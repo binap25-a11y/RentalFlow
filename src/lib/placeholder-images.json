@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "prop-1",
+      "description": "Modern Apartment",
+      "imageUrl": "https://picsum.photos/seed/prop1/800/600",
+      "imageHint": "modern apartment"
+    },
+    {
+      "id": "prop-2",
+      "description": "Cozy Suburban Home",
+      "imageUrl": "https://picsum.photos/seed/prop2/800/600",
+      "imageHint": "suburban house"
+    },
+    {
+      "id": "user-landlord",
+      "description": "Landlord Portrait",
+      "imageUrl": "https://picsum.photos/seed/landlord/200/200",
+      "imageHint": "professional man"
+    },
+    {
+      "id": "user-tenant",
+      "description": "Tenant Portrait",
+      "imageUrl": "https://picsum.photos/seed/tenant/200/200",
+      "imageHint": "smiling woman"
+    }
+  ]
 }
