@@ -1,10 +1,10 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Users, Wrench, AlertTriangle, ArrowUpRight, Clock } from "lucide-react";
+import { Building2, Users, Wrench, AlertTriangle, ArrowUpRight, Clock, FileCheck } from "lucide-react";
 import { MOCK_PROPERTIES, MOCK_MAINTENANCE } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export default function LandlordDashboard() {
   const stats = [
@@ -104,5 +104,3 @@ export default function LandlordDashboard() {
     </div>
   );
 }
-
-import { FileCheck } from "lucide-react";
