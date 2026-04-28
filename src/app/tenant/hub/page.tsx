@@ -1,6 +1,6 @@
-
 "use client";
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { MOCK_PROPERTIES, MOCK_MAINTENANCE } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,16 @@ import Image from "next/image";
 export default function TenantHub() {
   const property = MOCK_PROPERTIES[0];
   const activeRequests = MOCK_MAINTENANCE.filter(m => m.tenantId === 't-1' && m.status !== 'completed');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const formatDate = (dateString: string) => {
+    if (!mounted) return "";
+    return new Date(dateString).toLocaleDateString();
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -91,7 +101,7 @@ export default function TenantHub() {
                   <div key={req.id} className="p-4 rounded-xl bg-muted/30 border border-muted">
                     <div className="flex items-center justify-between mb-2">
                       <Badge variant="outline" className="capitalize text-[10px] font-bold">{req.status}</Badge>
-                      <span className="text-[10px] text-muted-foreground">{new Date(req.createdAt).toLocaleDateString()}</span>
+                      <span className="text-[10px] text-muted-foreground">{formatDate(req.createdAt)}</span>
                     </div>
                     <p className="text-sm font-semibold text-primary mb-1 truncate">{req.description}</p>
                     <div className="flex items-center text-xs text-muted-foreground">

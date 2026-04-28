@@ -1,21 +1,23 @@
-
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { triageMaintenanceRequest } from "@/ai/flows/maintenance-request-triage";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { MOCK_MAINTENANCE } from "@/lib/mock-data";
-import { Wrench, Sparkles, AlertCircle, CheckCircle2, Clock, Filter, BrainCircuit } from "lucide-react";
+import { Wrench, Sparkles, Clock, Filter, BrainCircuit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function MaintenancePage() {
   const [requests, setRequests] = useState(MOCK_MAINTENANCE);
   const [isTriaging, setIsTriaging] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleTriage = async (id: string, description: string) => {
     setIsTriaging(id);
@@ -48,6 +50,11 @@ export default function MaintenancePage() {
       case 'routine': return 'bg-blue-500 text-white border-blue-200';
       default: return 'bg-slate-400 text-white border-slate-200';
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!mounted) return "";
+    return new Date(dateString).toLocaleDateString();
   };
 
   return (
@@ -85,7 +92,7 @@ export default function MaintenancePage() {
                     {request.category}
                   </Badge>
                   <span className="text-xs text-muted-foreground font-medium flex items-center ml-auto">
-                    <Clock className="w-3 h-3 mr-1" /> {new Date(request.createdAt).toLocaleDateString()}
+                    <Clock className="w-3 h-3 mr-1" /> {formatDate(request.createdAt)}
                   </span>
                 </div>
                 
