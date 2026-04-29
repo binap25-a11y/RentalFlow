@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
@@ -18,9 +17,10 @@ export default function TenantDocumentsPage() {
 
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
+    // Updated to match security rules: query must include where("userId", "==", user.uid)
     return query(
       collection(db, "documents"),
-      where("tenantUserProfileId", "==", user.uid)
+      where("userId", "==", user.uid)
     );
   }, [db, user]);
 

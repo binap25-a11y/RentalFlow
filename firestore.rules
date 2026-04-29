@@ -10,41 +10,30 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // USERS
-    match /users/{userId} {
-      allow read, write: if isOwner(userId);
-    }
-
-    // DOCUMENTS (Root Collection)
+    // DOCUMENTS
     match /documents/{docId} {
       allow create: if isSignedIn();
-      allow list: if isSignedIn() && (
-        request.query.where("userId", "==", request.auth.uid) || 
-        request.query.where("tenantUserProfileId", "==", request.auth.uid)
-      );
-      allow get: if isSignedIn() && (
-        resource.data.userId == request.auth.uid || 
-        resource.data.tenantUserProfileId == request.auth.uid
-      );
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && request.query.where("userId", "==", request.auth.uid);
       allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
-    // PROPERTIES (Root Collection)
+    // PROPERTIES
     match /properties/{propertyId} {
       allow read, write: if isSignedIn();
     }
 
-    // TENANTS (Root Collection)
+    // TENANTS
     match /tenants/{tenantId} {
       allow read, write: if isSignedIn();
     }
 
-    // MAINTENANCE REQUESTS (Root Collection)
+    // MAINTENANCE REQUESTS
     match /maintenanceRequests/{requestId} {
       allow read, write: if isSignedIn();
     }
 
-    // EMERGENCY CONTACTS (Root Collection)
+    // EMERGENCY CONTACTS
     match /emergencyContacts/{contactId} {
       allow read, write: if isSignedIn();
     }

@@ -43,6 +43,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
+    // Updated to match security rules: query must include where("userId", "==", user.uid)
     return query(
       collection(db, 'documents'), 
       where('propertyId', '==', propertyId),

@@ -106,7 +106,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 export const useFirebase = (): FirebaseServicesAndUser => {
   const context = useContext(FirebaseContext);
 
-  // Return safe defaults for SSR or uninitialized states
+  // Return safe defaults for SSR or uninitialized states instead of throwing
   if (!context) {
     return {
       firebaseApp: {} as FirebaseApp,
