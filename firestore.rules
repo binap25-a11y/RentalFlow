@@ -14,13 +14,14 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // Splitting OR conditions into separate allow statements helps the Firestore query optimizer 
-    // authorize list operations (queries) correctly.
+    // Specifically split rules to allow the query optimizer to correctly authorize list operations.
 
     match /{path=**}/maintenanceRequests/{requestId} {
-      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      allow list: if isSignedIn() && resource.data.reportedByUserId == request.auth.uid;
-      allow list: if isSignedIn() && "assignedToUserId" in resource.data && resource.data.assignedToUserId == request.auth.uid;
+      allow list: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.reportedByUserId == request.auth.uid ||
+        ("assignedToUserId" in resource.data && resource.data.assignedToUserId == request.auth.uid)
+      );
       
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
@@ -39,8 +40,10 @@ service cloud.firestore {
     }
 
     match /{path=**}/tenants/{tenantId} {
-      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      allow list: if isSignedIn() && "userProfileId" in resource.data && resource.data.userProfileId == request.auth.uid;
+      allow list: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        ("userProfileId" in resource.data && resource.data.userProfileId == request.auth.uid)
+      );
       
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
@@ -78,9 +81,11 @@ service cloud.firestore {
     // --- TOP-LEVEL VAULT ---
 
     match /documents/{documentId} {
-      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      allow list: if isSignedIn() && resource.data.uploadedByUserId == request.auth.uid;
-      allow list: if isSignedIn() && "tenantUserProfileId" in resource.data && resource.data.tenantUserProfileId == request.auth.uid;
+      allow list: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.uploadedByUserId == request.auth.uid || 
+        ("tenantUserProfileId" in resource.data && resource.data.tenantUserProfileId == request.auth.uid)
+      );
       
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 

@@ -8,11 +8,16 @@ import { collection, query, where } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { format, isBefore, addDays, isValid, parseISO } from "date-fns";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 export default function LandlordDashboard() {
   const { user } = useUser();
   const db = useFirestore();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -33,14 +38,26 @@ export default function LandlordDashboard() {
   const { data: documents } = useCollection(documentsQuery);
 
   const stats = useMemo(() => {
+    // Prevent hydration mismatch by returning default stats on server
+    if (!isClient) {
+      return [
+        { label: 'Total Properties', value: 0, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
+        { label: 'Occupied', value: 0, icon: Users, color: 'text-violet-600', bg: 'bg-violet-50' },
+        { label: 'Expiring Soon', value: 0, icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-50' },
+      ];
+    }
+
     const total = properties?.length || 0;
     const occupied = properties?.filter(p => p.isOccupied).length || 0;
+    const today = new Date();
+    const threshold = addDays(today, 30);
+    
     const expiring = documents?.filter(d => {
-      if (!d.expiryDate) return false;
+      if (!d.expiryDate || typeof d.expiryDate !== 'string') return false;
       try {
         const expiry = parseISO(d.expiryDate);
         if (!isValid(expiry)) return false;
-        return isBefore(expiry, addDays(new Date(), 30));
+        return isBefore(expiry, threshold);
       } catch {
         return false;
       }
@@ -51,27 +68,30 @@ export default function LandlordDashboard() {
       { label: 'Occupied', value: occupied, icon: Users, color: 'text-violet-600', bg: 'bg-violet-50' },
       { label: 'Expiring Soon', value: expiring, icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-50' },
     ];
-  }, [properties, documents]);
+  }, [properties, documents, isClient]);
 
   const expiringDocs = useMemo(() => {
-    if (!documents) return [];
+    if (!isClient || !documents) return [];
+    const today = new Date();
+    const threshold = addDays(today, 30);
+
     return documents
       .filter(d => {
-        if (!d.expiryDate) return false;
+        if (!d.expiryDate || typeof d.expiryDate !== 'string') return false;
         try {
           const expiry = parseISO(d.expiryDate);
           if (!isValid(expiry)) return false;
-          return isBefore(expiry, addDays(new Date(), 30));
+          return isBefore(expiry, threshold);
         } catch {
           return false;
         }
       })
       .sort((a, b) => {
-        const dateA = new Date(a.expiryDate!).getTime();
-        const dateB = new Date(b.expiryDate!).getTime();
+        const dateA = a.expiryDate ? new Date(a.expiryDate).getTime() : 0;
+        const dateB = b.expiryDate ? new Date(b.expiryDate).getTime() : 0;
         return dateA - dateB;
       });
-  }, [documents]);
+  }, [documents, isClient]);
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -107,7 +127,9 @@ export default function LandlordDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {expiringDocs.length > 0 ? (
+            {!isClient ? (
+              <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
+            ) : expiringDocs.length > 0 ? (
               expiringDocs.map((doc) => {
                 let expiryDate: Date | null = null;
                 try {
