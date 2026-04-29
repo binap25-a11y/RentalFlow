@@ -14,65 +14,63 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // Optimized for split OR conditions to satisfy query authorization
-
-    match /{path=**}/maintenanceRequests/{requestId} {
-      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      allow list: if isSignedIn() && resource.data.reportedByUserId == request.auth.uid;
-      
-      allow get: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.reportedByUserId == request.auth.uid
-      );
-      
-      allow create: if isSignedIn() && request.resource.data.reportedByUserId == request.auth.uid;
-      
-      allow update: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.reportedByUserId == request.auth.uid
-      );
-      
-      allow delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-    }
+    // Required for portfolio-wide scans and resident profile lookups
 
     match /{path=**}/tenants/{tenantId} {
-      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      allow list: if isSignedIn() && resource.data.userProfileId == request.auth.uid;
-      allow list: if isSignedIn() && tenantId == request.auth.uid;
-      
+      allow list: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.userProfileId == request.auth.uid
+      );
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.userProfileId == request.auth.uid ||
         tenantId == request.auth.uid
       );
-      
-      allow write: if isSignedIn() && (
-        (exists(resource) && resource.data.landlordId == request.auth.uid) ||
-        (!exists(resource) && request.resource.data.landlordId == request.auth.uid)
-      );
     }
 
-    match /{path=**}/emergencyContacts/{contactId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+    match /{path=**}/maintenanceRequests/{requestId} {
+      allow list: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.reportedByUserId == request.auth.uid
+      );
+      allow get: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.reportedByUserId == request.auth.uid
+      );
     }
 
     // --- HIERARCHICAL RULES ---
 
     match /users/{userId} {
-      allow get: if isSignedIn();
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update, delete: if isOwner(userId);
-      
+      allow read, write: if isOwner(userId);
+
       match /properties/{propertyId} {
-        allow list: if isOwner(userId);
+        allow read, write: if isOwner(userId);
+        
+        // Allow residents to see their own property details
         allow get: if isSignedIn() && (
           isOwner(userId) || 
           exists(/databases/$(database)/documents/users/$(userId)/properties/$(propertyId)/tenants/$(request.auth.uid))
         );
-        allow create: if isOwner(userId) && request.resource.data.landlordId == userId;
-        allow update, delete: if isOwner(userId);
 
+        match /tenants/{tenantId} {
+          allow read, write: if isOwner(userId);
+        }
+
+        match /maintenanceRequests/{requestId} {
+          allow read, write: if isOwner(userId);
+          allow create: if isSignedIn() && request.resource.data.reportedByUserId == request.auth.uid;
+          allow update: if isSignedIn() && (
+            isOwner(userId) || 
+            resource.data.reportedByUserId == request.auth.uid
+          );
+        }
+
+        match /emergencyContacts/{contactId} {
+          allow read, write: if isOwner(userId);
+          allow read: if isSignedIn() && exists(/databases/$(database)/documents/users/$(userId)/properties/$(propertyId)/tenants/$(request.auth.uid));
+        }
+        
         match /inspections/{inspectionId} {
           allow read, write: if isOwner(userId);
         }
@@ -82,22 +80,12 @@ service cloud.firestore {
     // --- TOP-LEVEL VAULT ---
 
     match /documents/{documentId} {
-      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      allow list: if isSignedIn() && resource.data.uploadedByUserId == request.auth.uid;
-      allow list: if isSignedIn() && resource.data.tenantUserProfileId == request.auth.uid;
-      
-      allow get: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.uploadedByUserId == request.auth.uid || 
+      allow read, write: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid ||
+        resource.data.uploadedByUserId == request.auth.uid ||
         resource.data.tenantUserProfileId == request.auth.uid
       );
-      
-      allow create: if isSignedIn() && request.resource.data.uploadedByUserId == request.auth.uid;
-      
-      allow update, delete: if isSignedIn() && (
-        resource.data.uploadedByUserId == request.auth.uid || 
-        resource.data.landlordId == request.auth.uid
-      );
+      allow create: if isSignedIn();
     }
   }
 }

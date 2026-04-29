@@ -86,7 +86,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
                     : "hover:bg-sidebar-accent text-sidebar-foreground/80 hover:text-sidebar-foreground"
                 )}
               >
-                <Link href={item.href}>
+                <Link href={item.href} onClick={handleItemClick}>
                   <item.icon className="w-5 h-5" />
                   <span className="font-medium">{item.label}</span>
                 </Link>
