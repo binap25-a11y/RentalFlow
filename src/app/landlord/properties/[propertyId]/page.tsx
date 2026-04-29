@@ -213,8 +213,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         </div>
 
         <div className="space-y-8">
-          <Card className="border-none shadow-sm overflow-hidden border-t-4 border-primary bg-white">
-            <CardHeader className="bg-primary/5 pb-4">
+          <Card className="border-none shadow-sm overflow-hidden bg-white">
+            <CardHeader className="bg-primary/5 border-t-4 border-primary pb-4">
               <CardTitle className="text-xl font-headline font-bold text-primary flex items-center">
                 <ShieldAlert className="w-5 h-5 mr-2" />
                 Portfolio Status

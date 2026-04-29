@@ -2,15 +2,16 @@
 "use client";
 
 import { useState } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking, useStorage } from '@/firebase';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Building2, MapPin, Plus, Trash2, Edit3, Loader2, X } from "lucide-react";
+import { Building2, MapPin, Plus, Trash2, Edit3, Loader2, Image as ImageIcon, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import Image from "next/image";
@@ -18,6 +19,7 @@ import Image from "next/image";
 export default function PropertiesPage() {
   const { user } = useUser();
   const db = useFirestore();
+  const storage = useStorage();
   const { toast } = useToast();
 
   const propertiesQuery = useMemoFirebase(() => {
@@ -35,10 +37,11 @@ export default function PropertiesPage() {
   const [zipCode, setZipCode] = useState('');
   const [rentAmount, setRentAmount] = useState('');
   const [description, setDescription] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const handleAddProperty = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !db) return;
+    if (!user || !db || !storage) return;
 
     const rentValue = Number(rentAmount);
     if (rentValue < 0) {
@@ -51,8 +54,13 @@ export default function PropertiesPage() {
     const propertyRef = doc(db, 'users', user.uid, 'properties', propertyId);
 
     try {
-      // Reverted to reliable placeholder storage for stability
-      const mainImageUrl = `https://picsum.photos/seed/${propertyId}/800/600`;
+      let finalImageUrl = `https://picsum.photos/seed/${propertyId}/800/600`;
+
+      if (imageFile) {
+        const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${imageFile.name}`);
+        const uploadResult = await uploadBytes(storageRef, imageFile);
+        finalImageUrl = await getDownloadURL(uploadResult.ref);
+      }
 
       setDocumentNonBlocking(propertyRef, {
         id: propertyId,
@@ -66,22 +74,28 @@ export default function PropertiesPage() {
         numberOfBathrooms: 1,
         rentAmount: rentValue,
         isOccupied: false,
-        imageUrl: mainImageUrl,
+        imageUrl: finalImageUrl,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       }, { merge: true });
 
       toast({ title: "Property Added", description: "Successfully created in your portfolio." });
       setIsAddDialogOpen(false);
-      setAddress('');
-      setZipCode('');
-      setRentAmount('');
-      setDescription('');
-    } catch (error) {
-      toast({ variant: "destructive", title: "Save Failed", description: "Could not create property record." });
+      resetForm();
+    } catch (error: any) {
+      console.error(error);
+      toast({ variant: "destructive", title: "Save Failed", description: error.message || "Could not create property record." });
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const resetForm = () => {
+    setAddress('');
+    setZipCode('');
+    setRentAmount('');
+    setDescription('');
+    setImageFile(null);
   };
 
   const handleDeleteProperty = (propertyId: string) => {
@@ -131,7 +145,34 @@ export default function PropertiesPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="desc">Description</Label>
-                  <Input id="desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief overview of the property" />
+                  <Input id="desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief overview" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="image">Property Photo</Label>
+                  <div className="flex items-center gap-4">
+                    <Input 
+                      id="image" 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full h-24 border-dashed rounded-xl flex flex-col gap-2"
+                      onClick={() => document.getElementById('image')?.click()}
+                    >
+                      {imageFile ? (
+                        <span className="text-xs font-bold text-primary">{imageFile.name}</span>
+                      ) : (
+                        <>
+                          <Upload className="w-6 h-6 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground font-medium">Click to upload photo</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
               <DialogFooter>

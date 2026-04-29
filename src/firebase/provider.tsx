@@ -111,9 +111,6 @@ export const useFirebase = (): FirebaseServicesAndUser => {
     throw new Error('useFirebase must be used within a FirebaseProvider.');
   }
 
-  // Handle SSR and early initialization states gracefully
-  const servicesAvailable = context.areServicesAvailable;
-  
   return {
     firebaseApp: (context.firebaseApp || {}) as FirebaseApp,
     firestore: (context.firestore || {}) as Firestore,

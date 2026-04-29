@@ -41,18 +41,18 @@ service cloud.firestore {
       }
     }
 
-    // DOCUMENTS COLLECTION (ROOT LEVEL)
+    // DOCUMENTS COLLECTION (ROOT LEVEL METADATA)
     match /documents/{documentId} {
       allow read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid ||
         resource.data.uploadedByUserId == request.auth.uid ||
         resource.data.tenantUserProfileId == request.auth.uid
       );
-      allow write: if isSignedIn() && (
-        (request.resource != null && (request.resource.data.landlordId == request.auth.uid || request.resource.data.uploadedByUserId == request.auth.uid)) ||
-        (resource != null && (resource.data.landlordId == request.auth.uid || resource.data.uploadedByUserId == request.auth.uid))
-      );
       allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid ||
+        resource.data.uploadedByUserId == request.auth.uid
+      );
     }
 
     // COLLECTION GROUP RULES FOR PORTFOLIO VIEWS
