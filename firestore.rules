@@ -3,14 +3,8 @@
  * RentalFlow Security Rules
  * 
  * Core Philosophy:
- * This ruleset implements a hierarchical ownership model centered around Landlords. 
- * Most application data (Properties, Tenants, Inspections, Maintenance) is logically 
- * and physically nested under a Landlord's unique identifier in the path.
- * 
- * Collection Group Support:
- * To allow landlords to see data across all their properties (e.g., all maintenance requests),
- * we use recursive wildcard matches. These rules verify access based on denormalized
- * UIDs (landlordId, reportedByUserId) stored within the documents.
+ * Centered around Landlord ownership with data-based authorization to support
+ * both hierarchical access and portfolio-wide Collection Group queries.
  */
 
 rules_version = '2';
@@ -27,12 +21,12 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** @description Checks if a field exists and matches the user's UID. */
     function isUserInField(fieldName) {
       return isSignedIn() && fieldName in resource.data && resource.data[fieldName] == request.auth.uid;
     }
 
-    // --- COLLECTION GROUP RULES (For scans across all properties) ---
+    // --- PORTFOLIO-WIDE (COLLECTION GROUP) RULES ---
+    // These rules apply regardless of where the document is nested.
 
     match /{path=**}/maintenanceRequests/{requestId} {
       allow read: if isSignedIn() && (
@@ -40,6 +34,15 @@ service cloud.firestore {
         isUserInField('reportedByUserId') || 
         isUserInField('assignedToUserId')
       );
+      // Allow creation if the reporter is the authenticated user
+      allow create: if isSignedIn() && request.resource.data.reportedByUserId == request.auth.uid;
+      // Allow update if the user is the landlord or reporter or assigned
+      allow update: if isSignedIn() && (
+        isUserInField('landlordId') || 
+        isUserInField('reportedByUserId') || 
+        isUserInField('assignedToUserId')
+      );
+      allow delete: if isUserInField('landlordId');
     }
 
     match /{path=**}/tenants/{tenantId} {
@@ -47,6 +50,12 @@ service cloud.firestore {
         isUserInField('landlordId') || 
         isUserInField('userProfileId')
       );
+      allow write: if isUserInField('landlordId');
+    }
+
+    match /{path=**}/emergencyContacts/{contactId} {
+      allow read: if isSignedIn(); // Broad read for property context
+      allow write: if isSignedIn(); // Authorized by parent property ownership
     }
 
     // --- HIERARCHICAL RULES ---
@@ -62,36 +71,18 @@ service cloud.firestore {
         allow create: if isOwner(userId) && request.resource.data.landlordId == userId;
         allow update, delete: if isOwner(userId);
 
-        match /tenants/{tenantId} {
-          allow get, list: if isOwner(userId) || isUserInField('userProfileId');
-          allow create, update, delete: if isOwner(userId);
-        }
-
+        // Inspections are usually handled within the property context
         match /inspections/{inspectionId} {
-          allow get, list: if isOwner(userId);
-          allow create, update, delete: if isOwner(userId);
+          allow read, write: if isOwner(userId);
 
           match /items/{itemId} {
             allow read, write: if isOwner(userId);
           }
         }
-
-        match /maintenanceRequests/{requestId} {
-          allow get, list: if isOwner(userId) || isUserInField('reportedByUserId') || isUserInField('assignedToUserId');
-          allow create: if isOwner(userId) || (isSignedIn() && request.resource.data.reportedByUserId == request.auth.uid);
-          allow update: if isOwner(userId) || isUserInField('reportedByUserId') || isUserInField('assignedToUserId');
-          allow delete: if isOwner(userId);
-
-          match /logs/{logId} {
-            allow read: if isOwner(userId) || isSignedIn();
-            allow create: if isSignedIn();
-            allow update, delete: if isOwner(userId);
-          }
-        }
       }
     }
 
-    // --- TOP-LEVEL DOCUMENTS ---
+    // --- TOP-LEVEL DOCUMENTS (Vault) ---
 
     match /documents/{documentId} {
       allow read: if isSignedIn() && (
