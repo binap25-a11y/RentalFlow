@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking, useStorage } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -41,6 +41,25 @@ export default function PropertiesPage() {
   const [rentAmount, setRentAmount] = useState('');
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setImageFile(file);
+    if (file) {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    } else {
+      setPreviewUrl(null);
+    }
+  };
 
   const handleAddProperty = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,6 +117,8 @@ export default function PropertiesPage() {
     setRentAmount('');
     setDescription('');
     setImageFile(null);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
   };
 
   const handleDeleteProperty = (propertyId: string) => {
@@ -157,20 +178,31 @@ export default function PropertiesPage() {
                       type="file" 
                       accept="image/*" 
                       className="hidden" 
-                      onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                      onChange={handleImageChange}
                     />
                     <Button 
                       type="button" 
                       variant="outline" 
-                      className="w-full h-24 border-dashed rounded-xl flex flex-col gap-2"
+                      className="w-full h-40 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 overflow-hidden relative group"
                       onClick={() => document.getElementById('image')?.click()}
                     >
-                      {imageFile ? (
-                        <span className="text-xs font-bold text-primary">{imageFile.name}</span>
+                      {previewUrl ? (
+                        <div className="absolute inset-0 w-full h-full">
+                          <Image 
+                            src={previewUrl} 
+                            alt="Preview" 
+                            fill 
+                            className="object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Upload className="w-8 h-8 text-white mb-1" />
+                            <span className="text-white text-xs font-bold">Change Photo</span>
+                          </div>
+                        </div>
                       ) : (
                         <>
-                          <Upload className="w-6 h-6 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground font-medium">Click to upload photo</span>
+                          <Upload className="w-8 h-8 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground font-medium">Click to upload photo</span>
                         </>
                       )}
                     </Button>

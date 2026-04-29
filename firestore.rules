@@ -19,7 +19,7 @@ service cloud.firestore {
     // -------------------------
     match /documents/{docId} {
       allow create: if isSignedIn();
-      // Enforce list queries with userId filter
+      // Enforce query filters via resource-based ownership checks
       allow read, update, delete: if isSignedIn() && 
         (resource == null || resource.data.userId == request.auth.uid || resource.data.landlordId == request.auth.uid);
     }
