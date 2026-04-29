@@ -119,7 +119,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           landlordId: user.uid,
           createdAt: serverTimestamp(),
         }, { merge: true });
-        toast({ title: "Photo Uploaded", description: "Saved to secure Cloud Storage." });
+        toast({ title: "Photo Uploaded", description: "Saved to secure Storage." });
       } catch (error) {
         toast({ variant: "destructive", title: "Upload Failed" });
       } finally {
@@ -285,7 +285,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               </div>
               <div className="flex items-center justify-between px-2">
                 <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest font-headline">Compliance Level</span>
-                <Badge variant="outline" className="text-primary font-bold border-primary/30 bg-primary/10">Tier 1 Secure</Badge>
+                <Badge variant="outline" className="text-primary font-bold border-primary/30 bg-primary/10 font-headline uppercase">Tier 1 Secure</Badge>
               </div>
               <Button variant="outline" className="w-full rounded-xl font-bold border-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-sm font-headline h-11">
                 <Download className="w-4 h-4 mr-2" /> Save PDF Guide

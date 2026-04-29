@@ -10,15 +10,15 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // USERS
+    // USERS ROOT
     match /users/{userId} {
       allow read, write: if isOwner(userId);
 
-      // PROPERTIES
+      // PROPERTIES (HIERARCHICAL)
       match /properties/{propertyId} {
         allow read, write: if isOwner(userId);
 
-        // TENANTS SUBCOLLECTION
+        // TENANTS SUBCOLLECTION (CRITICAL)
         match /tenants/{tenantId} {
           allow read, write: if isOwner(userId);
         }
