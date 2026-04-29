@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -60,6 +59,16 @@ export default function PropertiesPage() {
     e.preventDefault();
     if (!user || !db) return;
 
+    const rentValue = Number(rentAmount);
+    if (rentValue < 0) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Rent",
+        description: "Monthly rent cannot be negative.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     const propertyId = doc(collection(db, 'dummy')).id;
     const propertyRef = doc(db, 'users', user.uid, 'properties', propertyId);
@@ -74,7 +83,7 @@ export default function PropertiesPage() {
       description: description,
       numberOfBedrooms: 2,
       numberOfBathrooms: 1,
-      rentAmount: Number(rentAmount),
+      rentAmount: rentValue,
       isOccupied: false,
       imageUrl: imageUrl || 'https://picsum.photos/seed/rental/800/600',
       createdAt: serverTimestamp(),
@@ -173,7 +182,7 @@ export default function PropertiesPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="rent">Monthly Rent (£)</Label>
-                    <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} placeholder="1500" required />
+                    <Input id="rent" type="number" min="0" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} placeholder="1500" required />
                   </div>
                 </div>
                 <div className="space-y-2">

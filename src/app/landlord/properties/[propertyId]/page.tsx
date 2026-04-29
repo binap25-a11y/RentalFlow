@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useRef } from 'react';
@@ -20,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { format, isBefore, addDays } from "date-fns";
 import Image from "next/image";
+import Link from "next/link";
 
 const DOC_TYPES = ['Tenancy Agreement', 'EICR', 'Gas Safety', 'EPC', 'Insurance', 'Other'];
 
@@ -70,8 +70,19 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const handleUpdateRent = () => {
     if (!propertyRef) return;
+    
+    const rentValue = Number(rentAmount);
+    if (rentValue < 0) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Rent",
+        description: "Monthly rent cannot be negative.",
+      });
+      return;
+    }
+
     updateDocumentNonBlocking(propertyRef, {
-      rentAmount: Number(rentAmount),
+      rentAmount: rentValue,
       updatedAt: serverTimestamp(),
     });
     setIsEditing(false);
@@ -174,6 +185,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                   {isEditing ? (
                     <Input 
                       type="number" 
+                      min="0"
                       value={rentAmount || property.rentAmount} 
                       onChange={(e) => setRentAmount(e.target.value)}
                     />
