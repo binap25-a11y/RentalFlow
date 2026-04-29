@@ -23,7 +23,6 @@ export default function LandlordDashboard() {
   const documentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     // Security rules require an explicit filter on landlordId for list operations on the documents collection
-    // We remove orderBy for now to ensure rule compliance without requiring composite indexes immediately
     return query(
       collection(db, "documents"),
       where("landlordId", "==", user.uid)
@@ -60,6 +59,7 @@ export default function LandlordDashboard() {
     },
   ];
 
+  // Sorting expiring docs in-memory to avoid immediate composite index requirement
   const expiringDocs = documents?.filter(d => {
     if (!d.expiryDate) return false;
     const expiry = new Date(d.expiryDate);

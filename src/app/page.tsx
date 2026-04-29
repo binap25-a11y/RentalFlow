@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -7,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, KeyRound, LayoutDashboard, Mail, Lock, UserPlus, LogIn, Chrome, Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Home, KeyRound, LayoutDashboard, Mail, Lock, UserPlus, LogIn, Chrome, Loader2, Eye, EyeOff } from "lucide-react";
 import { useAuth, useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn, initiatePasswordReset } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp } from 'firebase/firestore';
@@ -61,7 +62,7 @@ export default function LoginPage() {
             }
           }
         } catch (e) {
-          // Profile check errors are handled by the global error emitter
+          // Errors are handled gracefully or by global listener if configured
         }
       };
       checkProfile();
@@ -81,7 +82,7 @@ export default function LoginPage() {
         toast({ title: "Welcome back", description: "Successfully signed in." });
       }
     } catch (error: any) {
-      console.error("Auth error:", error);
+      // Do not use console.error() as it triggers the Next.js Error Overlay in development
       let message = "An unexpected error occurred. Please try again.";
       
       if (error.code === 'auth/invalid-credential') {
@@ -90,6 +91,10 @@ export default function LoginPage() {
         message = "An account with this email already exists.";
       } else if (error.code === 'auth/weak-password') {
         message = "Password should be at least 6 characters.";
+      } else if (error.code === 'auth/user-not-found') {
+        message = "No account found with this email.";
+      } else if (error.code === 'auth/wrong-password') {
+        message = "Incorrect password.";
       }
 
       toast({
