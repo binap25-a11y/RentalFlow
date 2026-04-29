@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
-import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,10 +21,23 @@ export default function InspectionsPage() {
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return collection(db, 'users', user.uid, 'properties');
+    return query(
+      collection(db, 'properties'),
+      where('landlordId', '==', user.uid)
+    );
   }, [db, user]);
 
   const { data: properties, isLoading } = useCollection(propertiesQuery);
+
+  const inspectionsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return query(
+      collection(db, 'inspections'),
+      where('landlordId', '==', user.uid)
+    );
+  }, [db, user]);
+
+  const { data: inspections } = useCollection(inspectionsQuery);
 
   const [date, setDate] = useState<Date>();
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
@@ -33,11 +46,12 @@ export default function InspectionsPage() {
     if (!user || !db || !selectedPropertyId || !date) return;
 
     const inspectionId = doc(collection(db, 'dummy')).id;
-    const inspectionRef = doc(db, 'users', user.uid, 'properties', selectedPropertyId, 'inspections', inspectionId);
+    const inspectionRef = doc(db, 'inspections', inspectionId);
 
     setDocumentNonBlocking(inspectionRef, {
       id: inspectionId,
       propertyId: selectedPropertyId,
+      landlordId: user.uid,
       scheduledDate: date.toISOString(),
       inspectorUserId: user.uid,
       status: 'scheduled',
@@ -124,33 +138,39 @@ export default function InspectionsPage() {
           </h3>
           
           <div className="grid gap-4">
-            {!properties || properties.length === 0 ? (
+            {!inspections || inspections.length === 0 ? (
               <p className="text-center py-20 text-muted-foreground bg-muted/20 rounded-2xl border-2 border-dashed">
                 No inspections currently scheduled.
               </p>
             ) : (
-              <Card className="border-none shadow-sm overflow-hidden group">
-                <CardContent className="p-6">
-                  <div className="flex flex-col md:flex-row gap-6">
-                    <div className="bg-primary/5 p-4 rounded-2xl flex flex-col items-center justify-center text-primary min-w-[100px]">
-                      <span className="text-sm font-bold uppercase">MAY</span>
-                      <span className="text-3xl font-bold">12</span>
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Badge variant="outline">SCHEDULED</Badge>
-                        <Button variant="ghost" size="sm" onClick={generatePDFReport} className="text-primary h-8">
-                          <Download className="w-3 h-3 mr-2" /> Report Template
-                        </Button>
+              inspections.map((inspection) => (
+                <Card key={inspection.id} className="border-none shadow-sm overflow-hidden group">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col md:flex-row gap-6">
+                      <div className="bg-primary/5 p-4 rounded-2xl flex flex-col items-center justify-center text-primary min-w-[100px]">
+                        <span className="text-sm font-bold uppercase">
+                          {format(new Date(inspection.scheduledDate), 'MMM')}
+                        </span>
+                        <span className="text-3xl font-bold">
+                          {format(new Date(inspection.scheduledDate), 'dd')}
+                        </span>
                       </div>
-                      <h4 className="text-lg font-bold">Move-out Inspection</h4>
-                      <p className="text-sm text-muted-foreground flex items-center">
-                        <MapPin className="w-4 h-4 mr-1" /> All properties can have inspections managed individually.
-                      </p>
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Badge variant="outline" className="uppercase">{inspection.status}</Badge>
+                          <Button variant="ghost" size="sm" onClick={generatePDFReport} className="text-primary h-8">
+                            <Download className="w-3 h-3 mr-2" /> Report Template
+                          </Button>
+                        </div>
+                        <h4 className="text-lg font-bold">{inspection.summary}</h4>
+                        <p className="text-sm text-muted-foreground flex items-center">
+                          <MapPin className="w-4 h-4 mr-1" /> {properties?.find(p => p.id === inspection.propertyId)?.addressLine1 || 'Unknown Property'}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              ))
             )}
           </div>
         </div>

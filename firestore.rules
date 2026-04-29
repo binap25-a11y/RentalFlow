@@ -56,6 +56,13 @@ service cloud.firestore {
       allow read, write: if isSignedIn();
     }
 
+    // -------------------------
+    // INSPECTIONS
+    // -------------------------
+    match /inspections/{inspectionId} {
+      allow read, write: if isSignedIn();
+    }
+
     // Block everything else
     match /{document=**} {
       allow read, write: if false;

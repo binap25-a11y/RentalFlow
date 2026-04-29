@@ -51,7 +51,6 @@ export default function TenantHub() {
 
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Updated to match security rules: query must include where("userId", "==", user.uid)
     return query(
       collection(db, "documents"),
       where("userId", "==", user.uid)

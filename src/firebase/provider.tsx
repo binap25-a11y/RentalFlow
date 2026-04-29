@@ -34,10 +34,10 @@ export interface FirebaseContextState {
 }
 
 export interface FirebaseServicesAndUser {
-  firebaseApp: FirebaseApp;
-  firestore: Firestore;
-  auth: Auth;
-  storage: FirebaseStorage;
+  firebaseApp: FirebaseApp | null;
+  firestore: Firestore | null;
+  auth: Auth | null;
+  storage: FirebaseStorage | null;
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
@@ -107,14 +107,12 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 export const useFirebase = (): FirebaseServicesAndUser => {
   const context = useContext(FirebaseContext);
 
-  // Return safe defaults for SSR or uninitialized states instead of throwing.
-  // This prevents "Firebase core services not available" errors during Next.js pre-rendering.
   if (!context) {
     return {
-      firebaseApp: {} as FirebaseApp,
-      firestore: {} as Firestore,
-      auth: {} as Auth,
-      storage: {} as FirebaseStorage,
+      firebaseApp: null,
+      firestore: null,
+      auth: null,
+      storage: null,
       user: null,
       isUserLoading: true,
       userError: null,
@@ -122,42 +120,34 @@ export const useFirebase = (): FirebaseServicesAndUser => {
   }
 
   return {
-    firebaseApp: (context.firebaseApp || {}) as FirebaseApp,
-    firestore: (context.firestore || {}) as Firestore,
-    auth: (context.auth || {}) as Auth,
-    storage: (context.storage || {}) as FirebaseStorage,
+    firebaseApp: context.firebaseApp,
+    firestore: context.firestore,
+    auth: context.auth,
+    storage: context.storage,
     user: context.user,
     isUserLoading: context.isUserLoading,
     userError: context.userError,
   };
 };
 
-export const useAuth = (): Auth => {
+export const useAuth = (): Auth | null => {
   const context = useContext(FirebaseContext);
-  if (context?.auth) return context.auth;
-  const { auth } = useFirebase();
-  return auth;
+  return context?.auth || null;
 };
 
-export const useFirestore = (): Firestore => {
+export const useFirestore = (): Firestore | null => {
   const context = useContext(FirebaseContext);
-  if (context?.firestore) return context.firestore;
-  const { firestore } = useFirebase();
-  return firestore;
+  return context?.firestore || null;
 };
 
-export const useStorage = (): FirebaseStorage => {
+export const useStorage = (): FirebaseStorage | null => {
   const context = useContext(FirebaseContext);
-  if (context?.storage) return context.storage;
-  const { storage } = useFirebase();
-  return storage;
+  return context?.storage || null;
 };
 
-export const useFirebaseApp = (): FirebaseApp => {
+export const useFirebaseApp = (): FirebaseApp | null => {
   const context = useContext(FirebaseContext);
-  if (context?.firebaseApp) return context.firebaseApp;
-  const { firebaseApp } = useFirebase();
-  return firebaseApp;
+  return context?.firebaseApp || null;
 };
 
 type MemoFirebase<T> = T & {__memo?: boolean};
@@ -176,6 +166,5 @@ export const useUser = (): UserHookResult => {
   if (context) {
     return { user: context.user, isUserLoading: context.isUserLoading, userError: context.userError };
   }
-  const { user, isUserLoading, userError } = useFirebase(); 
-  return { user, isUserLoading, userError };
+  return { user: null, isUserLoading: true, userError: null };
 };
