@@ -1,14 +1,13 @@
-
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { triageMaintenanceRequest } from "@/ai/flows/maintenance-request-triage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { collectionGroup, query, where, doc, serverTimestamp } from "firebase/firestore";
-import { Wrench, Sparkles, Clock, Filter, BrainCircuit, Loader2, AlertCircle } from "lucide-react";
+import { Wrench, Sparkles, Clock, Filter, BrainCircuit, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -20,7 +19,8 @@ export default function MaintenancePage() {
 
   const maintenanceQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Using collectionGroup to see requests across all properties for this landlord
+    // Note: This requires a composite index for collectionGroup + where('landlordId')
+    // and matching security rules for collection groups.
     return query(
       collectionGroup(db, "maintenanceRequests"),
       where("landlordId", "==", user.uid)
@@ -143,9 +143,6 @@ export default function MaintenancePage() {
                     )}
                     {isTriaging === request.id ? 'Analyzing...' : 'Auto-Triage with AI'}
                   </Button>
-                  <div className="grid grid-cols-1 gap-2">
-                    <Button variant="outline" className="rounded-xl text-xs h-9">Update Status</Button>
-                  </div>
                 </div>
               </div>
             </Card>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -8,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, KeyRound, LayoutDashboard, Mail, Lock, UserPlus, LogIn, Chrome, Loader2, Eye, EyeOff } from "lucide-react";
+import { Home, KeyRound, LayoutDashboard, Mail, Lock, UserPlus, LogIn, Chrome, Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { useAuth, useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn, initiatePasswordReset } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp } from 'firebase/firestore';
@@ -35,71 +34,100 @@ export default function LoginPage() {
     setMounted(true);
   }, []);
 
-  // Handle post-authentication navigation and profile creation
   useEffect(() => {
     if (user && db && mounted) {
       const checkProfile = async () => {
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
+        try {
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
 
-        if (!userDoc.exists()) {
-          // New user - create profile with the selected role from the form
-          setDocumentNonBlocking(userDocRef, {
-            id: user.uid,
-            email: user.email,
-            role: role,
-            externalAuthId: user.uid,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          }, { merge: true });
-          
-          if (role === 'landlord') {
-            router.push('/landlord/dashboard');
+          if (!userDoc.exists()) {
+            setDocumentNonBlocking(userDocRef, {
+              id: user.uid,
+              email: user.email,
+              role: role,
+              externalAuthId: user.uid,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+            }, { merge: true });
+            
+            router.push(role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub');
           } else {
-            router.push('/tenant/hub');
+            const userData = userDoc.data();
+            if (userData?.role === 'landlord') {
+              router.push('/landlord/dashboard');
+            } else if (userData?.role === 'tenant') {
+              router.push('/tenant/hub');
+            }
           }
-        } else {
-          // Existing user - navigate based on stored role
-          const userData = userDoc.data();
-          if (userData?.role === 'landlord') {
-            router.push('/landlord/dashboard');
-          } else if (userData?.role === 'tenant') {
-            router.push('/tenant/hub');
-          }
+        } catch (e) {
+          // Profile check errors are handled by the global error emitter
         }
       };
       checkProfile();
     }
   }, [user, db, router, role, mounted]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    if (authMode === 'signup') {
-      initiateEmailSignUp(auth, email, password);
-      toast({ title: "Creating account...", description: "Please wait while we set up your profile." });
-    } else {
-      initiateEmailSignIn(auth, email, password);
-      toast({ title: "Signing in...", description: "Welcome back to RentalFlow." });
+
+    try {
+      if (authMode === 'signup') {
+        await initiateEmailSignUp(auth, email, password);
+        toast({ title: "Account created", description: "Your RentalFlow profile is ready." });
+      } else {
+        await initiateEmailSignIn(auth, email, password);
+        toast({ title: "Welcome back", description: "Successfully signed in." });
+      }
+    } catch (error: any) {
+      console.error("Auth error:", error);
+      let message = "An unexpected error occurred. Please try again.";
+      
+      if (error.code === 'auth/invalid-credential') {
+        message = "Invalid email or password. Please check your credentials.";
+      } else if (error.code === 'auth/email-already-in-use') {
+        message = "An account with this email already exists.";
+      } else if (error.code === 'auth/weak-password') {
+        message = "Password should be at least 6 characters.";
+      }
+
+      toast({
+        variant: "destructive",
+        title: "Authentication Failed",
+        description: message,
+      });
+    } finally {
+      setIsLoading(false);
     }
-    // Loading state is primarily for visual feedback during the initial request
-    setTimeout(() => setIsLoading(false), 2000);
   };
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    initiateGoogleSignIn(auth);
-    toast({ title: "Connecting to Google...", description: "Redirecting to authentication provider." });
-    setTimeout(() => setIsLoading(false), 3000);
+    try {
+      await initiateGoogleSignIn(auth);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Google Sign-In Failed",
+        description: "Could not connect to Google. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleResetPassword = () => {
+  const handleResetPassword = async () => {
     if (!resetEmail) {
-      toast({ variant: "destructive", title: "Email required", description: "Please enter your email to reset your password." });
+      toast({ variant: "destructive", title: "Email required", description: "Please enter your email." });
       return;
     }
-    initiatePasswordReset(auth, resetEmail);
-    toast({ title: "Reset link sent", description: "Check your email for instructions to reset your password." });
+    try {
+      await initiatePasswordReset(auth, resetEmail);
+      toast({ title: "Reset link sent", description: "Check your email inbox." });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Reset Failed", description: "Could not send reset link." });
+    }
   };
 
   if (!mounted || isUserLoading) {
@@ -158,7 +186,6 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required 
-                    suppressHydrationWarning
                   />
                 </div>
               </div>
@@ -176,7 +203,7 @@ export default function LoginPage() {
                         <DialogHeader>
                           <DialogTitle>Reset Password</DialogTitle>
                           <DialogDescription>
-                            Enter your email address and we'll send you a link to reset your password.
+                            Enter your email address to receive a reset link.
                           </DialogDescription>
                         </DialogHeader>
                         <div className="py-4">
@@ -187,7 +214,6 @@ export default function LoginPage() {
                             placeholder="name@example.com"
                             value={resetEmail}
                             onChange={(e) => setResetEmail(e.target.value)}
-                            suppressHydrationWarning
                           />
                         </div>
                         <DialogFooter>
@@ -206,13 +232,11 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required 
-                    suppressHydrationWarning
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-3 text-muted-foreground hover:text-primary transition-colors focus:outline-none"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
