@@ -1,9 +1,6 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // --- HELPER FUNCTIONS ---
 
     function isSignedIn() {
       return request.auth != null;
@@ -13,18 +10,56 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // --- COLLECTION GROUP RULES ---
-    // Required for portfolio-wide scans and resident profile lookups
+    // USERS ROOT
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
 
+      // PROPERTIES
+      match /properties/{propertyId} {
+        allow read, write: if isOwner(userId);
+
+        // TENANTS SUBCOLLECTION
+        match /tenants/{tenantId} {
+          allow read, write: if isOwner(userId);
+        }
+
+        // MAINTENANCE REQUESTS SUBCOLLECTION
+        match /maintenanceRequests/{requestId} {
+          allow read, write: if isOwner(userId);
+        }
+
+        // EMERGENCY CONTACTS SUBCOLLECTION
+        match /emergencyContacts/{contactId} {
+          allow read, write: if isOwner(userId);
+          allow read: if isSignedIn();
+        }
+
+        // INSPECTIONS SUBCOLLECTION
+        match /inspections/{inspectionId} {
+          allow read, write: if isOwner(userId);
+        }
+      }
+    }
+
+    // DOCUMENTS COLLECTION
+    match /documents/{documentId} {
+      allow read: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid ||
+        resource.data.uploadedByUserId == request.auth.uid ||
+        resource.data.tenantUserProfileId == request.auth.uid
+      );
+      allow write: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid ||
+        resource.data.uploadedByUserId == request.auth.uid
+      );
+      allow create: if isSignedIn();
+    }
+
+    // COLLECTION GROUP RULES FOR PORTFOLIO VIEWS
     match /{path=**}/tenants/{tenantId} {
       allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.userProfileId == request.auth.uid
-      );
-      allow get: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.userProfileId == request.auth.uid ||
-        tenantId == request.auth.uid
       );
     }
 
@@ -33,60 +68,6 @@ service cloud.firestore {
         resource.data.landlordId == request.auth.uid || 
         resource.data.reportedByUserId == request.auth.uid
       );
-      allow get: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.reportedByUserId == request.auth.uid
-      );
-    }
-
-    // --- HIERARCHICAL RULES ---
-
-    match /users/{userId} {
-      allow read, write: if isOwner(userId);
-
-      match /properties/{propertyId} {
-        allow read, write: if isOwner(userId);
-        
-        // Allow residents to see their own property details
-        allow get: if isSignedIn() && (
-          isOwner(userId) || 
-          exists(/databases/$(database)/documents/users/$(userId)/properties/$(propertyId)/tenants/$(request.auth.uid))
-        );
-
-        // 🔥 TENANTS SUBCOLLECTION (CRITICAL)
-        match /tenants/{tenantId} {
-          allow read, write: if isOwner(userId);
-        }
-
-        match /maintenanceRequests/{requestId} {
-          allow read, write: if isOwner(userId);
-          allow create: if isSignedIn() && request.resource.data.reportedByUserId == request.auth.uid;
-          allow update: if isSignedIn() && (
-            isOwner(userId) || 
-            resource.data.reportedByUserId == request.auth.uid
-          );
-        }
-
-        match /emergencyContacts/{contactId} {
-          allow read, write: if isOwner(userId);
-          allow read: if isSignedIn() && exists(/databases/$(database)/documents/users/$(userId)/properties/$(propertyId)/tenants/$(request.auth.uid));
-        }
-        
-        match /inspections/{inspectionId} {
-          allow read, write: if isOwner(userId);
-        }
-      }
-    }
-
-    // --- TOP-LEVEL VAULT ---
-
-    match /documents/{documentId} {
-      allow read, write: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid ||
-        resource.data.uploadedByUserId == request.auth.uid ||
-        resource.data.tenantUserProfileId == request.auth.uid
-      );
-      allow create: if isSignedIn();
     }
   }
 }
