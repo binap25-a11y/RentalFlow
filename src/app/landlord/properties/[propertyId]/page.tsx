@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, use, useRef } from 'react';
@@ -57,11 +58,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: documents } = useCollection(docsQuery);
 
-  // Filter for photos only
   const photos = documents?.filter(d => d.documentType === 'Property Photo') || [];
   const complianceDocs = documents?.filter(d => d.documentType !== 'Property Photo') || [];
 
-  // Form states
   const [isEditing, setIsEditing] = useState(false);
   const [rentAmount, setRentAmount] = useState('');
   const [newDocType, setNewDocType] = useState('Tenancy Agreement');
@@ -70,17 +69,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const handleUpdateRent = () => {
     if (!propertyRef) return;
-    
     const rentValue = Number(rentAmount);
     if (rentValue < 0) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Rent",
-        description: "Monthly rent cannot be negative.",
-      });
+      toast({ variant: "destructive", title: "Invalid Rent", description: "Monthly rent cannot be negative." });
       return;
     }
-
     updateDocumentNonBlocking(propertyRef, {
       rentAmount: rentValue,
       updatedAt: serverTimestamp(),
@@ -92,7 +85,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const handleUploadDoc = () => {
     if (!user || !db) return;
     setIsUploading(true);
-
     const docId = doc(collection(db, 'dummy')).id;
     const docRef = doc(db, 'documents', docId);
 
@@ -103,8 +95,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       documentType: newDocType,
       propertyId: propertyId,
       expiryDate: newDocExpiry,
-      uploadedByUserId: user.uid,
-      landlordId: user.uid,
+      uploadedByUserId: user.uid, // REQUIRED BY SECURITY RULES
+      landlordId: user.uid,       // REQUIRED BY SECURITY RULES
       createdAt: serverTimestamp(),
     }, { merge: true });
 
@@ -131,8 +123,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           fileUrl: base64String,
           documentType: 'Property Photo',
           propertyId: propertyId,
-          uploadedByUserId: user.uid,
-          landlordId: user.uid,
+          uploadedByUserId: user.uid, // REQUIRED BY SECURITY RULES
+          landlordId: user.uid,       // REQUIRED BY SECURITY RULES
           createdAt: serverTimestamp(),
         }, { merge: true });
 
@@ -241,7 +233,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="icon"><Edit3 className="w-4 h-4" /></Button>
                         <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="w-4 h-4" /></Button>
                       </div>
                     </CardContent>
@@ -256,13 +247,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 <Button size="sm" className="rounded-xl" onClick={() => fileInputRef.current?.click()}>
                   <Plus className="w-4 h-4 mr-2" /> Add Photos
                 </Button>
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  className="hidden" 
-                  accept="image/*" 
-                  onChange={handleAddPhoto} 
-                />
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleAddPhoto} />
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -293,9 +278,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     <div className="space-y-2">
                       <Label>Document Type</Label>
                       <Select value={newDocType} onValueChange={setNewDocType}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {DOC_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
                         </SelectContent>
@@ -338,9 +321,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                             </div>
                             <div className="flex items-center gap-3">
                               <Badge variant={status.variant}>{status.label}</Badge>
-                              <Button variant="ghost" size="icon" className="rounded-full">
-                                <Download className="w-4 h-4" />
-                              </Button>
+                              <Button variant="ghost" size="icon" className="rounded-full"><Download className="w-4 h-4" /></Button>
                             </div>
                           </CardContent>
                         </Card>
@@ -350,41 +331,18 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 </div>
               </div>
             </TabsContent>
-
-            <TabsContent value="maintenance" className="mt-6 space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold font-headline">Maintenance Requests</h3>
-                <Button size="sm" className="rounded-xl" asChild>
-                  <Link href="/landlord/maintenance">
-                    <Wrench className="w-4 h-4 mr-2" /> Manage Issues
-                  </Link>
-                </Button>
-              </div>
-            </TabsContent>
           </Tabs>
         </div>
 
         <div className="space-y-8">
           <Card className="border-none shadow-sm">
-            <CardHeader>
-              <CardTitle>Portfolio Status</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Portfolio Status</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="p-4 bg-accent/10 rounded-xl flex gap-3">
                 <Info className="w-5 h-5 text-accent shrink-0" />
                 <p className="text-xs text-accent-foreground leading-relaxed italic">
                   Keep your EICR and Gas Safety up to date to ensure legal compliance for your property.
                 </p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-muted/30 p-4 rounded-xl text-center">
-                  <p className="text-2xl font-bold">{photos.length + 1}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Photos</p>
-                </div>
-                <div className="bg-muted/30 p-4 rounded-xl text-center">
-                  <p className="text-2xl font-bold">{complianceDocs.length}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Docs</p>
-                </div>
               </div>
             </CardContent>
           </Card>
