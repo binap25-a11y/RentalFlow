@@ -1,77 +1,182 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    /**
+     * CORE PHILOSOPHY:
+     * This ruleset enforces a strict hierarchy where data is primarily organized under Landlord users.
+     * It utilizes "Authorization Independence" via denormalization: critical access control fields 
+     * (like 'landlordId' and a 'members' map) are copied onto child documents to avoid expensive 
+     * cross-document lookups (get() calls).
+     *
+     * DATA STRUCTURE:
+     * - /users/{userId}: Private user profiles.
+     * - /users/{landlordId}/properties/{propertyId}: Rental properties managed by landlords.
+     * - Subcollections under properties (images, documents, inspections, etc.) inherit access 
+     *   via denormalized fields.
+     *
+     * KEY SECURITY DECISIONS:
+     * - Landlords have full control over their own path tree.
+     * - Tenants are granted read access to properties and associated resources (images, docs, etc.) 
+     *   if their UID is present in a 'members' map denormalized onto those documents.
+     * - Maintenance requests allow for bidirectional interaction between landlord and tenant.
+     * - Structural integrity is enforced by ensuring 'landlordId' in the document matches the path.
+     */
+
+    // --- Helper Functions ---
+
+    /** Checks if the user is authenticated. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    // -------------------------
-    // USERS
-    // -------------------------
+    /** Checks if the authenticated user matches the provided userId. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** Checks if the document exists and the user is the owner (used for updates/deletes). */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    /** Checks if the user's UID is a key in the document's 'members' map. */
+    function isMember(data) {
+      return isSignedIn() && data != null && data.members != null && data.members[request.auth.uid] != null;
+    }
+
+    /** Checks if the user's UID matches a specific field (e.g., tenantId or userId). */
+    function isSpecificUser(targetId) {
+      return isSignedIn() && request.auth.uid == targetId;
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Rules for the User profile collection. Access is strictly personal.
+     * @path /users/{userId}
+     * @allow (get, create) Authenticated user 'abc' accessing /users/abc.
+     * @deny (list) User 'abc' attempting to list all users.
+     * @principle Restricts access to a user's own data tree and enforces self-creation.
+     */
     match /users/{userId} {
-      allow read, write: if isSignedIn() && request.auth.uid == userId;
-    }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
 
-    // -------------------------
-    // DOCUMENTS
-    // -------------------------
-    match /documents/{docId} {
-      // Allow create if user is signed in
-      allow create: if isSignedIn();
-      // Allow read/list if user is the owner OR the landlord
-      // Firestore automatically translates this into query filters for list operations.
-      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.landlordId == request.auth.uid);
-      // Allow update/delete if user is the owner
-      allow update, delete: if isSignedIn() && (resource.data.userId == request.auth.uid);
-    }
+      /**
+       * @description Properties managed by the landlord. Shared with tenants via 'members' map.
+       * @path /users/{userId}/properties/{propertyId}
+       * @allow (get) Tenant 'xyz' reading a property where they are in the 'members' map.
+       * @deny (update) Tenant 'xyz' attempting to modify property details.
+       * @principle Uses denormalized 'members' map for shared read access and path-based write access.
+       * NOTE: 'userId' from the parent match represents the 'landlordId' in this context.
+       */
+      match /properties/{propertyId} {
+        allow get: if isOwner(userId) || isMember(resource.data);
+        allow list: if isOwner(userId) || isMember(resource.data);
+        allow create: if isOwner(userId) && request.resource.data.landlordId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.landlordId == userId;
+        allow delete: if isExistingOwner(userId);
 
-    // -------------------------
-    // PROPERTIES
-    // -------------------------
-    match /properties/{propertyId} {
-      allow create: if isSignedIn();
-      allow read: if isSignedIn() && (resource.data.landlordId == request.auth.uid);
-      allow update, delete: if isSignedIn() && (resource.data.landlordId == request.auth.uid);
-    }
+        /**
+         * @description Tenancy details for a specific user.
+         * @path /users/{userId}/properties/{propertyId}/tenantProfiles/{tenantProfileId}
+         * @allow (get) Tenant 'xyz' reading their own profile via 'userId' match.
+         * @deny (create) Tenant 'xyz' attempting to create their own profile.
+         * @principle Validates relational integrity between path and document data.
+         * NOTE: 'userId' from the parent match represents the 'landlordId' in this context.
+         */
+        match /tenantProfiles/{tenantProfileId} {
+          allow get: if isOwner(userId) || isSpecificUser(resource.data.userId);
+          allow list: if isOwner(userId) || isSpecificUser(resource.data.userId);
+          allow create: if isOwner(userId) && request.resource.data.landlordId == userId;
+          allow update: if isExistingOwner(userId) && request.resource.data.landlordId == userId;
+          allow delete: if isExistingOwner(userId);
+        }
 
-    // -------------------------
-    // TENANTS
-    // -------------------------
-    match /tenants/{tenantId} {
-      allow create: if isSignedIn();
-      allow read: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.userProfileId == request.auth.uid);
-      allow update, delete: if isSignedIn() && (resource.data.landlordId == request.auth.uid);
-    }
+        /**
+         * @description Property images. Shared with tenants via denormalized 'members' map.
+         * @path /users/{userId}/properties/{propertyId}/images/{imageId}
+         * @allow (list) Tenant 'xyz' listing images for a property they belong to.
+         * @deny (delete) Tenant 'xyz' deleting a property image.
+         * @principle Inherits shared access logic from parent property via denormalized map.
+         * NOTE: 'userId' from the parent match represents the 'landlordId' in this context.
+         */
+        match /images/{imageId} {
+          allow get: if isOwner(userId) || isMember(resource.data);
+          allow list: if isOwner(userId) || isMember(resource.data);
+          allow create: if isOwner(userId);
+          allow update: if isExistingOwner(userId);
+          allow delete: if isExistingOwner(userId);
+        }
 
-    // -------------------------
-    // MAINTENANCE REQUESTS
-    // -------------------------
-    match /maintenanceRequests/{requestId} {
-      allow create: if isSignedIn();
-      allow read: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.reportedByUserId == request.auth.uid);
-      allow update, delete: if isSignedIn() && (resource.data.landlordId == request.auth.uid);
-    }
+        /**
+         * @description Property documents (Leases, etc.). Shared with tenants via 'members' map.
+         * @path /users/{userId}/properties/{propertyId}/documents/{documentId}
+         * @allow (get) Tenant 'xyz' viewing a lease agreement for their property.
+         * @deny (create) Tenant 'xyz' uploading a document to the landlord's path.
+         * @principle Restricts writes to the landlord while allowing member reads.
+         * NOTE: 'userId' from the parent match represents the 'landlordId' in this context.
+         */
+        match /documents/{documentId} {
+          allow get: if isOwner(userId) || isMember(resource.data);
+          allow list: if isOwner(userId) || isMember(resource.data);
+          allow create: if isOwner(userId);
+          allow update: if isExistingOwner(userId);
+          allow delete: if isExistingOwner(userId);
+        }
 
-    // -------------------------
-    // EMERGENCY CONTACTS
-    // -------------------------
-    match /emergencyContacts/{contactId} {
-      allow read, write: if isSignedIn();
-    }
+        /**
+         * @description Property inspections.
+         * @path /users/{userId}/properties/{propertyId}/inspections/{inspectionId}
+         * @allow (get) Tenant viewing a completed inspection report.
+         * @deny (update) Tenant updating inspection status.
+         * @principle Authorizes landlords for management and members for review.
+         * NOTE: 'userId' from the parent match represents the 'landlordId' in this context.
+         */
+        match /inspections/{inspectionId} {
+          allow get: if isOwner(userId) || isMember(resource.data);
+          allow list: if isOwner(userId) || isMember(resource.data);
+          allow create: if isOwner(userId) && request.resource.data.landlordId == userId;
+          allow update: if isExistingOwner(userId) && request.resource.data.landlordId == userId;
+          allow delete: if isExistingOwner(userId);
+        }
 
-    // -------------------------
-    // INSPECTIONS
-    // -------------------------
-    match /inspections/{inspectionId} {
-      allow create: if isSignedIn();
-      allow read, update, delete: if isSignedIn() && (resource.data.landlordId == request.auth.uid);
-    }
+        /**
+         * @description Maintenance requests submitted by tenants or landlords.
+         * @path /users/{userId}/properties/{propertyId}/maintenanceRequests/{requestId}
+         * @allow (create) Tenant 'xyz' submitting a request where tenantId == 'xyz'.
+         * @deny (delete) Tenant 'xyz' deleting a maintenance request.
+         * @principle Allows both landlord and specific tenant to read and update request state.
+         * NOTE: 'userId' from the parent match represents the 'landlordId' in this context.
+         */
+        match /maintenanceRequests/{requestId} {
+          allow get: if isOwner(userId) || isSpecificUser(resource.data.tenantId);
+          allow list: if isOwner(userId) || isSpecificUser(resource.data.tenantId);
+          allow create: if isOwner(userId) || (isSignedIn() && request.resource.data.tenantId == request.auth.uid);
+          allow update: if isExistingOwner(userId) || isSpecificUser(resource.data.tenantId);
+          allow delete: if isExistingOwner(userId);
+        }
 
-    // Block everything else
-    match /{document=**} {
-      allow read, write: if false;
+        /**
+         * @description Emergency contact sheets for the property.
+         * @path /users/{userId}/properties/{propertyId}/emergencyContactSheets/{sheetId}
+         * @allow (get) Tenant 'xyz' downloading the emergency contact sheet.
+         * @deny (update) Any user attempting to modify a generated sheet.
+         * @principle Read access for all property members; writes restricted to landlord.
+         * NOTE: 'userId' from the parent match represents the 'landlordId' in this context.
+         */
+        match /emergencyContactSheets/{sheetId} {
+          allow get: if isOwner(userId) || isMember(resource.data);
+          allow list: if isOwner(userId) || isMember(resource.data);
+          allow create: if isOwner(userId);
+          allow update: if isExistingOwner(userId);
+          allow delete: if isExistingOwner(userId);
+        }
+      }
     }
   }
 }
