@@ -7,7 +7,8 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebas
 import { collection, query, where } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { format, isBefore, addDays } from "date-fns";
+import { format, isBefore, addDays, isValid } from "date-fns";
+import { useMemo } from "react";
 
 export default function LandlordDashboard() {
   const { user } = useUser();
@@ -31,43 +32,38 @@ export default function LandlordDashboard() {
 
   const { data: documents } = useCollection(documentsQuery);
 
-  const stats = [
-    { 
-      label: 'Total Properties', 
-      value: properties?.length || 0, 
-      icon: Building2, 
-      color: 'text-blue-600', 
-      bg: 'bg-blue-50' 
-    },
-    { 
-      label: 'Occupied', 
-      value: properties?.filter(p => p.isOccupied).length || 0, 
-      icon: Users, 
-      color: 'text-violet-600', 
-      bg: 'bg-violet-50' 
-    },
-    { 
-      label: 'Expiring Soon', 
-      value: documents?.filter(d => {
+  const stats = useMemo(() => {
+    const total = properties?.length || 0;
+    const occupied = properties?.filter(p => p.isOccupied).length || 0;
+    const expiring = documents?.filter(d => {
+      if (!d.expiryDate) return false;
+      const expiry = new Date(d.expiryDate);
+      if (!isValid(expiry)) return false;
+      return isBefore(expiry, addDays(new Date(), 30));
+    }).length || 0;
+
+    return [
+      { label: 'Total Properties', value: total, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
+      { label: 'Occupied', value: occupied, icon: Users, color: 'text-violet-600', bg: 'bg-violet-50' },
+      { label: 'Expiring Soon', value: expiring, icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-50' },
+    ];
+  }, [properties, documents]);
+
+  const expiringDocs = useMemo(() => {
+    if (!documents) return [];
+    return documents
+      .filter(d => {
         if (!d.expiryDate) return false;
         const expiry = new Date(d.expiryDate);
+        if (!isValid(expiry)) return false;
         return isBefore(expiry, addDays(new Date(), 30));
-      }).length || 0, 
-      icon: AlertTriangle, 
-      color: 'text-amber-600', 
-      bg: 'bg-amber-50' 
-    },
-  ];
-
-  // Sorting expiring docs in-memory to avoid immediate composite index requirement
-  const expiringDocs = documents?.filter(d => {
-    if (!d.expiryDate) return false;
-    const expiry = new Date(d.expiryDate);
-    return isBefore(expiry, addDays(new Date(), 30));
-  }).sort((a, b) => {
-    if (!a.expiryDate || !b.expiryDate) return 0;
-    return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
-  }) || [];
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.expiryDate!).getTime();
+        const dateB = new Date(b.expiryDate!).getTime();
+        return dateA - dateB;
+      });
+  }, [documents]);
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -104,24 +100,29 @@ export default function LandlordDashboard() {
           </CardHeader>
           <CardContent className="space-y-4">
             {expiringDocs.length > 0 ? (
-              expiringDocs.map((doc) => (
-                <div key={doc.id} className="flex items-center justify-between p-4 rounded-xl bg-amber-50 border border-amber-100">
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 bg-white rounded-lg shadow-sm">
-                      <FileText className="w-5 h-5 text-amber-500" />
+              expiringDocs.map((doc) => {
+                const expiryDate = new Date(doc.expiryDate!);
+                return (
+                  <div key={doc.id} className="flex items-center justify-between p-4 rounded-xl bg-amber-50 border border-amber-100">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 bg-white rounded-lg shadow-sm">
+                        <FileText className="w-5 h-5 text-amber-500" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm">{doc.documentType}</h4>
+                        <p className="text-xs text-muted-foreground">
+                          Expires: {isValid(expiryDate) ? format(expiryDate, 'PPP') : 'Invalid Date'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-sm">{doc.documentType}</h4>
-                      <p className="text-xs text-muted-foreground">Expires: {format(new Date(doc.expiryDate), 'PPP')}</p>
-                    </div>
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link href={`/landlord/properties/${doc.propertyId}`}>
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </Button>
                   </div>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link href={`/landlord/properties/${doc.propertyId}`}>
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </Button>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="p-4 bg-muted rounded-full mb-4">

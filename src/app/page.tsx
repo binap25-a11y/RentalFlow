@@ -62,7 +62,7 @@ export default function LoginPage() {
             }
           }
         } catch (e) {
-          // Errors are handled gracefully or by global listener if configured
+          // Silence error for non-existent profiles during check
         }
       };
       checkProfile();
@@ -82,7 +82,6 @@ export default function LoginPage() {
         toast({ title: "Welcome back", description: "Successfully signed in." });
       }
     } catch (error: any) {
-      // Do not use console.error() as it triggers the Next.js Error Overlay in development
       let message = "An unexpected error occurred. Please try again.";
       
       if (error.code === 'auth/invalid-credential') {
@@ -93,8 +92,6 @@ export default function LoginPage() {
         message = "Password should be at least 6 characters.";
       } else if (error.code === 'auth/user-not-found') {
         message = "No account found with this email.";
-      } else if (error.code === 'auth/wrong-password') {
-        message = "Incorrect password.";
       }
 
       toast({

@@ -2,24 +2,23 @@
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where } from "firebase/firestore";
+import { collection, query, where, collectionGroup } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Phone, FileText, Download, AlertCircle, Wrench, ShieldAlert, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
+import { useMemo } from "react";
 
 export default function TenantHub() {
   const { user } = useUser();
   const db = useFirestore();
 
-  // Fetch tenant's maintenance requests
+  // Fetch tenant's maintenance requests across all landlord paths
   const requestsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Tenants view their own reported requests across the system
-    const { collectionGroup } = require('firebase/firestore');
     return query(
       collectionGroup(db, "maintenanceRequests"),
       where("reportedByUserId", "==", user.uid)
@@ -27,7 +26,11 @@ export default function TenantHub() {
   }, [db, user]);
 
   const { data: requests, isLoading: isRequestsLoading } = useCollection(requestsQuery);
-  const activeRequests = requests?.filter(r => r.status !== 'completed') || [];
+  
+  const activeRequests = useMemo(() => {
+    if (!requests) return [];
+    return requests.filter(r => r.status !== 'completed');
+  }, [requests]);
 
   // Fetch documents assigned to this resident
   const docsQuery = useMemoFirebase(() => {
@@ -115,20 +118,23 @@ export default function TenantHub() {
             </CardHeader>
             <CardContent className="space-y-4">
               {activeRequests.length > 0 ? (
-                activeRequests.map(req => (
-                  <div key={req.id} className="p-4 rounded-xl bg-muted/30 border border-muted">
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge variant="outline" className="capitalize text-[10px] font-bold">{req.status}</Badge>
-                      <span className="text-[10px] text-muted-foreground">
-                        {req.createdAt ? format(new Date(req.createdAt), 'PP') : 'Just now'}
-                      </span>
+                activeRequests.map(req => {
+                  const createdAt = req.createdAt ? new Date(req.createdAt) : null;
+                  return (
+                    <div key={req.id} className="p-4 rounded-xl bg-muted/30 border border-muted">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge variant="outline" className="capitalize text-[10px] font-bold">{req.status}</Badge>
+                        <span className="text-[10px] text-muted-foreground">
+                          {createdAt && isValid(createdAt) ? format(createdAt, 'PP') : 'Just now'}
+                        </span>
+                      </div>
+                      <p className="text-sm font-semibold text-primary mb-1 truncate">{req.title || req.description}</p>
+                      <div className="flex items-center text-xs text-muted-foreground">
+                        <Wrench className="w-3 h-3 mr-1" /> {req.category}
+                      </div>
                     </div>
-                    <p className="text-sm font-semibold text-primary mb-1 truncate">{req.title || req.description}</p>
-                    <div className="flex items-center text-xs text-muted-foreground">
-                      <Wrench className="w-3 h-3 mr-1" /> {req.category}
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <p className="text-sm text-center py-4 text-muted-foreground italic">No active requests</p>
               )}
@@ -142,20 +148,25 @@ export default function TenantHub() {
             </CardHeader>
             <CardContent className="space-y-3">
               {documents && documents.length > 0 ? (
-                documents.map(doc => (
-                  <div key={doc.id} className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors rounded-xl cursor-pointer group">
-                    <div className="flex items-center">
-                      <div className="p-2 bg-blue-50 text-blue-600 rounded-lg mr-3 group-hover:bg-blue-100">
-                        <FileText className="w-5 h-5" />
+                documents.map(doc => {
+                  const createdAt = doc.createdAt ? new Date(doc.createdAt) : null;
+                  return (
+                    <div key={doc.id} className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors rounded-xl cursor-pointer group">
+                      <div className="flex items-center">
+                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg mr-3 group-hover:bg-blue-100">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold truncate max-w-[150px]">{doc.fileName}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            Uploaded {createdAt && isValid(createdAt) ? format(createdAt, 'PP') : 'Recently'}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-bold truncate max-w-[150px]">{doc.fileName}</p>
-                        <p className="text-[10px] text-muted-foreground">Uploaded {doc.createdAt ? format(new Date(doc.createdAt), 'PP') : 'Recently'}</p>
-                      </div>
+                      <Download className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
-                    <Download className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <p className="text-xs text-muted-foreground italic text-center py-2">No shared documents available.</p>
               )}
