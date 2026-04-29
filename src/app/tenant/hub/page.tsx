@@ -1,13 +1,12 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collectionGroup, query, where, doc } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Phone, FileText, Download, AlertCircle, Wrench, ShieldAlert, Home as HomeIcon, Loader2 } from "lucide-react";
+import { MapPin, Phone, FileText, Download, AlertCircle, Wrench, ShieldAlert, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -19,6 +18,8 @@ export default function TenantHub() {
   // Fetch tenant's maintenance requests
   const requestsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
+    // Tenants view their own reported requests across the system
+    const { collectionGroup } = require('firebase/firestore');
     return query(
       collectionGroup(db, "maintenanceRequests"),
       where("reportedByUserId", "==", user.uid)
@@ -28,12 +29,12 @@ export default function TenantHub() {
   const { data: requests, isLoading: isRequestsLoading } = useCollection(requestsQuery);
   const activeRequests = requests?.filter(r => r.status !== 'completed') || [];
 
-  // Fetch documents assigned to this resident (or their property)
+  // Fetch documents assigned to this resident
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Tenants can see documents where they are the uploader or denormalized resident
+    // Filter by tenantUserProfileId as required by security rules for tenant access
     return query(
-      collectionGroup(db, "documents"),
+      collection(db, "documents"),
       where("tenantUserProfileId", "==", user.uid)
     );
   }, [db, user]);
@@ -78,7 +79,7 @@ export default function TenantHub() {
               <h3 className="font-bold font-headline text-lg">About Your Residence</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Welcome to your managed home. Use this portal to view active lease documents, 
-                emergency contacts, and manage your maintenance requests directly with your landlord.
+                emergency guides, and manage your maintenance requests directly with your landlord.
               </p>
               <div className="flex flex-wrap gap-2">
                 <Badge variant="secondary">Active Lease</Badge>

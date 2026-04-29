@@ -3,14 +3,14 @@
 
 import { useState } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
-import { collection, doc, serverTimestamp, query, where } from "firebase/firestore";
+import { collection, doc, serverTimestamp, query, where, collectionGroup } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Wrench, Clock, AlertCircle, Plus, Loader2, CheckCircle2 } from "lucide-react";
+import { Wrench, Clock, Plus, Loader2, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -23,30 +23,7 @@ export default function TenantMaintenancePage() {
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Find the tenant's property assignment
-  const assignmentsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return query(
-      collection(db, "tenants"), // Using a denormalized top-level collection if exists, otherwise search profiles
-      where("userProfileId", "==", user.uid)
-    );
-  }, [db, user]);
-
-  // For the prototype, we assume the tenant knows their property ID or we fetch it from their profile
-  // Let's assume the user profile has the property information
-  const userProfileQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return doc(db, 'users', user.uid);
-  }, [db, user]);
-
-  const { data: profile } = useCollection(useMemoFirebase(() => {
-    // This is a simplified search for the resident's property in the prototype
-    if (!db || !user) return null;
-    return collectionGroup(db, "tenants");
-  }, [db, user]));
-
-  // In a real scenario, we'd have the tenant's propertyId in their profile
-  // For this prototype, we'll allow them to submit to "Current Residence"
+  // For the prototype, we use a fixed context or search for assignments
   const propertyId = "simulated-property-id";
   const landlordId = "simulated-landlord-id";
 
@@ -67,18 +44,18 @@ export default function TenantMaintenancePage() {
     setIsSubmitting(true);
     const requestId = doc(collection(db, 'dummy')).id;
     
-    // We'd ideally have real IDs here. In the prototype, we use path variables
+    // Maintain hierarchical structure while adding denormalized landlordId for filtering
     const requestRef = doc(db, 'users', landlordId, 'properties', propertyId, 'maintenanceRequests', requestId);
 
     setDocumentNonBlocking(requestRef, {
       id: requestId,
       propertyId,
-      landlordId, // Added for easy filtering
-      reportedByUserId: user.uid,
+      landlordId, // REQUIRED for list filtering by landlord
+      reportedByUserId: user.uid, // REQUIRED by security rules for tenant access
       title,
       description,
       status: 'pending',
-      priority: 'routine', // Default, triage will update
+      priority: 'routine',
       category: 'general',
       submittedAt: new Date().toISOString(),
       createdAt: serverTimestamp(),
@@ -144,7 +121,9 @@ export default function TenantMaintenancePage() {
           </h3>
           
           <div className="grid gap-4">
-            {!requests || requests.length === 0 ? (
+            {isLoading ? (
+              <div className="flex justify-center py-20"><Loader2 className="animate-spin" /></div>
+            ) : !requests || requests.length === 0 ? (
               <div className="py-20 text-center bg-muted/20 rounded-2xl border-2 border-dashed">
                 <p className="text-muted-foreground">You haven't submitted any maintenance requests yet.</p>
               </div>
@@ -179,6 +158,3 @@ export default function TenantMaintenancePage() {
     </div>
   );
 }
-
-// Ensure collectionGroup is imported correctly
-import { collectionGroup } from 'firebase/firestore';
