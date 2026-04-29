@@ -13,18 +13,12 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // Check if the current user is a tenant assigned to a specific property
-    function isTenantOfProperty(landlordId, propertyId) {
-      return isSignedIn() && exists(/databases/$(database)/documents/users/$(landlordId)/properties/$(propertyId)/tenants/$(request.auth.uid));
-    }
-
     // --- COLLECTION GROUP RULES ---
+    // Optimized for split OR conditions to satisfy query authorization
 
     match /{path=**}/maintenanceRequests/{requestId} {
-      allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.reportedByUserId == request.auth.uid
-      );
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.reportedByUserId == request.auth.uid;
       
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
@@ -42,15 +36,13 @@ service cloud.firestore {
     }
 
     match /{path=**}/tenants/{tenantId} {
-      allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        ("userProfileId" in resource.data && resource.data.userProfileId == request.auth.uid) ||
-        tenantId == request.auth.uid
-      );
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userProfileId == request.auth.uid;
+      allow list: if isSignedIn() && tenantId == request.auth.uid;
       
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
-        ("userProfileId" in resource.data && resource.data.userProfileId == request.auth.uid) ||
+        resource.data.userProfileId == request.auth.uid ||
         tenantId == request.auth.uid
       );
       
@@ -90,16 +82,14 @@ service cloud.firestore {
     // --- TOP-LEVEL VAULT ---
 
     match /documents/{documentId} {
-      allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.uploadedByUserId == request.auth.uid || 
-        ("tenantUserProfileId" in resource.data && resource.data.tenantUserProfileId == request.auth.uid)
-      );
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.uploadedByUserId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.tenantUserProfileId == request.auth.uid;
       
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.uploadedByUserId == request.auth.uid || 
-        ("tenantUserProfileId" in resource.data && resource.data.tenantUserProfileId == request.auth.uid)
+        resource.data.tenantUserProfileId == request.auth.uid
       );
       
       allow create: if isSignedIn() && request.resource.data.uploadedByUserId == request.auth.uid;
