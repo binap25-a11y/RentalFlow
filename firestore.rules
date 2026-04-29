@@ -53,6 +53,7 @@ service cloud.firestore {
           exists(/databases/$(database)/documents/users/$(userId)/properties/$(propertyId)/tenants/$(request.auth.uid))
         );
 
+        // 🔥 TENANTS SUBCOLLECTION (CRITICAL)
         match /tenants/{tenantId} {
           allow read, write: if isOwner(userId);
         }

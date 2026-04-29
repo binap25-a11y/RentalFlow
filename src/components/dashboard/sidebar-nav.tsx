@@ -64,7 +64,11 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
   return (
     <Sidebar className="border-r border-sidebar-border shadow-2xl">
       <SidebarHeader className="p-6">
-        <Link href={dashboardHref} className="flex items-center gap-2 group" onClick={handleItemClick}>
+        <Link 
+          href={dashboardHref} 
+          className="flex items-center gap-2 group" 
+          onClick={handleItemClick}
+        >
           <div className="p-2 bg-sidebar-primary rounded-xl transition-transform group-hover:scale-110">
             <KeyRound className="w-5 h-5 text-sidebar-primary-foreground" />
           </div>
@@ -78,7 +82,6 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
               <SidebarMenuButton 
                 asChild 
                 isActive={pathname === item.href}
-                onClick={handleItemClick}
                 className={cn(
                   "h-11 rounded-lg transition-all duration-200",
                   pathname === item.href 
