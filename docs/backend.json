@@ -207,7 +207,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Document",
       "type": "object",
-      "description": "Stores metadata about files (e.g., property images, lease agreements, emergency contact PDFs, inspection reports) uploaded to a secure storage bucket.",
+      "description": "Stores metadata about files (e.g., property images, lease agreements, emergency contact PDFs, inspection reports, compliance docs) uploaded to a secure storage bucket.",
       "properties": {
         "id": {
           "type": "string",
@@ -219,12 +219,12 @@
         },
         "fileUrl": {
           "type": "string",
-          "description": "The URL or path to the document in the Supabase storage bucket.",
+          "description": "The URL or path to the document in the storage bucket.",
           "format": "uri"
         },
         "documentType": {
           "type": "string",
-          "description": "The category or type of the document (e.g., 'Property Image', 'Lease Agreement', 'Emergency Contact PDF', 'Inspection Report PDF', 'Maintenance Photo')."
+          "description": "The category or type of the document (e.g., 'Lease Agreement', 'Gas Safety', 'EICR', 'EPC', 'Inspection Report')."
         },
         "description": {
           "type": "string",
@@ -234,13 +234,18 @@
           "type": "string",
           "description": "Optional reference to the Property this document is associated with. (Relationship: Property 1:N Document)"
         },
-        "tenantProfileId": {
+        "expiryDate": {
           "type": "string",
-          "description": "Optional reference to the TenantProfile this document is associated with. (Relationship: TenantProfile 1:N Document)"
+          "description": "Optional renewal or expiration date for the document.",
+          "format": "date"
         },
         "uploadedByUserId": {
           "type": "string",
           "description": "Reference to the UserProfile who uploaded this document. (Relationship: UserProfile 1:N Document)"
+        },
+        "landlordId": {
+          "type": "string",
+          "description": "Denormalized landlord ID for easier authorization checks."
         },
         "createdAt": {
           "type": "string",
@@ -254,6 +259,7 @@
         "fileUrl",
         "documentType",
         "uploadedByUserId",
+        "landlordId",
         "createdAt"
       ]
     },
@@ -692,7 +698,7 @@
           "schema": {
             "$ref": "#/backend/entities/Document"
           },
-          "description": "Stores metadata for various uploaded files (e.g., property images, lease agreements, emergency contacts). Includes denormalized 'landlordId' (from the associated property) and 'tenantUserProfileId' (from an associated tenant's UserProfile, if applicable) for authorization independence, enabling secure and efficient queryable access patterns (QAPs) without 'get()' operations.",
+          "description": "Stores metadata for various uploaded files (e.g., property images, lease agreements, emergency contacts, compliance docs). Includes denormalized 'landlordId' for authorization independence.",
           "params": [
             {
               "name": "documentId",
@@ -701,7 +707,6 @@
           ]
         }
       }
-    ],
-    "reasoning": "The recommended Firestore structure prioritizes Authorization Independence and Structural Segregation to ensure secure, scalable, and easily debuggable security rules. Each collection's security posture is homogeneous, and authorization context is denormalized where necessary to eliminate `get()` calls in rules.User profiles are stored in `/users/{userId}`, where `userId` is `request.auth.uid`. This collection also stores the user's `role` (Landlord or Tenant), which is crucial for all subsequent authorization checks in RentalFlow. For Landlord-managed data (Properties, Tenants, Inspections, Maintenance Requests), a hierarchical path structure is used: `/users/{landlordId}/properties/{propertyId}/...`. This automatically makes the `landlordId` available in the path, simplifying rules to `request.auth.uid == landlordId`. This structure provides robust ownership and access control for all landlord-centric data.For documents, which can relate to properties, tenants, or users and require flexible querying, a top-level `/documents/{documentId}` collection is used. To maintain Authorization Independence and support Queryable Access Patterns (QAPs), the `landlordId` (of the associated property) and `tenantUserProfileId` (of an associated tenant with a login) are explicitly denormalized into each `Document` document. This allows rules to check `resource.data.landlordId == request.auth.uid` or `resource.data.tenantUserProfileId == request.auth.uid` directly, enabling secure `list` operations without requiring expensive or rule-breaking `get()` calls. QAPs are supported across the board by ensuring all necessary authorization fields are either present in the document's data or directly inferable from the path (e.g., `landlordId` in `/users/{landlordId}/...`). For tenant-specific maintenance requests, the `reportedByUserId` field allows tenants to query their own requests using collection group queries, with rules validating `reportedByUserId == request.auth.uid`."
+    ]
   }
 }
