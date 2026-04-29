@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -106,7 +107,8 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 export const useFirebase = (): FirebaseServicesAndUser => {
   const context = useContext(FirebaseContext);
 
-  // Return safe defaults for SSR or uninitialized states instead of throwing
+  // Return safe defaults for SSR or uninitialized states instead of throwing.
+  // This prevents "Firebase core services not available" errors during Next.js pre-rendering.
   if (!context) {
     return {
       firebaseApp: {} as FirebaseApp,

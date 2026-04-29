@@ -75,12 +75,11 @@
         "description": { "type": "string" },
         "propertyId": { "type": "string" },
         "expiryDate": { "type": "string", "format": "date" },
-        "uploadedByUserId": { "type": "string" },
+        "userId": { "type": "string", "description": "The user who owns or is allowed to view this document." },
         "landlordId": { "type": "string" },
-        "tenantUserProfileId": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "fileName", "fileUrl", "documentType", "uploadedByUserId", "landlordId", "createdAt"]
+      "required": ["id", "fileName", "fileUrl", "documentType", "userId", "landlordId", "createdAt"]
     },
     "MaintenanceRequest": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -119,7 +118,7 @@
         }
       },
       {
-        "path": "/users/{landlordId}/properties/{propertyId}",
+        "path": "/properties/{propertyId}",
         "definition": {
           "entityName": "Property",
           "schema": { "$ref": "#/backend/entities/Property" },
@@ -127,7 +126,7 @@
         }
       },
       {
-        "path": "/users/{landlordId}/properties/{propertyId}/tenants/{tenantId}",
+        "path": "/tenants/{tenantId}",
         "definition": {
           "entityName": "TenantProfile",
           "schema": { "$ref": "#/backend/entities/TenantProfile" },
@@ -135,7 +134,7 @@
         }
       },
       {
-        "path": "/users/{landlordId}/properties/{propertyId}/maintenanceRequests/{requestId}",
+        "path": "/maintenanceRequests/{requestId}",
         "definition": {
           "entityName": "MaintenanceRequest",
           "schema": { "$ref": "#/backend/entities/MaintenanceRequest" },
