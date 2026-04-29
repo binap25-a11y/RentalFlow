@@ -5,212 +5,62 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
       "type": "object",
-      "description": "Stores core user information and role within RentalFlow, linking to an external authentication system. This entity differentiates between Landlords and Tenants and directs them to their respective dashboards.",
+      "description": "Stores core user information and role within RentalFlow.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the UserProfile entity."
-        },
-        "email": {
-          "type": "string",
-          "description": "The user's primary email address.",
-          "format": "email"
-        },
-        "firstName": {
-          "type": "string",
-          "description": "The first name of the user."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "The last name of the user."
-        },
-        "role": {
-          "type": "string",
-          "description": "The role of the user within the application, determining their access and interface.",
-          "enum": ["landlord", "tenant"]
-        },
-        "externalAuthId": {
-          "type": "string",
-          "description": "Reference to the unique identifier from the external authentication system."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the user profile was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the user profile was last updated.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "role": { "type": "string", "enum": ["landlord", "tenant"] },
+        "externalAuthId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "email",
-        "role",
-        "externalAuthId",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["id", "email", "role", "externalAuthId", "createdAt", "updatedAt"]
     },
     "Property": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Property",
       "type": "object",
-      "description": "Represents a rental property managed by a landlord, including its details and current status.",
+      "description": "Represents a rental property managed by a landlord.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Property entity."
-        },
-        "landlordId": {
-          "type": "string",
-          "description": "Reference to the UserProfile of the landlord who owns or manages this property. (Relationship: UserProfile 1:N Property)"
-        },
-        "addressLine1": {
-          "type": "string",
-          "description": "The first line of the property's street address."
-        },
-        "addressLine2": {
-          "type": "string",
-          "description": "The second line of the property's street address, if applicable."
-        },
-        "city": {
-          "type": "string",
-          "description": "The city where the property is located."
-        },
-        "state": {
-          "type": "string",
-          "description": "The state where the property is located."
-        },
-        "zipCode": {
-          "type": "string",
-          "description": "The postal code of the property's location."
-        },
-        "description": {
-          "type": "string",
-          "description": "A general description or overview of the property."
-        },
-        "numberOfBedrooms": {
-          "type": "number",
-          "description": "The total number of bedrooms in the property."
-        },
-        "numberOfBathrooms": {
-          "type": "number",
-          "description": "The total number of bathrooms in the property."
-        },
-        "rentAmount": {
-          "type": "number",
-          "description": "The monthly rent amount for the property."
-        },
-        "isOccupied": {
-          "type": "boolean",
-          "description": "Indicates whether the property is currently occupied by a tenant."
-        },
-        "imageUrl": {
-          "type": "string",
-          "description": "The URL or data URI for the primary property banner image."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the property record was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the property record was last updated.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "landlordId": { "type": "string" },
+        "addressLine1": { "type": "string" },
+        "city": { "type": "string" },
+        "state": { "type": "string" },
+        "zipCode": { "type": "string" },
+        "description": { "type": "string" },
+        "numberOfBedrooms": { "type": "number" },
+        "numberOfBathrooms": { "type": "number" },
+        "rentAmount": { "type": "number" },
+        "isOccupied": { "type": "boolean" },
+        "imageUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "landlordId",
-        "addressLine1",
-        "city",
-        "state",
-        "zipCode",
-        "description",
-        "numberOfBedrooms",
-        "numberOfBathrooms",
-        "rentAmount",
-        "isOccupied",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["id", "landlordId", "addressLine1", "city", "state", "zipCode", "description", "rentAmount", "isOccupied", "createdAt", "updatedAt"]
     },
     "TenantProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "TenantProfile",
       "type": "object",
-      "description": "Detailed profile information for a tenant, including their contact details, lease terms, and assigned property.",
+      "description": "Detailed profile information for a tenant.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the TenantProfile entity."
-        },
-        "firstName": {
-          "type": "string",
-          "description": "The first name of the tenant."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "The last name of the tenant."
-        },
-        "email": {
-          "type": "string",
-          "description": "The tenant's email address.",
-          "format": "email"
-        },
-        "phoneNumber": {
-          "type": "string",
-          "description": "The tenant's primary phone number."
-        },
-        "propertyId": {
-          "type": "string",
-          "description": "Reference to the Property where this tenant resides."
-        },
-        "landlordId": {
-          "type": "string",
-          "description": "The unique identifier of the landlord who manages this tenant's property. Required for portfolio-wide queries."
-        },
-        "userProfileId": {
-          "type": "string",
-          "description": "Optional reference to the UserProfile if the tenant has a login account."
-        },
-        "leaseStartDate": {
-          "type": "string",
-          "description": "The start date of the tenant's lease agreement.",
-          "format": "date"
-        },
-        "leaseEndDate": {
-          "type": "string",
-          "description": "The end date of the tenant's lease agreement.",
-          "format": "date"
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the tenant profile was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the tenant profile was last updated.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phoneNumber": { "type": "string" },
+        "propertyId": { "type": "string" },
+        "landlordId": { "type": "string" },
+        "userProfileId": { "type": "string" },
+        "leaseStartDate": { "type": "string", "format": "date" },
+        "leaseEndDate": { "type": "string", "format": "date" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "firstName",
-        "lastName",
-        "email",
-        "phoneNumber",
-        "propertyId",
-        "landlordId",
-        "leaseStartDate",
-        "leaseEndDate",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["id", "firstName", "lastName", "email", "propertyId", "landlordId", "createdAt", "updatedAt"]
     },
     "Document": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -218,226 +68,45 @@
       "type": "object",
       "description": "Stores metadata about files uploaded to a secure storage bucket.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Document entity."
-        },
-        "fileName": {
-          "type": "string",
-          "description": "The original name of the uploaded file."
-        },
-        "fileUrl": {
-          "type": "string",
-          "description": "The URL or data URI of the document.",
-          "format": "uri"
-        },
-        "documentType": {
-          "type": "string",
-          "description": "The category or type of the document."
-        },
-        "description": {
-          "type": "string",
-          "description": "An optional description or caption for the document."
-        },
-        "propertyId": {
-          "type": "string",
-          "description": "Optional reference to the Property this document is associated with."
-        },
-        "expiryDate": {
-          "type": "string",
-          "description": "Optional renewal or expiration date for the document.",
-          "format": "date"
-        },
-        "uploadedByUserId": {
-          "type": "string",
-          "description": "Reference to the UserProfile who uploaded this document."
-        },
-        "landlordId": {
-          "type": "string",
-          "description": "The unique identifier of the landlord who owns the data."
-        },
-        "tenantUserProfileId": {
-          "type": "string",
-          "description": "Optional UID of the tenant allowed to view this document."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the document was uploaded.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "fileName": { "type": "string" },
+        "fileUrl": { "type": "string", "format": "uri" },
+        "documentType": { "type": "string" },
+        "description": { "type": "string" },
+        "propertyId": { "type": "string" },
+        "expiryDate": { "type": "string", "format": "date" },
+        "uploadedByUserId": { "type": "string" },
+        "landlordId": { "type": "string" },
+        "tenantUserProfileId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "fileName",
-        "fileUrl",
-        "documentType",
-        "uploadedByUserId",
-        "landlordId",
-        "createdAt"
-      ]
-    },
-    "Inspection": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Inspection",
-      "type": "object",
-      "description": "Records details of a property inspection.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Inspection entity."
-        },
-        "propertyId": {
-          "type": "string",
-          "description": "Reference to the Property that was inspected."
-        },
-        "scheduledDate": {
-          "type": "string",
-          "description": "The planned date and time for the inspection.",
-          "format": "date-time"
-        },
-        "completedDate": {
-          "type": "string",
-          "description": "The actual date and time when the inspection was completed.",
-          "format": "date-time"
-        },
-        "inspectorUserId": {
-          "type": "string",
-          "description": "Reference to the UserProfile of the landlord or agent who conducted the inspection."
-        },
-        "status": {
-          "type": "string",
-          "description": "The current status of the inspection."
-        },
-        "summary": {
-          "type": "string",
-          "description": "A general summary of the inspection findings."
-        },
-        "reportDocumentId": {
-          "type": "string",
-          "description": "Optional reference to the Document containing the report."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the inspection record was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the inspection record was last updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "propertyId",
-        "scheduledDate",
-        "inspectorUserId",
-        "status",
-        "summary",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["id", "fileName", "fileUrl", "documentType", "uploadedByUserId", "landlordId", "createdAt"]
     },
     "MaintenanceRequest": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "MaintenanceRequest",
       "type": "object",
-      "description": "Records details of maintenance issues reported for a property.",
+      "description": "Records details of maintenance issues.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the MaintenanceRequest entity."
-        },
-        "propertyId": {
-          "type": "string",
-          "description": "Reference to the Property where the maintenance issue was reported."
-        },
-        "landlordId": {
-          "type": "string",
-          "description": "The unique identifier of the landlord who owns the property. Required for portfolio-wide queries."
-        },
-        "reportedByUserId": {
-          "type": "string",
-          "description": "Reference to the UserProfile who reported this maintenance request."
-        },
-        "title": {
-          "type": "string",
-          "description": "A concise title or subject for the maintenance request."
-        },
-        "description": {
-          "type": "string",
-          "description": "A detailed description of the maintenance issue."
-        },
-        "status": {
-          "type": "string",
-          "description": "The current status of the maintenance request."
-        },
-        "priority": {
-          "type": "string",
-          "description": "The priority level of the request."
-        },
-        "category": {
-          "type": "string",
-          "description": "The category of the maintenance issue."
-        },
-        "submittedAt": {
-          "type": "string",
-          "description": "Timestamp when the maintenance request was submitted.",
-          "format": "date-time"
-        },
-        "resolvedAt": {
-          "type": "string",
-          "description": "Optional timestamp when the maintenance request was resolved.",
-          "format": "date-time"
-        },
-        "aiTriageNotes": {
-          "type": "string",
-          "description": "Notes or suggestions generated by AI."
-        },
-        "assignedToUserId": {
-          "type": "string",
-          "description": "Optional reference to the UserProfile assigned to handle this request."
-        },
-        "photoDocumentIds": {
-          "type": "array",
-          "description": "References to Documents containing photos related to the maintenance request.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the maintenance request record was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the maintenance request record was last updated.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "propertyId": { "type": "string" },
+        "landlordId": { "type": "string" },
+        "reportedByUserId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string" },
+        "priority": { "type": "string" },
+        "category": { "type": "string" },
+        "submittedAt": { "type": "string", "format": "date-time" },
+        "aiTriageNotes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "propertyId",
-        "landlordId",
-        "reportedByUserId",
-        "title",
-        "description",
-        "status",
-        "priority",
-        "category",
-        "submittedAt",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["id", "propertyId", "landlordId", "reportedByUserId", "title", "description", "status", "priority", "category", "submittedAt", "createdAt", "updatedAt"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous",
-      "google.com"
-    ]
+    "providers": ["password", "google.com"]
   },
   "firestore": {
     "structure": [
@@ -445,124 +114,40 @@
         "path": "/users/{userId}",
         "definition": {
           "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "Stores core user profiles.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/UserProfile" },
+          "description": "Stores core user profiles."
         }
       },
       {
         "path": "/users/{landlordId}/properties/{propertyId}",
         "definition": {
           "entityName": "Property",
-          "schema": {
-            "$ref": "#/backend/entities/Property"
-          },
-          "description": "Stores rental property details.",
-          "params": [
-            {
-              "name": "landlordId",
-              "description": "The unique identifier of the landlord."
-            },
-            {
-              "name": "propertyId",
-              "description": "The unique identifier for the property."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/Property" },
+          "description": "Stores rental property details."
         }
       },
       {
         "path": "/users/{landlordId}/properties/{propertyId}/tenants/{tenantId}",
         "definition": {
           "entityName": "TenantProfile",
-          "schema": {
-            "$ref": "#/backend/entities/TenantProfile"
-          },
-          "description": "Contains detailed profile information for tenants.",
-          "params": [
-            {
-              "name": "landlordId",
-              "description": "The landlord identifier."
-            },
-            {
-              "name": "propertyId",
-              "description": "The property identifier."
-            },
-            {
-              "name": "tenantId",
-              "description": "The tenant identifier."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{landlordId}/properties/{propertyId}/inspections/{inspectionId}",
-        "definition": {
-          "entityName": "Inspection",
-          "schema": {
-            "$ref": "#/backend/entities/Inspection"
-          },
-          "description": "Records details of property inspections.",
-          "params": [
-            {
-              "name": "landlordId",
-              "description": "The landlord identifier."
-            },
-            {
-              "name": "propertyId",
-              "description": "The property identifier."
-            },
-            {
-              "name": "inspectionId",
-              "description": "The inspection identifier."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/TenantProfile" },
+          "description": "Contains detailed profile information for tenants."
         }
       },
       {
         "path": "/users/{landlordId}/properties/{propertyId}/maintenanceRequests/{requestId}",
         "definition": {
           "entityName": "MaintenanceRequest",
-          "schema": {
-            "$ref": "#/backend/entities/MaintenanceRequest"
-          },
-          "description": "Records maintenance requests.",
-          "params": [
-            {
-              "name": "landlordId",
-              "description": "The landlord identifier."
-            },
-            {
-              "name": "propertyId",
-              "description": "The property identifier."
-            },
-            {
-              "name": "requestId",
-              "description": "The maintenance request identifier."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/MaintenanceRequest" },
+          "description": "Records maintenance requests."
         }
       },
       {
         "path": "/documents/{documentId}",
         "definition": {
           "entityName": "Document",
-          "schema": {
-            "$ref": "#/backend/entities/Document"
-          },
-          "description": "Stores metadata for various uploaded files.",
-          "params": [
-            {
-              "name": "documentId",
-              "description": "The document identifier."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/Document" },
+          "description": "Stores metadata for various uploaded files."
         }
       }
     ]
