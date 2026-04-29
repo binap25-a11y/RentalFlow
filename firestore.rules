@@ -18,9 +18,12 @@ service cloud.firestore {
     // DOCUMENTS
     // -------------------------
     match /documents/{docId} {
+      // Allow create if user is signed in
       allow create: if isSignedIn();
       // Allow read/list if user is the owner OR the landlord
+      // Firestore automatically translates this into query filters for list operations.
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.landlordId == request.auth.uid);
+      // Allow update/delete if user is the owner
       allow update, delete: if isSignedIn() && (resource.data.userId == request.auth.uid);
     }
 

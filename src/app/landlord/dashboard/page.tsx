@@ -31,10 +31,10 @@ export default function LandlordDashboard() {
 
   const documentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Standard security rules require a filter on the owner field
+    // Query documents where the user is the landlord to see relevant certificates/leases
     return query(
       collection(db, "documents"),
-      where("userId", "==", user.uid)
+      where("landlordId", "==", user.uid)
     );
   }, [db, user]);
 

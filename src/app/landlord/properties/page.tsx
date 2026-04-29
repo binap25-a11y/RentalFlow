@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking, useStorage } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useStorage } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Building2, MapPin, Plus, Trash2, Edit3, Loader2, Image as ImageIcon, Upload } from "lucide-react";
+import { Building2, MapPin, Plus, Trash2, Edit3, Loader2, Image as ImageIcon, Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import Image from "next/image";
@@ -34,6 +34,7 @@ export default function PropertiesPage() {
   const { data: properties, isLoading } = useCollection(propertiesQuery);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingProperty, setEditingProperty] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form State
@@ -62,7 +63,33 @@ export default function PropertiesPage() {
     }
   };
 
-  const handleAddProperty = async (e: React.FormEvent) => {
+  const resetForm = () => {
+    setAddress('');
+    setZipCode('');
+    setRentAmount('');
+    setDescription('');
+    setImageFile(null);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+    setEditingProperty(null);
+  };
+
+  const handleOpenAddDialog = () => {
+    resetForm();
+    setIsAddDialogOpen(true);
+  };
+
+  const handleOpenEditDialog = (property: any) => {
+    setEditingProperty(property);
+    setAddress(property.addressLine1);
+    setZipCode(property.zipCode);
+    setRentAmount(property.rentAmount.toString());
+    setDescription(property.description || '');
+    setPreviewUrl(property.imageUrl);
+    setIsAddDialogOpen(true);
+  };
+
+  const handleSaveProperty = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !db || !storage) return;
 
@@ -73,11 +100,12 @@ export default function PropertiesPage() {
     }
 
     setIsSubmitting(true);
-    const propertyId = doc(collection(db, 'dummy')).id;
-    const propertyRef = doc(db, 'properties', propertyId);
-
+    
     try {
-      let finalImageUrl = `https://picsum.photos/seed/${propertyId}/800/600`;
+      const propertyId = editingProperty ? editingProperty.id : doc(collection(db, 'dummy')).id;
+      const propertyRef = doc(db, 'properties', propertyId);
+      
+      let finalImageUrl = editingProperty ? editingProperty.imageUrl : `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile) {
         const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${imageFile.name}`);
@@ -85,41 +113,37 @@ export default function PropertiesPage() {
         finalImageUrl = await getDownloadURL(uploadResult.ref);
       }
 
-      setDocumentNonBlocking(propertyRef, {
+      const data = {
         id: propertyId,
         landlordId: user.uid,
         addressLine1: address,
-        city: 'London',
-        state: 'UK',
+        city: editingProperty?.city || 'London',
+        state: editingProperty?.state || 'UK',
         zipCode: zipCode,
         description: description,
-        numberOfBedrooms: 2,
-        numberOfBathrooms: 1,
+        numberOfBedrooms: editingProperty?.numberOfBedrooms || 2,
+        numberOfBathrooms: editingProperty?.numberOfBathrooms || 1,
         rentAmount: rentValue,
-        isOccupied: false,
+        isOccupied: editingProperty?.isOccupied || false,
         imageUrl: finalImageUrl,
-        createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      }, { merge: true });
+      };
 
-      toast({ title: "Property Added", description: "Successfully created in your portfolio." });
+      if (editingProperty) {
+        updateDocumentNonBlocking(propertyRef, data);
+        toast({ title: "Property Updated", description: "Your changes have been saved." });
+      } else {
+        setDocumentNonBlocking(propertyRef, { ...data, createdAt: serverTimestamp() }, { merge: true });
+        toast({ title: "Property Added", description: "Successfully created in your portfolio." });
+      }
+
       setIsAddDialogOpen(false);
       resetForm();
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Save Failed", description: error.message || "Could not create property record." });
+      toast({ variant: "destructive", title: "Save Failed", description: error.message || "Could not save property record." });
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const resetForm = () => {
-    setAddress('');
-    setZipCode('');
-    setRentAmount('');
-    setDescription('');
-    setImageFile(null);
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl(null);
   };
 
   const handleDeleteProperty = (propertyId: string) => {
@@ -136,22 +160,29 @@ export default function PropertiesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary mb-2">Portfolio Management</h1>
-          <p className="text-muted-foreground font-medium">Add, view and manage your rental assets.</p>
+          <p className="text-muted-foreground font-medium font-body">Add, view and manage your rental assets.</p>
         </div>
         
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+          setIsAddDialogOpen(open);
+          if (!open) resetForm();
+        }}>
           <DialogTrigger asChild>
-            <Button className="rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 font-bold">
+            <Button onClick={handleOpenAddDialog} className="rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 font-bold">
               <Plus className="w-4 h-4 mr-2" />
               Add New Property
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[550px] max-h-[90vh] p-0 rounded-2xl overflow-hidden flex flex-col border-none shadow-2xl">
             <DialogHeader className="p-6 bg-primary/5 border-b">
-              <DialogTitle className="text-2xl font-headline font-bold text-primary">Property Details</DialogTitle>
-              <DialogDescription className="font-medium">Enter the address and financial details for your new property.</DialogDescription>
+              <DialogTitle className="text-2xl font-headline font-bold text-primary">
+                {editingProperty ? 'Edit Property' : 'Property Details'}
+              </DialogTitle>
+              <DialogDescription className="font-medium">
+                {editingProperty ? 'Update the details for this property asset.' : 'Enter the address and financial details for your new property.'}
+              </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleAddProperty} className="flex-1 overflow-hidden flex flex-col">
+            <form onSubmit={handleSaveProperty} className="flex-1 overflow-hidden flex flex-col">
               <ScrollArea className="flex-1 p-6">
                 <div className="grid gap-6">
                   <div className="space-y-2">
@@ -218,9 +249,9 @@ export default function PropertiesPage() {
               <DialogFooter className="p-6 bg-muted/20 border-t">
                 <Button type="submit" className="w-full h-12 rounded-xl font-bold text-lg shadow-lg shadow-primary/10" disabled={isSubmitting}>
                   {isSubmitting ? (
-                    <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Creating Asset...</>
+                    <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Saving...</>
                   ) : (
-                    "Confirm Property Creation"
+                    editingProperty ? "Save Changes" : "Confirm Property Creation"
                   )}
                 </Button>
               </DialogFooter>
@@ -249,11 +280,16 @@ export default function PropertiesPage() {
               <p className="text-sm text-muted-foreground flex items-center"><MapPin className="w-3 h-3 mr-1" /> {property.zipCode}</p>
             </CardHeader>
             <CardFooter className="grid grid-cols-2 gap-2">
-              <Button variant="outline" className="rounded-lg h-9 text-xs font-bold" asChild>
-                <Link href={`/landlord/properties/${property.id}`}><Edit3 className="w-3 h-3 mr-2" /> Manage</Link>
-              </Button>
-              <Button variant="ghost" className="rounded-lg h-9 text-xs text-destructive hover:bg-destructive/10" onClick={() => handleDeleteProperty(property.id)}>
-                <Trash2 className="w-3 h-3 mr-2" /> Delete
+              <div className="flex gap-2 w-full">
+                <Button variant="outline" size="sm" className="flex-1 rounded-lg font-bold h-9" asChild>
+                  <Link href={`/landlord/properties/${property.id}`}><Building2 className="w-3 h-3 mr-2" /> Details</Link>
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1 rounded-lg font-bold h-9 border-primary/20 text-primary hover:bg-primary/5" onClick={() => handleOpenEditDialog(property)}>
+                  <Edit3 className="w-3 h-3 mr-2" /> Edit
+                </Button>
+              </div>
+              <Button variant="ghost" className="col-span-2 rounded-lg h-9 text-xs text-destructive hover:bg-destructive/10" onClick={() => handleDeleteProperty(property.id)}>
+                <Trash2 className="w-3 h-3 mr-2" /> Remove Asset
               </Button>
             </CardFooter>
           </Card>
