@@ -135,45 +135,45 @@ export default function PropertiesPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-headline font-bold text-primary mb-2">Properties</h1>
-          <p className="text-muted-foreground font-medium">Manage your rental assets and occupancy status.</p>
+          <h1 className="text-3xl font-headline font-bold text-primary mb-2">Portfolio Management</h1>
+          <p className="text-muted-foreground font-medium">Add, view and manage your rental assets.</p>
         </div>
         
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="rounded-xl shadow-lg shadow-primary/20">
+            <Button className="rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 font-bold">
               <Plus className="w-4 h-4 mr-2" />
               Add New Property
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[550px] max-h-[90vh] p-0 rounded-2xl overflow-hidden flex flex-col">
-            <DialogHeader className="p-6 pb-2">
-              <DialogTitle className="text-2xl font-headline">Add Property</DialogTitle>
-              <DialogDescription>Enter the details of your new rental property.</DialogDescription>
+          <DialogContent className="sm:max-w-[550px] max-h-[90vh] p-0 rounded-2xl overflow-hidden flex flex-col border-none shadow-2xl">
+            <DialogHeader className="p-6 bg-primary/5 border-b">
+              <DialogTitle className="text-2xl font-headline font-bold text-primary">Property Details</DialogTitle>
+              <DialogDescription className="font-medium">Enter the address and financial details for your new property.</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleAddProperty} className="flex-1 overflow-hidden flex flex-col">
-              <ScrollArea className="flex-1 p-6 pt-2">
+              <ScrollArea className="flex-1 p-6">
                 <div className="grid gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="address">Full Address</Label>
-                    <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="123 Example Street" className="rounded-xl" />
+                    <Label htmlFor="address" className="font-bold text-xs uppercase tracking-widest text-primary/60">Full Address</Label>
+                    <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="123 Example Street" className="rounded-xl h-11" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="zipCode">Postcode</Label>
-                      <Input id="zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required placeholder="SW1A 1AA" className="rounded-xl" />
+                      <Label htmlFor="zipCode" className="font-bold text-xs uppercase tracking-widest text-primary/60">Postcode</Label>
+                      <Input id="zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required placeholder="SW1A 1AA" className="rounded-xl h-11" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="rent">Monthly Rent (£)</Label>
-                      <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required placeholder="1200" className="rounded-xl" />
+                      <Label htmlFor="rent" className="font-bold text-xs uppercase tracking-widest text-primary/60">Monthly Rent (£)</Label>
+                      <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required placeholder="1200" className="rounded-xl h-11" />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="desc">Description</Label>
-                    <Input id="desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Modern flat with garden access..." className="rounded-xl" />
+                    <Label htmlFor="desc" className="font-bold text-xs uppercase tracking-widest text-primary/60">Public Description</Label>
+                    <Input id="desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. Modern flat with garden access..." className="rounded-xl h-11" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="image">Property Photo</Label>
+                    <Label htmlFor="image" className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Showcase Photo</Label>
                     <div className="flex flex-col items-center gap-4">
                       <Input 
                         id="image" 
@@ -185,7 +185,7 @@ export default function PropertiesPage() {
                       <Button 
                         type="button" 
                         variant="outline" 
-                        className="w-full h-48 border-dashed border-2 rounded-2xl flex flex-col items-center justify-center gap-2 overflow-hidden relative group hover:bg-muted/50 transition-colors"
+                        className="w-full h-48 border-dashed border-2 rounded-2xl flex flex-col items-center justify-center gap-2 overflow-hidden relative group hover:bg-primary/5 hover:border-primary/20 transition-all"
                         onClick={() => document.getElementById('image')?.click()}
                       >
                         {previewUrl ? (
@@ -203,9 +203,11 @@ export default function PropertiesPage() {
                           </div>
                         ) : (
                           <>
-                            <Upload className="w-10 h-10 text-muted-foreground mb-1" />
+                            <div className="p-3 bg-primary/5 rounded-full text-primary">
+                                <Upload className="w-6 h-6" />
+                            </div>
                             <span className="text-sm text-muted-foreground font-semibold">Click to upload photo</span>
-                            <span className="text-[10px] text-muted-foreground/60">Supports JPG, PNG, WEBP</span>
+                            <span className="text-[10px] text-muted-foreground/60 uppercase tracking-widest font-bold">JPG, PNG, WEBP</span>
                           </>
                         )}
                       </Button>
@@ -213,10 +215,10 @@ export default function PropertiesPage() {
                   </div>
                 </div>
               </ScrollArea>
-              <DialogFooter className="p-6 border-t bg-muted/20">
-                <Button type="submit" className="w-full h-12 rounded-xl font-bold text-lg" disabled={isSubmitting}>
+              <DialogFooter className="p-6 bg-muted/20 border-t">
+                <Button type="submit" className="w-full h-12 rounded-xl font-bold text-lg shadow-lg shadow-primary/10" disabled={isSubmitting}>
                   {isSubmitting ? (
-                    <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Saving Property...</>
+                    <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Creating Asset...</>
                   ) : (
                     "Confirm Property Creation"
                   )}
