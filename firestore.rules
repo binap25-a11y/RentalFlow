@@ -1,0 +1,172 @@
+/**
+ * LeaseLoop Security Rules
+ * 
+ * Core Philosophy:
+ * This ruleset implements a hierarchical ownership model centered around Landlords. 
+ * Most application data (Properties, Tenants, Inspections, Maintenance) is logically 
+ * and physically nested under a Landlord's unique identifier in the path. This 
+ * provides "Authorization Independence," where the path itself determines primary 
+ * access rights.
+ * 
+ * Data Structure:
+ * - /users/{userId}: Root user profiles.
+ * - /users/{landlordId}/properties/{propertyId}: Property management tree.
+ *   (Note: 'landlordId' in documentation refers to the 'userId' path segment in the actual rules.)
+ * - /documents/{documentId}: Global metadata for files, using denormalized 
+ *   UIDs (landlordId, tenantUserProfileId) to allow efficient access without 
+ *   expensive cross-document lookups.
+ * 
+ * Key Security Decisions:
+ * 1. Path-Based Authorization: We rely on the {userId} variable from the parent
+ *    match in the path to grant primary read/write access to the owner of the 
+ *    property tree (who is the landlord).
+ * 2. Multi-Role Access: While Landlords own the path, certain documents (like 
+ *    MaintenanceRequests or TenantProfiles) allow secondary access for Tenants 
+ *    based on denormalized UID fields (e.g., reportedByUserId, userProfileId).
+ * 3. Prototyping Flexibility: Rules enforce relational integrity (matching 
+ *    internal IDs to paths) but do not enforce strict schema types for 
+ *    non-critical data fields to allow for rapid UI/UX iteration.
+ * 4. Structural Segregation: User data is strictly separated from property data. 
+ *    Documents are stored at the top level to facilitate cross-entity association 
+ *    while maintaining security via internal metadata.
+ * 
+ * Denormalization for Authorization:
+ * We explicitly denormalize 'landlordId', 'tenantUserProfileId', and 
+ * 'reportedByUserId' into documents to ensure that 'list' operations can be 
+ * secured via simple filters without requiring 'get()' calls, which are limited 
+ * and costly in security rules.
+ */
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- HELPER FUNCTIONS ---
+
+    /** @description Checks if a user is authenticated. */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** @description Checks if the authenticated user's UID matches the provided ID. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** @description Checks if the user is the owner and the document exists. Used for updates and deletes. */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    /** @description Checks if the authenticated user is the one specified in a document's data field. */
+    function isUserInData(fieldName) {
+      return isSignedIn() && resource.data[fieldName] == request.auth.uid;
+    }
+
+    /** @description Checks if the authenticated user is the one specified in the incoming data. */
+    function isUserInIncomingData(fieldName) {
+      return isSignedIn() && request.resource.data[fieldName] == request.auth.uid;
+    }
+
+    // --- COLLECTION RULES ---
+
+    /**
+     * @description Rules for UserProfile. Users can manage their own profiles.
+     * @path /users/{userId}
+     * @allow (create) if auth.uid matches path userId.
+     * @deny (read) if auth.uid does not match path userId.
+     * @principle Ownership and Self-Creation.
+     */
+    match /users/{userId} { // userId is the variable for the user's ID
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+      
+      /**
+       * @description Rules for Properties. Primary access is granted to the landlord identified in the path.
+       * @path /users/{userId}/properties/{propertyId} (where userId acts as landlordId)
+       * @allow (create) if auth.uid matches userId.
+       * @deny (update) if auth.uid does not match the userId in the path.
+       * @principle Path-based ownership.
+       */
+      match /properties/{propertyId} {
+        // Corrected: use 'userId' from the parent match block as the landlordId
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.landlordId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.landlordId == resource.data.landlordId;
+        allow delete: if isExistingOwner(userId);
+
+        /**
+         * @description Rules for TenantProfiles. Landlords manage them; Tenants can read their own.
+         * @path /users/{userId}/properties/{propertyId}/tenants/{tenantId} (where userId acts as landlordId)
+         * @allow (get) if user is the landlord or the tenant (via userProfileId).
+         * @principle Hierarchical ownership with secondary field-based access.
+         */
+        match /tenants/{tenantId} {
+          // Corrected: use 'userId' from the parent match block as the landlordId
+          allow get: if isOwner(userId) || isUserInData('userProfileId');
+          allow list: if isOwner(userId) || isUserInData('userProfileId');
+          allow create: if isOwner(userId);
+          allow update: if isExistingOwner(userId);
+          allow delete: if isExistingOwner(userId);
+        }
+
+        /**
+         * @description Rules for Inspections. Managed strictly by the landlord.
+         * @path /users/{userId}/properties/{propertyId}/inspections/{inspectionId} (where userId acts as landlordId)
+         */
+        match /inspections/{inspectionId} {
+          // Corrected: use 'userId' from the parent match block as the landlordId
+          allow get, list: if isOwner(userId);
+          allow create: if isOwner(userId) && request.resource.data.propertyId == propertyId;
+          allow update: if isExistingOwner(userId);
+          allow delete: if isExistingOwner(userId);
+
+          /** @path /users/{userId}/properties/{propertyId}/inspections/{inspectionId}/items/{itemId} */
+          match /items/{itemId} {
+            // Corrected: use 'userId' from the grandparent match block as the landlordId
+            allow get, list: if isOwner(userId);
+            allow create, update, delete: if isOwner(userId);
+          }
+        }
+
+        /**
+         * @description Rules for MaintenanceRequests. Landlords own the tree, but tenants can report issues.
+         * @path /users/{userId}/properties/{propertyId}/maintenanceRequests/{requestId} (where userId acts as landlordId)
+         * @allow (create) if user is landlord OR user is the reporter.
+         * @principle Shared access based on path and reporter status.
+         */
+        match /maintenanceRequests/{requestId} {
+          // Corrected: use 'userId' from the parent match block as the landlordId
+          allow get, list: if isOwner(userId) || isUserInData('reportedByUserId') || isUserInData('assignedToUserId');
+          allow create: if isOwner(userId) || isUserInIncomingData('reportedByUserId');
+          allow update: if isExistingOwner(userId) || isUserInData('reportedByUserId') || isUserInData('assignedToUserId');
+          allow delete: if isExistingOwner(userId);
+
+          /** @path /users/{userId}/properties/{propertyId}/maintenanceRequests/{requestId}/logs/{logId} */
+          match /logs/{logId} {
+            // Corrected: use 'userId' from the grandparent match block as the landlordId
+            allow get, list: if isOwner(userId) || get(/databases/$(database)/documents/users/$(userId)/properties/$(propertyId)/maintenanceRequests/$(requestId)).data.reportedByUserId == request.auth.uid;
+            allow create: if isOwner(userId) || isUserInIncomingData('actorUserId');
+            allow update, delete: if isOwner(userId);
+          }
+        }
+      }
+    }
+
+    /**
+     * @description Rules for global Document metadata. Uses denormalized IDs to check access.
+     * @path /documents/{documentId}
+     * @allow (get) if user is landlord, tenant, or uploader.
+     * @principle Authorization Independence via denormalization.
+     */
+    match /documents/{documentId} {
+      allow get, list: if isSignedIn() && (isUserInData('uploadedByUserId') || isUserInData('landlordId') || isUserInData('tenantUserProfileId'));
+      allow create: if isSignedIn() && isUserInIncomingData('uploadedByUserId');
+      allow update: if isSignedIn() && (isUserInData('uploadedByUserId') || isUserInData('landlordId'));
+      allow delete: if isSignedIn() && (isUserInData('uploadedByUserId') || isUserInData('landlordId'));
+    }
+
+  }
+}
