@@ -10,7 +10,7 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // USERS ROOT
+    // USERS
     match /users/{userId} {
       allow read, write: if isOwner(userId);
 
@@ -31,7 +31,6 @@ service cloud.firestore {
         // EMERGENCY CONTACTS SUBCOLLECTION
         match /emergencyContacts/{contactId} {
           allow read, write: if isOwner(userId);
-          allow read: if isSignedIn();
         }
 
         // INSPECTIONS SUBCOLLECTION
@@ -41,7 +40,7 @@ service cloud.firestore {
       }
     }
 
-    // DOCUMENTS COLLECTION
+    // DOCUMENTS COLLECTION (ROOT LEVEL)
     match /documents/{documentId} {
       allow read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid ||

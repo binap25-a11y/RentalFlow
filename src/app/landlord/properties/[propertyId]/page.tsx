@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Building2, MapPin, Users, Wrench, FileCheck, Phone, 
   Trash2, Edit3, Loader2, Save, Plus, ArrowLeft,
@@ -119,7 +119,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           landlordId: user.uid,
           createdAt: serverTimestamp(),
         }, { merge: true });
-        toast({ title: "Photo Uploaded", description: "Saved to secure Firebase bucket." });
+        toast({ title: "Photo Uploaded", description: "Saved to secure Cloud Storage." });
       } catch (error) {
         toast({ variant: "destructive", title: "Upload Failed" });
       } finally {
@@ -137,7 +137,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full"><ArrowLeft className="w-5 h-5" /></Button>
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">{property.addressLine1}</h1>
-          <p className="text-muted-foreground flex items-center font-medium"><MapPin className="w-4 h-4 mr-1 text-primary/60" /> {property.zipCode}</p>
+          <p className="text-muted-foreground flex items-center font-medium font-body"><MapPin className="w-4 h-4 mr-1 text-primary/60" /> {property.zipCode}</p>
         </div>
       </div>
 
@@ -147,13 +147,13 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             <CardHeader className="bg-primary/5 pb-4">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-xl font-headline font-bold text-primary">Financial Details</CardTitle>
-                <Badge variant={property.isOccupied ? "default" : "secondary"}>{property.isOccupied ? "Occupied" : "Vacant"}</Badge>
+                <Badge variant={property.isOccupied ? "default" : "secondary"} className="font-bold">{property.isOccupied ? "Occupied" : "Vacant"}</Badge>
               </div>
             </CardHeader>
             <CardContent className="pt-6">
               <div className="flex items-end gap-4">
                 <div className="space-y-1 flex-1">
-                  <Label className="text-muted-foreground font-bold text-xs uppercase tracking-wider">Monthly Rent (£)</Label>
+                  <Label className="text-muted-foreground font-bold text-xs uppercase tracking-wider font-headline">Monthly Rent (£)</Label>
                   {isEditing ? (
                     <Input type="number" value={rentAmount || property.rentAmount} onChange={(e) => setRentAmount(e.target.value)} className="rounded-xl" />
                   ) : (
@@ -169,12 +169,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
           <Tabs defaultValue="tenants">
             <TabsList className="grid w-full grid-cols-6 bg-muted/50 p-1 rounded-xl overflow-x-auto h-auto">
-              <TabsTrigger value="tenants" className="rounded-lg py-2"><Users className="w-4 h-4 mr-2" /> Residents</TabsTrigger>
-              <TabsTrigger value="gallery" className="rounded-lg py-2"><Camera className="w-4 h-4 mr-2" /> Gallery</TabsTrigger>
-              <TabsTrigger value="docs" className="rounded-lg py-2"><FileText className="w-4 h-4 mr-2" /> Vault</TabsTrigger>
-              <TabsTrigger value="maintenance" className="rounded-lg py-2"><Wrench className="w-4 h-4 mr-2" /> Issues</TabsTrigger>
-              <TabsTrigger value="inspections" className="rounded-lg py-2"><FileCheck className="w-4 h-4 mr-2" /> Health</TabsTrigger>
-              <TabsTrigger value="contacts" className="rounded-lg py-2"><Phone className="w-4 h-4 mr-2" /> Help</TabsTrigger>
+              <TabsTrigger value="tenants" className="rounded-lg py-2 font-bold"><Users className="w-4 h-4 mr-2" /> Residents</TabsTrigger>
+              <TabsTrigger value="gallery" className="rounded-lg py-2 font-bold"><Camera className="w-4 h-4 mr-2" /> Gallery</TabsTrigger>
+              <TabsTrigger value="docs" className="rounded-lg py-2 font-bold"><FileText className="w-4 h-4 mr-2" /> Vault</TabsTrigger>
+              <TabsTrigger value="maintenance" className="rounded-lg py-2 font-bold"><Wrench className="w-4 h-4 mr-2" /> Issues</TabsTrigger>
+              <TabsTrigger value="inspections" className="rounded-lg py-2 font-bold"><FileCheck className="w-4 h-4 mr-2" /> Health</TabsTrigger>
+              <TabsTrigger value="contacts" className="rounded-lg py-2 font-bold"><Phone className="w-4 h-4 mr-2" /> Help</TabsTrigger>
             </TabsList>
 
             <TabsContent value="gallery" className="mt-6 space-y-6">
@@ -197,6 +197,28 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               </div>
             </TabsContent>
 
+            <TabsContent value="tenants" className="mt-6 space-y-4">
+               <h3 className="text-lg font-bold font-headline text-primary">Assigned Residents</h3>
+               {tenants && tenants.length > 0 ? (
+                 tenants.map(tenant => (
+                    <div key={tenant.id} className="flex items-center justify-between p-4 bg-white rounded-xl border border-primary/5 shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                          {tenant.firstName[0]}{tenant.lastName[0]}
+                        </div>
+                        <div>
+                          <p className="font-bold font-body">{tenant.firstName} {tenant.lastName}</p>
+                          <p className="text-xs text-muted-foreground font-body">{tenant.email}</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="font-bold border-primary/20 text-primary">Active Lease</Badge>
+                    </div>
+                 ))
+               ) : (
+                 <p className="text-sm text-muted-foreground italic font-body">No residents assigned yet.</p>
+               )}
+            </TabsContent>
+
             <TabsContent value="contacts" className="mt-6 space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-bold font-headline text-primary">Help & Support Contacts</h3>
@@ -208,18 +230,18 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="space-y-1">
-                      <Label className="text-xs">Name</Label>
-                      <Input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="John Electric" className="h-8 text-xs" />
+                      <Label className="text-xs font-bold font-headline uppercase tracking-wider">Name</Label>
+                      <Input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="John Electric" className="h-8 text-xs font-body" />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">Role</Label>
-                      <Input value={contactRole} onChange={(e) => setContactRole(e.target.value)} placeholder="Electrician" className="h-8 text-xs" />
+                      <Label className="text-xs font-bold font-headline uppercase tracking-wider">Role</Label>
+                      <Input value={contactRole} onChange={(e) => setContactRole(e.target.value)} placeholder="Electrician" className="h-8 text-xs font-body" />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">Phone</Label>
-                      <Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="07700 900000" className="h-8 text-xs" />
+                      <Label className="text-xs font-bold font-headline uppercase tracking-wider">Phone</Label>
+                      <Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="07700 900000" className="h-8 text-xs font-body" />
                     </div>
-                    <Button onClick={handleAddContact} className="w-full h-8 text-xs font-bold rounded-lg" disabled={!contactName || !contactPhone}>Add Contact</Button>
+                    <Button onClick={handleAddContact} className="w-full h-8 text-xs font-bold rounded-lg font-headline" disabled={!contactName || !contactPhone}>Add Contact</Button>
                   </CardContent>
                 </Card>
                 
@@ -232,7 +254,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         </div>
                         <div>
                           <p className="text-sm font-bold font-body">{contact.name}</p>
-                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">{contact.role}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight font-headline">{contact.role}</p>
                         </div>
                       </div>
                       <a href={`tel:${contact.phone}`} className="p-2 hover:bg-primary/5 rounded-full transition-colors">
@@ -247,22 +269,25 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         </div>
 
         <div className="space-y-8">
-          <Card className="border-none shadow-sm overflow-hidden border-t-4 border-primary">
-            <CardHeader className="bg-muted/30 pb-4">
-              <CardTitle className="text-xl font-headline font-bold text-foreground">Portfolio Status</CardTitle>
+          <Card className="border-none shadow-sm overflow-hidden border-t-4 border-primary bg-white">
+            <CardHeader className="bg-primary/5 pb-4">
+              <CardTitle className="text-xl font-headline font-bold text-primary flex items-center">
+                <ShieldAlert className="w-5 h-5 mr-2" />
+                Portfolio Status
+              </CardTitle>
             </CardHeader>
             <CardContent className="pt-6 space-y-4">
-              <div className="p-4 bg-muted/50 rounded-xl flex gap-3 border border-border transition-all hover:bg-muted/80">
-                <Info className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+              <div className="p-4 bg-primary/5 rounded-xl flex gap-3 border border-primary/10 transition-all hover:bg-primary/10">
+                <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                 <p className="text-sm text-foreground font-body font-medium leading-relaxed">
                   Keep compliance certificates up to date to ensure resident safety and legal alignment.
                 </p>
               </div>
               <div className="flex items-center justify-between px-2">
                 <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest font-headline">Compliance Level</span>
-                <Badge variant="outline" className="text-primary font-bold border-primary/30 bg-primary/5">Tier 1 Secure</Badge>
+                <Badge variant="outline" className="text-primary font-bold border-primary/30 bg-primary/10">Tier 1 Secure</Badge>
               </div>
-              <Button variant="outline" className="w-full rounded-xl font-bold border-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-sm">
+              <Button variant="outline" className="w-full rounded-xl font-bold border-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-sm font-headline h-11">
                 <Download className="w-4 h-4 mr-2" /> Save PDF Guide
               </Button>
             </CardContent>

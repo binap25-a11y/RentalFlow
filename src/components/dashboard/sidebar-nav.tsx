@@ -101,18 +101,18 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
         <div className="flex items-center gap-3 mb-6">
           <Avatar className="h-10 w-10 border-2 border-sidebar-primary ring-2 ring-sidebar-background shadow-lg">
             <AvatarImage src={userAvatar} />
-            <AvatarFallback className="bg-sidebar-primary/20 text-sidebar-foreground">{userName[0]}</AvatarFallback>
+            <AvatarFallback className="bg-sidebar-primary/20 text-sidebar-foreground font-bold">{userName[0]}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col min-w-0">
-            <span className="text-sm font-semibold truncate text-sidebar-foreground">{userName}</span>
-            <span className="text-xs text-sidebar-foreground/60 capitalize">{role} Account</span>
+            <span className="text-sm font-semibold truncate text-sidebar-foreground font-body">{userName}</span>
+            <span className="text-xs text-sidebar-foreground/60 capitalize font-headline font-bold">{role} Account</span>
           </div>
         </div>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton 
               onClick={handleLogout}
-              className="w-full justify-start h-10 rounded-lg hover:bg-destructive/10 hover:text-destructive text-sidebar-foreground/60 transition-colors"
+              className="w-full justify-start h-10 rounded-lg hover:bg-destructive/10 hover:text-destructive text-sidebar-foreground/60 transition-colors font-headline font-bold"
             >
               <LogOut className="w-4 h-4" />
               <span>Logout</span>
