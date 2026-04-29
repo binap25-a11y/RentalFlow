@@ -18,23 +18,39 @@ service cloud.firestore {
     // authorize list operations (queries) correctly.
 
     match /{path=**}/maintenanceRequests/{requestId} {
-      allow read: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      allow read: if isSignedIn() && resource.data.reportedByUserId == request.auth.uid;
-      allow read: if isSignedIn() && "assignedToUserId" in resource.data && resource.data.assignedToUserId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.reportedByUserId == request.auth.uid;
+      allow list: if isSignedIn() && "assignedToUserId" in resource.data && resource.data.assignedToUserId == request.auth.uid;
+      
+      allow get: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.reportedByUserId == request.auth.uid ||
+        ("assignedToUserId" in resource.data && resource.data.assignedToUserId == request.auth.uid)
+      );
       
       allow create: if isSignedIn() && request.resource.data.reportedByUserId == request.auth.uid;
       
-      allow update: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      allow update: if isSignedIn() && resource.data.reportedByUserId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.reportedByUserId == request.auth.uid
+      );
       
       allow delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
     match /{path=**}/tenants/{tenantId} {
-      allow read: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      allow read: if isSignedIn() && "userProfileId" in resource.data && resource.data.userProfileId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && "userProfileId" in resource.data && resource.data.userProfileId == request.auth.uid;
       
-      allow write: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow get: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        ("userProfileId" in resource.data && resource.data.userProfileId == request.auth.uid)
+      );
+      
+      allow write: if isSignedIn() && (
+        (exists(resource) && resource.data.landlordId == request.auth.uid) ||
+        (!exists(resource) && request.resource.data.landlordId == request.auth.uid)
+      );
     }
 
     match /{path=**}/emergencyContacts/{contactId} {
@@ -62,9 +78,15 @@ service cloud.firestore {
     // --- TOP-LEVEL VAULT ---
 
     match /documents/{documentId} {
-      allow read: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      allow read: if isSignedIn() && resource.data.uploadedByUserId == request.auth.uid;
-      allow read: if isSignedIn() && "tenantUserProfileId" in resource.data && resource.data.tenantUserProfileId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.uploadedByUserId == request.auth.uid;
+      allow list: if isSignedIn() && "tenantUserProfileId" in resource.data && resource.data.tenantUserProfileId == request.auth.uid;
+      
+      allow get: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.uploadedByUserId == request.auth.uid || 
+        ("tenantUserProfileId" in resource.data && resource.data.tenantUserProfileId == request.auth.uid)
+      );
       
       allow create: if isSignedIn() && request.resource.data.uploadedByUserId == request.auth.uid;
       

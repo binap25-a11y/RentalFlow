@@ -7,7 +7,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebas
 import { collection, query, where } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { format, isBefore, addDays, isValid } from "date-fns";
+import { format, isBefore, addDays, isValid, parseISO } from "date-fns";
 import { useMemo } from "react";
 
 export default function LandlordDashboard() {
@@ -37,9 +37,13 @@ export default function LandlordDashboard() {
     const occupied = properties?.filter(p => p.isOccupied).length || 0;
     const expiring = documents?.filter(d => {
       if (!d.expiryDate) return false;
-      const expiry = new Date(d.expiryDate);
-      if (!isValid(expiry)) return false;
-      return isBefore(expiry, addDays(new Date(), 30));
+      try {
+        const expiry = parseISO(d.expiryDate);
+        if (!isValid(expiry)) return false;
+        return isBefore(expiry, addDays(new Date(), 30));
+      } catch {
+        return false;
+      }
     }).length || 0;
 
     return [
@@ -54,9 +58,13 @@ export default function LandlordDashboard() {
     return documents
       .filter(d => {
         if (!d.expiryDate) return false;
-        const expiry = new Date(d.expiryDate);
-        if (!isValid(expiry)) return false;
-        return isBefore(expiry, addDays(new Date(), 30));
+        try {
+          const expiry = parseISO(d.expiryDate);
+          if (!isValid(expiry)) return false;
+          return isBefore(expiry, addDays(new Date(), 30));
+        } catch {
+          return false;
+        }
       })
       .sort((a, b) => {
         const dateA = new Date(a.expiryDate!).getTime();
@@ -101,7 +109,13 @@ export default function LandlordDashboard() {
           <CardContent className="space-y-4">
             {expiringDocs.length > 0 ? (
               expiringDocs.map((doc) => {
-                const expiryDate = new Date(doc.expiryDate!);
+                let expiryDate: Date | null = null;
+                try {
+                  expiryDate = parseISO(doc.expiryDate!);
+                } catch {
+                  expiryDate = null;
+                }
+                
                 return (
                   <div key={doc.id} className="flex items-center justify-between p-4 rounded-xl bg-amber-50 border border-amber-100">
                     <div className="flex items-center gap-4">
@@ -111,7 +125,7 @@ export default function LandlordDashboard() {
                       <div>
                         <h4 className="font-bold text-sm">{doc.documentType}</h4>
                         <p className="text-xs text-muted-foreground">
-                          Expires: {isValid(expiryDate) ? format(expiryDate, 'PPP') : 'Invalid Date'}
+                          Expires: {expiryDate && isValid(expiryDate) ? format(expiryDate, 'PPP') : 'Invalid Date'}
                         </p>
                       </div>
                     </div>
