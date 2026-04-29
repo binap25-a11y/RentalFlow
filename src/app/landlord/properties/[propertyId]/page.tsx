@@ -37,14 +37,14 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(collection(db, 'tenants'), where('propertyId', '==', propertyId));
+    return query(collection(db, 'tenants'), where('propertyId', '==', propertyId), where('landlordId', '==', user.uid));
   }, [db, user, propertyId]);
 
   const { data: tenants } = useCollection(tenantsQuery);
 
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Updated to match security rules: query must include where("userId", "==", user.uid)
+    // Security rules require where("userId", "==", user.uid) for /documents list
     return query(
       collection(db, 'documents'), 
       where('propertyId', '==', propertyId),
@@ -216,13 +216,13 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
         <div className="space-y-8">
           <Card className="border-none shadow-sm overflow-hidden bg-white">
-            <CardHeader className="pb-4">
+            <CardHeader className="pb-4 border-b border-primary/5 bg-primary/5">
               <CardTitle className="text-xl font-headline font-bold text-primary flex items-center">
-                <ShieldAlert className="w-5 h-5 mr-2 text-accent" />
+                <ShieldAlert className="w-5 h-5 mr-2 text-primary" />
                 Portfolio Status
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-2 space-y-4">
+            <CardContent className="pt-6 space-y-4">
               <div className="p-4 bg-primary/5 rounded-xl flex gap-3 border border-primary/10 transition-all hover:bg-primary/10">
                 <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                 <p className="text-sm text-foreground font-body font-medium leading-relaxed">
@@ -231,7 +231,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               </div>
               <div className="flex items-center justify-between px-2">
                 <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest font-headline">Compliance Level</span>
-                <Badge variant="outline" className="text-primary font-bold border-primary/30 bg-primary/10 font-headline uppercase">Tier 1 Secure</Badge>
+                <Badge variant="outline" className="text-primary font-bold border-primary/20 bg-primary/10 font-headline uppercase tracking-tight">Tier 1 Secure</Badge>
               </div>
               <Button className="w-full rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 font-headline h-11">
                 <Download className="w-4 h-4 mr-2" /> Save PDF Guide

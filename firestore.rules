@@ -24,6 +24,7 @@ service cloud.firestore {
     match /documents/{docId} {
       allow create: if isSignedIn();
       allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // Filter requirement to prove no unauthorized access
       allow list: if isSignedIn() && request.query.where("userId", "==", request.auth.uid);
       allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
@@ -32,21 +33,24 @@ service cloud.firestore {
     // PROPERTIES
     // -------------------------
     match /properties/{propertyId} {
-      allow read, write: if isSignedIn();
+      allow create: if isSignedIn();
+      allow read, list, update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
     // -------------------------
     // TENANTS
     // -------------------------
     match /tenants/{tenantId} {
-      allow read, write: if isSignedIn();
+      allow create: if isSignedIn();
+      allow read, list, update, delete: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.userProfileId == request.auth.uid);
     }
 
     // -------------------------
     // MAINTENANCE REQUESTS
     // -------------------------
     match /maintenanceRequests/{requestId} {
-      allow read, write: if isSignedIn();
+      allow create: if isSignedIn();
+      allow read, list, update, delete: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.reportedByUserId == request.auth.uid);
     }
 
     // -------------------------
@@ -60,7 +64,7 @@ service cloud.firestore {
     // INSPECTIONS
     // -------------------------
     match /inspections/{inspectionId} {
-      allow read, write: if isSignedIn();
+      allow read, write: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
     // Block everything else
