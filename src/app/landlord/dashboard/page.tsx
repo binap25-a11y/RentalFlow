@@ -4,7 +4,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Users, AlertTriangle, FileText, ArrowRight, ShieldAlert } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { format, isBefore, addDays } from "date-fns";
@@ -23,10 +23,10 @@ export default function LandlordDashboard() {
   const documentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     // Security rules require an explicit filter on landlordId for list operations on the documents collection
+    // We remove orderBy for now to ensure rule compliance without requiring composite indexes immediately
     return query(
       collection(db, "documents"),
-      where("landlordId", "==", user.uid),
-      orderBy("expiryDate", "asc")
+      where("landlordId", "==", user.uid)
     );
   }, [db, user]);
 
@@ -64,6 +64,9 @@ export default function LandlordDashboard() {
     if (!d.expiryDate) return false;
     const expiry = new Date(d.expiryDate);
     return isBefore(expiry, addDays(new Date(), 30));
+  }).sort((a, b) => {
+    if (!a.expiryDate || !b.expiryDate) return 0;
+    return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
   }) || [];
 
   return (
