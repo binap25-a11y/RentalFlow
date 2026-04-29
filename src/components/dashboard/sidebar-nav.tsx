@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -8,10 +9,10 @@ import {
   Wrench, 
   FileCheck, 
   LayoutDashboard, 
-  Settings, 
   LogOut,
   Home,
-  FileText
+  FileText,
+  KeyRound
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
@@ -58,7 +59,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
       <SidebarHeader className="p-6">
         <Link href={dashboardHref} className="flex items-center gap-2 group">
           <div className="p-2 bg-sidebar-primary rounded-xl transition-transform group-hover:scale-110">
-            <LayoutDashboard className="w-5 h-5 text-sidebar-primary-foreground" />
+            <KeyRound className="w-5 h-5 text-sidebar-primary-foreground" />
           </div>
           <span className="font-headline font-bold text-xl tracking-tight text-sidebar-foreground">RentalFlow</span>
         </Link>

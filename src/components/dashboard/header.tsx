@@ -3,7 +3,7 @@
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { LayoutDashboard, LogOut, User } from "lucide-react";
+import { KeyRound, LogOut, User } from "lucide-react";
 import Link from "next/link";
 import { useAuth, useUser } from "@/firebase";
 import { initiateSignOut } from "@/firebase/non-blocking-login";
@@ -41,7 +41,7 @@ export function Header({ role }: HeaderProps) {
         <Separator orientation="vertical" className="mr-2 h-4" />
         <Link href={dashboardHref} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <div className="p-1.5 bg-primary rounded-lg">
-            <LayoutDashboard className="w-4 h-4 text-primary-foreground" />
+            <KeyRound className="w-4 h-4 text-primary-foreground" />
           </div>
           <span className="font-headline font-bold text-lg tracking-tight text-primary">RentalFlow</span>
         </Link>
