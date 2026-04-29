@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -26,9 +27,7 @@
         "role": {
           "type": "string",
           "description": "The role of the user within the application, determining their access and interface.",
-          "items": {
-            "type": "string"
-          }
+          "enum": ["landlord", "tenant"]
         },
         "externalAuthId": {
           "type": "string",
@@ -48,8 +47,6 @@
       "required": [
         "id",
         "email",
-        "firstName",
-        "lastName",
         "role",
         "externalAuthId",
         "createdAt",
@@ -290,10 +287,7 @@
         },
         "status": {
           "type": "string",
-          "description": "The current status of the inspection (e.g., 'Scheduled', 'In Progress', 'Completed', 'Canceled').",
-          "items": {
-            "type": "string"
-          }
+          "description": "The current status of the inspection (e.g., 'Scheduled', 'In Progress', 'Completed', 'Canceled')."
         },
         "summary": {
           "type": "string",
@@ -345,10 +339,7 @@
         },
         "condition": {
           "type": "string",
-          "description": "The recorded condition of the item (e.g., 'Good', 'Fair', 'Poor', 'N/A').",
-          "items": {
-            "type": "string"
-          }
+          "description": "The recorded condition of the item (e.g., 'Good', 'Fair', 'Poor', 'N/A')."
         },
         "comments": {
           "type": "string",
@@ -414,24 +405,15 @@
         },
         "status": {
           "type": "string",
-          "description": "The current status of the maintenance request (e.g., 'Pending', 'In Progress', 'Completed', 'Canceled', 'On Hold').",
-          "items": {
-            "type": "string"
-          }
+          "description": "The current status of the maintenance request (e.g., 'Pending', 'In Progress', 'Completed', 'Canceled', 'On Hold')."
         },
         "priority": {
           "type": "string",
-          "description": "The priority level of the request, often suggested by AI (e.g., 'Low', 'Medium', 'High', 'Emergency').",
-          "items": {
-            "type": "string"
-          }
+          "description": "The priority level of the request, often suggested by AI (e.g., 'Low', 'Medium', 'High', 'Emergency')."
         },
         "category": {
           "type": "string",
-          "description": "The category of the maintenance issue, often suggested by AI (e.g., 'Plumbing', 'Electrical', 'HVAC', 'Appliance', 'Structural', 'General').",
-          "items": {
-            "type": "string"
-          }
+          "description": "The category of the maintenance issue, often suggested by AI (e.g., 'Plumbing', 'Electrical', 'HVAC', 'Appliance', 'Structural', 'General')."
         },
         "submittedAt": {
           "type": "string",
@@ -533,7 +515,8 @@
   "auth": {
     "providers": [
       "password",
-      "anonymous"
+      "anonymous",
+      "google.com"
     ]
   },
   "firestore": {
