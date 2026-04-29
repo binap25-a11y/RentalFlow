@@ -2,10 +2,9 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Users, Wrench, AlertTriangle, Clock, FileCheck, Plus, ShieldAlert, FileText, ArrowRight } from "lucide-react";
+import { Building2, Users, AlertTriangle, FileText, ArrowRight, ShieldAlert } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy, limit } from "firebase/firestore";
-import { Badge } from "@/components/ui/badge";
+import { collection, query, where, orderBy } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { format, isBefore, addDays } from "date-fns";
@@ -23,6 +22,7 @@ export default function LandlordDashboard() {
 
   const documentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
+    // Security rules require an explicit filter on landlordId for list operations on the documents collection
     return query(
       collection(db, "documents"),
       where("landlordId", "==", user.uid),
@@ -150,7 +150,7 @@ export default function LandlordDashboard() {
             </Button>
             <Button variant="outline" className="w-full justify-start h-12 rounded-xl border-accent/20 hover:bg-accent/5" asChild>
               <Link href="/landlord/inspections">
-                <FileCheck className="w-5 h-5 mr-3 text-accent" />
+                <AlertTriangle className="w-5 h-5 mr-3 text-accent" />
                 Schedule Inspection
               </Link>
             </Button>

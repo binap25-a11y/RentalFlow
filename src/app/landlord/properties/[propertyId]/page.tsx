@@ -2,9 +2,9 @@
 "use client";
 
 import { useState, use } from 'react';
-import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,8 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   Building2, MapPin, Users, Wrench, FileCheck, Phone, 
   Trash2, Edit3, Loader2, Save, Plus, ArrowLeft,
-  Download, FileText, AlertTriangle, ShieldAlert, Sparkles,
-  Calendar, Info
+  Download, FileText, Info
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -47,6 +46,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
+    // Security rules require an explicit filter on landlordId for list operations on the documents collection
     return query(
       collection(db, 'documents'), 
       where('propertyId', '==', propertyId),
