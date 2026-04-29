@@ -107,6 +107,10 @@
           "type": "boolean",
           "description": "Indicates whether the property is currently occupied by a tenant."
         },
+        "imageUrl": {
+          "type": "string",
+          "description": "The URL or data URI for the primary property banner image."
+        },
         "createdAt": {
           "type": "string",
           "description": "Timestamp when the property record was created.",
@@ -163,11 +167,15 @@
         },
         "propertyId": {
           "type": "string",
-          "description": "Reference to the Property where this tenant resides. (Relationship: Property 1:N TenantProfile)"
+          "description": "Reference to the Property where this tenant resides."
+        },
+        "landlordId": {
+          "type": "string",
+          "description": "The unique identifier of the landlord who manages this tenant's property. Required for portfolio-wide queries."
         },
         "userProfileId": {
           "type": "string",
-          "description": "Optional reference to the UserProfile if the tenant has a login account. (Relationship: TenantProfile 1:1 UserProfile)"
+          "description": "Optional reference to the UserProfile if the tenant has a login account."
         },
         "leaseStartDate": {
           "type": "string",
@@ -197,6 +205,7 @@
         "email",
         "phoneNumber",
         "propertyId",
+        "landlordId",
         "leaseStartDate",
         "leaseEndDate",
         "createdAt",
@@ -207,7 +216,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Document",
       "type": "object",
-      "description": "Stores metadata about files (e.g., property images, lease agreements, emergency contact PDFs, inspection reports, compliance docs) uploaded to a secure storage bucket.",
+      "description": "Stores metadata about files uploaded to a secure storage bucket.",
       "properties": {
         "id": {
           "type": "string",
@@ -219,12 +228,12 @@
         },
         "fileUrl": {
           "type": "string",
-          "description": "The URL or path to the document in the storage bucket.",
+          "description": "The URL or data URI of the document.",
           "format": "uri"
         },
         "documentType": {
           "type": "string",
-          "description": "The category or type of the document (e.g., 'Lease Agreement', 'Gas Safety', 'EICR', 'EPC', 'Inspection Report')."
+          "description": "The category or type of the document."
         },
         "description": {
           "type": "string",
@@ -232,7 +241,7 @@
         },
         "propertyId": {
           "type": "string",
-          "description": "Optional reference to the Property this document is associated with. (Relationship: Property 1:N Document)"
+          "description": "Optional reference to the Property this document is associated with."
         },
         "expiryDate": {
           "type": "string",
@@ -241,11 +250,15 @@
         },
         "uploadedByUserId": {
           "type": "string",
-          "description": "Reference to the UserProfile who uploaded this document. (Relationship: UserProfile 1:N Document)"
+          "description": "Reference to the UserProfile who uploaded this document."
         },
         "landlordId": {
           "type": "string",
-          "description": "Denormalized landlord ID for easier authorization checks."
+          "description": "The unique identifier of the landlord who owns the data."
+        },
+        "tenantUserProfileId": {
+          "type": "string",
+          "description": "Optional UID of the tenant allowed to view this document."
         },
         "createdAt": {
           "type": "string",
@@ -267,7 +280,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Inspection",
       "type": "object",
-      "description": "Records details of a property inspection, including scheduling, status, and overall findings.",
+      "description": "Records details of a property inspection.",
       "properties": {
         "id": {
           "type": "string",
@@ -275,7 +288,7 @@
         },
         "propertyId": {
           "type": "string",
-          "description": "Reference to the Property that was inspected. (Relationship: Property 1:N Inspection)"
+          "description": "Reference to the Property that was inspected."
         },
         "scheduledDate": {
           "type": "string",
@@ -289,19 +302,19 @@
         },
         "inspectorUserId": {
           "type": "string",
-          "description": "Reference to the UserProfile of the landlord or agent who conducted the inspection. (Relationship: UserProfile 1:N Inspection)"
+          "description": "Reference to the UserProfile of the landlord or agent who conducted the inspection."
         },
         "status": {
           "type": "string",
-          "description": "The current status of the inspection (e.g., 'Scheduled', 'In Progress', 'Completed', 'Canceled')."
+          "description": "The current status of the inspection."
         },
         "summary": {
           "type": "string",
-          "description": "A general summary of the inspection findings and overall condition."
+          "description": "A general summary of the inspection findings."
         },
         "reportDocumentId": {
           "type": "string",
-          "description": "Optional reference to the Document containing the generated PDF report for this inspection. (Relationship: Document 1:1 Inspection)"
+          "description": "Optional reference to the Document containing the report."
         },
         "createdAt": {
           "type": "string",
@@ -325,69 +338,11 @@
         "updatedAt"
       ]
     },
-    "InspectionItem": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "InspectionItem",
-      "type": "object",
-      "description": "Detailed record of a specific item or area checked during a property inspection, including its condition and any comments.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the InspectionItem entity."
-        },
-        "inspectionId": {
-          "type": "string",
-          "description": "Reference to the parent Inspection this item belongs to. (Relationship: Inspection 1:N InspectionItem)"
-        },
-        "itemDescription": {
-          "type": "string",
-          "description": "A description of the item or area inspected (e.g., 'Kitchen Sink', 'Bedroom Window', 'Smoke Detector')."
-        },
-        "condition": {
-          "type": "string",
-          "description": "The recorded condition of the item (e.g., 'Good', 'Fair', 'Poor', 'N/A')."
-        },
-        "comments": {
-          "type": "string",
-          "description": "Additional comments or observations about the item's condition."
-        },
-        "issuesFound": {
-          "type": "boolean",
-          "description": "Indicates if any issues were found with this specific item."
-        },
-        "photoDocumentIds": {
-          "type": "array",
-          "description": "References to Documents containing photos related to this inspection item. (Relationship: InspectionItem N:N Document)",
-          "items": {
-            "type": "string"
-          }
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the inspection item record was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the inspection item record was last updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "inspectionId",
-        "itemDescription",
-        "condition",
-        "issuesFound",
-        "createdAt",
-        "updatedAt"
-      ]
-    },
     "MaintenanceRequest": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "MaintenanceRequest",
       "type": "object",
-      "description": "Records details of maintenance issues reported for a property, including status, priority, and AI-triage information.",
+      "description": "Records details of maintenance issues reported for a property.",
       "properties": {
         "id": {
           "type": "string",
@@ -395,11 +350,15 @@
         },
         "propertyId": {
           "type": "string",
-          "description": "Reference to the Property where the maintenance issue was reported. (Relationship: Property 1:N MaintenanceRequest)"
+          "description": "Reference to the Property where the maintenance issue was reported."
+        },
+        "landlordId": {
+          "type": "string",
+          "description": "The unique identifier of the landlord who owns the property. Required for portfolio-wide queries."
         },
         "reportedByUserId": {
           "type": "string",
-          "description": "Reference to the UserProfile (Tenant or Landlord) who reported this maintenance request. (Relationship: UserProfile 1:N MaintenanceRequest)"
+          "description": "Reference to the UserProfile who reported this maintenance request."
         },
         "title": {
           "type": "string",
@@ -411,15 +370,15 @@
         },
         "status": {
           "type": "string",
-          "description": "The current status of the maintenance request (e.g., 'Pending', 'In Progress', 'Completed', 'Canceled', 'On Hold')."
+          "description": "The current status of the maintenance request."
         },
         "priority": {
           "type": "string",
-          "description": "The priority level of the request, often suggested by AI (e.g., 'Low', 'Medium', 'High', 'Emergency')."
+          "description": "The priority level of the request."
         },
         "category": {
           "type": "string",
-          "description": "The category of the maintenance issue, often suggested by AI (e.g., 'Plumbing', 'Electrical', 'HVAC', 'Appliance', 'Structural', 'General')."
+          "description": "The category of the maintenance issue."
         },
         "submittedAt": {
           "type": "string",
@@ -433,15 +392,15 @@
         },
         "aiTriageNotes": {
           "type": "string",
-          "description": "Notes or suggestions generated by the AI-powered triage system."
+          "description": "Notes or suggestions generated by AI."
         },
         "assignedToUserId": {
           "type": "string",
-          "description": "Optional reference to the UserProfile (Landlord or Contractor) assigned to handle this request. (Relationship: UserProfile 1:N MaintenanceRequest)"
+          "description": "Optional reference to the UserProfile assigned to handle this request."
         },
         "photoDocumentIds": {
           "type": "array",
-          "description": "References to Documents containing photos related to the maintenance request. (Relationship: MaintenanceRequest N:N Document)",
+          "description": "References to Documents containing photos related to the maintenance request.",
           "items": {
             "type": "string"
           }
@@ -460,6 +419,7 @@
       "required": [
         "id",
         "propertyId",
+        "landlordId",
         "reportedByUserId",
         "title",
         "description",
@@ -469,52 +429,6 @@
         "submittedAt",
         "createdAt",
         "updatedAt"
-      ]
-    },
-    "MaintenanceLog": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "MaintenanceLog",
-      "type": "object",
-      "description": "Records individual actions or updates made to a maintenance request, providing a historical log of its progress.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the MaintenanceLog entity."
-        },
-        "maintenanceRequestId": {
-          "type": "string",
-          "description": "Reference to the MaintenanceRequest this log entry belongs to. (Relationship: MaintenanceRequest 1:N MaintenanceLog)"
-        },
-        "actorUserId": {
-          "type": "string",
-          "description": "Reference to the UserProfile who performed the action recorded in this log entry. (Relationship: UserProfile 1:N MaintenanceLog)"
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "The date and time when the action was performed.",
-          "format": "date-time"
-        },
-        "action": {
-          "type": "string",
-          "description": "A brief description of the action taken (e.g., 'Status changed', 'Comment added', 'Assigned')."
-        },
-        "details": {
-          "type": "string",
-          "description": "Additional details or notes about the action performed."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the maintenance log entry was created.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "maintenanceRequestId",
-        "actorUserId",
-        "timestamp",
-        "action",
-        "createdAt"
       ]
     }
   },
@@ -534,11 +448,11 @@
           "schema": {
             "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores core user profiles, identified by their authentication UID. Access is restricted to the user themselves or authorized administrators. The user's 'role' (Landlord, Tenant) is critical for subsequent authorization and is stored within this document.",
+          "description": "Stores core user profiles.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier of the user, corresponding to their external authentication ID (request.auth.uid)."
+              "description": "The unique identifier of the user."
             }
           ]
         }
@@ -550,11 +464,11 @@
           "schema": {
             "$ref": "#/backend/entities/Property"
           },
-          "description": "Stores rental property details, owned and managed by a specific landlord. The 'landlordId' is derived from the path, ensuring authorization independence for all property-related operations.",
+          "description": "Stores rental property details.",
           "params": [
             {
               "name": "landlordId",
-              "description": "The unique identifier of the landlord who owns this property."
+              "description": "The unique identifier of the landlord."
             },
             {
               "name": "propertyId",
@@ -570,19 +484,19 @@
           "schema": {
             "$ref": "#/backend/entities/TenantProfile"
           },
-          "description": "Contains detailed profile information for tenants, managed by the respective landlord of the associated property. 'landlordId' and 'propertyId' are derived from the path. Includes 'userProfileId' if the tenant has a login account, allowing for self-access by the tenant.",
+          "description": "Contains detailed profile information for tenants.",
           "params": [
             {
               "name": "landlordId",
-              "description": "The unique identifier of the landlord who manages this tenant's property."
+              "description": "The landlord identifier."
             },
             {
               "name": "propertyId",
-              "description": "The unique identifier of the property the tenant resides in."
+              "description": "The property identifier."
             },
             {
               "name": "tenantId",
-              "description": "The unique identifier for the tenant profile record."
+              "description": "The tenant identifier."
             }
           ]
         }
@@ -594,47 +508,19 @@
           "schema": {
             "$ref": "#/backend/entities/Inspection"
           },
-          "description": "Records details of property inspections. 'landlordId' and 'propertyId' are derived from the path, making landlord ownership and authorization explicit and independent.",
+          "description": "Records details of property inspections.",
           "params": [
             {
               "name": "landlordId",
-              "description": "The unique identifier of the landlord who owns the inspected property."
+              "description": "The landlord identifier."
             },
             {
               "name": "propertyId",
-              "description": "The unique identifier of the property being inspected."
+              "description": "The property identifier."
             },
             {
               "name": "inspectionId",
-              "description": "The unique identifier for the inspection record."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{landlordId}/properties/{propertyId}/inspections/{inspectionId}/items/{itemId}",
-        "definition": {
-          "entityName": "InspectionItem",
-          "schema": {
-            "$ref": "#/backend/entities/InspectionItem"
-          },
-          "description": "Stores detailed records of specific items checked during a property inspection. 'landlordId', 'propertyId', and 'inspectionId' are derived from the path, ensuring authorization independence.",
-          "params": [
-            {
-              "name": "landlordId",
-              "description": "The unique identifier of the landlord who owns the inspected property."
-            },
-            {
-              "name": "propertyId",
-              "description": "The unique identifier of the property being inspected."
-            },
-            {
-              "name": "inspectionId",
-              "description": "The unique identifier of the parent inspection."
-            },
-            {
-              "name": "itemId",
-              "description": "The unique identifier for the inspection item record."
+              "description": "The inspection identifier."
             }
           ]
         }
@@ -646,47 +532,19 @@
           "schema": {
             "$ref": "#/backend/entities/MaintenanceRequest"
           },
-          "description": "Records maintenance requests for a property. 'landlordId' and 'propertyId' are derived from the path. 'reportedByUserId' enables tenants to view their own requests, and 'assignedToUserId' facilitates role-based access for assigned personnel, all without requiring cross-document 'get()' operations for authorization.",
+          "description": "Records maintenance requests.",
           "params": [
             {
               "name": "landlordId",
-              "description": "The unique identifier of the landlord who owns the property where the request was made."
+              "description": "The landlord identifier."
             },
             {
               "name": "propertyId",
-              "description": "The unique identifier of the property for which the maintenance request was submitted."
+              "description": "The property identifier."
             },
             {
               "name": "requestId",
-              "description": "The unique identifier for the maintenance request."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{landlordId}/properties/{propertyId}/maintenanceRequests/{requestId}/logs/{logId}",
-        "definition": {
-          "entityName": "MaintenanceLog",
-          "schema": {
-            "$ref": "#/backend/entities/MaintenanceLog"
-          },
-          "description": "Stores a historical log of actions and updates for a maintenance request. 'landlordId', 'propertyId', and 'maintenanceRequestId' are derived from the path. 'actorUserId' indicates who performed the action, ensuring authorization independence for log entries.",
-          "params": [
-            {
-              "name": "landlordId",
-              "description": "The unique identifier of the landlord who owns the property related to the maintenance request."
-            },
-            {
-              "name": "propertyId",
-              "description": "The unique identifier of the property related to the maintenance request."
-            },
-            {
-              "name": "requestId",
-              "description": "The unique identifier of the parent maintenance request."
-            },
-            {
-              "name": "logId",
-              "description": "The unique identifier for the maintenance log entry."
+              "description": "The maintenance request identifier."
             }
           ]
         }
@@ -698,11 +556,11 @@
           "schema": {
             "$ref": "#/backend/entities/Document"
           },
-          "description": "Stores metadata for various uploaded files (e.g., property images, lease agreements, emergency contacts, compliance docs). Includes denormalized 'landlordId' for authorization independence.",
+          "description": "Stores metadata for various uploaded files.",
           "params": [
             {
               "name": "documentId",
-              "description": "The unique identifier for the document record."
+              "description": "The document identifier."
             }
           ]
         }

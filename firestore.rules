@@ -1,12 +1,4 @@
 
-/**
- * RentalFlow Security Rules
- * 
- * Core Philosophy:
- * Centered around Landlord ownership with data-based authorization to support
- * both hierarchical access and portfolio-wide Collection Group queries.
- */
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -26,36 +18,34 @@ service cloud.firestore {
     }
 
     // --- PORTFOLIO-WIDE (COLLECTION GROUP) RULES ---
-    // These rules apply regardless of where the document is nested.
+    // These rules allow group scans across all nested paths for specific collections.
 
     match /{path=**}/maintenanceRequests/{requestId} {
       allow read: if isSignedIn() && (
-        isUserInField('landlordId') || 
-        isUserInField('reportedByUserId') || 
-        isUserInField('assignedToUserId')
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.reportedByUserId == request.auth.uid || 
+        resource.data.assignedToUserId == request.auth.uid
       );
-      // Allow creation if the reporter is the authenticated user
       allow create: if isSignedIn() && request.resource.data.reportedByUserId == request.auth.uid;
-      // Allow update if the user is the landlord or reporter or assigned
       allow update: if isSignedIn() && (
-        isUserInField('landlordId') || 
-        isUserInField('reportedByUserId') || 
-        isUserInField('assignedToUserId')
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.reportedByUserId == request.auth.uid || 
+        resource.data.assignedToUserId == request.auth.uid
       );
-      allow delete: if isUserInField('landlordId');
+      allow delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
     match /{path=**}/tenants/{tenantId} {
       allow read: if isSignedIn() && (
-        isUserInField('landlordId') || 
-        isUserInField('userProfileId')
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.userProfileId == request.auth.uid
       );
-      allow write: if isUserInField('landlordId');
+      allow write: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
     match /{path=**}/emergencyContacts/{contactId} {
-      allow read: if isSignedIn(); // Broad read for property context
-      allow write: if isSignedIn(); // Authorized by parent property ownership
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
     }
 
     // --- HIERARCHICAL RULES ---
@@ -71,10 +61,8 @@ service cloud.firestore {
         allow create: if isOwner(userId) && request.resource.data.landlordId == userId;
         allow update, delete: if isOwner(userId);
 
-        // Inspections are usually handled within the property context
         match /inspections/{inspectionId} {
           allow read, write: if isOwner(userId);
-
           match /items/{itemId} {
             allow read, write: if isOwner(userId);
           }
@@ -86,12 +74,15 @@ service cloud.firestore {
 
     match /documents/{documentId} {
       allow read: if isSignedIn() && (
-        isUserInField('uploadedByUserId') || 
-        isUserInField('landlordId') || 
-        isUserInField('tenantUserProfileId')
+        resource.data.uploadedByUserId == request.auth.uid || 
+        resource.data.landlordId == request.auth.uid || 
+        ( "tenantUserProfileId" in resource.data && resource.data.tenantUserProfileId == request.auth.uid )
       );
       allow create: if isSignedIn() && request.resource.data.uploadedByUserId == request.auth.uid;
-      allow update, delete: if isSignedIn() && (isUserInField('uploadedByUserId') || isUserInField('landlordId'));
+      allow update, delete: if isSignedIn() && (
+        resource.data.uploadedByUserId == request.auth.uid || 
+        resource.data.landlordId == request.auth.uid
+      );
     }
   }
 }
