@@ -2,6 +2,7 @@
 "use client";
 
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
+import { Header } from "@/components/dashboard/header";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useUser } from "@/firebase";
 import { Loader2 } from "lucide-react";
@@ -30,6 +31,7 @@ export default function TenantLayout({
           userAvatar={user?.photoURL || undefined} 
         />
         <SidebarInset className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <Header role="tenant" />
           <main className="flex-1 overflow-y-auto p-4 md:p-8">
             {children}
           </main>
