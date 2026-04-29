@@ -47,7 +47,9 @@ export default function PropertiesPage() {
 
   useEffect(() => {
     return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (previewUrl && !previewUrl.startsWith('http')) {
+        URL.revokeObjectURL(previewUrl);
+      }
     };
   }, [previewUrl]);
 
@@ -55,11 +57,9 @@ export default function PropertiesPage() {
     const file = e.target.files?.[0] || null;
     setImageFile(file);
     if (file) {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (previewUrl && !previewUrl.startsWith('http')) URL.revokeObjectURL(previewUrl);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
-    } else {
-      setPreviewUrl(null);
     }
   };
 
@@ -69,7 +69,6 @@ export default function PropertiesPage() {
     setRentAmount('');
     setDescription('');
     setImageFile(null);
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
     setEditingProperty(null);
   };

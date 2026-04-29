@@ -46,7 +46,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Querying documents where landlord is the user OR user is the userId
+    // Querying documents where landlord is the user
     return query(
       collection(db, 'documents'), 
       where('propertyId', '==', propertyId),
@@ -71,7 +71,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   // Document Upload State
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
-  const [docName, setDocName] = useState('');
 
   const handleUpdateRent = () => {
     if (!propertyRef) return;
@@ -120,7 +119,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         documentType: 'property-asset',
         description: `Uploaded for ${property?.addressLine1}`,
         propertyId: propertyId,
-        userId: user.uid,
+        userId: user.uid, // Default to landlord as owner
         landlordId: user.uid,
         createdAt: new Date().toISOString(),
       });
