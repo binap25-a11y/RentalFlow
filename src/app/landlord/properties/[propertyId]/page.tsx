@@ -18,7 +18,7 @@ import {
   Calendar, Info
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "navigation";
+import { useRouter } from "next/navigation";
 import { format, isBefore, addDays } from "date-fns";
 
 const DOC_TYPES = ['Tenancy Agreement', 'EICR', 'Gas Safety', 'EPC', 'Insurance', 'Other'];
@@ -47,7 +47,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(collection(db, 'documents'), where('propertyId', '==', propertyId));
+    return query(
+      collection(db, 'documents'), 
+      where('propertyId', '==', propertyId),
+      where('landlordId', '==', user.uid)
+    );
   }, [db, user, propertyId]);
 
   const { data: documents } = useCollection(docsQuery);
@@ -267,9 +271,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 <h3 className="text-lg font-bold font-headline">Maintenance Requests</h3>
                 <Button size="sm" className="rounded-xl"><Wrench className="w-4 h-4 mr-2" /> Log Issue</Button>
               </div>
-              {/* Maintenance list... */}
             </TabsContent>
-            {/* Other tabs... */}
           </Tabs>
         </div>
 
