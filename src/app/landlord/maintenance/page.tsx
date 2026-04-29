@@ -8,9 +8,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { collectionGroup, query, where, doc, serverTimestamp } from "firebase/firestore";
-import { Wrench, Sparkles, Clock, Filter, BrainCircuit, Loader2 } from "lucide-react";
+import { Wrench, Sparkles, Clock, Filter, BrainCircuit, Loader2, CheckCircle2, PlayCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, isValid } from "date-fns";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function MaintenancePage() {
   const { user } = useUser();
@@ -20,7 +26,6 @@ export default function MaintenancePage() {
 
   const maintenanceQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Note: This collectionGroup query requires landlordId for authorization
     return query(
       collectionGroup(db, "maintenanceRequests"),
       where("landlordId", "==", user.uid)
@@ -56,6 +61,15 @@ export default function MaintenancePage() {
     } finally {
       setIsTriaging(null);
     }
+  };
+
+  const updateStatus = (request: any, newStatus: string) => {
+    const requestRef = doc(db, 'users', request.landlordId, 'properties', request.propertyId, 'maintenanceRequests', request.id);
+    updateDocumentNonBlocking(requestRef, {
+      status: newStatus,
+      updatedAt: serverTimestamp(),
+    });
+    toast({ title: "Status Updated", description: `Task marked as ${newStatus}.` });
   };
 
   const getPriorityColor = (priority: string) => {
@@ -110,15 +124,15 @@ export default function MaintenancePage() {
                     <div className="p-6 md:col-span-3 space-y-4">
                       <div className="flex flex-wrap items-center gap-3">
                         <Badge variant="outline" className="text-[10px] uppercase font-bold text-primary/60 border-primary/20">
-                          ID: {request.id.slice(0, 8)}
+                          {request.status || 'Pending'}
                         </Badge>
                         <Badge className={`capitalize font-bold border ${getPriorityColor(request.priority)}`}>
                           {request.priority || 'Pending Triage'}
                         </Badge>
-                        <Badge variant="secondary" className="capitalize text-[10px]">
+                        <Badge variant="secondary" className="capitalize text-[10px] font-bold">
                           {request.category || 'Uncategorized'}
                         </Badge>
-                        <span className="text-xs text-muted-foreground font-medium flex items-center ml-auto">
+                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tight ml-auto">
                           <Clock className="w-3 h-3 mr-1" /> {createdAt && isValid(createdAt) ? format(createdAt, 'PPp') : 'Just now'}
                         </span>
                       </div>
@@ -132,7 +146,7 @@ export default function MaintenancePage() {
                         <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 flex gap-3">
                           <BrainCircuit className="w-5 h-5 text-accent shrink-0 mt-0.5" />
                           <div>
-                            <p className="text-xs font-bold text-accent uppercase tracking-wider mb-1">AI Recommendation Insight</p>
+                            <p className="text-[10px] font-bold text-accent uppercase tracking-widest mb-1">AI Recommendation Insight</p>
                             <p className="text-sm text-accent-foreground/80 italic">{request.aiTriageNotes}</p>
                           </div>
                         </div>
@@ -141,7 +155,7 @@ export default function MaintenancePage() {
 
                     <div className="bg-muted/30 p-6 flex flex-col justify-center gap-3 border-l border-muted/50">
                       <Button 
-                        className="w-full bg-accent hover:bg-accent/90 text-white rounded-xl shadow-lg shadow-accent/10 font-bold"
+                        className="w-full bg-accent hover:bg-accent/90 text-white rounded-xl shadow-lg shadow-accent/10 font-bold h-11"
                         onClick={() => handleTriage(request)}
                         disabled={isTriaging === request.id}
                       >
@@ -150,8 +164,26 @@ export default function MaintenancePage() {
                         ) : (
                           <Sparkles className="w-4 h-4 mr-2" />
                         )}
-                        {isTriaging === request.id ? 'Analyzing...' : 'Auto-Triage with AI'}
+                        {isTriaging === request.id ? 'Analyzing...' : 'Auto-Triage'}
                       </Button>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" className="w-full rounded-xl font-bold h-11 border-primary/10">
+                            Update Status
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                          <DropdownMenuItem onClick={() => updateStatus(request, 'in-progress')}>
+                            <PlayCircle className="w-4 h-4 mr-2 text-blue-500" />
+                            Mark In Progress
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => updateStatus(request, 'completed')}>
+                            <CheckCircle2 className="w-4 h-4 mr-2 text-green-500" />
+                            Mark Completed
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </Card>

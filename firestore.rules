@@ -13,20 +13,22 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // Check if the current user is a tenant assigned to a specific property
+    function isTenantOfProperty(landlordId, propertyId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(landlordId)/properties/$(propertyId)/tenants/$(request.auth.uid));
+    }
+
     // --- COLLECTION GROUP RULES ---
-    // Specifically split rules to allow the query optimizer to correctly authorize list operations.
 
     match /{path=**}/maintenanceRequests/{requestId} {
       allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
-        resource.data.reportedByUserId == request.auth.uid ||
-        ("assignedToUserId" in resource.data && resource.data.assignedToUserId == request.auth.uid)
+        resource.data.reportedByUserId == request.auth.uid
       );
       
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
-        resource.data.reportedByUserId == request.auth.uid ||
-        ("assignedToUserId" in resource.data && resource.data.assignedToUserId == request.auth.uid)
+        resource.data.reportedByUserId == request.auth.uid
       );
       
       allow create: if isSignedIn() && request.resource.data.reportedByUserId == request.auth.uid;
@@ -42,12 +44,14 @@ service cloud.firestore {
     match /{path=**}/tenants/{tenantId} {
       allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
-        ("userProfileId" in resource.data && resource.data.userProfileId == request.auth.uid)
+        ("userProfileId" in resource.data && resource.data.userProfileId == request.auth.uid) ||
+        tenantId == request.auth.uid
       );
       
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
-        ("userProfileId" in resource.data && resource.data.userProfileId == request.auth.uid)
+        ("userProfileId" in resource.data && resource.data.userProfileId == request.auth.uid) ||
+        tenantId == request.auth.uid
       );
       
       allow write: if isSignedIn() && (
@@ -57,18 +61,23 @@ service cloud.firestore {
     }
 
     match /{path=**}/emergencyContacts/{contactId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
     }
 
     // --- HIERARCHICAL RULES ---
 
     match /users/{userId} {
-      allow get: if isOwner(userId);
+      allow get: if isSignedIn();
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update, delete: if isOwner(userId);
       
       match /properties/{propertyId} {
-        allow get, list: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow get: if isSignedIn() && (
+          isOwner(userId) || 
+          exists(/databases/$(database)/documents/users/$(userId)/properties/$(propertyId)/tenants/$(request.auth.uid))
+        );
         allow create: if isOwner(userId) && request.resource.data.landlordId == userId;
         allow update, delete: if isOwner(userId);
 

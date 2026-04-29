@@ -1,12 +1,12 @@
 
 "use client";
 
-import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, collectionGroup } from "firebase/firestore";
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from "@/firebase";
+import { collection, query, where, collectionGroup, doc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Phone, FileText, Download, AlertCircle, Wrench, ShieldAlert, Loader2 } from "lucide-react";
+import { MapPin, Phone, FileText, Download, AlertCircle, Wrench, ShieldAlert, Loader2, Home } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { format, isValid } from "date-fns";
@@ -16,7 +16,27 @@ export default function TenantHub() {
   const { user } = useUser();
   const db = useFirestore();
 
-  // Fetch tenant's maintenance requests across all landlord paths
+  // 1. Find the tenant profile associated with this user UID
+  const tenantProfileQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return query(
+      collectionGroup(db, "tenants"),
+      where("userProfileId", "==", user.uid)
+    );
+  }, [db, user]);
+
+  const { data: tenantProfiles, isLoading: isProfileLoading } = useCollection(tenantProfileQuery);
+  const activeProfile = tenantProfiles?.[0];
+
+  // 2. Fetch the actual property document using IDs from the profile
+  const propertyRef = useMemoFirebase(() => {
+    if (!db || !activeProfile) return null;
+    return doc(db, "users", activeProfile.landlordId, "properties", activeProfile.propertyId);
+  }, [db, activeProfile]);
+
+  const { data: property, isLoading: isPropertyLoading } = useDoc(propertyRef);
+
+  // 3. Fetch maintenance requests reported by this user
   const requestsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -32,10 +52,9 @@ export default function TenantHub() {
     return requests.filter(r => r.status !== 'completed');
   }, [requests]);
 
-  // Fetch documents assigned to this resident
+  // 4. Fetch documents shared with this resident
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Filter by tenantUserProfileId as required by security rules for tenant access
     return query(
       collection(db, "documents"),
       where("tenantUserProfileId", "==", user.uid)
@@ -44,14 +63,36 @@ export default function TenantHub() {
 
   const { data: documents } = useCollection(docsQuery);
 
-  if (isRequestsLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+  if (isProfileLoading || isPropertyLoading || isRequestsLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground font-medium">Syncing your resident portal...</p>
+      </div>
+    );
+  }
+
+  if (!activeProfile || !property) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
+        <div className="p-6 bg-muted rounded-full">
+          <Home className="w-12 h-12 text-muted-foreground" />
+        </div>
+        <h2 className="text-2xl font-bold font-headline">Welcome to RentalFlow</h2>
+        <p className="text-muted-foreground max-w-md">
+          It looks like you haven't been assigned to a property yet. 
+          Please contact your landlord to link your account.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary mb-2">Resident Hub</h1>
-          <p className="text-muted-foreground font-medium">Welcome back to your sanctuary.</p>
+          <p className="text-muted-foreground font-medium">Welcome home, {activeProfile.firstName}.</p>
         </div>
         <Button className="bg-accent hover:bg-accent/90 rounded-xl shadow-lg shadow-accent/20" asChild>
           <Link href="/tenant/maintenance">
@@ -65,42 +106,44 @@ export default function TenantHub() {
         <Card className="lg:col-span-2 border-none shadow-sm overflow-hidden">
           <div className="relative h-64 w-full">
             <Image 
-              src="https://picsum.photos/seed/home/800/600" 
-              alt="Home" 
+              src={property.imageUrl || "https://picsum.photos/seed/home/800/600"} 
+              alt={property.addressLine1} 
               fill 
               className="object-cover"
               data-ai-hint="modern apartment interior"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             <div className="absolute bottom-6 left-6 text-white">
-              <p className="flex items-center text-sm mb-1 opacity-90"><MapPin className="w-4 h-4 mr-1" /> Your Managed Property</p>
-              <h2 className="text-2xl font-headline font-bold">Property Overview</h2>
+              <p className="flex items-center text-sm mb-1 opacity-90"><MapPin className="w-4 h-4 mr-1" /> {property.addressLine1}</p>
+              <h2 className="text-2xl font-headline font-bold">{property.zipCode}</h2>
             </div>
           </div>
           <CardContent className="pt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-4">
               <h3 className="font-bold font-headline text-lg">About Your Residence</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Welcome to your managed home. Use this portal to view active lease documents, 
-                emergency guides, and manage your maintenance requests directly with your landlord.
+                {property.description}
               </p>
               <div className="flex flex-wrap gap-2">
                 <Badge variant="secondary">Active Lease</Badge>
+                <Badge variant="outline">£{property.rentAmount}/mo</Badge>
               </div>
             </div>
             <div className="space-y-4">
               <h3 className="font-bold font-headline text-lg flex items-center">
                 <ShieldAlert className="w-5 h-5 mr-2 text-red-500" />
-                Emergency Contact
+                Management Contact
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-muted/40 rounded-xl border border-muted">
                   <div>
-                    <p className="text-sm font-bold">Property Management</p>
-                    <p className="text-xs text-muted-foreground">Emergency Support</p>
+                    <p className="text-sm font-bold">24/7 Maintenance</p>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Emergency Support</p>
                   </div>
-                  <Button size="icon" variant="ghost" className="rounded-full text-primary hover:bg-primary/10">
-                    <Phone className="w-4 h-4" />
+                  <Button size="icon" variant="ghost" className="rounded-full text-primary hover:bg-primary/10" asChild>
+                    <a href="tel:0800000000">
+                      <Phone className="w-4 h-4" />
+                    </a>
                   </Button>
                 </div>
               </div>
@@ -143,12 +186,12 @@ export default function TenantHub() {
 
           <Card className="border-none shadow-sm">
             <CardHeader>
-              <CardTitle className="text-xl font-headline">Documents</CardTitle>
+              <CardTitle className="text-xl font-headline">Vault</CardTitle>
               <CardDescription>Your lease and building guides</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {documents && documents.length > 0 ? (
-                documents.map(doc => {
+                documents.slice(0, 3).map(doc => {
                   const createdAt = doc.createdAt ? new Date(doc.createdAt) : null;
                   return (
                     <div key={doc.id} className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors rounded-xl cursor-pointer group">
@@ -159,7 +202,7 @@ export default function TenantHub() {
                         <div>
                           <p className="text-sm font-bold truncate max-w-[150px]">{doc.fileName}</p>
                           <p className="text-[10px] text-muted-foreground">
-                            Uploaded {createdAt && isValid(createdAt) ? format(createdAt, 'PP') : 'Recently'}
+                            {createdAt && isValid(createdAt) ? format(createdAt, 'PP') : 'Recently'}
                           </p>
                         </div>
                       </div>
@@ -168,7 +211,12 @@ export default function TenantHub() {
                   );
                 })
               ) : (
-                <p className="text-xs text-muted-foreground italic text-center py-2">No shared documents available.</p>
+                <p className="text-xs text-muted-foreground italic text-center py-2">No documents shared yet.</p>
+              )}
+              {documents && documents.length > 3 && (
+                <Button variant="ghost" className="w-full text-xs text-primary" asChild>
+                  <Link href="/tenant/documents">View All Documents</Link>
+                </Button>
               )}
             </CardContent>
           </Card>
