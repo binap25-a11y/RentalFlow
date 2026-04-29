@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, use } from 'react';
+import { useState, use, useMemo } from 'react';
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
@@ -47,8 +46,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     // Security rules require where("userId", "==", user.uid) for /documents list
     return query(
       collection(db, 'documents'), 
-      where('propertyId', '==', propertyId),
-      where('userId', '==', user.uid)
+      where('userId', '==', user.uid),
+      where('propertyId', '==', propertyId)
     );
   }, [db, user, propertyId]);
 
@@ -110,7 +109,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <Card className="border-none shadow-sm overflow-hidden">
+          <Card className="border-none shadow-sm overflow-hidden bg-card">
             <CardHeader className="bg-primary/5 pb-4">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-xl font-headline font-bold text-primary">Financial Details</CardTitle>
@@ -215,26 +214,33 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         </div>
 
         <div className="space-y-8">
-          <Card className="border-none shadow-sm overflow-hidden bg-white">
-            <CardHeader className="pb-4 border-b border-primary/5 bg-primary/5">
+          <Card className="border-none shadow-sm overflow-hidden bg-white rounded-2xl">
+            <CardHeader className="pb-4 bg-primary/10">
               <CardTitle className="text-xl font-headline font-bold text-primary flex items-center">
-                <ShieldAlert className="w-5 h-5 mr-2 text-primary" />
+                <ShieldAlert className="w-5 h-5 mr-3 text-primary" />
                 Portfolio Status
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-6 space-y-4">
-              <div className="p-4 bg-primary/5 rounded-xl flex gap-3 border border-primary/10 transition-all hover:bg-primary/10">
+            <CardContent className="pt-6 space-y-6">
+              <div className="p-5 bg-background border border-primary/10 rounded-2xl flex gap-4 items-start shadow-sm">
                 <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                <p className="text-sm text-foreground font-body font-medium leading-relaxed">
-                  Keep compliance certificates up to date to ensure resident safety and legal alignment.
+                <p className="text-sm font-body text-muted-foreground leading-relaxed">
+                  Compliance and resident safety are top priorities. Keep all certifications updated within the <span className="font-bold text-primary">Vault</span> to maintain your <span className="font-bold text-primary">Tier 1</span> status.
                 </p>
               </div>
-              <div className="flex items-center justify-between px-2">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest font-headline">Compliance Level</span>
-                <Badge variant="outline" className="text-primary font-bold border-primary/20 bg-primary/10 font-headline uppercase tracking-tight">Tier 1 Secure</Badge>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest font-headline">Compliance Health</span>
+                  <Badge className="bg-primary hover:bg-primary/90 text-primary-foreground font-headline font-bold uppercase py-1 px-3">Verified Safe</Badge>
+                </div>
+                <div className="h-2 w-full bg-primary/5 rounded-full overflow-hidden">
+                  <div className="h-full bg-primary w-[92%]"></div>
+                </div>
               </div>
-              <Button className="w-full rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 font-headline h-11">
-                <Download className="w-4 h-4 mr-2" /> Save PDF Guide
+
+              <Button className="w-full rounded-xl font-headline font-bold h-12 shadow-lg shadow-primary/10 hover:translate-y-[-1px] transition-transform">
+                <Download className="w-4 h-4 mr-2" /> Generate Health Report
               </Button>
             </CardContent>
           </Card>
