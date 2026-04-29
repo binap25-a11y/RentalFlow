@@ -2,8 +2,9 @@
 "use client";
 
 import { useState, use, useMemo } from 'react';
-import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useStorage, addDocumentNonBlocking } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,17 +14,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Building2, MapPin, Users, Wrench, FileCheck, Phone, 
   Trash2, Edit3, Loader2, Save, Plus, ArrowLeft,
-  Download, FileText, Info, Camera, ShieldAlert
+  Download, FileText, Info, Camera, ShieldAlert, Upload
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { format, isValid } from 'date-fns';
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
   const propertyId = resolvedParams.propertyId;
   const { user } = useUser();
   const db = useFirestore();
+  const storage = useStorage();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -43,10 +46,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
+    // Querying documents where landlord is the user OR user is the userId
     return query(
       collection(db, 'documents'), 
-      where('userId', '==', user.uid),
-      where('propertyId', '==', propertyId)
+      where('propertyId', '==', propertyId),
+      where('landlordId', '==', user.uid)
     );
   }, [db, user, propertyId]);
 
@@ -64,6 +68,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const [contactName, setContactName] = useState('');
   const [contactRole, setContactRole] = useState('');
   const [contactPhone, setContactPhone] = useState('');
+
+  // Document Upload State
+  const [isUploadingDoc, setIsUploadingDoc] = useState(false);
+  const [docName, setDocName] = useState('');
 
   const handleUpdateRent = () => {
     if (!propertyRef) return;
@@ -91,6 +99,38 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
     setContactName(''); setContactRole(''); setContactPhone('');
     toast({ title: "Contact Added" });
+  };
+
+  const handleUploadDocument = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || !db || !storage) return;
+
+    setIsUploadingDoc(true);
+    const docId = doc(collection(db, 'dummy')).id;
+
+    try {
+      const storageRef = ref(storage, `documents/${user.uid}/${propertyId}/${file.name}`);
+      const uploadResult = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(uploadResult.ref);
+
+      addDocumentNonBlocking(collection(db, 'documents'), {
+        id: docId,
+        fileName: file.name,
+        fileUrl: url,
+        documentType: 'property-asset',
+        description: `Uploaded for ${property?.addressLine1}`,
+        propertyId: propertyId,
+        userId: user.uid,
+        landlordId: user.uid,
+        createdAt: new Date().toISOString(),
+      });
+
+      toast({ title: "Document Uploaded", description: `${file.name} is now in the vault.` });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Upload Failed", description: error.message });
+    } finally {
+      setIsUploadingDoc(false);
+    }
   };
 
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin" /></div>;
@@ -159,8 +199,61 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     </div>
                  ))
                ) : (
-                 <p className="text-sm text-muted-foreground italic font-body">No residents assigned yet.</p>
+                 <div className="p-8 text-center bg-muted/20 rounded-2xl border-2 border-dashed">
+                    <p className="text-sm text-muted-foreground font-body">No residents assigned yet.</p>
+                    <Button variant="link" asChild><Link href="/landlord/tenants">Assign Resident</Link></Button>
+                 </div>
                )}
+            </TabsContent>
+
+            <TabsContent value="docs" className="mt-6 space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-bold font-headline text-primary">Property Vault</h3>
+                <div className="relative">
+                  <Input 
+                    type="file" 
+                    id="doc-upload" 
+                    className="hidden" 
+                    onChange={handleUploadDocument}
+                    disabled={isUploadingDoc}
+                  />
+                  <Button asChild variant="outline" className="rounded-xl border-primary text-primary hover:bg-primary/5" disabled={isUploadingDoc}>
+                    <Label htmlFor="doc-upload" className="cursor-pointer">
+                      {isUploadingDoc ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
+                      Upload Document
+                    </Label>
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="grid gap-3">
+                {!documents || documents.length === 0 ? (
+                  <p className="text-sm text-muted-foreground italic font-body py-12 text-center border-2 border-dashed rounded-2xl">
+                    The vault is empty. Upload lease agreements or guides.
+                  </p>
+                ) : (
+                  documents.map(doc => (
+                    <div key={doc.id} className="flex items-center justify-between p-4 bg-white rounded-xl border border-primary/5 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 bg-blue-50 rounded-lg">
+                          <FileText className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm font-body">{doc.fileName}</p>
+                          <p className="text-[10px] text-muted-foreground font-headline uppercase font-bold">
+                            Added: {doc.createdAt ? format(new Date(doc.createdAt), 'PPP') : 'Recently'}
+                          </p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="icon" asChild className="rounded-full hover:bg-primary/5">
+                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
+                          <Download className="w-4 h-4 text-primary" />
+                        </a>
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
             </TabsContent>
 
             <TabsContent value="contacts" className="mt-6 space-y-6">

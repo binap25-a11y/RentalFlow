@@ -19,8 +19,9 @@ service cloud.firestore {
     // -------------------------
     match /documents/{docId} {
       allow create: if isSignedIn();
-      allow read, update, delete: if isSignedIn() && 
-        (resource.data.userId == request.auth.uid || resource.data.landlordId == request.auth.uid);
+      // Allow read/list if user is the owner OR the landlord
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.landlordId == request.auth.uid);
+      allow update, delete: if isSignedIn() && (resource.data.userId == request.auth.uid);
     }
 
     // -------------------------
@@ -28,8 +29,8 @@ service cloud.firestore {
     // -------------------------
     match /properties/{propertyId} {
       allow create: if isSignedIn();
-      allow read, update, delete: if isSignedIn() && 
-        (resource.data.landlordId == request.auth.uid);
+      allow read: if isSignedIn() && (resource.data.landlordId == request.auth.uid);
+      allow update, delete: if isSignedIn() && (resource.data.landlordId == request.auth.uid);
     }
 
     // -------------------------
@@ -37,8 +38,8 @@ service cloud.firestore {
     // -------------------------
     match /tenants/{tenantId} {
       allow create: if isSignedIn();
-      allow read, update, delete: if isSignedIn() && 
-        (resource.data.landlordId == request.auth.uid || resource.data.userProfileId == request.auth.uid);
+      allow read: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.userProfileId == request.auth.uid);
+      allow update, delete: if isSignedIn() && (resource.data.landlordId == request.auth.uid);
     }
 
     // -------------------------
@@ -46,8 +47,8 @@ service cloud.firestore {
     // -------------------------
     match /maintenanceRequests/{requestId} {
       allow create: if isSignedIn();
-      allow read, update, delete: if isSignedIn() && 
-        (resource.data.landlordId == request.auth.uid || resource.data.reportedByUserId == request.auth.uid);
+      allow read: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.reportedByUserId == request.auth.uid);
+      allow update, delete: if isSignedIn() && (resource.data.landlordId == request.auth.uid);
     }
 
     // -------------------------
@@ -62,8 +63,7 @@ service cloud.firestore {
     // -------------------------
     match /inspections/{inspectionId} {
       allow create: if isSignedIn();
-      allow read, update, delete: if isSignedIn() && 
-        (resource.data.landlordId == request.auth.uid);
+      allow read, update, delete: if isSignedIn() && (resource.data.landlordId == request.auth.uid);
     }
 
     // Block everything else
