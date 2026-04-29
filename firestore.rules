@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -18,8 +19,7 @@ service cloud.firestore {
     // -------------------------
     match /documents/{docId} {
       allow create: if isSignedIn();
-      // Using 'read' covers both 'get' and 'list'. 
-      // Firestore enforces these rules as filters on 'list' queries.
+      // Enforce list queries with userId filter
       allow read, update, delete: if isSignedIn() && 
         (resource == null || resource.data.userId == request.auth.uid || resource.data.landlordId == request.auth.uid);
     }
@@ -62,7 +62,8 @@ service cloud.firestore {
     // INSPECTIONS
     // -------------------------
     match /inspections/{inspectionId} {
-      allow read, write: if isSignedIn() && 
+      allow create: if isSignedIn();
+      allow read, update, delete: if isSignedIn() && 
         (resource == null || resource.data.landlordId == request.auth.uid);
     }
 
