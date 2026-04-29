@@ -1,4 +1,3 @@
-
 'use client';
 import {
   Auth,
@@ -8,6 +7,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   sendPasswordResetEmail,
+  signOut,
 } from 'firebase/auth';
 
 /** 
@@ -45,4 +45,11 @@ export function initiateGoogleSignIn(authInstance: Auth): void {
  */
 export function initiatePasswordReset(authInstance: Auth, email: string): void {
   sendPasswordResetEmail(authInstance, email);
+}
+
+/** 
+ * Initiate sign-out (non-blocking). 
+ */
+export function initiateSignOut(authInstance: Auth): void {
+  signOut(authInstance);
 }

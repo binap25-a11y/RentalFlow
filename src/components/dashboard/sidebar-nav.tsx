@@ -1,8 +1,7 @@
-
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   Building2, 
   Users, 
@@ -15,8 +14,10 @@ import {
   FileText
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/firebase";
+import { initiateSignOut } from "@/firebase/non-blocking-login";
 
 interface SidebarNavProps {
   role: 'landlord' | 'tenant';
@@ -26,6 +27,10 @@ interface SidebarNavProps {
 
 export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
   const pathname = usePathname();
+  const auth = useAuth();
+  const router = useRouter();
+
+  const dashboardHref = role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub';
 
   const landlordItems = [
     { label: 'Overview', icon: LayoutDashboard, href: '/landlord/dashboard' },
@@ -43,10 +48,15 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
 
   const items = role === 'landlord' ? landlordItems : tenantItems;
 
+  const handleLogout = () => {
+    initiateSignOut(auth);
+    router.push('/');
+  };
+
   return (
     <Sidebar className="border-r border-sidebar-border shadow-2xl">
       <SidebarHeader className="p-6">
-        <Link href="/" className="flex items-center gap-2 group">
+        <Link href={dashboardHref} className="flex items-center gap-2 group">
           <div className="p-2 bg-sidebar-primary rounded-xl transition-transform group-hover:scale-110">
             <LayoutDashboard className="w-5 h-5 text-sidebar-primary-foreground" />
           </div>
@@ -89,11 +99,12 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
         </div>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild className="hover:bg-destructive/10 hover:text-destructive text-sidebar-foreground/60">
-              <Link href="/">
-                <LogOut className="w-4 h-4" />
-                <span>Logout</span>
-              </Link>
+            <SidebarMenuButton 
+              onClick={handleLogout}
+              className="w-full justify-start h-10 rounded-lg hover:bg-destructive/10 hover:text-destructive text-sidebar-foreground/60 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
