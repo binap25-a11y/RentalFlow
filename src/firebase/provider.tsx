@@ -111,30 +111,14 @@ export const useFirebase = (): FirebaseServicesAndUser => {
     throw new Error('useFirebase must be used within a FirebaseProvider.');
   }
 
-  // Support SSR by providing a fallback if services aren't fully ready yet
-  if (!context.areServicesAvailable || !context.firebaseApp || !context.firestore || !context.auth || !context.storage) {
-    // If we're on the server, we might not have the services ready in the same way
-    // but we should avoid throwing to prevent hydration crashes if possible.
-    // However, the standard hook pattern expects them.
-    if (typeof window === 'undefined') {
-       return {
-         firebaseApp: context.firebaseApp as any,
-         firestore: context.firestore as any,
-         auth: context.auth as any,
-         storage: context.storage as any,
-         user: context.user,
-         isUserLoading: context.isUserLoading,
-         userError: context.userError,
-       };
-    }
-    throw new Error('Firebase core services not available. Check FirebaseProvider props.');
-  }
-
+  // Handle SSR and early initialization states gracefully
+  const servicesAvailable = context.areServicesAvailable;
+  
   return {
-    firebaseApp: context.firebaseApp,
-    firestore: context.firestore,
-    auth: context.auth,
-    storage: context.storage,
+    firebaseApp: (context.firebaseApp || {}) as FirebaseApp,
+    firestore: (context.firestore || {}) as Firestore,
+    auth: (context.auth || {}) as Auth,
+    storage: (context.storage || {}) as FirebaseStorage,
     user: context.user,
     isUserLoading: context.isUserLoading,
     userError: context.userError,

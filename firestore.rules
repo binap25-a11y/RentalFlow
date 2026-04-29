@@ -41,7 +41,7 @@ service cloud.firestore {
       }
     }
 
-    // DOCUMENTS COLLECTION (ROOT LEVEL) - Needed for Vault & Gallery
+    // DOCUMENTS COLLECTION (ROOT LEVEL)
     match /documents/{documentId} {
       allow read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid ||

@@ -2,9 +2,8 @@
 "use client";
 
 import { useState, use, useRef } from 'react';
-import { useUser, useFirestore, useStorage, useDoc, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,10 +25,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const propertyId = resolvedParams.propertyId;
   const { user } = useUser();
   const db = useFirestore();
-  const storage = useStorage();
   const { toast } = useToast();
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const propertyRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -63,14 +60,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: contacts } = useCollection(contactsQuery);
 
-  const photos = documents?.filter(d => d.documentType === 'Property Photo') || [];
-
   const [isEditing, setIsEditing] = useState(false);
   const [rentAmount, setRentAmount] = useState('');
   const [contactName, setContactName] = useState('');
   const [contactRole, setContactRole] = useState('');
   const [contactPhone, setContactPhone] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
 
   const handleUpdateRent = () => {
     if (!propertyRef) return;
@@ -97,36 +91,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
     setContactName(''); setContactRole(''); setContactPhone('');
     toast({ title: "Contact Added" });
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && user && storage && db) {
-      setIsUploading(true);
-      try {
-        const docId = doc(collection(db, 'dummy')).id;
-        const fileRef = ref(storage, `properties/${propertyId}/gallery/${docId}_${file.name}`);
-        await uploadBytes(fileRef, file);
-        const url = await getDownloadURL(fileRef);
-
-        const docRef = doc(db, 'documents', docId);
-        setDocumentNonBlocking(docRef, {
-          id: docId,
-          fileName: file.name,
-          fileUrl: url,
-          documentType: 'Property Photo',
-          propertyId,
-          uploadedByUserId: user.uid,
-          landlordId: user.uid,
-          createdAt: serverTimestamp(),
-        }, { merge: true });
-        toast({ title: "Photo Uploaded", description: "Saved to secure Storage." });
-      } catch (error) {
-        toast({ variant: "destructive", title: "Upload Failed" });
-      } finally {
-        setIsUploading(false);
-      }
-    }
   };
 
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin" /></div>;
@@ -169,34 +133,13 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           </Card>
 
           <Tabs defaultValue="tenants">
-            <TabsList className="grid w-full grid-cols-6 bg-muted/50 p-1 rounded-xl overflow-x-auto h-auto">
+            <TabsList className="grid w-full grid-cols-5 bg-muted/50 p-1 rounded-xl h-auto">
               <TabsTrigger value="tenants" className="rounded-lg py-2 font-bold"><Users className="w-4 h-4 mr-2" /> Residents</TabsTrigger>
-              <TabsTrigger value="gallery" className="rounded-lg py-2 font-bold"><Camera className="w-4 h-4 mr-2" /> Gallery</TabsTrigger>
               <TabsTrigger value="docs" className="rounded-lg py-2 font-bold"><FileText className="w-4 h-4 mr-2" /> Vault</TabsTrigger>
               <TabsTrigger value="maintenance" className="rounded-lg py-2 font-bold"><Wrench className="w-4 h-4 mr-2" /> Issues</TabsTrigger>
               <TabsTrigger value="inspections" className="rounded-lg py-2 font-bold"><FileCheck className="w-4 h-4 mr-2" /> Health</TabsTrigger>
               <TabsTrigger value="contacts" className="rounded-lg py-2 font-bold"><Phone className="w-4 h-4 mr-2" /> Help</TabsTrigger>
             </TabsList>
-
-            <TabsContent value="gallery" className="mt-6 space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold font-headline text-primary">Property Gallery</h3>
-                <Button size="sm" className="rounded-xl font-bold" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                  {isUploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <><Plus className="w-4 h-4 mr-2" /> Add Photos</>}
-                </Button>
-                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {photos.map((photo) => (
-                  <div key={photo.id} className="relative aspect-video rounded-xl overflow-hidden group border border-primary/5 shadow-sm">
-                    <Image src={photo.fileUrl} alt="Gallery" fill className="object-cover transition-transform group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                      <Button variant="destructive" size="icon" className="rounded-full h-8 w-8" onClick={() => deleteDocumentNonBlocking(doc(db, 'documents', photo.id))}><Trash2 className="w-4 h-4" /></Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </TabsContent>
 
             <TabsContent value="tenants" className="mt-6 space-y-4">
                <h3 className="text-lg font-bold font-headline text-primary">Assigned Residents</h3>
