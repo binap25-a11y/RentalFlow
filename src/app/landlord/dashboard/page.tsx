@@ -23,7 +23,7 @@ export default function LandlordDashboard() {
 
   const documentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Security rules require an explicit filter on landlordId for list operations on the documents collection
+    // Security rules require an explicit filter on landlordId for list operations
     return query(
       collection(db, "documents"),
       where("landlordId", "==", user.uid)
