@@ -21,24 +21,25 @@ export default function LandlordDashboard() {
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return collection(db, "users", user.uid, "properties");
+    return query(
+      collection(db, "properties"),
+      where("landlordId", "==", user.uid)
+    );
   }, [db, user]);
 
   const { data: properties } = useCollection(propertiesQuery);
 
   const documentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Security rules require an explicit filter on landlordId for list operations
     return query(
       collection(db, "documents"),
-      where("landlordId", "==", user.uid)
+      where("userId", "==", user.uid)
     );
   }, [db, user]);
 
   const { data: documents } = useCollection(documentsQuery);
 
   const stats = useMemo(() => {
-    // Prevent hydration mismatch by returning default stats on server
     if (!isClient) {
       return [
         { label: 'Total Properties', value: 0, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -189,9 +190,9 @@ export default function LandlordDashboard() {
               </Link>
             </Button>
             <Button variant="outline" className="w-full justify-start h-12 rounded-xl border-accent/20 hover:bg-accent/5" asChild>
-              <Link href="/landlord/inspections">
+              <Link href="/landlord/maintenance">
                 <AlertTriangle className="w-5 h-5 mr-3 text-accent" />
-                Schedule Inspection
+                Maintenance Dashboard
               </Link>
             </Button>
           </CardContent>

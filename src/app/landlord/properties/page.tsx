@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking, useStorage } from '@/firebase';
-import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,10 @@ export default function PropertiesPage() {
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return collection(db, 'users', user.uid, 'properties');
+    return query(
+      collection(db, 'properties'),
+      where('landlordId', '==', user.uid)
+    );
   }, [db, user]);
 
   const { data: properties, isLoading } = useCollection(propertiesQuery);
@@ -51,7 +54,7 @@ export default function PropertiesPage() {
 
     setIsSubmitting(true);
     const propertyId = doc(collection(db, 'dummy')).id;
-    const propertyRef = doc(db, 'users', user.uid, 'properties', propertyId);
+    const propertyRef = doc(db, 'properties', propertyId);
 
     try {
       let finalImageUrl = `https://picsum.photos/seed/${propertyId}/800/600`;
@@ -83,7 +86,6 @@ export default function PropertiesPage() {
       setIsAddDialogOpen(false);
       resetForm();
     } catch (error: any) {
-      console.error(error);
       toast({ variant: "destructive", title: "Save Failed", description: error.message || "Could not create property record." });
     } finally {
       setIsSubmitting(false);
@@ -100,7 +102,7 @@ export default function PropertiesPage() {
 
   const handleDeleteProperty = (propertyId: string) => {
     if (!user || !db) return;
-    const propertyRef = doc(db, 'users', user.uid, 'properties', propertyId);
+    const propertyRef = doc(db, 'properties', propertyId);
     deleteDocumentNonBlocking(propertyRef);
     toast({ title: "Property Deleted" });
   };

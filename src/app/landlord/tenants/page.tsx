@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, doc, serverTimestamp, query, where, collectionGroup } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,15 +20,14 @@ export default function TenantsPage() {
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return collection(db, 'users', user.uid, 'properties');
+    return query(collection(db, 'properties'), where('landlordId', '==', user.uid));
   }, [db, user]);
 
   const { data: properties } = useCollection(propertiesQuery);
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Query all tenants across all properties owned by this landlord
-    return query(collectionGroup(db, 'tenants'), where('landlordId', '==', user.uid));
+    return query(collection(db, 'tenants'), where('landlordId', '==', user.uid));
   }, [db, user]);
 
   const { data: tenants, isLoading } = useCollection(tenantsQuery);
@@ -48,9 +47,9 @@ export default function TenantsPage() {
     if (!user || !db || !selectedPropertyId) return;
 
     const tenantId = doc(collection(db, 'dummy')).id;
-    const tenantRef = doc(db, 'users', user.uid, 'properties', selectedPropertyId, 'tenants', tenantId);
+    const tenantRef = doc(db, 'tenants', tenantId);
     
-    const propertyRef = doc(db, 'users', user.uid, 'properties', selectedPropertyId);
+    const propertyRef = doc(db, 'properties', selectedPropertyId);
 
     setDocumentNonBlocking(tenantRef, {
       id: tenantId,
@@ -59,7 +58,7 @@ export default function TenantsPage() {
       email,
       phoneNumber: phone,
       propertyId: selectedPropertyId,
-      landlordId: user.uid, // Required for collection group query filtering
+      landlordId: user.uid,
       leaseStartDate: new Date().toISOString().split('T')[0],
       leaseEndDate: new Date(Date.now() + 31536000000).toISOString().split('T')[0],
       createdAt: serverTimestamp(),
@@ -82,7 +81,7 @@ export default function TenantsPage() {
 
   const handleDeleteTenant = (tenant: any) => {
     if (!user || !db) return;
-    const tenantRef = doc(db, 'users', user.uid, 'properties', tenant.propertyId, 'tenants', tenant.id);
+    const tenantRef = doc(db, 'tenants', tenant.id);
     deleteDocumentNonBlocking(tenantRef);
     toast({ title: "Resident Removed", description: "Tenant record has been deleted." });
   };

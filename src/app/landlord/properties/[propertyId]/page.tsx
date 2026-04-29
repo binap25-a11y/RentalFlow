@@ -30,14 +30,14 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const propertyRef = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return doc(db, 'users', user.uid, 'properties', propertyId);
+    return doc(db, 'properties', propertyId);
   }, [db, user, propertyId]);
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return collection(db, 'users', user.uid, 'properties', propertyId, 'tenants');
+    return query(collection(db, 'tenants'), where('propertyId', '==', propertyId));
   }, [db, user, propertyId]);
 
   const { data: tenants } = useCollection(tenantsQuery);
@@ -47,7 +47,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return query(
       collection(db, 'documents'), 
       where('propertyId', '==', propertyId),
-      where('landlordId', '==', user.uid)
+      where('userId', '==', user.uid)
     );
   }, [db, user, propertyId]);
 
@@ -55,7 +55,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const contactsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return collection(db, 'users', user.uid, 'properties', propertyId, 'emergencyContacts');
+    return query(collection(db, 'emergencyContacts'), where('propertyId', '==', propertyId));
   }, [db, user, propertyId]);
 
   const { data: contacts } = useCollection(contactsQuery);
@@ -79,13 +79,14 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const handleAddContact = () => {
     if (!user || !db) return;
     const contactId = doc(collection(db, 'dummy')).id;
-    const contactRef = doc(db, 'users', user.uid, 'properties', propertyId, 'emergencyContacts', contactId);
+    const contactRef = doc(db, 'emergencyContacts', contactId);
 
     setDocumentNonBlocking(contactRef, {
       id: contactId,
       name: contactName,
       role: contactRole,
       phone: contactPhone,
+      propertyId: propertyId,
       createdAt: serverTimestamp(),
     }, { merge: true });
 

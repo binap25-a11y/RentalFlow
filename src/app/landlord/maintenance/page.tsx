@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
-import { collectionGroup, query, where, doc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, doc, serverTimestamp } from "firebase/firestore";
 import { Wrench, Sparkles, Clock, Filter, BrainCircuit, Loader2, CheckCircle2, PlayCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, isValid } from "date-fns";
@@ -27,7 +27,7 @@ export default function MaintenancePage() {
   const maintenanceQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
-      collectionGroup(db, "maintenanceRequests"),
+      collection(db, "maintenanceRequests"),
       where("landlordId", "==", user.uid)
     );
   }, [db, user]);
@@ -39,7 +39,7 @@ export default function MaintenancePage() {
     try {
       const result = await triageMaintenanceRequest({ maintenanceRequest: request.description });
       
-      const requestRef = doc(db, 'users', request.landlordId, 'properties', request.propertyId, 'maintenanceRequests', request.id);
+      const requestRef = doc(db, 'maintenanceRequests', request.id);
       
       updateDocumentNonBlocking(requestRef, {
         priority: result.priority,
@@ -64,7 +64,7 @@ export default function MaintenancePage() {
   };
 
   const updateStatus = (request: any, newStatus: string) => {
-    const requestRef = doc(db, 'users', request.landlordId, 'properties', request.propertyId, 'maintenanceRequests', request.id);
+    const requestRef = doc(db, 'maintenanceRequests', request.id);
     updateDocumentNonBlocking(requestRef, {
       status: newStatus,
       updatedAt: serverTimestamp(),

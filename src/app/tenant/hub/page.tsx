@@ -2,7 +2,7 @@
 "use client";
 
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from "@/firebase";
-import { collection, query, where, collectionGroup, doc } from "firebase/firestore";
+import { collection, query, where, doc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,11 +16,10 @@ export default function TenantHub() {
   const { user } = useUser();
   const db = useFirestore();
 
-  // 1. Find the tenant profile associated with this user UID
   const tenantProfileQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
-      collectionGroup(db, "tenants"),
+      collection(db, "tenants"),
       where("userProfileId", "==", user.uid)
     );
   }, [db, user]);
@@ -28,19 +27,17 @@ export default function TenantHub() {
   const { data: tenantProfiles, isLoading: isProfileLoading } = useCollection(tenantProfileQuery);
   const activeProfile = tenantProfiles?.[0];
 
-  // 2. Fetch the actual property document using IDs from the profile
   const propertyRef = useMemoFirebase(() => {
     if (!db || !activeProfile) return null;
-    return doc(db, "users", activeProfile.landlordId, "properties", activeProfile.propertyId);
+    return doc(db, "properties", activeProfile.propertyId);
   }, [db, activeProfile]);
 
   const { data: property, isLoading: isPropertyLoading } = useDoc(propertyRef);
 
-  // 3. Fetch maintenance requests reported by this user
   const requestsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
-      collectionGroup(db, "maintenanceRequests"),
+      collection(db, "maintenanceRequests"),
       where("reportedByUserId", "==", user.uid)
     );
   }, [db, user]);
@@ -52,7 +49,6 @@ export default function TenantHub() {
     return requests.filter(r => r.status !== 'completed');
   }, [requests]);
 
-  // 4. Fetch documents shared with this resident
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(

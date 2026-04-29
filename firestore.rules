@@ -7,67 +7,57 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    // USERS ROOT
-    match /users/{userId} {
-      allow read, write: if isOwner(userId);
-
-      // PROPERTIES (HIERARCHICAL)
-      match /properties/{propertyId} {
-        allow read, write: if isOwner(userId);
-
-        // TENANTS SUBCOLLECTION
-        match /tenants/{tenantId} {
-          allow read, write: if isOwner(userId);
-        }
-
-        // MAINTENANCE REQUESTS SUBCOLLECTION
-        match /maintenanceRequests/{requestId} {
-          allow read, write: if isOwner(userId);
-        }
-
-        // EMERGENCY CONTACTS
-        match /emergencyContacts/{contactId} {
-          allow read, write: if isOwner(userId);
-        }
-
-        // INSPECTIONS
-        match /inspections/{inspectionId} {
-          allow read, write: if isOwner(userId);
-        }
-      }
-    }
-
-    // DOCUMENTS (ROOT LEVEL)
-    match /documents/{documentId} {
-      allow read: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid ||
-        resource.data.uploadedByUserId == request.auth.uid ||
-        resource.data.tenantUserProfileId == request.auth.uid
-      );
+    // -------------------------
+    // DOCUMENTS
+    // -------------------------
+    match /documents/{docId} {
+      // Create
       allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid ||
-        resource.data.uploadedByUserId == request.auth.uid
-      );
+
+      // Read single doc
+      allow get: if isSignedIn() &&
+        (resource.data.userId == request.auth.uid || resource.data.tenantUserProfileId == request.auth.uid);
+
+      // Allow LIST with filter
+      allow list: if isSignedIn() &&
+        (request.query.where("userId", "==", request.auth.uid) || request.query.where("tenantUserProfileId", "==", request.auth.uid));
+
+      // Update/Delete
+      allow update, delete: if isSignedIn() &&
+        resource.data.userId == request.auth.uid;
     }
 
-    // COLLECTION GROUP RULES
-    // Required for Landlord Maintenance Page and Tenants Page
-    match /{path=**}/tenants/{tenantId} {
-      allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid ||
-        resource.data.userProfileId == request.auth.uid
-      );
+    // -------------------------
+    // PROPERTIES
+    // -------------------------
+    match /properties/{propertyId} {
+      allow read, write: if isSignedIn();
     }
-    match /{path=**}/maintenanceRequests/{requestId} {
-      allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.reportedByUserId == request.auth.uid
-      );
+
+    // -------------------------
+    // TENANTS
+    // -------------------------
+    match /tenants/{tenantId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // -------------------------
+    // MAINTENANCE REQUESTS
+    // -------------------------
+    match /maintenanceRequests/{requestId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // -------------------------
+    // EMERGENCY CONTACTS
+    // -------------------------
+    match /emergencyContacts/{contactId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Block everything else
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

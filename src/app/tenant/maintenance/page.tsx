@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
-import { collection, doc, serverTimestamp, query, where, collectionGroup } from "firebase/firestore";
+import { collection, doc, serverTimestamp, query, where } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,11 +23,10 @@ export default function TenantMaintenancePage() {
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 1. Resolve the tenant's actual property and landlord context
   const tenantProfileQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
-      collectionGroup(db, "tenants"),
+      collection(db, "tenants"),
       where("userProfileId", "==", user.uid)
     );
   }, [db, user]);
@@ -35,11 +34,10 @@ export default function TenantMaintenancePage() {
   const { data: tenantProfiles, isLoading: isProfileLoading } = useCollection(tenantProfileQuery);
   const activeProfile = tenantProfiles?.[0];
 
-  // 2. Fetch maintenance request history
   const requestsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
-      collectionGroup(db, "maintenanceRequests"),
+      collection(db, "maintenanceRequests"),
       where("reportedByUserId", "==", user.uid)
     );
   }, [db, user]);
@@ -59,17 +57,7 @@ export default function TenantMaintenancePage() {
 
     setIsSubmitting(true);
     const requestId = doc(collection(db, 'dummy')).id;
-    
-    // Use the resolved property and landlord IDs from the tenant's profile
-    const requestRef = doc(
-      db, 
-      'users', 
-      activeProfile.landlordId, 
-      'properties', 
-      activeProfile.propertyId, 
-      'maintenanceRequests', 
-      requestId
-    );
+    const requestRef = doc(db, 'maintenanceRequests', requestId);
 
     setDocumentNonBlocking(requestRef, {
       id: requestId,
@@ -120,7 +108,7 @@ export default function TenantMaintenancePage() {
           <Card className="lg:col-span-1 border-none shadow-sm h-fit">
             <CardHeader>
               <CardTitle>Submit New Request</CardTitle>
-              <CardDescription>Reporting for: {activeProfile.propertyId.slice(0, 8)}...</CardDescription>
+              <CardDescription>Reporting for property {activeProfile.propertyId.slice(0, 8)}...</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
