@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState, use, useRef } from 'react';
-import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { useState, use } from 'react';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -214,8 +214,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
         <div className="space-y-8">
           <Card className="border-none shadow-sm overflow-hidden bg-white">
-            <CardHeader className="bg-primary/5 border-t-4 border-primary pb-4">
-              <CardTitle className="text-xl font-headline font-bold text-primary flex items-center">
+            <CardHeader className="bg-primary border-t-4 border-primary/20 pb-4">
+              <CardTitle className="text-xl font-headline font-bold text-primary-foreground flex items-center">
                 <ShieldAlert className="w-5 h-5 mr-2" />
                 Portfolio Status
               </CardTitle>
@@ -231,7 +231,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest font-headline">Compliance Level</span>
                 <Badge variant="outline" className="text-primary font-bold border-primary/30 bg-primary/10 font-headline uppercase">Tier 1 Secure</Badge>
               </div>
-              <Button variant="outline" className="w-full rounded-xl font-bold border-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-sm font-headline h-11">
+              <Button className="w-full rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 font-headline h-11">
                 <Download className="w-4 h-4 mr-2" /> Save PDF Guide
               </Button>
             </CardContent>

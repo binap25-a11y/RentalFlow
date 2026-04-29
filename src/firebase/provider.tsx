@@ -111,6 +111,7 @@ export const useFirebase = (): FirebaseServicesAndUser => {
     throw new Error('useFirebase must be used within a FirebaseProvider.');
   }
 
+  // We perform soft checks rather than throwing to avoid SSR hydration mismatches
   return {
     firebaseApp: (context.firebaseApp || {}) as FirebaseApp,
     firestore: (context.firestore || {}) as Firestore,

@@ -19,7 +19,7 @@ service cloud.firestore {
       match /properties/{propertyId} {
         allow read, write: if isOwner(userId);
 
-        // TENANTS SUBCOLLECTION (CRITICAL)
+        // TENANTS SUBCOLLECTION
         match /tenants/{tenantId} {
           allow read, write: if isOwner(userId);
         }
@@ -29,19 +29,19 @@ service cloud.firestore {
           allow read, write: if isOwner(userId);
         }
 
-        // EMERGENCY CONTACTS SUBCOLLECTION
+        // EMERGENCY CONTACTS
         match /emergencyContacts/{contactId} {
           allow read, write: if isOwner(userId);
         }
 
-        // INSPECTIONS SUBCOLLECTION
+        // INSPECTIONS
         match /inspections/{inspectionId} {
           allow read, write: if isOwner(userId);
         }
       }
     }
 
-    // DOCUMENTS COLLECTION (ROOT LEVEL METADATA)
+    // DOCUMENTS (ROOT LEVEL)
     match /documents/{documentId} {
       allow read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid ||
@@ -55,14 +55,14 @@ service cloud.firestore {
       );
     }
 
-    // COLLECTION GROUP RULES FOR PORTFOLIO VIEWS
+    // COLLECTION GROUP RULES
+    // Required for Landlord Maintenance Page and Tenants Page
     match /{path=**}/tenants/{tenantId} {
       allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
+        resource.data.landlordId == request.auth.uid ||
         resource.data.userProfileId == request.auth.uid
       );
     }
-
     match /{path=**}/maintenanceRequests/{requestId} {
       allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
