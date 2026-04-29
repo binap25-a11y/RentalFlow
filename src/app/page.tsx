@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,19 +30,24 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [role, setRole] = useState<'landlord' | 'tenant'>('landlord');
+  
+  // Guard to prevent multiple profile creation attempts
+  const hasAttemptedProfileCheck = useRef(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    if (user && db && mounted) {
+    if (user && db && mounted && !hasAttemptedProfileCheck.current) {
       const checkProfile = async () => {
+        hasAttemptedProfileCheck.current = true;
         try {
           const userDocRef = doc(db, 'users', user.uid);
           const userDoc = await getDoc(userDocRef);
 
           if (!userDoc.exists()) {
+            // Profile doesn't exist, create it once
             setDocumentNonBlocking(userDocRef, {
               id: user.uid,
               email: user.email,
@@ -54,6 +59,7 @@ export default function LoginPage() {
             
             router.push(role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub');
           } else {
+            // Profile exists, redirect based on role
             const userData = userDoc.data();
             if (userData?.role === 'landlord') {
               router.push('/landlord/dashboard');
@@ -62,7 +68,7 @@ export default function LoginPage() {
             }
           }
         } catch (e) {
-          // Silence error for non-existent profiles during check
+          hasAttemptedProfileCheck.current = false; // Allow retry on failure
         }
       };
       checkProfile();
