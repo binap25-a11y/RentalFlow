@@ -1,12 +1,14 @@
 
 import { Property, User, MaintenanceRequest, Inspection } from './types';
 
+/**
+ * Mock data is kept as empty arrays to allow the UI to handle 
+ * real-time Firestore data and empty states gracefully.
+ */
+
 export const MOCK_PROPERTIES: Property[] = [];
 
-export const MOCK_USERS: User[] = [
-  { id: 'placeholder-landlord', name: 'Landlord User', email: 'landlord@example.com', role: 'landlord' },
-  { id: 'placeholder-tenant', name: 'Tenant User', email: 'tenant@example.com', role: 'tenant' }
-];
+export const MOCK_USERS: User[] = [];
 
 export const MOCK_MAINTENANCE: MaintenanceRequest[] = [];
 
