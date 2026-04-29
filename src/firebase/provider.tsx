@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -107,11 +106,19 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 export const useFirebase = (): FirebaseServicesAndUser => {
   const context = useContext(FirebaseContext);
 
-  if (context === undefined) {
-    throw new Error('useFirebase must be used within a FirebaseProvider.');
+  // Return safe defaults for SSR or uninitialized states
+  if (!context) {
+    return {
+      firebaseApp: {} as FirebaseApp,
+      firestore: {} as Firestore,
+      auth: {} as Auth,
+      storage: {} as FirebaseStorage,
+      user: null,
+      isUserLoading: true,
+      userError: null,
+    };
   }
 
-  // We perform soft checks rather than throwing to avoid SSR hydration mismatches
   return {
     firebaseApp: (context.firebaseApp || {}) as FirebaseApp,
     firestore: (context.firestore || {}) as Firestore,

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use } from 'react';
@@ -215,7 +214,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
         <div className="space-y-8">
           <Card className="border-none shadow-sm overflow-hidden bg-white">
-            <CardHeader className="bg-primary border-t-4 border-primary/20 pb-4">
+            <CardHeader className="bg-primary pb-4">
               <CardTitle className="text-xl font-headline font-bold text-primary-foreground flex items-center">
                 <ShieldAlert className="w-5 h-5 mr-2" />
                 Portfolio Status
