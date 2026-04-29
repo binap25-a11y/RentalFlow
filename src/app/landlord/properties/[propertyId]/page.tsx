@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, use } from 'react';
+import { useState, use, useRef } from 'react';
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,11 +14,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   Building2, MapPin, Users, Wrench, FileCheck, Phone, 
   Trash2, Edit3, Loader2, Save, Plus, ArrowLeft,
-  Download, FileText, Info
+  Download, FileText, Info, Camera, Image as ImageIcon
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { format, isBefore, addDays } from "date-fns";
+import Image from "next/image";
 
 const DOC_TYPES = ['Tenancy Agreement', 'EICR', 'Gas Safety', 'EPC', 'Insurance', 'Other'];
 
@@ -29,6 +30,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const db = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const propertyRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -46,7 +48,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Security rules require an explicit filter on landlordId for list operations on the documents collection
     return query(
       collection(db, 'documents'), 
       where('propertyId', '==', propertyId),
@@ -55,6 +56,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   }, [db, user, propertyId]);
 
   const { data: documents } = useCollection(docsQuery);
+
+  // Filter for photos only
+  const photos = documents?.filter(d => d.documentType === 'Property Photo') || [];
+  const complianceDocs = documents?.filter(d => d.documentType !== 'Property Photo') || [];
 
   // Form states
   const [isEditing, setIsEditing] = useState(false);
@@ -97,6 +102,34 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       setNewDocExpiry('');
       toast({ title: "Document Uploaded", description: `${newDocType} has been saved to your vault.` });
     }, 1000);
+  };
+
+  const handleAddPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && user && db) {
+      setIsUploading(true);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        const docId = doc(collection(db, 'dummy')).id;
+        const docRef = doc(db, 'documents', docId);
+
+        setDocumentNonBlocking(docRef, {
+          id: docId,
+          fileName: file.name,
+          fileUrl: base64String,
+          documentType: 'Property Photo',
+          propertyId: propertyId,
+          uploadedByUserId: user.uid,
+          landlordId: user.uid,
+          createdAt: serverTimestamp(),
+        }, { merge: true });
+
+        setIsUploading(false);
+        toast({ title: "Photo Added", description: "Image added to property gallery." });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const getDocStatus = (expiryDate: string) => {
@@ -158,8 +191,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           </Card>
 
           <Tabs defaultValue="tenants" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 bg-muted/50 p-1">
+            <TabsList className="grid w-full grid-cols-6 bg-muted/50 p-1">
               <TabsTrigger value="tenants"><Users className="w-4 h-4 mr-2" /> Residents</TabsTrigger>
+              <TabsTrigger value="gallery"><Camera className="w-4 h-4 mr-2" /> Gallery</TabsTrigger>
               <TabsTrigger value="docs"><FileText className="w-4 h-4 mr-2" /> Vault</TabsTrigger>
               <TabsTrigger value="maintenance"><Wrench className="w-4 h-4 mr-2" /> Maintenance</TabsTrigger>
               <TabsTrigger value="inspections"><FileCheck className="w-4 h-4 mr-2" /> Inspections</TabsTrigger>
@@ -169,7 +203,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             <TabsContent value="tenants" className="mt-6 space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-bold font-headline">Assigned Residents</h3>
-                <Button size="sm" className="rounded-xl"><Plus className="w-4 h-4 mr-2" /> Assign Resident</Button>
+                <Button size="sm" className="rounded-xl" asChild>
+                  <Link href="/landlord/tenants">
+                    <Plus className="w-4 h-4 mr-2" /> Assign Resident
+                  </Link>
+                </Button>
               </div>
               
               {!tenants || tenants.length === 0 ? (
@@ -198,6 +236,41 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                   </Card>
                 ))
               )}
+            </TabsContent>
+
+            <TabsContent value="gallery" className="mt-6 space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-bold font-headline">Property Gallery</h3>
+                <Button size="sm" className="rounded-xl" onClick={() => fileInputRef.current?.click()}>
+                  <Plus className="w-4 h-4 mr-2" /> Add Photos
+                </Button>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept="image/*" 
+                  onChange={handleAddPhoto} 
+                />
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="relative aspect-video rounded-xl overflow-hidden group shadow-sm border">
+                  <Image src={property.imageUrl || 'https://picsum.photos/seed/main/800/600'} alt="Main" fill className="object-cover" />
+                  <div className="absolute top-2 left-2">
+                    <Badge className="bg-primary text-[10px]">MAIN PHOTO</Badge>
+                  </div>
+                </div>
+                {photos.map((photo) => (
+                  <div key={photo.id} className="relative aspect-video rounded-xl overflow-hidden group shadow-sm border">
+                    <Image src={photo.fileUrl} alt="Gallery item" fill className="object-cover transition-transform group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Button variant="destructive" size="icon" className="h-8 w-8 rounded-full">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </TabsContent>
 
             <TabsContent value="docs" className="mt-6 space-y-6">
@@ -232,10 +305,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               <div className="space-y-4">
                 <h3 className="text-lg font-bold font-headline">Compliance Vault</h3>
                 <div className="grid gap-4">
-                  {!documents || documents.length === 0 ? (
-                    <p className="text-center py-10 text-muted-foreground italic">No documents uploaded yet.</p>
+                  {!complianceDocs || complianceDocs.length === 0 ? (
+                    <p className="text-center py-10 text-muted-foreground italic">No compliance documents uploaded yet.</p>
                   ) : (
-                    documents.map(doc => {
+                    complianceDocs.map(doc => {
                       const status = getDocStatus(doc.expiryDate);
                       return (
                         <Card key={doc.id} className="border-none shadow-sm group hover:bg-muted/30 transition-colors">
@@ -269,7 +342,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             <TabsContent value="maintenance" className="mt-6 space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-bold font-headline">Maintenance Requests</h3>
-                <Button size="sm" className="rounded-xl"><Wrench className="w-4 h-4 mr-2" /> Log Issue</Button>
+                <Button size="sm" className="rounded-xl" asChild>
+                  <Link href="/landlord/maintenance">
+                    <Wrench className="w-4 h-4 mr-2" /> Manage Issues
+                  </Link>
+                </Button>
               </div>
             </TabsContent>
           </Tabs>
@@ -278,7 +355,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         <div className="space-y-8">
           <Card className="border-none shadow-sm">
             <CardHeader>
-              <CardTitle>Vault Status</CardTitle>
+              <CardTitle>Portfolio Status</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="p-4 bg-accent/10 rounded-xl flex gap-3">
@@ -286,6 +363,16 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 <p className="text-xs text-accent-foreground leading-relaxed italic">
                   Keep your EICR and Gas Safety up to date to ensure legal compliance for your property.
                 </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-muted/30 p-4 rounded-xl text-center">
+                  <p className="text-2xl font-bold">{photos.length + 1}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Photos</p>
+                </div>
+                <div className="bg-muted/30 p-4 rounded-xl text-center">
+                  <p className="text-2xl font-bold">{complianceDocs.length}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Docs</p>
+                </div>
               </div>
             </CardContent>
           </Card>

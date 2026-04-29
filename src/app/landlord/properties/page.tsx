@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Building2, MapPin, Plus, Trash2, Edit3, Loader2, Home, Wrench, FileCheck, Phone, DollarSign } from "lucide-react";
+import { Building2, MapPin, Plus, Trash2, Edit3, Loader2, Image as ImageIcon, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import Image from "next/image";
@@ -28,19 +28,39 @@ export default function PropertiesPage() {
   const { data: properties, isLoading } = useCollection(propertiesQuery);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form State
   const [address, setAddress] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [rentAmount, setRentAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [imageUrl, setImageUrl] = useState('https://picsum.photos/seed/rental/800/600');
+  const [imageUrl, setImageUrl] = useState('');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setPreviewUrl(base64String);
+        setImageUrl(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const clearImage = () => {
+    setPreviewUrl(null);
+    setImageUrl('');
+  };
 
   const handleAddProperty = (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !db) return;
 
+    setIsSubmitting(true);
     const propertyId = doc(collection(db, 'dummy')).id;
     const propertyRef = doc(db, 'users', user.uid, 'properties', propertyId);
 
@@ -48,7 +68,7 @@ export default function PropertiesPage() {
       id: propertyId,
       landlordId: user.uid,
       addressLine1: address,
-      city: 'London', // Default for now
+      city: 'London',
       state: 'UK',
       zipCode: zipCode,
       description: description,
@@ -56,17 +76,22 @@ export default function PropertiesPage() {
       numberOfBathrooms: 1,
       rentAmount: Number(rentAmount),
       isOccupied: false,
-      imageUrl: imageUrl,
+      imageUrl: imageUrl || 'https://picsum.photos/seed/rental/800/600',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     }, { merge: true });
 
-    setIsAddDialogOpen(false);
-    setAddress('');
-    setZipCode('');
-    setRentAmount('');
-    setDescription('');
-    toast({ title: "Property Added", description: "The property has been added to your portfolio." });
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setIsAddDialogOpen(false);
+      setAddress('');
+      setZipCode('');
+      setRentAmount('');
+      setDescription('');
+      setImageUrl('');
+      setPreviewUrl(null);
+      toast({ title: "Property Added", description: "The property has been added to your portfolio." });
+    }, 500);
   };
 
   const handleDeleteProperty = (propertyId: string) => {
@@ -100,7 +125,7 @@ export default function PropertiesPage() {
               Add New Property
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px] rounded-2xl">
+          <DialogContent className="sm:max-w-[500px] rounded-2xl max-h-[90vh] overflow-y-auto">
             <form onSubmit={handleAddProperty}>
               <DialogHeader>
                 <DialogTitle>Add Property</DialogTitle>
@@ -109,6 +134,34 @@ export default function PropertiesPage() {
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="image">Property Photo</Label>
+                  {previewUrl ? (
+                    <div className="relative h-40 w-full rounded-xl overflow-hidden border">
+                      <Image src={previewUrl} alt="Preview" fill className="object-cover" />
+                      <Button 
+                        type="button" 
+                        variant="destructive" 
+                        size="icon" 
+                        className="absolute top-2 right-2 h-8 w-8 rounded-full"
+                        onClick={clearImage}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center w-full">
+                      <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer bg-muted/30 hover:bg-muted/50 transition-colors">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <ImageIcon className="w-8 h-8 mb-3 text-muted-foreground" />
+                          <p className="mb-2 text-sm text-muted-foreground font-semibold">Click to upload main photo</p>
+                          <p className="text-xs text-muted-foreground">PNG, JPG or WEBP</p>
+                        </div>
+                        <input id="dropzone-file" type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                      </label>
+                    </div>
+                  )}
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="address">Full Address</Label>
                   <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="123 Lease St, London" required />
@@ -127,13 +180,12 @@ export default function PropertiesPage() {
                   <Label htmlFor="description">Short Description</Label>
                   <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Modern 2-bed apartment..." />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="image">Image URL (Optional)</Label>
-                  <Input id="image" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." />
-                </div>
               </div>
               <DialogFooter>
-                <Button type="submit" className="w-full">Save Property</Button>
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Save Property
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
