@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Building2, MapPin, Plus, Trash2, Edit3, Loader2, Image as ImageIcon, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
@@ -145,73 +146,80 @@ export default function PropertiesPage() {
               Add New Property
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px] rounded-2xl">
-            <form onSubmit={handleAddProperty}>
-              <DialogHeader>
-                <DialogTitle>Add Property</DialogTitle>
-                <DialogDescription>Enter the details of your new rental property.</DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="address">Full Address</Label>
-                  <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+          <DialogContent className="sm:max-w-[550px] max-h-[90vh] p-0 rounded-2xl overflow-hidden flex flex-col">
+            <DialogHeader className="p-6 pb-2">
+              <DialogTitle className="text-2xl font-headline">Add Property</DialogTitle>
+              <DialogDescription>Enter the details of your new rental property.</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleAddProperty} className="flex-1 overflow-hidden flex flex-col">
+              <ScrollArea className="flex-1 p-6 pt-2">
+                <div className="grid gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="zipCode">Postcode</Label>
-                    <Input id="zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required />
+                    <Label htmlFor="address">Full Address</Label>
+                    <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="123 Example Street" className="rounded-xl" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="zipCode">Postcode</Label>
+                      <Input id="zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required placeholder="SW1A 1AA" className="rounded-xl" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="rent">Monthly Rent (£)</Label>
+                      <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required placeholder="1200" className="rounded-xl" />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="rent">Monthly Rent (£)</Label>
-                    <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required />
+                    <Label htmlFor="desc">Description</Label>
+                    <Input id="desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Modern flat with garden access..." className="rounded-xl" />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="desc">Description</Label>
-                  <Input id="desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief overview" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="image">Property Photo</Label>
-                  <div className="flex items-center gap-4">
-                    <Input 
-                      id="image" 
-                      type="file" 
-                      accept="image/*" 
-                      className="hidden" 
-                      onChange={handleImageChange}
-                    />
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="w-full h-40 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 overflow-hidden relative group"
-                      onClick={() => document.getElementById('image')?.click()}
-                    >
-                      {previewUrl ? (
-                        <div className="absolute inset-0 w-full h-full">
-                          <Image 
-                            src={previewUrl} 
-                            alt="Preview" 
-                            fill 
-                            className="object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Upload className="w-8 h-8 text-white mb-1" />
-                            <span className="text-white text-xs font-bold">Change Photo</span>
+                  <div className="space-y-2">
+                    <Label htmlFor="image">Property Photo</Label>
+                    <div className="flex flex-col items-center gap-4">
+                      <Input 
+                        id="image" 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={handleImageChange}
+                      />
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        className="w-full h-48 border-dashed border-2 rounded-2xl flex flex-col items-center justify-center gap-2 overflow-hidden relative group hover:bg-muted/50 transition-colors"
+                        onClick={() => document.getElementById('image')?.click()}
+                      >
+                        {previewUrl ? (
+                          <div className="absolute inset-0 w-full h-full">
+                            <Image 
+                              src={previewUrl} 
+                              alt="Preview" 
+                              fill 
+                              className="object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Upload className="w-8 h-8 text-white mb-1" />
+                              <span className="text-white text-xs font-bold">Change Photo</span>
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <>
-                          <Upload className="w-8 h-8 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground font-medium">Click to upload photo</span>
-                        </>
-                      )}
-                    </Button>
+                        ) : (
+                          <>
+                            <Upload className="w-10 h-10 text-muted-foreground mb-1" />
+                            <span className="text-sm text-muted-foreground font-semibold">Click to upload photo</span>
+                            <span className="text-[10px] text-muted-foreground/60">Supports JPG, PNG, WEBP</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit" className="w-full h-12 rounded-xl font-bold" disabled={isSubmitting}>
-                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Confirm Property Creation"}
+              </ScrollArea>
+              <DialogFooter className="p-6 border-t bg-muted/20">
+                <Button type="submit" className="w-full h-12 rounded-xl font-bold text-lg" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Saving Property...</>
+                  ) : (
+                    "Confirm Property Creation"
+                  )}
                 </Button>
               </DialogFooter>
             </form>
@@ -230,7 +238,7 @@ export default function PropertiesPage() {
                 className="object-cover transition-transform group-hover:scale-105" 
                 data-ai-hint="rental property"
               />
-              <Badge className={`absolute top-4 right-4 ${property.isOccupied ? 'bg-green-500' : 'bg-amber-500'}`}>
+              <Badge className={`absolute top-4 right-4 font-bold ${property.isOccupied ? 'bg-green-500' : 'bg-amber-500'}`}>
                 {property.isOccupied ? 'Occupied' : 'Vacant'}
               </Badge>
             </div>
