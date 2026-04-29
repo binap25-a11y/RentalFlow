@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +30,7 @@ export default function LandlordDashboard() {
 
   const documentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Security rules require where("userId", "==", user.uid) for /documents list
+    // Standard security rules require a filter on the owner field
     return query(
       collection(db, "documents"),
       where("userId", "==", user.uid)
@@ -99,7 +98,7 @@ export default function LandlordDashboard() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div>
         <h1 className="text-3xl font-headline font-bold text-primary mb-2">Portfolio Overview</h1>
-        <p className="text-muted-foreground font-medium">Monitoring your properties and resident requests.</p>
+        <p className="text-muted-foreground font-medium font-body">Monitoring your properties and resident requests.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -113,7 +112,7 @@ export default function LandlordDashboard() {
               </div>
               <div className="space-y-1">
                 <p className="text-2xl font-bold font-headline">{stat.value}</p>
-                <p className="text-sm text-muted-foreground font-medium">{stat.label}</p>
+                <p className="text-sm text-muted-foreground font-medium font-body">{stat.label}</p>
               </div>
             </CardContent>
           </Card>
@@ -147,8 +146,8 @@ export default function LandlordDashboard() {
                         <FileText className="w-5 h-5 text-amber-500" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-sm">{doc.documentType}</h4>
-                        <p className="text-xs text-muted-foreground">
+                        <h4 className="font-bold text-sm font-body">{doc.documentType}</h4>
+                        <p className="text-xs text-muted-foreground font-body">
                           Expires: {expiryDate && isValid(expiryDate) ? format(expiryDate, 'PPP') : 'Invalid Date'}
                         </p>
                       </div>
@@ -166,8 +165,8 @@ export default function LandlordDashboard() {
                 <div className="p-4 bg-muted rounded-full mb-4">
                   <ShieldAlert className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold mb-1">All compliant</h3>
-                <p className="text-sm text-muted-foreground max-w-xs">No documents require immediate renewal.</p>
+                <h3 className="text-lg font-semibold font-headline mb-1">All compliant</h3>
+                <p className="text-sm text-muted-foreground font-body max-w-xs">No documents require immediate renewal.</p>
               </div>
             )}
           </CardContent>
@@ -178,19 +177,19 @@ export default function LandlordDashboard() {
             <CardTitle className="text-xl font-headline">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3">
-            <Button className="w-full justify-start h-12 bg-primary hover:bg-primary/90 rounded-xl" asChild>
+            <Button className="w-full justify-start h-12 bg-primary hover:bg-primary/90 rounded-xl font-headline font-bold" asChild>
               <Link href="/landlord/properties">
                 <Building2 className="w-5 h-5 mr-3" />
                 Add New Property
               </Link>
             </Button>
-            <Button variant="outline" className="w-full justify-start h-12 rounded-xl border-primary/20 hover:bg-primary/5" asChild>
+            <Button variant="outline" className="w-full justify-start h-12 rounded-xl border-primary/20 hover:bg-primary/5 font-headline font-bold" asChild>
               <Link href="/landlord/tenants">
                 <Users className="w-5 h-5 mr-3 text-primary" />
                 Assign Resident
               </Link>
             </Button>
-            <Button variant="outline" className="w-full justify-start h-12 rounded-xl border-accent/20 hover:bg-accent/5" asChild>
+            <Button variant="outline" className="w-full justify-start h-12 rounded-xl border-accent/20 hover:bg-accent/5 font-headline font-bold" asChild>
               <Link href="/landlord/maintenance">
                 <AlertTriangle className="w-5 h-5 mr-3 text-accent" />
                 Maintenance Dashboard
