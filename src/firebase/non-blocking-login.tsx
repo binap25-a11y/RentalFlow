@@ -10,28 +10,39 @@ import {
   sendPasswordResetEmail,
 } from 'firebase/auth';
 
-/** Initiate anonymous sign-in (non-blocking). */
+/** 
+ * Initiate anonymous sign-in (non-blocking). 
+ * Errors will bubble up to the global error handler or development overlay.
+ */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
-  signInAnonymously(authInstance).catch(err => console.error("Anonymous sign-in error", err));
+  signInAnonymously(authInstance);
 }
 
-/** Initiate email/password sign-up (non-blocking). */
+/** 
+ * Initiate email/password sign-up (non-blocking). 
+ */
 export function initiateEmailSignUp(authInstance: Auth, email: string, password: string): void {
-  createUserWithEmailAndPassword(authInstance, email, password).catch(err => console.error("Email sign-up error", err));
+  createUserWithEmailAndPassword(authInstance, email, password);
 }
 
-/** Initiate email/password sign-in (non-blocking). */
+/** 
+ * Initiate email/password sign-in (non-blocking). 
+ */
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
-  signInWithEmailAndPassword(authInstance, email, password).catch(err => console.error("Email sign-in error", err));
+  signInWithEmailAndPassword(authInstance, email, password);
 }
 
-/** Initiate Google sign-in (non-blocking). */
+/** 
+ * Initiate Google sign-in (non-blocking). 
+ */
 export function initiateGoogleSignIn(authInstance: Auth): void {
   const provider = new GoogleAuthProvider();
-  signInWithPopup(authInstance, provider).catch(err => console.error("Google sign-in error", err));
+  signInWithPopup(authInstance, provider);
 }
 
-/** Initiate password reset email (non-blocking). */
+/** 
+ * Initiate password reset email (non-blocking). 
+ */
 export function initiatePasswordReset(authInstance: Auth, email: string): void {
-  sendPasswordResetEmail(authInstance, email).catch(err => console.error("Password reset error", err));
+  sendPasswordResetEmail(authInstance, email);
 }

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -7,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, KeyRound, LayoutDashboard, Mail, Lock, UserPlus, LogIn, Chrome } from "lucide-react";
+import { Home, KeyRound, LayoutDashboard, Mail, Lock, UserPlus, LogIn, Chrome, Loader2 } from "lucide-react";
 import { useAuth, useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn, initiatePasswordReset } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp } from 'firebase/firestore';
@@ -80,7 +81,7 @@ export default function LoginPage() {
       initiateEmailSignIn(auth, email, password);
       toast({ title: "Signing in...", description: "Welcome back to LeaseLoop." });
     }
-    // Reset loading state after a brief delay
+    // Loading state is primarily for visual feedback during the initial request
     setTimeout(() => setIsLoading(false), 2000);
   };
 
@@ -215,7 +216,7 @@ export default function LoginPage() {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  "Processing..."
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   authMode === 'login' ? (
                     <span className="flex items-center"><LogIn className="w-4 h-4 mr-2" /> Login</span>
