@@ -1,5 +1,6 @@
+
 /**
- * LeaseLoop Security Rules
+ * RentalFlow Security Rules
  * 
  * Core Philosophy:
  * This ruleset implements a hierarchical ownership model centered around Landlords. 

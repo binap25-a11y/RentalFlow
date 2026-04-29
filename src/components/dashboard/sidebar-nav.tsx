@@ -50,7 +50,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
           <div className="p-2 bg-sidebar-primary rounded-xl transition-transform group-hover:scale-110">
             <LayoutDashboard className="w-5 h-5 text-sidebar-primary-foreground" />
           </div>
-          <span className="font-headline font-bold text-xl tracking-tight text-sidebar-foreground">LeaseLoop</span>
+          <span className="font-headline font-bold text-xl tracking-tight text-sidebar-foreground">RentalFlow</span>
         </Link>
       </SidebarHeader>
       <SidebarContent className="px-3">

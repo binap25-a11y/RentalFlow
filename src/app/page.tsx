@@ -80,7 +80,7 @@ export default function LoginPage() {
       toast({ title: "Creating account...", description: "Please wait while we set up your profile." });
     } else {
       initiateEmailSignIn(auth, email, password);
-      toast({ title: "Signing in...", description: "Welcome back to LeaseLoop." });
+      toast({ title: "Signing in...", description: "Welcome back to RentalFlow." });
     }
     // Loading state is primarily for visual feedback during the initial request
     setTimeout(() => setIsLoading(false), 2000);
@@ -107,7 +107,7 @@ export default function LoginPage() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-pulse flex flex-col items-center">
           <KeyRound className="w-12 h-12 text-primary mb-4" />
-          <p className="text-muted-foreground font-medium">Loading LeaseLoop...</p>
+          <p className="text-muted-foreground font-medium">Loading RentalFlow...</p>
         </div>
       </div>
     );
@@ -119,14 +119,14 @@ export default function LoginPage() {
         <div className="inline-flex items-center justify-center p-3 bg-primary text-primary-foreground rounded-2xl mb-4 shadow-xl shadow-primary/20">
           <KeyRound className="w-8 h-8" />
         </div>
-        <h1 className="text-4xl font-headline font-bold text-primary mb-2">LeaseLoop</h1>
+        <h1 className="text-4xl font-headline font-bold text-primary mb-2">RentalFlow</h1>
         <p className="text-muted-foreground font-medium">Rental Management Reimagined</p>
       </div>
 
       <Card className="w-full max-w-md border-none shadow-2xl bg-white/80 backdrop-blur-sm">
         <CardHeader className="space-y-1 pb-2">
           <CardTitle className="text-2xl text-center">
-            {authMode === 'login' ? 'Welcome Back' : 'Join LeaseLoop'}
+            {authMode === 'login' ? 'Welcome Back' : 'Join RentalFlow'}
           </CardTitle>
           <CardDescription className="text-center">
             {authMode === 'login' ? 'Sign in to your rental portal' : 'Create your rental management account'}
@@ -269,7 +269,7 @@ export default function LoginPage() {
       </Card>
       
       <p className="mt-8 text-xs text-muted-foreground opacity-60">
-        &copy; 2024 LeaseLoop Systems. Secure property management.
+        &copy; 2024 RentalFlow Systems. Secure property management.
       </p>
     </div>
   );
