@@ -108,6 +108,7 @@ export const useFirebase = (): FirebaseServicesAndUser => {
   const context = useContext(FirebaseContext);
 
   if (!context) {
+    // Return safe defaults during SSR/Pre-hydration
     return {
       firebaseApp: null,
       firestore: null,

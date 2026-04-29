@@ -20,7 +20,7 @@ service cloud.firestore {
     match /documents/{docId} {
       allow create: if isSignedIn();
       allow read, update, delete: if isSignedIn() && 
-        (resource == null || resource.data.userId == request.auth.uid || resource.data.landlordId == request.auth.uid);
+        (resource.data.userId == request.auth.uid || resource.data.landlordId == request.auth.uid);
     }
 
     // -------------------------
@@ -29,7 +29,7 @@ service cloud.firestore {
     match /properties/{propertyId} {
       allow create: if isSignedIn();
       allow read, update, delete: if isSignedIn() && 
-        (resource == null || resource.data.landlordId == request.auth.uid);
+        (resource.data.landlordId == request.auth.uid);
     }
 
     // -------------------------
@@ -38,7 +38,7 @@ service cloud.firestore {
     match /tenants/{tenantId} {
       allow create: if isSignedIn();
       allow read, update, delete: if isSignedIn() && 
-        (resource == null || resource.data.landlordId == request.auth.uid || resource.data.userProfileId == request.auth.uid);
+        (resource.data.landlordId == request.auth.uid || resource.data.userProfileId == request.auth.uid);
     }
 
     // -------------------------
@@ -47,7 +47,7 @@ service cloud.firestore {
     match /maintenanceRequests/{requestId} {
       allow create: if isSignedIn();
       allow read, update, delete: if isSignedIn() && 
-        (resource == null || resource.data.landlordId == request.auth.uid || resource.data.reportedByUserId == request.auth.uid);
+        (resource.data.landlordId == request.auth.uid || resource.data.reportedByUserId == request.auth.uid);
     }
 
     // -------------------------
@@ -63,7 +63,7 @@ service cloud.firestore {
     match /inspections/{inspectionId} {
       allow create: if isSignedIn();
       allow read, update, delete: if isSignedIn() && 
-        (resource == null || resource.data.landlordId == request.auth.uid);
+        (resource.data.landlordId == request.auth.uid);
     }
 
     // Block everything else
