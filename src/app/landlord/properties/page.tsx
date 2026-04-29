@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Building2, MapPin, Plus, Trash2, Edit3, Loader2, Image as ImageIcon, X } from "lucide-react";
+import { Building2, MapPin, Plus, Trash2, Edit3, Loader2, Image as ImageIcon, X, Images } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import Image from "next/image";
@@ -34,10 +34,15 @@ export default function PropertiesPage() {
   const [zipCode, setZipCode] = useState('');
   const [rentAmount, setRentAmount] = useState('');
   const [description, setDescription] = useState('');
+  
+  // Main Image State
   const [imageUrl, setImageUrl] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Additional Images State
+  const [additionalImages, setAdditionalImages] = useState<string[]>([]);
+
+  const handleMainFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -50,9 +55,27 @@ export default function PropertiesPage() {
     }
   };
 
-  const clearImage = () => {
+  const handleAdditionalFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const filesArray = Array.from(files);
+      filesArray.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setAdditionalImages(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const clearMainImage = () => {
     setPreviewUrl(null);
     setImageUrl('');
+  };
+
+  const removeAdditionalImage = (index: number) => {
+    setAdditionalImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleAddProperty = (e: React.FormEvent) => {
@@ -73,6 +96,7 @@ export default function PropertiesPage() {
     const propertyId = doc(collection(db, 'dummy')).id;
     const propertyRef = doc(db, 'users', user.uid, 'properties', propertyId);
 
+    // 1. Create the main property document
     setDocumentNonBlocking(propertyRef, {
       id: propertyId,
       landlordId: user.uid,
@@ -90,6 +114,22 @@ export default function PropertiesPage() {
       updatedAt: serverTimestamp(),
     }, { merge: true });
 
+    // 2. Create documents for each additional image
+    additionalImages.forEach((base64, idx) => {
+      const docId = doc(collection(db, 'dummy')).id;
+      const docRef = doc(db, 'documents', docId);
+      setDocumentNonBlocking(docRef, {
+        id: docId,
+        fileName: `gallery_${idx}_${propertyId}.jpg`,
+        fileUrl: base64,
+        documentType: 'Property Photo',
+        propertyId: propertyId,
+        uploadedByUserId: user.uid,
+        landlordId: user.uid,
+        createdAt: serverTimestamp(),
+      }, { merge: true });
+    });
+
     setTimeout(() => {
       setIsSubmitting(false);
       setIsAddDialogOpen(false);
@@ -99,8 +139,9 @@ export default function PropertiesPage() {
       setDescription('');
       setImageUrl('');
       setPreviewUrl(null);
-      toast({ title: "Property Added", description: "The property has been added to your portfolio." });
-    }, 500);
+      setAdditionalImages([]);
+      toast({ title: "Property Added", description: "The property and gallery have been added to your portfolio." });
+    }, 800);
   };
 
   const handleDeleteProperty = (propertyId: string) => {
@@ -134,7 +175,7 @@ export default function PropertiesPage() {
               Add New Property
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px] rounded-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-[600px] rounded-2xl max-h-[90vh] overflow-y-auto">
             <form onSubmit={handleAddProperty}>
               <DialogHeader>
                 <DialogTitle>Add Property</DialogTitle>
@@ -142,35 +183,64 @@ export default function PropertiesPage() {
                   Enter the details of your new rental property.
                 </DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="image">Property Photo</Label>
-                  {previewUrl ? (
-                    <div className="relative h-40 w-full rounded-xl overflow-hidden border">
-                      <Image src={previewUrl} alt="Preview" fill className="object-cover" />
-                      <Button 
-                        type="button" 
-                        variant="destructive" 
-                        size="icon" 
-                        className="absolute top-2 right-2 h-8 w-8 rounded-full"
-                        onClick={clearImage}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center w-full">
-                      <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer bg-muted/30 hover:bg-muted/50 transition-colors">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <ImageIcon className="w-8 h-8 mb-3 text-muted-foreground" />
-                          <p className="mb-2 text-sm text-muted-foreground font-semibold">Click to upload main photo</p>
-                          <p className="text-xs text-muted-foreground">PNG, JPG or WEBP</p>
+              <div className="grid gap-6 py-4">
+                <div className="space-y-4">
+                  <Label>Property Photos</Label>
+                  
+                  {/* Main Image Upload */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Main Banner Photo</Label>
+                    {previewUrl ? (
+                      <div className="relative h-40 w-full rounded-xl overflow-hidden border">
+                        <Image src={previewUrl} alt="Preview" fill className="object-cover" />
+                        <Button 
+                          type="button" 
+                          variant="destructive" 
+                          size="icon" 
+                          className="absolute top-2 right-2 h-8 w-8 rounded-full"
+                          onClick={clearMainImage}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center w-full">
+                        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer bg-muted/30 hover:bg-muted/50 transition-colors">
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                            <ImageIcon className="w-6 h-6 mb-2 text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground font-semibold">Click to upload main photo</p>
+                          </div>
+                          <input type="file" className="hidden" accept="image/*" onChange={handleMainFileChange} />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Additional Images Upload */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Additional Gallery Photos</Label>
+                    <div className="grid grid-cols-4 gap-3">
+                      {additionalImages.map((img, idx) => (
+                        <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border group">
+                          <Image src={img} alt={`Additional ${idx}`} fill className="object-cover" />
+                          <button 
+                            type="button"
+                            onClick={() => removeAdditionalImage(idx)}
+                            className="absolute top-1 right-1 bg-destructive text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
                         </div>
-                        <input id="dropzone-file" type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                      ))}
+                      <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed rounded-lg cursor-pointer bg-muted/20 hover:bg-muted/40 transition-colors">
+                        <Images className="w-5 h-5 text-muted-foreground" />
+                        <span className="text-[10px] mt-1 font-bold text-muted-foreground uppercase">Add More</span>
+                        <input type="file" className="hidden" accept="image/*" multiple onChange={handleAdditionalFilesChange} />
                       </label>
                     </div>
-                  )}
+                  </div>
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="address">Full Address</Label>
                   <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="123 Lease St, London" required />
@@ -191,9 +261,9 @@ export default function PropertiesPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                  Save Property
+                <Button type="submit" className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20" disabled={isSubmitting}>
+                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Building2 className="w-4 h-4 mr-2" />}
+                  Save Property & Gallery
                 </Button>
               </DialogFooter>
             </form>
@@ -208,28 +278,28 @@ export default function PropertiesPage() {
           </div>
           <h3 className="text-xl font-bold font-headline mb-2">No Properties Found</h3>
           <p className="text-muted-foreground max-w-sm mb-6">Start building your portfolio by adding your first rental property.</p>
-          <Button variant="outline" onClick={() => setIsAddDialogOpen(true)}>
+          <Button variant="outline" onClick={() => setIsAddDialogOpen(true)} className="rounded-xl border-primary/20 hover:bg-primary/5">
             Add Property Now
           </Button>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {properties.map((property) => (
-            <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
+            <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-md transition-all duration-300">
               <div className="relative h-48 w-full">
                 <Image 
                   src={property.imageUrl || 'https://picsum.photos/seed/prop/800/600'} 
                   alt={property.addressLine1} 
                   fill 
-                  className="object-cover transition-transform group-hover:scale-105"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
                   data-ai-hint="rental property"
                 />
-                <Badge className={`absolute top-4 right-4 ${property.isOccupied ? 'bg-green-500' : 'bg-amber-500'}`}>
+                <Badge className={`absolute top-4 right-4 shadow-sm ${property.isOccupied ? 'bg-green-500' : 'bg-amber-500'}`}>
                   {property.isOccupied ? 'Occupied' : 'Vacant'}
                 </Badge>
               </div>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-bold font-headline line-clamp-1">{property.addressLine1}</CardTitle>
+                <CardTitle className="text-lg font-bold font-headline line-clamp-1 group-hover:text-primary transition-colors">{property.addressLine1}</CardTitle>
                 <p className="text-sm text-muted-foreground flex items-center">
                   <MapPin className="w-3 h-3 mr-1" /> {property.zipCode}
                 </p>
@@ -237,13 +307,13 @@ export default function PropertiesPage() {
               <CardContent>
                 <p className="text-sm text-muted-foreground line-clamp-2 mb-4 h-10">{property.description}</p>
                 <div className="flex items-center justify-between">
-                  <div className="text-lg font-bold text-primary">
+                  <div className="text-xl font-bold text-primary">
                     £{property.rentAmount}<span className="text-xs font-normal text-muted-foreground">/mo</span>
                   </div>
                 </div>
               </CardContent>
               <CardFooter className="grid grid-cols-2 gap-2 pt-0">
-                <Button variant="outline" className="rounded-lg h-9 text-xs" asChild>
+                <Button variant="outline" className="rounded-lg h-9 text-xs font-bold border-primary/10 hover:bg-primary/5" asChild>
                   <Link href={`/landlord/properties/${property.id}`}>
                     <Edit3 className="w-3 h-3 mr-2" />
                     Manage
@@ -256,7 +326,7 @@ export default function PropertiesPage() {
                       Delete
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="rounded-2xl">
                     <DialogHeader>
                       <DialogTitle>Are you absolutely sure?</DialogTitle>
                       <DialogDescription>
@@ -264,7 +334,7 @@ export default function PropertiesPage() {
                       </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                      <Button variant="destructive" onClick={() => handleDeleteProperty(property.id)}>Confirm Delete</Button>
+                      <Button variant="destructive" className="rounded-xl w-full" onClick={() => handleDeleteProperty(property.id)}>Confirm Delete</Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
