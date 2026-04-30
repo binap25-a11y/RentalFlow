@@ -46,7 +46,7 @@ export default function PropertiesPage() {
 
   useEffect(() => {
     return () => {
-      if (previewUrl && !previewUrl.startsWith('http')) {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
         URL.revokeObjectURL(previewUrl);
       }
     };
@@ -56,7 +56,7 @@ export default function PropertiesPage() {
     const file = e.target.files?.[0] || null;
     if (file) {
       setImageFile(file);
-      if (previewUrl && !previewUrl.startsWith('http')) URL.revokeObjectURL(previewUrl);
+      if (previewUrl && previewUrl.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
@@ -83,7 +83,8 @@ export default function PropertiesPage() {
     setZipCode(property.zipCode);
     setRentAmount(property.rentAmount.toString());
     setDescription(property.description || '');
-    setPreviewUrl(property.imageUrl);
+    setPreviewUrl(property.imageUrl || null);
+    setImageFile(null);
     setIsAddDialogOpen(true);
   };
 
@@ -106,7 +107,6 @@ export default function PropertiesPage() {
       let finalImageUrl = previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile) {
-        // Storing in folder named 'Images' as requested
         const storageRef = ref(storage, `Images/properties/${user.uid}/${propertyId}/${imageFile.name}`);
         const uploadResult = await uploadBytes(storageRef, imageFile);
         finalImageUrl = await getDownloadURL(uploadResult.ref);
@@ -172,24 +172,24 @@ export default function PropertiesPage() {
               Add New Property
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[700px] w-[95vw] h-[90vh] p-0 rounded-2xl overflow-hidden flex flex-col border-none shadow-2xl">
-            <DialogHeader className="p-6 bg-primary/5 border-b shrink-0 text-left relative">
-              <DialogTitle className="text-2xl font-headline font-bold text-primary">
+          <DialogContent className="sm:max-w-[700px] w-[95vw] max-h-[90vh] p-0 rounded-2xl overflow-hidden flex flex-col border-none shadow-2xl">
+            <DialogHeader className="p-4 bg-primary/5 border-b shrink-0 text-left relative">
+              <DialogTitle className="text-xl font-headline font-bold text-primary">
                 {editingProperty ? 'Modify Property Asset' : 'New Property Details'}
               </DialogTitle>
-              <DialogDescription className="font-medium text-muted-foreground">
-                {editingProperty ? 'Update the details and showcase image for this property.' : 'Enter the core profile details for your new rental property.'}
+              <DialogDescription className="text-xs font-medium text-muted-foreground">
+                {editingProperty ? 'Update details and showcase photo.' : 'Enter core profile details for your new rental.'}
               </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleSaveProperty} className="flex-1 overflow-hidden flex flex-col min-h-0">
               <ScrollArea className="flex-1">
-                <div className="px-6 py-8 space-y-8">
+                <div className="px-6 py-6 space-y-8">
                   <div className="space-y-4">
                     <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Showcase Photo</Label>
                     <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/20">
                       <div className={cn(
-                        "w-full h-64 overflow-hidden flex flex-col items-center justify-center relative",
+                        "w-full h-48 overflow-hidden flex flex-col items-center justify-center relative",
                         previewUrl && "bg-transparent"
                       )}>
                         {previewUrl ? (
@@ -204,7 +204,7 @@ export default function PropertiesPage() {
                                <Button 
                                  type="button" 
                                  variant="secondary" 
-                                 className="rounded-full font-bold shadow-xl"
+                                 className="rounded-full font-bold shadow-xl h-9 px-4"
                                  onClick={() => document.getElementById('image-input-dialog')?.click()}
                                >
                                  <Upload className="w-4 h-4 mr-2" />
@@ -213,7 +213,7 @@ export default function PropertiesPage() {
                                <Button 
                                  type="button" 
                                  variant="destructive" 
-                                 className="rounded-full font-bold shadow-xl"
+                                 className="rounded-full font-bold shadow-xl h-9 px-4"
                                  onClick={() => { setPreviewUrl(null); setImageFile(null); }}
                                >
                                  <X className="w-4 h-4 mr-2" />
@@ -225,14 +225,14 @@ export default function PropertiesPage() {
                           <button 
                             type="button"
                             onClick={() => document.getElementById('image-input-dialog')?.click()}
-                            className="flex flex-col items-center gap-3 p-12 w-full h-full hover:bg-muted/30 transition-colors"
+                            className="flex flex-col items-center gap-3 p-8 w-full h-full hover:bg-muted/30 transition-colors"
                           >
-                            <div className="p-4 bg-primary/10 rounded-full text-primary">
-                              <ImageIcon className="w-8 h-8" />
+                            <div className="p-3 bg-primary/10 rounded-full text-primary">
+                              <ImageIcon className="w-6 h-6" />
                             </div>
                             <div className="text-center">
-                              <p className="font-bold text-base text-primary">Upload Property Image</p>
-                              <p className="text-xs text-muted-foreground mt-1">Supported formats: JPG, PNG. Max 5MB.</p>
+                              <p className="font-bold text-sm text-primary">Upload Property Image</p>
+                              <p className="text-[10px] text-muted-foreground mt-1">Supported formats: JPG, PNG. Max 5MB.</p>
                             </div>
                           </button>
                         )}
@@ -250,47 +250,47 @@ export default function PropertiesPage() {
                   <div className="grid gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="address-dlg" className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Address</Label>
-                      <Input id="address-dlg" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="e.g. 42 Baker Street" className="rounded-xl h-12" />
+                      <Input id="address-dlg" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="e.g. 42 Baker Street" className="rounded-xl h-11" />
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label htmlFor="zipCode-dlg" className="font-bold text-xs uppercase tracking-widest text-primary/60">Postcode / Zip</Label>
-                        <Input id="zipCode-dlg" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required placeholder="NW1 6XE" className="rounded-xl h-12" />
+                        <Input id="zipCode-dlg" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required placeholder="NW1 6XE" className="rounded-xl h-11" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="rent-dlg" className="font-bold text-xs uppercase tracking-widest text-primary/60">Monthly Rent (£)</Label>
-                        <Input id="rent-dlg" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required placeholder="1850" className="rounded-xl h-12" />
+                        <Input id="rent-dlg" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required placeholder="1850" className="rounded-xl h-11" />
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="desc-dlg" className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Description</Label>
-                      <Input id="desc-dlg" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. Modern two-bedroom penthouse with city views..." className="rounded-xl h-12" />
+                      <Input id="desc-dlg" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. Modern two-bedroom apartment..." className="rounded-xl h-11" />
                     </div>
                   </div>
                 </div>
               </ScrollArea>
               
-              <DialogFooter className="p-6 bg-muted/10 border-t shrink-0">
+              <DialogFooter className="p-4 bg-muted/10 border-t shrink-0">
                 <div className="flex w-full gap-4">
                   <Button 
                     type="button" 
                     variant="outline" 
-                    className="flex-1 h-12 rounded-xl font-bold"
+                    className="flex-1 h-11 rounded-xl font-bold"
                     onClick={() => setIsAddDialogOpen(false)}
                   >
                     Cancel
                   </Button>
                   <Button 
                     type="submit" 
-                    className="flex-[2] h-12 rounded-xl font-bold shadow-xl shadow-primary/10 transition-all" 
+                    className="flex-[2] h-11 rounded-xl font-bold shadow-xl shadow-primary/10 transition-all" 
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
-                      <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Syncing...</>
+                      <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Saving...</>
                     ) : (
-                      <><Save className="w-5 h-5 mr-2" /> {editingProperty ? "Update Asset" : "Add Asset"}</>
+                      <><Save className="w-4 h-4 mr-2" /> {editingProperty ? "Save Changes" : "Create Asset"}</>
                     )}
                   </Button>
                 </div>
@@ -305,11 +305,11 @@ export default function PropertiesPage() {
           <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-500 rounded-2xl bg-card">
             <div className="relative h-56 w-full overflow-hidden">
               <Image 
-                src={property.imageUrl || "https://picsum.photos/seed/prop/800/600"} 
+                src={property.imageUrl || "https://picsum.photos/seed/house/800/600"} 
                 alt={property.addressLine1} 
                 fill 
                 className="object-cover transition-transform duration-700 group-hover:scale-110" 
-                data-ai-hint="modern architecture"
+                data-ai-hint="modern home"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <Badge className={cn(
