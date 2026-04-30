@@ -107,7 +107,6 @@ export const useFirebase = (): FirebaseServicesAndUser => {
   const context = useContext(FirebaseContext);
 
   if (context === undefined) {
-    // Return safe defaults during SSR
     return {
       firebaseApp: null as any,
       firestore: null as any,
