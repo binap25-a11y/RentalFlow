@@ -103,7 +103,7 @@ export default function PropertiesPage() {
       const propertyId = editingProperty ? editingProperty.id : doc(collection(db, 'dummy')).id;
       const propertyRef = doc(db, 'properties', propertyId);
       
-      let finalImageUrl = editingProperty ? editingProperty.imageUrl : `https://picsum.photos/seed/${propertyId}/800/600`;
+      let finalImageUrl = previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile) {
         const storageRef = ref(storage, `Images/properties/${user.uid}/${propertyId}/${imageFile.name}`);
@@ -171,21 +171,21 @@ export default function PropertiesPage() {
               Add New Property
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[650px] w-[95vw] h-[90vh] p-0 rounded-2xl overflow-hidden flex flex-col border-none shadow-2xl">
+          <DialogContent className="sm:max-w-[700px] w-[95vw] h-[90vh] p-0 rounded-2xl overflow-hidden flex flex-col border-none shadow-2xl">
             <DialogHeader className="p-6 bg-primary/5 border-b shrink-0 text-left">
               <DialogTitle className="text-2xl font-headline font-bold text-primary">
                 {editingProperty ? 'Modify Property Asset' : 'New Property Details'}
               </DialogTitle>
-              <DialogDescription className="font-medium">
-                {editingProperty ? 'Update the details and images for this property.' : 'Complete the profile for your new rental property.'}
+              <DialogDescription className="font-medium text-muted-foreground">
+                {editingProperty ? 'Update the details and showcase image for this property asset.' : 'Enter the core profile details for your new rental property.'}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSaveProperty} className="flex-1 overflow-hidden flex flex-col">
-              <ScrollArea className="flex-1 p-6">
+              <ScrollArea className="flex-1 px-6 py-6">
                 <div className="grid gap-8">
                   <div className="space-y-4">
                     <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Showcase Photo</Label>
-                    <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/30">
+                    <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/20">
                       <div className={cn(
                         "w-full h-64 overflow-hidden flex flex-col items-center justify-center relative",
                         previewUrl && "bg-transparent"
@@ -206,7 +206,7 @@ export default function PropertiesPage() {
                                  onClick={() => document.getElementById('image-input-dialog')?.click()}
                                >
                                  <Upload className="w-4 h-4 mr-2" />
-                                 Change Property Image
+                                 Change Property Photo
                                </Button>
                             </div>
                           </>
@@ -214,14 +214,14 @@ export default function PropertiesPage() {
                           <button 
                             type="button"
                             onClick={() => document.getElementById('image-input-dialog')?.click()}
-                            className="flex flex-col items-center gap-3 p-12 w-full h-full"
+                            className="flex flex-col items-center gap-3 p-12 w-full h-full hover:bg-muted/30 transition-colors"
                           >
                             <div className="p-4 bg-primary/10 rounded-full text-primary">
                               <ImageIcon className="w-8 h-8" />
                             </div>
                             <div className="text-center">
-                              <p className="font-bold text-base text-primary">Upload Property Photo</p>
-                              <p className="text-xs text-muted-foreground mt-1">High-quality images attract the best residents.</p>
+                              <p className="font-bold text-base text-primary">Upload Property Image</p>
+                              <p className="text-xs text-muted-foreground mt-1">Provide a high-quality visual of the residence.</p>
                             </div>
                           </button>
                         )}
@@ -254,18 +254,18 @@ export default function PropertiesPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="desc-dlg" className="font-bold text-xs uppercase tracking-widest text-primary/60">Brief Description</Label>
-                      <Input id="desc-dlg" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. Spacious 2-bed apartment near central park..." className="rounded-xl h-12" />
+                      <Label htmlFor="desc-dlg" className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Description</Label>
+                      <Input id="desc-dlg" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. Modern two-bedroom penthouse with city views..." className="rounded-xl h-12" />
                     </div>
                   </div>
                 </div>
               </ScrollArea>
-              <DialogFooter className="p-6 bg-muted/20 border-t shrink-0">
-                <Button type="submit" className="w-full h-14 rounded-xl font-bold text-lg shadow-xl shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.99]" disabled={isSubmitting}>
+              <DialogFooter className="p-6 bg-muted/10 border-t shrink-0">
+                <Button type="submit" className="w-full h-14 rounded-xl font-bold text-lg shadow-xl shadow-primary/10 transition-all hover:scale-[1.01] active:scale-[0.99]" disabled={isSubmitting}>
                   {isSubmitting ? (
-                    <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Finalizing...</>
+                    <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Syncing Details...</>
                   ) : (
-                    <><Save className="w-5 h-5 mr-2" /> {editingProperty ? "Update Property Record" : "Confirm Property Creation"}</>
+                    <><Save className="w-5 h-5 mr-2" /> {editingProperty ? "Save Property Changes" : "Create Property Record"}</>
                   )}
                 </Button>
               </DialogFooter>
@@ -279,11 +279,11 @@ export default function PropertiesPage() {
           <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-500 rounded-2xl bg-card">
             <div className="relative h-56 w-full overflow-hidden">
               <Image 
-                src={property.imageUrl} 
+                src={property.imageUrl || "https://picsum.photos/seed/prop/800/600"} 
                 alt={property.addressLine1} 
                 fill 
                 className="object-cover transition-transform duration-700 group-hover:scale-110" 
-                data-ai-hint="luxury property"
+                data-ai-hint="modern architecture"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <Badge className={cn(
@@ -300,14 +300,14 @@ export default function PropertiesPage() {
             <CardFooter className="flex flex-col gap-3 pt-4">
               <div className="flex gap-3 w-full">
                 <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-10 border-primary/10 hover:bg-primary hover:text-white transition-all" asChild>
-                  <Link href={`/landlord/properties/${property.id}`}><Building2 className="w-4 h-4 mr-2" /> Details</Link>
+                  <Link href={`/landlord/properties/${property.id}`}><Building2 className="w-4 h-4 mr-2" /> View Asset</Link>
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-10 border-primary/10 text-primary hover:bg-primary/5 transition-all" onClick={() => handleOpenEditDialog(property)}>
-                  <Edit3 className="w-4 h-4 mr-2" /> Edit
+                  <Edit3 className="w-4 h-4 mr-2" /> Modify
                 </Button>
               </div>
               <Button variant="ghost" className="w-full rounded-xl h-10 text-xs text-destructive hover:bg-destructive/10 font-bold" onClick={() => handleDeleteProperty(property.id)}>
-                <Trash2 className="w-4 h-4 mr-2" /> Delete Asset
+                <Trash2 className="w-4 h-4 mr-2" /> Decommission Asset
               </Button>
             </CardFooter>
           </Card>
