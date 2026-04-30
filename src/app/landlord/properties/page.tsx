@@ -121,13 +121,15 @@ export default function PropertiesPage() {
       const propertyId = editingProperty ? editingProperty.id : doc(collection(db, 'dummy')).id;
       const propertyRef = doc(db, 'properties', propertyId);
       
-      let finalImageUrl = previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
+      let finalImageUrl = editingProperty?.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile) {
         toast({ title: "Uploading photo...", description: "Please wait while we save your property image." });
         const storageRef = ref(storage, `Images/properties/${user.uid}/${propertyId}/${imageFile.name}`);
         const uploadResult = await uploadBytes(storageRef, imageFile);
         finalImageUrl = await getDownloadURL(uploadResult.ref);
+      } else if (previewUrl && !previewUrl.startsWith('blob:')) {
+        finalImageUrl = previewUrl;
       }
 
       const data = {
@@ -210,10 +212,10 @@ export default function PropertiesPage() {
             <form onSubmit={handleSaveProperty} className="flex-1 min-h-0 flex flex-col bg-card overflow-hidden">
               <ScrollArea className="flex-1">
                 <div className="p-8 space-y-8">
-                  {/* Property Photo Section */}
+                  {/* Property Photo Section - Aspect Video Scaling */}
                   <div className="space-y-4 text-left">
                     <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Showcase Photo</Label>
-                    <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/20 aspect-[16/7] w-full flex items-center justify-center">
+                    <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/20 aspect-video w-full flex items-center justify-center">
                       {previewUrl ? (
                         <>
                           <Image src={previewUrl} alt="Preview" fill className="object-cover" />
