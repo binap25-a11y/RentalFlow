@@ -107,10 +107,18 @@ export const useFirebase = (): FirebaseServicesAndUser => {
   const context = useContext(FirebaseContext);
 
   if (context === undefined) {
-    throw new Error('useFirebase must be used within a FirebaseProvider.');
+    // Return safe defaults during SSR
+    return {
+      firebaseApp: null as any,
+      firestore: null as any,
+      auth: null as any,
+      storage: null as any,
+      user: null,
+      isUserLoading: true,
+      userError: null,
+    };
   }
 
-  // Handle cases where context might be partially populated during SSR/early hydration
   return {
     firebaseApp: context.firebaseApp!,
     firestore: context.firestore!,

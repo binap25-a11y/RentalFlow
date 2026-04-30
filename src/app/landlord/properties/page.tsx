@@ -106,7 +106,8 @@ export default function PropertiesPage() {
       let finalImageUrl = editingProperty ? editingProperty.imageUrl : `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile) {
-        const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${imageFile.name}`);
+        // Path matches requirements, using Firebase Storage folder 'Images'
+        const storageRef = ref(storage, `Images/properties/${user.uid}/${propertyId}/${imageFile.name}`);
         const uploadResult = await uploadBytes(storageRef, imageFile);
         finalImageUrl = await getDownloadURL(uploadResult.ref);
       }
@@ -279,7 +280,7 @@ export default function PropertiesPage() {
                 alt={property.addressLine1} 
                 fill 
                 className="object-cover transition-transform group-hover:scale-105" 
-                data-ai-hint="rental property"
+                data-ai-hint="apartment building"
               />
               <Badge className={cn(
                 "absolute top-4 right-4 font-bold shadow-sm",
