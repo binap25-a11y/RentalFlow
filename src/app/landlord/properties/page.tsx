@@ -172,7 +172,7 @@ export default function PropertiesPage() {
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[600px] w-[95vw] max-h-[90vh] p-0 rounded-2xl overflow-hidden flex flex-col border-none shadow-2xl">
-            <DialogHeader className="p-6 bg-primary/5 border-b shrink-0">
+            <DialogHeader className="p-6 bg-primary/5 border-b shrink-0 text-left">
               <DialogTitle className="text-2xl font-headline font-bold text-primary">
                 {editingProperty ? 'Edit Property' : 'Property Details'}
               </DialogTitle>

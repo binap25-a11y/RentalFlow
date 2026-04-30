@@ -22,8 +22,7 @@ service cloud.firestore {
     match /tenants/{tenantId} {
       allow read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
-        resource.data.userId == request.auth.uid ||
-        resource.data.userProfileId == request.auth.uid
+        resource.data.email == request.auth.token.email
       );
       allow write: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
@@ -31,8 +30,7 @@ service cloud.firestore {
     match /maintenanceRequests/{requestId} {
       allow read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
-        resource.data.reportedByUserId == request.auth.uid ||
-        resource.data.tenantId == request.auth.uid
+        resource.data.reportedByUserId == request.auth.uid
       );
       allow create: if isSignedIn();
       allow update: if isSignedIn() && (

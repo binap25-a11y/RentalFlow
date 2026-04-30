@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useMemo } from 'react';
@@ -39,14 +38,17 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(collection(db, 'tenants'), where('propertyId', '==', propertyId), where('landlordId', '==', user.uid));
+    return query(
+      collection(db, 'tenants'), 
+      where('propertyId', '==', propertyId), 
+      where('landlordId', '==', user.uid)
+    );
   }, [db, user, propertyId]);
 
   const { data: tenants } = useCollection(tenantsQuery);
 
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Querying documents where landlord is the user
     return query(
       collection(db, 'documents'), 
       where('propertyId', '==', propertyId),
@@ -119,7 +121,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         documentType: 'property-asset',
         description: `Uploaded for ${property?.addressLine1}`,
         propertyId: propertyId,
-        userId: user.uid, // Default to landlord as owner
+        userId: user.uid, 
         landlordId: user.uid,
         createdAt: new Date().toISOString(),
       });
@@ -137,7 +139,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 text-left">
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full"><ArrowLeft className="w-5 h-5" /></Button>
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">{property.addressLine1}</h1>
@@ -156,7 +158,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             </CardHeader>
             <CardContent className="pt-6">
               <div className="flex items-end gap-4">
-                <div className="space-y-1 flex-1">
+                <div className="space-y-1 flex-1 text-left">
                   <Label className="text-muted-foreground font-bold text-xs uppercase tracking-wider font-headline">Monthly Rent (£)</Label>
                   {isEditing ? (
                     <Input type="number" value={rentAmount || property.rentAmount} onChange={(e) => setRentAmount(e.target.value)} className="rounded-xl" />
@@ -181,7 +183,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             </TabsList>
 
             <TabsContent value="tenants" className="mt-6 space-y-4">
-               <h3 className="text-lg font-bold font-headline text-primary">Assigned Residents</h3>
+               <h3 className="text-lg font-bold font-headline text-primary text-left">Assigned Residents</h3>
                {tenants && tenants.length > 0 ? (
                  tenants.map(tenant => (
                     <div key={tenant.id} className="flex items-center justify-between p-4 bg-white rounded-xl border border-primary/5 shadow-sm">
@@ -189,7 +191,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
                           {tenant.firstName[0]}{tenant.lastName[0]}
                         </div>
-                        <div>
+                        <div className="text-left">
                           <p className="font-bold font-body">{tenant.firstName} {tenant.lastName}</p>
                           <p className="text-xs text-muted-foreground font-body">{tenant.email}</p>
                         </div>
@@ -237,7 +239,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         <div className="p-2 bg-blue-50 rounded-lg">
                           <FileText className="w-5 h-5 text-blue-600" />
                         </div>
-                        <div>
+                        <div className="text-left">
                           <p className="font-bold text-sm font-body">{doc.fileName}</p>
                           <p className="text-[10px] text-muted-foreground font-headline uppercase font-bold">
                             Added: {doc.createdAt ? format(new Date(doc.createdAt), 'PPP') : 'Recently'}
@@ -261,19 +263,19 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card className="border-none shadow-sm bg-muted/30">
-                  <CardHeader className="pb-2">
+                  <CardHeader className="pb-2 text-left">
                     <CardTitle className="text-sm font-bold font-headline">Add Support Contact</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div className="space-y-1">
+                    <div className="space-y-1 text-left">
                       <Label className="text-xs font-bold font-headline uppercase tracking-wider">Name</Label>
                       <Input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="John Electric" className="h-8 text-xs font-body" />
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1 text-left">
                       <Label className="text-xs font-bold font-headline uppercase tracking-wider">Role</Label>
                       <Input value={contactRole} onChange={(e) => setContactRole(e.target.value)} placeholder="Electrician" className="h-8 text-xs font-body" />
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1 text-left">
                       <Label className="text-xs font-bold font-headline uppercase tracking-wider">Phone</Label>
                       <Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="07700 900000" className="h-8 text-xs font-body" />
                     </div>
@@ -288,7 +290,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         <div className="p-2 bg-primary/5 rounded-lg">
                           <Phone className="w-4 h-4 text-primary" />
                         </div>
-                        <div>
+                        <div className="text-left">
                           <p className="text-sm font-bold font-body">{contact.name}</p>
                           <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight font-headline">{contact.role}</p>
                         </div>
@@ -313,7 +315,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
-              <div className="p-5 bg-background border border-primary/10 rounded-2xl flex gap-4 items-start shadow-sm">
+              <div className="p-5 bg-background border border-primary/10 rounded-2xl flex gap-4 items-start shadow-sm text-left">
                 <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                 <p className="text-sm font-body text-muted-foreground leading-relaxed">
                   Compliance and resident safety are top priorities. Keep all certifications updated within the <span className="font-bold text-primary">Vault</span> to maintain your <span className="font-bold text-primary">Tier 1</span> status.
