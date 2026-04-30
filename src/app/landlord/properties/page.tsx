@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Building2, MapPin, Plus, Trash2, Edit3, Loader2, Image as ImageIcon, Upload, X } from "lucide-react";
+import { Building2, MapPin, Plus, Trash2, Edit3, Loader2, Image as ImageIcon, Upload, X, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import Image from "next/image";
@@ -172,24 +172,24 @@ export default function PropertiesPage() {
               Add New Property
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px] w-[95vw] max-h-[90vh] p-0 rounded-2xl overflow-hidden flex flex-col border-none shadow-2xl">
+          <DialogContent className="sm:max-w-[650px] w-[95vw] max-h-[95vh] p-0 rounded-2xl overflow-hidden flex flex-col border-none shadow-2xl">
             <DialogHeader className="p-6 bg-primary/5 border-b shrink-0 text-left">
               <DialogTitle className="text-2xl font-headline font-bold text-primary">
-                {editingProperty ? 'Edit Property' : 'Property Details'}
+                {editingProperty ? 'Modify Property Asset' : 'New Property Details'}
               </DialogTitle>
               <DialogDescription className="font-medium">
-                {editingProperty ? 'Update the details for this property asset.' : 'Enter the address and financial details for your new property.'}
+                {editingProperty ? 'Update the details and images for this property.' : 'Complete the profile for your new rental property.'}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSaveProperty} className="flex-1 overflow-hidden flex flex-col">
               <ScrollArea className="flex-1 p-6">
-                <div className="grid gap-6">
+                <div className="grid gap-8">
                   <div className="space-y-4">
                     <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Showcase Photo</Label>
-                    <div className="relative group">
+                    <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/30">
                       <div className={cn(
-                        "w-full h-56 rounded-2xl overflow-hidden border-2 border-dashed transition-all flex flex-col items-center justify-center bg-muted/30",
-                        previewUrl ? "border-transparent" : "border-muted-foreground/20 hover:border-primary/40 hover:bg-primary/5"
+                        "w-full h-64 overflow-hidden flex flex-col items-center justify-center",
+                        previewUrl && "bg-transparent"
                       )}>
                         {previewUrl ? (
                           <>
@@ -199,34 +199,36 @@ export default function PropertiesPage() {
                               fill 
                               className="object-cover"
                             />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                <Button 
                                  type="button" 
                                  variant="secondary" 
-                                 className="rounded-full font-bold shadow-lg"
-                                 onClick={() => document.getElementById('image-input')?.click()}
+                                 className="rounded-full font-bold shadow-xl"
+                                 onClick={() => document.getElementById('image-input-dialog')?.click()}
                                >
-                                 <ImageIcon className="w-4 h-4 mr-2" />
-                                 Change Photo
+                                 <Upload className="w-4 h-4 mr-2" />
+                                 Change Property Image
                                </Button>
                             </div>
                           </>
                         ) : (
                           <button 
                             type="button"
-                            onClick={() => document.getElementById('image-input')?.click()}
-                            className="flex flex-col items-center gap-2 p-8 w-full h-full"
+                            onClick={() => document.getElementById('image-input-dialog')?.click()}
+                            className="flex flex-col items-center gap-3 p-12 w-full h-full"
                           >
                             <div className="p-4 bg-primary/10 rounded-full text-primary">
-                              <Upload className="w-8 h-8" />
+                              <ImageIcon className="w-8 h-8" />
                             </div>
-                            <p className="font-bold text-sm">Click to upload property photo</p>
-                            <p className="text-xs text-muted-foreground">High quality photos attract better residents</p>
+                            <div className="text-center">
+                              <p className="font-bold text-base text-primary">Upload Property Photo</p>
+                              <p className="text-xs text-muted-foreground mt-1">First impressions matter. Use high-quality images.</p>
+                            </div>
                           </button>
                         )}
                       </div>
                       <Input 
-                        id="image-input" 
+                        id="image-input-dialog" 
                         type="file" 
                         accept="image/*" 
                         className="hidden" 
@@ -235,34 +237,36 @@ export default function PropertiesPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="address" className="font-bold text-xs uppercase tracking-widest text-primary/60">Full Address</Label>
-                    <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="123 Example Street" className="rounded-xl h-11" />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="zipCode" className="font-bold text-xs uppercase tracking-widest text-primary/60">Postcode</Label>
-                      <Input id="zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required placeholder="SW1A 1AA" className="rounded-xl h-11" />
+                      <Label htmlFor="address-dlg" className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Address</Label>
+                      <Input id="address-dlg" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="e.g. 42 Baker Street" className="rounded-xl h-12" />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="rent" className="font-bold text-xs uppercase tracking-widest text-primary/60">Monthly Rent (£)</Label>
-                      <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required placeholder="1200" className="rounded-xl h-11" />
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="zipCode-dlg" className="font-bold text-xs uppercase tracking-widest text-primary/60">Postcode / Zip</Label>
+                        <Input id="zipCode-dlg" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required placeholder="NW1 6XE" className="rounded-xl h-12" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="rent-dlg" className="font-bold text-xs uppercase tracking-widest text-primary/60">Monthly Rent (£)</Label>
+                        <Input id="rent-dlg" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required placeholder="1850" className="rounded-xl h-12" />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="desc" className="font-bold text-xs uppercase tracking-widest text-primary/60">Public Description</Label>
-                    <Input id="desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. Modern flat with garden access..." className="rounded-xl h-11" />
+                    <div className="space-y-2">
+                      <Label htmlFor="desc-dlg" className="font-bold text-xs uppercase tracking-widest text-primary/60">Brief Description</Label>
+                      <Input id="desc-dlg" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. Spacious 2-bed apartment near central park..." className="rounded-xl h-12" />
+                    </div>
                   </div>
                 </div>
               </ScrollArea>
               <DialogFooter className="p-6 bg-muted/20 border-t shrink-0">
-                <Button type="submit" className="w-full h-12 rounded-xl font-bold text-lg shadow-lg shadow-primary/10" disabled={isSubmitting}>
+                <Button type="submit" className="w-full h-14 rounded-xl font-bold text-lg shadow-xl shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.99]" disabled={isSubmitting}>
                   {isSubmitting ? (
-                    <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Saving...</>
+                    <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Finalizing...</>
                   ) : (
-                    editingProperty ? "Save Changes" : "Confirm Property Creation"
+                    <><Save className="w-5 h-5 mr-2" /> {editingProperty ? "Update Property Record" : "Confirm Property Creation"}</>
                   )}
                 </Button>
               </DialogFooter>
@@ -271,39 +275,40 @@ export default function PropertiesPage() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {properties?.map((property) => (
-          <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-md transition-all duration-300">
-            <div className="relative h-48 w-full">
+          <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-500 rounded-2xl bg-card">
+            <div className="relative h-56 w-full overflow-hidden">
               <Image 
                 src={property.imageUrl} 
                 alt={property.addressLine1} 
                 fill 
-                className="object-cover transition-transform group-hover:scale-105" 
-                data-ai-hint="apartment building"
+                className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                data-ai-hint="luxury property"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <Badge className={cn(
-                "absolute top-4 right-4 font-bold shadow-sm",
-                property.isOccupied ? 'bg-green-500 hover:bg-green-600' : 'bg-amber-500 hover:bg-amber-600'
+                "absolute top-4 right-4 font-bold shadow-lg py-1 px-3 uppercase text-[10px]",
+                property.isOccupied ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-amber-500 hover:bg-amber-600'
               )}>
                 {property.isOccupied ? 'Occupied' : 'Vacant'}
               </Badge>
             </div>
-            <CardHeader>
-              <CardTitle className="text-lg font-bold font-headline">{property.addressLine1}</CardTitle>
-              <p className="text-sm text-muted-foreground flex items-center"><MapPin className="w-3 h-3 mr-1" /> {property.zipCode}</p>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl font-bold font-headline group-hover:text-primary transition-colors line-clamp-1">{property.addressLine1}</CardTitle>
+              <p className="text-sm text-muted-foreground flex items-center font-medium"><MapPin className="w-4 h-4 mr-1 text-primary/40" /> {property.zipCode}</p>
             </CardHeader>
-            <CardFooter className="flex flex-col gap-2">
-              <div className="flex gap-2 w-full">
-                <Button variant="outline" size="sm" className="flex-1 rounded-lg font-bold h-9" asChild>
-                  <Link href={`/landlord/properties/${property.id}`}><Building2 className="w-3 h-3 mr-2" /> Details</Link>
+            <CardFooter className="flex flex-col gap-3 pt-4">
+              <div className="flex gap-3 w-full">
+                <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-10 border-primary/10 hover:bg-primary hover:text-white transition-all" asChild>
+                  <Link href={`/landlord/properties/${property.id}`}><Building2 className="w-4 h-4 mr-2" /> Details</Link>
                 </Button>
-                <Button variant="outline" size="sm" className="flex-1 rounded-lg font-bold h-9 border-primary/20 text-primary hover:bg-primary/5" onClick={() => handleOpenEditDialog(property)}>
-                  <Edit3 className="w-3 h-3 mr-2" /> Edit
+                <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-10 border-primary/10 text-primary hover:bg-primary/5 transition-all" onClick={() => handleOpenEditDialog(property)}>
+                  <Edit3 className="w-4 h-4 mr-2" /> Edit
                 </Button>
               </div>
-              <Button variant="ghost" className="w-full rounded-lg h-9 text-xs text-destructive hover:bg-destructive/10" onClick={() => handleDeleteProperty(property.id)}>
-                <Trash2 className="w-3 h-3 mr-2" /> Remove Asset
+              <Button variant="ghost" className="w-full rounded-xl h-10 text-xs text-destructive hover:bg-destructive/10 font-bold" onClick={() => handleDeleteProperty(property.id)}>
+                <Trash2 className="w-4 h-4 mr-2" /> Delete Asset
               </Button>
             </CardFooter>
           </Card>
