@@ -193,7 +193,7 @@ export default function PropertiesPage() {
               Add New Property
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[750px] w-[95vw] h-[90vh] p-0 rounded-2xl overflow-hidden flex flex-col border-none shadow-2xl">
+          <DialogContent className="sm:max-w-[700px] w-[95vw] h-[85vh] p-0 rounded-2xl overflow-hidden flex flex-col border-none shadow-2xl">
             <DialogHeader className="p-6 bg-primary/5 border-b shrink-0 text-left">
               <DialogTitle className="text-2xl font-headline font-bold text-primary">
                 {editingProperty ? 'Modify Property Asset' : 'New Property Details'}
@@ -203,12 +203,13 @@ export default function PropertiesPage() {
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleSaveProperty} className="flex-1 min-h-0 flex flex-col">
+            <form onSubmit={handleSaveProperty} className="flex-1 min-h-0 flex flex-col bg-card">
               <ScrollArea className="flex-1">
                 <div className="p-8 space-y-8">
+                  {/* Property Photo Section - Scaled for Page */}
                   <div className="space-y-4 text-left">
                     <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Showcase Photo</Label>
-                    <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/20 h-56 flex items-center justify-center">
+                    <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/20 aspect-video w-full max-h-56 flex items-center justify-center">
                       {previewUrl ? (
                         <>
                           <Image src={previewUrl} alt="Preview" fill className="object-cover" />
@@ -222,10 +223,10 @@ export default function PropertiesPage() {
                           </div>
                         </>
                       ) : (
-                        <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="flex flex-col items-center gap-2 p-8 w-full h-full">
-                          <ImageIcon className="w-10 h-10 text-primary/40" />
-                          <p className="text-sm font-bold text-primary">Click to Upload Property Photo</p>
-                          <p className="text-xs text-muted-foreground">High-quality JPG or PNG recommended</p>
+                        <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="flex flex-col items-center gap-2 p-6 w-full h-full justify-center">
+                          <ImageIcon className="w-8 h-8 text-primary/40" />
+                          <p className="text-sm font-bold text-primary">Upload Property Photo</p>
+                          <p className="text-[10px] text-muted-foreground">Recommended: 16:9 ratio</p>
                         </button>
                       )}
                       <Input id="image-input" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
@@ -295,7 +296,7 @@ export default function PropertiesPage() {
                     </div>
                     <div className="space-y-2 md:col-span-2 text-left">
                       <Label htmlFor="description">Asset Description</Label>
-                      <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Modern apartment with city views and balcony..." className="rounded-xl h-11" />
+                      <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Modern apartment with city views..." className="rounded-xl h-11" />
                     </div>
                   </div>
                 </div>
