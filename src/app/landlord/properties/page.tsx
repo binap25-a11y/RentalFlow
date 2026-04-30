@@ -121,6 +121,7 @@ export default function PropertiesPage() {
       let finalImageUrl = previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile) {
+        // Corrected storage path to store images in 'Images' folder
         const storageRef = ref(storage, `Images/properties/${user.uid}/${propertyId}/${imageFile.name}`);
         const uploadResult = await uploadBytes(storageRef, imageFile);
         finalImageUrl = await getDownloadURL(uploadResult.ref);
@@ -177,7 +178,7 @@ export default function PropertiesPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary mb-2">Portfolio Management</h1>
           <p className="text-muted-foreground font-medium font-body">Add, view and manage your rental assets.</p>
@@ -206,7 +207,7 @@ export default function PropertiesPage() {
             <form onSubmit={handleSaveProperty} className="flex-1 overflow-hidden flex flex-col">
               <ScrollArea className="flex-1">
                 <div className="px-8 py-8 space-y-8">
-                  <div className="space-y-4">
+                  <div className="space-y-4 text-left">
                     <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Showcase Photo</Label>
                     <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/20 h-48 flex items-center justify-center">
                       {previewUrl ? (
@@ -233,25 +234,25 @@ export default function PropertiesPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2 md:col-span-2 text-left">
-                      <Label htmlFor="address">Address</Label>
-                      <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="e.g. 123 Baker Street" className="rounded-xl" />
+                      <Label htmlFor="address">Street Address</Label>
+                      <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="e.g. 123 Baker Street" className="rounded-xl h-11" />
                     </div>
                     <div className="space-y-2 text-left">
                       <Label htmlFor="city">City</Label>
-                      <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} required placeholder="London" className="rounded-xl" />
+                      <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} required placeholder="London" className="rounded-xl h-11" />
                     </div>
                     <div className="space-y-2 text-left">
                       <Label htmlFor="state">State / Province</Label>
-                      <Input id="state" value={state} onChange={(e) => setState(e.target.value)} required placeholder="UK" className="rounded-xl" />
+                      <Input id="state" value={state} onChange={(e) => setState(e.target.value)} required placeholder="UK" className="rounded-xl h-11" />
                     </div>
                     <div className="space-y-2 text-left">
                       <Label htmlFor="zipCode">Postcode / Zip</Label>
-                      <Input id="zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required placeholder="NW1 6XE" className="rounded-xl" />
+                      <Input id="zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required placeholder="NW1 6XE" className="rounded-xl h-11" />
                     </div>
                     <div className="space-y-2 text-left">
                       <Label>Property Type</Label>
                       <Select value={propertyType} onValueChange={setPropertyType}>
-                        <SelectTrigger className="rounded-xl">
+                        <SelectTrigger className="rounded-xl h-11">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -265,7 +266,7 @@ export default function PropertiesPage() {
                     <div className="space-y-2 text-left">
                       <Label>Bedrooms</Label>
                       <Select value={bedrooms} onValueChange={setBedrooms}>
-                        <SelectTrigger className="rounded-xl">
+                        <SelectTrigger className="rounded-xl h-11">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -276,7 +277,7 @@ export default function PropertiesPage() {
                     <div className="space-y-2 text-left">
                       <Label>Bathrooms</Label>
                       <Select value={bathrooms} onValueChange={setBathrooms}>
-                        <SelectTrigger className="rounded-xl">
+                        <SelectTrigger className="rounded-xl h-11">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -285,16 +286,16 @@ export default function PropertiesPage() {
                       </Select>
                     </div>
                     <div className="space-y-2 text-left">
-                      <Label htmlFor="sqft">Sq Footage</Label>
-                      <Input id="sqft" type="number" value={squareFootage} onChange={(e) => setSquareFootage(e.target.value)} placeholder="850" className="rounded-xl" />
+                      <Label htmlFor="sqft">Square Footage</Label>
+                      <Input id="sqft" type="number" value={squareFootage} onChange={(e) => setSquareFootage(e.target.value)} placeholder="850" className="rounded-xl h-11" />
                     </div>
                     <div className="space-y-2 text-left">
                       <Label htmlFor="rent">Monthly Rent (£)</Label>
-                      <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required placeholder="1500" className="rounded-xl" />
+                      <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required placeholder="1500" className="rounded-xl h-11" />
                     </div>
                     <div className="space-y-2 md:col-span-2 text-left">
-                      <Label htmlFor="description">Description</Label>
-                      <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Modern apartment with city views..." className="rounded-xl" />
+                      <Label htmlFor="description">Asset Description</Label>
+                      <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Modern apartment with city views and balcony..." className="rounded-xl h-11" />
                     </div>
                   </div>
                 </div>
@@ -302,7 +303,7 @@ export default function PropertiesPage() {
               
               <DialogFooter className="p-6 bg-muted/10 border-t shrink-0">
                 <Button type="button" variant="outline" className="rounded-xl" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" className="rounded-xl font-bold bg-primary hover:bg-primary/90" disabled={isSubmitting}>
+                <Button type="submit" className="rounded-xl font-bold bg-primary hover:bg-primary/90 min-w-[140px]" disabled={isSubmitting}>
                   {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                   {editingProperty ? "Update Asset" : "Create Asset"}
                 </Button>
@@ -321,6 +322,7 @@ export default function PropertiesPage() {
                 alt={property.addressLine1} 
                 fill 
                 className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                data-ai-hint="modern house"
               />
               <Badge className={cn(
                 "absolute top-4 right-4 font-bold shadow-lg py-1 px-3 uppercase text-[10px]",
