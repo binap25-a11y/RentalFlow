@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -129,8 +128,6 @@ export default function PropertiesPage() {
         const storageRef = ref(storage, `Images/${user.uid}/${propertyId}/${imageFile.name}`);
         const uploadResult = await uploadBytes(storageRef, imageFile);
         finalImageUrl = await getDownloadURL(uploadResult.ref);
-      } else if (previewUrl && !previewUrl.startsWith('blob:')) {
-        finalImageUrl = previewUrl;
       }
 
       const data = {
