@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useState } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, query, where, collectionGroup } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,14 +19,15 @@ export default function TenantsPage() {
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(collection(db, 'properties'), where('landlordId', '==', user.uid));
+    return collection(db, 'users', user.uid, 'properties');
   }, [db, user]);
 
   const { data: properties } = useCollection(propertiesQuery);
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(collection(db, 'tenants'), where('landlordId', '==', user.uid));
+    // Tenants are TenantProfiles nested under properties. We query across them.
+    return query(collectionGroup(db, 'tenantProfiles'), where('landlordId', '==', user.uid));
   }, [db, user]);
 
   const { data: tenants, isLoading } = useCollection(tenantsQuery);
@@ -47,9 +47,8 @@ export default function TenantsPage() {
     if (!user || !db || !selectedPropertyId) return;
 
     const tenantId = doc(collection(db, 'dummy')).id;
-    const tenantRef = doc(db, 'tenants', tenantId);
-    
-    const propertyRef = doc(db, 'properties', selectedPropertyId);
+    const tenantRef = doc(db, 'users', user.uid, 'properties', selectedPropertyId, 'tenantProfiles', tenantId);
+    const propertyRef = doc(db, 'users', user.uid, 'properties', selectedPropertyId);
 
     setDocumentNonBlocking(tenantRef, {
       id: tenantId,
@@ -81,7 +80,7 @@ export default function TenantsPage() {
 
   const handleDeleteTenant = (tenant: any) => {
     if (!user || !db) return;
-    const tenantRef = doc(db, 'tenants', tenant.id);
+    const tenantRef = doc(db, 'users', user.uid, 'properties', tenant.propertyId, 'tenantProfiles', tenant.id);
     deleteDocumentNonBlocking(tenantRef);
     toast({ title: "Resident Removed", description: "Tenant record has been deleted." });
   };
@@ -193,7 +192,7 @@ export default function TenantsPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                            {tenant.firstName[0]}{tenant.lastName[0]}
+                            {tenant.firstName?.[0] || 'T'}{tenant.lastName?.[0] || ''}
                           </div>
                           <div>
                             <p className="font-bold text-sm">{tenant.firstName} {tenant.lastName}</p>

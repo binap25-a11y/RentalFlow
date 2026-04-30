@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -27,10 +26,8 @@ export default function PropertiesPage() {
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(
-      collection(db, 'properties'),
-      where('landlordId', '==', user.uid)
-    );
+    // Paths aligned with backend.json: /users/{userId}/properties
+    return collection(db, 'users', user.uid, 'properties');
   }, [db, user]);
 
   const { data: properties, isLoading } = useCollection(propertiesQuery);
@@ -119,13 +116,13 @@ export default function PropertiesPage() {
     setIsSubmitting(true);
     
     try {
-      const propertyId = editingProperty ? editingProperty.id : doc(collection(db, 'properties')).id;
-      const propertyRef = doc(db, 'properties', propertyId);
+      const propertyId = editingProperty ? editingProperty.id : doc(collection(db, 'dummy')).id;
+      // Use nested path from backend.json
+      const propertyRef = doc(db, 'users', user.uid, 'properties', propertyId);
       
       let finalImageUrl = editingProperty?.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile) {
-        toast({ title: "Uploading photo...", description: "Saving your property image to the vault." });
         const storageRef = ref(storage, `Images/${user.uid}/${propertyId}/${imageFile.name}`);
         const uploadResult = await uploadBytes(storageRef, imageFile);
         finalImageUrl = await getDownloadURL(uploadResult.ref);
@@ -173,7 +170,7 @@ export default function PropertiesPage() {
 
   const handleDeleteProperty = (propertyId: string) => {
     if (!user || !db) return;
-    const propertyRef = doc(db, 'properties', propertyId);
+    const propertyRef = doc(db, 'users', user.uid, 'properties', propertyId);
     deleteDocumentNonBlocking(propertyRef);
     toast({ title: "Property Removed", description: "Asset has been decommissioned." });
   };

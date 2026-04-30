@@ -31,36 +31,29 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const propertyRef = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return doc(db, 'properties', propertyId);
+    return doc(db, 'users', user.uid, 'properties', propertyId);
   }, [db, user, propertyId]);
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(
-      collection(db, 'tenants'), 
-      where('propertyId', '==', propertyId), 
-      where('landlordId', '==', user.uid)
-    );
+    // Tenants are TenantProfiles nested under the property in backend.json
+    return collection(db, 'users', user.uid, 'properties', propertyId, 'tenantProfiles');
   }, [db, user, propertyId]);
 
   const { data: tenants } = useCollection(tenantsQuery);
 
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(
-      collection(db, 'documents'), 
-      where('propertyId', '==', propertyId),
-      where('landlordId', '==', user.uid)
-    );
+    return collection(db, 'users', user.uid, 'properties', propertyId, 'documents');
   }, [db, user, propertyId]);
 
   const { data: documents } = useCollection(docsQuery);
 
   const contactsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(collection(db, 'emergencyContacts'), where('propertyId', '==', propertyId));
+    return collection(db, 'users', user.uid, 'properties', propertyId, 'emergencyContacts');
   }, [db, user, propertyId]);
 
   const { data: contacts } = useCollection(contactsQuery);
@@ -87,7 +80,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const handleAddContact = () => {
     if (!user || !db) return;
     const contactId = doc(collection(db, 'dummy')).id;
-    const contactRef = doc(db, 'emergencyContacts', contactId);
+    const contactRef = doc(db, 'users', user.uid, 'properties', propertyId, 'emergencyContacts', contactId);
 
     setDocumentNonBlocking(contactRef, {
       id: contactId,
@@ -114,7 +107,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       const uploadResult = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(uploadResult.ref);
 
-      addDocumentNonBlocking(collection(db, 'documents'), {
+      const docRef = doc(db, 'users', user.uid, 'properties', propertyId, 'documents', docId);
+      setDocumentNonBlocking(docRef, {
         id: docId,
         fileName: file.name,
         fileUrl: url,
@@ -124,7 +118,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         userId: user.uid, 
         landlordId: user.uid,
         createdAt: new Date().toISOString(),
-      });
+      }, { merge: true });
 
       toast({ title: "Document Uploaded", description: `${file.name} is now in the vault.` });
     } catch (error: any) {
@@ -189,7 +183,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     <div key={tenant.id} className="flex items-center justify-between p-4 bg-white rounded-xl border border-primary/5 shadow-sm">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                          {tenant.firstName[0]}{tenant.lastName[0]}
+                          {tenant.firstName?.[0] || 'T'}{tenant.lastName?.[0] || ''}
                         </div>
                         <div className="text-left">
                           <p className="font-bold font-body">{tenant.firstName} {tenant.lastName}</p>
