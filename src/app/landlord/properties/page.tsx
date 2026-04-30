@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -118,14 +119,14 @@ export default function PropertiesPage() {
     setIsSubmitting(true);
     
     try {
-      const propertyId = editingProperty ? editingProperty.id : doc(collection(db, 'dummy')).id;
+      const propertyId = editingProperty ? editingProperty.id : doc(collection(db, 'properties')).id;
       const propertyRef = doc(db, 'properties', propertyId);
       
       let finalImageUrl = editingProperty?.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile) {
-        toast({ title: "Uploading photo...", description: "Please wait while we save your property image." });
-        const storageRef = ref(storage, `Images/properties/${user.uid}/${propertyId}/${imageFile.name}`);
+        toast({ title: "Uploading photo...", description: "Saving your property image to the vault." });
+        const storageRef = ref(storage, `Images/${user.uid}/${propertyId}/${imageFile.name}`);
         const uploadResult = await uploadBytes(storageRef, imageFile);
         finalImageUrl = await getDownloadURL(uploadResult.ref);
       } else if (previewUrl && !previewUrl.startsWith('blob:')) {
@@ -148,19 +149,19 @@ export default function PropertiesPage() {
         isOccupied: editingProperty?.isOccupied || false,
         imageUrl: finalImageUrl,
         updatedAt: serverTimestamp(),
+        members: { [user.uid]: 'owner' }
       };
 
       if (editingProperty) {
         updateDocumentNonBlocking(propertyRef, data);
-        toast({ title: "Property Updated", description: "Your changes have been saved." });
+        toast({ title: "Property Updated", description: "Asset record updated successfully." });
       } else {
         setDocumentNonBlocking(propertyRef, { 
           ...data, 
           createdAt: serverTimestamp(), 
-          isActive: true, 
-          members: { [user.uid]: 'owner' } 
+          isActive: true
         }, { merge: true });
-        toast({ title: "Property Created", description: "Asset added to your portfolio." });
+        toast({ title: "Property Created", description: "New asset added to your portfolio." });
       }
 
       setIsAddDialogOpen(false);
@@ -176,7 +177,7 @@ export default function PropertiesPage() {
     if (!user || !db) return;
     const propertyRef = doc(db, 'properties', propertyId);
     deleteDocumentNonBlocking(propertyRef);
-    toast({ title: "Property Removed" });
+    toast({ title: "Property Removed", description: "Asset has been decommissioned." });
   };
 
   if (isLoading) return <div className="flex flex-col items-center justify-center h-[60vh]"><Loader2 className="animate-spin text-primary" /></div>;
@@ -212,7 +213,6 @@ export default function PropertiesPage() {
             <form onSubmit={handleSaveProperty} className="flex-1 min-h-0 flex flex-col bg-card overflow-hidden">
               <ScrollArea className="flex-1">
                 <div className="p-8 space-y-8">
-                  {/* Property Photo Section - Aspect Video Scaling */}
                   <div className="space-y-4 text-left">
                     <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Showcase Photo</Label>
                     <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/20 aspect-video w-full flex items-center justify-center">
