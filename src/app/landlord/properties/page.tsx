@@ -121,7 +121,6 @@ export default function PropertiesPage() {
       let finalImageUrl = previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile) {
-        // Store in Images folder as requested
         const storageRef = ref(storage, `Images/properties/${user.uid}/${propertyId}/${imageFile.name}`);
         const uploadResult = await uploadBytes(storageRef, imageFile);
         finalImageUrl = await getDownloadURL(uploadResult.ref);
@@ -149,7 +148,12 @@ export default function PropertiesPage() {
         updateDocumentNonBlocking(propertyRef, data);
         toast({ title: "Property Updated", description: "Your changes have been saved." });
       } else {
-        setDocumentNonBlocking(propertyRef, { ...data, createdAt: serverTimestamp(), isActive: true, members: { [user.uid]: 'owner' } }, { merge: true });
+        setDocumentNonBlocking(propertyRef, { 
+          ...data, 
+          createdAt: serverTimestamp(), 
+          isActive: true, 
+          members: { [user.uid]: 'owner' } 
+        }, { merge: true });
         toast({ title: "Property Added", description: "Successfully created in your portfolio." });
       }
 
@@ -195,7 +199,7 @@ export default function PropertiesPage() {
                 {editingProperty ? 'Modify Property Asset' : 'New Property Details'}
               </DialogTitle>
               <DialogDescription className="text-sm font-medium text-muted-foreground">
-                Enter complete details and upload a photo to showcase your property.
+                Enter complete details and upload a photo to showcase your property asset.
               </DialogDescription>
             </DialogHeader>
 
@@ -228,23 +232,23 @@ export default function PropertiesPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2 md:col-span-2">
+                    <div className="space-y-2 md:col-span-2 text-left">
                       <Label htmlFor="address">Address</Label>
                       <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="e.g. 123 Baker Street" className="rounded-xl" />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-left">
                       <Label htmlFor="city">City</Label>
                       <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} required placeholder="London" className="rounded-xl" />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-left">
                       <Label htmlFor="state">State / Province</Label>
                       <Input id="state" value={state} onChange={(e) => setState(e.target.value)} required placeholder="UK" className="rounded-xl" />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-left">
                       <Label htmlFor="zipCode">Postcode / Zip</Label>
                       <Input id="zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required placeholder="NW1 6XE" className="rounded-xl" />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-left">
                       <Label>Property Type</Label>
                       <Select value={propertyType} onValueChange={setPropertyType}>
                         <SelectTrigger className="rounded-xl">
@@ -258,7 +262,7 @@ export default function PropertiesPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-left">
                       <Label>Bedrooms</Label>
                       <Select value={bedrooms} onValueChange={setBedrooms}>
                         <SelectTrigger className="rounded-xl">
@@ -269,7 +273,7 @@ export default function PropertiesPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-left">
                       <Label>Bathrooms</Label>
                       <Select value={bathrooms} onValueChange={setBathrooms}>
                         <SelectTrigger className="rounded-xl">
@@ -280,15 +284,15 @@ export default function PropertiesPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-left">
                       <Label htmlFor="sqft">Sq Footage</Label>
                       <Input id="sqft" type="number" value={squareFootage} onChange={(e) => setSquareFootage(e.target.value)} placeholder="850" className="rounded-xl" />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-left">
                       <Label htmlFor="rent">Monthly Rent (£)</Label>
                       <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required placeholder="1500" className="rounded-xl" />
                     </div>
-                    <div className="space-y-2 md:col-span-2">
+                    <div className="space-y-2 md:col-span-2 text-left">
                       <Label htmlFor="description">Description</Label>
                       <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Modern apartment with city views..." className="rounded-xl" />
                     </div>
@@ -329,11 +333,11 @@ export default function PropertiesPage() {
                 <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm text-primary font-bold text-[10px]"><Bath className="w-3 h-3 mr-1" /> {property.numberOfBathrooms}</Badge>
               </div>
             </div>
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-2 text-left">
               <CardTitle className="text-xl font-bold font-headline group-hover:text-primary transition-colors line-clamp-1">{property.addressLine1}</CardTitle>
               <p className="text-sm text-muted-foreground flex items-center font-medium"><MapPin className="w-4 h-4 mr-1 text-primary/40" /> {property.zipCode}, {property.city}</p>
             </CardHeader>
-            <CardContent className="pb-2">
+            <CardContent className="pb-2 text-left">
               <p className="text-2xl font-bold text-primary font-headline">£{property.rentAmount}<span className="text-xs text-muted-foreground font-normal"> / month</span></p>
             </CardContent>
             <CardFooter className="flex flex-col gap-3 pt-4 border-t border-muted/50">
