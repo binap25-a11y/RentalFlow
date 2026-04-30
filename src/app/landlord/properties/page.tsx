@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Building2, MapPin, Plus, Trash2, Edit3, Loader2, Image as ImageIcon, Upload, X, Save } from "lucide-react";
+import { Building2, MapPin, Plus, Trash2, Edit3, Loader2, Image as ImageIcon, Upload, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import Image from "next/image";
@@ -106,7 +106,6 @@ export default function PropertiesPage() {
       let finalImageUrl = editingProperty ? editingProperty.imageUrl : `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile) {
-        // Path matches requirements, using Firebase Storage folder 'Images'
         const storageRef = ref(storage, `Images/properties/${user.uid}/${propertyId}/${imageFile.name}`);
         const uploadResult = await uploadBytes(storageRef, imageFile);
         finalImageUrl = await getDownloadURL(uploadResult.ref);
@@ -172,7 +171,7 @@ export default function PropertiesPage() {
               Add New Property
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[650px] w-[95vw] max-h-[95vh] p-0 rounded-2xl overflow-hidden flex flex-col border-none shadow-2xl">
+          <DialogContent className="sm:max-w-[650px] w-[95vw] h-[90vh] p-0 rounded-2xl overflow-hidden flex flex-col border-none shadow-2xl">
             <DialogHeader className="p-6 bg-primary/5 border-b shrink-0 text-left">
               <DialogTitle className="text-2xl font-headline font-bold text-primary">
                 {editingProperty ? 'Modify Property Asset' : 'New Property Details'}
@@ -188,7 +187,7 @@ export default function PropertiesPage() {
                     <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Showcase Photo</Label>
                     <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/30">
                       <div className={cn(
-                        "w-full h-64 overflow-hidden flex flex-col items-center justify-center",
+                        "w-full h-64 overflow-hidden flex flex-col items-center justify-center relative",
                         previewUrl && "bg-transparent"
                       )}>
                         {previewUrl ? (
@@ -222,7 +221,7 @@ export default function PropertiesPage() {
                             </div>
                             <div className="text-center">
                               <p className="font-bold text-base text-primary">Upload Property Photo</p>
-                              <p className="text-xs text-muted-foreground mt-1">First impressions matter. Use high-quality images.</p>
+                              <p className="text-xs text-muted-foreground mt-1">High-quality images attract the best residents.</p>
                             </div>
                           </button>
                         )}
