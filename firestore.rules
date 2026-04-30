@@ -2,17 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * CORE PHILOSOPHY:
-     * Flat root-level collections are used for maximum scalability and query flexibility.
-     * Access is controlled via ownership fields (landlordId, userId, tenantId) or a 'members' map.
-     */
-
     function isSignedIn() {
       return request.auth != null;
     }
-
-    // --- Collection Rules ---
 
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
