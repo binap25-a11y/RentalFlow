@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Building2, MapPin, Plus, Trash2, Edit3, Loader2, Image as ImageIcon, Upload, Save } from "lucide-react";
+import { Building2, MapPin, Plus, Trash2, Edit3, Loader2, Image as ImageIcon, Upload, Save, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import Image from "next/image";
@@ -106,6 +106,7 @@ export default function PropertiesPage() {
       let finalImageUrl = previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile) {
+        // Storing in folder named 'Images' as requested
         const storageRef = ref(storage, `Images/properties/${user.uid}/${propertyId}/${imageFile.name}`);
         const uploadResult = await uploadBytes(storageRef, imageFile);
         finalImageUrl = await getDownloadURL(uploadResult.ref);
@@ -172,17 +173,18 @@ export default function PropertiesPage() {
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[700px] w-[95vw] h-[90vh] p-0 rounded-2xl overflow-hidden flex flex-col border-none shadow-2xl">
-            <DialogHeader className="p-6 bg-primary/5 border-b shrink-0 text-left">
+            <DialogHeader className="p-6 bg-primary/5 border-b shrink-0 text-left relative">
               <DialogTitle className="text-2xl font-headline font-bold text-primary">
                 {editingProperty ? 'Modify Property Asset' : 'New Property Details'}
               </DialogTitle>
               <DialogDescription className="font-medium text-muted-foreground">
-                {editingProperty ? 'Update the details and showcase image for this property asset.' : 'Enter the core profile details for your new rental property.'}
+                {editingProperty ? 'Update the details and showcase image for this property.' : 'Enter the core profile details for your new rental property.'}
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSaveProperty} className="flex-1 overflow-hidden flex flex-col">
-              <ScrollArea className="flex-1 px-6 py-6">
-                <div className="grid gap-8">
+
+            <form onSubmit={handleSaveProperty} className="flex-1 overflow-hidden flex flex-col min-h-0">
+              <ScrollArea className="flex-1">
+                <div className="px-6 py-8 space-y-8">
                   <div className="space-y-4">
                     <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Showcase Photo</Label>
                     <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/20">
@@ -198,7 +200,7 @@ export default function PropertiesPage() {
                               fill 
                               className="object-cover"
                             />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                                <Button 
                                  type="button" 
                                  variant="secondary" 
@@ -206,7 +208,16 @@ export default function PropertiesPage() {
                                  onClick={() => document.getElementById('image-input-dialog')?.click()}
                                >
                                  <Upload className="w-4 h-4 mr-2" />
-                                 Change Property Photo
+                                 Change Photo
+                               </Button>
+                               <Button 
+                                 type="button" 
+                                 variant="destructive" 
+                                 className="rounded-full font-bold shadow-xl"
+                                 onClick={() => { setPreviewUrl(null); setImageFile(null); }}
+                               >
+                                 <X className="w-4 h-4 mr-2" />
+                                 Remove
                                </Button>
                             </div>
                           </>
@@ -221,7 +232,7 @@ export default function PropertiesPage() {
                             </div>
                             <div className="text-center">
                               <p className="font-bold text-base text-primary">Upload Property Image</p>
-                              <p className="text-xs text-muted-foreground mt-1">Provide a high-quality visual of the residence.</p>
+                              <p className="text-xs text-muted-foreground mt-1">Supported formats: JPG, PNG. Max 5MB.</p>
                             </div>
                           </button>
                         )}
@@ -260,14 +271,29 @@ export default function PropertiesPage() {
                   </div>
                 </div>
               </ScrollArea>
+              
               <DialogFooter className="p-6 bg-muted/10 border-t shrink-0">
-                <Button type="submit" className="w-full h-14 rounded-xl font-bold text-lg shadow-xl shadow-primary/10 transition-all hover:scale-[1.01] active:scale-[0.99]" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Syncing Details...</>
-                  ) : (
-                    <><Save className="w-5 h-5 mr-2" /> {editingProperty ? "Save Property Changes" : "Create Property Record"}</>
-                  )}
-                </Button>
+                <div className="flex w-full gap-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="flex-1 h-12 rounded-xl font-bold"
+                    onClick={() => setIsAddDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    className="flex-[2] h-12 rounded-xl font-bold shadow-xl shadow-primary/10 transition-all" 
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Syncing...</>
+                    ) : (
+                      <><Save className="w-5 h-5 mr-2" /> {editingProperty ? "Update Asset" : "Add Asset"}</>
+                    )}
+                  </Button>
+                </div>
               </DialogFooter>
             </form>
           </DialogContent>
