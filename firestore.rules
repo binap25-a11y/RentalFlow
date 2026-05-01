@@ -41,7 +41,7 @@ service cloud.firestore {
       }
     }
 
-    // Collection Group rules (Required for portfolio-wide and cross-property queries)
+    // Collection Group rules for standardized queries across properties
     match /{path=**}/properties/{id} {
       allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 

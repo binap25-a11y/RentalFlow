@@ -83,8 +83,9 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
 
   // Ensure we don't double-prefix the path
   let normalizedPath = context.path;
-  if (!normalizedPath.startsWith('/databases/(default)/documents/')) {
-    normalizedPath = `/databases/(default)/documents/${normalizedPath.replace(/^\//, '')}`;
+  const dbPrefix = '/databases/(default)/documents';
+  if (!normalizedPath.includes(dbPrefix)) {
+    normalizedPath = `${dbPrefix}/${normalizedPath.replace(/^\//, '')}`;
   }
 
   return {

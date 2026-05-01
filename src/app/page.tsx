@@ -27,7 +27,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
   const [role, setRole] = useState<'landlord' | 'tenant'>('landlord');
   const [needsProfile, setNeedsProfile] = useState(false);
   
@@ -53,7 +52,6 @@ export default function LoginPage() {
               router.replace('/tenant/hub');
             }
           } else {
-            // User is signed in but has no Firestore profile
             setNeedsProfile(true);
           }
         } catch (e) {
@@ -69,6 +67,8 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const userDocRef = doc(db, 'users', user.uid);
+      
+      // Initiate profile creation
       setDocumentNonBlocking(userDocRef, {
         id: user.uid,
         email: user.email,
@@ -78,7 +78,14 @@ export default function LoginPage() {
       }, { merge: true });
       
       toast({ title: "Profile established", description: `Welcome to RentalFlow as a ${role}.` });
-      // The useEffect above will handle redirection once the doc exists
+      
+      // IMPROVEMENT: Immediate navigation to reduce perceived latency
+      isRedirecting.current = true;
+      if (role === 'landlord') {
+        router.replace('/landlord/dashboard');
+      } else {
+        router.replace('/tenant/hub');
+      }
     } catch (e) {
       toast({ variant: "destructive", title: "Setup Failed", description: "Could not establish your profile." });
       setIsLoading(false);
@@ -92,7 +99,7 @@ export default function LoginPage() {
     try {
       if (authMode === 'signup') {
         await initiateEmailSignUp(auth, email, password);
-        toast({ title: "Account created", description: "Welcome! Please choose your role." });
+        toast({ title: "Account created", description: "Almost there! Please choose your role." });
       } else {
         await initiateEmailSignIn(auth, email, password);
         toast({ title: "Welcome back", description: "Signed in successfully." });
@@ -133,9 +140,9 @@ export default function LoginPage() {
             <div className="mx-auto p-3 bg-primary text-primary-foreground rounded-2xl w-fit mb-4">
               <ShieldCheck className="w-8 h-8" />
             </div>
-            <CardTitle className="text-2xl font-headline font-bold text-primary">Choose Your Role</CardTitle>
+            <CardTitle className="text-2xl font-headline font-bold text-primary">Establish Your Identity</CardTitle>
             <CardDescription>
-              Signed in as <span className="text-primary font-bold">{user?.email}</span>. How will you use RentalFlow?
+              Authenticated as <span className="text-primary font-bold">{user?.email}</span>. How will you use RentalFlow?
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -146,7 +153,7 @@ export default function LoginPage() {
               </TabsList>
             </Tabs>
             <Button className="w-full h-12 rounded-xl font-bold bg-primary" onClick={handleCreateProfile} disabled={isLoading}>
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Complete Setup"}
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Enter My Portal"}
             </Button>
           </CardContent>
         </Card>
@@ -161,35 +168,35 @@ export default function LoginPage() {
           <KeyRound className="w-8 h-8" />
         </div>
         <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">RentalFlow</h1>
-        <p className="text-muted-foreground font-medium">Rental Management Reimagined</p>
+        <p className="text-muted-foreground font-medium">Professional Property Management</p>
       </div>
 
-      <Card className="w-full max-w-md border-none shadow-2xl bg-white/80 backdrop-blur-sm">
-        <CardHeader className="space-y-1 pb-2 text-center">
+      <Card className="w-full max-w-md border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
+        <CardHeader className="space-y-1 pb-4 text-center bg-primary/5">
           <CardTitle className="text-2xl font-headline font-bold text-primary">
-            {authMode === 'login' ? 'Welcome Back' : 'Join RentalFlow'}
+            {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
           </CardTitle>
           <CardDescription>
-            {authMode === 'login' ? 'Sign in to your portal' : 'Create your account'}
+            {authMode === 'login' ? 'Sign in to access your properties' : 'Join the RentalFlow ecosystem'}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Label htmlFor="email">Work Email</Label>
+              <Input id="email" type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-11" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-2.5">
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="rounded-xl h-11" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-muted-foreground hover:text-primary transition-colors">
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full h-12 rounded-xl font-bold bg-primary" disabled={isLoading}>
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (authMode === 'login' ? 'Login' : 'Create Account')}
+            <Button type="submit" className="w-full h-12 rounded-xl font-bold bg-primary text-lg" disabled={isLoading}>
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (authMode === 'login' ? 'Login' : 'Sign Up')}
             </Button>
           </form>
 
@@ -198,17 +205,17 @@ export default function LoginPage() {
               <span className="w-full border-t"></span>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-muted-foreground">Or</span>
+              <span className="bg-background px-4 text-muted-foreground font-bold tracking-widest">Secure Connect</span>
             </div>
           </div>
 
-          <Button variant="outline" className="w-full h-11 rounded-xl mb-4 font-bold" onClick={handleGoogleSignIn} disabled={isLoading}>
-            <Chrome className="w-4 h-4 mr-2 text-red-500" />
+          <Button variant="outline" className="w-full h-12 rounded-xl mb-6 font-bold border-primary/10 hover:bg-primary/5 hover:border-primary/20 transition-all" onClick={handleGoogleSignIn} disabled={isLoading}>
+            <Chrome className="w-5 h-5 mr-3 text-red-500" />
             Continue with Google
           </Button>
 
-          <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full text-sm font-bold text-muted-foreground hover:text-primary">
-            {authMode === 'login' ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+          <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full text-sm font-bold text-primary/60 hover:text-primary transition-colors">
+            {authMode === 'login' ? "New to RentalFlow? Create an account" : "Already registered? Log in here"}
           </button>
         </CardContent>
       </Card>
