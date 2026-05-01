@@ -122,7 +122,8 @@ export default function PropertiesPage() {
       let finalImageUrl = editingProperty?.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile && storage) {
-        const storageRef = ref(storage, `Images/${user.uid}/${propertyId}/${imageFile.name}`);
+        const storagePath = `Images/${user.uid}/${propertyId}/${imageFile.name}`;
+        const storageRef = ref(storage, storagePath);
         const uploadResult = await uploadBytes(storageRef, imageFile);
         finalImageUrl = await getDownloadURL(uploadResult.ref);
       }
