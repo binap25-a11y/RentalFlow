@@ -1,4 +1,3 @@
-
 'use client';
 import { getAuth, type User } from 'firebase/auth';
 
@@ -83,9 +82,10 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   }
 
   // Ensure we don't double-prefix the path
-  const normalizedPath = context.path.startsWith('/databases/(default)/documents/') 
-    ? context.path 
-    : `/databases/(default)/documents/${context.path.replace(/^\//, '')}`;
+  let normalizedPath = context.path;
+  if (!normalizedPath.startsWith('/databases/(default)/documents/')) {
+    normalizedPath = `/databases/(default)/documents/${normalizedPath.replace(/^\//, '')}`;
+  }
 
   return {
     auth: authObject,
