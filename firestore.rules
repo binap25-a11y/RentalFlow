@@ -17,9 +17,9 @@ service cloud.firestore {
           return isSignedIn() && request.auth.uid == userId;
         }
         
-        // Landlords can list their own properties via path-based auth
-        // Tenants can list if they are members (requires filtered query)
-        allow list: if isLandlord() || (isSignedIn() && resource.data.members[request.auth.uid] != null);
+        // Split list into owner (path-based) and member (data-based) for better evaluation
+        allow list: if isLandlord();
+        allow list: if isSignedIn() && resource.data.members[request.auth.uid] != null;
         
         // Standard read for single docs
         allow get: if isLandlord() || (isSignedIn() && resource.data.members[request.auth.uid] != null);
