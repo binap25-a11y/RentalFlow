@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -31,7 +30,6 @@ export default function LoginPage() {
   const [resetEmail, setResetEmail] = useState('');
   const [role, setRole] = useState<'landlord' | 'tenant'>('landlord');
   
-  // Guard to prevent multiple profile creation attempts
   const hasAttemptedProfileCheck = useRef(false);
 
   useEffect(() => {
@@ -39,7 +37,8 @@ export default function LoginPage() {
   }, []);
 
   useEffect(() => {
-    if (user && db && mounted && !hasAttemptedProfileCheck.current) {
+    // Only auto-redirect if we aren't currently in a loading state from a form submission
+    if (user && db && mounted && !isLoading && !hasAttemptedProfileCheck.current) {
       const checkProfile = async () => {
         hasAttemptedProfileCheck.current = true;
         try {
@@ -47,12 +46,11 @@ export default function LoginPage() {
           const userDoc = await getDoc(userDocRef);
 
           if (!userDoc.exists()) {
-            // Profile doesn't exist, create it once
+            // Profile doesn't exist, create it if we're in sign-up mode or it's a new social login
             setDocumentNonBlocking(userDocRef, {
               id: user.uid,
               email: user.email,
               role: role,
-              externalAuthId: user.uid,
               createdAt: serverTimestamp(),
               updatedAt: serverTimestamp(),
             }, { merge: true });
@@ -68,12 +66,12 @@ export default function LoginPage() {
             }
           }
         } catch (e) {
-          hasAttemptedProfileCheck.current = false; // Allow retry on failure
+          hasAttemptedProfileCheck.current = false;
         }
       };
       checkProfile();
     }
-  }, [user, db, router, role, mounted]);
+  }, [user, db, router, role, mounted, isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,24 +87,11 @@ export default function LoginPage() {
       }
     } catch (error: any) {
       let message = "An unexpected error occurred. Please try again.";
+      if (error.code === 'auth/invalid-credential') message = "Invalid email or password.";
+      else if (error.code === 'auth/email-already-in-use') message = "Email already in use.";
       
-      if (error.code === 'auth/invalid-credential') {
-        message = "Invalid email or password. Please check your credentials.";
-      } else if (error.code === 'auth/email-already-in-use') {
-        message = "An account with this email already exists.";
-      } else if (error.code === 'auth/weak-password') {
-        message = "Password should be at least 6 characters.";
-      } else if (error.code === 'auth/user-not-found') {
-        message = "No account found with this email.";
-      }
-
-      toast({
-        variant: "destructive",
-        title: "Authentication Failed",
-        description: message,
-      });
-    } finally {
-      setIsLoading(false);
+      toast({ variant: "destructive", title: "Authentication Failed", description: message });
+      setIsLoading(false); // Reset loading on error
     }
   };
 
@@ -115,12 +100,7 @@ export default function LoginPage() {
     try {
       await initiateGoogleSignIn(auth);
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Google Sign-In Failed",
-        description: "Could not connect to Google. Please try again.",
-      });
-    } finally {
+      toast({ variant: "destructive", title: "Google Sign-In Failed", description: "Please try again." });
       setIsLoading(false);
     }
   };
