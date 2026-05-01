@@ -20,7 +20,6 @@ export default function LandlordDashboard() {
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Querying the landlord's specific property subcollection
     return collection(db, "users", user.uid, "properties");
   }, [db, user]);
 
@@ -28,7 +27,6 @@ export default function LandlordDashboard() {
 
   const documentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Use collectionGroup to find all documents across all properties for this landlord
     return query(
       collectionGroup(db, "documents"),
       where("landlordId", "==", user.uid)

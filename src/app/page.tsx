@@ -36,7 +36,6 @@ export default function LoginPage() {
     setMounted(true);
   }, []);
 
-  // Professional Session Check & Redirection
   useEffect(() => {
     if (user && db && mounted && !isLoading && !isRedirecting.current) {
       const checkAndRedirect = async () => {
@@ -52,15 +51,12 @@ export default function LoginPage() {
             } else if (userData?.role === 'tenant') {
               router.replace('/tenant/hub');
             } else {
-              // Handle edge case where doc exists but role is missing
               isRedirecting.current = false;
             }
           } else {
-            // Profile doesn't exist yet, wait for creation flow
             isRedirecting.current = false;
           }
         } catch (e) {
-          console.error("Profile check error:", e);
           isRedirecting.current = false;
         }
       };
@@ -74,12 +70,10 @@ export default function LoginPage() {
 
     try {
       if (authMode === 'signup') {
-        const result = await initiateEmailSignUp(auth, email, password);
-        // Wait for the auth state to settle slightly
+        await initiateEmailSignUp(auth, email, password);
         const newUser = auth.currentUser;
         if (newUser) {
           const userDocRef = doc(db, 'users', newUser.uid);
-          // Wait for profile creation before allowing the redirect effect to fire
           await setDocumentNonBlocking(userDocRef, {
             id: newUser.uid,
             email: newUser.email,

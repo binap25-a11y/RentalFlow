@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Building2, MapPin, Plus, Trash2, Edit3, Image as ImageIcon, Upload, Save, X, Bed, Bath, Loader2, Info } from "lucide-react";
+import { Building2, MapPin, Plus, Trash2, Edit3, Image as ImageIcon, Upload, Save, X, Bed, Bath, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import Image from "next/image";
@@ -122,7 +122,6 @@ export default function PropertiesPage() {
       let finalImageUrl = previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile && storage) {
-        // Correct path to 'Images' as requested
         const storageRef = ref(storage, `Images/${user.uid}/${propertyId}/${imageFile.name}`);
         const uploadResult = await uploadBytes(storageRef, imageFile);
         finalImageUrl = await getDownloadURL(uploadResult.ref);
@@ -144,7 +143,7 @@ export default function PropertiesPage() {
         isOccupied: editingProperty?.isOccupied || false,
         imageUrl: finalImageUrl,
         updatedAt: serverTimestamp(),
-        members: { [user.uid]: 'owner' } // Critical for security rules
+        members: { [user.uid]: 'owner' }
       };
 
       if (editingProperty) {
@@ -327,7 +326,6 @@ export default function PropertiesPage() {
         </Dialog>
       </div>
 
-      {/* Property Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {!properties || properties.length === 0 ? (
           <div className="col-span-full py-20 text-center flex flex-col items-center justify-center bg-muted/10 rounded-3xl border-2 border-dashed border-primary/10">
@@ -348,7 +346,7 @@ export default function PropertiesPage() {
                 />
                 <Badge className={cn(
                   "absolute top-4 right-4 font-bold shadow-lg py-1 px-4 uppercase text-[10px] tracking-widest",
-                  property.isOccupied ? 'bg-emerald-500' : 'bg-amber-500 text-white'
+                  property.isOccupied ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'
                 )}>
                   {property.isOccupied ? 'Occupied' : 'Vacant'}
                 </Badge>

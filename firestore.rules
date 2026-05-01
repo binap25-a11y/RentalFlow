@@ -17,36 +17,29 @@ service cloud.firestore {
           return isSignedIn() && request.auth.uid == userId;
         }
 
-        function isMember() {
-          return isSignedIn() && (
-            isOwner() ||
-            (resource != null && resource.data.members != null && resource.data.members[request.auth.uid] != null)
-          );
-        }
-
         // Allow listing properties collection and reading/writing individual properties
-        // We allow list if the user is the owner (userId matches auth.uid)
         allow list: if isOwner();
-        allow get: if isMember();
+        allow get: if isSignedIn() && (isOwner() || (resource != null && resource.data.members != null && resource.data.members[request.auth.uid] != null));
         allow write: if isOwner();
 
         // Sub-collections under a property
         match /{allSubcollections=**} {
           allow read, write: if isOwner();
+          allow list: if isOwner();
         }
 
-        // Specific tenant access for sub-collections
+        // Specific tenant access for sub-collections based on members or specific fields
         match /tenantProfiles/{id} { 
           allow read: if isSignedIn() && (isOwner() || resource.data.userId == request.auth.uid);
         }
         match /images/{id} { 
-          allow read: if isMember(); 
+          allow read: if isSignedIn() && (isOwner() || (resource != null && resource.data.members != null && resource.data.members[request.auth.uid] != null)); 
         }
         match /documents/{id} { 
-          allow read: if isMember() || (isSignedIn() && resource.data.userId == request.auth.uid); 
+          allow read: if isSignedIn() && (isOwner() || resource.data.userId == request.auth.uid || (resource != null && resource.data.members != null && resource.data.members[request.auth.uid] != null)); 
         }
         match /inspections/{id} { 
-          allow read: if isMember(); 
+          allow read: if isSignedIn() && (isOwner() || (resource != null && resource.data.members != null && resource.data.members[request.auth.uid] != null)); 
         }
         match /maintenanceRequests/{id} { 
           allow read, update, delete: if isSignedIn() && (isOwner() || resource.data.tenantId == request.auth.uid);
@@ -56,36 +49,35 @@ service cloud.firestore {
     }
 
     // Collection Group rules for cross-property queries
-    // Landlords can query all their resources across different properties
     match /{path=**}/properties/{id} {
       allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
+        (resource != null && resource.data.landlordId == request.auth.uid) || 
+        (resource != null && resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
     }
     match /{path=**}/maintenanceRequests/{id} {
       allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.tenantId == request.auth.uid
+        (resource != null && resource.data.landlordId == request.auth.uid) || 
+        (resource != null && resource.data.tenantId == request.auth.uid)
       );
     }
     match /{path=**}/inspections/{id} {
       allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
+        (resource != null && resource.data.landlordId == request.auth.uid) || 
+        (resource != null && resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
     }
     match /{path=**}/tenantProfiles/{id} {
       allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.userId == request.auth.uid
+        (resource != null && resource.data.landlordId == request.auth.uid) || 
+        (resource != null && resource.data.userId == request.auth.uid)
       );
     }
     match /{path=**}/documents/{id} {
       allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.userId == request.auth.uid ||
-        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
+        (resource != null && resource.data.landlordId == request.auth.uid) || 
+        (resource != null && resource.data.userId == request.auth.uid) ||
+        (resource != null && resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
     }
   }
