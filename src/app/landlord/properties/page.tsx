@@ -122,6 +122,7 @@ export default function PropertiesPage() {
       let finalImageUrl = previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile && storage) {
+        // Upload images to 'Images/' folder as per requirements
         const storageRef = ref(storage, `Images/${user.uid}/${propertyId}/${imageFile.name}`);
         const uploadResult = await uploadBytes(storageRef, imageFile);
         finalImageUrl = await getDownloadURL(uploadResult.ref);
@@ -143,6 +144,7 @@ export default function PropertiesPage() {
         isOccupied: editingProperty?.isOccupied || false,
         imageUrl: finalImageUrl,
         updatedAt: serverTimestamp(),
+        // Members map is critical for security rules logic
         members: { [user.uid]: 'owner' }
       };
 
@@ -208,7 +210,7 @@ export default function PropertiesPage() {
             <form onSubmit={handleSaveProperty} className="flex-1 flex flex-col min-h-0">
               <ScrollArea className="flex-1">
                 <div className="p-6 md:p-8 space-y-8">
-                  {/* Image Upload Section */}
+                  {/* Image Upload Section - Redesigned for professional look */}
                   <div className="space-y-4 text-left">
                     <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 font-headline">Property Presentation</Label>
                     <div className="max-w-3xl mx-auto">

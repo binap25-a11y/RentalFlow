@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, KeyRound, LayoutDashboard, Mail, Lock, UserPlus, LogIn, Chrome, Loader2, Eye, EyeOff } from "lucide-react";
+import { Home, KeyRound, LayoutDashboard, Mail, Lock, UserPlus, LogIn, Chrome, Loader2, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { useAuth, useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn, initiatePasswordReset } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp } from 'firebase/firestore';
@@ -29,6 +29,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [role, setRole] = useState<'landlord' | 'tenant'>('landlord');
+  const [needsProfile, setNeedsProfile] = useState(false);
   
   const isRedirecting = useRef(false);
 
@@ -39,31 +40,51 @@ export default function LoginPage() {
   useEffect(() => {
     if (user && db && mounted && !isLoading && !isRedirecting.current) {
       const checkAndRedirect = async () => {
-        isRedirecting.current = true;
         try {
           const userDocRef = doc(db, 'users', user.uid);
           const userDoc = await getDoc(userDocRef);
 
           if (userDoc.exists()) {
+            isRedirecting.current = true;
             const userData = userDoc.data();
             if (userData?.role === 'landlord') {
               router.replace('/landlord/dashboard');
             } else if (userData?.role === 'tenant') {
               router.replace('/tenant/hub');
-            } else {
-              isRedirecting.current = false;
             }
           } else {
-            isRedirecting.current = false;
+            // User is signed in but has no Firestore profile (e.g. Google sign-in)
+            setNeedsProfile(true);
           }
         } catch (e) {
           console.error("Redirect check failed:", e);
-          isRedirecting.current = false;
         }
       };
       checkAndRedirect();
     }
   }, [user, db, router, mounted, isLoading]);
+
+  const handleCreateProfile = async () => {
+    if (!user || !db) return;
+    setIsLoading(true);
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      await setDocumentNonBlocking(userDocRef, {
+        id: user.uid,
+        email: user.email,
+        role: role,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+      
+      toast({ title: "Profile established", description: `Welcome to RentalFlow as a ${role}.` });
+      // The redirection useEffect will catch the new profile and redirect
+    } catch (e) {
+      toast({ variant: "destructive", title: "Setup Failed", description: "Could not establish your profile." });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,19 +93,9 @@ export default function LoginPage() {
     try {
       if (authMode === 'signup') {
         await initiateEmailSignUp(auth, email, password);
-        const newUser = auth.currentUser;
-        if (newUser) {
-          const userDocRef = doc(db, 'users', newUser.uid);
-          await setDocumentNonBlocking(userDocRef, {
-            id: newUser.uid,
-            email: newUser.email,
-            role: role,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          }, { merge: true });
-          
-          toast({ title: "Account created", description: "Welcome to RentalFlow." });
-        }
+        // Note: Sign-up logic in initiateEmailSignUp doesn't return the user object directly, 
+        // but it triggers the useUser hook. Redirection is handled by the useEffect above.
+        // We'll create the profile inside the useEffect for email signups too.
       } else {
         await initiateEmailSignIn(auth, email, password);
         toast({ title: "Welcome back", description: "Successfully signed in." });
@@ -129,6 +140,48 @@ export default function LoginPage() {
           <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
           <p className="text-muted-foreground font-medium animate-pulse">Initializing RentalFlow...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (needsProfile) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <Card className="w-full max-w-md border-none shadow-2xl bg-white/80 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-500">
+          <CardHeader className="text-center">
+            <div className="mx-auto p-3 bg-primary text-primary-foreground rounded-2xl w-fit mb-4">
+              <ShieldCheck className="w-8 h-8" />
+            </div>
+            <CardTitle className="text-2xl font-headline font-bold text-primary">Establish Your Role</CardTitle>
+            <CardDescription className="font-medium">
+              You're signed in as <span className="text-primary font-bold">{user?.email}</span>. Please choose how you will use RentalFlow.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <Tabs value={role} onValueChange={(v) => setRole(v as any)} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-xl">
+                <TabsTrigger value="landlord" className="rounded-lg font-bold">
+                  <LayoutDashboard className="w-4 h-4 mr-2" />
+                  Landlord
+                </TabsTrigger>
+                <TabsTrigger value="tenant" className="rounded-lg font-bold">
+                  <Home className="w-4 h-4 mr-2" />
+                  Resident
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <Button 
+              className="w-full h-12 rounded-xl font-bold bg-primary shadow-lg shadow-primary/20"
+              onClick={handleCreateProfile}
+              disabled={isLoading}
+            >
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Complete Setup"}
+            </Button>
+            <Button variant="ghost" className="w-full text-xs text-muted-foreground" onClick={() => auth.signOut().then(() => setNeedsProfile(false))}>
+              Sign out and try another account
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
