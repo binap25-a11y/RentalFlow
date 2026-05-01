@@ -1,8 +1,7 @@
-
 "use client";
 
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from "@/firebase";
-import { collection, query, where, doc } from "firebase/firestore";
+import { query, where, doc, collectionGroup } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,9 +17,10 @@ export default function TenantHub() {
 
   const tenantProfileQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
+    // Tenants are TenantProfiles nested under landlord's properties. We must use collectionGroup.
     return query(
-      collection(db, "tenants"),
-      where("userProfileId", "==", user.uid)
+      collectionGroup(db, "tenantProfiles"),
+      where("userId", "==", user.uid)
     );
   }, [db, user]);
 
@@ -28,17 +28,19 @@ export default function TenantHub() {
   const activeProfile = tenantProfiles?.[0];
 
   const propertyRef = useMemoFirebase(() => {
-    if (!db || !activeProfile) return null;
-    return doc(db, "properties", activeProfile.propertyId);
+    if (!db || !activeProfile || !activeProfile.propertyId || !activeProfile.landlordId) return null;
+    // Hierarchical path from backend.json
+    return doc(db, "users", activeProfile.landlordId, "properties", activeProfile.propertyId);
   }, [db, activeProfile]);
 
   const { data: property, isLoading: isPropertyLoading } = useDoc(propertyRef);
 
   const requestsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
+    // MaintenanceRequests are nested. Use collectionGroup.
     return query(
-      collection(db, "maintenanceRequests"),
-      where("reportedByUserId", "==", user.uid)
+      collectionGroup(db, "maintenanceRequests"),
+      where("tenantId", "==", user.uid)
     );
   }, [db, user]);
 
@@ -51,8 +53,9 @@ export default function TenantHub() {
 
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
+    // Documents are nested. Use collectionGroup.
     return query(
-      collection(db, "documents"),
+      collectionGroup(db, "documents"),
       where("userId", "==", user.uid)
     );
   }, [db, user]);

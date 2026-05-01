@@ -116,7 +116,7 @@ export default function PropertiesPage() {
     setIsSubmitting(true);
     
     try {
-      const propertyId = editingProperty ? editingProperty.id : doc(collection(db, 'dummy')).id;
+      const propertyId = editingProperty ? editingProperty.id : crypto.randomUUID();
       const propertyRef = doc(db, 'users', user.uid, 'properties', propertyId);
       
       let finalImageUrl = previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`;

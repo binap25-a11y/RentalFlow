@@ -51,12 +51,15 @@ export default function LoginPage() {
             } else if (userData?.role === 'tenant') {
               router.replace('/tenant/hub');
             } else {
+              // No role found, allow them to choose (unlikely if they signed up correctly)
               isRedirecting.current = false;
             }
           } else {
+            // New user, wait for sign-up completion to create doc
             isRedirecting.current = false;
           }
         } catch (e) {
+          console.error("Redirect check failed:", e);
           isRedirecting.current = false;
         }
       };
@@ -83,6 +86,7 @@ export default function LoginPage() {
           }, { merge: true });
           
           toast({ title: "Account created", description: "Welcome to RentalFlow." });
+          // Redirection will be handled by the useEffect
         }
       } else {
         await initiateEmailSignIn(auth, email, password);

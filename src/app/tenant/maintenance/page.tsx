@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useState } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
-import { collection, doc, serverTimestamp, query, where } from "firebase/firestore";
+import { doc, serverTimestamp, query, where, collectionGroup } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,8 +25,8 @@ export default function TenantMaintenancePage() {
   const tenantProfileQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
-      collection(db, "tenants"),
-      where("userProfileId", "==", user.uid)
+      collectionGroup(db, "tenantProfiles"),
+      where("userId", "==", user.uid)
     );
   }, [db, user]);
 
@@ -37,8 +36,8 @@ export default function TenantMaintenancePage() {
   const requestsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
-      collection(db, "maintenanceRequests"),
-      where("reportedByUserId", "==", user.uid)
+      collectionGroup(db, "maintenanceRequests"),
+      where("tenantId", "==", user.uid)
     );
   }, [db, user]);
 
@@ -56,20 +55,22 @@ export default function TenantMaintenancePage() {
     }
 
     setIsSubmitting(true);
-    const requestId = doc(collection(db, 'dummy')).id;
-    const requestRef = doc(db, 'maintenanceRequests', requestId);
+    // Unique ID for the new request
+    const requestId = crypto.randomUUID();
+    // Path: /users/{landlordId}/properties/{propertyId}/maintenanceRequests/{requestId}
+    const requestRef = doc(db, 'users', activeProfile.landlordId, 'properties', activeProfile.propertyId, 'maintenanceRequests', requestId);
 
     setDocumentNonBlocking(requestRef, {
       id: requestId,
       propertyId: activeProfile.propertyId,
       landlordId: activeProfile.landlordId,
-      reportedByUserId: user.uid,
+      tenantId: user.uid,
       title,
       description,
       status: 'pending',
       priority: 'routine',
       category: 'general',
-      submittedAt: new Date().toISOString(),
+      submissionDate: new Date().toISOString(),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     }, { merge: true });
@@ -155,9 +156,9 @@ export default function TenantMaintenancePage() {
                   <p className="text-muted-foreground">You haven't submitted any maintenance requests yet.</p>
                 </div>
               ) : (
-                requests.sort((a, b) => {
-                  const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-                  const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                requests.slice().sort((a, b) => {
+                  const dateA = a.createdAt ? (a.createdAt.seconds || 0) : 0;
+                  const dateB = b.createdAt ? (b.createdAt.seconds || 0) : 0;
                   return dateB - dateA;
                 }).map(req => (
                   <Card key={req.id} className="border-none shadow-sm group">
@@ -169,7 +170,7 @@ export default function TenantMaintenancePage() {
                               {req.status}
                             </Badge>
                             <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">
-                              {req.createdAt ? format(new Date(req.createdAt), 'PPp') : 'Just now'}
+                              {req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'PPp') : 'Just now'}
                             </span>
                           </div>
                           <h4 className="text-lg font-bold font-headline group-hover:text-primary transition-colors">{req.title}</h4>

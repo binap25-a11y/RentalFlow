@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where } from "firebase/firestore";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { query, where, collectionGroup } from "firebase/firestore";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Download, Loader2, Calendar, ShieldCheck, Search } from "lucide-react";
@@ -18,9 +17,9 @@ export default function TenantDocumentsPage() {
 
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Updated to match security rules: query must include where("userId", "==", user.uid)
+    // Documents are nested. Use collectionGroup with correct filter.
     return query(
-      collection(db, "documents"),
+      collectionGroup(db, "documents"),
       where("userId", "==", user.uid)
     );
   }, [db, user]);
