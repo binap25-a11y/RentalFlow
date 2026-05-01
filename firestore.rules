@@ -10,7 +10,8 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
 
-      // Properties and their sub-resources nested under users
+      // Hierarchical access for Landlords
+      // Match the properties collection and all its documents
       match /properties/{propertyId} {
         
         function isOwner() {
@@ -24,20 +25,19 @@ service cloud.firestore {
           );
         }
 
-        // Full access to the owner (landlord) for the property and all its subcollections
-        allow read, write: if isOwner();
-        
-        // Members (tenants) can read the property document itself
+        // Allow listing the properties collection and reading/writing individual properties
+        allow list: if isOwner() || (isSignedIn() && resource.data.members[request.auth.uid] != null);
         allow get: if isMember();
+        allow write: if isOwner();
 
-        // Recursively allow access to all subcollections for the owner
+        // Sub-collections under a property
         match /{allSubcollections=**} {
           allow read, write: if isOwner();
         }
 
-        // Specific tenant access for subcollections
+        // Specific tenant access for sub-collections
         match /tenantProfiles/{id} { 
-          allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+          allow read: if isSignedIn() && (isOwner() || resource.data.userId == request.auth.uid);
         }
         match /images/{id} { 
           allow read: if isMember(); 
@@ -49,13 +49,14 @@ service cloud.firestore {
           allow read: if isMember(); 
         }
         match /maintenanceRequests/{id} { 
-          allow read, update, delete: if isSignedIn() && resource.data.tenantId == request.auth.uid;
+          allow read, update, delete: if isSignedIn() && (isOwner() || resource.data.tenantId == request.auth.uid);
           allow create: if isSignedIn();
         }
       }
     }
 
-    // Collection Group rules for cross-property queries (Essential for Landlord Dashboard/Registers)
+    // Collection Group rules for cross-property queries
+    // These allow landlords to query all their resources across different properties
     match /{path=**}/properties/{id} {
       allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 

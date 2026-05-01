@@ -30,16 +30,16 @@ export default function LoginPage() {
   const [resetEmail, setResetEmail] = useState('');
   const [role, setRole] = useState<'landlord' | 'tenant'>('landlord');
   
-  const hasAttemptedProfileCheck = useRef(false);
+  const isCheckingProfile = useRef(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    if (user && db && mounted && !isLoading && !isUserLoading && !hasAttemptedProfileCheck.current) {
+    if (user && db && mounted && !isLoading && !isUserLoading && !isCheckingProfile.current) {
       const checkProfile = async () => {
-        hasAttemptedProfileCheck.current = true;
+        isCheckingProfile.current = true;
         try {
           const userDocRef = doc(db, 'users', user.uid);
           const userDoc = await getDoc(userDocRef);
@@ -47,18 +47,15 @@ export default function LoginPage() {
           if (userDoc.exists()) {
             const userData = userDoc.data();
             if (userData?.role === 'landlord') {
-              router.push('/landlord/dashboard');
+              router.replace('/landlord/dashboard');
             } else if (userData?.role === 'tenant') {
-              router.push('/tenant/hub');
+              router.replace('/tenant/hub');
             }
-          } else {
-            // Profile doesn't exist yet - this is likely a fresh signup
-            // We wait for the submit handler to create it.
-            hasAttemptedProfileCheck.current = false;
           }
         } catch (e) {
           console.error("Profile check error:", e);
-          hasAttemptedProfileCheck.current = false;
+        } finally {
+          isCheckingProfile.current = false;
         }
       };
       checkProfile();
@@ -84,12 +81,11 @@ export default function LoginPage() {
           }, { merge: true });
           
           toast({ title: "Account created", description: "Your RentalFlow profile is ready." });
-          router.push(role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub');
+          // Redirection will be picked up by the useEffect above
         }
       } else {
         await initiateEmailSignIn(auth, email, password);
         toast({ title: "Welcome back", description: "Successfully signed in." });
-        // Redirection is handled by the useEffect for existing users
       }
     } catch (error: any) {
       setIsLoading(false);
@@ -127,9 +123,9 @@ export default function LoginPage() {
   if (!mounted || (isUserLoading && !user)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse flex flex-col items-center">
-          <KeyRound className="w-12 h-12 text-primary mb-4" />
-          <p className="text-muted-foreground font-medium">Loading RentalFlow...</p>
+        <div className="flex flex-col items-center">
+          <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground font-medium animate-pulse">Initializing RentalFlow...</p>
         </div>
       </div>
     );
@@ -141,27 +137,27 @@ export default function LoginPage() {
         <div className="inline-flex items-center justify-center p-3 bg-primary text-primary-foreground rounded-2xl mb-4 shadow-xl shadow-primary/20">
           <KeyRound className="w-8 h-8" />
         </div>
-        <h1 className="text-4xl font-headline font-bold text-primary mb-2">RentalFlow</h1>
+        <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">RentalFlow</h1>
         <p className="text-muted-foreground font-medium">Rental Management Reimagined</p>
       </div>
 
       <Card className="w-full max-w-md border-none shadow-2xl bg-white/80 backdrop-blur-sm">
         <CardHeader className="space-y-1 pb-2 text-center">
-          <CardTitle className="text-2xl">
+          <CardTitle className="text-2xl font-headline font-bold text-primary">
             {authMode === 'login' ? 'Welcome Back' : 'Join RentalFlow'}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="font-medium">
             {authMode === 'login' ? 'Sign in to your rental portal' : 'Create your rental management account'}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={role} onValueChange={(v) => setRole(v as any)} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/50 p-1">
-              <TabsTrigger value="landlord" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
+            <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/50 p-1 rounded-xl">
+              <TabsTrigger value="landlord" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg font-bold">
                 <LayoutDashboard className="w-4 h-4 mr-2" />
                 Landlord
               </TabsTrigger>
-              <TabsTrigger value="tenant" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground rounded-lg">
+              <TabsTrigger value="tenant" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground rounded-lg font-bold">
                 <Home className="w-4 h-4 mr-2" />
                 Resident
               </TabsTrigger>
@@ -189,13 +185,13 @@ export default function LoginPage() {
                   {authMode === 'login' && (
                     <Dialog>
                       <DialogTrigger asChild>
-                        <button type="button" className="text-xs text-primary font-medium hover:underline focus:outline-none">
+                        <button type="button" className="text-xs text-primary font-bold hover:underline focus:outline-none">
                           Forgot password?
                         </button>
                       </DialogTrigger>
                       <DialogContent className="rounded-2xl">
                         <DialogHeader>
-                          <DialogTitle>Reset Password</DialogTitle>
+                          <DialogTitle className="font-headline font-bold">Reset Password</DialogTitle>
                           <DialogDescription>
                             Enter your email address to receive a reset link.
                           </DialogDescription>
@@ -206,13 +202,13 @@ export default function LoginPage() {
                             id="reset-email" 
                             type="email" 
                             placeholder="name@example.com"
-                            className="h-11 rounded-xl"
+                            className="h-11 rounded-xl mt-2"
                             value={resetEmail}
                             onChange={(e) => setResetEmail(e.target.value)}
                           />
                         </div>
                         <DialogFooter>
-                          <Button onClick={handleResetPassword} className="rounded-xl w-full h-11">Send Reset Link</Button>
+                          <Button onClick={handleResetPassword} className="rounded-xl w-full h-11 font-bold shadow-lg shadow-primary/10">Send Reset Link</Button>
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
@@ -240,7 +236,7 @@ export default function LoginPage() {
 
               <Button 
                 type="submit"
-                className={`w-full h-12 text-base rounded-xl transition-all duration-300 transform active:scale-[0.98] ${role === 'landlord' ? 'bg-primary hover:bg-primary/90' : 'bg-accent hover:bg-accent/90'}`} 
+                className={`w-full h-12 text-base rounded-xl transition-all duration-300 transform active:scale-[0.98] font-bold shadow-lg ${role === 'landlord' ? 'bg-primary hover:bg-primary/90 shadow-primary/20' : 'bg-accent hover:bg-accent/90 shadow-accent/20'}`} 
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -260,7 +256,7 @@ export default function LoginPage() {
                 <span className="w-full border-t border-muted-foreground/20"></span>
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-muted-foreground font-medium">Or continue with</span>
+                <span className="bg-white px-2 text-muted-foreground font-bold">Or continue with</span>
               </div>
             </div>
 
@@ -278,7 +274,7 @@ export default function LoginPage() {
               <button 
                 type="button"
                 onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
-                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors focus:outline-none"
+                className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors focus:outline-none"
               >
                 {authMode === 'login' ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
               </button>
@@ -287,7 +283,7 @@ export default function LoginPage() {
         </CardContent>
       </Card>
       
-      <p className="mt-8 text-xs text-muted-foreground opacity-60">
+      <p className="mt-8 text-xs text-muted-foreground opacity-60 font-medium">
         &copy; 2024 RentalFlow Systems. Secure property management.
       </p>
     </div>
