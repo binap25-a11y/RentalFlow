@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, use, useMemo } from 'react';
-import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useStorage, addDocumentNonBlocking } from '@/firebase';
-import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useStorage } from '@/firebase';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,13 +12,13 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Building2, MapPin, Users, Wrench, FileCheck, Phone, 
-  Trash2, Edit3, Loader2, Save, Plus, ArrowLeft,
-  Download, FileText, Info, Camera, ShieldAlert, Upload
+  Trash2, Edit3, Loader2, Save, ArrowLeft,
+  Download, FileText, Info, ShieldAlert, Upload
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { format, isValid } from 'date-fns';
+import { format } from 'date-fns';
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -38,7 +38,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Tenants are TenantProfiles nested under the property in backend.json
     return collection(db, 'users', user.uid, 'properties', propertyId, 'tenantProfiles');
   }, [db, user, propertyId]);
 
@@ -51,18 +50,17 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: documents } = useCollection(docsQuery);
 
-  const contactsQuery = useMemoFirebase(() => {
+  const sheetsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return collection(db, 'users', user.uid, 'properties', propertyId, 'emergencyContacts');
+    return collection(db, 'users', user.uid, 'properties', propertyId, 'emergencyContactSheets');
   }, [db, user, propertyId]);
 
-  const { data: contacts } = useCollection(contactsQuery);
+  const { data: sheets } = useCollection(sheetsQuery);
 
   const [isEditing, setIsEditing] = useState(false);
   const [rentAmount, setRentAmount] = useState('');
-  const [contactName, setContactName] = useState('');
-  const [contactRole, setContactRole] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
+  const [sheetTitle, setSheetTitle] = useState('');
+  const [sheetUrl, setSheetUrl] = useState('');
 
   // Document Upload State
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
@@ -77,22 +75,23 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     toast({ title: "Rent Updated" });
   };
 
-  const handleAddContact = () => {
+  const handleAddSheet = () => {
     if (!user || !db) return;
-    const contactId = doc(collection(db, 'dummy')).id;
-    const contactRef = doc(db, 'users', user.uid, 'properties', propertyId, 'emergencyContacts', contactId);
+    const sheetId = doc(collection(db, 'dummy')).id;
+    const sheetRef = doc(db, 'users', user.uid, 'properties', propertyId, 'emergencyContactSheets', sheetId);
 
-    setDocumentNonBlocking(contactRef, {
-      id: contactId,
-      name: contactName,
-      role: contactRole,
-      phone: contactPhone,
+    setDocumentNonBlocking(sheetRef, {
+      id: sheetId,
+      title: sheetTitle,
+      documentUrl: sheetUrl,
       propertyId: propertyId,
+      landlordId: user.uid,
+      generationDate: new Date().toISOString(),
       createdAt: serverTimestamp(),
     }, { merge: true });
 
-    setContactName(''); setContactRole(''); setContactPhone('');
-    toast({ title: "Contact Added" });
+    setSheetTitle(''); setSheetUrl('');
+    toast({ title: "Emergency Sheet Added" });
   };
 
   const handleUploadDocument = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -173,7 +172,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               <TabsTrigger value="docs" className="rounded-lg py-2 font-bold"><FileText className="w-4 h-4 mr-2" /> Vault</TabsTrigger>
               <TabsTrigger value="maintenance" className="rounded-lg py-2 font-bold"><Wrench className="w-4 h-4 mr-2" /> Issues</TabsTrigger>
               <TabsTrigger value="inspections" className="rounded-lg py-2 font-bold"><FileCheck className="w-4 h-4 mr-2" /> Health</TabsTrigger>
-              <TabsTrigger value="contacts" className="rounded-lg py-2 font-bold"><Phone className="w-4 h-4 mr-2" /> Help</TabsTrigger>
+              <TabsTrigger value="contacts" className="rounded-lg py-2 font-bold"><Phone className="w-4 h-4 mr-2" /> Support</TabsTrigger>
             </TabsList>
 
             <TabsContent value="tenants" className="mt-6 space-y-4">
@@ -253,45 +252,43 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
             <TabsContent value="contacts" className="mt-6 space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold font-headline text-primary">Help & Support Contacts</h3>
+                <h3 className="text-lg font-bold font-headline text-primary">Emergency Support Sheets</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card className="border-none shadow-sm bg-muted/30">
                   <CardHeader className="pb-2 text-left">
-                    <CardTitle className="text-sm font-bold font-headline">Add Support Contact</CardTitle>
+                    <CardTitle className="text-sm font-bold font-headline">Add Sheet Link</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="space-y-1 text-left">
-                      <Label className="text-xs font-bold font-headline uppercase tracking-wider">Name</Label>
-                      <Input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="John Electric" className="h-8 text-xs font-body" />
+                      <Label className="text-xs font-bold font-headline uppercase tracking-wider">Sheet Title</Label>
+                      <Input value={sheetTitle} onChange={(e) => setSheetTitle(e.target.value)} placeholder="Emergency Contacts Q4" className="h-8 text-xs font-body" />
                     </div>
                     <div className="space-y-1 text-left">
-                      <Label className="text-xs font-bold font-headline uppercase tracking-wider">Role</Label>
-                      <Input value={contactRole} onChange={(e) => setContactRole(e.target.value)} placeholder="Electrician" className="h-8 text-xs font-body" />
+                      <Label className="text-xs font-bold font-headline uppercase tracking-wider">Document URL</Label>
+                      <Input value={sheetUrl} onChange={(e) => setSheetUrl(e.target.value)} placeholder="https://..." className="h-8 text-xs font-body" />
                     </div>
-                    <div className="space-y-1 text-left">
-                      <Label className="text-xs font-bold font-headline uppercase tracking-wider">Phone</Label>
-                      <Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="07700 900000" className="h-8 text-xs font-body" />
-                    </div>
-                    <Button onClick={handleAddContact} className="w-full h-8 text-xs font-bold rounded-lg font-headline" disabled={!contactName || !contactPhone}>Add Contact</Button>
+                    <Button onClick={handleAddSheet} className="w-full h-8 text-xs font-bold rounded-lg font-headline" disabled={!sheetTitle || !sheetUrl}>Add Sheet</Button>
                   </CardContent>
                 </Card>
                 
                 <div className="space-y-3">
-                  {contacts?.map(contact => (
-                    <div key={contact.id} className="flex items-center justify-between p-4 bg-white rounded-xl border border-primary/5 shadow-sm">
+                  {sheets?.map(sheet => (
+                    <div key={sheet.id} className="flex items-center justify-between p-4 bg-white rounded-xl border border-primary/5 shadow-sm">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-primary/5 rounded-lg">
-                          <Phone className="w-4 h-4 text-primary" />
+                          <FileText className="w-4 h-4 text-primary" />
                         </div>
                         <div className="text-left">
-                          <p className="text-sm font-bold font-body">{contact.name}</p>
-                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight font-headline">{contact.role}</p>
+                          <p className="text-sm font-bold font-body">{sheet.title}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight font-headline">Added: {format(new Date(sheet.generationDate), 'PP')}</p>
                         </div>
                       </div>
-                      <a href={`tel:${contact.phone}`} className="p-2 hover:bg-primary/5 rounded-full transition-colors">
-                        <Phone className="w-4 h-4 text-primary" />
-                      </a>
+                      <Button variant="ghost" size="icon" asChild className="rounded-full hover:bg-primary/5">
+                        <a href={sheet.documentUrl} target="_blank" rel="noopener noreferrer">
+                          <Download className="w-4 h-4 text-primary" />
+                        </a>
+                      </Button>
                     </div>
                   ))}
                 </div>
