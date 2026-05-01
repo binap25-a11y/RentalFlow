@@ -26,7 +26,7 @@ export default function PropertiesPage() {
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Paths aligned with backend.json: /users/{userId}/properties
+    // Aligning with hierarchical path: /users/{userId}/properties
     return collection(db, 'users', user.uid, 'properties');
   }, [db, user]);
 
@@ -117,7 +117,7 @@ export default function PropertiesPage() {
     
     try {
       const propertyId = editingProperty ? editingProperty.id : doc(collection(db, 'dummy')).id;
-      // Use nested path from backend.json
+      // Hierarchical path: /users/{landlordId}/properties/{propertyId}
       const propertyRef = doc(db, 'users', user.uid, 'properties', propertyId);
       
       let finalImageUrl = editingProperty?.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
@@ -230,7 +230,7 @@ export default function PropertiesPage() {
                           <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Recommended: Landscape Orientation</p>
                         </button>
                       )}
-                      <Input id="image-input" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                      <input id="image-input" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
                     </div>
                   </div>
 
@@ -305,7 +305,7 @@ export default function PropertiesPage() {
               
               <DialogFooter className="p-6 bg-muted/10 border-t shrink-0">
                 <Button type="button" variant="outline" className="rounded-xl h-12" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" className="rounded-xl font-bold bg-primary hover:bg-primary/90 min-w-[160px] h-12 shadow-lg shadow-primary/10" disabled={isSubmitting}>
+                <Button type="submit" className="rounded-xl font-bold bg-primary hover:bg-primary/90 min-w-[160px] h-12 shadow-lg shadow-primary/20" disabled={isSubmitting}>
                   {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                   {editingProperty ? "Save Changes" : "Create Asset"}
                 </Button>

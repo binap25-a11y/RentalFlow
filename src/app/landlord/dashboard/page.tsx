@@ -1,10 +1,9 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Users, AlertTriangle, FileText, ArrowRight, ShieldAlert } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where } from "firebase/firestore";
+import { collection, query, where, collectionGroup } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { format, isBefore, addDays, isValid, parseISO } from "date-fns";
@@ -21,19 +20,17 @@ export default function LandlordDashboard() {
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(
-      collection(db, "properties"),
-      where("landlordId", "==", user.uid)
-    );
+    // Querying the landlord's specific property subcollection
+    return collection(db, "users", user.uid, "properties");
   }, [db, user]);
 
   const { data: properties } = useCollection(propertiesQuery);
 
   const documentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Query documents where the user is the landlord to see relevant certificates/leases
+    // Use collectionGroup to find all documents across all properties for this landlord
     return query(
-      collection(db, "documents"),
+      collectionGroup(db, "documents"),
       where("landlordId", "==", user.uid)
     );
   }, [db, user]);
