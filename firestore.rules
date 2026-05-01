@@ -19,13 +19,12 @@ service cloud.firestore {
 
         function isMember() {
           return isSignedIn() && (
-            request.auth.uid == userId ||
+            isOwner() ||
             (resource != null && resource.data.members != null && resource.data.members[request.auth.uid] != null)
           );
         }
 
         // Landlords (owners) have full access to their properties
-        // Use path-based authorization for listing/creation
         allow read, write: if isOwner();
         
         // Tenants/Members can read properties they are members of
@@ -74,8 +73,7 @@ service cloud.firestore {
     match /{path=**}/maintenanceRequests/{id} {
       allow read, list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
-        resource.data.tenantId == request.auth.uid ||
-        resource.data.reportedByUserId == request.auth.uid
+        resource.data.tenantId == request.auth.uid
       );
     }
     match /{path=**}/inspections/{id} {

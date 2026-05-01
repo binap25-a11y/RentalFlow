@@ -36,8 +36,8 @@ export default function LoginPage() {
     setMounted(true);
   }, []);
 
+  // Use a more controlled effect for redirection to prevent race conditions during signup
   useEffect(() => {
-    // Only auto-redirect if we aren't currently in a loading state from a form submission
     if (user && db && mounted && !isLoading && !isUserLoading && !hasAttemptedProfileCheck.current) {
       const checkProfile = async () => {
         hasAttemptedProfileCheck.current = true;
@@ -45,18 +45,16 @@ export default function LoginPage() {
           const userDocRef = doc(db, 'users', user.uid);
           const userDoc = await getDoc(userDocRef);
 
-          if (!userDoc.exists()) {
-            // Profile doesn't exist yet, we stay on the page to let the user finish sign up or we create it if it was a social login
-            // For now, let's wait for the form submission to create the profile to ensure role selection is correct
-            hasAttemptedProfileCheck.current = false;
-          } else {
-            // Profile exists, redirect based on role
+          if (userDoc.exists()) {
             const userData = userDoc.data();
             if (userData?.role === 'landlord') {
               router.push('/landlord/dashboard');
             } else if (userData?.role === 'tenant') {
               router.push('/tenant/hub');
             }
+          } else {
+            // Profile doesn't exist - we'll let the submit handler or social login create it
+            hasAttemptedProfileCheck.current = false;
           }
         } catch (e) {
           console.error("Profile check error:", e);
@@ -74,29 +72,32 @@ export default function LoginPage() {
     try {
       if (authMode === 'signup') {
         await initiateEmailSignUp(auth, email, password);
-        // The user is signed in, now create the profile document
         if (auth.currentUser) {
           const userDocRef = doc(db, 'users', auth.currentUser.uid);
-          setDocumentNonBlocking(userDocRef, {
+          // Set profile and redirect immediately after
+          await setDocumentNonBlocking(userDocRef, {
             id: auth.currentUser.uid,
             email: auth.currentUser.email,
             role: role,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
           }, { merge: true });
+          
+          toast({ title: "Account created", description: "Your RentalFlow profile is ready." });
+          router.push(role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub');
         }
-        toast({ title: "Account created", description: "Your RentalFlow profile is ready." });
       } else {
         await initiateEmailSignIn(auth, email, password);
         toast({ title: "Welcome back", description: "Successfully signed in." });
+        // The useEffect will handle the redirect for existing users
       }
     } catch (error: any) {
+      setIsLoading(false);
       let message = "An unexpected error occurred. Please try again.";
       if (error.code === 'auth/invalid-credential') message = "Invalid email or password.";
       else if (error.code === 'auth/email-already-in-use') message = "Email already in use.";
       
       toast({ variant: "destructive", title: "Authentication Failed", description: message });
-      setIsLoading(false);
     }
   };
 
@@ -145,11 +146,11 @@ export default function LoginPage() {
       </div>
 
       <Card className="w-full max-w-md border-none shadow-2xl bg-white/80 backdrop-blur-sm">
-        <CardHeader className="space-y-1 pb-2">
-          <CardTitle className="text-2xl text-center">
+        <CardHeader className="space-y-1 pb-2 text-center">
+          <CardTitle className="text-2xl">
             {authMode === 'login' ? 'Welcome Back' : 'Join RentalFlow'}
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription>
             {authMode === 'login' ? 'Sign in to your rental portal' : 'Create your rental management account'}
           </CardDescription>
         </CardHeader>
@@ -167,7 +168,7 @@ export default function LoginPage() {
             </TabsList>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-2 text-left">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -182,13 +183,13 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 text-left">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
                   {authMode === 'login' && (
                     <Dialog>
                       <DialogTrigger asChild>
-                        <button type="button" className="text-xs text-primary hover:underline font-medium">
+                        <button type="button" className="text-xs text-primary hover:underline font-medium focus:outline-none">
                           Forgot password?
                         </button>
                       </DialogTrigger>
@@ -211,7 +212,7 @@ export default function LoginPage() {
                           />
                         </div>
                         <DialogFooter>
-                          <Button onClick={handleResetPassword} className="rounded-xl w-full">Send Reset Link</Button>
+                          <Button onClick={handleResetPassword} className="rounded-xl w-full h-11">Send Reset Link</Button>
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
@@ -259,13 +260,13 @@ export default function LoginPage() {
                 <span className="w-full border-t border-muted-foreground/20"></span>
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground font-medium">Or continue with</span>
+                <span className="bg-white px-2 text-muted-foreground font-medium">Or continue with</span>
               </div>
             </div>
 
             <Button 
               variant="outline" 
-              className="w-full h-11 border-muted-foreground/20 hover:bg-muted/50 rounded-xl mb-4"
+              className="w-full h-11 border-muted-foreground/20 hover:bg-muted/50 rounded-xl mb-4 font-bold"
               onClick={handleGoogleSignIn}
               disabled={isLoading}
             >
@@ -277,7 +278,7 @@ export default function LoginPage() {
               <button 
                 type="button"
                 onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
-                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors focus:outline-none"
               >
                 {authMode === 'login' ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
               </button>

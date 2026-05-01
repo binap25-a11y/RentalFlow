@@ -27,6 +27,7 @@ export default function PropertiesPage() {
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
+    // Hierarchical query matching backend.json
     return collection(db, 'users', user.uid, 'properties');
   }, [db, user]);
 
@@ -162,7 +163,6 @@ export default function PropertiesPage() {
       setIsAddDialogOpen(false);
       resetForm();
     } catch (error: any) {
-      console.error("Save error:", error);
       toast({ variant: "destructive", title: "Save Failed", description: error.message || "Failed to save property." });
     } finally {
       setIsSubmitting(false);
