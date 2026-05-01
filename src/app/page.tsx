@@ -38,7 +38,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     // Only auto-redirect if we aren't currently in a loading state from a form submission
-    if (user && db && mounted && !isLoading && !hasAttemptedProfileCheck.current) {
+    if (user && db && mounted && !isLoading && !isUserLoading && !hasAttemptedProfileCheck.current) {
       const checkProfile = async () => {
         hasAttemptedProfileCheck.current = true;
         try {
@@ -46,16 +46,9 @@ export default function LoginPage() {
           const userDoc = await getDoc(userDocRef);
 
           if (!userDoc.exists()) {
-            // Profile doesn't exist, create it if we're in sign-up mode or it's a new social login
-            setDocumentNonBlocking(userDocRef, {
-              id: user.uid,
-              email: user.email,
-              role: role,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-            }, { merge: true });
-            
-            router.push(role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub');
+            // Profile doesn't exist yet, we stay on the page to let the user finish sign up or we create it if it was a social login
+            // For now, let's wait for the form submission to create the profile to ensure role selection is correct
+            hasAttemptedProfileCheck.current = false;
           } else {
             // Profile exists, redirect based on role
             const userData = userDoc.data();
@@ -66,12 +59,13 @@ export default function LoginPage() {
             }
           }
         } catch (e) {
+          console.error("Profile check error:", e);
           hasAttemptedProfileCheck.current = false;
         }
       };
       checkProfile();
     }
-  }, [user, db, router, role, mounted, isLoading]);
+  }, [user, db, router, mounted, isLoading, isUserLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +74,17 @@ export default function LoginPage() {
     try {
       if (authMode === 'signup') {
         await initiateEmailSignUp(auth, email, password);
+        // The user is signed in, now create the profile document
+        if (auth.currentUser) {
+          const userDocRef = doc(db, 'users', auth.currentUser.uid);
+          setDocumentNonBlocking(userDocRef, {
+            id: auth.currentUser.uid,
+            email: auth.currentUser.email,
+            role: role,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          }, { merge: true });
+        }
         toast({ title: "Account created", description: "Your RentalFlow profile is ready." });
       } else {
         await initiateEmailSignIn(auth, email, password);
@@ -91,7 +96,7 @@ export default function LoginPage() {
       else if (error.code === 'auth/email-already-in-use') message = "Email already in use.";
       
       toast({ variant: "destructive", title: "Authentication Failed", description: message });
-      setIsLoading(false); // Reset loading on error
+      setIsLoading(false);
     }
   };
 
@@ -151,11 +156,11 @@ export default function LoginPage() {
         <CardContent>
           <Tabs value={role} onValueChange={(v) => setRole(v as any)} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/50 p-1">
-              <TabsTrigger value="landlord" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <TabsTrigger value="landlord" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
                 <LayoutDashboard className="w-4 h-4 mr-2" />
                 Landlord
               </TabsTrigger>
-              <TabsTrigger value="tenant" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+              <TabsTrigger value="tenant" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground rounded-lg">
                 <Home className="w-4 h-4 mr-2" />
                 Resident
               </TabsTrigger>
@@ -170,7 +175,7 @@ export default function LoginPage() {
                     id="email" 
                     type="email" 
                     placeholder="name@example.com" 
-                    className="pl-10"
+                    className="pl-10 h-11 rounded-xl"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required 
@@ -187,7 +192,7 @@ export default function LoginPage() {
                           Forgot password?
                         </button>
                       </DialogTrigger>
-                      <DialogContent>
+                      <DialogContent className="rounded-2xl">
                         <DialogHeader>
                           <DialogTitle>Reset Password</DialogTitle>
                           <DialogDescription>
@@ -200,12 +205,13 @@ export default function LoginPage() {
                             id="reset-email" 
                             type="email" 
                             placeholder="name@example.com"
+                            className="h-11 rounded-xl"
                             value={resetEmail}
                             onChange={(e) => setResetEmail(e.target.value)}
                           />
                         </div>
                         <DialogFooter>
-                          <Button onClick={handleResetPassword}>Send Reset Link</Button>
+                          <Button onClick={handleResetPassword} className="rounded-xl w-full">Send Reset Link</Button>
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
@@ -216,7 +222,7 @@ export default function LoginPage() {
                   <Input 
                     id="password" 
                     type={showPassword ? "text" : "password"} 
-                    className="pl-10 pr-10"
+                    className="pl-10 pr-10 h-11 rounded-xl"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required 
@@ -233,7 +239,7 @@ export default function LoginPage() {
 
               <Button 
                 type="submit"
-                className={`w-full h-12 text-base transition-all duration-300 transform active:scale-[0.98] ${role === 'landlord' ? 'bg-primary hover:bg-primary/90' : 'bg-accent hover:bg-accent/90'}`} 
+                className={`w-full h-12 text-base rounded-xl transition-all duration-300 transform active:scale-[0.98] ${role === 'landlord' ? 'bg-primary hover:bg-primary/90' : 'bg-accent hover:bg-accent/90'}`} 
                 disabled={isLoading}
               >
                 {isLoading ? (

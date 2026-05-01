@@ -17,15 +17,19 @@ service cloud.firestore {
           return isSignedIn() && request.auth.uid == userId;
         }
 
-        function isTenant() {
-          return isSignedIn() && resource != null && resource.data.members != null && resource.data.members[request.auth.uid] == 'tenant';
+        function isMember() {
+          return isSignedIn() && (
+            request.auth.uid == userId ||
+            (resource != null && resource.data.members != null && resource.data.members[request.auth.uid] != null)
+          );
         }
 
         // Landlords (owners) have full access to their properties
+        // Use path-based authorization for listing/creation
         allow read, write: if isOwner();
         
-        // Tenants can read properties they are members of
-        allow get: if isTenant();
+        // Tenants/Members can read properties they are members of
+        allow get: if isMember();
 
         // Sub-collections nested under properties
         match /tenantProfiles/{id} { 
@@ -33,15 +37,15 @@ service cloud.firestore {
           allow write: if isOwner(); 
         }
         match /images/{id} { 
-          allow read: if isOwner() || isTenant(); 
+          allow read: if isOwner() || isMember(); 
           allow write: if isOwner(); 
         }
         match /documents/{id} { 
-          allow read: if isOwner() || isTenant() || (isSignedIn() && resource.data.userId == request.auth.uid); 
+          allow read: if isOwner() || isMember() || (isSignedIn() && resource.data.userId == request.auth.uid); 
           allow write: if isOwner(); 
         }
         match /inspections/{id} { 
-          allow read: if isOwner() || isTenant(); 
+          allow read: if isOwner() || isMember(); 
           allow write: if isOwner(); 
         }
         match /maintenanceRequests/{id} { 
@@ -50,11 +54,11 @@ service cloud.firestore {
           allow update, delete: if isOwner() || (isSignedIn() && resource.data.tenantId == request.auth.uid);
         }
         match /emergencyContactSheets/{id} { 
-          allow read: if isOwner() || isTenant(); 
+          allow read: if isOwner() || isMember(); 
           allow write: if isOwner(); 
         }
         match /emergencyContacts/{id} { 
-          allow read: if isOwner() || isTenant(); 
+          allow read: if isOwner() || isMember(); 
           allow write: if isOwner(); 
         }
       }

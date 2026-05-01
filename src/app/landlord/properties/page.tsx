@@ -162,7 +162,8 @@ export default function PropertiesPage() {
       setIsAddDialogOpen(false);
       resetForm();
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Save Failed", description: error.message });
+      console.error("Save error:", error);
+      toast({ variant: "destructive", title: "Save Failed", description: error.message || "Failed to save property." });
     } finally {
       setIsSubmitting(false);
     }
@@ -210,7 +211,7 @@ export default function PropertiesPage() {
                 <div className="p-8 space-y-8">
                   <div className="space-y-4 text-left">
                     <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Photo Showcase</Label>
-                    <div className="max-w-md mx-auto">
+                    <div className="max-w-2xl mx-auto">
                       <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/20 aspect-video w-full flex items-center justify-center">
                         {previewUrl ? (
                           <>
@@ -328,7 +329,7 @@ export default function PropertiesPage() {
               />
               <Badge className={cn(
                 "absolute top-4 right-4 font-bold shadow-lg py-1 px-3 uppercase text-[10px]",
-                property.isOccupied ? 'bg-emerald-500' : 'bg-amber-500'
+                property.isOccupied ? 'bg-emerald-500' : 'bg-amber-500 text-white'
               )}>
                 {property.isOccupied ? 'Occupied' : 'Vacant'}
               </Badge>
