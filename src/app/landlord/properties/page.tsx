@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useStorage } from '@/firebase';
-import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Building2, MapPin, Plus, Trash2, Edit3, Image as ImageIcon, Upload, Save, X, Bed, Bath, Square, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
@@ -26,7 +27,6 @@ export default function PropertiesPage() {
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Aligning with hierarchical path: /users/{userId}/properties
     return collection(db, 'users', user.uid, 'properties');
   }, [db, user]);
 
@@ -108,8 +108,8 @@ export default function PropertiesPage() {
 
   const handleSaveProperty = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !db || !storage) {
-      toast({ variant: "destructive", title: "Error", description: "Missing user or services. Please refresh." });
+    if (!user || !db) {
+      toast({ variant: "destructive", title: "Error", description: "Authentication required." });
       return;
     }
 
@@ -117,12 +117,11 @@ export default function PropertiesPage() {
     
     try {
       const propertyId = editingProperty ? editingProperty.id : doc(collection(db, 'dummy')).id;
-      // Hierarchical path: /users/{landlordId}/properties/{propertyId}
       const propertyRef = doc(db, 'users', user.uid, 'properties', propertyId);
       
       let finalImageUrl = editingProperty?.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
-      if (imageFile) {
+      if (imageFile && storage) {
         const storageRef = ref(storage, `Images/${user.uid}/${propertyId}/${imageFile.name}`);
         const uploadResult = await uploadBytes(storageRef, imageFile);
         finalImageUrl = await getDownloadURL(uploadResult.ref);
@@ -149,20 +148,20 @@ export default function PropertiesPage() {
 
       if (editingProperty) {
         updateDocumentNonBlocking(propertyRef, data);
-        toast({ title: "Property Updated", description: "Asset record updated successfully." });
+        toast({ title: "Property Updated", description: "Details saved successfully." });
       } else {
         setDocumentNonBlocking(propertyRef, { 
           ...data, 
           createdAt: serverTimestamp(), 
           isActive: true
         }, { merge: true });
-        toast({ title: "Property Created", description: "New asset added to your portfolio." });
+        toast({ title: "Property Created", description: "New asset added to portfolio." });
       }
 
       setIsAddDialogOpen(false);
       resetForm();
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Operation Failed", description: error.message || "Could not save property record." });
+      toast({ variant: "destructive", title: "Save Failed", description: error.message });
     } finally {
       setIsSubmitting(false);
     }
@@ -182,7 +181,7 @@ export default function PropertiesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary mb-2">Portfolio Management</h1>
-          <p className="text-muted-foreground font-medium font-body">Manage your property assets and showcase photos.</p>
+          <p className="text-muted-foreground font-medium font-body">Manage your property assets and details.</p>
         </div>
         
         <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
@@ -201,7 +200,7 @@ export default function PropertiesPage() {
                 {editingProperty ? 'Modify Property Asset' : 'New Property Details'}
               </DialogTitle>
               <DialogDescription className="text-sm font-medium text-muted-foreground">
-                Enter complete details and upload a photo to showcase your property asset.
+                Enter complete details and upload a photo for your property record.
               </DialogDescription>
             </DialogHeader>
 
@@ -209,28 +208,29 @@ export default function PropertiesPage() {
               <ScrollArea className="flex-1">
                 <div className="p-8 space-y-8">
                   <div className="space-y-4 text-left">
-                    <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Showcase Photo</Label>
-                    <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/20 aspect-video w-full flex items-center justify-center">
-                      {previewUrl ? (
-                        <>
-                          <Image src={previewUrl} alt="Preview" fill className="object-cover" />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                             <Button type="button" variant="secondary" size="sm" className="rounded-full" onClick={() => document.getElementById('image-input')?.click()}>
-                               <Upload className="w-4 h-4 mr-1" /> Change Photo
-                             </Button>
-                             <Button type="button" variant="destructive" size="sm" className="rounded-full" onClick={() => { setPreviewUrl(null); setImageFile(null); }}>
-                               <X className="w-4 h-4" />
-                             </Button>
-                          </div>
-                        </>
-                      ) : (
-                        <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="flex flex-col items-center gap-2 p-6 w-full h-full justify-center">
-                          <ImageIcon className="w-10 h-10 text-primary/40" />
-                          <p className="text-sm font-bold text-primary">Upload Property Image</p>
-                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Recommended: Landscape Orientation</p>
-                        </button>
-                      )}
-                      <input id="image-input" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                    <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Photo</Label>
+                    <div className="max-w-md mx-auto">
+                      <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/20 aspect-video w-full flex items-center justify-center">
+                        {previewUrl ? (
+                          <>
+                            <Image src={previewUrl} alt="Preview" fill className="object-cover" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                               <Button type="button" variant="secondary" size="sm" className="rounded-full" onClick={() => document.getElementById('image-input')?.click()}>
+                                 <Upload className="w-4 h-4 mr-1" /> Change
+                               </Button>
+                               <Button type="button" variant="destructive" size="sm" className="rounded-full" onClick={() => { setPreviewUrl(null); setImageFile(null); }}>
+                                 <X className="w-4 h-4" />
+                               </Button>
+                            </div>
+                          </>
+                        ) : (
+                          <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="flex flex-col items-center gap-2 p-6 w-full h-full justify-center">
+                            <ImageIcon className="w-8 h-8 text-primary/40" />
+                            <p className="text-sm font-bold text-primary">Upload Image</p>
+                          </button>
+                        )}
+                        <input id="image-input" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                      </div>
                     </div>
                   </div>
 
@@ -296,8 +296,8 @@ export default function PropertiesPage() {
                       <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required placeholder="1500" className="rounded-xl h-11" />
                     </div>
                     <div className="space-y-2 md:col-span-2 text-left">
-                      <Label htmlFor="description">Asset Description</Label>
-                      <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Modern apartment with central heating..." className="rounded-xl h-11" />
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Modern apartment with central heating..." className="rounded-xl min-h-[100px]" />
                     </div>
                   </div>
                 </div>
@@ -354,7 +354,7 @@ export default function PropertiesPage() {
                 </Button>
               </div>
               <Button variant="ghost" className="w-full rounded-xl h-10 text-xs text-destructive hover:bg-destructive/10 font-bold" onClick={() => handleDeleteProperty(property.id)}>
-                <Trash2 className="w-4 h-4 mr-2" /> Decommission Asset
+                <Trash2 className="w-4 h-4 mr-2" /> Decommission
               </Button>
             </CardFooter>
           </Card>

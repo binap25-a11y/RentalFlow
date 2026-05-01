@@ -17,40 +17,50 @@ service cloud.firestore {
           return isSignedIn() && request.auth.uid == userId;
         }
         
-        function isMember() {
-          return isSignedIn() && (
-            isLandlord() || 
-            (resource != null && resource.data.members != null && resource.data.members[request.auth.uid] != null) ||
-            (request.resource != null && request.resource.data.members != null && request.resource.data.members[request.auth.uid] != null)
-          );
-        }
+        // Landlords can list their own properties via path-based auth
+        // Tenants can list if they are members (requires filtered query)
+        allow list: if isLandlord() || (isSignedIn() && resource.data.members[request.auth.uid] != null);
+        
+        // Standard read for single docs
+        allow get: if isLandlord() || (isSignedIn() && resource.data.members[request.auth.uid] != null);
 
-        allow read: if isMember();
         allow create: if isLandlord();
         allow update, delete: if isLandlord();
 
         // Sub-collections nested under properties
         match /tenantProfiles/{id} { 
-          allow read: if isMember() || (isSignedIn() && resource.data.userId == request.auth.uid);
+          allow read: if isLandlord() || (isSignedIn() && (resource.data.userId == request.auth.uid || request.auth.uid == userId));
           allow write: if isLandlord(); 
         }
-        match /images/{id} { allow read: if isMember(); allow write: if isLandlord(); }
+        match /images/{id} { 
+          allow read: if isLandlord() || (isSignedIn() && resource.data.members[request.auth.uid] != null); 
+          allow write: if isLandlord(); 
+        }
         match /documents/{id} { 
-          allow read: if isMember() || (isSignedIn() && resource.data.userId == request.auth.uid); 
+          allow read: if isLandlord() || (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.members[request.auth.uid] != null)); 
           allow write: if isLandlord(); 
         }
-        match /inspections/{id} { allow read: if isMember(); allow write: if isLandlord(); }
+        match /inspections/{id} { 
+          allow read: if isLandlord() || (isSignedIn() && resource.data.members[request.auth.uid] != null); 
+          allow write: if isLandlord(); 
+        }
         match /maintenanceRequests/{id} { 
-          allow read: if isMember() || (isSignedIn() && resource.data.tenantId == request.auth.uid); 
+          allow read: if isLandlord() || (isSignedIn() && (resource.data.tenantId == request.auth.uid || resource.data.landlordId == request.auth.uid)); 
           allow create: if isSignedIn();
           allow update, delete: if isLandlord() || (isSignedIn() && resource.data.tenantId == request.auth.uid);
         }
-        match /emergencyContactSheets/{id} { allow read: if isMember(); allow write: if isLandlord(); }
-        match /emergencyContacts/{id} { allow read: if isMember(); allow write: if isLandlord(); }
+        match /emergencyContactSheets/{id} { 
+          allow read: if isLandlord() || (isSignedIn() && resource.data.members[request.auth.uid] != null); 
+          allow write: if isLandlord(); 
+        }
+        match /emergencyContacts/{id} { 
+          allow read: if isLandlord() || (isSignedIn() && resource.data.members[request.auth.uid] != null); 
+          allow write: if isLandlord(); 
+        }
       }
     }
 
-    // Collection Group rules for cross-property queries used by landlords
+    // Collection Group rules for cross-property queries
     match /{path=**}/properties/{id} {
       allow read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
