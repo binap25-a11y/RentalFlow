@@ -10,7 +10,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
 
-      // Properties and their sub-resources
+      // Properties and their sub-resources nested under users
       match /properties/{propertyId} {
         
         function isLandlord() {
@@ -19,15 +19,16 @@ service cloud.firestore {
 
         function isMember() {
           return isSignedIn() && (
-            resource == null || 
-            (resource.data.members != null && resource.data.members[request.auth.uid] != null)
+            isLandlord() ||
+            (resource != null && resource.data.members != null && resource.data.members[request.auth.uid] != null)
           );
         }
 
-        allow list: if isLandlord();
-        allow get: if isLandlord() || isMember();
-        allow create: if isLandlord();
-        allow update, delete: if isLandlord();
+        // Direct collection access for the landlord
+        allow list, get, create, update, delete: if isLandlord();
+        
+        // Members (tenants) can get the property
+        allow get: if isMember();
 
         // Sub-collections nested under properties
         match /tenantProfiles/{id} { 
@@ -62,6 +63,28 @@ service cloud.firestore {
       }
     }
 
+    // Top-level maintenanceRequests for cross-property tenant access
+    match /maintenanceRequests/{id} {
+      allow read, list: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.reportedByUserId == request.auth.uid
+      );
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.reportedByUserId == request.auth.uid
+      );
+    }
+
+    // Top-level tenants (Tenant Profiles) mapping
+    match /tenants/{id} {
+      allow read, list: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.userProfileId == request.auth.uid
+      );
+      allow write: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+    }
+
     // Collection Group rules for cross-property queries
     match /{path=**}/properties/{id} {
       allow list: if isSignedIn() && (
@@ -72,7 +95,8 @@ service cloud.firestore {
     match /{path=**}/maintenanceRequests/{id} {
       allow read, list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
-        resource.data.tenantId == request.auth.uid
+        resource.data.tenantId == request.auth.uid ||
+        resource.data.reportedByUserId == request.auth.uid
       );
     }
     match /{path=**}/inspections/{id} {
