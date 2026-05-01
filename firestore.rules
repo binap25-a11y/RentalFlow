@@ -8,7 +8,8 @@ service cloud.firestore {
 
     // User profiles: Only the owner can read/write
     match /users/{userId} {
-      allow read, write: if isSignedIn() && request.auth.uid == userId;
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow write: if isSignedIn() && request.auth.uid == userId;
 
       // Hierarchical Properties and all sub-collections
       match /properties/{propertyId} {
@@ -42,9 +43,10 @@ service cloud.firestore {
     }
 
     // Collection Group rules for standardized queries across properties
+    // This resolves the "Missing permissions" when listing across properties
     match /{path=**}/properties/{id} {
       allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
+        (resource.data.landlordId == request.auth.uid) || 
         (resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
     }

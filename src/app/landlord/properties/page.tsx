@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Building2, MapPin, Plus, Trash2, Edit3, Image as ImageIcon, Upload, Save, X, Bed, Bath, Loader2, Info } from "lucide-react";
+import { Building2, MapPin, Plus, Save, Image as ImageIcon, Bed, Bath, Loader2, Edit3, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import Image from "next/image";
@@ -119,7 +119,6 @@ export default function PropertiesPage() {
       let finalImageUrl = previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile && storage) {
-        // IMPROVEMENT: Standardized storage path
         const storageRef = ref(storage, `Images/${user.uid}/${propertyId}/${imageFile.name}`);
         const uploadResult = await uploadBytes(storageRef, imageFile);
         finalImageUrl = await getDownloadURL(uploadResult.ref);
@@ -193,7 +192,6 @@ export default function PropertiesPage() {
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[750px] p-0 rounded-2xl overflow-hidden flex flex-col h-[90vh] border-none shadow-2xl">
-            {/* PINNED HEADER */}
             <DialogHeader className="p-6 bg-primary/5 border-b shrink-0 text-left">
               <DialogTitle className="text-2xl font-headline font-bold text-primary flex items-center gap-2">
                 <Building2 className="w-6 h-6" />
@@ -203,7 +201,6 @@ export default function PropertiesPage() {
             </DialogHeader>
 
             <form onSubmit={handleSaveProperty} className="flex-1 flex flex-col min-h-0">
-              {/* SCROLLABLE CONTENT */}
               <ScrollArea className="flex-1">
                 <div className="p-6 md:p-8 space-y-10">
                   <div className="space-y-4">
@@ -295,7 +292,6 @@ export default function PropertiesPage() {
                 </div>
               </ScrollArea>
               
-              {/* PINNED FOOTER */}
               <DialogFooter className="p-6 bg-muted/20 border-t shrink-0 flex gap-4">
                 <Button type="button" variant="ghost" className="rounded-xl h-12 px-6 font-bold" onClick={() => setIsAddDialogOpen(false)}>Discard</Button>
                 <Button type="submit" className="rounded-xl font-bold bg-primary h-12 px-8 flex-1 md:flex-none md:min-w-[200px] shadow-lg shadow-primary/20" disabled={isSubmitting}>

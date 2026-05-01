@@ -55,7 +55,7 @@ function buildAuthObject(currentUser: User | null): FirebaseAuthObject | null {
         }
         return acc;
       }, {} as Record<string, string[]>),
-      sign_in_provider: currentUser.providerData[0]?.providerId || 'custom',
+      sign_in_provider: currentUser.providerData[0]?.providerId || 'password',
       tenant: currentUser.tenantId,
     },
   };
@@ -84,7 +84,7 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   // Ensure we don't double-prefix the path
   let normalizedPath = context.path;
   const dbPrefix = '/databases/(default)/documents';
-  if (!normalizedPath.includes(dbPrefix)) {
+  if (!normalizedPath.startsWith(dbPrefix)) {
     normalizedPath = `${dbPrefix}/${normalizedPath.replace(/^\//, '')}`;
   }
 

@@ -7,12 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, KeyRound, LayoutDashboard, Mail, Lock, UserPlus, LogIn, Chrome, Loader2, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { KeyRound, Loader2, Eye, EyeOff, ShieldCheck, Chrome } from "lucide-react";
 import { useAuth, useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
-import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn, initiatePasswordReset } from '@/firebase/non-blocking-login';
+import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -68,7 +67,6 @@ export default function LoginPage() {
     try {
       const userDocRef = doc(db, 'users', user.uid);
       
-      // Initiate profile creation
       setDocumentNonBlocking(userDocRef, {
         id: user.uid,
         email: user.email,
@@ -79,7 +77,6 @@ export default function LoginPage() {
       
       toast({ title: "Profile established", description: `Welcome to RentalFlow as a ${role}.` });
       
-      // IMPROVEMENT: Immediate navigation to reduce perceived latency
       isRedirecting.current = true;
       if (role === 'landlord') {
         router.replace('/landlord/dashboard');
