@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Building2, MapPin, Plus, Trash2, Edit3, Image as ImageIcon, Upload, Save, X, Bed, Bath, Loader2 } from "lucide-react";
+import { Building2, MapPin, Plus, Trash2, Edit3, Image as ImageIcon, Upload, Save, X, Bed, Bath, Loader2, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import Image from "next/image";
@@ -122,6 +122,7 @@ export default function PropertiesPage() {
       let finalImageUrl = previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile && storage) {
+        // Correct path to 'Images' as requested
         const storageRef = ref(storage, `Images/${user.uid}/${propertyId}/${imageFile.name}`);
         const uploadResult = await uploadBytes(storageRef, imageFile);
         finalImageUrl = await getDownloadURL(uploadResult.ref);
@@ -143,19 +144,19 @@ export default function PropertiesPage() {
         isOccupied: editingProperty?.isOccupied || false,
         imageUrl: finalImageUrl,
         updatedAt: serverTimestamp(),
-        members: { [user.uid]: 'owner' }
+        members: { [user.uid]: 'owner' } // Critical for security rules
       };
 
       if (editingProperty) {
         updateDocumentNonBlocking(propertyRef, data);
-        toast({ title: "Property Updated", description: "Details saved successfully." });
+        toast({ title: "Property Updated", description: "Asset details saved successfully." });
       } else {
         setDocumentNonBlocking(propertyRef, { 
           ...data, 
           createdAt: serverTimestamp(), 
           isActive: true
         }, { merge: true });
-        toast({ title: "Property Created", description: "New asset added to portfolio." });
+        toast({ title: "Property Created", description: "New asset added to your portfolio." });
       }
 
       setIsAddDialogOpen(false);
@@ -328,48 +329,57 @@ export default function PropertiesPage() {
 
       {/* Property Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {properties?.map((property) => (
-          <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-500 rounded-2xl bg-card">
-            <div className="relative h-64 w-full overflow-hidden">
-              <Image 
-                src={property.imageUrl || "https://picsum.photos/seed/house/800/600"} 
-                alt={property.addressLine1} 
-                fill 
-                className="object-cover transition-transform duration-700 group-hover:scale-110" 
-              />
-              <Badge className={cn(
-                "absolute top-4 right-4 font-bold shadow-lg py-1 px-4 uppercase text-[10px] tracking-widest",
-                property.isOccupied ? 'bg-emerald-500' : 'bg-amber-500 text-white'
-              )}>
-                {property.isOccupied ? 'Occupied' : 'Vacant'}
-              </Badge>
-              <div className="absolute bottom-4 left-4 flex gap-2">
-                <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm text-primary font-bold text-[10px] py-1 px-3 shadow-sm border-none"><Bed className="w-3 h-3 mr-2" /> {property.numberOfBedrooms} Beds</Badge>
-                <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm text-primary font-bold text-[10px] py-1 px-3 shadow-sm border-none"><Bath className="w-3 h-3 mr-2" /> {property.numberOfBathrooms} Baths</Badge>
+        {!properties || properties.length === 0 ? (
+          <div className="col-span-full py-20 text-center flex flex-col items-center justify-center bg-muted/10 rounded-3xl border-2 border-dashed border-primary/10">
+            <Building2 className="w-12 h-12 text-muted-foreground mb-4 opacity-20" />
+            <p className="text-muted-foreground font-medium">No properties in your portfolio yet.</p>
+            <Button variant="link" onClick={handleOpenAddDialog} className="font-bold text-primary">Add your first asset</Button>
+          </div>
+        ) : (
+          properties.map((property) => (
+            <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-500 rounded-2xl bg-card">
+              <div className="relative h-64 w-full overflow-hidden">
+                <Image 
+                  src={property.imageUrl || "https://picsum.photos/seed/house/800/600"} 
+                  alt={property.addressLine1} 
+                  fill 
+                  className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                  data-ai-hint="rental property"
+                />
+                <Badge className={cn(
+                  "absolute top-4 right-4 font-bold shadow-lg py-1 px-4 uppercase text-[10px] tracking-widest",
+                  property.isOccupied ? 'bg-emerald-500' : 'bg-amber-500 text-white'
+                )}>
+                  {property.isOccupied ? 'Occupied' : 'Vacant'}
+                </Badge>
+                <div className="absolute bottom-4 left-4 flex gap-2">
+                  <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm text-primary font-bold text-[10px] py-1 px-3 shadow-sm border-none"><Bed className="w-3 h-3 mr-2" /> {property.numberOfBedrooms} Beds</Badge>
+                  <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm text-primary font-bold text-[10px] py-1 px-3 shadow-sm border-none"><Bath className="w-3 h-3 mr-2" /> {property.numberOfBathrooms} Baths</Badge>
+                </div>
               </div>
-            </div>
-            <CardHeader className="pb-2 text-left">
-              <CardTitle className="text-xl font-bold font-headline group-hover:text-primary transition-colors line-clamp-1">{property.addressLine1}</CardTitle>
-              <p className="text-sm text-muted-foreground flex items-center font-medium mt-1"><MapPin className="w-4 h-4 mr-1 text-primary/40" /> {property.zipCode}, {property.city}</p>
-            </CardHeader>
-            <CardContent className="pb-2 text-left">
-              <p className="text-2xl font-bold text-primary font-headline">£{property.rentAmount}<span className="text-xs text-muted-foreground font-normal"> / month</span></p>
-            </CardContent>
-            <CardFooter className="flex flex-col gap-3 pt-6 border-t border-muted/50">
-              <div className="flex gap-3 w-full">
-                <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-11 border-primary/10 hover:bg-primary/5 text-primary" asChild>
-                  <Link href={`/landlord/properties/${property.id}`}><Building2 className="w-4 h-4 mr-2" /> Details</Link>
+              <CardHeader className="pb-2 text-left">
+                <CardTitle className="text-xl font-bold font-headline group-hover:text-primary transition-colors line-clamp-1">{property.addressLine1}</CardTitle>
+                <p className="text-sm text-muted-foreground flex items-center font-medium mt-1"><MapPin className="w-4 h-4 mr-1 text-primary/40" /> {property.zipCode}, {property.city}</p>
+              </CardHeader>
+              <CardContent className="pb-2 text-left">
+                <p className="text-2xl font-bold text-primary font-headline">£{property.rentAmount}<span className="text-xs text-muted-foreground font-normal"> / month</span></p>
+              </CardContent>
+              <CardFooter className="flex flex-col gap-3 pt-6 border-t border-muted/50">
+                <div className="flex gap-3 w-full">
+                  <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-11 border-primary/10 hover:bg-primary/5 text-primary" asChild>
+                    <Link href={`/landlord/properties/${property.id}`}><Building2 className="w-4 h-4 mr-2" /> Details</Link>
+                  </Button>
+                  <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-11 text-primary hover:bg-primary/5 border-primary/10" onClick={() => handleOpenEditDialog(property)}>
+                    <Edit3 className="w-4 h-4 mr-2" /> Edit
+                  </Button>
+                </div>
+                <Button variant="ghost" className="w-full rounded-xl h-10 text-xs text-destructive hover:bg-destructive/10 font-bold transition-colors" onClick={() => handleDeleteProperty(property.id)}>
+                  <Trash2 className="w-4 h-4 mr-2" /> Decommission Property
                 </Button>
-                <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-11 text-primary hover:bg-primary/5 border-primary/10" onClick={() => handleOpenEditDialog(property)}>
-                  <Edit3 className="w-4 h-4 mr-2" /> Edit
-                </Button>
-              </div>
-              <Button variant="ghost" className="w-full rounded-xl h-10 text-xs text-destructive hover:bg-destructive/10 font-bold transition-colors" onClick={() => handleDeleteProperty(property.id)}>
-                <Trash2 className="w-4 h-4 mr-2" /> Decommission Property
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+              </CardFooter>
+            </Card>
+          ))
+        )}
       </div>
     </div>
   );

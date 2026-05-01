@@ -30,16 +30,17 @@ export default function LoginPage() {
   const [resetEmail, setResetEmail] = useState('');
   const [role, setRole] = useState<'landlord' | 'tenant'>('landlord');
   
-  const isCheckingProfile = useRef(false);
+  const isRedirecting = useRef(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Professional Session Check & Redirection
   useEffect(() => {
-    if (user && db && mounted && !isLoading && !isUserLoading && !isCheckingProfile.current) {
-      const checkProfile = async () => {
-        isCheckingProfile.current = true;
+    if (user && db && mounted && !isLoading && !isRedirecting.current) {
+      const checkAndRedirect = async () => {
+        isRedirecting.current = true;
         try {
           const userDocRef = doc(db, 'users', user.uid);
           const userDoc = await getDoc(userDocRef);
@@ -50,17 +51,22 @@ export default function LoginPage() {
               router.replace('/landlord/dashboard');
             } else if (userData?.role === 'tenant') {
               router.replace('/tenant/hub');
+            } else {
+              // Handle edge case where doc exists but role is missing
+              isRedirecting.current = false;
             }
+          } else {
+            // Profile doesn't exist yet, wait for creation flow
+            isRedirecting.current = false;
           }
         } catch (e) {
           console.error("Profile check error:", e);
-        } finally {
-          isCheckingProfile.current = false;
+          isRedirecting.current = false;
         }
       };
-      checkProfile();
+      checkAndRedirect();
     }
-  }, [user, db, router, mounted, isLoading, isUserLoading]);
+  }, [user, db, router, mounted, isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,20 +74,21 @@ export default function LoginPage() {
 
     try {
       if (authMode === 'signup') {
-        await initiateEmailSignUp(auth, email, password);
-        // Firebase Auth is updated, now we wait for auth.currentUser and create profile
-        if (auth.currentUser) {
-          const userDocRef = doc(db, 'users', auth.currentUser.uid);
+        const result = await initiateEmailSignUp(auth, email, password);
+        // Wait for the auth state to settle slightly
+        const newUser = auth.currentUser;
+        if (newUser) {
+          const userDocRef = doc(db, 'users', newUser.uid);
+          // Wait for profile creation before allowing the redirect effect to fire
           await setDocumentNonBlocking(userDocRef, {
-            id: auth.currentUser.uid,
-            email: auth.currentUser.email,
+            id: newUser.uid,
+            email: newUser.email,
             role: role,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
           }, { merge: true });
           
-          toast({ title: "Account created", description: "Your RentalFlow profile is ready." });
-          // Redirection will be picked up by the useEffect above
+          toast({ title: "Account created", description: "Welcome to RentalFlow." });
         }
       } else {
         await initiateEmailSignIn(auth, email, password);
@@ -147,7 +154,7 @@ export default function LoginPage() {
             {authMode === 'login' ? 'Welcome Back' : 'Join RentalFlow'}
           </CardTitle>
           <CardDescription className="font-medium">
-            {authMode === 'login' ? 'Sign in to your rental portal' : 'Create your rental management account'}
+            {authMode === 'login' ? 'Sign in to your portal' : 'Create your management account'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -193,7 +200,7 @@ export default function LoginPage() {
                         <DialogHeader>
                           <DialogTitle className="font-headline font-bold">Reset Password</DialogTitle>
                           <DialogDescription>
-                            Enter your email address to receive a reset link.
+                            Enter your email to receive a reset link.
                           </DialogDescription>
                         </DialogHeader>
                         <div className="py-4">
