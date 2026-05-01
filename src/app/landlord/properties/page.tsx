@@ -122,6 +122,7 @@ export default function PropertiesPage() {
       let finalImageUrl = editingProperty?.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile && storage) {
+        // Uploading to 'Images/' as requested
         const storagePath = `Images/${user.uid}/${propertyId}/${imageFile.name}`;
         const storageRef = ref(storage, storagePath);
         const uploadResult = await uploadBytes(storageRef, imageFile);
@@ -205,9 +206,9 @@ export default function PropertiesPage() {
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleSaveProperty} className="flex-1 min-h-0 flex flex-col bg-card overflow-hidden">
+            <form onSubmit={handleSaveProperty} className="flex-1 flex flex-col min-h-0">
               <ScrollArea className="flex-1">
-                <div className="p-8 space-y-8">
+                <div className="p-6 md:p-8 space-y-8">
                   <div className="space-y-4 text-left">
                     <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Photo Showcase</Label>
                     <div className="max-w-2xl mx-auto">

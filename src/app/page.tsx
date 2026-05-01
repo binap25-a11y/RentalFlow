@@ -36,7 +36,6 @@ export default function LoginPage() {
     setMounted(true);
   }, []);
 
-  // Use a more controlled effect for redirection to prevent race conditions during signup
   useEffect(() => {
     if (user && db && mounted && !isLoading && !isUserLoading && !hasAttemptedProfileCheck.current) {
       const checkProfile = async () => {
@@ -53,8 +52,8 @@ export default function LoginPage() {
               router.push('/tenant/hub');
             }
           } else {
-            // Profile doesn't exist - if it's a login, we might need to handle this.
-            // But if it's a fresh signup, the submit handler will create it.
+            // Profile doesn't exist yet - this is likely a fresh signup
+            // We wait for the submit handler to create it.
             hasAttemptedProfileCheck.current = false;
           }
         } catch (e) {
@@ -73,9 +72,9 @@ export default function LoginPage() {
     try {
       if (authMode === 'signup') {
         await initiateEmailSignUp(auth, email, password);
+        // Firebase Auth is updated, now we wait for auth.currentUser and create profile
         if (auth.currentUser) {
           const userDocRef = doc(db, 'users', auth.currentUser.uid);
-          // Set profile and redirect immediately after
           await setDocumentNonBlocking(userDocRef, {
             id: auth.currentUser.uid,
             email: auth.currentUser.email,
@@ -90,7 +89,7 @@ export default function LoginPage() {
       } else {
         await initiateEmailSignIn(auth, email, password);
         toast({ title: "Welcome back", description: "Successfully signed in." });
-        // The useEffect will handle the redirect for existing users
+        // Redirection is handled by the useEffect for existing users
       }
     } catch (error: any) {
       setIsLoading(false);
@@ -125,7 +124,7 @@ export default function LoginPage() {
     }
   };
 
-  if (!mounted || isUserLoading) {
+  if (!mounted || (isUserLoading && !user)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-pulse flex flex-col items-center">

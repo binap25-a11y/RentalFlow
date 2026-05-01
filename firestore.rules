@@ -56,7 +56,6 @@ service cloud.firestore {
     }
 
     // Collection Group rules for cross-property queries (Essential for Landlord Dashboard/Registers)
-    // Landlords list their own data across all their properties using collectionGroup
     match /{path=**}/properties/{id} {
       allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
