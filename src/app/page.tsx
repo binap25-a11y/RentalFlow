@@ -53,7 +53,7 @@ export default function LoginPage() {
               router.replace('/tenant/hub');
             }
           } else {
-            // User is signed in but has no Firestore profile (e.g. Google sign-in or new signup)
+            // User is signed in but has no Firestore profile
             setNeedsProfile(true);
           }
         } catch (e) {
@@ -92,19 +92,18 @@ export default function LoginPage() {
     try {
       if (authMode === 'signup') {
         await initiateEmailSignUp(auth, email, password);
-        toast({ title: "Account created", description: "Welcome to RentalFlow! Please choose your role." });
+        toast({ title: "Account created", description: "Welcome! Please choose your role." });
       } else {
         await initiateEmailSignIn(auth, email, password);
-        toast({ title: "Welcome back", description: "Successfully signed in." });
+        toast({ title: "Welcome back", description: "Signed in successfully." });
       }
     } catch (error: any) {
       setIsLoading(false);
-      let message = "An unexpected error occurred. Please try again.";
+      let message = "An error occurred. Please try again.";
       if (error.code === 'auth/invalid-credential') message = "Invalid email or password.";
       else if (error.code === 'auth/email-already-in-use') message = "Email already in use.";
-      else if (error.code === 'auth/weak-password') message = "Password should be at least 6 characters.";
       
-      toast({ variant: "destructive", title: "Authentication Failed", description: message });
+      toast({ variant: "destructive", title: "Auth Failed", description: message });
     }
   };
 
@@ -118,26 +117,10 @@ export default function LoginPage() {
     }
   };
 
-  const handleResetPassword = async () => {
-    if (!resetEmail) {
-      toast({ variant: "destructive", title: "Email required", description: "Please enter your email." });
-      return;
-    }
-    try {
-      await initiatePasswordReset(auth, resetEmail);
-      toast({ title: "Reset link sent", description: "Check your email inbox." });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Reset Failed", description: "Could not send reset link." });
-    }
-  };
-
   if (!mounted || (isUserLoading && !user)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center">
-          <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground font-medium animate-pulse">Initializing RentalFlow...</p>
-        </div>
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
       </div>
     );
   }
@@ -145,38 +128,25 @@ export default function LoginPage() {
   if (needsProfile) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <Card className="w-full max-w-md border-none shadow-2xl bg-white/80 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-500">
+        <Card className="w-full max-w-md border-none shadow-2xl bg-white/80 backdrop-blur-sm">
           <CardHeader className="text-center">
             <div className="mx-auto p-3 bg-primary text-primary-foreground rounded-2xl w-fit mb-4">
               <ShieldCheck className="w-8 h-8" />
             </div>
-            <CardTitle className="text-2xl font-headline font-bold text-primary">Establish Your Role</CardTitle>
-            <CardDescription className="font-medium">
-              You're signed in as <span className="text-primary font-bold">{user?.email}</span>. Please choose how you will use RentalFlow.
+            <CardTitle className="text-2xl font-headline font-bold text-primary">Choose Your Role</CardTitle>
+            <CardDescription>
+              Signed in as <span className="text-primary font-bold">{user?.email}</span>. How will you use RentalFlow?
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <Tabs value={role} onValueChange={(v) => setRole(v as any)} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-xl">
-                <TabsTrigger value="landlord" className="rounded-lg font-bold">
-                  <LayoutDashboard className="w-4 h-4 mr-2" />
-                  Landlord
-                </TabsTrigger>
-                <TabsTrigger value="tenant" className="rounded-lg font-bold">
-                  <Home className="w-4 h-4 mr-2" />
-                  Resident
-                </TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-xl h-12">
+                <TabsTrigger value="landlord" className="rounded-lg font-bold">Landlord</TabsTrigger>
+                <TabsTrigger value="tenant" className="rounded-lg font-bold">Resident</TabsTrigger>
               </TabsList>
             </Tabs>
-            <Button 
-              className="w-full h-12 rounded-xl font-bold bg-primary shadow-lg shadow-primary/20"
-              onClick={handleCreateProfile}
-              disabled={isLoading}
-            >
+            <Button className="w-full h-12 rounded-xl font-bold bg-primary" onClick={handleCreateProfile} disabled={isLoading}>
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Complete Setup"}
-            </Button>
-            <Button variant="ghost" className="w-full text-xs text-muted-foreground" onClick={() => auth.signOut().then(() => setNeedsProfile(false))}>
-              Sign out and try another account
             </Button>
           </CardContent>
         </Card>
@@ -187,7 +157,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div className="mb-8 text-center animate-in fade-in slide-in-from-top-4 duration-1000">
-        <div className="inline-flex items-center justify-center p-3 bg-primary text-primary-foreground rounded-2xl mb-4 shadow-xl shadow-primary/20">
+        <div className="inline-flex items-center justify-center p-3 bg-primary text-primary-foreground rounded-2xl mb-4 shadow-xl">
           <KeyRound className="w-8 h-8" />
         </div>
         <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">RentalFlow</h1>
@@ -199,133 +169,49 @@ export default function LoginPage() {
           <CardTitle className="text-2xl font-headline font-bold text-primary">
             {authMode === 'login' ? 'Welcome Back' : 'Join RentalFlow'}
           </CardTitle>
-          <CardDescription className="font-medium">
-            {authMode === 'login' ? 'Sign in to your portal' : 'Create your management account'}
+          <CardDescription>
+            {authMode === 'login' ? 'Sign in to your portal' : 'Create your account'}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2 text-left">
+            <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="name@example.com" 
-                  className="pl-10 h-11 rounded-xl"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required 
-                />
-              </div>
+              <Input id="email" type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
-            <div className="space-y-2 text-left">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                {authMode === 'login' && (
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <button type="button" className="text-xs text-primary font-bold hover:underline focus:outline-none">
-                        Forgot password?
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="rounded-2xl">
-                      <DialogHeader>
-                        <DialogTitle className="font-headline font-bold">Reset Password</DialogTitle>
-                        <DialogDescription>
-                          Enter your email to receive a reset link.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="py-4">
-                        <Label htmlFor="reset-email">Email Address</Label>
-                        <Input 
-                          id="reset-email" 
-                          type="email" 
-                          placeholder="name@example.com"
-                          className="h-11 rounded-xl mt-2"
-                          value={resetEmail}
-                          onChange={(e) => setResetEmail(e.target.value)}
-                        />
-                      </div>
-                      <DialogFooter>
-                        <Button onClick={handleResetPassword} className="rounded-xl w-full h-11 font-bold shadow-lg shadow-primary/10">Send Reset Link</Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                )}
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  id="password" 
-                  type={showPassword ? "text" : "password"} 
-                  className="pl-10 pr-10 h-11 rounded-xl"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required 
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-muted-foreground hover:text-primary transition-colors focus:outline-none"
-                >
+                <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-2.5">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
-
-            <Button 
-              type="submit"
-              className={`w-full h-12 text-base rounded-xl transition-all duration-300 transform active:scale-[0.98] font-bold shadow-lg bg-primary hover:bg-primary/90 shadow-primary/20`} 
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                authMode === 'login' ? (
-                  <span className="flex items-center"><LogIn className="w-4 h-4 mr-2" /> Login</span>
-                ) : (
-                  <span className="flex items-center"><UserPlus className="w-4 h-4 mr-2" /> Create Account</span>
-                )
-              )}
+            <Button type="submit" className="w-full h-12 rounded-xl font-bold bg-primary" disabled={isLoading}>
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (authMode === 'login' ? 'Login' : 'Create Account')}
             </Button>
           </form>
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-muted-foreground/20"></span>
+              <span className="w-full border-t"></span>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-muted-foreground font-bold">Or continue with</span>
+              <span className="bg-white px-2 text-muted-foreground">Or</span>
             </div>
           </div>
 
-          <Button 
-            variant="outline" 
-            className="w-full h-11 border-muted-foreground/20 hover:bg-muted/50 rounded-xl mb-4 font-bold"
-            onClick={handleGoogleSignIn}
-            disabled={isLoading}
-          >
+          <Button variant="outline" className="w-full h-11 rounded-xl mb-4 font-bold" onClick={handleGoogleSignIn} disabled={isLoading}>
             <Chrome className="w-4 h-4 mr-2 text-red-500" />
-            Sign in with Google
+            Continue with Google
           </Button>
 
-          <div className="text-center">
-            <button 
-              type="button"
-              onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
-              className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors focus:outline-none"
-            >
-              {authMode === 'login' ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-            </button>
-          </div>
+          <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full text-sm font-bold text-muted-foreground hover:text-primary">
+            {authMode === 'login' ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+          </button>
         </CardContent>
       </Card>
-      
-      <p className="mt-8 text-xs text-muted-foreground opacity-60 font-medium">
-        &copy; 2024 RentalFlow Systems. Secure property management.
-      </p>
     </div>
   );
 }
