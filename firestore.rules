@@ -24,46 +24,39 @@ service cloud.firestore {
           );
         }
 
-        // Landlords (owners) have full access to their properties
+        // Full access to the owner (landlord) for the property and all its subcollections
         allow read, write: if isOwner();
         
-        // Tenants/Members can read properties they are members of
+        // Members (tenants) can read the property document itself
         allow get: if isMember();
 
-        // Sub-collections nested under properties
+        // Recursively allow access to all subcollections for the owner
+        match /{allSubcollections=**} {
+          allow read, write: if isOwner();
+        }
+
+        // Specific tenant access for subcollections
         match /tenantProfiles/{id} { 
-          allow read: if isOwner() || (isSignedIn() && resource.data.userId == request.auth.uid);
-          allow write: if isOwner(); 
+          allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
         }
         match /images/{id} { 
-          allow read: if isOwner() || isMember(); 
-          allow write: if isOwner(); 
+          allow read: if isMember(); 
         }
         match /documents/{id} { 
-          allow read: if isOwner() || isMember() || (isSignedIn() && resource.data.userId == request.auth.uid); 
-          allow write: if isOwner(); 
+          allow read: if isMember() || (isSignedIn() && resource.data.userId == request.auth.uid); 
         }
         match /inspections/{id} { 
-          allow read: if isOwner() || isMember(); 
-          allow write: if isOwner(); 
+          allow read: if isMember(); 
         }
         match /maintenanceRequests/{id} { 
-          allow read: if isOwner() || (isSignedIn() && (resource.data.tenantId == request.auth.uid || resource.data.landlordId == request.auth.uid)); 
+          allow read, update, delete: if isSignedIn() && resource.data.tenantId == request.auth.uid;
           allow create: if isSignedIn();
-          allow update, delete: if isOwner() || (isSignedIn() && resource.data.tenantId == request.auth.uid);
-        }
-        match /emergencyContactSheets/{id} { 
-          allow read: if isOwner() || isMember(); 
-          allow write: if isOwner(); 
-        }
-        match /emergencyContacts/{id} { 
-          allow read: if isOwner() || isMember(); 
-          allow write: if isOwner(); 
         }
       }
     }
 
-    // Collection Group rules for cross-property queries
+    // Collection Group rules for cross-property queries (Essential for Landlord Dashboard/Registers)
+    // Landlords list their own data across all their properties using collectionGroup
     match /{path=**}/properties/{id} {
       allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
@@ -71,25 +64,25 @@ service cloud.firestore {
       );
     }
     match /{path=**}/maintenanceRequests/{id} {
-      allow read, list: if isSignedIn() && (
+      allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.tenantId == request.auth.uid
       );
     }
     match /{path=**}/inspections/{id} {
-      allow read, list: if isSignedIn() && (
+      allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         (resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
     }
     match /{path=**}/tenantProfiles/{id} {
-      allow read, list: if isSignedIn() && (
+      allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.userId == request.auth.uid
       );
     }
     match /{path=**}/documents/{id} {
-      allow read, list: if isSignedIn() && (
+      allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.userId == request.auth.uid ||
         (resource.data.members != null && resource.data.members[request.auth.uid] != null)

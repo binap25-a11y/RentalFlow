@@ -53,7 +53,8 @@ export default function LoginPage() {
               router.push('/tenant/hub');
             }
           } else {
-            // Profile doesn't exist - we'll let the submit handler or social login create it
+            // Profile doesn't exist - if it's a login, we might need to handle this.
+            // But if it's a fresh signup, the submit handler will create it.
             hasAttemptedProfileCheck.current = false;
           }
         } catch (e) {
@@ -189,7 +190,7 @@ export default function LoginPage() {
                   {authMode === 'login' && (
                     <Dialog>
                       <DialogTrigger asChild>
-                        <button type="button" className="text-xs text-primary hover:underline font-medium focus:outline-none">
+                        <button type="button" className="text-xs text-primary font-medium hover:underline focus:outline-none">
                           Forgot password?
                         </button>
                       </DialogTrigger>

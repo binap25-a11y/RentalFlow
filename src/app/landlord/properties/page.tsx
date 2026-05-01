@@ -27,7 +27,6 @@ export default function PropertiesPage() {
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Hierarchical query matching backend.json
     return collection(db, 'users', user.uid, 'properties');
   }, [db, user]);
 
@@ -196,7 +195,7 @@ export default function PropertiesPage() {
               Add New Property
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[700px] w-[95vw] max-h-[90vh] p-0 rounded-2xl overflow-hidden flex flex-col border-none shadow-2xl">
+          <DialogContent className="sm:max-w-[700px] w-[95vw] h-[90vh] p-0 rounded-2xl overflow-hidden flex flex-col border-none shadow-2xl">
             <DialogHeader className="p-6 bg-primary/5 border-b shrink-0 text-left">
               <DialogTitle className="text-2xl font-headline font-bold text-primary">
                 {editingProperty ? 'Modify Property Asset' : 'New Property Details'}
