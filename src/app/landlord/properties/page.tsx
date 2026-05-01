@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -122,7 +123,6 @@ export default function PropertiesPage() {
       let finalImageUrl = previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile && storage) {
-        // Upload images to 'Images/' folder as per requirements
         const storageRef = ref(storage, `Images/${user.uid}/${propertyId}/${imageFile.name}`);
         const uploadResult = await uploadBytes(storageRef, imageFile);
         finalImageUrl = await getDownloadURL(uploadResult.ref);
@@ -144,7 +144,6 @@ export default function PropertiesPage() {
         isOccupied: editingProperty?.isOccupied || false,
         imageUrl: finalImageUrl,
         updatedAt: serverTimestamp(),
-        // Members map is critical for security rules logic
         members: { [user.uid]: 'owner' }
       };
 
@@ -210,7 +209,6 @@ export default function PropertiesPage() {
             <form onSubmit={handleSaveProperty} className="flex-1 flex flex-col min-h-0">
               <ScrollArea className="flex-1">
                 <div className="p-6 md:p-8 space-y-8">
-                  {/* Image Upload Section - Redesigned for professional look */}
                   <div className="space-y-4 text-left">
                     <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 font-headline">Property Presentation</Label>
                     <div className="max-w-3xl mx-auto">
@@ -228,11 +226,11 @@ export default function PropertiesPage() {
                             </div>
                           </>
                         ) : (
-                          <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="flex flex-col items-center gap-3 p-12 w-full h-full justify-center group transition-colors hover:bg-muted/30">
+                          <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="flex flex-col items-center gap-3 p-12 w-full h-full justify-center group transition-colors hover:bg-muted/30 text-center">
                             <div className="p-4 bg-primary/5 rounded-full group-hover:bg-primary/10 transition-colors">
                               <ImageIcon className="w-10 h-10 text-primary/60" />
                             </div>
-                            <div className="text-center">
+                            <div>
                               <p className="text-sm font-bold text-primary">Upload Property Image</p>
                               <p className="text-xs text-muted-foreground mt-1">JPG, PNG or WEBP (Max 5MB)</p>
                             </div>
@@ -243,7 +241,6 @@ export default function PropertiesPage() {
                     </div>
                   </div>
 
-                  {/* Core Details Section */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2 md:col-span-2 text-left">
                       <Label htmlFor="address" className="font-bold text-xs uppercase text-primary/60">Street Address</Label>

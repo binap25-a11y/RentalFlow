@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -78,10 +79,9 @@ export default function LoginPage() {
       }, { merge: true });
       
       toast({ title: "Profile established", description: `Welcome to RentalFlow as a ${role}.` });
-      // The redirection useEffect will catch the new profile and redirect
+      // Redirection useEffect will handle the rest
     } catch (e) {
       toast({ variant: "destructive", title: "Setup Failed", description: "Could not establish your profile." });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -93,9 +93,6 @@ export default function LoginPage() {
     try {
       if (authMode === 'signup') {
         await initiateEmailSignUp(auth, email, password);
-        // Note: Sign-up logic in initiateEmailSignUp doesn't return the user object directly, 
-        // but it triggers the useUser hook. Redirection is handled by the useEffect above.
-        // We'll create the profile inside the useEffect for email signups too.
       } else {
         await initiateEmailSignIn(auth, email, password);
         toast({ title: "Welcome back", description: "Successfully signed in." });

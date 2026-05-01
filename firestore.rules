@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -10,7 +11,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
 
-      // Hierarchical Properties
+      // Hierarchical Properties and all sub-collections
       match /properties/{propertyId} {
         function isOwner() {
           return isSignedIn() && request.auth.uid == userId;
@@ -38,54 +39,42 @@ service cloud.firestore {
       }
     }
 
-    // Collection Group rules (Required for portfolio-wide queries)
+    // Collection Group rules (Required for portfolio-wide and cross-property queries)
     match /{path=**}/properties/{id} {
       allow list: if isSignedIn() && (
-        (resource != null && (
-          resource.data.landlordId == request.auth.uid || 
-          (resource.data.members != null && resource.data.members[request.auth.uid] != null)
-        ))
+        resource.data.landlordId == request.auth.uid || 
+        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
     }
     match /{path=**}/maintenanceRequests/{id} {
       allow list: if isSignedIn() && (
-        (resource != null && (
-          resource.data.landlordId == request.auth.uid || 
-          resource.data.tenantId == request.auth.uid
-        ))
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.tenantId == request.auth.uid
       );
     }
     match /{path=**}/inspections/{id} {
       allow list: if isSignedIn() && (
-        (resource != null && (
-          resource.data.landlordId == request.auth.uid || 
-          (resource.data.members != null && resource.data.members[request.auth.uid] != null)
-        ))
+        resource.data.landlordId == request.auth.uid || 
+        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
     }
     match /{path=**}/tenantProfiles/{id} {
       allow list: if isSignedIn() && (
-        (resource != null && (
-          resource.data.landlordId == request.auth.uid || 
-          resource.data.userId == request.auth.uid
-        ))
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.userId == request.auth.uid
       );
     }
     match /{path=**}/documents/{id} {
       allow list: if isSignedIn() && (
-        (resource != null && (
-          resource.data.landlordId == request.auth.uid || 
-          resource.data.userId == request.auth.uid ||
-          (resource.data.members != null && resource.data.members[request.auth.uid] != null)
-        ))
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.userId == request.auth.uid ||
+        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
     }
     match /{path=**}/emergencyContactSheets/{id} {
       allow list: if isSignedIn() && (
-        (resource != null && (
-          resource.data.landlordId == request.auth.uid || 
-          (resource.data.members != null && resource.data.members[request.auth.uid] != null)
-        ))
+        resource.data.landlordId == request.auth.uid || 
+        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
     }
   }
