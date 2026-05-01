@@ -1,3 +1,4 @@
+
 'use client';
 import { getAuth, type User } from 'firebase/auth';
 
@@ -81,9 +82,16 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
     // Auth not initialized yet
   }
 
-  // Ensure we don't double-prefix the path
+  // Ensure we don't double-prefix the path or leave it inconsistent
   let normalizedPath = context.path;
   const dbPrefix = '/databases/(default)/documents';
+  
+  // If the path already has the prefix but is missing the leading slash
+  if (normalizedPath.startsWith('databases/')) {
+    normalizedPath = '/' + normalizedPath;
+  }
+  
+  // If it's a relative path, prefix it properly
   if (!normalizedPath.startsWith(dbPrefix)) {
     normalizedPath = `${dbPrefix}/${normalizedPath.replace(/^\//, '')}`;
   }

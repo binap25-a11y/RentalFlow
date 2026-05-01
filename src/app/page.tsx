@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -7,10 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { KeyRound, Loader2, Eye, EyeOff, ShieldCheck, Chrome } from "lucide-react";
+import { KeyRound, Loader2, Eye, EyeOff, ShieldCheck, Chrome, User, Phone, CheckCircle2 } from "lucide-react";
 import { useAuth, useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { sendEmailVerification } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
@@ -26,7 +28,12 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Profile Setup State
   const [role, setRole] = useState<'landlord' | 'tenant'>('landlord');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [needsProfile, setNeedsProfile] = useState(false);
   
   const isRedirecting = useRef(false);
@@ -63,6 +70,11 @@ export default function LoginPage() {
 
   const handleCreateProfile = async () => {
     if (!user || !db) return;
+    if (!firstName || !lastName || !phoneNumber) {
+      toast({ variant: "destructive", title: "Missing Information", description: "Please provide your name and contact number." });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const userDocRef = doc(db, 'users', user.uid);
@@ -70,12 +82,21 @@ export default function LoginPage() {
       setDocumentNonBlocking(userDocRef, {
         id: user.uid,
         email: user.email,
+        firstName,
+        lastName,
+        phoneNumber,
         role: role,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       }, { merge: true });
       
-      toast({ title: "Profile established", description: `Welcome to RentalFlow as a ${role}.` });
+      // Verification attempt
+      try {
+        await sendEmailVerification(user);
+        toast({ title: "Profile Ready", description: "Verification email sent. Welcome to RentalFlow!" });
+      } catch (err) {
+        toast({ title: "Profile established", description: `Welcome as a ${role}.` });
+      }
       
       isRedirecting.current = true;
       if (role === 'landlord') {
@@ -96,7 +117,7 @@ export default function LoginPage() {
     try {
       if (authMode === 'signup') {
         await initiateEmailSignUp(auth, email, password);
-        toast({ title: "Account created", description: "Almost there! Please choose your role." });
+        toast({ title: "Account created", description: "Please complete your identity details." });
       } else {
         await initiateEmailSignIn(auth, email, password);
         toast({ title: "Welcome back", description: "Signed in successfully." });
@@ -132,25 +153,51 @@ export default function LoginPage() {
   if (needsProfile) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <Card className="w-full max-w-md border-none shadow-2xl bg-white/80 backdrop-blur-sm">
-          <CardHeader className="text-center">
+        <Card className="w-full max-w-lg border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
+          <CardHeader className="text-center bg-primary/5 pb-8">
             <div className="mx-auto p-3 bg-primary text-primary-foreground rounded-2xl w-fit mb-4">
               <ShieldCheck className="w-8 h-8" />
             </div>
-            <CardTitle className="text-2xl font-headline font-bold text-primary">Establish Your Identity</CardTitle>
+            <CardTitle className="text-2xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
             <CardDescription>
-              Authenticated as <span className="text-primary font-bold">{user?.email}</span>. How will you use RentalFlow?
+              Authenticated as <span className="text-primary font-bold">{user?.email}</span>. Complete your details.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <Tabs value={role} onValueChange={(v) => setRole(v as any)} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-xl h-12">
-                <TabsTrigger value="landlord" className="rounded-lg font-bold">Landlord</TabsTrigger>
-                <TabsTrigger value="tenant" className="rounded-lg font-bold">Resident</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <Button className="w-full h-12 rounded-xl font-bold bg-primary" onClick={handleCreateProfile} disabled={isLoading}>
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Enter My Portal"}
+          <CardContent className="space-y-6 pt-8">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">First Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jane" className="pl-10 h-11 rounded-xl" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Last Name</Label>
+                <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" className="h-11 rounded-xl" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Phone Number</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+44 7700 900000" className="pl-10 h-11 rounded-xl" />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select Your Portal Role</Label>
+              <Tabs value={role} onValueChange={(v) => setRole(v as any)} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-xl h-12">
+                  <TabsTrigger value="landlord" className="rounded-lg font-bold">Landlord</TabsTrigger>
+                  <TabsTrigger value="tenant" className="rounded-lg font-bold">Resident</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            <Button className="w-full h-12 rounded-xl font-bold bg-primary text-lg shadow-lg shadow-primary/20" onClick={handleCreateProfile} disabled={isLoading || !firstName || !lastName || !phoneNumber}>
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle2 className="w-5 h-5 mr-2" /> Enter My Portal</>}
             </Button>
           </CardContent>
         </Card>
@@ -164,7 +211,7 @@ export default function LoginPage() {
         <div className="inline-flex items-center justify-center p-3 bg-primary text-primary-foreground rounded-2xl mb-4 shadow-xl">
           <KeyRound className="w-8 h-8" />
         </div>
-        <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">RentalFlow</h1>
+        <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight text-left md:text-center">RentalFlow</h1>
         <p className="text-muted-foreground font-medium">Professional Property Management</p>
       </div>
 
