@@ -11,17 +11,17 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
 
       // Properties and their sub-resources
+      // This match allows listing the /users/{userId}/properties collection
       match /properties/{propertyId} {
         
         function isLandlord() {
           return isSignedIn() && request.auth.uid == userId;
         }
-        
-        // Split list into owner (path-based) and member (data-based) for better evaluation
+
+        // Allow list if you are the landlord of this path
         allow list: if isLandlord();
-        allow list: if isSignedIn() && resource.data.members[request.auth.uid] != null;
         
-        // Standard read for single docs
+        // Standard read for single docs: Landlord or Member
         allow get: if isLandlord() || (isSignedIn() && resource.data.members[request.auth.uid] != null);
 
         allow create: if isLandlord();
@@ -29,7 +29,7 @@ service cloud.firestore {
 
         // Sub-collections nested under properties
         match /tenantProfiles/{id} { 
-          allow read: if isLandlord() || (isSignedIn() && (resource.data.userId == request.auth.uid || request.auth.uid == userId));
+          allow read: if isLandlord() || (isSignedIn() && (resource.data.userId == request.auth.uid));
           allow write: if isLandlord(); 
         }
         match /images/{id} { 
@@ -61,8 +61,15 @@ service cloud.firestore {
     }
 
     // Collection Group rules for cross-property queries
+    // These require landlordId or tenantId filters in the query
     match /{path=**}/properties/{id} {
-      allow read: if isSignedIn() && (
+      allow list: if isSignedIn() && (
+        query.limit <= 100 && (
+          request.auth.uid == resource.data.landlordId || 
+          resource.data.members[request.auth.uid] != null
+        )
+      );
+      allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         (resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
