@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -126,6 +125,7 @@ export default function PropertiesPage() {
       }
 
       const tenantIds = editingProperty?.tenantIds || [];
+      const memberIds = Array.from(new Set([user.uid, ...tenantIds]));
 
       const data = {
         id: propertyId,
@@ -144,6 +144,7 @@ export default function PropertiesPage() {
         imageUrl: finalImageUrl,
         updatedAt: serverTimestamp(),
         tenantIds: tenantIds,
+        memberIds: memberIds,
       };
 
       if (editingProperty) {

@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useState, useMemo } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking, getLandlordCollectionQuery } from '@/firebase';
-import { collection, doc, serverTimestamp, query, where, getDoc, arrayUnion } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, arrayUnion } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,8 +56,10 @@ export default function TenantsPage() {
       email,
       phoneNumber: phone,
       userId: tenantUid,
+      tenantId: tenantUid,
       propertyId: selectedPropertyId,
       landlordId: user.uid,
+      memberIds: [user.uid, tenantUid],
       leaseStartDate: new Date().toISOString().split('T')[0],
       leaseEndDate: new Date(Date.now() + 31536000000).toISOString().split('T')[0],
       createdAt: serverTimestamp(),
@@ -68,6 +69,7 @@ export default function TenantsPage() {
     updateDocumentNonBlocking(propertyRef, {
       isOccupied: true,
       tenantIds: arrayUnion(tenantUid),
+      memberIds: arrayUnion(tenantUid),
       updatedAt: serverTimestamp(),
     });
 

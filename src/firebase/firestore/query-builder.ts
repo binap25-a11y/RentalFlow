@@ -1,4 +1,3 @@
-
 import {
   collection,
   query,
@@ -6,14 +5,15 @@ import {
   or,
   QueryConstraint,
   Firestore,
-  Query
+  Query,
+  DocumentData
 } from "firebase/firestore";
 
 /**
- * 🏠 Landlord Portfolio Queries
+ * 🏠 Landlord Portfolio Queries (FLAT)
  * Filters a top-level collection by landlordId.
  */
-export function getLandlordCollectionQuery(db: Firestore, collectionName: string, userId: string): Query {
+export function getLandlordCollectionQuery(db: Firestore, collectionName: string, userId: string): Query<DocumentData> {
   if (!userId) throw new Error("User ID required");
   return query(
     collection(db, collectionName),
@@ -22,7 +22,7 @@ export function getLandlordCollectionQuery(db: Firestore, collectionName: string
 }
 
 /**
- * 🔐 Tenant / Resident Hub Queries
+ * 🔐 Tenant / Resident Hub Queries (FLAT)
  * Filters a top-level collection for items relevant to the tenant.
  */
 export function getTenantCollectionQuery(options: {
@@ -30,7 +30,7 @@ export function getTenantCollectionQuery(options: {
   collectionName: string;
   userId: string;
   additionalConstraints?: QueryConstraint[];
-}) {
+}): Query<DocumentData> {
   const { db, collectionName, userId, additionalConstraints = [] } = options;
 
   if (!userId) {
@@ -47,6 +47,7 @@ export function getTenantCollectionQuery(options: {
   }
 
   // Other entities use OR filters matching security rules
+  // We check for direct tenantId, general userId, or memberIds membership.
   return query(
     collection(db, collectionName),
     or(
