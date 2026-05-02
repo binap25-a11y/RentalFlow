@@ -31,7 +31,7 @@ service cloud.firestore {
     }
 
     // Collection Group Rules for Queries
-    // These allow the list operations used in dashboards
+    // These allow the list operations used in dashboards across the portfolio
     
     match /{path=**}/properties/{id} {
       allow list, read: if isSignedIn() && (
@@ -42,6 +42,11 @@ service cloud.firestore {
 
     match /{path=**}/maintenanceRequests/{id} {
       allow list, read: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.tenantId == request.auth.uid
+      );
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.tenantId == request.auth.uid
       );
