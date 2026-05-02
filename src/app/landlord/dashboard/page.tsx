@@ -18,18 +18,16 @@ export default function LandlordDashboard() {
     setIsClient(true);
   }, []);
 
-  // Direct collection query for properties owned by this landlord
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return getLandlordCollectionQuery(db, user.uid, "properties");
+    return getLandlordCollectionQuery(db, "properties", user.uid);
   }, [db, user]);
 
   const { data: properties, isLoading: isPropLoading } = useCollection(propertiesQuery);
 
-  // Direct collection query for documents owned by this landlord
   const documentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return getLandlordCollectionQuery(db, user.uid, "documents");
+    return getLandlordCollectionQuery(db, "documents", user.uid);
   }, [db, user]);
 
   const { data: documents, isLoading: isDocsLoading } = useCollection(documentsQuery);

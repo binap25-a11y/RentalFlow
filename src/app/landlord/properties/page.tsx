@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
-import { useUser, useFirestore, useCollection, getLandlordPropertiesQuery, setDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useStorage } from '@/firebase';
-import { doc, serverTimestamp } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, getLandlordCollectionQuery, setDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useStorage } from '@/firebase';
+import { doc, serverTimestamp, collection } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,7 @@ export default function PropertiesPage() {
 
   const propertiesQuery = useMemo(() => {
     if (!db || !user) return null;
-    return getLandlordPropertiesQuery(db, user.uid);
+    return getLandlordCollectionQuery(db, "properties", user.uid);
   }, [db, user]);
 
   const { data: properties, isLoading } = useCollection(propertiesQuery);
@@ -113,8 +114,8 @@ export default function PropertiesPage() {
     setIsSubmitting(true);
     
     try {
-      const propertyId = editingProperty ? editingProperty.id : crypto.randomUUID();
-      const propertyRef = doc(db, 'users', user.uid, 'properties', propertyId);
+      const propertyId = editingProperty ? editingProperty.id : doc(collection(db, 'properties')).id;
+      const propertyRef = doc(db, 'properties', propertyId);
       
       let finalImageUrl = previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
@@ -124,9 +125,7 @@ export default function PropertiesPage() {
         finalImageUrl = await getDownloadURL(uploadResult.ref);
       }
 
-      // Maintain memberIds array for collectionGroup listing security
-      const currentMemberIds = editingProperty?.memberIds || [user.uid];
-      const memberIds = Array.from(new Set([...currentMemberIds, user.uid]));
+      const memberIds = editingProperty?.memberIds || [user.uid];
 
       const data = {
         id: propertyId,
@@ -145,7 +144,6 @@ export default function PropertiesPage() {
         imageUrl: finalImageUrl,
         updatedAt: serverTimestamp(),
         memberIds: memberIds,
-        members: editingProperty?.members || { [user.uid]: 'owner' }
       };
 
       if (editingProperty) {
@@ -171,7 +169,7 @@ export default function PropertiesPage() {
 
   const handleDeleteProperty = (propertyId: string) => {
     if (!user || !db) return;
-    const propertyRef = doc(db, 'users', user.uid, 'properties', propertyId);
+    const propertyRef = doc(db, 'properties', propertyId);
     deleteDocumentNonBlocking(propertyRef);
     toast({ title: "Asset Decommissioned" });
   };
@@ -276,7 +274,7 @@ export default function PropertiesPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="font-bold text-xs uppercase text-primary/60">Baths</Label>
-                        <Select value={bathrooms} onValueChange={setBedrooms}>
+                        <Select value={bathrooms} onValueChange={setBathrooms}>
                           <SelectTrigger className="rounded-xl h-12"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {['1','2','3+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}

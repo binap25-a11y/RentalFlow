@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -5,7 +6,7 @@ import { triageMaintenanceRequest } from "@/ai/flows/maintenance-request-triage"
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, buildSecureCollectionGroupQuery } from "@/firebase";
+import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, getLandlordCollectionQuery } from "@/firebase";
 import { doc, serverTimestamp } from "firebase/firestore";
 import { Wrench, Sparkles, Clock, Filter, BrainCircuit, Loader2, CheckCircle2, PlayCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -25,12 +26,7 @@ export default function MaintenancePage() {
 
   const maintenanceQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return buildSecureCollectionGroupQuery({
-      db,
-      collectionName: "maintenanceRequests",
-      userId: user.uid,
-      role: "landlord"
-    });
+    return getLandlordCollectionQuery(db, "maintenanceRequests", user.uid);
   }, [db, user]);
 
   const { data: requests, isLoading } = useCollection(maintenanceQuery);
@@ -41,7 +37,7 @@ export default function MaintenancePage() {
     try {
       const result = await triageMaintenanceRequest({ maintenanceRequest: request.description });
       
-      const requestRef = doc(db, 'users', user.uid, 'properties', request.propertyId, 'maintenanceRequests', request.id);
+      const requestRef = doc(db, 'maintenanceRequests', request.id);
       
       updateDocumentNonBlocking(requestRef, {
         priority: result.priority,
@@ -67,7 +63,7 @@ export default function MaintenancePage() {
 
   const updateStatus = (request: any, newStatus: string) => {
     if (!user) return;
-    const requestRef = doc(db, 'users', user.uid, 'properties', request.propertyId, 'maintenanceRequests', request.id);
+    const requestRef = doc(db, 'maintenanceRequests', request.id);
     updateDocumentNonBlocking(requestRef, {
       status: newStatus,
       updatedAt: serverTimestamp(),

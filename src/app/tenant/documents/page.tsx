@@ -1,7 +1,7 @@
+
 "use client";
 
-import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { query, where, collectionGroup } from "firebase/firestore";
+import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,11 +17,11 @@ export default function TenantDocumentsPage() {
 
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Documents are nested. Use collectionGroup with correct filter.
-    return query(
-      collectionGroup(db, "documents"),
-      where("userId", "==", user.uid)
-    );
+    return getTenantCollectionQuery({
+      db,
+      collectionName: "documents",
+      userId: user.uid
+    });
   }, [db, user]);
 
   const { data: documents, isLoading } = useCollection(docsQuery);
@@ -66,7 +66,7 @@ export default function TenantDocumentsPage() {
           </Card>
         ) : (
           filteredDocs.map((doc) => {
-            const createdAt = doc.createdAt ? new Date(doc.createdAt) : null;
+            const createdAt = doc.createdAt ? new Date(doc.createdAt.seconds * 1000) : null;
             return (
               <Card key={doc.id} className="border-none shadow-sm hover:shadow-md transition-all group">
                 <CardHeader className="pb-3">

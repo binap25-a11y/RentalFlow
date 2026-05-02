@@ -1,7 +1,6 @@
 
 import {
   collection,
-  collectionGroup,
   query,
   where,
   or,
@@ -13,49 +12,39 @@ import {
 type UserRole = "landlord" | "tenant";
 
 /**
- * 🏠 Direct Landlord Queries (Bypasses CollectionGroup Index requirement)
+ * 🏠 Landlord Portfolio Queries
+ * Filters a top-level collection by landlordId.
  */
-export function getLandlordCollectionQuery(db: Firestore, userId: string, collectionName: string): Query {
-  return query(collection(db, "users", userId, collectionName));
+export function getLandlordCollectionQuery(db: Firestore, collectionName: string, userId: string): Query {
+  return query(
+    collection(db, collectionName),
+    where("landlordId", "==", userId)
+  );
 }
 
 /**
- * 🔐 Secure Portfolio Queries (For Residents and shared access)
+ * 🔐 Tenant / Resident Hub Queries
+ * Filters a top-level collection for items relevant to the tenant.
  */
-export function buildSecureCollectionGroupQuery(options: {
+export function getTenantCollectionQuery(options: {
   db: Firestore;
   collectionName: string;
   userId: string;
-  role: UserRole;
   additionalConstraints?: QueryConstraint[];
 }) {
-  const { db, collectionName, userId, role, additionalConstraints = [] } = options;
+  const { db, collectionName, userId, additionalConstraints = [] } = options;
 
   if (!userId) {
     throw new Error("User must be authenticated");
   }
 
-  const constraints: QueryConstraint[] = [];
-
-  // ✅ LANDLORD ACCESS (Uses direct path helper in practice, but supported here)
-  if (role === "landlord") {
-    constraints.push(where("landlordId", "==", userId));
-  }
-
-  // ✅ TENANT / MEMBER ACCESS
-  if (role === "tenant") {
-    constraints.push(
-      or(
-        where("tenantId", "==", userId),
-        where("userId", "==", userId),
-        where("memberIds", "array-contains", userId)
-      )
-    );
-  }
-
   return query(
-    collectionGroup(db, collectionName),
-    ...constraints,
+    collection(db, collectionName),
+    or(
+      where("tenantId", "==", userId),
+      where("userId", "==", userId),
+      where("memberIds", "array-contains", userId)
+    ),
     ...additionalConstraints
   );
 }

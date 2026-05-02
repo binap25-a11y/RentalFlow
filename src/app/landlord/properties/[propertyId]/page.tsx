@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState, use, useMemo } from 'react';
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useStorage } from '@/firebase';
-import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,39 +34,29 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const router = useRouter();
 
   const propertyRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return doc(db, 'users', user.uid, 'properties', propertyId);
-  }, [db, user, propertyId]);
+    if (!db) return null;
+    return doc(db, 'properties', propertyId);
+  }, [db, propertyId]);
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return collection(db, 'users', user.uid, 'properties', propertyId, 'tenantProfiles');
-  }, [db, user, propertyId]);
+    return query(collection(db, 'tenantProfiles'), where('propertyId', '==', propertyId));
+  }, [db, propertyId]);
 
   const { data: tenants } = useCollection(tenantsQuery);
 
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return collection(db, 'users', user.uid, 'properties', propertyId, 'documents');
-  }, [db, user, propertyId]);
+    return query(collection(db, 'documents'), where('propertyId', '==', propertyId));
+  }, [db, propertyId]);
 
   const { data: documents } = useCollection(docsQuery);
 
-  const sheetsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return collection(db, 'users', user.uid, 'properties', propertyId, 'emergencyContactSheets');
-  }, [db, user, propertyId]);
-
-  const { data: sheets } = useCollection(sheetsQuery);
-
   const [isEditing, setIsEditing] = useState(false);
   const [rentAmount, setRentAmount] = useState('');
-  const [sheetTitle, setSheetTitle] = useState('');
-  const [sheetUrl, setSheetUrl] = useState('');
 
-  // Document Upload State
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
   const [expiryDate, setExpiryDate] = useState<Date>();
 
@@ -79,39 +70,19 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     toast({ title: "Rent Updated" });
   };
 
-  const handleAddSheet = () => {
-    if (!user || !db || !property) return;
-    const sheetId = doc(collection(db, 'dummy')).id;
-    const sheetRef = doc(db, 'users', user.uid, 'properties', propertyId, 'emergencyContactSheets', sheetId);
-
-    setDocumentNonBlocking(sheetRef, {
-      id: sheetId,
-      title: sheetTitle,
-      documentUrl: sheetUrl,
-      propertyId: propertyId,
-      landlordId: user.uid,
-      memberIds: Object.keys(property.members || { [user.uid]: 'owner' }),
-      generationDate: new Date().toISOString(),
-      createdAt: serverTimestamp(),
-    }, { merge: true });
-
-    setSheetTitle(''); setSheetUrl('');
-    toast({ title: "Emergency Sheet Added" });
-  };
-
   const handleUploadDocument = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user || !db || !storage || !property) return;
 
     setIsUploadingDoc(true);
-    const docId = doc(collection(db, 'dummy')).id;
+    const docId = doc(collection(db, 'documents')).id;
 
     try {
       const storageRef = ref(storage, `documents/${user.uid}/${propertyId}/${file.name}`);
       const uploadResult = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(uploadResult.ref);
 
-      const docRef = doc(db, 'users', user.uid, 'properties', propertyId, 'documents', docId);
+      const docRef = doc(db, 'documents', docId);
       
       setDocumentNonBlocking(docRef, {
         id: docId,
@@ -123,9 +94,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         userId: user.uid, 
         landlordId: user.uid,
         expiryDate: expiryDate ? expiryDate.toISOString() : null,
-        memberIds: Object.keys(property.members || { [user.uid]: 'owner' }),
+        memberIds: property.memberIds || [user.uid],
         uploadDate: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
+        createdAt: serverTimestamp(),
       }, { merge: true });
 
       toast({ title: "Document Uploaded", description: `${file.name} is now in the vault.` });
@@ -292,51 +263,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     </div>
                   ))
                 )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="contacts" className="mt-6 space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold font-headline text-primary">Emergency Support Sheets</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="border-none shadow-sm bg-muted/30">
-                  <CardHeader className="pb-2 text-left">
-                    <CardTitle className="text-sm font-bold font-headline">Add Sheet Link</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="space-y-1 text-left">
-                      <Label className="text-xs font-bold font-headline uppercase tracking-wider">Sheet Title</Label>
-                      <Input value={sheetTitle} onChange={(e) => setSheetTitle(e.target.value)} placeholder="Emergency Contacts Q4" className="h-8 text-xs font-body" />
-                    </div>
-                    <div className="space-y-1 text-left">
-                      <Label className="text-xs font-bold font-headline uppercase tracking-wider">Document URL</Label>
-                      <Input value={sheetUrl} onChange={(e) => setSheetUrl(e.target.value)} placeholder="https://..." className="h-8 text-xs font-body" />
-                    </div>
-                    <Button onClick={handleAddSheet} className="w-full h-8 text-xs font-bold rounded-lg font-headline" disabled={!sheetTitle || !sheetUrl}>Add Sheet</Button>
-                  </CardContent>
-                </Card>
-                
-                <div className="space-y-3">
-                  {sheets?.map(sheet => (
-                    <div key={sheet.id} className="flex items-center justify-between p-4 bg-white rounded-xl border border-primary/5 shadow-sm">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/5 rounded-lg">
-                          <FileText className="w-4 h-4 text-primary" />
-                        </div>
-                        <div className="text-left">
-                          <p className="text-sm font-bold font-body">{sheet.title}</p>
-                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight font-headline">Added: {format(new Date(sheet.generationDate), 'PP')}</p>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="icon" asChild className="rounded-full hover:bg-primary/5">
-                        <a href={sheet.documentUrl} target="_blank" rel="noopener noreferrer">
-                          <Download className="w-4 h-4 text-primary" />
-                        </a>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
               </div>
             </TabsContent>
           </Tabs>

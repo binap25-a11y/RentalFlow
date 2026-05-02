@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
-import { doc, serverTimestamp, query, where, collectionGroup } from "firebase/firestore";
+import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, getTenantCollectionQuery } from "@/firebase";
+import { doc, serverTimestamp, collection } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,10 +25,11 @@ export default function TenantMaintenancePage() {
 
   const tenantProfileQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(
-      collectionGroup(db, "tenantProfiles"),
-      where("userId", "==", user.uid)
-    );
+    return getTenantCollectionQuery({
+      db,
+      collectionName: "tenantProfiles",
+      userId: user.uid
+    });
   }, [db, user]);
 
   const { data: tenantProfiles, isLoading: isProfileLoading } = useCollection(tenantProfileQuery);
@@ -35,10 +37,11 @@ export default function TenantMaintenancePage() {
 
   const requestsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(
-      collectionGroup(db, "maintenanceRequests"),
-      where("tenantId", "==", user.uid)
-    );
+    return getTenantCollectionQuery({
+      db,
+      collectionName: "maintenanceRequests",
+      userId: user.uid
+    });
   }, [db, user]);
 
   const { data: requests, isLoading: isRequestsLoading } = useCollection(requestsQuery);
@@ -55,22 +58,20 @@ export default function TenantMaintenancePage() {
     }
 
     setIsSubmitting(true);
-    // Unique ID for the new request
-    const requestId = crypto.randomUUID();
-    // Path: /users/{landlordId}/properties/{propertyId}/maintenanceRequests/{requestId}
-    const requestRef = doc(db, 'users', activeProfile.landlordId, 'properties', activeProfile.propertyId, 'maintenanceRequests', requestId);
+    const requestId = doc(collection(db, 'maintenanceRequests')).id;
+    const requestRef = doc(db, 'maintenanceRequests', requestId);
 
     setDocumentNonBlocking(requestRef, {
       id: requestId,
       propertyId: activeProfile.propertyId,
       landlordId: activeProfile.landlordId,
       tenantId: user.uid,
+      memberIds: activeProfile.memberIds || [user.uid, activeProfile.landlordId],
       title,
       description,
       status: 'pending',
       priority: 'routine',
       category: 'general',
-      submissionDate: new Date().toISOString(),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     }, { merge: true });
@@ -100,7 +101,7 @@ export default function TenantMaintenancePage() {
             <AlertCircle className="w-8 h-8" />
           </div>
           <h3 className="text-lg font-bold">Awaiting Property Link</h3>
-          <p className="text-muted-foreground max-w-sm mx-auto">
+          <p className="text-muted-foreground max-sm mx-auto">
             You are not currently linked to a property. Please contact your landlord to enable maintenance reporting.
           </p>
         </Card>

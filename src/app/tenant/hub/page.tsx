@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, buildSecureCollectionGroupQuery } from "@/firebase";
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,21 +9,19 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Phone, FileText, Download, AlertCircle, Wrench, ShieldAlert, Loader2, Home } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { format, isValid, parseISO } from "date-fns";
+import { format, isValid } from "date-fns";
 import { useMemo } from "react";
 
 export default function TenantHub() {
   const { user } = useUser();
   const db = useFirestore();
 
-  // Securely query for the tenant's profile across all properties
   const tenantProfileQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return buildSecureCollectionGroupQuery({
+    return getTenantCollectionQuery({
       db,
       collectionName: "tenantProfiles",
-      userId: user.uid,
-      role: "tenant"
+      userId: user.uid
     });
   }, [db, user]);
 
@@ -30,20 +29,18 @@ export default function TenantHub() {
   const activeProfile = tenantProfiles?.[0];
 
   const propertyRef = useMemoFirebase(() => {
-    if (!db || !activeProfile || !activeProfile.propertyId || !activeProfile.landlordId) return null;
-    return doc(db, "users", activeProfile.landlordId, "properties", activeProfile.propertyId);
+    if (!db || !activeProfile) return null;
+    return doc(db, "properties", activeProfile.propertyId);
   }, [db, activeProfile]);
 
   const { data: property, isLoading: isPropertyLoading } = useDoc(propertyRef);
 
-  // Securely query for maintenance requests submitted by this tenant
   const requestsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return buildSecureCollectionGroupQuery({
+    return getTenantCollectionQuery({
       db,
       collectionName: "maintenanceRequests",
-      userId: user.uid,
-      role: "tenant"
+      userId: user.uid
     });
   }, [db, user]);
 
@@ -54,14 +51,12 @@ export default function TenantHub() {
     return requests.filter(r => r.status !== 'completed');
   }, [requests]);
 
-  // Securely query for shared documents for this tenant
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return buildSecureCollectionGroupQuery({
+    return getTenantCollectionQuery({
       db,
       collectionName: "documents",
-      userId: user.uid,
-      role: "tenant"
+      userId: user.uid
     });
   }, [db, user]);
 

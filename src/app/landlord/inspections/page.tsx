@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
-import { collection, doc, serverTimestamp, query, where, collectionGroup } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, getLandlordCollectionQuery } from '@/firebase';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,17 +26,14 @@ export default function InspectionsPage() {
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return collection(db, 'users', user.uid, 'properties');
+    return getLandlordCollectionQuery(db, "properties", user.uid);
   }, [db, user]);
 
   const { data: properties, isLoading: isPropLoading } = useCollection(propertiesQuery);
 
-  // For a landlord, we want to see ALL inspections across their properties.
-  // Using collectionGroup or querying nested paths.
   const inspectionsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // In backend.json, inspections are nested. Landlords can query across their own subcollections.
-    return query(collectionGroup(db, 'inspections'), where('landlordId', '==', user.uid));
+    return getLandlordCollectionQuery(db, "inspections", user.uid);
   }, [db, user]);
 
   const { data: inspections, isLoading: isInspLoading } = useCollection(inspectionsQuery);
@@ -43,7 +41,6 @@ export default function InspectionsPage() {
   const [date, setDate] = useState<Date>();
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
   
-  // Conduct Inspection State
   const [activeInspection, setActiveInspection] = useState<any>(null);
   const [findings, setFindings] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -51,13 +48,15 @@ export default function InspectionsPage() {
   const handleSchedule = () => {
     if (!user || !db || !selectedPropertyId || !date) return;
 
-    const inspectionId = doc(collection(db, 'dummy')).id;
-    const inspectionRef = doc(db, 'users', user.uid, 'properties', selectedPropertyId, 'inspections', inspectionId);
+    const property = properties?.find(p => p.id === selectedPropertyId);
+    const inspectionId = doc(collection(db, 'inspections')).id;
+    const inspectionRef = doc(db, 'inspections', inspectionId);
 
     setDocumentNonBlocking(inspectionRef, {
       id: inspectionId,
       propertyId: selectedPropertyId,
       landlordId: user.uid,
+      memberIds: property?.memberIds || [user.uid],
       scheduledDate: date.toISOString(),
       status: 'scheduled',
       createdAt: serverTimestamp(),
@@ -81,7 +80,7 @@ export default function InspectionsPage() {
         findings: findings
       });
 
-      const inspectionRef = doc(db, 'users', user.uid, 'properties', activeInspection.propertyId, 'inspections', activeInspection.id);
+      const inspectionRef = doc(db, 'inspections', activeInspection.id);
       updateDocumentNonBlocking(inspectionRef, {
         status: 'completed',
         findings: findings,

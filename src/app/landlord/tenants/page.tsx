@@ -20,14 +20,14 @@ export default function TenantsPage() {
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return getLandlordCollectionQuery(db, user.uid, "properties");
+    return getLandlordCollectionQuery(db, "properties", user.uid);
   }, [db, user]);
 
   const { data: properties } = useCollection(propertiesQuery);
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return getLandlordCollectionQuery(db, user.uid, "tenantProfiles");
+    return getLandlordCollectionQuery(db, "tenantProfiles", user.uid);
   }, [db, user]);
 
   const { data: tenants, isLoading } = useCollection(tenantsQuery);
@@ -45,9 +45,9 @@ export default function TenantsPage() {
     e.preventDefault();
     if (!user || !db || !selectedPropertyId) return;
 
-    const tenantId = doc(collection(db, 'dummy')).id;
-    const tenantRef = doc(db, 'users', user.uid, 'tenantProfiles', tenantId);
-    const propertyRef = doc(db, 'users', user.uid, 'properties', selectedPropertyId);
+    const tenantId = doc(collection(db, 'tenantProfiles')).id;
+    const tenantRef = doc(db, 'tenantProfiles', tenantId);
+    const propertyRef = doc(db, 'properties', selectedPropertyId);
 
     const propertySnap = await getDoc(propertyRef);
     const propertyData = propertySnap.data();
@@ -84,7 +84,7 @@ export default function TenantsPage() {
 
   const handleDeleteTenant = (tenant: any) => {
     if (!user || !db) return;
-    const tenantRef = doc(db, 'users', user.uid, 'tenantProfiles', tenant.id);
+    const tenantRef = doc(db, 'tenantProfiles', tenant.id);
     deleteDocumentNonBlocking(tenantRef);
     toast({ title: "Resident Removed" });
   };
