@@ -12,12 +12,63 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { format, isValid, parseISO } from "date-fns";
-import { Calendar as CalendarIcon, FileCheck, MapPin, Plus, Clock, Loader2, FileText, Download, CheckCircle2, ClipboardList } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { format, isValid } from "date-fns";
+import { 
+  Calendar as CalendarIcon, MapPin, Loader2, Download, 
+  CheckCircle2, ClipboardList, ShieldAlert, Home, Wrench, 
+  Check, X, AlertTriangle, Info, FileText
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { generateInspectionReport } from "@/ai/flows/generate-inspection-report";
 import { jsPDF } from "jspdf";
+
+const INSPECTION_SECTIONS = [
+  {
+    id: "exterior",
+    title: "Exterior",
+    icon: Home,
+    items: ["Roof condition", "Walls, brickwork", "Windows and external doors", "Garden maintained", "Pathways safe and clear", "Bins accessible"]
+  },
+  {
+    id: "safety",
+    title: "Safety & Compliance",
+    icon: ShieldAlert,
+    items: ["Smoke alarms tested", "CO alarm tested", "Electrical sockets safe", "Gas safety certificate valid", "EICR valid", "PAT Certificate valid", "No tampering with safety equipment"]
+  },
+  {
+    id: "interior",
+    title: "Interior General",
+    icon: Info,
+    items: ["Walls, ceilings, floors", "No signs of damp or mould", "Windows open and close", "Internal doors and locks", "Adequate ventilation", "General cleanliness acceptable"]
+  },
+  {
+    id: "kitchen",
+    title: "Kitchen",
+    icon: CheckCircle2,
+    items: ["Worktops, cupboards, flooring", "Sink and taps", "Oven and hob", "Fridge freezer", "Washing machine (if supplied)", "Adequate ventilation"]
+  },
+  {
+    id: "bathrooms",
+    title: "Bathrooms",
+    icon: Wrench,
+    items: ["Toilet flushing", "Shower/bath working", "No leaks from taps/pipes", "Extractor fan working", "Sealant and grout intact", "No mould or damp"]
+  },
+  {
+    id: "heating",
+    title: "Heating",
+    icon: AlertTriangle,
+    items: ["Boiler functioning", "Radiators heating", "Thermostat working", "Hot water supply"]
+  },
+  {
+    id: "bedrooms",
+    title: "Bedrooms",
+    icon: Home,
+    items: ["Windows and locks", "Heating operational", "No damp or mould", "Flooring and carpet condition and walls", "Furniture condition (if provided)"]
+  }
+];
 
 export default function InspectionsPage() {
   const { user } = useUser();
@@ -47,8 +98,22 @@ export default function InspectionsPage() {
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
   
   const [activeInspection, setActiveInspection] = useState<any>(null);
-  const [findings, setFindings] = useState('');
+  const [structuredFindings, setStructuredFindings] = useState<Record<string, { status: 'pass' | 'fail', notes: string }>>({});
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleStatusChange = (itemId: string, status: 'pass' | 'fail') => {
+    setStructuredFindings(prev => ({
+      ...prev,
+      [itemId]: { ...prev[itemId], status }
+    }));
+  };
+
+  const handleNotesChange = (itemId: string, notes: string) => {
+    setStructuredFindings(prev => ({
+      ...prev,
+      [itemId]: { ...prev[itemId], notes }
+    }));
+  };
 
   const handleSchedule = () => {
     if (!user || !db || !selectedPropertyId || !date) return;
@@ -74,21 +139,26 @@ export default function InspectionsPage() {
   };
 
   const handleConduct = async () => {
-    if (!db || !activeInspection || !findings || !user) return;
+    if (!db || !activeInspection || !user) return;
 
     setIsGenerating(true);
     const property = properties?.find(p => p.id === activeInspection.propertyId);
 
+    // Flatten findings for AI prompt
+    const flatFindings = Object.entries(structuredFindings).map(([item, data]) => {
+      return `${item}: ${data.status.toUpperCase()} ${data.notes ? `(Notes: ${data.notes})` : ''}`;
+    }).join('\n');
+
     try {
       const aiReport = await generateInspectionReport({
         propertyAddress: property?.addressLine1 || 'Property',
-        findings: findings
+        findings: flatFindings
       });
 
       const inspectionRef = doc(db, 'inspections', activeInspection.id);
       updateDocumentNonBlocking(inspectionRef, {
         status: 'completed',
-        findings: findings,
+        structuredFindings: structuredFindings,
         summary: aiReport.summary,
         priorityItems: aiReport.priorityItems,
         healthScore: aiReport.healthScore,
@@ -98,7 +168,7 @@ export default function InspectionsPage() {
 
       toast({ title: "Inspection Completed", description: "Professional report generated by AI." });
       setActiveInspection(null);
-      setFindings('');
+      setStructuredFindings({});
     } catch (error) {
       toast({ variant: "destructive", title: "Reporting Failed", description: "AI could not generate summary at this time." });
     } finally {
@@ -109,31 +179,101 @@ export default function InspectionsPage() {
   const downloadPDF = (inspection: any) => {
     const property = properties?.find(p => p.id === inspection.propertyId);
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const today = format(new Date(), 'PPp');
     
-    doc.setFontSize(22);
-    doc.text("Property Inspection Report", 20, 20);
+    // Header
+    doc.setFillColor(31, 41, 55); // Dark Slate
+    doc.rect(0, 0, pageWidth, 40, 'F');
     
-    doc.setFontSize(12);
-    doc.text(`Property: ${property?.addressLine1 || 'Unknown'}`, 20, 35);
-    doc.text(`Date: ${inspection.conductedDate ? format(new Date(inspection.conductedDate), 'PPP') : 'N/A'}`, 20, 42);
-    doc.text(`Condition Score: ${inspection.healthScore}/100`, 20, 49);
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.text("OFFICIAL AUDIT RECORD", 20, 25);
     
-    doc.setFontSize(14);
-    doc.text("AI Summary", 20, 65);
     doc.setFontSize(10);
-    const splitSummary = doc.splitTextToSize(inspection.summary || "No summary provided", 170);
-    doc.text(splitSummary, 20, 72);
+    doc.text(`Portfolio Registry: RentSafeUK`, 20, 32);
     
-    let y = 72 + (splitSummary.length * 5) + 10;
+    // Property Details
+    doc.setTextColor(0, 0, 0);
     doc.setFontSize(14);
-    doc.text("Priority Maintenance", 20, y);
+    doc.setFont("helvetica", "bold");
+    doc.text("Property Subject", 20, 55);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.text(`${property?.addressLine1 || 'Property Asset'}`, 20, 62);
+    doc.text(`${property?.city || 'Unknown'}, ${property?.zipCode || 'No Postcode'}`, 20, 68);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Audit Information", pageWidth - 80, 55);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Conducted: ${inspection.conductedDate ? format(new Date(inspection.conductedDate), 'PPp') : 'N/A'}`, pageWidth - 80, 62);
+    doc.text(`Safety Score: ${inspection.healthScore}/100`, pageWidth - 80, 68);
+
+    doc.setDrawColor(229, 231, 235);
+    doc.line(20, 75, pageWidth - 20, 75);
+
+    // AI Summary
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Executive Summary", 20, 90);
     doc.setFontSize(10);
-    y += 7;
-    (inspection.priorityItems || []).forEach((item: string, i: number) => {
-      doc.text(`- ${item}`, 20, y + (i * 6));
+    doc.setFont("helvetica", "italic");
+    const splitSummary = doc.splitTextToSize(inspection.summary || "No summary provided", pageWidth - 40);
+    doc.text(splitSummary, 20, 98);
+
+    let y = 98 + (splitSummary.length * 5) + 10;
+
+    // Findings Table
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("Condition Audit Breakdown", 20, y);
+    y += 8;
+
+    const findings = inspection.structuredFindings || {};
+    
+    doc.setFontSize(10);
+    doc.setFillColor(243, 244, 246);
+    doc.rect(20, y, pageWidth - 40, 8, 'F');
+    doc.text("Checklist Item", 25, y + 6);
+    doc.text("Status", pageWidth - 60, y + 6);
+    y += 12;
+
+    Object.entries(findings).forEach(([item, data]: [string, any]) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.setFont("helvetica", "normal");
+      doc.text(item, 25, y);
+      
+      const isPass = data.status === 'pass';
+      doc.setTextColor(isPass ? 16, 185, 129) : 239, 68, 68); // Green or Red
+      doc.setFont("helvetica", "bold");
+      doc.text(isPass ? "PASS" : "FAIL", pageWidth - 60, y);
+      
+      doc.setTextColor(107, 114, 128);
+      doc.setFontSize(8);
+      if (data.notes) {
+        const splitNotes = doc.splitTextToSize(`Note: ${data.notes}`, pageWidth - 80);
+        doc.text(splitNotes, 25, y + 5);
+        y += (splitNotes.length * 4);
+      }
+      
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(10);
+      y += 8;
     });
+
+    // Footer
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(156, 163, 175);
+      doc.text(`Generated: ${today} | Official Audit Record - Page ${i} of ${totalPages}`, pageWidth / 2, 290, { align: "center" });
+    }
     
-    doc.save(`Inspection_${property?.addressLine1 || 'Report'}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    doc.save(`Audit_${property?.addressLine1 || 'Report'}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
   if (!isClient || isPropLoading || isInspLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
@@ -142,15 +282,15 @@ export default function InspectionsPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div>
-          <h1 className="text-3xl font-headline font-bold text-primary mb-2">Inspections & Compliance</h1>
-          <p className="text-muted-foreground font-medium">Maintain property standards with structured reporting.</p>
+          <h1 className="text-3xl font-headline font-bold text-primary mb-2">Inspections & Audits</h1>
+          <p className="text-muted-foreground font-medium">Official portfolio compliance tracking and safety records.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-1 border-none shadow-sm h-fit">
           <CardHeader>
-            <CardTitle className="text-xl font-headline">Plan Inspection</CardTitle>
+            <CardTitle className="text-xl font-headline">Schedule Audit</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2 text-left">
@@ -165,7 +305,7 @@ export default function InspectionsPage() {
               </select>
             </div>
             <div className="space-y-2 text-left">
-              <Label className="text-xs uppercase font-bold text-muted-foreground">Preferred Date</Label>
+              <Label className="text-xs uppercase font-bold text-muted-foreground">Audit Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -202,13 +342,13 @@ export default function InspectionsPage() {
         <div className="lg:col-span-2 space-y-6">
           <h3 className="text-xl font-bold font-headline flex items-center">
             <ClipboardList className="w-5 h-5 mr-2 text-primary" />
-            Inspection Register
+            Portfolio Compliance Ledger
           </h3>
           
           <div className="grid gap-4">
             {!inspections || inspections.length === 0 ? (
               <div className="py-20 text-center bg-muted/20 rounded-2xl border-2 border-dashed border-primary/10">
-                <p className="text-muted-foreground font-medium">No inspections currently scheduled.</p>
+                <p className="text-muted-foreground font-medium">No audit records currently found.</p>
               </div>
             ) : (
               inspections
@@ -233,7 +373,7 @@ export default function InspectionsPage() {
                             </Badge>
                             {inspection.status === 'completed' && (
                               <Button variant="outline" size="sm" onClick={() => downloadPDF(inspection)} className="rounded-lg h-8 text-primary border-primary/20">
-                                <Download className="w-3 h-3 mr-2" /> Download PDF
+                                <Download className="w-3 h-3 mr-2" /> Export PDF Audit
                               </Button>
                             )}
                           </div>
@@ -241,8 +381,12 @@ export default function InspectionsPage() {
                             <h4 className="text-lg font-bold font-headline">
                               {properties?.find(p => p.id === inspection.propertyId)?.addressLine1 || 'Property Asset'}
                             </h4>
-                            <p className="text-sm text-muted-foreground flex items-center mt-1">
-                              <MapPin className="w-4 h-4 mr-1 text-primary/40" /> {properties?.find(p => p.id === inspection.propertyId)?.zipCode || 'No postcode'}
+                            <p className="text-xs text-muted-foreground font-bold flex items-center mt-1">
+                              {inspection.conductedDate ? (
+                                <>Recorded: {format(new Date(inspection.conductedDate), 'PPp')}</>
+                              ) : (
+                                <>Scheduled: {format(new Date(inspection.scheduledDate), 'PPP')}</>
+                              )}
                             </p>
                           </div>
                           
@@ -250,28 +394,73 @@ export default function InspectionsPage() {
                             <Dialog open={activeInspection?.id === inspection.id} onOpenChange={(open) => !open && setActiveInspection(null)}>
                               <DialogTrigger asChild>
                                 <Button className="w-full md:w-auto rounded-xl bg-accent hover:bg-accent/90 text-white font-bold h-10 px-6" onClick={() => setActiveInspection(inspection)}>
-                                  Conduct Inspection
+                                  Start Audit
                                 </Button>
                               </DialogTrigger>
-                              <DialogContent className="sm:max-w-[500px] rounded-2xl border-none shadow-2xl">
-                                <DialogHeader className="text-left">
-                                  <DialogTitle className="text-xl font-headline font-bold">Inspection Findings</DialogTitle>
-                                  <DialogDescription>Record the property condition and required actions.</DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4 py-4 text-left">
-                                  <div className="space-y-2">
-                                    <Label className="font-bold text-xs uppercase text-primary/60">Observations & Notes</Label>
-                                    <Textarea 
-                                      placeholder="e.g. Living room carpet has minor stains. Kitchen appliances in good order. Small leak found under master sink." 
-                                      className="min-h-[150px] rounded-xl focus:ring-2 focus:ring-primary outline-none"
-                                      value={findings}
-                                      onChange={(e) => setFindings(e.target.value)}
-                                    />
-                                  </div>
+                              <DialogContent className="sm:max-w-[700px] p-0 rounded-2xl border-none shadow-2xl flex flex-col h-[85vh] overflow-hidden">
+                                <div className="p-6 bg-primary/5 border-b text-left">
+                                  <DialogTitle className="text-2xl font-headline font-bold">Comprehensive Audit</DialogTitle>
+                                  <DialogDescription className="font-medium">Conducting full safety & condition audit for property registry.</DialogDescription>
                                 </div>
-                                <DialogFooter>
-                                  <Button className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20" onClick={handleConduct} disabled={!findings || isGenerating}>
-                                    {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</> : <><CheckCircle2 className="w-4 h-4 mr-2" /> Complete & Generate Report</>}
+                                
+                                <ScrollArea className="flex-1">
+                                  <div className="p-6 space-y-8">
+                                    <Tabs defaultValue="exterior">
+                                      <TabsList className="w-full grid grid-cols-4 lg:grid-cols-7 h-auto bg-muted/50 p-1 rounded-xl">
+                                        {INSPECTION_SECTIONS.map(s => (
+                                          <TabsTrigger key={s.id} value={s.id} className="rounded-lg py-2">
+                                            <s.icon className="w-4 h-4" />
+                                          </TabsTrigger>
+                                        ))}
+                                      </TabsList>
+                                      
+                                      {INSPECTION_SECTIONS.map(section => (
+                                        <TabsContent key={section.id} value={section.id} className="mt-6 space-y-6">
+                                          <div className="flex items-center gap-2 mb-4">
+                                            <section.icon className="w-5 h-5 text-primary" />
+                                            <h3 className="text-lg font-bold font-headline">{section.title}</h3>
+                                          </div>
+                                          
+                                          {section.items.map(item => (
+                                            <div key={item} className="p-4 bg-muted/20 rounded-2xl space-y-4 border border-primary/5">
+                                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                <Label className="font-bold text-sm text-left">{item}</Label>
+                                                <div className="flex gap-2 shrink-0">
+                                                  <Button 
+                                                    size="sm" 
+                                                    variant={structuredFindings[item]?.status === 'pass' ? 'default' : 'outline'}
+                                                    className="rounded-lg font-bold h-8 px-4"
+                                                    onClick={() => handleStatusChange(item, 'pass')}
+                                                  >
+                                                    <Check className="w-3 h-3 mr-2" /> PASS
+                                                  </Button>
+                                                  <Button 
+                                                    size="sm" 
+                                                    variant={structuredFindings[item]?.status === 'fail' ? 'destructive' : 'outline'}
+                                                    className="rounded-lg font-bold h-8 px-4"
+                                                    onClick={() => handleStatusChange(item, 'fail')}
+                                                  >
+                                                    <X className="w-3 h-3 mr-2" /> FAIL
+                                                  </Button>
+                                                </div>
+                                              </div>
+                                              <Textarea 
+                                                placeholder="Auditor notes (e.g. Minor wear, needs repair...)" 
+                                                className="rounded-xl min-h-[60px] bg-white text-sm"
+                                                value={structuredFindings[item]?.notes || ''}
+                                                onChange={(e) => handleNotesChange(item, e.target.value)}
+                                              />
+                                            </div>
+                                          ))}
+                                        </TabsContent>
+                                      ))}
+                                    </Tabs>
+                                  </div>
+                                </ScrollArea>
+                                
+                                <DialogFooter className="p-6 bg-muted/10 border-t">
+                                  <Button className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20" onClick={handleConduct} disabled={isGenerating}>
+                                    {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Finalizing Audit...</> : <><CheckCircle2 className="w-4 h-4 mr-2" /> Sign & Generate Audit Record</>}
                                   </Button>
                                 </DialogFooter>
                               </DialogContent>
@@ -280,7 +469,7 @@ export default function InspectionsPage() {
 
                           {inspection.summary && (
                             <div className="p-4 bg-muted/40 rounded-xl border border-primary/5 mt-4 text-left">
-                              <p className="text-[10px] font-bold text-primary uppercase mb-2">AI Summary Findings</p>
+                              <p className="text-[10px] font-bold text-primary uppercase mb-2">Audit Executive Summary</p>
                               <p className="text-sm text-muted-foreground italic leading-relaxed">{inspection.summary}</p>
                             </div>
                           )}
