@@ -78,15 +78,19 @@ export default function LoginPage() {
     try {
       const userDocRef = doc(db, 'users', user.uid);
       
-      setDocumentNonBlocking(userDocRef, {
+      const profileData = {
         id: user.uid,
         email: user.email,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         phoneNumber: phoneNumber.trim(),
         role: role,
-        createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+      };
+
+      setDocumentNonBlocking(userDocRef, {
+        ...profileData,
+        createdAt: serverTimestamp(),
       }, { merge: true });
       
       try {

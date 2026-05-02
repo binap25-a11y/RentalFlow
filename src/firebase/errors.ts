@@ -75,25 +75,21 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
     // Auth not initialized yet
   }
 
-  // Normalize path to prevent double-prefixing or incorrect root relative paths
-  let rawPath = context.path || "";
   const dbPrefix = '/databases/(default)/documents';
+  let rawPath = context.path || "";
   
+  // Cleanly normalize the path without double-prefixing
   let normalizedPath = rawPath;
-
-  // If path is already normalized with the prefix, do nothing
-  if (normalizedPath.startsWith(dbPrefix)) {
-    // OK
-  } else {
-    // Strip leading slash if any and prepend prefix
-    const cleanPath = normalizedPath.replace(/^\//, '');
-    normalizedPath = `${dbPrefix}/${cleanPath}`;
+  if (!normalizedPath.startsWith('/')) {
+    normalizedPath = '/' + normalizedPath;
+  }
+  
+  if (!normalizedPath.startsWith(dbPrefix)) {
+    normalizedPath = `${dbPrefix}${normalizedPath}`;
   }
 
-  // Ensure trailing slash isn't accidental
-  if (normalizedPath.endsWith('/') && normalizedPath !== `${dbPrefix}/`) {
-    normalizedPath = normalizedPath.slice(0, -1);
-  }
+  // Remove potential double slashes
+  normalizedPath = normalizedPath.replace(/\/+/g, '/');
 
   return {
     auth: authObject,
