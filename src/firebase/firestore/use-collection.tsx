@@ -76,7 +76,7 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       async (serverError: FirestoreError) => {
-        // Improved path extraction for better error reporting
+        // Path extraction for error reporting
         let path: string = "(unknown path)";
         const target = memoizedTargetRefOrQuery as unknown as InternalQuery;
         

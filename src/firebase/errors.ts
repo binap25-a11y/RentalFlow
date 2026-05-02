@@ -72,19 +72,22 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
       authObject = buildAuthObject(currentUser);
     }
   } catch {
-    // Auth not initialized yet
+    // Auth not initialized
   }
 
   const dbPrefix = '/databases/(default)/documents';
   let rawPath = context.path || "";
   
+  // Clean the input path
   let normalizedPath = rawPath;
-  // If the path already has the prefix, don't add it again.
-  if (rawPath.startsWith(dbPrefix)) {
-    normalizedPath = rawPath;
+  
+  // If it's a collection group marker, preserve it but ensure prefixing is correct
+  if (normalizedPath.includes('[Collection Group]')) {
+    const cleanPart = normalizedPath.replace(dbPrefix, '').replace(/^\/+/, '');
+    normalizedPath = `${dbPrefix}/${cleanPart}`;
   } else {
-    // For normal paths or [Collection Group] markers, ensure they are prefixed correctly.
-    const cleanPath = rawPath.replace(/^\/+|\/+$/g, '');
+    // Ensure absolute path from root documents
+    const cleanPath = normalizedPath.replace(dbPrefix, '').replace(/^\/+|\/+$/g, '');
     normalizedPath = cleanPath ? `${dbPrefix}/${cleanPath}` : dbPrefix;
   }
 

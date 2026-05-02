@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useMemo } from 'react';
@@ -113,6 +112,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       const url = await getDownloadURL(uploadResult.ref);
 
       const docRef = doc(db, 'users', user.uid, 'properties', propertyId, 'documents', docId);
+      
+      // Denormalize landlordId and members for Collection Group security rules
       setDocumentNonBlocking(docRef, {
         id: docId,
         fileName: file.name,

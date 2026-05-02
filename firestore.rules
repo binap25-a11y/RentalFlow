@@ -16,8 +16,15 @@ service cloud.firestore {
     // They match the collection name regardless of its position in the path.
 
     match /{path=**}/properties/{id} {
-      allow list: if isSignedIn();
-      allow get: if isSignedIn();
+      allow list: if isSignedIn() && (
+        request.query.where('landlordId', '==', request.auth.uid) ||
+        (request.query.where('members', '!=', null) && request.query.where('members.' + request.auth.uid, '!=', null))
+      );
+      allow get: if isSignedIn() && (
+        resource == null || 
+        resource.data.landlordId == request.auth.uid || 
+        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
+      );
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && (
         resource == null || resource.data.landlordId == request.auth.uid
@@ -25,7 +32,10 @@ service cloud.firestore {
     }
 
     match /{path=**}/documents/{id} {
-      allow list: if isSignedIn();
+      allow list: if isSignedIn() && (
+        request.query.where('landlordId', '==', request.auth.uid) || 
+        request.query.where('userId', '==', request.auth.uid)
+      );
       allow get: if isSignedIn() && (
         resource == null || 
         resource.data.landlordId == request.auth.uid || 
@@ -37,7 +47,10 @@ service cloud.firestore {
     }
 
     match /{path=**}/maintenanceRequests/{id} {
-      allow list: if isSignedIn();
+      allow list: if isSignedIn() && (
+        request.query.where('landlordId', '==', request.auth.uid) || 
+        request.query.where('tenantId', '==', request.auth.uid)
+      );
       allow get: if isSignedIn() && (
         resource == null || 
         resource.data.landlordId == request.auth.uid || 
@@ -52,14 +65,18 @@ service cloud.firestore {
     }
 
     match /{path=**}/inspections/{id} {
-      allow list, get: if isSignedIn();
+      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
+      allow get: if isSignedIn();
       allow create, update, delete: if isSignedIn() && (
         resource == null || resource.data.landlordId == request.auth.uid
       );
     }
 
     match /{path=**}/tenantProfiles/{id} {
-      allow list: if isSignedIn();
+      allow list: if isSignedIn() && (
+        request.query.where('landlordId', '==', request.auth.uid) || 
+        request.query.where('userId', '==', request.auth.uid)
+      );
       allow get: if isSignedIn() && (
         resource == null || 
         resource.data.landlordId == request.auth.uid || 
@@ -71,18 +88,19 @@ service cloud.firestore {
     }
 
     match /{path=**}/images/{id} {
-      allow list, get: if isSignedIn();
+      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
+      allow get: if isSignedIn();
       allow create, delete: if isSignedIn() && (
         resource == null || resource.data.landlordId == request.auth.uid
       );
     }
 
     match /{path=**}/emergencyContactSheets/{id} {
-      allow list, get, create: if isSignedIn();
+      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
+      allow get, create: if isSignedIn();
     }
 
     // --- PATH-SPECIFIC RULES ---
-    // Rules for direct access to user profiles and their subcollections.
     match /users/{userId} {
       allow read, write: if isOwner(userId);
 
