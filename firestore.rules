@@ -14,62 +14,45 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if isOwner(userId);
 
-      // Hierarchical Property Access
-      match /properties/{propertyId} {
-        function propertyIsOwner() {
-          return isOwner(userId);
-        }
-        
-        function propertyIsMember() {
-          return isSignedIn() && (
-            (resource != null && resource.data.members != null && resource.data.members[request.auth.uid] != null) ||
-            (request.resource != null && request.resource.data.members != null && request.resource.data.members[request.auth.uid] != null)
-          );
-        }
-
-        allow read: if propertyIsOwner() || propertyIsMember();
-        allow write: if propertyIsOwner();
-
-        // Sub-collections under properties
-        match /{allSubcollections=**} {
-          allow read, write: if propertyIsOwner();
-          allow read: if isSignedIn() && (
-            resource != null && (
-              resource.data.userId == request.auth.uid ||
-              resource.data.tenantId == request.auth.uid ||
-              resource.data.landlordId == request.auth.uid ||
-              (resource.data.members != null && resource.data.members[request.auth.uid] != null)
-            )
-          );
-        }
+      // Recursive match to allow the owner full access to their own data tree
+      match /{allSubcollections=**} {
+        allow read, write: if isOwner(userId);
       }
     }
 
-    // Collection Group Rules for Queries
+    // Collection Group Rules for Queries (Cross-cutting access for tenants and shared data)
     match /{path=**}/properties/{id} {
       allow list: if isSignedIn() && (
         (resource.data.landlordId == request.auth.uid) || 
         (resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
+      allow read: if isSignedIn() && (
+        (resource.data.landlordId == request.auth.uid) || 
+        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
+      );
     }
+
     match /{path=**}/maintenanceRequests/{id} {
       allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.tenantId == request.auth.uid
       );
     }
+
     match /{path=**}/inspections/{id} {
       allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         (resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
     }
+
     match /{path=**}/tenantProfiles/{id} {
       allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.userId == request.auth.uid
       );
     }
+
     match /{path=**}/documents/{id} {
       allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
@@ -77,6 +60,7 @@ service cloud.firestore {
         (resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
     }
+
     match /{path=**}/emergencyContactSheets/{id} {
       allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 

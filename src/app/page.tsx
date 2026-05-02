@@ -69,8 +69,8 @@ export default function LoginPage() {
 
   const handleCreateProfile = async () => {
     if (!user || !db) return;
-    if (!firstName || !lastName || !phoneNumber) {
-      toast({ variant: "destructive", title: "Missing Information", description: "Please provide your name and contact number." });
+    if (!firstName.trim() || !lastName.trim() || !phoneNumber.trim()) {
+      toast({ variant: "destructive", title: "Missing Information", description: "Please provide your full name and contact number." });
       return;
     }
 
@@ -81,9 +81,9 @@ export default function LoginPage() {
       setDocumentNonBlocking(userDocRef, {
         id: user.uid,
         email: user.email,
-        firstName,
-        lastName,
-        phoneNumber,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phoneNumber: phoneNumber.trim(),
         role: role,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -91,7 +91,7 @@ export default function LoginPage() {
       
       try {
         await sendEmailVerification(user);
-        toast({ title: "Profile Ready", description: "Verification email sent. Welcome to RentalFlow!" });
+        toast({ title: "Profile established", description: "Verification email sent. Welcome to RentalFlow!" });
       } catch (err) {
         toast({ title: "Profile established", description: `Welcome as a ${role}.` });
       }
