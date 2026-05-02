@@ -6,7 +6,6 @@ import {
   useFirestore, 
   useCollection, 
   useMemoFirebase, 
-  setDocumentNonBlocking, 
   updateDocumentNonBlocking, 
   deleteDocumentNonBlocking,
   getLandlordCollectionQuery 
@@ -130,7 +129,7 @@ export default function InspectionsPage() {
     const inspectionId = doc(collection(db, 'inspections')).id;
     const inspectionRef = doc(db, 'inspections', inspectionId);
 
-    setDocumentNonBlocking(inspectionRef, {
+    updateDocumentNonBlocking(inspectionRef, {
       id: inspectionId,
       propertyId: selectedPropertyId,
       landlordId: user.uid,
@@ -139,7 +138,7 @@ export default function InspectionsPage() {
       status: 'scheduled',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    }, { merge: true });
+    });
 
     toast({ title: "Inspection Scheduled", description: `New inspection set for ${format(date, 'PPP')}` });
     setSelectedPropertyId('');
@@ -291,17 +290,13 @@ export default function InspectionsPage() {
         updatedAt: serverTimestamp(),
       };
 
-      // Save to Firestore (Non-blocking)
       updateDocumentNonBlocking(inspectionRef, completedData);
-
-      // Immediately trigger PDF download
       downloadPDF(completedData);
 
       toast({ title: "Inspection Completed", description: "Audit finalized and report downloaded." });
       setActiveInspection(null);
       setStructuredFindings({});
     } catch (error: any) {
-      console.error("Audit Finalization Error:", error);
       toast({ variant: "destructive", title: "Reporting Failed", description: error.message || "AI could not generate summary at this time." });
     } finally {
       setIsGenerating(false);
