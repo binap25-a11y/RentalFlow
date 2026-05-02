@@ -86,7 +86,7 @@ export function useCollection<T = any>(
           path = target.path;
         } else if (target._query?.path) {
           try {
-            path = target._query.path.canonicalString() || target._query.path.toString();
+            path = target._query.path.canonicalString?.() || target._query.path.toString?.() || "(unknown query path)";
           } catch {
             path = "(unknown query path)";
           }
