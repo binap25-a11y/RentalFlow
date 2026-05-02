@@ -34,9 +34,14 @@ export function buildSecureCollectionGroupQuery(options: {
     // - maintenanceRequests uses tenantId
     // - tenantProfiles uses userId
     // - documents uses userId
-    const filterField = (collectionName === 'maintenanceRequests' || collectionName === 'tenantProfiles') 
-      ? 'tenantId' 
-      : 'userId';
+    let filterField = 'userId';
+    if (collectionName === 'maintenanceRequests') {
+      filterField = 'tenantId';
+    } else if (collectionName === 'tenantProfiles') {
+      filterField = 'userId';
+    } else if (collectionName === 'documents') {
+      filterField = 'userId';
+    }
     
     constraints.push(where(filterField, "==", userId));
   }
