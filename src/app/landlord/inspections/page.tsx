@@ -1,8 +1,16 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, getLandlordCollectionQuery } from '@/firebase';
+import { 
+  useUser, 
+  useFirestore, 
+  useCollection, 
+  useMemoFirebase, 
+  setDocumentNonBlocking, 
+  updateDocumentNonBlocking, 
+  deleteDocumentNonBlocking,
+  getLandlordCollectionQuery 
+} from '@/firebase';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,7 +26,7 @@ import { format } from "date-fns";
 import { 
   Calendar as CalendarIcon, MapPin, Loader2, Download, 
   CheckCircle2, ClipboardList, ShieldAlert, Home, Wrench, 
-  Check, X, AlertTriangle, Info
+  Check, X, AlertTriangle, Info, Trash2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -138,6 +146,13 @@ export default function InspectionsPage() {
     setDate(undefined);
   };
 
+  const handleDeleteInspection = (id: string) => {
+    if (!db) return;
+    const inspectionRef = doc(db, 'inspections', id);
+    deleteDocumentNonBlocking(inspectionRef);
+    toast({ title: "Audit Record Removed", description: "The compliance entry has been decommissioned." });
+  };
+
   const downloadPDF = (inspection: any) => {
     const property = properties?.find(p => p.id === inspection.propertyId);
     const doc = new jsPDF();
@@ -169,7 +184,7 @@ export default function InspectionsPage() {
     doc.text("Audit Information", pageWidth - 80, 55);
     doc.setFont("helvetica", "normal");
     doc.text(`Conducted: ${inspection.conductedDate ? format(new Date(inspection.conductedDate), 'PPp') : 'N/A'}`, pageWidth - 80, 62);
-    doc.text(`Safety Score: ${inspection.healthScore}/100`, pageWidth - 80, 68);
+    doc.text(`Safety Score: ${inspection.healthScore || 0}/100`, pageWidth - 80, 68);
 
     doc.setDrawColor(229, 231, 235);
     doc.line(20, 75, pageWidth - 20, 75);
@@ -279,7 +294,7 @@ export default function InspectionsPage() {
       // Save to Firestore (Non-blocking)
       updateDocumentNonBlocking(inspectionRef, completedData);
 
-      // Immediately trigger PDF download for a seamless experience
+      // Immediately trigger PDF download
       downloadPDF(completedData);
 
       toast({ title: "Inspection Completed", description: "Audit finalized and report downloaded." });
@@ -287,7 +302,7 @@ export default function InspectionsPage() {
       setStructuredFindings({});
     } catch (error: any) {
       console.error("Audit Finalization Error:", error);
-      toast({ variant: "destructive", title: "Reporting Failed", description: error.message || "AI could not generate summary at this time. Check your connection." });
+      toast({ variant: "destructive", title: "Reporting Failed", description: error.message || "AI could not generate summary at this time." });
     } finally {
       setIsGenerating(false);
     }
@@ -388,11 +403,21 @@ export default function InspectionsPage() {
                             <Badge variant={inspection.status === 'completed' ? 'secondary' : 'default'} className="uppercase font-bold text-[10px]">
                               {inspection.status}
                             </Badge>
-                            {inspection.status === 'completed' && (
-                              <Button variant="outline" size="sm" onClick={() => downloadPDF(inspection)} className="rounded-lg h-8 text-primary border-primary/20">
-                                <Download className="w-3 h-3 mr-2" /> Export PDF Audit
+                            <div className="flex gap-2">
+                              {inspection.status === 'completed' && (
+                                <Button variant="outline" size="sm" onClick={() => downloadPDF(inspection)} className="rounded-lg h-8 text-primary border-primary/20">
+                                  <Download className="w-3 h-3 mr-2" /> Export PDF
+                                </Button>
+                              )}
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-lg"
+                                onClick={() => handleDeleteInspection(inspection.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
                               </Button>
-                            )}
+                            </div>
                           </div>
                           <div className="text-left">
                             <h4 className="text-lg font-bold font-headline">
