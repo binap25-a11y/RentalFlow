@@ -90,7 +90,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       documentUrl: sheetUrl,
       propertyId: propertyId,
       landlordId: user.uid,
-      members: property.members || { [user.uid]: 'owner' },
+      memberIds: Object.keys(property.members || { [user.uid]: 'owner' }),
       generationDate: new Date().toISOString(),
       createdAt: serverTimestamp(),
     }, { merge: true });
@@ -113,7 +113,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
       const docRef = doc(db, 'users', user.uid, 'properties', propertyId, 'documents', docId);
       
-      // Denormalize landlordId and members for Collection Group security rules
       setDocumentNonBlocking(docRef, {
         id: docId,
         fileName: file.name,
@@ -124,7 +123,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         userId: user.uid, 
         landlordId: user.uid,
         expiryDate: expiryDate ? expiryDate.toISOString() : null,
-        members: property.members || { [user.uid]: 'owner' },
+        memberIds: Object.keys(property.members || { [user.uid]: 'owner' }),
         uploadDate: new Date().toISOString(),
         createdAt: new Date().toISOString(),
       }, { merge: true });

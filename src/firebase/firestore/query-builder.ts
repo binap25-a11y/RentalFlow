@@ -2,9 +2,12 @@ import {
   collectionGroup,
   query,
   where,
+  or,
   QueryConstraint,
   Firestore
 } from "firebase/firestore";
+
+type UserRole = "landlord" | "tenant";
 
 /**
  * 🔐 Centralized query builder to enforce Firestore rules compliance
@@ -13,7 +16,7 @@ export function buildSecureCollectionGroupQuery(options: {
   db: Firestore;
   collectionName: string;
   userId: string;
-  role: 'landlord' | 'tenant';
+  role: UserRole;
   additionalConstraints?: QueryConstraint[];
 }) {
   const { db, collectionName, userId, role, additionalConstraints = [] } = options;
@@ -25,24 +28,28 @@ export function buildSecureCollectionGroupQuery(options: {
   const constraints: QueryConstraint[] = [];
 
   // 🔑 ROLE-BASED FILTERING (Enforces query-rules alignment)
-  // For Collection Group queries, Firestore requires the filter to exactly match the security rule.
   if (role === "landlord") {
-    // Landlords always filter by their own ID across all nested property sub-collections
     constraints.push(where("landlordId", "==", userId));
   } else if (role === "tenant") {
-    // For residents, different entities use different ID fields based on firestore.rules
-    let filterField = 'userId';
+    // Tenants can access documents where they are the primary user, 
+    // OR where they are included in the memberIds array.
     if (collectionName === 'maintenanceRequests') {
-      filterField = 'tenantId';
+      constraints.push(where("tenantId", "==", userId));
+    } else if (collectionName === 'documents') {
+      constraints.push(
+        or(
+          where("userId", "==", userId),
+          where("memberIds", "array-contains", userId)
+        )
+      );
+    } else {
+      constraints.push(where("memberIds", "array-contains", userId));
     }
-    
-    constraints.push(where(filterField, "==", userId));
   }
 
-  // Step 1: Force constraint check (CRITICAL)
-  // Collection Group queries without constraints will be rejected by security rules.
+  // Final check to prevent broad queries
   if (constraints.length === 0) {
-    throw new Error(`Firestore query for ${collectionName} must include security constraints to pass security rules.`);
+    throw new Error(`Firestore query for ${collectionName} must include security constraints.`);
   }
 
   return query(

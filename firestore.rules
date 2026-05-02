@@ -8,16 +8,18 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // Splitting OR conditions into separate allow blocks is the most reliable way 
-    // to satisfy the Firestore Collection Group query analyzer.
-
+    // Rules for Collection Group queries must align precisely with the query filters.
+    
     // 1. Properties
     match /{path=**}/properties/{id} {
-      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
+      allow list: if isSignedIn() && (
+        request.query.where('landlordId', '==', request.auth.uid) ||
+        request.query.where('memberIds', 'array-contains', request.auth.uid)
+      );
       
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
-        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
+        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
       );
       
       allow create: if isSignedIn();
@@ -26,13 +28,16 @@ service cloud.firestore {
 
     // 2. Documents
     match /{path=**}/documents/{id} {
-      // Split list rules for Landlords and Tenants
-      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
-      allow list: if isSignedIn() && request.query.where('userId', '==', request.auth.uid);
+      allow list: if isSignedIn() && (
+        request.query.where('landlordId', '==', request.auth.uid) ||
+        request.query.where('userId', '==', request.auth.uid) ||
+        request.query.where('memberIds', 'array-contains', request.auth.uid)
+      );
       
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
-        resource.data.userId == request.auth.uid
+        resource.data.userId == request.auth.uid ||
+        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
       );
       
       allow create, update, delete: if isSignedIn() && (
@@ -42,8 +47,10 @@ service cloud.firestore {
 
     // 3. Maintenance Requests
     match /{path=**}/maintenanceRequests/{id} {
-      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
-      allow list: if isSignedIn() && request.query.where('tenantId', '==', request.auth.uid);
+      allow list: if isSignedIn() && (
+        request.query.where('landlordId', '==', request.auth.uid) ||
+        request.query.where('tenantId', '==', request.auth.uid)
+      );
       
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
@@ -59,44 +66,19 @@ service cloud.firestore {
 
     // 4. Inspections
     match /{path=**}/inspections/{id} {
-      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
-      allow get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      
-      allow create, update, delete: if isSignedIn() && (
-        request.resource == null || request.resource.data.landlordId == request.auth.uid
+      allow list: if isSignedIn() && (
+        request.query.where('landlordId', '==', request.auth.uid) ||
+        request.query.where('memberIds', 'array-contains', request.auth.uid)
       );
-    }
-
-    // 5. Tenant Profiles
-    match /{path=**}/tenantProfiles/{id} {
-      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
-      allow list: if isSignedIn() && request.query.where('userId', '==', request.auth.uid);
       
       allow get: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.userId == request.auth.uid
+        resource.data.landlordId == request.auth.uid ||
+        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
       );
       
       allow create, update, delete: if isSignedIn() && (
         request.resource == null || request.resource.data.landlordId == request.auth.uid
       );
-    }
-
-    // 6. Property Images
-    match /{path=**}/images/{id} {
-      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
-      allow get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      
-      allow create, delete: if isSignedIn() && (
-        request.resource == null || request.resource.data.landlordId == request.auth.uid
-      );
-    }
-
-    // 7. Emergency Contact Sheets
-    match /{path=**}/emergencyContactSheets/{id} {
-      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
-      allow get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      allow create: if isSignedIn();
     }
 
     // --- PATH-SPECIFIC RULES ---
