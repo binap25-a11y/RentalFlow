@@ -9,27 +9,24 @@ service cloud.firestore {
 
     // --- COLLECTION GROUP RULES ---
     // These rules handle queries across the entire database for specific collection names.
-    // We use unified 'read' permissions to simplify the proof for the Firestore query analyzer.
+    // IMPORTANT: Collection group rules with 'OR' conditions often fail the query analyzer.
+    // We split them into separate rules to ensure 'list' operations are correctly authorized.
 
     // 1. Properties
     match /{path=**}/properties/{id} {
-      allow read: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
-      );
+      allow read: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow read: if isSignedIn() && resource.data.members != null && resource.data.members[request.auth.uid] != null;
       
       allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid
-      );
+      allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
     // 2. Documents
     match /{path=**}/documents/{id} {
-      allow read: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.userId == request.auth.uid
-      );
+      // Landlord access
+      allow read: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      // Tenant access
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
       
       allow create, update, delete: if isSignedIn() && (
         request.resource == null || request.resource.data.landlordId == request.auth.uid
@@ -38,10 +35,10 @@ service cloud.firestore {
 
     // 3. Maintenance Requests
     match /{path=**}/maintenanceRequests/{id} {
-      allow read: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.tenantId == request.auth.uid
-      );
+      // Landlord access
+      allow read: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      // Tenant access
+      allow read: if isSignedIn() && resource.data.tenantId == request.auth.uid;
       
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && (
@@ -61,10 +58,10 @@ service cloud.firestore {
 
     // 5. Tenant Profiles
     match /{path=**}/tenantProfiles/{id} {
-      allow read: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.userId == request.auth.uid
-      );
+      // Landlord access
+      allow read: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      // Tenant access
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
       
       allow create, update, delete: if isSignedIn() && (
         request.resource == null || request.resource.data.landlordId == request.auth.uid
