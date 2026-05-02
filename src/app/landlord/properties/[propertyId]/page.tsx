@@ -76,7 +76,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   };
 
   const handleAddSheet = () => {
-    if (!user || !db) return;
+    if (!user || !db || !property) return;
     const sheetId = doc(collection(db, 'dummy')).id;
     const sheetRef = doc(db, 'users', user.uid, 'properties', propertyId, 'emergencyContactSheets', sheetId);
 
@@ -86,6 +86,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       documentUrl: sheetUrl,
       propertyId: propertyId,
       landlordId: user.uid,
+      members: property.members || { [user.uid]: 'owner' },
       generationDate: new Date().toISOString(),
       createdAt: serverTimestamp(),
     }, { merge: true });
@@ -96,7 +97,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const handleUploadDocument = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user || !db || !storage) return;
+    if (!file || !user || !db || !storage || !property) return;
 
     setIsUploadingDoc(true);
     const docId = doc(collection(db, 'dummy')).id;
@@ -116,6 +117,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         propertyId: propertyId,
         userId: user.uid, 
         landlordId: user.uid,
+        members: property.members || { [user.uid]: 'owner' },
         createdAt: new Date().toISOString(),
       }, { merge: true });
 

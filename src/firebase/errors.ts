@@ -1,4 +1,3 @@
-
 'use client';
 import { getAuth, type User } from 'firebase/auth';
 
@@ -79,7 +78,7 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   const dbPrefix = '/databases/(default)/documents';
   let rawPath = context.path || "";
   
-  // Strip existing prefix to avoid double-prefixing
+  // Strip existing prefix if present to avoid double-prefixing
   if (rawPath.startsWith(dbPrefix)) {
     rawPath = rawPath.substring(dbPrefix.length);
   }

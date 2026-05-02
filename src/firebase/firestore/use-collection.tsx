@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -30,11 +29,12 @@ export interface UseCollectionResult<T> {
   https://github.com/firebase/firebase-js-sdk/blob/c5f08a9bc5da0d2b0207802c972d53724ccef055/packages/firestore/src/lite-api/reference.ts#L143
 */
 export interface InternalQuery extends Query<DocumentData> {
-  _query: {
-    path: {
+  _query?: {
+    path?: {
       canonicalString(): string;
       toString(): string;
-    }
+    };
+    collectionGroup?: string;
   }
 }
 
@@ -74,13 +74,13 @@ export function useCollection<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      (error: FirestoreError) => {
+      async (serverError: FirestoreError) => {
         // Improved path extraction for collection group queries
         let path: string = "";
-        const target = memoizedTargetRefOrQuery as any;
+        const target = memoizedTargetRefOrQuery as unknown as InternalQuery;
         
-        if (target.path) {
-          path = target.path;
+        if ((target as any).path) {
+          path = (target as any).path;
         } else if (target._query?.path) {
           path = target._query.path.toString();
         } else if (target._query?.collectionGroup) {
@@ -90,11 +90,11 @@ export function useCollection<T = any>(
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path: path || "(unknown path)",
-        })
+        });
 
-        setError(contextualError)
-        setData(null)
-        setIsLoading(false)
+        setError(contextualError);
+        setData(null);
+        setIsLoading(false);
 
         // trigger global error propagation
         errorEmitter.emit('permission-error', contextualError);
