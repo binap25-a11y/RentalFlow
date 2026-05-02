@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -38,28 +39,30 @@ export default function TenantsPage() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [tenantUid, setTenantUid] = useState('');
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
 
   const handleAddTenant = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !db || !selectedPropertyId || !tenantUid) return;
+    if (!user || !db || !selectedPropertyId) return;
 
     const tenantId = doc(collection(db, 'tenantProfiles')).id;
     const tenantRef = doc(db, 'tenantProfiles', tenantId);
     const propertyRef = doc(db, 'properties', selectedPropertyId);
 
+    // We use the email as a placeholder for the userId until the tenant actually signs up
+    const placeholderUserId = email.toLowerCase().trim();
+
     setDocumentNonBlocking(tenantRef, {
       id: tenantId,
       firstName,
       lastName,
-      email,
+      email: email.toLowerCase().trim(),
       phoneNumber: phone,
-      userId: tenantUid,
-      tenantId: tenantUid,
+      userId: placeholderUserId, // Linked via email initially
+      tenantId: placeholderUserId,
       propertyId: selectedPropertyId,
       landlordId: user.uid,
-      memberIds: [user.uid, tenantUid],
+      memberIds: [user.uid, placeholderUserId],
       leaseStartDate: new Date().toISOString().split('T')[0],
       leaseEndDate: new Date(Date.now() + 31536000000).toISOString().split('T')[0],
       createdAt: serverTimestamp(),
@@ -68,8 +71,8 @@ export default function TenantsPage() {
 
     updateDocumentNonBlocking(propertyRef, {
       isOccupied: true,
-      tenantIds: arrayUnion(tenantUid),
-      memberIds: arrayUnion(tenantUid),
+      tenantIds: arrayUnion(placeholderUserId),
+      memberIds: arrayUnion(placeholderUserId),
       updatedAt: serverTimestamp(),
     });
 
@@ -78,9 +81,8 @@ export default function TenantsPage() {
     setLastName('');
     setEmail('');
     setPhone('');
-    setTenantUid('');
     setSelectedPropertyId('');
-    toast({ title: "Resident Assigned" });
+    toast({ title: "Resident Assigned", description: "The resident can now join using their email." });
   };
 
   const handleDeleteTenant = (tenant: any) => {
@@ -114,7 +116,7 @@ export default function TenantsPage() {
             <form onSubmit={handleAddTenant}>
               <DialogHeader className="text-left">
                 <DialogTitle className="text-xl font-bold font-headline">Assign Resident</DialogTitle>
-                <DialogDescription>Enter the resident's details and select their property.</DialogDescription>
+                <DialogDescription>Enter the resident's details. They will be linked automatically when they join with this email.</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4 text-left">
                 <div className="grid grid-cols-2 gap-4">
@@ -128,12 +130,8 @@ export default function TenantsPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="tenantUid" className="font-bold text-xs uppercase text-primary/60">User UID (Must exist in Auth)</Label>
-                  <Input id="tenantUid" value={tenantUid} onChange={(e) => setTenantUid(e.target.value)} required className="rounded-xl h-11" />
-                </div>
-                <div className="space-y-2">
                   <Label htmlFor="email" className="font-bold text-xs uppercase text-primary/60">Email Address</Label>
-                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-11" />
+                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-11" placeholder="resident@example.com" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone" className="font-bold text-xs uppercase text-primary/60">Phone Number</Label>

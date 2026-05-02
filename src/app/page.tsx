@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -10,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { KeyRound, Loader2, Eye, EyeOff, ShieldCheck, Chrome, User as UserIcon, Phone, CheckCircle2 } from "lucide-react";
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, setDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -50,7 +51,6 @@ export default function LoginPage() {
 
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            // Stricter check for complete profile metadata
             if (!userData.firstName || !userData.lastName || !userData.role || !userData.phoneNumber) {
               setNeedsProfile(true);
               return;
@@ -82,11 +82,8 @@ export default function LoginPage() {
     try {
       const displayName = `${firstName.trim()} ${lastName.trim()}`;
       
-      // 1. Update Auth Profile and wait for completion
       await updateProfile(user, { displayName });
 
-      // 2. Commit Firestore Profile and wait for completion
-      // This ensures that the security rules (which might check for these fields) are satisfied.
       const userDocRef = doc(db, 'users', user.uid);
       await setDoc(userDocRef, {
         id: user.uid,
@@ -98,8 +95,30 @@ export default function LoginPage() {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       }, { merge: true });
+
+      // Claim Existing Resident Profile by Email
+      if (role === 'tenant' && user.email) {
+        const tenantProfilesRef = collection(db, 'tenantProfiles');
+        const q = query(tenantProfilesRef, where('email', '==', user.email.toLowerCase().trim()));
+        const querySnapshot = await getDocs(q);
+        
+        for (const profileDoc of querySnapshot.docs) {
+          const profileData = profileDoc.data();
+          // Update profile with real UID
+          await updateDoc(profileDoc.ref, { 
+            userId: user.uid,
+            tenantId: user.uid,
+            memberIds: arrayUnion(user.uid)
+          });
+          // Update linked property
+          const propertyRef = doc(db, 'properties', profileData.propertyId);
+          await updateDoc(propertyRef, {
+            tenantIds: arrayUnion(user.uid),
+            memberIds: arrayUnion(user.uid)
+          });
+        }
+      }
       
-      // 3. Force token refresh to update identity in Firestore rules
       await user.getIdToken(true);
 
       toast({ title: "Profile Ready", description: `Welcome to RentalFlow.` });
@@ -214,7 +233,7 @@ export default function LoginPage() {
         <p className="text-muted-foreground font-medium">Professional Rental Management</p>
       </div>
 
-      <Card className="w-full max-w-md border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
+      <Card className="w-full max-md border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
         <CardHeader className="space-y-1 pb-4 text-center bg-primary/5">
           <CardTitle className="text-2xl font-headline font-bold text-primary">
             {authMode === 'login' ? 'Welcome Back' : 'Join Us'}
