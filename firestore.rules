@@ -8,11 +8,10 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // Splitting list and get permissions to align with Firestore query analyzer requirements.
+    // Combined conditions into single 'allow list' blocks to help the Firestore query analyzer.
 
     // 1. Properties
     match /{path=**}/properties/{id} {
-      // Direct access (path-based or filtered list)
       allow list: if isSignedIn() && (
         request.query.where('landlordId', '==', request.auth.uid)
       );
@@ -28,12 +27,12 @@ service cloud.firestore {
 
     // 2. Documents
     match /{path=**}/documents/{id} {
-      // Landlord portfolio list
-      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
-      // Tenant specific list
-      allow list: if isSignedIn() && request.query.where('userId', '==', request.auth.uid);
+      // Unified list rule for Landlords and Tenants
+      allow list: if isSignedIn() && (
+        request.query.where('landlordId', '==', request.auth.uid) ||
+        request.query.where('userId', '==', request.auth.uid)
+      );
       
-      // Individual document access
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.userId == request.auth.uid
@@ -46,12 +45,11 @@ service cloud.firestore {
 
     // 3. Maintenance Requests
     match /{path=**}/maintenanceRequests/{id} {
-      // Landlord portfolio list
-      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
-      // Tenant specific list
-      allow list: if isSignedIn() && request.query.where('tenantId', '==', request.auth.uid);
+      allow list: if isSignedIn() && (
+        request.query.where('landlordId', '==', request.auth.uid) ||
+        request.query.where('tenantId', '==', request.auth.uid)
+      );
       
-      // Individual request access
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.tenantId == request.auth.uid
@@ -76,8 +74,10 @@ service cloud.firestore {
 
     // 5. Tenant Profiles
     match /{path=**}/tenantProfiles/{id} {
-      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
-      allow list: if isSignedIn() && request.query.where('userId', '==', request.auth.uid);
+      allow list: if isSignedIn() && (
+        request.query.where('landlordId', '==', request.auth.uid) ||
+        request.query.where('userId', '==', request.auth.uid)
+      );
       
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
