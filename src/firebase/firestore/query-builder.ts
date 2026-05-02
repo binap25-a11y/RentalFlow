@@ -32,30 +32,24 @@ export function buildSecureCollectionGroupQuery(options: {
     // Landlords always access via landlordId
     constraints.push(where("landlordId", "==", userId));
   } else if (role === "tenant") {
-    // Residents access via tenantId/userId OR memberIds array
+    // Residents/Members access via tenantId/userId OR memberIds array
+    // Firestore collectionGroup queries require explicit filters matching rules
     if (collectionName === 'maintenanceRequests') {
       constraints.push(where("tenantId", "==", userId));
-    } else if (collectionName === 'documents' || collectionName === 'tenantProfiles') {
+    } else {
+      // For properties, documents, etc., check direct ownership or shared membership
       constraints.push(
         or(
           where("userId", "==", userId),
           where("memberIds", "array-contains", userId)
         )
       );
-    } else {
-      // Default fallback for properties, inspections etc.
-      constraints.push(
-        or(
-          where("tenantId", "==", userId),
-          where("memberIds", "array-contains", userId)
-        )
-      );
     }
   }
 
-  // Final check to prevent broad unauthorized queries
+  // Final safety check: throw if no constraints are generated to prevent broad query denials
   if (constraints.length === 0) {
-    throw new Error(`Firestore query for ${collectionName} must include security constraints.`);
+    throw new Error(`❌ Firestore query for ${collectionName} missing security filters. This will be rejected by rules.`);
   }
 
   return query(

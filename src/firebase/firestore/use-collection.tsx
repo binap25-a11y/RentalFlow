@@ -36,6 +36,7 @@ export interface InternalQuery extends Query<DocumentData> {
       toString?(): string;
     };
     collectionGroup?: string;
+    filters?: any[];
   }
 }
 
@@ -61,8 +62,19 @@ export function useCollection<T = any>(
       return;
     }
 
-    // Diagnostic logging for development
-    console.log("Firestore Query Executing:", memoizedTargetRefOrQuery);
+    const target = memoizedTargetRefOrQuery as unknown as InternalQuery;
+
+    // 🕵️ Diagnostic logging for development
+    console.log("Firestore Query Active:", target);
+
+    // 🛡️ Safety Guard: CollectionGroup queries must have filters to pass security rules
+    if (target?._query?.collectionGroup && (!target?._query?.filters || target._query.filters.length === 0)) {
+      console.error("❌ BROAD CollectionGroup query detected. This will trigger a permission denial.");
+      const error = new Error("Firestore collectionGroup query missing security constraints.");
+      setError(error);
+      setIsLoading(false);
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -81,7 +93,6 @@ export function useCollection<T = any>(
       async (serverError: FirestoreError) => {
         // Path extraction for error reporting
         let path: string = "(unknown path)";
-        const target = memoizedTargetRefOrQuery as unknown as InternalQuery;
         
         if (target._query?.collectionGroup) {
           path = `[Collection Group] ${target._query.collectionGroup}`;
