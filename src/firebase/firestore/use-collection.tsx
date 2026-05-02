@@ -32,8 +32,8 @@ export interface InternalQuery extends Query<DocumentData> {
   path?: string;
   _query?: {
     path?: {
-      canonicalString(): string;
-      toString(): string;
+      canonicalString?(): string;
+      toString?(): string;
     };
     collectionGroup?: string;
   }
