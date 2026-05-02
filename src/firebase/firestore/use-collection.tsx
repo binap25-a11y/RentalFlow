@@ -61,6 +61,9 @@ export function useCollection<T = any>(
       return;
     }
 
+    // Step 2: Add logging inside hook for diagnostics
+    console.log("Firestore Query:", memoizedTargetRefOrQuery);
+
     setIsLoading(true);
     setError(null);
 

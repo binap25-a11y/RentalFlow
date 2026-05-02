@@ -8,14 +8,14 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // These rules handle queries across the entire database for specific collection names.
-    // IMPORTANT: Collection group rules with 'OR' conditions often fail the query analyzer.
-    // We split them into separate rules to ensure 'list' operations are correctly authorized.
+    // Optimizing for query-rules alignment: splitting conditions into separate allow blocks.
 
     // 1. Properties
     match /{path=**}/properties/{id} {
-      allow read: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      allow read: if isSignedIn() && resource.data.members != null && resource.data.members[request.auth.uid] != null;
+      // Landlord access (list/get)
+      allow list, get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      // Member access (get only)
+      allow get: if isSignedIn() && resource.data.members != null && resource.data.members[request.auth.uid] != null;
       
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
@@ -23,10 +23,10 @@ service cloud.firestore {
 
     // 2. Documents
     match /{path=**}/documents/{id} {
-      // Landlord access
-      allow read: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      // Tenant access
-      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // Landlord portfolio list/get
+      allow list, get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      // Tenant specific list/get
+      allow list, get: if isSignedIn() && resource.data.userId == request.auth.uid;
       
       allow create, update, delete: if isSignedIn() && (
         request.resource == null || request.resource.data.landlordId == request.auth.uid
@@ -35,10 +35,10 @@ service cloud.firestore {
 
     // 3. Maintenance Requests
     match /{path=**}/maintenanceRequests/{id} {
-      // Landlord access
-      allow read: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      // Tenant access
-      allow read: if isSignedIn() && resource.data.tenantId == request.auth.uid;
+      // Landlord portfolio list/get
+      allow list, get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      // Tenant specific list/get
+      allow list, get: if isSignedIn() && resource.data.tenantId == request.auth.uid;
       
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && (
@@ -49,7 +49,7 @@ service cloud.firestore {
 
     // 4. Inspections
     match /{path=**}/inspections/{id} {
-      allow read: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list, get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
       
       allow create, update, delete: if isSignedIn() && (
         request.resource == null || request.resource.data.landlordId == request.auth.uid
@@ -58,10 +58,8 @@ service cloud.firestore {
 
     // 5. Tenant Profiles
     match /{path=**}/tenantProfiles/{id} {
-      // Landlord access
-      allow read: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      // Tenant access
-      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list, get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list, get: if isSignedIn() && resource.data.userId == request.auth.uid;
       
       allow create, update, delete: if isSignedIn() && (
         request.resource == null || request.resource.data.landlordId == request.auth.uid
@@ -70,7 +68,7 @@ service cloud.firestore {
 
     // 6. Property Images
     match /{path=**}/images/{id} {
-      allow read: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list, get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
       allow create, delete: if isSignedIn() && (
         request.resource == null || request.resource.data.landlordId == request.auth.uid
       );
@@ -78,12 +76,11 @@ service cloud.firestore {
 
     // 7. Emergency Contact Sheets
     match /{path=**}/emergencyContactSheets/{id} {
-      allow read: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list, get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
       allow create: if isSignedIn();
     }
 
     // --- PATH-SPECIFIC RULES ---
-    // Absolute paths take precedence and handle direct resource access via user ID.
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
 

@@ -26,7 +26,6 @@ export function buildSecureCollectionGroupQuery(options: {
 
   // 🔑 ROLE-BASED FILTERING (Enforces query-rules alignment)
   // For Collection Group queries, Firestore requires the filter to exactly match the security rule.
-  // We use landlordId for landlords and userId/tenantId for tenants as defined in backend.json
   if (role === "landlord") {
     // Landlords always filter by their own ID across all nested property sub-collections
     constraints.push(where("landlordId", "==", userId));
@@ -40,11 +39,15 @@ export function buildSecureCollectionGroupQuery(options: {
     } else if (collectionName === 'documents') {
       filterField = 'userId';
     } else if (collectionName === 'emergencyContactSheets') {
-      // Emergency sheets are usually landlord-only or matched by landlordId for management
       filterField = 'landlordId'; 
     }
     
     constraints.push(where(filterField, "==", userId));
+  }
+
+  // Step 1: Force constraint check (CRITICAL)
+  if (constraints.length === 0) {
+    throw new Error(`Firestore query for ${collectionName} must include security constraints`);
   }
 
   return query(
