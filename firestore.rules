@@ -8,37 +8,51 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // Collection Group rules use {path=**} to allow queries across nested subcollections.
-    // We use 'read' which covers both 'get' (single doc) and 'list' (query results).
-    // In Firestore, if you query collectionGroup('documents'), you MUST have a rule
-    // at this level that authorizes the list operation.
+    // These rules handle queries across the entire database for specific collection names.
+    // In Firestore, 'list' rules for collection groups must exactly match the query's filters.
+    // We split OR conditions into multiple 'allow' statements to help the Firestore query analyzer.
 
+    // 1. Properties
     match /{path=**}/properties/{id} {
-      allow read: if isSignedIn() && (
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && (resource.data.members != null && resource.data.members[request.auth.uid] != null);
+      
+      allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         (resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
+      
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid
       );
     }
 
+    // 2. Documents
     match /{path=**}/documents/{id} {
-      allow read: if isSignedIn() && (
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.userId == request.auth.uid
       );
+      
       allow create, update, delete: if isSignedIn() && (
         request.resource == null || request.resource.data.landlordId == request.auth.uid
       );
     }
 
+    // 3. Maintenance Requests
     match /{path=**}/maintenanceRequests/{id} {
-      allow read: if isSignedIn() && (
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.tenantId == request.auth.uid;
+      
+      allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.tenantId == request.auth.uid
       );
+      
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
@@ -46,43 +60,49 @@ service cloud.firestore {
       );
     }
 
+    // 4. Inspections
     match /{path=**}/inspections/{id} {
-      allow read: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid
-      );
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      
       allow create, update, delete: if isSignedIn() && (
         request.resource == null || request.resource.data.landlordId == request.auth.uid
       );
     }
 
+    // 5. Tenant Profiles
     match /{path=**}/tenantProfiles/{id} {
-      allow read: if isSignedIn() && (
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.tenantId == request.auth.uid;
+      
+      allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.userId == request.auth.uid ||
         resource.data.tenantId == request.auth.uid
       );
+      
       allow create, update, delete: if isSignedIn() && (
         request.resource == null || request.resource.data.landlordId == request.auth.uid
       );
     }
 
+    // 6. Property Images
     match /{path=**}/images/{id} {
-      allow read: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid
-      );
+      allow list, get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
       allow create, delete: if isSignedIn() && (
         request.resource == null || request.resource.data.landlordId == request.auth.uid
       );
     }
 
+    // 7. Emergency Contact Sheets
     match /{path=**}/emergencyContactSheets/{id} {
-      allow read: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid
-      );
+      allow list, get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
       allow create: if isSignedIn();
     }
 
     // --- PATH-SPECIFIC RULES ---
+    // Absolute paths take precedence and handle direct resource access via user ID.
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
 
