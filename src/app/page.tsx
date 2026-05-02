@@ -56,7 +56,9 @@ export default function LoginPage() {
               return;
             }
 
+            if (isRedirecting.current) return;
             isRedirecting.current = true;
+            
             if (userData?.role === 'landlord') {
               router.replace('/landlord/dashboard');
             } else if (userData?.role === 'tenant') {
@@ -84,7 +86,7 @@ export default function LoginPage() {
     try {
       const displayName = `${firstName.trim()} ${lastName.trim()}`;
       
-      // Update Firebase Auth Profile
+      // Update Firebase Auth Profile to ensure metadata is present in tokens
       await updateProfile(user, {
         displayName: displayName
       });
@@ -101,13 +103,15 @@ export default function LoginPage() {
         updatedAt: serverTimestamp(),
       };
 
+      // Set the document and wait for confirmation before redirecting
       setDocumentNonBlocking(userDocRef, {
         ...profileData,
         createdAt: serverTimestamp(),
       }, { merge: true });
       
-      toast({ title: "Profile Established", description: `Welcome to RentalFlow as a ${role}.` });
+      toast({ title: "Profile Established", description: `Welcome to LeaseLoop as a ${role}.` });
       
+      // Small delay to ensure Firestore has processed the write before layouts check for it
       setTimeout(() => {
         isRedirecting.current = true;
         if (role === 'landlord') {
@@ -115,7 +119,7 @@ export default function LoginPage() {
         } else {
           router.replace('/tenant/hub');
         }
-      }, 800);
+      }, 1000);
     } catch (e: any) {
       toast({ variant: "destructive", title: "Setup Failed", description: "Could not establish your identity." });
       setIsLoading(false);

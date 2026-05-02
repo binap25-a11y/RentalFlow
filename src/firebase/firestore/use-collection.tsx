@@ -83,7 +83,7 @@ export function useCollection<T = any>(
         if (target.path) {
           path = target.path;
         } else if (target._query?.collectionGroup) {
-          path = `(collectionGroup)/${target._query.collectionGroup}`;
+          path = `[Collection Group] ${target._query.collectionGroup}`;
         } else if (target._query?.path) {
           try {
             path = target._query.path.canonicalString() || target._query.path.toString();

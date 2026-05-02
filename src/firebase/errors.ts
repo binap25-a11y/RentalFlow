@@ -81,7 +81,9 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   // Clean up path - if it's already a full path, don't mangle it.
   // If it's a collection group path or relative path, ensure it starts with the prefix correctly.
   let normalizedPath = rawPath;
-  if (!rawPath.startsWith(dbPrefix)) {
+  if (rawPath.startsWith('[Collection Group]')) {
+    normalizedPath = `${dbPrefix}/${rawPath}`;
+  } else if (!rawPath.startsWith(dbPrefix)) {
     const cleanPath = rawPath.replace(/^\/+|\/+$/g, '');
     normalizedPath = cleanPath ? `${dbPrefix}/${cleanPath}` : dbPrefix;
   }

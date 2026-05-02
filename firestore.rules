@@ -10,9 +10,9 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // --- COLLECTION GROUP RULES (REQUIRED FOR DASHBOARD QUERIES) ---
-    // These allow the 'list' operation across the entire database provided
-    // the query is filtered by the user's ID.
+    // --- COLLECTION GROUP RULES (REQUIRED FOR PORTFOLIO-WIDE QUERIES) ---
+    // These allow the 'list' operation provided the query is filtered by the user's ID.
+    // They are defined at the top level to ensure they are captured by collectionGroup queries.
 
     match /{path=**}/properties/{id} {
       allow list: if isSignedIn();
@@ -71,7 +71,10 @@ service cloud.firestore {
 
     match /{path=**}/emergencyContactSheets/{id} {
       allow list: if isSignedIn();
-      allow get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow get: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid ||
+        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
+      );
       allow create: if isSignedIn();
     }
 
@@ -80,7 +83,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if isOwner(userId);
 
-      // Recursive catch-all for path-based access (mostly for landlords)
+      // Recursive catch-all for path-based access (mostly for landlords managing nested properties)
       match /{allSubcollections=**} {
         allow read, write: if isOwner(userId);
       }
