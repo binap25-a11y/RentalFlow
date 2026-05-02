@@ -1,16 +1,27 @@
 import {
+  collection,
   collectionGroup,
   query,
   where,
   or,
   QueryConstraint,
-  Firestore
+  Firestore,
+  Query
 } from "firebase/firestore";
 
 type UserRole = "landlord" | "tenant";
 
 /**
- * 🔐 Centralized query builder to enforce Firestore rules compliance
+ * 🏠 Direct subcollection query for properties (Landlord only)
+ */
+export function getLandlordPropertiesQuery(db: Firestore, userId: string): Query {
+  return query(
+    collection(db, "users", userId, "properties")
+  );
+}
+
+/**
+ * 🔐 Centralized query builder to enforce Firestore rules compliance for portfolio-wide listings
  */
 export function buildSecureCollectionGroupQuery(options: {
   db: Firestore;

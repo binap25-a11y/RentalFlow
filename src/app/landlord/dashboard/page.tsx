@@ -2,8 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Users, AlertTriangle, FileText, ArrowRight, ShieldAlert, Loader2 } from "lucide-react";
-import { useUser, useFirestore, useCollection, useMemoFirebase, buildSecureCollectionGroupQuery } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { useUser, useFirestore, useCollection, useMemoFirebase, buildSecureCollectionGroupQuery, getLandlordPropertiesQuery } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { isBefore, addDays, isValid, parseISO } from "date-fns";
@@ -21,7 +20,7 @@ export default function LandlordDashboard() {
   // Direct collection query for properties owned by this landlord
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return collection(db, "users", user.uid, "properties");
+    return getLandlordPropertiesQuery(db, user.uid);
   }, [db, user]);
 
   const { data: properties, isLoading: isPropLoading } = useCollection(propertiesQuery);

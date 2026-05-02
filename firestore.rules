@@ -18,15 +18,15 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES (Portfolio-wide listing) ---
-    // Firestore requires these list rules to match the query filters exactly.
+    // Firestore requires split list rules for OR conditions to pass the static analyzer.
     
     // 1. Properties
     match /{path=**}/properties/{id} {
       allow get: if isSignedIn() && (isOwner(resource.data) || isMember(resource.data));
-      allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
-      );
+      // Split list rules for query analyzer compatibility
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds);
+      
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
@@ -34,11 +34,11 @@ service cloud.firestore {
     // 2. Documents
     match /{path=**}/documents/{id} {
       allow get: if isSignedIn() && (isOwner(resource.data) || isMember(resource.data));
-      allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid ||
-        resource.data.userId == request.auth.uid ||
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
-      );
+      // Split list rules for query analyzer compatibility
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds);
+      
       allow create, update, delete: if isSignedIn() && (
         request.resource.data.landlordId == request.auth.uid ||
         request.resource.data.userId == request.auth.uid
@@ -48,10 +48,10 @@ service cloud.firestore {
     // 3. Maintenance Requests
     match /{path=**}/maintenanceRequests/{id} {
       allow get: if isSignedIn() && isOwner(resource.data);
-      allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid ||
-        resource.data.tenantId == request.auth.uid
-      );
+      // Split list rules for query analyzer compatibility
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.tenantId == request.auth.uid;
+      
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && isOwner(resource.data);
     }
@@ -59,10 +59,10 @@ service cloud.firestore {
     // 4. Inspections
     match /{path=**}/inspections/{id} {
       allow get: if isSignedIn() && (isOwner(resource.data) || isMember(resource.data));
-      allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid ||
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
-      );
+      // Split list rules for query analyzer compatibility
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds);
+      
       allow create, update, delete: if isSignedIn() && (
         request.resource.data.landlordId == request.auth.uid
       );
@@ -71,10 +71,10 @@ service cloud.firestore {
     // 5. Tenant Profiles
     match /{path=**}/tenantProfiles/{id} {
       allow get: if isSignedIn() && (isOwner(resource.data) || isMember(resource.data));
-      allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid ||
-        resource.data.userId == request.auth.uid
-      );
+      // Split list rules for query analyzer compatibility
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
       allow create, update, delete: if isSignedIn() && (
         request.resource.data.landlordId == request.auth.uid
       );
