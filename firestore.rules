@@ -8,65 +8,61 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // Splitting list rules ensures the query analyzer can authorize collectionGroup requests.
-
-    // 1. Properties
+    // Specifically optimized for portfolio-wide listings (Dashboards)
     match /{path=**}/properties/{id} {
-      allow get: if isSignedIn() && (resource.data.landlordId == request.auth.uid || (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds));
-      
-      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      allow list: if isSignedIn() && (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds);
-      
+      allow read: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid ||
+        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
+      );
+      allow list: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid ||
+        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
+      );
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // 2. Documents
     match /{path=**}/documents/{id} {
-      allow get: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.userId == request.auth.uid || (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds));
-      
-      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow list: if isSignedIn() && (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds);
-      
+      allow read, list: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid ||
+        resource.data.userId == request.auth.uid ||
+        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
+      );
       allow create, update, delete: if isSignedIn() && (
         request.resource.data.landlordId == request.auth.uid ||
         request.resource.data.userId == request.auth.uid
       );
     }
 
-    // 3. Maintenance Requests
     match /{path=**}/maintenanceRequests/{id} {
-      allow get: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.tenantId == request.auth.uid);
-      
-      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      allow list: if isSignedIn() && resource.data.tenantId == request.auth.uid;
-      
+      allow read, list: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid ||
+        resource.data.tenantId == request.auth.uid
+      );
       allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.tenantId == request.auth.uid);
+      allow update, delete: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid ||
+        resource.data.tenantId == request.auth.uid
+      );
     }
 
-    // 4. Inspections
     match /{path=**}/inspections/{id} {
-      allow get: if isSignedIn() && (resource.data.landlordId == request.auth.uid || (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds));
-      
-      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      allow list: if isSignedIn() && (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds);
-      
+      allow read, list: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid ||
+        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
+      );
       allow create, update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // 5. Tenant Profiles
     match /{path=**}/tenantProfiles/{id} {
-      allow get: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.userId == request.auth.uid);
-      
-      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
-      
+      allow read, list: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid ||
+        resource.data.userId == request.auth.uid
+      );
       allow create, update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // --- PATH-SPECIFIC RULES ---
+    // --- PATH-SPECIFIC RULES (Owner Direct Access) ---
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
 

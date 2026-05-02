@@ -1,9 +1,8 @@
-
 "use client";
 
-import { useState } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, doc, serverTimestamp, query, where, collectionGroup, getDoc } from 'firebase/firestore';
+import { useState, useMemo } from 'react';
+import { useUser, useFirestore, useCollection, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking, buildSecureCollectionGroupQuery, getLandlordPropertiesQuery } from '@/firebase';
+import { collection, doc, serverTimestamp, query, where, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,17 +17,21 @@ export default function TenantsPage() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  const propertiesQuery = useMemoFirebase(() => {
+  const propertiesQuery = useMemo(() => {
     if (!db || !user) return null;
-    return collection(db, 'users', user.uid, 'properties');
+    return getLandlordPropertiesQuery(db, user.uid);
   }, [db, user]);
 
   const { data: properties } = useCollection(propertiesQuery);
 
-  const tenantsQuery = useMemoFirebase(() => {
+  const tenantsQuery = useMemo(() => {
     if (!db || !user) return null;
-    // Tenants are TenantProfiles nested under properties. We query across them.
-    return query(collectionGroup(db, 'tenantProfiles'), where('landlordId', '==', user.uid));
+    return buildSecureCollectionGroupQuery({
+      db,
+      collectionName: "tenantProfiles",
+      userId: user.uid,
+      role: "landlord"
+    });
   }, [db, user]);
 
   const { data: tenants, isLoading } = useCollection(tenantsQuery);
@@ -47,19 +50,17 @@ export default function TenantsPage() {
     e.preventDefault();
     if (!user || !db || !selectedPropertyId) return;
 
-    // Create a new ID for the tenant profile, BUT we need a real UID if we want them to sign in.
-    // In a real app, you'd invite them. For this MVP, we use a placeholder ID or their email as a key.
-    // However, the rule resource.data.userId == request.auth.uid requires the document to have their real UID.
-    // For now, we'll use a random ID and assume the landlord will link it later, or they are just records.
     const tenantId = doc(collection(db, 'dummy')).id;
     const tenantRef = doc(db, 'users', user.uid, 'properties', selectedPropertyId, 'tenantProfiles', tenantId);
     const propertyRef = doc(db, 'users', user.uid, 'properties', selectedPropertyId);
 
-    // Fetch the property to get existing members
+    // Fetch the property to maintain the memberIds array
     const propertySnap = await getDoc(propertyRef);
     const propertyData = propertySnap.data();
-    const currentMembers = propertyData?.members || { [user.uid]: 'owner' };
-
+    const currentMemberIds = propertyData?.memberIds || [user.uid];
+    
+    // In a real invite system, we'd add the tenant's real UID here.
+    // For now, we update the profile with the landlord's link.
     setDocumentNonBlocking(tenantRef, {
       id: tenantId,
       firstName,
@@ -74,13 +75,11 @@ export default function TenantsPage() {
       updatedAt: serverTimestamp(),
     }, { merge: true });
 
-    // Update property status and members map
-    // We add the email as a placeholder key in members if we don't have a UID yet
+    // Update property status
     updateDocumentNonBlocking(propertyRef, {
       isOccupied: true,
       updatedAt: serverTimestamp(),
-      // In a real scenario, you'd add the tenant's UID here after they accept an invite
-      members: { ...currentMembers } 
+      memberIds: currentMemberIds // Should be updated with real UID in production
     });
 
     setIsAddDialogOpen(false);

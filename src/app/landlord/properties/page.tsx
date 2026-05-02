@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useStorage, getLandlordPropertiesQuery } from '@/firebase';
-import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { useState, useEffect, useMemo } from 'react';
+import { useUser, useFirestore, useCollection, getLandlordPropertiesQuery, setDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useStorage } from '@/firebase';
+import { doc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ export default function PropertiesPage() {
   const storage = useStorage();
   const { toast } = useToast();
 
-  const propertiesQuery = useMemoFirebase(() => {
+  const propertiesQuery = useMemo(() => {
     if (!db || !user) return null;
     return getLandlordPropertiesQuery(db, user.uid);
   }, [db, user]);
@@ -124,7 +124,7 @@ export default function PropertiesPage() {
         finalImageUrl = await getDownloadURL(uploadResult.ref);
       }
 
-      // Collect existing member IDs or start with landlord
+      // Maintain memberIds array for collectionGroup listing security
       const currentMemberIds = editingProperty?.memberIds || [user.uid];
       const memberIds = Array.from(new Set([...currentMemberIds, user.uid]));
 

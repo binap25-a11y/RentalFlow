@@ -46,7 +46,7 @@ export function buildSecureCollectionGroupQuery(options: {
 
   // ✅ TENANT / MEMBER ACCESS
   if (role === "tenant") {
-    // For tenants, we check direct association (tenantId/userId) OR membership in the property via array
+    // We check direct association OR membership in the property via memberIds array
     constraints.push(
       or(
         where("tenantId", "==", userId),
