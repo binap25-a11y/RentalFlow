@@ -51,7 +51,7 @@ export default function LoginPage() {
 
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            // Verify all required fields are present
+            // Verify all required fields are present to prevent "null" identity issues
             if (!userData.firstName || !userData.lastName || !userData.role) {
               setNeedsProfile(true);
               return;
@@ -67,7 +67,7 @@ export default function LoginPage() {
             setNeedsProfile(true);
           }
         } catch (e) {
-          // If we can't read the profile (e.g. initial setup), show the form
+          // If we can't read the profile, assume it needs establishment
           setNeedsProfile(true);
         }
       };
@@ -84,9 +84,11 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      // Update Firebase Auth Display Name
+      const displayName = `${firstName.trim()} ${lastName.trim()}`;
+      
+      // Update Firebase Auth Profile for Token sync
       await updateProfile(user, {
-        displayName: `${firstName.trim()} ${lastName.trim()}`
+        displayName: displayName
       });
 
       const userDocRef = doc(db, 'users', user.uid);
@@ -106,14 +108,9 @@ export default function LoginPage() {
         createdAt: serverTimestamp(),
       }, { merge: true });
       
-      try {
-        await sendEmailVerification(user);
-        toast({ title: "Profile established", description: "Verification email sent. Welcome to RentalFlow!" });
-      } catch (err) {
-        toast({ title: "Profile established", description: `Welcome as a ${role}.` });
-      }
+      toast({ title: "Profile Established", description: `Welcome to LeaseLoop as a ${role}.` });
       
-      // Delay redirection slightly to ensure Firestore is updated
+      // Navigate based on selected role
       setTimeout(() => {
         isRedirecting.current = true;
         if (role === 'landlord') {
@@ -121,9 +118,9 @@ export default function LoginPage() {
         } else {
           router.replace('/tenant/hub');
         }
-      }, 500);
-    } catch (e) {
-      toast({ variant: "destructive", title: "Setup Failed", description: "Could not establish your profile." });
+      }, 800);
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Setup Failed", description: "Could not establish your identity." });
       setIsLoading(false);
     }
   };
@@ -135,10 +132,9 @@ export default function LoginPage() {
     try {
       if (authMode === 'signup') {
         await initiateEmailSignUp(auth, email, password);
-        toast({ title: "Account created", description: "Please complete your identity details." });
+        toast({ title: "Account Created", description: "Please establish your identity." });
       } else {
         await initiateEmailSignIn(auth, email, password);
-        toast({ title: "Welcome back", description: "Signed in successfully." });
       }
     } catch (error: any) {
       setIsLoading(false);
@@ -146,7 +142,7 @@ export default function LoginPage() {
       if (error.code === 'auth/invalid-credential') message = "Invalid email or password.";
       else if (error.code === 'auth/email-already-in-use') message = "Email already in use.";
       
-      toast({ variant: "destructive", title: "Auth Failed", description: message });
+      toast({ variant: "destructive", title: "Authentication Failed", description: message });
     }
   };
 
@@ -155,7 +151,7 @@ export default function LoginPage() {
     try {
       await initiateGoogleSignIn(auth);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Google Sign-In Failed", description: "Please try again." });
+      toast({ variant: "destructive", title: "Google Login Failed", description: "Please try again." });
       setIsLoading(false);
     }
   };
@@ -178,7 +174,7 @@ export default function LoginPage() {
             </div>
             <CardTitle className="text-2xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
             <CardDescription>
-              Authenticated as <span className="text-primary font-bold">{user?.email}</span>. Complete your details.
+              Signed in as <span className="text-primary font-bold">{user?.email}</span>. Please complete your profile.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 pt-8">
@@ -205,7 +201,7 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-4 text-left">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select Your Portal Role</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select Your Role</Label>
               <Tabs value={role} onValueChange={(v) => setRole(v as any)} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-xl h-12">
                   <TabsTrigger value="landlord" className="rounded-lg font-bold">Landlord</TabsTrigger>
@@ -215,7 +211,7 @@ export default function LoginPage() {
             </div>
 
             <Button className="w-full h-12 rounded-xl font-bold bg-primary text-lg shadow-lg shadow-primary/20" onClick={handleCreateProfile} disabled={isLoading || !firstName || !lastName || !phoneNumber}>
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle2 className="w-5 h-5 mr-2" /> Enter My Portal</>}
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle2 className="w-5 h-5 mr-2" /> Complete Registration</>}
             </Button>
           </CardContent>
         </Card>
@@ -230,7 +226,7 @@ export default function LoginPage() {
           <KeyRound className="w-8 h-8" />
         </div>
         <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">LeaseLoop</h1>
-        <p className="text-muted-foreground font-medium">Professional Property Management</p>
+        <p className="text-muted-foreground font-medium">Professional Rental Management</p>
       </div>
 
       <Card className="w-full max-w-md border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
@@ -239,13 +235,13 @@ export default function LoginPage() {
             {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
           </CardTitle>
           <CardDescription>
-            {authMode === 'login' ? 'Sign in to access your properties' : 'Join the LeaseLoop ecosystem'}
+            {authMode === 'login' ? 'Sign in to access your portfolio' : 'Join the LeaseLoop ecosystem'}
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2 text-left">
-              <Label htmlFor="email">Work Email</Label>
+              <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-11" />
             </div>
             <div className="space-y-2 text-left">
@@ -267,7 +263,7 @@ export default function LoginPage() {
               <span className="w-full border-t"></span>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-4 text-muted-foreground font-bold tracking-widest">Secure Connect</span>
+              <span className="bg-background px-4 text-muted-foreground font-bold tracking-widest">Connect Securely</span>
             </div>
           </div>
 
