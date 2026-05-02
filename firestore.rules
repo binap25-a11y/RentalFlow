@@ -14,13 +14,13 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if isOwner(userId);
 
-      // Recursive match to allow the owner full access to their own data tree
+      // Allow the owner full access to their own data tree
       match /{allSubcollections=**} {
         allow read, write: if isOwner(userId);
       }
     }
 
-    // Helper to check if user is a member of the property (Landlord or Assigned Tenant)
+    // Helper to check if user is a member of the property
     function isPropertyParticipant(data) {
       return isSignedIn() && (
         data.landlordId == request.auth.uid || 
@@ -30,7 +30,7 @@ service cloud.firestore {
       );
     }
 
-    // Collection Group Rules for Queries (Support cross-property views for landlords and tenants)
+    // Collection Group Rules for Queries
     
     match /{path=**}/properties/{id} {
       allow list, read: if isSignedIn() && (
