@@ -50,7 +50,6 @@ export default function LoginPage() {
 
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            // Verify all required fields are present
             if (!userData.firstName || !userData.lastName || !userData.role) {
               setNeedsProfile(true);
               return;
@@ -85,14 +84,9 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const displayName = `${firstName.trim()} ${lastName.trim()}`;
-      
-      // Update Firebase Auth Profile to ensure metadata is present in tokens
-      await updateProfile(user, {
-        displayName: displayName
-      });
+      await updateProfile(user, { displayName });
 
       const userDocRef = doc(db, 'users', user.uid);
-      
       const profileData = {
         id: user.uid,
         email: user.email,
@@ -103,7 +97,6 @@ export default function LoginPage() {
         updatedAt: serverTimestamp(),
       };
 
-      // Set the document and wait for confirmation before redirecting
       setDocumentNonBlocking(userDocRef, {
         ...profileData,
         createdAt: serverTimestamp(),
@@ -111,7 +104,6 @@ export default function LoginPage() {
       
       toast({ title: "Profile Established", description: `Welcome to LeaseLoop as a ${role}.` });
       
-      // Small delay to ensure Firestore has processed the write before layouts check for it
       setTimeout(() => {
         isRedirecting.current = true;
         if (role === 'landlord') {

@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Users, AlertTriangle, FileText, ArrowRight, ShieldAlert } from "lucide-react";
+import { Building2, Users, AlertTriangle, FileText, ArrowRight, ShieldAlert, Loader2 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, where, collectionGroup } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ export default function LandlordDashboard() {
     return collection(db, "users", user.uid, "properties");
   }, [db, user]);
 
-  const { data: properties } = useCollection(propertiesQuery);
+  const { data: properties, isLoading: isPropLoading } = useCollection(propertiesQuery);
 
   const documentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -33,16 +33,10 @@ export default function LandlordDashboard() {
     );
   }, [db, user]);
 
-  const { data: documents } = useCollection(documentsQuery);
+  const { data: documents, isLoading: isDocsLoading } = useCollection(documentsQuery);
 
   const stats = useMemo(() => {
-    if (!isClient) {
-      return [
-        { label: 'Total Properties', value: 0, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
-        { label: 'Occupied', value: 0, icon: Users, color: 'text-violet-600', bg: 'bg-violet-50' },
-        { label: 'Expiring Soon', value: 0, icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-50' },
-      ];
-    }
+    if (!isClient) return null;
 
     const total = properties?.length || 0;
     const occupied = properties?.filter(p => p.isOccupied).length || 0;
@@ -90,6 +84,15 @@ export default function LandlordDashboard() {
       });
   }, [documents, isClient]);
 
+  if (!isClient || isPropLoading || isDocsLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <p className="text-muted-foreground font-medium">Syncing portfolio data...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div>
@@ -98,7 +101,7 @@ export default function LandlordDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {stats.map((stat) => (
+        {stats?.map((stat) => (
           <Card key={stat.label} className="border-none shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-4">
@@ -124,9 +127,7 @@ export default function LandlordDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {!isClient ? (
-              <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
-            ) : expiringDocs.length > 0 ? (
+            {expiringDocs.length > 0 ? (
               expiringDocs.map((doc) => {
                 let expiryDate: Date | null = null;
                 try {
@@ -142,7 +143,7 @@ export default function LandlordDashboard() {
                         <FileText className="w-5 h-5 text-amber-500" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-sm font-body">{doc.documentType}</h4>
+                        <h4 className="font-bold text-sm font-body">{doc.fileName || doc.documentType}</h4>
                         <p className="text-xs text-muted-foreground font-body">
                           Expires: {expiryDate && isValid(expiryDate) ? format(expiryDate, 'PPP') : 'Invalid Date'}
                         </p>
