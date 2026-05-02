@@ -58,11 +58,7 @@ export default function LoginPage() {
             if (isRedirecting.current) return;
             isRedirecting.current = true;
             
-            if (userData?.role === 'landlord') {
-              router.replace('/landlord/dashboard');
-            } else {
-              router.replace('/tenant/hub');
-            }
+            router.replace(userData?.role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub');
           } else {
             setNeedsProfile(true);
           }
@@ -85,10 +81,10 @@ export default function LoginPage() {
     try {
       const displayName = `${firstName.trim()} ${lastName.trim()}`;
       
-      // Update Auth Profile FIRST
+      // 1. Update Auth Profile
       await updateProfile(user, { displayName });
 
-      // Save Firestore Profile
+      // 2. Commit Firestore Profile (MUST wait for this)
       const userDocRef = doc(db, 'users', user.uid);
       await setDoc(userDocRef, {
         id: user.uid,
@@ -101,13 +97,11 @@ export default function LoginPage() {
         updatedAt: serverTimestamp(),
       }, { merge: true });
       
-      toast({ title: "Profile Ready", description: `Welcome to LeaseLoop.` });
+      toast({ title: "Profile Ready", description: `Welcome to RentalFlow.` });
       
-      // Delay redirection slightly to allow state propagation
-      setTimeout(() => {
-        isRedirecting.current = true;
-        router.replace(role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub');
-      }, 800);
+      // 3. Set redirection flag and navigate
+      isRedirecting.current = true;
+      router.replace(role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub');
     } catch (e: any) {
       toast({ variant: "destructive", title: "Setup Failed", description: e.message });
       setIsLoading(false);
@@ -162,7 +156,7 @@ export default function LoginPage() {
               <ShieldCheck className="w-8 h-8" />
             </div>
             <CardTitle className="text-2xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
-            <CardDescription>Establish your professional profile on LeaseLoop.</CardDescription>
+            <CardDescription>Establish your professional profile on RentalFlow.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 pt-8">
             <div className="grid grid-cols-2 gap-4 text-left">
@@ -212,7 +206,7 @@ export default function LoginPage() {
         <div className="inline-flex items-center justify-center p-3 bg-primary text-primary-foreground rounded-2xl mb-4 shadow-xl">
           <KeyRound className="w-8 h-8" />
         </div>
-        <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">LeaseLoop</h1>
+        <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">RentalFlow</h1>
         <p className="text-muted-foreground font-medium">Professional Rental Management</p>
       </div>
 
@@ -260,7 +254,7 @@ export default function LoginPage() {
           </Button>
 
           <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full text-sm font-bold text-primary/60 hover:text-primary transition-colors">
-            {authMode === 'login' ? "New to LeaseLoop? Register here" : "Already have an account? Log in"}
+            {authMode === 'login' ? "New to RentalFlow? Register here" : "Already have an account? Log in"}
           </button>
         </CardContent>
       </Card>

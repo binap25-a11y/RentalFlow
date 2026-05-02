@@ -2,6 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // --- HELPER FUNCTIONS ---
     function isSignedIn() {
       return request.auth != null;
     }
@@ -11,10 +12,8 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // These rules apply specifically to collectionGroup() queries.
-    // We allow 'list' for signed-in users, as the client-side query 
-    // must provide filters (e.g., .where('landlordId', '==', uid)) 
-    // that are enforced by Firestore's query security model.
+    // These rules are required for collectionGroup() queries used in dashboards.
+    // They match the collection name regardless of its position in the path.
 
     match /{path=**}/properties/{id} {
       allow list: if isSignedIn();
@@ -27,16 +26,23 @@ service cloud.firestore {
 
     match /{path=**}/documents/{id} {
       allow list: if isSignedIn();
-      allow get: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (
+      allow get: if isSignedIn() && (
+        resource == null || 
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.userId == request.auth.uid
+      );
+      allow create, update, delete: if isSignedIn() && (
         resource == null || resource.data.landlordId == request.auth.uid
       );
     }
 
     match /{path=**}/maintenanceRequests/{id} {
       allow list: if isSignedIn();
-      allow get: if isSignedIn();
+      allow get: if isSignedIn() && (
+        resource == null || 
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.tenantId == request.auth.uid
+      );
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && (
         resource == null || 
@@ -46,40 +52,37 @@ service cloud.firestore {
     }
 
     match /{path=**}/inspections/{id} {
-      allow list: if isSignedIn();
-      allow get: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (
+      allow list, get: if isSignedIn();
+      allow create, update, delete: if isSignedIn() && (
         resource == null || resource.data.landlordId == request.auth.uid
       );
     }
 
     match /{path=**}/tenantProfiles/{id} {
       allow list: if isSignedIn();
-      allow get: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (
+      allow get: if isSignedIn() && (
+        resource == null || 
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.userId == request.auth.uid
+      );
+      allow create, update, delete: if isSignedIn() && (
         resource == null || resource.data.landlordId == request.auth.uid
       );
     }
 
     match /{path=**}/images/{id} {
-      allow list: if isSignedIn();
-      allow get: if isSignedIn();
-      allow create: if isSignedIn();
-      allow delete: if isSignedIn() && (
+      allow list, get: if isSignedIn();
+      allow create, delete: if isSignedIn() && (
         resource == null || resource.data.landlordId == request.auth.uid
       );
     }
 
     match /{path=**}/emergencyContactSheets/{id} {
-      allow list: if isSignedIn();
-      allow get: if isSignedIn();
-      allow create: if isSignedIn();
+      allow list, get, create: if isSignedIn();
     }
 
     // --- PATH-SPECIFIC RULES ---
-    // Direct access to user profiles and their subcollections.
+    // Rules for direct access to user profiles and their subcollections.
     match /users/{userId} {
       allow read, write: if isOwner(userId);
 

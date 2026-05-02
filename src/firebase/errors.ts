@@ -79,13 +79,11 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   let rawPath = context.path || "";
   
   let normalizedPath = rawPath;
+  // If the path already has the prefix, don't add it again.
   if (rawPath.startsWith(dbPrefix)) {
     normalizedPath = rawPath;
-  } else if (rawPath.startsWith('[Collection Group]')) {
-    // Context path for collection groups should be the full DB path
-    normalizedPath = `${dbPrefix}/${rawPath}`;
   } else {
-    // For normal paths, ensure they start with the prefix and don't double up
+    // For normal paths or [Collection Group] markers, ensure they are prefixed correctly.
     const cleanPath = rawPath.replace(/^\/+|\/+$/g, '');
     normalizedPath = cleanPath ? `${dbPrefix}/${cleanPath}` : dbPrefix;
   }
