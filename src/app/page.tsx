@@ -60,7 +60,7 @@ export default function LoginPage() {
             setNeedsProfile(true);
           }
         } catch (e) {
-          console.error("Redirect check failed:", e);
+          // Standard permission errors handled by FirebaseErrorListener
         }
       };
       checkAndRedirect();

@@ -10,9 +10,11 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // Standard User Profile Access
     match /users/{userId} {
       allow read, write: if isOwner(userId);
 
+      // Hierarchical Property Access
       match /properties/{propertyId} {
         function propertyIsOwner() {
           return isOwner(userId);
@@ -28,6 +30,7 @@ service cloud.firestore {
         allow read: if propertyIsOwner() || propertyIsMember();
         allow write: if propertyIsOwner();
 
+        // Sub-collections under properties
         match /{allSubcollections=**} {
           allow read, write: if propertyIsOwner();
           allow read: if isSignedIn() && (
@@ -42,6 +45,7 @@ service cloud.firestore {
       }
     }
 
+    // Collection Group Rules for Queries
     match /{path=**}/properties/{id} {
       allow list: if isSignedIn() && (
         (resource.data.landlordId == request.auth.uid) || 

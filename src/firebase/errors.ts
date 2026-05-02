@@ -75,11 +75,12 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
     // Auth not initialized yet
   }
 
+  // Normalize path to prevent double-prefixing
   let normalizedPath = context.path;
   const dbPrefix = '/databases/(default)/documents';
   
   if (normalizedPath.startsWith(dbPrefix)) {
-    // Already has full prefix, do nothing
+    // Already normalized, keep as is
   } else if (normalizedPath.startsWith('databases/')) {
     normalizedPath = '/' + normalizedPath;
   } else {
