@@ -3,11 +3,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Users, AlertTriangle, FileText, ArrowRight, ShieldAlert, Loader2 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, buildSecureCollectionGroupQuery } from "@/firebase";
-import { collection, where } from "firebase/firestore";
+import { collection } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { format, isBefore, addDays, isValid, parseISO } from "date-fns";
+import { isBefore, addDays, isValid, parseISO } from "date-fns";
 import { useMemo, useState, useEffect } from "react";
 
 export default function LandlordDashboard() {
@@ -19,6 +18,7 @@ export default function LandlordDashboard() {
     setIsClient(true);
   }, []);
 
+  // Direct collection query for properties owned by this landlord
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return collection(db, "users", user.uid, "properties");
@@ -26,6 +26,7 @@ export default function LandlordDashboard() {
 
   const { data: properties, isLoading: isPropLoading } = useCollection(propertiesQuery);
 
+  // Secure Collection Group query for all documents across the landlord's portfolio
   const documentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return buildSecureCollectionGroupQuery({
@@ -36,7 +37,7 @@ export default function LandlordDashboard() {
     });
   }, [db, user]);
 
-  const { data: documents, isLoading: isDocsLoading, error: docsError } = useCollection(documentsQuery);
+  const { data: documents, isLoading: isDocsLoading } = useCollection(documentsQuery);
 
   const stats = useMemo(() => {
     if (!isClient) return null;
@@ -106,7 +107,7 @@ export default function LandlordDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats?.map((stat) => (
           <Card key={stat.label} className="border-none shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 text-left">
               <div className="flex items-center justify-between mb-4">
                 <div className={`${stat.bg} ${stat.color} p-3 rounded-xl`}>
                   <stat.icon className="w-6 h-6" />
@@ -145,10 +146,10 @@ export default function LandlordDashboard() {
                       <div className="p-2 bg-white rounded-lg shadow-sm">
                         <FileText className="w-5 h-5 text-amber-500" />
                       </div>
-                      <div>
+                      <div className="text-left">
                         <h4 className="font-bold text-sm font-body">{doc.fileName || doc.documentType}</h4>
                         <p className="text-xs text-muted-foreground font-body">
-                          Expires: {expiryDate && isValid(expiryDate) ? format(expiryDate, 'PPP') : 'Invalid Date'}
+                          Expires: {expiryDate && isValid(expiryDate) ? parseISO(doc.expiryDate!).toLocaleDateString() : 'Invalid Date'}
                         </p>
                       </div>
                     </div>
@@ -177,7 +178,7 @@ export default function LandlordDashboard() {
             <CardTitle className="text-xl font-headline">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3">
-            <Button className="w-full justify-start h-12 bg-primary hover:bg-primary/90 rounded-xl font-headline font-bold" asChild>
+            <Button className="w-full justify-start h-12 bg-primary hover:bg-primary/90 rounded-xl font-headline font-bold text-white" asChild>
               <Link href="/landlord/properties">
                 <Building2 className="w-5 h-5 mr-3" />
                 Add New Property

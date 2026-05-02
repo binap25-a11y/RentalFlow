@@ -7,7 +7,7 @@ import {
 } from "firebase/firestore";
 
 /**
- * 🔐 Centralised query builder to enforce Firestore rules compliance
+ * 🔐 Centralized query builder to enforce Firestore rules compliance
  */
 export function buildSecureCollectionGroupQuery(options: {
   db: Firestore;
@@ -25,12 +25,19 @@ export function buildSecureCollectionGroupQuery(options: {
   const constraints: QueryConstraint[] = [];
 
   // 🔑 ROLE-BASED FILTERING (Enforces query-rules alignment)
+  // For Collection Group queries, Firestore requires the filter to exactly match the security rule.
   if (role === "landlord") {
+    // Landlords always filter by their own ID across all nested property sub-collections
     constraints.push(where("landlordId", "==", userId));
   } else if (role === "tenant") {
-    // Note: Some models use tenantId, others userId for tenant identification
-    // We default to tenantId for maintenance requests and userId for profiles/docs as per backend.json
-    const filterField = (collectionName === 'maintenanceRequests' || collectionName === 'tenantProfiles') ? 'tenantId' : 'userId';
+    // For residents, different entities use different ID fields based on backend.json
+    // - maintenanceRequests uses tenantId
+    // - tenantProfiles uses userId
+    // - documents uses userId
+    const filterField = (collectionName === 'maintenanceRequests' || collectionName === 'tenantProfiles') 
+      ? 'tenantId' 
+      : 'userId';
+    
     constraints.push(where(filterField, "==", userId));
   }
 

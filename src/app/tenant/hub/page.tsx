@@ -1,27 +1,29 @@
 "use client";
 
-import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from "@/firebase";
-import { query, where, doc, collectionGroup } from "firebase/firestore";
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, buildSecureCollectionGroupQuery } from "@/firebase";
+import { doc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Phone, FileText, Download, AlertCircle, Wrench, ShieldAlert, Loader2, Home } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { format, isValid } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import { useMemo } from "react";
 
 export default function TenantHub() {
   const { user } = useUser();
   const db = useFirestore();
 
+  // Securely query for the tenant's profile across all properties
   const tenantProfileQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Tenants are TenantProfiles nested under landlord's properties. We must use collectionGroup.
-    return query(
-      collectionGroup(db, "tenantProfiles"),
-      where("userId", "==", user.uid)
-    );
+    return buildSecureCollectionGroupQuery({
+      db,
+      collectionName: "tenantProfiles",
+      userId: user.uid,
+      role: "tenant"
+    });
   }, [db, user]);
 
   const { data: tenantProfiles, isLoading: isProfileLoading } = useCollection(tenantProfileQuery);
@@ -29,19 +31,20 @@ export default function TenantHub() {
 
   const propertyRef = useMemoFirebase(() => {
     if (!db || !activeProfile || !activeProfile.propertyId || !activeProfile.landlordId) return null;
-    // Hierarchical path from backend.json
     return doc(db, "users", activeProfile.landlordId, "properties", activeProfile.propertyId);
   }, [db, activeProfile]);
 
   const { data: property, isLoading: isPropertyLoading } = useDoc(propertyRef);
 
+  // Securely query for maintenance requests submitted by this tenant
   const requestsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // MaintenanceRequests are nested. Use collectionGroup.
-    return query(
-      collectionGroup(db, "maintenanceRequests"),
-      where("tenantId", "==", user.uid)
-    );
+    return buildSecureCollectionGroupQuery({
+      db,
+      collectionName: "maintenanceRequests",
+      userId: user.uid,
+      role: "tenant"
+    });
   }, [db, user]);
 
   const { data: requests, isLoading: isRequestsLoading } = useCollection(requestsQuery);
@@ -51,13 +54,15 @@ export default function TenantHub() {
     return requests.filter(r => r.status !== 'completed');
   }, [requests]);
 
+  // Securely query for shared documents for this tenant
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Documents are nested. Use collectionGroup.
-    return query(
-      collectionGroup(db, "documents"),
-      where("userId", "==", user.uid)
-    );
+    return buildSecureCollectionGroupQuery({
+      db,
+      collectionName: "documents",
+      userId: user.uid,
+      role: "tenant"
+    });
   }, [db, user]);
 
   const { data: documents } = useCollection(docsQuery);
@@ -89,11 +94,11 @@ export default function TenantHub() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
+        <div className="text-left">
           <h1 className="text-3xl font-headline font-bold text-primary mb-2">Resident Hub</h1>
           <p className="text-muted-foreground font-medium">Welcome home, {activeProfile.firstName}.</p>
         </div>
-        <Button className="bg-accent hover:bg-accent/90 rounded-xl shadow-lg shadow-accent/20" asChild>
+        <Button className="bg-accent hover:bg-accent/90 rounded-xl shadow-lg shadow-accent/20 text-white" asChild>
           <Link href="/tenant/maintenance">
             <AlertCircle className="w-4 h-4 mr-2" />
             Request Maintenance
@@ -112,30 +117,30 @@ export default function TenantHub() {
               data-ai-hint="modern apartment interior"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="absolute bottom-6 left-6 text-white">
+            <div className="absolute bottom-6 left-6 text-white text-left">
               <p className="flex items-center text-sm mb-1 opacity-90"><MapPin className="w-4 h-4 mr-1" /> {property.addressLine1}</p>
               <h2 className="text-2xl font-headline font-bold">{property.zipCode}</h2>
             </div>
           </div>
           <CardContent className="pt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-4">
+            <div className="space-y-4 text-left">
               <h3 className="font-bold font-headline text-lg">About Your Residence</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {property.description}
               </p>
               <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">Active Lease</Badge>
-                <Badge variant="outline">£{property.rentAmount}/mo</Badge>
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-none">Active Lease</Badge>
+                <Badge variant="outline" className="border-primary/20">£{property.rentAmount}/mo</Badge>
               </div>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-4 text-left">
               <h3 className="font-bold font-headline text-lg flex items-center">
                 <ShieldAlert className="w-5 h-5 mr-2 text-red-500" />
                 Management Contact
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-muted/40 rounded-xl border border-muted">
-                  <div>
+                  <div className="text-left">
                     <p className="text-sm font-bold">24/7 Maintenance</p>
                     <p className="text-[10px] text-muted-foreground uppercase font-bold">Emergency Support</p>
                   </div>
@@ -152,10 +157,10 @@ export default function TenantHub() {
 
         <div className="space-y-8">
           <Card className="border-none shadow-sm">
-            <CardHeader>
+            <CardHeader className="text-left">
               <CardTitle className="text-xl font-headline flex items-center justify-between">
                 Active Requests
-                <Badge className="bg-accent">{activeRequests.length}</Badge>
+                <Badge className="bg-accent text-white">{activeRequests.length}</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -163,9 +168,11 @@ export default function TenantHub() {
                 activeRequests.map(req => {
                   const createdAt = req.createdAt ? new Date(req.createdAt) : null;
                   return (
-                    <div key={req.id} className="p-4 rounded-xl bg-muted/30 border border-muted">
+                    <div key={req.id} className="p-4 rounded-xl bg-muted/30 border border-muted text-left">
                       <div className="flex items-center justify-between mb-2">
-                        <Badge variant="outline" className="capitalize text-[10px] font-bold">{req.status}</Badge>
+                        <Badge variant="outline" className="capitalize text-[10px] font-bold border-primary/20">
+                          {req.status}
+                        </Badge>
                         <span className="text-[10px] text-muted-foreground">
                           {createdAt && isValid(createdAt) ? format(createdAt, 'PP') : 'Just now'}
                         </span>
@@ -184,7 +191,7 @@ export default function TenantHub() {
           </Card>
 
           <Card className="border-none shadow-sm">
-            <CardHeader>
+            <CardHeader className="text-left">
               <CardTitle className="text-xl font-headline">Vault</CardTitle>
               <CardDescription>Your lease and building guides</CardDescription>
             </CardHeader>
@@ -198,7 +205,7 @@ export default function TenantHub() {
                         <div className="p-2 bg-blue-50 text-blue-600 rounded-lg mr-3 group-hover:bg-blue-100">
                           <FileText className="w-5 h-5" />
                         </div>
-                        <div>
+                        <div className="text-left">
                           <p className="text-sm font-bold truncate max-w-[150px]">{doc.fileName}</p>
                           <p className="text-[10px] text-muted-foreground">
                             {createdAt && isValid(createdAt) ? format(createdAt, 'PP') : 'Recently'}
@@ -213,7 +220,7 @@ export default function TenantHub() {
                 <p className="text-xs text-muted-foreground italic text-center py-2">No documents shared yet.</p>
               )}
               {documents && documents.length > 3 && (
-                <Button variant="ghost" className="w-full text-xs text-primary" asChild>
+                <Button variant="ghost" className="w-full text-xs text-primary font-bold" asChild>
                   <Link href="/tenant/documents">View All Documents</Link>
                 </Button>
               )}

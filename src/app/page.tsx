@@ -50,7 +50,7 @@ export default function LoginPage() {
 
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            // Stricter check for complete profile
+            // Stricter check for complete profile metadata
             if (!userData.firstName || !userData.lastName || !userData.role || !userData.phoneNumber) {
               setNeedsProfile(true);
               return;
@@ -82,10 +82,11 @@ export default function LoginPage() {
     try {
       const displayName = `${firstName.trim()} ${lastName.trim()}`;
       
-      // 1. Update Auth Profile (CRITICAL: Await this to refresh identity token)
+      // 1. Update Auth Profile and wait for completion
       await updateProfile(user, { displayName });
 
-      // 2. Commit Firestore Profile (CRITICAL: Await this to satisfy security rules)
+      // 2. Commit Firestore Profile and wait for completion
+      // This ensures that the security rules (which might check for these fields) are satisfied.
       const userDocRef = doc(db, 'users', user.uid);
       await setDoc(userDocRef, {
         id: user.uid,
@@ -98,16 +99,11 @@ export default function LoginPage() {
         updatedAt: serverTimestamp(),
       }, { merge: true });
       
-      // 3. Optional: Refresh token to ensure identity is recognized immediately by Firestore
-      try {
-        await user.getIdToken(true);
-      } catch (err) {
-        console.warn("Could not force refresh token, continuing...");
-      }
+      // 3. Force token refresh to update identity in Firestore rules
+      await user.getIdToken(true);
 
       toast({ title: "Profile Ready", description: `Welcome to RentalFlow.` });
       
-      // 4. Set redirection flag and navigate
       isRedirecting.current = true;
       router.replace(role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub');
     } catch (e: any) {

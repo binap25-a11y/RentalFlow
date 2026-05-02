@@ -8,8 +8,10 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // Collection Group rules must be at the top level for queries like collectionGroup().
-    // We use strict 'read' permissions which forces Firestore to validate query filters.
+    // Collection Group rules use {path=**} to allow queries across nested subcollections.
+    // We use 'read' which covers both 'get' (single doc) and 'list' (query results).
+    // In Firestore, if you query collectionGroup('documents'), you MUST have a rule
+    // at this level that authorizes the list operation.
 
     match /{path=**}/properties/{id} {
       allow read: if isSignedIn() && (
@@ -56,7 +58,8 @@ service cloud.firestore {
     match /{path=**}/tenantProfiles/{id} {
       allow read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
-        resource.data.userId == request.auth.uid
+        resource.data.userId == request.auth.uid ||
+        resource.data.tenantId == request.auth.uid
       );
       allow create, update, delete: if isSignedIn() && (
         request.resource == null || request.resource.data.landlordId == request.auth.uid
