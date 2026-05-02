@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, getLandlordCollectionQuery } from '@/firebase';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { format } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import { Calendar as CalendarIcon, FileCheck, MapPin, Plus, Clock, Loader2, FileText, Download, CheckCircle2, ClipboardList } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -23,20 +22,25 @@ export default function InspectionsPage() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return getLandlordCollectionQuery(db, "properties", user.uid);
   }, [db, user]);
 
-  const { data: properties, isLoading: isPropLoading } = useCollection(propertiesQuery);
+  const { data: properties, loading: isPropLoading } = useCollection(propertiesQuery);
 
   const inspectionsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return getLandlordCollectionQuery(db, "inspections", user.uid);
   }, [db, user]);
 
-  const { data: inspections, isLoading: isInspLoading } = useCollection(inspectionsQuery);
+  const { data: inspections, loading: isInspLoading } = useCollection(inspectionsQuery);
 
   const [date, setDate] = useState<Date>();
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
@@ -131,7 +135,7 @@ export default function InspectionsPage() {
     doc.save(`Inspection_${property?.addressLine1}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
-  if (isPropLoading || isInspLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+  if (!isClient || isPropLoading || isInspLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -145,13 +149,13 @@ export default function InspectionsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-1 border-none shadow-sm h-fit">
           <CardHeader>
-            <CardTitle className="text-xl">Plan Inspection</CardTitle>
+            <CardTitle className="text-xl font-headline">Plan Inspection</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
+            <div className="space-y-2 text-left">
               <Label className="text-xs uppercase font-bold text-muted-foreground">Select Asset</Label>
               <select 
-                className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
+                className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow"
                 value={selectedPropertyId}
                 onChange={(e) => setSelectedPropertyId(e.target.value)}
               >
@@ -159,14 +163,14 @@ export default function InspectionsPage() {
                 {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
               </select>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 text-left">
               <Label className="text-xs uppercase font-bold text-muted-foreground">Preferred Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant={"outline"}
                     className={cn(
-                      "w-full justify-start text-left font-normal h-11 rounded-xl",
+                      "w-full justify-start text-left font-normal h-11 rounded-xl border-input hover:bg-muted/50 transition-colors",
                       !date && "text-muted-foreground"
                     )}
                   >
@@ -174,17 +178,22 @@ export default function InspectionsPage() {
                     {date ? format(date, "PPP") : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 rounded-2xl overflow-hidden">
+                <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl border-none overflow-hidden" align="start">
                   <Calendar
                     mode="single"
                     selected={date}
                     onSelect={setDate}
                     initialFocus
+                    className="rounded-2xl"
                   />
                 </PopoverContent>
               </Popover>
             </div>
-            <Button className="w-full rounded-xl h-11 font-bold" onClick={handleSchedule} disabled={!date || !selectedPropertyId}>
+            <Button 
+              className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/10 hover:translate-y-[-1px] transition-transform" 
+              onClick={handleSchedule} 
+              disabled={!date || !selectedPropertyId}
+            >
               Confirm Schedule
             </Button>
           </CardContent>
@@ -206,7 +215,7 @@ export default function InspectionsPage() {
                 .slice()
                 .sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime())
                 .map((inspection) => (
-                  <Card key={inspection.id} className="border-none shadow-sm overflow-hidden group">
+                  <Card key={inspection.id} className="border-none shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
                     <CardContent className="p-6">
                       <div className="flex flex-col md:flex-row gap-6">
                         <div className="bg-primary/5 p-4 rounded-2xl flex flex-col items-center justify-center text-primary min-w-[100px] h-fit">
@@ -240,28 +249,28 @@ export default function InspectionsPage() {
                           {inspection.status === 'scheduled' && (
                             <Dialog open={activeInspection?.id === inspection.id} onOpenChange={(open) => !open && setActiveInspection(null)}>
                               <DialogTrigger asChild>
-                                <Button className="w-full md:w-auto rounded-xl bg-accent hover:bg-accent/90 font-bold" onClick={() => setActiveInspection(inspection)}>
+                                <Button className="w-full md:w-auto rounded-xl bg-accent hover:bg-accent/90 text-white font-bold h-10 px-6" onClick={() => setActiveInspection(inspection)}>
                                   Conduct Inspection
                                 </Button>
                               </DialogTrigger>
-                              <DialogContent className="sm:max-w-[500px] rounded-2xl">
-                                <DialogHeader>
+                              <DialogContent className="sm:max-w-[500px] rounded-2xl border-none shadow-2xl">
+                                <DialogHeader className="text-left">
                                   <DialogTitle className="text-xl font-headline font-bold">Inspection Findings</DialogTitle>
                                   <DialogDescription>Record the property condition and required actions.</DialogDescription>
                                 </DialogHeader>
-                                <div className="space-y-4 py-4">
+                                <div className="space-y-4 py-4 text-left">
                                   <div className="space-y-2">
                                     <Label className="font-bold text-xs uppercase text-primary/60">Observations & Notes</Label>
                                     <Textarea 
                                       placeholder="e.g. Living room carpet has minor stains. Kitchen appliances in good order. Small leak found under master sink." 
-                                      className="min-h-[150px] rounded-xl"
+                                      className="min-h-[150px] rounded-xl focus:ring-2 focus:ring-primary outline-none"
                                       value={findings}
                                       onChange={(e) => setFindings(e.target.value)}
                                     />
                                   </div>
                                 </div>
                                 <DialogFooter>
-                                  <Button className="w-full rounded-xl h-11 font-bold" onClick={handleConduct} disabled={!findings || isGenerating}>
+                                  <Button className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20" onClick={handleConduct} disabled={!findings || isGenerating}>
                                     {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</> : <><CheckCircle2 className="w-4 h-4 mr-2" /> Complete & Generate Report</>}
                                   </Button>
                                 </DialogFooter>
