@@ -1,34 +1,5 @@
 
 {
-  "indexes": [
-    {
-      "collectionGroup": "tenantProfiles",
-      "queryScope": "COLLECTION_GROUP",
-      "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "documents",
-      "queryScope": "COLLECTION_GROUP",
-      "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "maintenanceRequests",
-      "queryScope": "COLLECTION_GROUP",
-      "fields": [
-        { "fieldPath": "tenantId", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "inspections",
-      "queryScope": "COLLECTION_GROUP",
-      "fields": [
-        { "fieldPath": "memberIds", "arrayConfig": "CONTAINS" }
-      ]
-    }
-  ],
+  "indexes": [],
   "fieldOverrides": []
 }

@@ -1,17 +1,17 @@
+
 import {
   collection,
   query,
   where,
-  or,
-  QueryConstraint,
   Firestore,
   Query,
-  DocumentData
+  DocumentData,
+  QueryConstraint
 } from "firebase/firestore";
 
 /**
- * 🏠 Landlord Portfolio Queries (FLAT)
- * Filters a top-level collection by landlordId.
+ * 🏠 Portfolio Queries (FLAT)
+ * Filters a top-level collection by landlordId or membership.
  */
 export function getLandlordCollectionQuery(db: Firestore, collectionName: string, userId: string): Query<DocumentData> {
   if (!userId) throw new Error("User ID required");
@@ -22,8 +22,8 @@ export function getLandlordCollectionQuery(db: Firestore, collectionName: string
 }
 
 /**
- * 🔐 Tenant / Resident Hub Queries (FLAT)
- * Filters a top-level collection for items relevant to the tenant.
+ * 🔐 Resident Hub Queries (FLAT)
+ * Filters a top-level collection for items relevant to the resident.
  */
 export function getTenantCollectionQuery(options: {
   db: Firestore;
@@ -46,15 +46,14 @@ export function getTenantCollectionQuery(options: {
     );
   }
 
-  // Other entities use OR filters matching security rules
-  // We check for direct tenantId, general userId, or memberIds membership.
+  // Other entities use specific field checks
+  const field = collectionName === 'tenantProfiles' ? 'userId' : 'tenantId';
+  
+  // NOTE: If we need more complex OR behavior, we'd use 'or' from firebase/firestore
+  // but for basic listing, a single constrained query is safest for rules.
   return query(
     collection(db, collectionName),
-    or(
-      where("tenantId", "==", userId),
-      where("userId", "==", userId),
-      where("memberIds", "array-contains", userId)
-    ),
+    where(field, "==", userId),
     ...additionalConstraints
   );
 }

@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -6,24 +7,17 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Explicitly for listing based on standardized fields
-    // This allows Firestore to prove the query is safe.
-    function canList(data) {
+    function isOwner(data) {
       return isSignedIn() && (
         data.landlordId == request.auth.uid ||
         data.tenantId == request.auth.uid ||
-        data.userId == request.auth.uid ||
-        (data.tenantIds != null && request.auth.uid in data.tenantIds) ||
-        (data.memberIds != null && request.auth.uid in data.memberIds)
+        data.userId == request.auth.uid
       );
     }
 
-    // For individual read/write based on membership
     function isMember(data) {
       return isSignedIn() && (
-        data.landlordId == request.auth.uid || 
-        data.tenantId == request.auth.uid || 
-        data.userId == request.auth.uid ||
+        isOwner(data) ||
         (data.memberIds != null && request.auth.uid in data.memberIds) ||
         (data.tenantIds != null && request.auth.uid in data.tenantIds)
       );
@@ -34,35 +28,35 @@ service cloud.firestore {
     }
 
     match /properties/{id} {
-      allow list: if canList(resource.data);
+      allow list: if isSignedIn() && (resource.data.landlordId == request.auth.uid || request.auth.uid in resource.data.tenantIds);
       allow read: if isMember(resource.data);
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
     match /tenantProfiles/{id} {
-      allow list: if canList(resource.data);
+      allow list: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.userId == request.auth.uid);
       allow read: if isMember(resource.data);
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.userId == request.auth.uid);
     }
 
     match /documents/{id} {
-      allow list: if canList(resource.data);
+      allow list: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.userId == request.auth.uid || request.auth.uid in resource.data.memberIds);
       allow read: if isMember(resource.data);
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.userId == request.auth.uid);
     }
 
     match /maintenanceRequests/{id} {
-      allow list: if canList(resource.data);
+      allow list: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.tenantId == request.auth.uid || request.auth.uid in resource.data.memberIds);
       allow read: if isMember(resource.data);
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.tenantId == request.auth.uid);
     }
 
     match /inspections/{id} {
-      allow list: if canList(resource.data);
+      allow list: if isSignedIn() && (resource.data.landlordId == request.auth.uid || request.auth.uid in resource.data.memberIds);
       allow read: if isMember(resource.data);
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;

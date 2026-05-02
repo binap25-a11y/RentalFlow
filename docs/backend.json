@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -31,7 +32,9 @@
         "description": { "type": "string" },
         "isActive": { "type": "boolean" },
         "tenantIds": { "type": "array", "items": { "type": "string" } },
-        "memberIds": { "type": "array", "items": { "type": "string" } }
+        "memberIds": { "type": "array", "items": { "type": "string" } },
+        "rentAmount": { "type": "number" },
+        "imageUrl": { "type": "string" }
       },
       "required": ["id", "landlordId", "addressLine1", "city", "zipCode", "isActive"]
     },
@@ -42,13 +45,13 @@
       "properties": {
         "id": { "type": "string" },
         "userId": { "type": "string" },
-        "tenantId": { "type": "string" },
         "propertyId": { "type": "string" },
         "landlordId": { "type": "string" },
         "memberIds": { "type": "array", "items": { "type": "string" } },
         "firstName": { "type": "string" },
         "lastName": { "type": "string" },
         "email": { "type": "string" },
+        "phoneNumber": { "type": "string" },
         "leaseStartDate": { "type": "string", "format": "date" },
         "leaseEndDate": { "type": "string", "format": "date" }
       },
@@ -87,6 +90,7 @@
         "status": { "type": "string" },
         "priority": { "type": "string" },
         "category": { "type": "string" },
+        "aiTriageNotes": { "type": "string" },
         "createdAt": { "type": "object" }
       },
       "required": ["id", "propertyId", "landlordId", "title", "status"]
@@ -101,9 +105,11 @@
         "landlordId": { "type": "string" },
         "memberIds": { "type": "array", "items": { "type": "string" } },
         "scheduledDate": { "type": "string", "format": "date-time" },
+        "conductedDate": { "type": "string", "format": "date-time" },
         "status": { "type": "string" },
         "findings": { "type": "string" },
         "summary": { "type": "string" },
+        "priorityItems": { "type": "array", "items": { "type": "string" } },
         "healthScore": { "type": "number" }
       },
       "required": ["id", "propertyId", "landlordId", "scheduledDate", "status"]
@@ -127,7 +133,7 @@
         "definition": {
           "entityName": "Property",
           "schema": { "$ref": "#/backend/entities/Property" },
-          "description": "Flat properties."
+          "description": "Top-level property assets."
         }
       },
       {
@@ -135,7 +141,7 @@
         "definition": {
           "entityName": "TenantProfile",
           "schema": { "$ref": "#/backend/entities/TenantProfile" },
-          "description": "Flat tenant associations."
+          "description": "Resident associations."
         }
       },
       {
@@ -143,7 +149,7 @@
         "definition": {
           "entityName": "PropertyDocument",
           "schema": { "$ref": "#/backend/entities/PropertyDocument" },
-          "description": "Flat document vault."
+          "description": "Document vault items."
         }
       },
       {
@@ -151,7 +157,7 @@
         "definition": {
           "entityName": "MaintenanceRequest",
           "schema": { "$ref": "#/backend/entities/MaintenanceRequest" },
-          "description": "Flat issue tracking."
+          "description": "Maintenance tracking records."
         }
       },
       {
@@ -159,7 +165,7 @@
         "definition": {
           "entityName": "Inspection",
           "schema": { "$ref": "#/backend/entities/Inspection" },
-          "description": "Flat health checks."
+          "description": "Property inspection reports."
         }
       }
     ]
