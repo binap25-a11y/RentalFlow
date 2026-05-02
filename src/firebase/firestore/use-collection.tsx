@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -13,15 +12,15 @@ import {
 export type WithId<T> = T & { id: string };
 
 export function useCollection<T = any>(
-  ref: Query<DocumentData> | CollectionReference<DocumentData> | null | undefined
+  ref: Query<DocumentData> | CollectionReference<DocumentData> | null
 ) {
   const [data, setData] = useState<WithId<T>[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
 
   useEffect(() => {
     if (!ref) {
-      setIsLoading(false);
+      setLoading(false);
       return;
     }
 
@@ -34,18 +33,17 @@ export function useCollection<T = any>(
         })) as WithId<T>[];
 
         setData(results);
-        setIsLoading(false);
-        setError(null);
+        setLoading(false);
       },
       (err) => {
         console.error("Firestore error:", err);
         setError(err);
-        setIsLoading(false);
+        setLoading(false);
       }
     );
 
     return () => unsubscribe();
   }, [ref]);
 
-  return { data, isLoading, error };
+  return { data, loading, error };
 }

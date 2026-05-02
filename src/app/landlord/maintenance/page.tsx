@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -29,7 +28,7 @@ export default function MaintenancePage() {
     return getLandlordCollectionQuery(db, "maintenanceRequests", user.uid);
   }, [db, user]);
 
-  const { data: requests, isLoading } = useCollection(maintenanceQuery);
+  const { data: requests, loading } = useCollection(maintenanceQuery);
 
   const handleTriage = async (request: any) => {
     if (!user) return;
@@ -81,7 +80,7 @@ export default function MaintenancePage() {
     }
   };
 
-  if (isLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+  if (loading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">

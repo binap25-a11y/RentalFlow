@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,14 +22,14 @@ export default function LandlordDashboard() {
     return getLandlordCollectionQuery(db, "properties", user.uid);
   }, [db, user]);
 
-  const { data: properties, isLoading: isPropLoading } = useCollection(propertiesQuery);
+  const { data: properties, loading: propLoading } = useCollection(propertiesQuery);
 
   const documentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return getLandlordCollectionQuery(db, "documents", user.uid);
   }, [db, user]);
 
-  const { data: documents, isLoading: isDocsLoading } = useCollection(documentsQuery);
+  const { data: documents, loading: docsLoading } = useCollection(documentsQuery);
 
   const stats = useMemo(() => {
     if (!isClient) return null;
@@ -81,7 +80,7 @@ export default function LandlordDashboard() {
       });
   }, [documents, isClient]);
 
-  if (!isClient || isPropLoading || isDocsLoading) {
+  if (!isClient || propLoading || docsLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />

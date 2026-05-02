@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -31,7 +30,7 @@ export default function PropertiesPage() {
     return getLandlordCollectionQuery(db, "properties", user.uid);
   }, [db, user]);
 
-  const { data: properties, isLoading } = useCollection(propertiesQuery);
+  const { data: properties, loading } = useCollection(propertiesQuery);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<any>(null);
@@ -109,11 +108,14 @@ export default function PropertiesPage() {
     const propertyId = editingProperty ? editingProperty.id : doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
     
-    // Optimistic / Faster closing of dialog
+    // Close dialog immediately for better perceived performance
     setIsAddDialogOpen(false);
 
     try {
-      let finalImageUrl = previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
+      // Use existing URL or a seeded picsum placeholder. DO NOT save local blob URLs to Firestore.
+      let finalImageUrl = (editingProperty?.imageUrl && !editingProperty.imageUrl.startsWith('blob:')) 
+        ? editingProperty.imageUrl 
+        : `https://picsum.photos/seed/${propertyId}/800/600`;
 
       const baseData = {
         id: propertyId,
@@ -134,19 +136,20 @@ export default function PropertiesPage() {
         isActive: true
       };
 
-      // Initiate save immediately
       if (editingProperty) {
         updateDocumentNonBlocking(propertyRef, baseData);
       } else {
         setDocumentNonBlocking(propertyRef, { ...baseData, createdAt: serverTimestamp() }, { merge: true });
       }
 
-      // If there's an image, handle it in background without blocking success toast
+      // Handle image upload in the background
       if (imageFile && storage) {
-        const storageRef = ref(storage, `Images/${user.uid}/${propertyId}/${imageFile.name}`);
+        const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${imageFile.name}`);
         uploadBytes(storageRef, imageFile).then(async (result) => {
           const url = await getDownloadURL(result.ref);
           updateDocumentNonBlocking(propertyRef, { imageUrl: url });
+        }).catch(err => {
+          console.error("Image upload failed:", err);
         });
       }
 
@@ -166,7 +169,7 @@ export default function PropertiesPage() {
     toast({ title: "Asset Decommissioned" });
   };
 
-  if (isLoading) return <div className="flex flex-col items-center justify-center h-[60vh]"><Loader2 className="animate-spin text-primary" /></div>;
+  if (loading) return <div className="flex flex-col items-center justify-center h-[60vh]"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -310,10 +313,11 @@ export default function PropertiesPage() {
             <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card">
               <div className="relative h-56 w-full overflow-hidden">
                 <Image 
-                  src={property.imageUrl || "https://picsum.photos/seed/house/800/600"} 
+                  src={property.imageUrl || `https://picsum.photos/seed/${property.id}/800/600`} 
                   alt={property.addressLine1} 
                   fill 
                   className="object-cover transition-transform duration-500 group-hover:scale-105" 
+                  data-ai-hint="property exterior"
                 />
                 <Badge className={cn(
                   "absolute top-4 right-4 font-bold shadow-lg py-1 px-3",

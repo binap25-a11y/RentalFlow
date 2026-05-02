@@ -1,4 +1,3 @@
-
 import {
   collection,
   query,
@@ -10,11 +9,11 @@ import {
 } from "firebase/firestore";
 
 /**
- * 🏠 Portfolio Queries (FLAT)
- * Filters a top-level collection by landlordId.
+ * 🏠 Landlord Portfolio Queries
+ * Filters top-level collections by landlordId.
  */
 export function getLandlordCollectionQuery(db: Firestore, collectionName: string, userId: string): Query<DocumentData> {
-  if (!userId) throw new Error("User ID required");
+  if (!userId) throw new Error("User ID required for landlord query");
   return query(
     collection(db, collectionName),
     where("landlordId", "==", userId)
@@ -22,8 +21,8 @@ export function getLandlordCollectionQuery(db: Firestore, collectionName: string
 }
 
 /**
- * 🔐 Resident Hub Queries (FLAT)
- * Filters a top-level collection for items relevant to the resident.
+ * 🔐 Resident Hub Queries
+ * Filters top-level collections for items relevant to the resident.
  */
 export function getTenantCollectionQuery(options: {
   db: Firestore;
@@ -34,10 +33,10 @@ export function getTenantCollectionQuery(options: {
   const { db, collectionName, userId, additionalConstraints = [] } = options;
 
   if (!userId) {
-    throw new Error("User must be authenticated");
+    throw new Error("User must be authenticated for resident query");
   }
 
-  // Properties use tenantIds array-contains
+  // Properties use tenantIds array-contains for shared access
   if (collectionName === 'properties') {
     return query(
       collection(db, collectionName),
@@ -46,12 +45,19 @@ export function getTenantCollectionQuery(options: {
     );
   }
 
-  // Other entities use specific field checks
-  const field = collectionName === 'tenantProfiles' ? 'userId' : 'tenantId';
-  
+  // TenantProfiles are linked by userId
+  if (collectionName === 'tenantProfiles') {
+    return query(
+      collection(db, collectionName),
+      where("userId", "==", userId),
+      ...additionalConstraints
+    );
+  }
+
+  // Maintenance and Documents are linked by tenantId or memberIds
   return query(
     collection(db, collectionName),
-    where(field, "==", userId),
+    where("tenantId", "==", userId),
     ...additionalConstraints
   );
 }
