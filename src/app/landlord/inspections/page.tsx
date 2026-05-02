@@ -115,13 +115,13 @@ export default function InspectionsPage() {
     
     doc.setFontSize(12);
     doc.text(`Property: ${property?.addressLine1 || 'Unknown'}`, 20, 35);
-    doc.text(`Date: ${format(new Date(inspection.conductedDate), 'PPP')}`, 20, 42);
+    doc.text(`Date: ${inspection.conductedDate ? format(new Date(inspection.conductedDate), 'PPP') : 'N/A'}`, 20, 42);
     doc.text(`Condition Score: ${inspection.healthScore}/100`, 20, 49);
     
     doc.setFontSize(14);
     doc.text("AI Summary", 20, 65);
     doc.setFontSize(10);
-    const splitSummary = doc.splitTextToSize(inspection.summary, 170);
+    const splitSummary = doc.splitTextToSize(inspection.summary || "No summary provided", 170);
     doc.text(splitSummary, 20, 72);
     
     let y = 72 + (splitSummary.length * 5) + 10;
@@ -129,11 +129,11 @@ export default function InspectionsPage() {
     doc.text("Priority Maintenance", 20, y);
     doc.setFontSize(10);
     y += 7;
-    inspection.priorityItems.forEach((item: string, i: number) => {
+    (inspection.priorityItems || []).forEach((item: string, i: number) => {
       doc.text(`- ${item}`, 20, y + (i * 6));
     });
     
-    doc.save(`Inspection_${property?.addressLine1}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    doc.save(`Inspection_${property?.addressLine1 || 'Report'}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
   if (!isClient || isPropLoading || isInspLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
