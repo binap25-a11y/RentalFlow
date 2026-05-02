@@ -33,17 +33,20 @@ export function buildSecureCollectionGroupQuery(options: {
     constraints.push(where("landlordId", "==", userId));
   } else if (role === "tenant") {
     // Residents/Members access via tenantId/userId OR memberIds array
-    // Firestore collectionGroup queries require explicit filters matching rules
     if (collectionName === 'maintenanceRequests') {
       constraints.push(where("tenantId", "==", userId));
-    } else {
-      // For properties, documents, etc., check direct ownership or shared membership
+    } else if (collectionName === 'tenantProfiles') {
+      constraints.push(where("userId", "==", userId));
+    } else if (collectionName === 'documents') {
       constraints.push(
         or(
           where("userId", "==", userId),
           where("memberIds", "array-contains", userId)
         )
       );
+    } else {
+      // For properties, inspections, etc.
+      constraints.push(where("memberIds", "array-contains", userId));
     }
   }
 

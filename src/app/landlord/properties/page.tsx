@@ -125,8 +125,8 @@ export default function PropertiesPage() {
       }
 
       // Collect existing member IDs or start with landlord
-      const memberIds = editingProperty?.memberIds || [user.uid];
-      if (!memberIds.includes(user.uid)) memberIds.push(user.uid);
+      const currentMemberIds = editingProperty?.memberIds || [user.uid];
+      const memberIds = Array.from(new Set([...currentMemberIds, user.uid]));
 
       const data = {
         id: propertyId,
@@ -276,7 +276,7 @@ export default function PropertiesPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="font-bold text-xs uppercase text-primary/60">Baths</Label>
-                        <Select value={bathrooms} onValueChange={setBathrooms}>
+                        <Select value={bathrooms} onValueChange={setBedrooms}>
                           <SelectTrigger className="rounded-xl h-12"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {['1','2','3+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}

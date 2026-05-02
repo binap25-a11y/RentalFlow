@@ -70,8 +70,8 @@ export function useCollection<T = any>(
     // 🛡️ Safety Guard: CollectionGroup queries must have filters to pass security rules
     if (target?._query?.collectionGroup && (!target?._query?.filters || target._query.filters.length === 0)) {
       console.error("❌ BROAD CollectionGroup query detected. This will trigger a permission denial.");
-      const error = new Error("Firestore collectionGroup query missing security constraints.");
-      setError(error);
+      const broadError = new Error(`Firestore collectionGroup query for "${target._query.collectionGroup}" is missing security constraints. This is a "hard fail" to prevent permission errors.`);
+      setError(broadError);
       setIsLoading(false);
       return;
     }
