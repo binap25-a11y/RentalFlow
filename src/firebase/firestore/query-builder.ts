@@ -29,10 +29,10 @@ export function buildSecureCollectionGroupQuery(options: {
 
   // 🔑 ROLE-BASED FILTERING (Enforces query-rules alignment)
   if (role === "landlord") {
+    // Landlords always access via landlordId
     constraints.push(where("landlordId", "==", userId));
   } else if (role === "tenant") {
-    // Tenants can access documents where they are the primary user, 
-    // OR where they are included in the memberIds array.
+    // Residents access via tenantId OR memberIds array
     if (collectionName === 'maintenanceRequests') {
       constraints.push(where("tenantId", "==", userId));
     } else if (collectionName === 'documents') {
@@ -43,7 +43,12 @@ export function buildSecureCollectionGroupQuery(options: {
         )
       );
     } else {
-      constraints.push(where("memberIds", "array-contains", userId));
+      constraints.push(
+        or(
+          where("tenantId", "==", userId),
+          where("memberIds", "array-contains", userId)
+        )
+      );
     }
   }
 

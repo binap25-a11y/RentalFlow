@@ -7,8 +7,15 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isOwner(data) {
+      return data.landlordId == request.auth.uid || data.tenantId == request.auth.uid;
+    }
+
+    function isMember(data) {
+      return data.memberIds != null && request.auth.uid in data.memberIds;
+    }
+
     // --- COLLECTION GROUP RULES ---
-    // Rules for Collection Group queries must align precisely with the query filters.
     
     // 1. Properties
     match /{path=**}/properties/{id} {
@@ -17,11 +24,7 @@ service cloud.firestore {
         request.query.where('memberIds', 'array-contains', request.auth.uid)
       );
       
-      allow get: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
-      );
-      
+      allow get: if isSignedIn() && (isOwner(resource.data) || isMember(resource.data));
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
@@ -37,7 +40,7 @@ service cloud.firestore {
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.userId == request.auth.uid ||
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
+        isMember(resource.data)
       );
       
       allow create, update, delete: if isSignedIn() && (
@@ -52,16 +55,9 @@ service cloud.firestore {
         request.query.where('tenantId', '==', request.auth.uid)
       );
       
-      allow get: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.tenantId == request.auth.uid
-      );
-      
+      allow get: if isSignedIn() && (isOwner(resource.data));
       allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.tenantId == request.auth.uid
-      );
+      allow update, delete: if isSignedIn() && (isOwner(resource.data));
     }
 
     // 4. Inspections
@@ -71,11 +67,7 @@ service cloud.firestore {
         request.query.where('memberIds', 'array-contains', request.auth.uid)
       );
       
-      allow get: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid ||
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
-      );
-      
+      allow get: if isSignedIn() && (isOwner(resource.data) || isMember(resource.data));
       allow create, update, delete: if isSignedIn() && (
         request.resource == null || request.resource.data.landlordId == request.auth.uid
       );

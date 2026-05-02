@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -120,11 +119,14 @@ export default function PropertiesPage() {
       let finalImageUrl = previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
       if (imageFile && storage) {
-        // Correct path for storage buckets
         const storageRef = ref(storage, `Images/${user.uid}/${propertyId}/${imageFile.name}`);
         const uploadResult = await uploadBytes(storageRef, imageFile);
         finalImageUrl = await getDownloadURL(uploadResult.ref);
       }
+
+      // Collect existing member IDs or start with landlord
+      const memberIds = editingProperty?.memberIds || [user.uid];
+      if (!memberIds.includes(user.uid)) memberIds.push(user.uid);
 
       const data = {
         id: propertyId,
@@ -142,7 +144,8 @@ export default function PropertiesPage() {
         isOccupied: editingProperty?.isOccupied || false,
         imageUrl: finalImageUrl,
         updatedAt: serverTimestamp(),
-        members: { [user.uid]: 'owner' }
+        memberIds: memberIds,
+        members: editingProperty?.members || { [user.uid]: 'owner' }
       };
 
       if (editingProperty) {
