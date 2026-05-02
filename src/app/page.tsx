@@ -11,7 +11,7 @@ import { KeyRound, Loader2, Eye, EyeOff, ShieldCheck, Chrome, User, Phone, Check
 import { useAuth, useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { sendEmailVerification, updateProfile } from 'firebase/auth';
+import { updateProfile, sendEmailVerification } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
@@ -171,7 +171,7 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 pt-8">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 text-left">
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">First Name</Label>
                 <div className="relative">
@@ -185,7 +185,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 text-left">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Phone Number</Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -193,7 +193,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 text-left">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select Your Portal Role</Label>
               <Tabs value={role} onValueChange={(v) => setRole(v as any)} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-xl h-12">

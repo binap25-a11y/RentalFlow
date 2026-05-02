@@ -76,12 +76,8 @@ export function useCollection<T = any>(
       (error: FirestoreError) => {
         // Safe path extraction for better error reporting
         let path: string = (memoizedTargetRefOrQuery as any).path || 
-                           (memoizedTargetRefOrQuery as unknown as InternalQuery)._query?.path?.canonicalString();
+                           (memoizedTargetRefOrQuery as unknown as InternalQuery)._query?.path?.canonicalString() || "";
         
-        if (!path || path === "/" || path === "") {
-          path = "databases/(default)/documents/";
-        }
-
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path,

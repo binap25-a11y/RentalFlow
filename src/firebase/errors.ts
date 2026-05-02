@@ -84,7 +84,7 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
     cleanPath = cleanPath.substring(dbPrefix.length);
   }
   
-  if (!cleanPath.startsWith('/')) {
+  if (!cleanPath.startsWith('/') && cleanPath !== "") {
     cleanPath = '/' + cleanPath;
   }
   
