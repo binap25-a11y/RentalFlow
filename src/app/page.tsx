@@ -50,8 +50,14 @@ export default function LoginPage() {
           const userDoc = await getDoc(userDocRef);
 
           if (userDoc.exists()) {
-            isRedirecting.current = true;
             const userData = userDoc.data();
+            // Verify all required fields are present
+            if (!userData.firstName || !userData.lastName || !userData.role) {
+              setNeedsProfile(true);
+              return;
+            }
+
+            isRedirecting.current = true;
             if (userData?.role === 'landlord') {
               router.replace('/landlord/dashboard');
             } else if (userData?.role === 'tenant') {
@@ -223,7 +229,7 @@ export default function LoginPage() {
         <p className="text-muted-foreground font-medium">Professional Property Management</p>
       </div>
 
-      <Card className="w-full max-w-md border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
+      <Card className="w-full max-md border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
         <CardHeader className="space-y-1 pb-4 text-center bg-primary/5">
           <CardTitle className="text-2xl font-headline font-bold text-primary">
             {authMode === 'login' ? 'Welcome Back' : 'Create Account'}

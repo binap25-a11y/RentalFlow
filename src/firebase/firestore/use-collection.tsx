@@ -75,14 +75,21 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (error: FirestoreError) => {
-        // Safe path extraction for better error reporting
-        // For collectionGroup queries, 'path' might be undefined, fallback to internal query representation
-        let path: string = (memoizedTargetRefOrQuery as any).path || 
-                           (memoizedTargetRefOrQuery as unknown as InternalQuery)._query?.path?.canonicalString() || "";
+        // Improved path extraction for collection group queries
+        let path: string = "";
+        const target = memoizedTargetRefOrQuery as any;
+        
+        if (target.path) {
+          path = target.path;
+        } else if (target._query?.path) {
+          path = target._query.path.toString();
+        } else if (target._query?.collectionGroup) {
+          path = `(collectionGroup)/${target._query.collectionGroup}`;
+        }
         
         const contextualError = new FirestorePermissionError({
           operation: 'list',
-          path,
+          path: path || "(unknown path)",
         })
 
         setError(contextualError)

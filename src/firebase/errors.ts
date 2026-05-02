@@ -79,16 +79,14 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   const dbPrefix = '/databases/(default)/documents';
   let rawPath = context.path || "";
   
-  // Normalize the path by removing redundant prefixes and ensuring single slash separation
-  let cleanPath = rawPath;
-  if (cleanPath.startsWith(dbPrefix)) {
-    cleanPath = cleanPath.substring(dbPrefix.length);
+  // Strip existing prefix to avoid double-prefixing
+  if (rawPath.startsWith(dbPrefix)) {
+    rawPath = rawPath.substring(dbPrefix.length);
   }
   
-  // Clean multiple leading slashes
-  cleanPath = cleanPath.replace(/^\/+/, '');
-  
-  const normalizedPath = `${dbPrefix}/${cleanPath}`.replace(/\/+$/, '');
+  // Normalize slashes
+  const cleanPath = rawPath.replace(/^\/+|\/+$/g, '');
+  const normalizedPath = cleanPath ? `${dbPrefix}/${cleanPath}` : dbPrefix;
 
   return {
     auth: authObject,
