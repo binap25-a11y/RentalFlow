@@ -1,4 +1,3 @@
-
 import {
   collection,
   query,
@@ -8,8 +7,6 @@ import {
   Firestore,
   Query
 } from "firebase/firestore";
-
-type UserRole = "landlord" | "tenant";
 
 /**
  * 🏠 Landlord Portfolio Queries
