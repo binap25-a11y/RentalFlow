@@ -43,7 +43,8 @@ service cloud.firestore {
     match /{path=**}/maintenanceRequests/{id} {
       allow list, read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
-        resource.data.tenantId == request.auth.uid
+        resource.data.tenantId == request.auth.uid ||
+        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
       allow create: if isSignedIn();
       allow update: if isSignedIn() && (
@@ -53,7 +54,10 @@ service cloud.firestore {
     }
 
     match /{path=**}/inspections/{id} {
-      allow list, read: if isPropertyParticipant(resource.data);
+      allow list, read: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
+      );
     }
 
     match /{path=**}/tenantProfiles/{id} {
@@ -64,11 +68,18 @@ service cloud.firestore {
     }
 
     match /{path=**}/documents/{id} {
-      allow list, read: if isPropertyParticipant(resource.data);
+      allow list, read: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.userId == request.auth.uid ||
+        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
+      );
     }
 
     match /{path=**}/emergencyContactSheets/{id} {
-      allow list, read: if isPropertyParticipant(resource.data);
+      allow list, read: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
+      );
     }
   }
 }

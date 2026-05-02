@@ -100,7 +100,7 @@ export default function LoginPage() {
       
       try {
         await sendEmailVerification(user);
-        toast({ title: "Profile established", description: "Verification email sent. Welcome to RentalFlow!" });
+        toast({ title: "Profile established", description: "Verification email sent. Welcome to LeaseLoop!" });
       } catch (err) {
         toast({ title: "Profile established", description: `Welcome as a ${role}.` });
       }
@@ -218,7 +218,7 @@ export default function LoginPage() {
         <div className="inline-flex items-center justify-center p-3 bg-primary text-primary-foreground rounded-2xl mb-4 shadow-xl">
           <KeyRound className="w-8 h-8" />
         </div>
-        <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">RentalFlow</h1>
+        <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">LeaseLoop</h1>
         <p className="text-muted-foreground font-medium">Professional Property Management</p>
       </div>
 
@@ -228,7 +228,7 @@ export default function LoginPage() {
             {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
           </CardTitle>
           <CardDescription>
-            {authMode === 'login' ? 'Sign in to access your properties' : 'Join the RentalFlow ecosystem'}
+            {authMode === 'login' ? 'Sign in to access your properties' : 'Join the LeaseLoop ecosystem'}
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
@@ -266,7 +266,7 @@ export default function LoginPage() {
           </Button>
 
           <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full text-sm font-bold text-primary/60 hover:text-primary transition-colors">
-            {authMode === 'login' ? "New to RentalFlow? Create an account" : "Already registered? Log in here"}
+            {authMode === 'login' ? "New to LeaseLoop? Create an account" : "Already registered? Log in here"}
           </button>
         </CardContent>
       </Card>
