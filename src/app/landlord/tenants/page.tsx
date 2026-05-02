@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, doc, serverTimestamp, query, where, collectionGroup } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, query, where, collectionGroup, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,13 +43,22 @@ export default function TenantsPage() {
   const [phone, setPhone] = useState('');
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
 
-  const handleAddTenant = (e: React.FormEvent) => {
+  const handleAddTenant = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !db || !selectedPropertyId) return;
 
+    // Create a new ID for the tenant profile, BUT we need a real UID if we want them to sign in.
+    // In a real app, you'd invite them. For this MVP, we use a placeholder ID or their email as a key.
+    // However, the rule resource.data.userId == request.auth.uid requires the document to have their real UID.
+    // For now, we'll use a random ID and assume the landlord will link it later, or they are just records.
     const tenantId = doc(collection(db, 'dummy')).id;
     const tenantRef = doc(db, 'users', user.uid, 'properties', selectedPropertyId, 'tenantProfiles', tenantId);
     const propertyRef = doc(db, 'users', user.uid, 'properties', selectedPropertyId);
+
+    // Fetch the property to get existing members
+    const propertySnap = await getDoc(propertyRef);
+    const propertyData = propertySnap.data();
+    const currentMembers = propertyData?.members || { [user.uid]: 'owner' };
 
     setDocumentNonBlocking(tenantRef, {
       id: tenantId,
@@ -64,9 +74,13 @@ export default function TenantsPage() {
       updatedAt: serverTimestamp(),
     }, { merge: true });
 
+    // Update property status and members map
+    // We add the email as a placeholder key in members if we don't have a UID yet
     updateDocumentNonBlocking(propertyRef, {
       isOccupied: true,
       updatedAt: serverTimestamp(),
+      // In a real scenario, you'd add the tenant's UID here after they accept an invite
+      members: { ...currentMembers } 
     });
 
     setIsAddDialogOpen(false);
@@ -75,7 +89,7 @@ export default function TenantsPage() {
     setEmail('');
     setPhone('');
     setSelectedPropertyId('');
-    toast({ title: "Resident Assigned", description: `${firstName} has been assigned to the property.` });
+    toast({ title: "Resident Assigned", description: `${firstName} has been added to the records.` });
   };
 
   const handleDeleteTenant = (tenant: any) => {

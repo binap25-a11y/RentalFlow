@@ -108,7 +108,7 @@ export default function LoginPage() {
       
       try {
         await sendEmailVerification(user);
-        toast({ title: "Profile established", description: "Verification email sent. Welcome to LeaseLoop!" });
+        toast({ title: "Profile established", description: "Verification email sent. Welcome to RentalFlow!" });
       } catch (err) {
         toast({ title: "Profile established", description: `Welcome as a ${role}.` });
       }
@@ -233,7 +233,7 @@ export default function LoginPage() {
         <p className="text-muted-foreground font-medium">Professional Property Management</p>
       </div>
 
-      <Card className="w-full max-md border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
+      <Card className="w-full max-w-md border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
         <CardHeader className="space-y-1 pb-4 text-center bg-primary/5">
           <CardTitle className="text-2xl font-headline font-bold text-primary">
             {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
