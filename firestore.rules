@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -10,19 +11,7 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // Standard User Profile Access
-    match /users/{userId} {
-      allow read, write: if isOwner(userId);
-
-      // Allow the owner full access to their own data tree recursively
-      match /{allSubcollections=**} {
-        allow read, write: if isOwner(userId);
-      }
-    }
-
-    // Collection Group Rules for Queries
-    // Rules are ORed. We allow listing for authenticated users on these groups,
-    // while protecting actual data access (read) and mutations (write).
+    // --- COLLECTION GROUP RULES (MUST BE TOP-LEVEL FOR QUERIES) ---
     
     match /{path=**}/properties/{id} {
       allow list: if isSignedIn();
@@ -80,6 +69,18 @@ service cloud.firestore {
         resource.data.landlordId == request.auth.uid || 
         (resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
+    }
+
+    // --- PATH-SPECIFIC RULES ---
+
+    // Standard User Profile Access
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      // Recursive catch-all for path-based access (mostly for landlords)
+      match /{allSubcollections=**} {
+        allow read, write: if isOwner(userId);
+      }
     }
   }
 }

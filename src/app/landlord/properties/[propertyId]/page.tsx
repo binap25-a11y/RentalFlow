@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, use, useMemo } from 'react';
@@ -13,12 +14,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Building2, MapPin, Users, Wrench, FileCheck, Phone, 
   Trash2, Edit3, Loader2, Save, ArrowLeft,
-  Download, FileText, Info, ShieldAlert, Upload
+  Download, FileText, Info, ShieldAlert, Upload, Calendar as CalendarIcon
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { format } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -64,6 +68,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   // Document Upload State
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
+  const [expiryDate, setExpiryDate] = useState<Date>();
 
   const handleUpdateRent = () => {
     if (!propertyRef) return;
@@ -117,11 +122,14 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         propertyId: propertyId,
         userId: user.uid, 
         landlordId: user.uid,
+        expiryDate: expiryDate ? expiryDate.toISOString() : null,
         members: property.members || { [user.uid]: 'owner' },
+        uploadDate: new Date().toISOString(),
         createdAt: new Date().toISOString(),
       }, { merge: true });
 
       toast({ title: "Document Uploaded", description: `${file.name} is now in the vault.` });
+      setExpiryDate(undefined);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Upload Failed", description: error.message });
     } finally {
@@ -129,13 +137,13 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     }
   };
 
-  if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin" /></div>;
+  if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!property) return <div className="p-8 text-center">Property not found.</div>;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex items-center gap-4 text-left">
-        <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full"><ArrowLeft className="w-5 h-5" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full hover:bg-muted"><ArrowLeft className="w-5 h-5" /></Button>
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">{property.addressLine1}</h1>
           <p className="text-muted-foreground flex items-center font-medium font-body"><MapPin className="w-4 h-4 mr-1 text-primary/60" /> {property.zipCode}</p>
@@ -156,12 +164,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 <div className="space-y-1 flex-1 text-left">
                   <Label className="text-muted-foreground font-bold text-xs uppercase tracking-wider font-headline">Monthly Rent (£)</Label>
                   {isEditing ? (
-                    <Input type="number" value={rentAmount || property.rentAmount} onChange={(e) => setRentAmount(e.target.value)} className="rounded-xl" />
+                    <Input type="number" value={rentAmount || property.rentAmount} onChange={(e) => setRentAmount(e.target.value)} className="rounded-xl h-11" />
                   ) : (
                     <p className="text-3xl font-bold text-primary font-headline">£{property.rentAmount}</p>
                   )}
                 </div>
-                <Button variant={isEditing ? "default" : "outline"} onClick={isEditing ? handleUpdateRent : () => setIsEditing(true)} className="rounded-xl font-bold">
+                <Button variant={isEditing ? "default" : "outline"} onClick={isEditing ? handleUpdateRent : () => setIsEditing(true)} className="rounded-xl font-bold h-11">
                   {isEditing ? <><Save className="w-4 h-4 mr-2" /> Save</> : <><Edit3 className="w-4 h-4 mr-2" /> Edit Rent</>}
                 </Button>
               </div>
@@ -205,26 +213,60 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             <TabsContent value="docs" className="mt-6 space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-bold font-headline text-primary">Property Vault</h3>
-                <div className="relative">
-                  <Input 
-                    type="file" 
-                    id="doc-upload" 
-                    className="hidden" 
-                    onChange={handleUploadDocument}
-                    disabled={isUploadingDoc}
-                  />
-                  <Button asChild variant="outline" className="rounded-xl border-primary text-primary hover:bg-primary/5" disabled={isUploadingDoc}>
-                    <Label htmlFor="doc-upload" className="cursor-pointer">
-                      {isUploadingDoc ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-                      Upload Document
-                    </Label>
-                  </Button>
-                </div>
               </div>
+
+              <Card className="border-none shadow-sm bg-primary/5">
+                <CardContent className="pt-6 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2 text-left">
+                      <Label className="text-xs font-bold font-headline uppercase tracking-wider">Compliance Expiry (Optional)</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal h-11 rounded-xl",
+                              !expiryDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {expiryDate ? format(expiryDate, "PPP") : <span>Pick expiry date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={expiryDate}
+                            onSelect={setExpiryDate}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="flex items-end">
+                      <div className="relative w-full">
+                        <Input 
+                          type="file" 
+                          id="doc-upload" 
+                          className="hidden" 
+                          onChange={handleUploadDocument}
+                          disabled={isUploadingDoc}
+                        />
+                        <Button asChild className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/20" disabled={isUploadingDoc}>
+                          <Label htmlFor="doc-upload" className="cursor-pointer">
+                            {isUploadingDoc ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
+                            Upload To Vault
+                          </Label>
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
               
               <div className="grid gap-3">
                 {!documents || documents.length === 0 ? (
-                  <p className="text-sm text-muted-foreground italic font-body py-12 text-center border-2 border-dashed rounded-2xl">
+                  <p className="text-sm text-muted-foreground italic font-body py-12 text-center border-2 border-dashed rounded-2xl bg-white">
                     The vault is empty. Upload lease agreements or guides.
                   </p>
                 ) : (
@@ -237,7 +279,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         <div className="text-left">
                           <p className="font-bold text-sm font-body">{doc.fileName}</p>
                           <p className="text-[10px] text-muted-foreground font-headline uppercase font-bold">
-                            Added: {doc.createdAt ? format(new Date(doc.createdAt), 'PPP') : 'Recently'}
+                            Uploaded: {doc.uploadDate ? format(new Date(doc.uploadDate), 'PPP') : 'Recently'}
+                            {doc.expiryDate && ` • Expires: ${format(new Date(doc.expiryDate), 'PP')}`}
                           </p>
                         </div>
                       </div>

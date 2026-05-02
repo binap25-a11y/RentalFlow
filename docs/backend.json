@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -101,6 +102,10 @@
         "isActive": {
           "type": "boolean",
           "description": "Indicates if the property is currently active in the landlord's portfolio."
+        },
+        "members": {
+          "type": "object",
+          "description": "Map of UID to role for access control."
         }
       },
       "required": [
@@ -134,6 +139,10 @@
         "propertyId": {
           "type": "string",
           "description": "Reference to the Property this tenant is assigned to. (Relationship: Property 1:N TenantProfile)"
+        },
+        "landlordId": {
+          "type": "string",
+          "description": "Reference to the Landlord User who manages this property."
         },
         "leaseStartDate": {
           "type": "string",
@@ -170,6 +179,7 @@
         "id",
         "userId",
         "propertyId",
+        "landlordId",
         "leaseStartDate",
         "rentAmount"
       ]
@@ -178,7 +188,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "PropertyImage",
       "type": "object",
-      "description": "Stores references to images associated with a specific property, managed via a Supabase bucket.",
+      "description": "Stores references to images associated with a specific property.",
       "properties": {
         "id": {
           "type": "string",
@@ -186,11 +196,15 @@
         },
         "propertyId": {
           "type": "string",
-          "description": "Reference to the Property this image belongs to. (Relationship: Property 1:N PropertyImage)"
+          "description": "Reference to the Property this image belongs to."
+        },
+        "landlordId": {
+          "type": "string",
+          "description": "Reference to the Landlord User who owns this property."
         },
         "imageUrl": {
           "type": "string",
-          "description": "The URL of the image, stored in an external storage bucket (e.g., Supabase bucket).",
+          "description": "The URL of the image.",
           "format": "uri"
         },
         "description": {
@@ -201,11 +215,16 @@
           "type": "string",
           "description": "The date and time when the image was uploaded.",
           "format": "date-time"
+        },
+        "members": {
+          "type": "object",
+          "description": "Map of UID to role for access control."
         }
       },
       "required": [
         "id",
         "propertyId",
+        "landlordId",
         "imageUrl",
         "uploadDate"
       ]
@@ -214,7 +233,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "PropertyDocument",
       "type": "object",
-      "description": "Stores references to various documents (e.g., lease agreements, floor plans) linked to a property, managed via a Supabase bucket.",
+      "description": "Stores references to various documents linked to a property.",
       "properties": {
         "id": {
           "type": "string",
@@ -222,16 +241,24 @@
         },
         "propertyId": {
           "type": "string",
-          "description": "Reference to the Property this document belongs to. (Relationship: Property 1:N PropertyDocument)"
+          "description": "Reference to the Property this document belongs to."
+        },
+        "landlordId": {
+          "type": "string",
+          "description": "Reference to the Landlord User who owns this property."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Optional reference to a specific tenant user."
         },
         "documentUrl": {
           "type": "string",
-          "description": "The URL of the document, stored in an external storage bucket (e.g., Supabase bucket).",
+          "description": "The URL of the document.",
           "format": "uri"
         },
         "documentType": {
           "type": "string",
-          "description": "The category or type of the document, e.g., 'Lease Agreement', 'Floor Plan', 'Certificate'."
+          "description": "The category or type of the document."
         },
         "fileName": {
           "type": "string",
@@ -239,17 +266,27 @@
         },
         "description": {
           "type": "string",
-          "description": "A brief description of the document's content or purpose."
+          "description": "A brief description of the document's content."
         },
         "uploadDate": {
           "type": "string",
           "description": "The date and time when the document was uploaded.",
           "format": "date-time"
+        },
+        "expiryDate": {
+          "type": "string",
+          "description": "Optional expiry date for compliance tracking.",
+          "format": "date"
+        },
+        "members": {
+          "type": "object",
+          "description": "Map of UID to role for access control."
         }
       },
       "required": [
         "id",
         "propertyId",
+        "landlordId",
         "documentUrl",
         "documentType",
         "fileName",
@@ -260,42 +297,37 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Inspection",
       "type": "object",
-      "description": "Records details about property inspections, including scheduling, conduction, and status.",
+      "description": "Records details about property inspections.",
       "properties": {
         "id": {
-          "type": "string",
-          "description": "Unique identifier for the Inspection entity."
+          "type": "string"
         },
         "propertyId": {
-          "type": "string",
-          "description": "Reference to the Property where the inspection is being conducted. (Relationship: Property 1:N Inspection)"
+          "type": "string"
         },
         "landlordId": {
-          "type": "string",
-          "description": "Reference to the Landlord User who scheduled or conducted this inspection. (Relationship: User 1:N Inspection)"
+          "type": "string"
         },
         "scheduledDate": {
           "type": "string",
-          "description": "The date and time when the inspection is scheduled.",
           "format": "date-time"
         },
         "conductedDate": {
           "type": "string",
-          "description": "The actual date and time when the inspection was conducted, if completed.",
           "format": "date-time"
         },
         "status": {
-          "type": "string",
-          "description": "The current status of the inspection (e.g., 'Scheduled', 'Completed', 'Canceled', 'In Progress')."
+          "type": "string"
         },
         "notes": {
-          "type": "string",
-          "description": "General notes or observations from the inspection."
+          "type": "string"
         },
         "reportUrl": {
           "type": "string",
-          "description": "The URL to the generated PDF inspection report, stored in an external storage bucket.",
           "format": "uri"
+        },
+        "members": {
+          "type": "object"
         }
       },
       "required": [
@@ -310,57 +342,45 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "MaintenanceRequest",
       "type": "object",
-      "description": "Records details of maintenance requests submitted by tenants or logged by landlords.",
+      "description": "Records details of maintenance requests.",
       "properties": {
         "id": {
-          "type": "string",
-          "description": "Unique identifier for the MaintenanceRequest entity."
+          "type": "string"
         },
         "propertyId": {
-          "type": "string",
-          "description": "Reference to the Property where the maintenance issue occurred. (Relationship: Property 1:N MaintenanceRequest)"
+          "type": "string"
         },
         "tenantId": {
-          "type": "string",
-          "description": "Reference to the Tenant User who submitted this request (if applicable). (Relationship: User 1:N MaintenanceRequest)"
+          "type": "string"
         },
         "landlordId": {
-          "type": "string",
-          "description": "Reference to the Landlord User responsible for managing this request. (Relationship: User 1:N MaintenanceRequest)"
+          "type": "string"
         },
         "title": {
-          "type": "string",
-          "description": "A brief summary or title of the maintenance issue."
+          "type": "string"
         },
         "description": {
-          "type": "string",
-          "description": "A detailed description of the maintenance issue."
+          "type": "string"
         },
         "submissionDate": {
           "type": "string",
-          "description": "The date and time when the maintenance request was submitted.",
           "format": "date-time"
         },
         "status": {
-          "type": "string",
-          "description": "The current status of the maintenance request (e.g., 'Pending', 'In Progress', 'Completed', 'Canceled')."
+          "type": "string"
         },
         "priority": {
-          "type": "string",
-          "description": "The priority level of the maintenance request (e.g., 'Low', 'Medium', 'High', 'Emergency'), potentially suggested by AI."
+          "type": "string"
         },
         "category": {
-          "type": "string",
-          "description": "The category of the maintenance issue (e.g., 'Plumbing', 'Electrical', 'Appliance', 'Structural'), potentially suggested by AI."
+          "type": "string"
         },
         "completionDate": {
           "type": "string",
-          "description": "The date and time when the maintenance request was completed.",
           "format": "date-time"
         },
         "landlordNotes": {
-          "type": "string",
-          "description": "Notes added by the landlord regarding the maintenance request or its resolution."
+          "type": "string"
         }
       },
       "required": [
@@ -377,38 +397,36 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "EmergencyContactSheet",
       "type": "object",
-      "description": "Represents a generated emergency contact sheet for a property, available for tenants to download.",
+      "description": "Represents a generated emergency contact sheet.",
       "properties": {
         "id": {
-          "type": "string",
-          "description": "Unique identifier for the EmergencyContactSheet entity."
+          "type": "string"
         },
         "propertyId": {
-          "type": "string",
-          "description": "Reference to the Property this emergency contact sheet belongs to. (Relationship: Property 1:N EmergencyContactSheet)"
+          "type": "string"
+        },
+        "landlordId": {
+          "type": "string"
         },
         "title": {
-          "type": "string",
-          "description": "The title of the emergency contact sheet (e.g., 'Emergency Contacts Q4 2023')."
-        },
-        "description": {
-          "type": "string",
-          "description": "A brief description of the emergency contact sheet's content."
+          "type": "string"
         },
         "documentUrl": {
           "type": "string",
-          "description": "The URL to the generated PDF emergency contact sheet, stored in an external storage bucket.",
           "format": "uri"
         },
         "generationDate": {
           "type": "string",
-          "description": "The date and time when the emergency contact sheet was generated.",
           "format": "date-time"
+        },
+        "members": {
+          "type": "object"
         }
       },
       "required": [
         "id",
         "propertyId",
+        "landlordId",
         "title",
         "documentUrl",
         "generationDate"
@@ -430,13 +448,7 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Stores core user profiles for both Landlords and Tenants. Access is strictly personal, where the `userId` matches `request.auth.uid`. Contains the user's role.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user (Firebase Authentication UID)."
-            }
-          ]
+          "description": "Stores core user profiles."
         }
       },
       {
@@ -446,17 +458,7 @@
           "schema": {
             "$ref": "#/backend/entities/Property"
           },
-          "description": "Represents a rental property managed by a landlord. This document includes denormalized 'landlordId' (matching the path parameter) and a 'members' map for authorization independence. The 'members' map (`{uid: 'role'}`) explicitly defines access for the landlord ('owner') and assigned tenants ('tenant').",
-          "params": [
-            {
-              "name": "landlordId",
-              "description": "The unique identifier of the Landlord User who owns this property."
-            },
-            {
-              "name": "propertyId",
-              "description": "The unique identifier of the Property."
-            }
-          ]
+          "description": "Represents a rental property."
         }
       },
       {
@@ -466,21 +468,7 @@
           "schema": {
             "$ref": "#/backend/entities/TenantProfile"
           },
-          "description": "Contains specific tenancy details for a user assigned to a property. This document includes denormalized 'landlordId' (from the path parameter) and 'userId' (the tenant's UID from the schema) for authorization independence.",
-          "params": [
-            {
-              "name": "landlordId",
-              "description": "The unique identifier of the Landlord User who manages this property."
-            },
-            {
-              "name": "propertyId",
-              "description": "The unique identifier of the Property."
-            },
-            {
-              "name": "tenantProfileId",
-              "description": "The unique identifier for the TenantProfile record."
-            }
-          ]
+          "description": "Tenancy details for a user assigned to a property."
         }
       },
       {
@@ -490,21 +478,7 @@
           "schema": {
             "$ref": "#/backend/entities/PropertyImage"
           },
-          "description": "Stores references to images associated with a specific property. This document includes denormalized 'landlordId' (from the path parameter) and the 'members' map (denormalized from the parent Property) for authorization independence.",
-          "params": [
-            {
-              "name": "landlordId",
-              "description": "The unique identifier of the Landlord User who owns this property."
-            },
-            {
-              "name": "propertyId",
-              "description": "The unique identifier of the Property this image belongs to."
-            },
-            {
-              "name": "imageId",
-              "description": "The unique identifier for the PropertyImage."
-            }
-          ]
+          "description": "Property images."
         }
       },
       {
@@ -514,21 +488,7 @@
           "schema": {
             "$ref": "#/backend/entities/PropertyDocument"
           },
-          "description": "Stores references to various documents linked to a property. This document includes denormalized 'landlordId' (from the path parameter) and the 'members' map (denormalized from the parent Property) for authorization independence.",
-          "params": [
-            {
-              "name": "landlordId",
-              "description": "The unique identifier of the Landlord User who owns this property."
-            },
-            {
-              "name": "propertyId",
-              "description": "The unique identifier of the Property this document belongs to."
-            },
-            {
-              "name": "documentId",
-              "description": "The unique identifier for the PropertyDocument."
-            }
-          ]
+          "description": "Property documents."
         }
       },
       {
@@ -538,21 +498,7 @@
           "schema": {
             "$ref": "#/backend/entities/Inspection"
           },
-          "description": "Records details about property inspections. This document includes denormalized 'landlordId' (from the path parameter, matches 'resource.data.landlordId') and the 'members' map (denormalized from the parent Property) for authorization independence. Tenant read access can be conditionally granted based on inspection status (e.g., 'Completed').",
-          "params": [
-            {
-              "name": "landlordId",
-              "description": "The unique identifier of the Landlord User who scheduled or conducted this inspection."
-            },
-            {
-              "name": "propertyId",
-              "description": "The unique identifier of the Property where the inspection is being conducted."
-            },
-            {
-              "name": "inspectionId",
-              "description": "The unique identifier for the Inspection record."
-            }
-          ]
+          "description": "Inspection records."
         }
       },
       {
@@ -562,21 +508,7 @@
           "schema": {
             "$ref": "#/backend/entities/MaintenanceRequest"
           },
-          "description": "Records details of maintenance requests. This document includes denormalized 'landlordId' (from the path parameter, matches 'resource.data.landlordId') and 'tenantId' (from the schema) for authorization independence.",
-          "params": [
-            {
-              "name": "landlordId",
-              "description": "The unique identifier of the Landlord User responsible for managing this request."
-            },
-            {
-              "name": "propertyId",
-              "description": "The unique identifier of the Property where the maintenance issue occurred."
-            },
-            {
-              "name": "requestId",
-              "description": "The unique identifier for the MaintenanceRequest."
-            }
-          ]
+          "description": "Maintenance requests."
         }
       },
       {
@@ -586,24 +518,9 @@
           "schema": {
             "$ref": "#/backend/entities/EmergencyContactSheet"
           },
-          "description": "Represents a generated emergency contact sheet for a property. This document includes denormalized 'landlordId' (from the path parameter) and the 'members' map (denormalized from the parent Property) for authorization independence.",
-          "params": [
-            {
-              "name": "landlordId",
-              "description": "The unique identifier of the Landlord User who owns this property."
-            },
-            {
-              "name": "propertyId",
-              "description": "The unique identifier of the Property this sheet belongs to."
-            },
-            {
-              "name": "sheetId",
-              "description": "The unique identifier for the EmergencyContactSheet."
-            }
-          ]
+          "description": "Generated emergency contact sheets."
         }
       }
-    ],
-    "reasoning": "The Firestore structure for LeaseLoop is designed to prioritize Authorization Independence, Clarity of Intent, DBAC (Database-Backed Access Control), QAP-compliant (Queries As Permissions) list operations, and Data Invariants. This is achieved primarily through a hierarchical path structure combined with strategic denormalization of authorization-relevant fields.\n\n**Authorization Independence & Denormalization:**\nEach collection path is designed to place documents directly under their primary owner or a containing entity, ensuring that security rules do not require costly and insecure `get()` calls to parent documents for authorization.\n\n1.  **User Profiles:** `/users/{userId}` stores basic user information. Access is strictly path-based, meaning only the user whose `uid` matches `{userId}` can access their profile.\n\n2.  **Landlord-Owned Data Hierarchy:** All landlord-specific entities (Properties, and their subcollections: TenantProfiles, Images, Documents, Inspections, Maintenance Requests, Emergency Contact Sheets) are nested under `/users/{landlordId}/properties/{propertyId}/...`. This automatically ties all these related documents to the landlord who owns the `propertyId` corresponding to the `{landlordId}` in the path.\n\n3.  **Property-Level Access (Members Map):** To enable secure read access for tenants to their assigned properties and related subcollections without complex `get()` calls, a `members` map is denormalized directly into each `Property` document. This map explicitly lists `UIDs` and their roles (e.g., `{<landlordUid>: \"owner\", <tenantUid1>: \"tenant\"}`). This `members` map, along with the `landlordId` (which matches the path parameter), is further denormalized into subcollection documents like `PropertyImage`, `PropertyDocument`, `Inspection`, and `EmergencyContactSheet`. This ensures that a tenant's read access to these subcollections can be determined by checking `resource.data.members[request.auth.uid] != null` directly within the document itself.\n\n4.  **Specific User/Tenant References:** For `TenantProfile` and `MaintenanceRequest` entities, the `userId` (for TenantProfile) and `tenantId` (for MaintenanceRequest) fields are already present in their respective schemas. These fields, combined with the denormalized `landlordId` (matching the path parameter), provide sufficient authorization context directly within the document, eliminating the need for the `members` map in these specific subcollections.\n\n**QAP Compliance (Secure List Operations):**\n\nThe hierarchical structure and denormalized fields allow for efficient and secure `list` operations:\n\n*   **Landlords:** Can list all their properties by filtering on `landlordId == request.auth.uid` (implicitly via the path `/users/{landlordId}/properties`). Similarly, they can list all subcollection documents for a specific property using the same path-based authorization.\n*   **Tenants:**\n    *   To view their assigned property, they would query the `/users/{landlordId}/properties` collection where `resource.data.members[request.auth.uid] == 'tenant'`. This requires an index on the `members` map but is a QAP-compliant list operation.\n    *   To view property-specific subcollections (Images, Documents, Inspections, Emergency Contact Sheets) they are authorized for, they would query the respective subcollection using `resource.data.members[request.auth.uid] == 'tenant'` (and potentially a status filter for Inspections).\n    *   To view their `TenantProfile` or `MaintenanceRequest` for a property, they would query the respective subcollection where `resource.data.userId == request.auth.uid` or `resource.data.tenantId == request.auth.uid`.\n\nThis design ensures that security rules are simple, explicit, and do not rely on `get()` calls, making the system more robust, scalable, and easier to debug."
+    ]
   }
 }
