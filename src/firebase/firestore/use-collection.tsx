@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -86,7 +85,6 @@ export function useCollection<T = any>(
         } else if (target._query?.collectionGroup) {
           path = `(collectionGroup)/${target._query.collectionGroup}`;
         } else if (target._query?.path) {
-          // Attempt to extract path from internal _query object
           try {
             path = target._query.path.canonicalString() || target._query.path.toString();
           } catch {

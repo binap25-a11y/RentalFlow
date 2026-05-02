@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -12,7 +11,7 @@ import { KeyRound, Loader2, Eye, EyeOff, ShieldCheck, Chrome, User, Phone, Check
 import { useAuth, useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { updateProfile, sendEmailVerification } from 'firebase/auth';
+import { updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
@@ -51,7 +50,7 @@ export default function LoginPage() {
 
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            // Verify all required fields are present to prevent "null" identity issues
+            // Verify all required fields are present
             if (!userData.firstName || !userData.lastName || !userData.role) {
               setNeedsProfile(true);
               return;
@@ -67,7 +66,6 @@ export default function LoginPage() {
             setNeedsProfile(true);
           }
         } catch (e) {
-          // If we can't read the profile, assume it needs establishment
           setNeedsProfile(true);
         }
       };
@@ -86,7 +84,7 @@ export default function LoginPage() {
     try {
       const displayName = `${firstName.trim()} ${lastName.trim()}`;
       
-      // Update Firebase Auth Profile for Token sync
+      // Update Firebase Auth Profile
       await updateProfile(user, {
         displayName: displayName
       });
@@ -108,9 +106,8 @@ export default function LoginPage() {
         createdAt: serverTimestamp(),
       }, { merge: true });
       
-      toast({ title: "Profile Established", description: `Welcome to LeaseLoop as a ${role}.` });
+      toast({ title: "Profile Established", description: `Welcome to RentalFlow as a ${role}.` });
       
-      // Navigate based on selected role
       setTimeout(() => {
         isRedirecting.current = true;
         if (role === 'landlord') {
