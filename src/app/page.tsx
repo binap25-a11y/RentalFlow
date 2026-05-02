@@ -11,7 +11,7 @@ import { KeyRound, Loader2, Eye, EyeOff, ShieldCheck, Chrome, User, Phone, Check
 import { useAuth, useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { sendEmailVerification } from 'firebase/auth';
+import { sendEmailVerification, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
@@ -76,6 +76,11 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
+      // Update Firebase Auth Display Name
+      await updateProfile(user, {
+        displayName: `${firstName.trim()} ${lastName.trim()}`
+      });
+
       const userDocRef = doc(db, 'users', user.uid);
       
       const profileData = {

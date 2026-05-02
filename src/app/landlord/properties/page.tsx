@@ -322,6 +322,7 @@ export default function PropertiesPage() {
                   alt={property.addressLine1} 
                   fill 
                   className="object-cover transition-transform duration-700 group-hover:scale-105" 
+                  data-ai-hint="modern house"
                 />
                 <Badge className={cn(
                   "absolute top-4 right-4 font-bold shadow-xl py-1.5 px-4 uppercase text-[10px] tracking-widest",

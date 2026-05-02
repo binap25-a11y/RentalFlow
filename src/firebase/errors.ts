@@ -78,7 +78,7 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   const dbPrefix = '/databases/(default)/documents';
   let rawPath = context.path || "";
   
-  // Cleanly normalize the path
+  // Cleanly normalize the path to avoid double prefixing
   let cleanPath = rawPath;
   if (cleanPath.startsWith(dbPrefix)) {
     cleanPath = cleanPath.substring(dbPrefix.length);
