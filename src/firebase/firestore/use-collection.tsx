@@ -12,10 +12,6 @@ import {
 
 export type WithId<T> = T & { id: string };
 
-/**
- * A clean, robust version of the useCollection hook.
- * Subscribes to a Firestore collection or query in real-time.
- */
 export function useCollection<T = any>(
   ref: Query<DocumentData> | CollectionReference<DocumentData> | null | undefined
 ) {

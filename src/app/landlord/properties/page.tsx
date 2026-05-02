@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -39,14 +40,12 @@ export default function PropertiesPage() {
   // Form State
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
-  const [state, setState] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [rentAmount, setRentAmount] = useState('');
   const [description, setDescription] = useState('');
   const [propertyType, setPropertyType] = useState('Apartment');
   const [bedrooms, setBedrooms] = useState('1');
   const [bathrooms, setBathrooms] = useState('1');
-  const [squareFootage, setSquareFootage] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -71,14 +70,12 @@ export default function PropertiesPage() {
   const resetForm = () => {
     setAddress('');
     setCity('');
-    setState('');
     setZipCode('');
     setRentAmount('');
     setDescription('');
     setPropertyType('Apartment');
     setBedrooms('1');
     setBathrooms('1');
-    setSquareFootage('');
     setImageFile(null);
     setPreviewUrl(null);
     setEditingProperty(null);
@@ -93,14 +90,12 @@ export default function PropertiesPage() {
     setEditingProperty(property);
     setAddress(property.addressLine1 || '');
     setCity(property.city || '');
-    setState(property.state || '');
     setZipCode(property.zipCode || '');
     setRentAmount(property.rentAmount?.toString() || '');
     setDescription(property.description || '');
     setPropertyType(property.propertyType || 'Apartment');
     setBedrooms(property.numberOfBedrooms?.toString() || '1');
     setBathrooms(property.numberOfBathrooms?.toString() || '1');
-    setSquareFootage(property.squareFootage?.toString() || '');
     setPreviewUrl(property.imageUrl || null);
     setImageFile(null);
     setIsAddDialogOpen(true);
@@ -111,55 +106,51 @@ export default function PropertiesPage() {
     if (!user || !db) return;
 
     setIsSubmitting(true);
+    const propertyId = editingProperty ? editingProperty.id : doc(collection(db, 'properties')).id;
+    const propertyRef = doc(db, 'properties', propertyId);
     
+    // Optimistic / Faster closing of dialog
+    setIsAddDialogOpen(false);
+
     try {
-      const propertyId = editingProperty ? editingProperty.id : doc(collection(db, 'properties')).id;
-      const propertyRef = doc(db, 'properties', propertyId);
-      
       let finalImageUrl = previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
-      if (imageFile && storage) {
-        const storageRef = ref(storage, `Images/${user.uid}/${propertyId}/${imageFile.name}`);
-        const uploadResult = await uploadBytes(storageRef, imageFile);
-        finalImageUrl = await getDownloadURL(uploadResult.ref);
-      }
-
-      const tenantIds = editingProperty?.tenantIds || [];
-      const memberIds = Array.from(new Set([user.uid, ...tenantIds]));
-
-      const data = {
+      const baseData = {
         id: propertyId,
         landlordId: user.uid,
         addressLine1: address,
         city,
-        state,
         zipCode,
         description,
         propertyType,
         numberOfBedrooms: Number(bedrooms),
         numberOfBathrooms: Number(bathrooms),
-        squareFootage: squareFootage ? Number(squareFootage) : null,
         rentAmount: Number(rentAmount),
         isOccupied: editingProperty?.isOccupied || false,
         imageUrl: finalImageUrl,
         updatedAt: serverTimestamp(),
-        tenantIds: tenantIds,
-        memberIds: memberIds,
+        tenantIds: editingProperty?.tenantIds || [],
+        memberIds: editingProperty?.memberIds || [user.uid],
+        isActive: true
       };
 
+      // Initiate save immediately
       if (editingProperty) {
-        updateDocumentNonBlocking(propertyRef, data);
-        toast({ title: "Property Asset Updated" });
+        updateDocumentNonBlocking(propertyRef, baseData);
       } else {
-        setDocumentNonBlocking(propertyRef, { 
-          ...data, 
-          createdAt: serverTimestamp(), 
-          isActive: true
-        }, { merge: true });
-        toast({ title: "Property Asset Registered" });
+        setDocumentNonBlocking(propertyRef, { ...baseData, createdAt: serverTimestamp() }, { merge: true });
       }
 
-      setIsAddDialogOpen(false);
+      // If there's an image, handle it in background without blocking success toast
+      if (imageFile && storage) {
+        const storageRef = ref(storage, `Images/${user.uid}/${propertyId}/${imageFile.name}`);
+        uploadBytes(storageRef, imageFile).then(async (result) => {
+          const url = await getDownloadURL(result.ref);
+          updateDocumentNonBlocking(propertyRef, { imageUrl: url });
+        });
+      }
+
+      toast({ title: editingProperty ? "Asset Updated" : "Asset Registered" });
       resetForm();
     } catch (error: any) {
       toast({ variant: "destructive", title: "Save Failed", description: error.message });
@@ -263,7 +254,7 @@ export default function PropertiesPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4 md:col-span-2">
+                    <div className="grid grid-cols-2 gap-4 md:col-span-2">
                       <div className="space-y-2">
                         <Label className="font-bold text-xs uppercase text-primary/60">Beds</Label>
                         <Select value={bedrooms} onValueChange={setBedrooms}>
@@ -281,10 +272,6 @@ export default function PropertiesPage() {
                             {['1','2','3+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
                           </SelectContent>
                         </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="sqft" className="font-bold text-xs uppercase text-primary/60">Sq. Ft.</Label>
-                        <Input id="sqft" type="number" value={squareFootage} onChange={(e) => setSquareFootage(e.target.value)} placeholder="800" className="rounded-xl h-12" />
                       </div>
                     </div>
 

@@ -11,7 +11,7 @@ import {
 
 /**
  * 🏠 Portfolio Queries (FLAT)
- * Filters a top-level collection by landlordId or membership.
+ * Filters a top-level collection by landlordId.
  */
 export function getLandlordCollectionQuery(db: Firestore, collectionName: string, userId: string): Query<DocumentData> {
   if (!userId) throw new Error("User ID required");
@@ -49,8 +49,6 @@ export function getTenantCollectionQuery(options: {
   // Other entities use specific field checks
   const field = collectionName === 'tenantProfiles' ? 'userId' : 'tenantId';
   
-  // NOTE: If we need more complex OR behavior, we'd use 'or' from firebase/firestore
-  // but for basic listing, a single constrained query is safest for rules.
   return query(
     collection(db, collectionName),
     where(field, "==", userId),

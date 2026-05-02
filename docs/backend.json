@@ -12,7 +12,7 @@
         "firstName": { "type": "string" },
         "lastName": { "type": "string" },
         "phoneNumber": { "type": "string" },
-        "role": { "type": "string" }
+        "role": { "type": "string", "enum": ["landlord", "tenant"] }
       },
       "required": ["id", "email", "firstName", "lastName", "role"]
     },
@@ -116,7 +116,7 @@
     }
   },
   "auth": {
-    "providers": ["password", "anonymous"]
+    "providers": ["password", "google.com"]
   },
   "firestore": {
     "structure": [
