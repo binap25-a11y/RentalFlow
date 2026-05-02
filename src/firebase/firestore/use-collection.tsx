@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -75,6 +76,7 @@ export function useCollection<T = any>(
       },
       (error: FirestoreError) => {
         // Safe path extraction for better error reporting
+        // For collectionGroup queries, 'path' might be undefined, fallback to internal query representation
         let path: string = (memoizedTargetRefOrQuery as any).path || 
                            (memoizedTargetRefOrQuery as unknown as InternalQuery)._query?.path?.canonicalString() || "";
         

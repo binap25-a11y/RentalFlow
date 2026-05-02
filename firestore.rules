@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -8,16 +9,6 @@ service cloud.firestore {
 
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
-    }
-
-    // Helper to check if user is a member of the property or the request
-    function isPropertyParticipant(data) {
-      return isSignedIn() && (
-        data.landlordId == request.auth.uid || 
-        data.userId == request.auth.uid ||
-        data.tenantId == request.auth.uid ||
-        (data.members != null && data.members[request.auth.uid] != null)
-      );
     }
 
     // Standard User Profile Access
@@ -32,6 +23,7 @@ service cloud.firestore {
 
     // Collection Group Rules for Queries
     // These allow the list operations used in dashboards across the portfolio
+    // Matches queries like query(collectionGroup(db, "properties"), where("landlordId", "==", user.uid))
     
     match /{path=**}/properties/{id} {
       allow list, read: if isSignedIn() && (

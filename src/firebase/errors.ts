@@ -1,3 +1,4 @@
+
 'use client';
 import { getAuth, type User } from 'firebase/auth';
 
@@ -78,17 +79,16 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   const dbPrefix = '/databases/(default)/documents';
   let rawPath = context.path || "";
   
-  // Cleanly normalize the path to avoid double prefixing
+  // Normalize the path by removing redundant prefixes and ensuring single slash separation
   let cleanPath = rawPath;
   if (cleanPath.startsWith(dbPrefix)) {
     cleanPath = cleanPath.substring(dbPrefix.length);
   }
   
-  if (!cleanPath.startsWith('/') && cleanPath !== "") {
-    cleanPath = '/' + cleanPath;
-  }
+  // Clean multiple leading slashes
+  cleanPath = cleanPath.replace(/^\/+/, '');
   
-  const normalizedPath = `${dbPrefix}${cleanPath}`.replace(/\/+/g, '/');
+  const normalizedPath = `${dbPrefix}/${cleanPath}`.replace(/\/+$/, '');
 
   return {
     auth: authObject,

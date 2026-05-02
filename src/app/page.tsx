@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -76,7 +77,7 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      // Update Firebase Auth Display Name
+      // Update Firebase Auth Display Name to avoid null identities
       await updateProfile(user, {
         displayName: `${firstName.trim()} ${lastName.trim()}`
       });
