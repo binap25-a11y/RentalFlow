@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -14,11 +13,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format, isValid } from "date-fns";
+import { format } from "date-fns";
 import { 
   Calendar as CalendarIcon, MapPin, Loader2, Download, 
   CheckCircle2, ClipboardList, ShieldAlert, Home, Wrench, 
-  Check, X, AlertTriangle, Info, FileText
+  Check, X, AlertTriangle, Info
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -144,7 +143,6 @@ export default function InspectionsPage() {
     setIsGenerating(true);
     const property = properties?.find(p => p.id === activeInspection.propertyId);
 
-    // Flatten findings for AI prompt
     const flatFindings = Object.entries(structuredFindings).map(([item, data]) => {
       return `${item}: ${data.status.toUpperCase()} ${data.notes ? `(Notes: ${data.notes})` : ''}`;
     }).join('\n');
@@ -182,8 +180,7 @@ export default function InspectionsPage() {
     const pageWidth = doc.internal.pageSize.getWidth();
     const today = format(new Date(), 'PPp');
     
-    // Header
-    doc.setFillColor(31, 41, 55); // Dark Slate
+    doc.setFillColor(31, 41, 55);
     doc.rect(0, 0, pageWidth, 40, 'F');
     
     doc.setTextColor(255, 255, 255);
@@ -193,7 +190,6 @@ export default function InspectionsPage() {
     doc.setFontSize(10);
     doc.text(`Portfolio Registry: RentSafeUK`, 20, 32);
     
-    // Property Details
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
@@ -212,7 +208,6 @@ export default function InspectionsPage() {
     doc.setDrawColor(229, 231, 235);
     doc.line(20, 75, pageWidth - 20, 75);
 
-    // AI Summary
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text("Executive Summary", 20, 90);
@@ -223,7 +218,6 @@ export default function InspectionsPage() {
 
     let y = 98 + (splitSummary.length * 5) + 10;
 
-    // Findings Table
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.text("Condition Audit Breakdown", 20, y);
@@ -247,7 +241,11 @@ export default function InspectionsPage() {
       doc.text(item, 25, y);
       
       const isPass = data.status === 'pass';
-      doc.setTextColor(isPass ? 16, 185, 129) : 239, 68, 68); // Green or Red
+      if (isPass) {
+        doc.setTextColor(16, 185, 129);
+      } else {
+        doc.setTextColor(239, 68, 68);
+      }
       doc.setFont("helvetica", "bold");
       doc.text(isPass ? "PASS" : "FAIL", pageWidth - 60, y);
       
@@ -264,7 +262,6 @@ export default function InspectionsPage() {
       y += 8;
     });
 
-    // Footer
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
