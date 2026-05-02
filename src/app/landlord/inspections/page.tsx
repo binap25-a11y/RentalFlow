@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -184,7 +185,6 @@ export default function InspectionsPage() {
                     selected={date}
                     onSelect={setDate}
                     initialFocus
-                    className="rounded-2xl"
                   />
                 </PopoverContent>
               </Popover>
