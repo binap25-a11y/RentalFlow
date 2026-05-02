@@ -7,10 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { KeyRound, Loader2, Eye, EyeOff, ShieldCheck, Chrome, User, Phone, CheckCircle2 } from "lucide-react";
-import { useAuth, useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
+import { KeyRound, Loader2, Eye, EyeOff, ShieldCheck, Chrome, User as UserIcon, Phone, CheckCircle2 } from "lucide-react";
+import { useAuth, useFirestore, useUser } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
-import { doc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -50,7 +50,6 @@ export default function LoginPage() {
 
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            // Critical check for identity metadata
             if (!userData.firstName || !userData.lastName || !userData.role) {
               setNeedsProfile(true);
               return;
@@ -61,14 +60,13 @@ export default function LoginPage() {
             
             if (userData?.role === 'landlord') {
               router.replace('/landlord/dashboard');
-            } else if (userData?.role === 'tenant') {
+            } else {
               router.replace('/tenant/hub');
             }
           } else {
             setNeedsProfile(true);
           }
         } catch (e) {
-          console.error("Profile check error:", e);
           setNeedsProfile(true);
         }
       };
@@ -79,7 +77,7 @@ export default function LoginPage() {
   const handleCreateProfile = async () => {
     if (!user || !db) return;
     if (!firstName.trim() || !lastName.trim() || !phoneNumber.trim()) {
-      toast({ variant: "destructive", title: "Missing Information", description: "Please provide your full name and contact number." });
+      toast({ variant: "destructive", title: "Missing Information", description: "Please fill in all details." });
       return;
     }
 
@@ -87,42 +85,31 @@ export default function LoginPage() {
     try {
       const displayName = `${firstName.trim()} ${lastName.trim()}`;
       
-      // 1. Update Auth Profile (Essential for identity tokens)
+      // Update Auth Profile FIRST
       await updateProfile(user, { displayName });
 
-      // 2. Commit Firestore Profile
+      // Save Firestore Profile
       const userDocRef = doc(db, 'users', user.uid);
-      const profileData = {
+      await setDoc(userDocRef, {
         id: user.uid,
         email: user.email,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         phoneNumber: phoneNumber.trim(),
         role: role,
-        updatedAt: serverTimestamp(),
-      };
-
-      // We use a regular setDoc here to ensure completion before redirection
-      const { setDoc: firestoreSetDoc } = await import('firebase/firestore');
-      await firestoreSetDoc(userDocRef, {
-        ...profileData,
         createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       }, { merge: true });
       
-      toast({ title: "Profile Established", description: `Welcome to LeaseLoop as a ${role}.` });
+      toast({ title: "Profile Ready", description: `Welcome to LeaseLoop.` });
       
-      // Small delay to allow Firestore state to propagate
+      // Delay redirection slightly to allow state propagation
       setTimeout(() => {
         isRedirecting.current = true;
-        if (role === 'landlord') {
-          router.replace('/landlord/dashboard');
-        } else {
-          router.replace('/tenant/hub');
-        }
-      }, 500);
+        router.replace(role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub');
+      }, 800);
     } catch (e: any) {
-      console.error("Profile setup failed:", e);
-      toast({ variant: "destructive", title: "Setup Failed", description: "Could not establish your identity." });
+      toast({ variant: "destructive", title: "Setup Failed", description: e.message });
       setIsLoading(false);
     }
   };
@@ -134,17 +121,17 @@ export default function LoginPage() {
     try {
       if (authMode === 'signup') {
         await initiateEmailSignUp(auth, email, password);
-        toast({ title: "Account Created", description: "Please establish your identity." });
+        toast({ title: "Verification Needed", description: "Please set up your profile." });
       } else {
         await initiateEmailSignIn(auth, email, password);
       }
     } catch (error: any) {
       setIsLoading(false);
-      let message = "An error occurred. Please try again.";
+      let message = "An error occurred.";
       if (error.code === 'auth/invalid-credential') message = "Invalid email or password.";
       else if (error.code === 'auth/email-already-in-use') message = "Email already in use.";
       
-      toast({ variant: "destructive", title: "Authentication Failed", description: message });
+      toast({ variant: "destructive", title: "Auth Error", description: message });
     }
   };
 
@@ -153,7 +140,7 @@ export default function LoginPage() {
     try {
       await initiateGoogleSignIn(auth);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Google Login Failed", description: "Please try again." });
+      toast({ variant: "destructive", title: "Google Login Failed" });
       setIsLoading(false);
     }
   };
@@ -175,16 +162,14 @@ export default function LoginPage() {
               <ShieldCheck className="w-8 h-8" />
             </div>
             <CardTitle className="text-2xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
-            <CardDescription>
-              Signed in as <span className="text-primary font-bold">{user?.email}</span>. Please complete your profile.
-            </CardDescription>
+            <CardDescription>Establish your professional profile on LeaseLoop.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 pt-8">
             <div className="grid grid-cols-2 gap-4 text-left">
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">First Name</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <UserIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jane" className="pl-10 h-11 rounded-xl" />
                 </div>
               </div>
@@ -203,7 +188,7 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-4 text-left">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select Your Role</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select Role</Label>
               <Tabs value={role} onValueChange={(v) => setRole(v as any)} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-xl h-12">
                   <TabsTrigger value="landlord" className="rounded-lg font-bold">Landlord</TabsTrigger>
@@ -212,7 +197,7 @@ export default function LoginPage() {
               </Tabs>
             </div>
 
-            <Button className="w-full h-12 rounded-xl font-bold bg-primary text-lg shadow-lg shadow-primary/20" onClick={handleCreateProfile} disabled={isLoading || !firstName || !lastName || !phoneNumber}>
+            <Button className="w-full h-12 rounded-xl font-bold bg-primary text-lg" onClick={handleCreateProfile} disabled={isLoading || !firstName || !lastName || !phoneNumber}>
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle2 className="w-5 h-5 mr-2" /> Complete Registration</>}
             </Button>
           </CardContent>
@@ -234,10 +219,10 @@ export default function LoginPage() {
       <Card className="w-full max-w-md border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
         <CardHeader className="space-y-1 pb-4 text-center bg-primary/5">
           <CardTitle className="text-2xl font-headline font-bold text-primary">
-            {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
+            {authMode === 'login' ? 'Welcome Back' : 'Join Us'}
           </CardTitle>
           <CardDescription>
-            {authMode === 'login' ? 'Sign in to access your portfolio' : 'Join the LeaseLoop ecosystem'}
+            {authMode === 'login' ? 'Sign in to your portfolio' : 'Start your management journey'}
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
@@ -250,7 +235,7 @@ export default function LoginPage() {
               <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="rounded-xl h-11" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-muted-foreground hover:text-primary transition-colors">
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-muted-foreground">
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
@@ -265,17 +250,17 @@ export default function LoginPage() {
               <span className="w-full border-t"></span>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-4 text-muted-foreground font-bold tracking-widest">Connect Securely</span>
+              <span className="bg-background px-4 text-muted-foreground font-bold tracking-widest">or continue with</span>
             </div>
           </div>
 
-          <Button variant="outline" className="w-full h-12 rounded-xl mb-6 font-bold border-primary/10 hover:bg-primary/5 hover:border-primary/20 transition-all" onClick={handleGoogleSignIn} disabled={isLoading}>
+          <Button variant="outline" className="w-full h-12 rounded-xl mb-6 font-bold" onClick={handleGoogleSignIn} disabled={isLoading}>
             <Chrome className="w-5 h-5 mr-3 text-red-500" />
             Continue with Google
           </Button>
 
           <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full text-sm font-bold text-primary/60 hover:text-primary transition-colors">
-            {authMode === 'login' ? "New to LeaseLoop? Create an account" : "Already registered? Log in here"}
+            {authMode === 'login' ? "New to LeaseLoop? Register here" : "Already have an account? Log in"}
           </button>
         </CardContent>
       </Card>
