@@ -32,10 +32,10 @@ export function buildSecureCollectionGroupQuery(options: {
     // Landlords always access via landlordId
     constraints.push(where("landlordId", "==", userId));
   } else if (role === "tenant") {
-    // Residents access via tenantId OR memberIds array
+    // Residents access via tenantId/userId OR memberIds array
     if (collectionName === 'maintenanceRequests') {
       constraints.push(where("tenantId", "==", userId));
-    } else if (collectionName === 'documents') {
+    } else if (collectionName === 'documents' || collectionName === 'tenantProfiles') {
       constraints.push(
         or(
           where("userId", "==", userId),
@@ -43,6 +43,7 @@ export function buildSecureCollectionGroupQuery(options: {
         )
       );
     } else {
+      // Default fallback for properties, inspections etc.
       constraints.push(
         or(
           where("tenantId", "==", userId),
@@ -52,7 +53,7 @@ export function buildSecureCollectionGroupQuery(options: {
     }
   }
 
-  // Final check to prevent broad queries
+  // Final check to prevent broad unauthorized queries
   if (constraints.length === 0) {
     throw new Error(`Firestore query for ${collectionName} must include security constraints.`);
   }
