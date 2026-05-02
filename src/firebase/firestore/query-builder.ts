@@ -13,6 +13,7 @@ type UserRole = "landlord" | "tenant";
 
 /**
  * 🏠 Direct subcollection query for properties (Landlord only)
+ * This is faster and avoids collectionGroup permission issues.
  */
 export function getLandlordPropertiesQuery(db: Firestore, userId: string): Query {
   return query(
@@ -38,32 +39,21 @@ export function buildSecureCollectionGroupQuery(options: {
 
   const constraints: QueryConstraint[] = [];
 
-  // 🔑 ROLE-BASED FILTERING (Enforces query-rules alignment)
+  // ✅ LANDLORD ACCESS
   if (role === "landlord") {
-    // Landlords always access via landlordId
     constraints.push(where("landlordId", "==", userId));
-  } else if (role === "tenant") {
-    // Residents/Members access via tenantId/userId OR memberIds array
-    if (collectionName === 'maintenanceRequests') {
-      constraints.push(where("tenantId", "==", userId));
-    } else if (collectionName === 'tenantProfiles') {
-      constraints.push(where("userId", "==", userId));
-    } else if (collectionName === 'documents') {
-      constraints.push(
-        or(
-          where("userId", "==", userId),
-          where("memberIds", "array-contains", userId)
-        )
-      );
-    } else {
-      // For properties, inspections, etc.
-      constraints.push(where("memberIds", "array-contains", userId));
-    }
   }
 
-  // Final safety check: throw if no constraints are generated to prevent broad query denials
-  if (constraints.length === 0) {
-    throw new Error(`❌ Firestore query for ${collectionName} missing security filters. This will be rejected by rules.`);
+  // ✅ TENANT / MEMBER ACCESS
+  if (role === "tenant") {
+    // For tenants, we check direct association (tenantId/userId) OR membership in the property
+    constraints.push(
+      or(
+        where("tenantId", "==", userId),
+        where("userId", "==", userId),
+        where("memberIds", "array-contains", userId)
+      )
+    );
   }
 
   return query(

@@ -1,130 +1,54 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  Query,
   onSnapshot,
-  DocumentData,
-  FirestoreError,
-  QuerySnapshot,
+  Query,
   CollectionReference,
+  DocumentData,
+  QuerySnapshot
 } from 'firebase/firestore';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
-/** Utility type to add an 'id' field to a given type T. */
 export type WithId<T> = T & { id: string };
 
 /**
- * Interface for the return value of the useCollection hook.
- * @template T Type of the document data.
- */
-export interface UseCollectionResult<T> {
-  data: WithId<T>[] | null; // Document data with ID, or null.
-  isLoading: boolean;       // True if loading.
-  error: FirestoreError | Error | null; // Error object, or null.
-}
-
-/* Internal implementation of Query:
-  https://github.com/firebase/firebase-js-sdk/blob/c5f08a9bc5da0d2b0207802c972d53724ccef055/packages/firestore/src/lite-api/reference.ts#L143
-*/
-export interface InternalQuery extends Query<DocumentData> {
-  path?: string;
-  _query?: {
-    path?: {
-      canonicalString?(): string;
-      toString?(): string;
-    };
-    collectionGroup?: string;
-    filters?: any[];
-  }
-}
-
-/**
- * React hook to subscribe to a Firestore collection or query in real-time.
- * Handles nullable references/queries.
+ * A clean, simplified version of the useCollection hook.
+ * Subscribes to a Firestore collection or query in real-time.
  */
 export function useCollection<T = any>(
-    memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
-): UseCollectionResult<T> {
-  type ResultItemType = WithId<T>;
-  type StateDataType = ResultItemType[] | null;
-
-  const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<FirestoreError | Error | null>(null);
+  ref: Query<DocumentData> | CollectionReference<DocumentData> | null | undefined
+) {
+  const [data, setData] = useState<WithId<T>[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
 
   useEffect(() => {
-    if (!memoizedTargetRefOrQuery) {
-      setData(null);
-      setIsLoading(false);
-      setError(null);
-      return;
-    }
-
-    const target = memoizedTargetRefOrQuery as unknown as InternalQuery;
-
-    // 🕵️ Diagnostic logging for development
-    console.log("QUERY DEBUG:", target);
-
-    // 🛡️ Safety Guard: CollectionGroup queries must have filters to pass security rules
-    if (target?._query?.collectionGroup && (!target?._query?.filters || target._query.filters.length === 0)) {
-      console.error("❌ BROAD CollectionGroup query detected. This will trigger a permission denial.");
-      const broadError = new Error(`Firestore collectionGroup query for "${target._query.collectionGroup}" is missing security constraints. This is a "hard fail" to prevent permission errors.`);
-      setError(broadError);
+    if (!ref) {
       setIsLoading(false);
       return;
     }
-
-    setIsLoading(true);
-    setError(null);
 
     const unsubscribe = onSnapshot(
-      memoizedTargetRefOrQuery,
+      ref,
       (snapshot: QuerySnapshot<DocumentData>) => {
-        const results: ResultItemType[] = [];
-        for (const doc of snapshot.docs) {
-          results.push({ ...(doc.data() as T), id: doc.id });
-        }
+        const results = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as WithId<T>[];
+
         setData(results);
+        setIsLoading(false);
         setError(null);
-        setIsLoading(false);
       },
-      async (serverError: FirestoreError) => {
-        // Path extraction for error reporting
-        let path: string = "(unknown path)";
-        
-        if (target._query?.collectionGroup) {
-          path = `[Collection Group] ${target._query.collectionGroup}`;
-        } else if (target.path) {
-          path = target.path;
-        } else if (target._query?.path) {
-          try {
-            path = target._query.path.canonicalString?.() || target._query.path.toString?.() || "(unknown query path)";
-          } catch {
-            path = "(unknown query path)";
-          }
-        }
-        
-        const contextualError = new FirestorePermissionError({
-          operation: target._query?.collectionGroup ? 'collectionGroup-list' : 'list',
-          path: path,
-        });
-
-        setError(contextualError);
-        setData(null);
+      (err) => {
+        console.error("Firestore error:", err);
+        setError(err);
         setIsLoading(false);
-
-        // trigger global error propagation
-        errorEmitter.emit('permission-error', contextualError);
       }
     );
 
     return () => unsubscribe();
-  }, [memoizedTargetRefOrQuery]); 
-  
-  if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
-    throw new Error(memoizedTargetRefOrQuery + ' was not properly memoized using useMemoFirebase');
-  }
+  }, [ref]);
+
   return { data, isLoading, error };
 }
