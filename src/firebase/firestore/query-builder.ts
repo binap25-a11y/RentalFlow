@@ -30,16 +30,10 @@ export function buildSecureCollectionGroupQuery(options: {
     // Landlords always filter by their own ID across all nested property sub-collections
     constraints.push(where("landlordId", "==", userId));
   } else if (role === "tenant") {
-    // For residents, different entities use different ID fields based on backend.json
+    // For residents, different entities use different ID fields based on firestore.rules
     let filterField = 'userId';
     if (collectionName === 'maintenanceRequests') {
       filterField = 'tenantId';
-    } else if (collectionName === 'tenantProfiles') {
-      filterField = 'userId';
-    } else if (collectionName === 'documents') {
-      filterField = 'userId';
-    } else if (collectionName === 'emergencyContactSheets') {
-      filterField = 'landlordId'; 
     }
     
     constraints.push(where(filterField, "==", userId));

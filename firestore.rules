@@ -8,13 +8,12 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // Combined conditions into single 'allow list' blocks to help the Firestore query analyzer.
+    // Splitting OR conditions into separate allow blocks is the most reliable way 
+    // to satisfy the Firestore Collection Group query analyzer.
 
     // 1. Properties
     match /{path=**}/properties/{id} {
-      allow list: if isSignedIn() && (
-        request.query.where('landlordId', '==', request.auth.uid)
-      );
+      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
       
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
@@ -27,11 +26,9 @@ service cloud.firestore {
 
     // 2. Documents
     match /{path=**}/documents/{id} {
-      // Unified list rule for Landlords and Tenants
-      allow list: if isSignedIn() && (
-        request.query.where('landlordId', '==', request.auth.uid) ||
-        request.query.where('userId', '==', request.auth.uid)
-      );
+      // Split list rules for Landlords and Tenants
+      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
+      allow list: if isSignedIn() && request.query.where('userId', '==', request.auth.uid);
       
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
@@ -45,10 +42,8 @@ service cloud.firestore {
 
     // 3. Maintenance Requests
     match /{path=**}/maintenanceRequests/{id} {
-      allow list: if isSignedIn() && (
-        request.query.where('landlordId', '==', request.auth.uid) ||
-        request.query.where('tenantId', '==', request.auth.uid)
-      );
+      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
+      allow list: if isSignedIn() && request.query.where('tenantId', '==', request.auth.uid);
       
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
@@ -74,10 +69,8 @@ service cloud.firestore {
 
     // 5. Tenant Profiles
     match /{path=**}/tenantProfiles/{id} {
-      allow list: if isSignedIn() && (
-        request.query.where('landlordId', '==', request.auth.uid) ||
-        request.query.where('userId', '==', request.auth.uid)
-      );
+      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
+      allow list: if isSignedIn() && request.query.where('userId', '==', request.auth.uid);
       
       allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
