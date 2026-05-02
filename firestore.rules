@@ -20,52 +20,49 @@ service cloud.firestore {
       }
     }
 
-    // Collection Group Rules for Queries (Cross-cutting access for tenants and shared data)
-    match /{path=**}/properties/{id} {
-      allow list: if isSignedIn() && (
-        (resource.data.landlordId == request.auth.uid) || 
-        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
+    // Helper to check if user is a member of the property (Landlord or Assigned Tenant)
+    function isPropertyParticipant(data) {
+      return isSignedIn() && (
+        data.landlordId == request.auth.uid || 
+        data.userId == request.auth.uid ||
+        data.tenantId == request.auth.uid ||
+        (data.members != null && data.members[request.auth.uid] != null)
       );
-      allow read: if isSignedIn() && (
-        (resource.data.landlordId == request.auth.uid) || 
+    }
+
+    // Collection Group Rules for Queries (Support cross-property views for landlords and tenants)
+    
+    match /{path=**}/properties/{id} {
+      allow list, read: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
         (resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
     }
 
     match /{path=**}/maintenanceRequests/{id} {
-      allow list: if isSignedIn() && (
+      allow list, read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.tenantId == request.auth.uid
       );
     }
 
     match /{path=**}/inspections/{id} {
-      allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
-      );
+      allow list, read: if isPropertyParticipant(resource.data);
     }
 
     match /{path=**}/tenantProfiles/{id} {
-      allow list: if isSignedIn() && (
+      allow list, read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.userId == request.auth.uid
       );
     }
 
     match /{path=**}/documents/{id} {
-      allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.userId == request.auth.uid ||
-        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
-      );
+      allow list, read: if isPropertyParticipant(resource.data);
     }
 
     match /{path=**}/emergencyContactSheets/{id} {
-      allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
-      );
+      allow list, read: if isPropertyParticipant(resource.data);
     }
   }
 }

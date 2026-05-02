@@ -76,19 +76,23 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   }
 
   // Normalize path to prevent double-prefixing or incorrect root relative paths
-  let normalizedPath = context.path;
+  let rawPath = context.path || "";
   const dbPrefix = '/databases/(default)/documents';
   
+  let normalizedPath = rawPath;
+
+  // If path is already normalized with the prefix, do nothing
   if (normalizedPath.startsWith(dbPrefix)) {
-    // Already normalized, keep as is
-  } else if (normalizedPath.startsWith('databases/')) {
-    normalizedPath = '/' + normalizedPath;
-  } else if (normalizedPath === '' || normalizedPath === '/') {
-    normalizedPath = dbPrefix;
+    // OK
   } else {
-    // Ensure we don't end up with /databases/(default)/documents/databases/(default)/documents/
-    const cleanPath = normalizedPath.replace(/^\//, '').replace(/^databases\/\(default\)\/documents\//, '');
+    // Strip leading slash if any and prepend prefix
+    const cleanPath = normalizedPath.replace(/^\//, '');
     normalizedPath = `${dbPrefix}/${cleanPath}`;
+  }
+
+  // Ensure trailing slash isn't accidental
+  if (normalizedPath.endsWith('/') && normalizedPath !== `${dbPrefix}/`) {
+    normalizedPath = normalizedPath.slice(0, -1);
   }
 
   return {

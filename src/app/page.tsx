@@ -60,7 +60,7 @@ export default function LoginPage() {
             setNeedsProfile(true);
           }
         } catch (e) {
-          // Standard permission errors handled by FirebaseErrorListener
+          // Errors handled by global listener
         }
       };
       checkAndRedirect();
@@ -151,7 +151,7 @@ export default function LoginPage() {
   if (needsProfile) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <Card className="w-full max-w-lg border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
+        <Card className="w-full max-w-lg border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden animate-in zoom-in duration-300">
           <CardHeader className="text-center bg-primary/5 pb-8">
             <div className="mx-auto p-3 bg-primary text-primary-foreground rounded-2xl w-fit mb-4">
               <ShieldCheck className="w-8 h-8" />
