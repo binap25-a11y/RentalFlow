@@ -35,6 +35,7 @@ export default function PropertiesPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState<Record<string, string>>({});
 
   // Form State
   const [address, setAddress] = useState('');
@@ -112,9 +113,15 @@ export default function PropertiesPage() {
     setIsAddDialogOpen(false);
 
     try {
-      // Use existing URL or a stable placeholder while background upload finishes
+      // 1. Capture the local preview URL if we're uploading a new file
+      if (imageFile && previewUrl) {
+        setUploadingImages(prev => ({ ...prev, [propertyId]: previewUrl }));
+      }
+
+      // 2. Prepare the persistent image URL (either existing, or a temporary placeholder)
       let currentPersistentUrl = editingProperty?.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
       
+      // Never store blob URLs in Firestore
       if (currentPersistentUrl.startsWith('blob:') || !currentPersistentUrl) {
         currentPersistentUrl = `https://picsum.photos/seed/${propertyId}/800/600`;
       }
@@ -144,13 +151,19 @@ export default function PropertiesPage() {
         setDocumentNonBlocking(propertyRef, { ...baseData, createdAt: serverTimestamp() }, { merge: true });
       }
 
-      // Handle image upload in the background
+      // 3. Handle image upload in the background
       if (imageFile && storage) {
         const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${imageFile.name}`);
         uploadBytes(storageRef, imageFile).then(async (result) => {
           const url = await getDownloadURL(result.ref);
           if (url) {
             updateDocumentNonBlocking(propertyRef, { imageUrl: url });
+            // Remove from local preview tracking once we have the permanent URL
+            setUploadingImages(prev => {
+              const next = { ...prev };
+              delete next[propertyId];
+              return next;
+            });
           }
         }).catch(err => {
           console.error("Background image upload failed:", err);
@@ -208,7 +221,13 @@ export default function PropertiesPage() {
                     <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/20 aspect-video w-full flex items-center justify-center">
                       {previewUrl ? (
                         <>
-                          <Image src={previewUrl} alt="Preview" fill className="object-cover" unoptimized={previewUrl.startsWith('blob:')} />
+                          <Image 
+                            src={previewUrl} 
+                            alt="Preview" 
+                            fill 
+                            className="object-cover" 
+                            unoptimized={previewUrl.startsWith('blob:')} 
+                          />
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                              <Button type="button" variant="secondary" size="sm" className="rounded-lg font-bold" onClick={() => document.getElementById('image-input')?.click()}>Change Photo</Button>
                              <Button type="button" variant="destructive" size="sm" className="rounded-lg font-bold" onClick={() => { setPreviewUrl(null); setImageFile(null); }}>Remove</Button>
@@ -317,9 +336,13 @@ export default function PropertiesPage() {
           </div>
         ) : (
           properties.map((property) => {
-            const displayImage = property.imageUrl && !property.imageUrl.startsWith('blob:') 
+            // Optimistic Image Logic: 
+            // 1. Check if we have a local preview for a property currently uploading
+            // 2. Check if the Firestore document has a valid image URL
+            // 3. Fallback to a professional seeded placeholder if neither exists
+            const displayImage = uploadingImages[property.id] || (property.imageUrl && !property.imageUrl.startsWith('blob:') 
               ? property.imageUrl 
-              : `https://picsum.photos/seed/${property.id}/800/600`;
+              : `https://picsum.photos/seed/${property.id}/800/600`);
 
             return (
               <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card">
@@ -329,9 +352,14 @@ export default function PropertiesPage() {
                     alt={property.addressLine1} 
                     fill 
                     className="object-cover transition-transform duration-500 group-hover:scale-105" 
-                    unoptimized={displayImage.includes('firebasestorage')}
+                    unoptimized={displayImage.startsWith('blob:') || displayImage.includes('firebasestorage')}
                     data-ai-hint="property exterior"
                   />
+                  {uploadingImages[property.id] && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <Loader2 className="w-8 h-8 animate-spin text-white" />
+                    </div>
+                  )}
                   <Badge className={cn(
                     "absolute top-4 right-4 font-bold shadow-lg py-1 px-3",
                     property.isOccupied ? 'bg-emerald-500' : 'bg-amber-500'
