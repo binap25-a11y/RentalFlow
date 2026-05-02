@@ -7,13 +7,9 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
     // --- COLLECTION GROUP RULES ---
-    // Using 'allow read' unifies 'get' and 'list' permissions.
-    // This allows Firestore to verify that the query filters match the security constraints.
+    // Collection Group rules must be at the top level for queries like collectionGroup().
+    // We use 'allow read' (get + list) to ensure consistency between individual access and listing.
 
     match /{path=**}/properties/{id} {
       allow read: if isSignedIn() && (
@@ -85,10 +81,10 @@ service cloud.firestore {
 
     // --- PATH-SPECIFIC RULES ---
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
 
       match /{allSubcollections=**} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
       }
     }
   }

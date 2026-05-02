@@ -78,6 +78,9 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   const dbPrefix = '/databases/(default)/documents';
   let rawPath = context.path || "";
   
+  // Normalize collection group markers
+  rawPath = rawPath.replace('[Collection Group] ', '(collectionGroup)/');
+
   // 1. Strip existing prefix if present to normalize
   let cleanPath = rawPath;
   if (cleanPath.startsWith(dbPrefix)) {
