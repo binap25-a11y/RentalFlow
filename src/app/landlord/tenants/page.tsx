@@ -3,7 +3,7 @@
 
 import { useState, useMemo } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking, getLandlordCollectionQuery } from '@/firebase';
-import { collection, doc, serverTimestamp, query, where, getDoc } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, query, where, getDoc, arrayUnion } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,19 +39,16 @@ export default function TenantsPage() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [tenantUid, setTenantUid] = useState('');
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
 
   const handleAddTenant = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !db || !selectedPropertyId) return;
+    if (!user || !db || !selectedPropertyId || !tenantUid) return;
 
     const tenantId = doc(collection(db, 'tenantProfiles')).id;
     const tenantRef = doc(db, 'tenantProfiles', tenantId);
     const propertyRef = doc(db, 'properties', selectedPropertyId);
-
-    const propertySnap = await getDoc(propertyRef);
-    const propertyData = propertySnap.data();
-    const currentMemberIds = propertyData?.memberIds || [user.uid];
 
     setDocumentNonBlocking(tenantRef, {
       id: tenantId,
@@ -59,9 +56,9 @@ export default function TenantsPage() {
       lastName,
       email,
       phoneNumber: phone,
+      userId: tenantUid,
       propertyId: selectedPropertyId,
       landlordId: user.uid,
-      memberIds: currentMemberIds,
       leaseStartDate: new Date().toISOString().split('T')[0],
       leaseEndDate: new Date(Date.now() + 31536000000).toISOString().split('T')[0],
       createdAt: serverTimestamp(),
@@ -70,6 +67,7 @@ export default function TenantsPage() {
 
     updateDocumentNonBlocking(propertyRef, {
       isOccupied: true,
+      tenantIds: arrayUnion(tenantUid),
       updatedAt: serverTimestamp(),
     });
 
@@ -78,6 +76,7 @@ export default function TenantsPage() {
     setLastName('');
     setEmail('');
     setPhone('');
+    setTenantUid('');
     setSelectedPropertyId('');
     toast({ title: "Resident Assigned" });
   };
@@ -125,6 +124,10 @@ export default function TenantsPage() {
                     <Label htmlFor="lastName" className="font-bold text-xs uppercase text-primary/60">Last Name</Label>
                     <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required className="rounded-xl h-11" />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tenantUid" className="font-bold text-xs uppercase text-primary/60">User UID (Must exist in Auth)</Label>
+                  <Input id="tenantUid" value={tenantUid} onChange={(e) => setTenantUid(e.target.value)} required className="rounded-xl h-11" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email" className="font-bold text-xs uppercase text-primary/60">Email Address</Label>

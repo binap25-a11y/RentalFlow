@@ -125,7 +125,7 @@ export default function PropertiesPage() {
         finalImageUrl = await getDownloadURL(uploadResult.ref);
       }
 
-      const memberIds = editingProperty?.memberIds || [user.uid];
+      const tenantIds = editingProperty?.tenantIds || [];
 
       const data = {
         id: propertyId,
@@ -143,7 +143,7 @@ export default function PropertiesPage() {
         isOccupied: editingProperty?.isOccupied || false,
         imageUrl: finalImageUrl,
         updatedAt: serverTimestamp(),
-        memberIds: memberIds,
+        tenantIds: tenantIds,
       };
 
       if (editingProperty) {

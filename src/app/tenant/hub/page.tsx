@@ -16,24 +16,17 @@ export default function TenantHub() {
   const { user } = useUser();
   const db = useFirestore();
 
-  const tenantProfileQuery = useMemoFirebase(() => {
+  const propertyQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return getTenantCollectionQuery({
       db,
-      collectionName: "tenantProfiles",
+      collectionName: "properties",
       userId: user.uid
     });
   }, [db, user]);
 
-  const { data: tenantProfiles, isLoading: isProfileLoading } = useCollection(tenantProfileQuery);
-  const activeProfile = tenantProfiles?.[0];
-
-  const propertyRef = useMemoFirebase(() => {
-    if (!db || !activeProfile) return null;
-    return doc(db, "properties", activeProfile.propertyId);
-  }, [db, activeProfile]);
-
-  const { data: property, isLoading: isPropertyLoading } = useDoc(propertyRef);
+  const { data: properties, isLoading: isPropLoading } = useCollection(propertyQuery);
+  const property = properties?.[0];
 
   const requestsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -62,7 +55,7 @@ export default function TenantHub() {
 
   const { data: documents } = useCollection(docsQuery);
 
-  if (isProfileLoading || isPropertyLoading || isRequestsLoading) {
+  if (isPropLoading || isRequestsLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh]">
         <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
@@ -71,7 +64,7 @@ export default function TenantHub() {
     );
   }
 
-  if (!activeProfile || !property) {
+  if (!property) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
         <div className="p-6 bg-muted rounded-full">
@@ -91,7 +84,7 @@ export default function TenantHub() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="text-left">
           <h1 className="text-3xl font-headline font-bold text-primary mb-2">Resident Hub</h1>
-          <p className="text-muted-foreground font-medium">Welcome home, {activeProfile.firstName}.</p>
+          <p className="text-muted-foreground font-medium">Welcome home.</p>
         </div>
         <Button className="bg-accent hover:bg-accent/90 rounded-xl shadow-lg shadow-accent/20 text-white" asChild>
           <Link href="/tenant/maintenance">
@@ -161,7 +154,7 @@ export default function TenantHub() {
             <CardContent className="space-y-4">
               {activeRequests.length > 0 ? (
                 activeRequests.map(req => {
-                  const createdAt = req.createdAt ? new Date(req.createdAt) : null;
+                  const createdAt = req.createdAt ? new Date(req.createdAt.seconds * 1000) : null;
                   return (
                     <div key={req.id} className="p-4 rounded-xl bg-muted/30 border border-muted text-left">
                       <div className="flex items-center justify-between mb-2">
@@ -193,7 +186,7 @@ export default function TenantHub() {
             <CardContent className="space-y-3">
               {documents && documents.length > 0 ? (
                 documents.slice(0, 3).map(doc => {
-                  const createdAt = doc.createdAt ? new Date(doc.createdAt) : null;
+                  const uploadDate = doc.uploadDate ? new Date(doc.uploadDate) : null;
                   return (
                     <div key={doc.id} className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors rounded-xl cursor-pointer group">
                       <div className="flex items-center">
@@ -203,11 +196,13 @@ export default function TenantHub() {
                         <div className="text-left">
                           <p className="text-sm font-bold truncate max-w-[150px]">{doc.fileName}</p>
                           <p className="text-[10px] text-muted-foreground">
-                            {createdAt && isValid(createdAt) ? format(createdAt, 'PP') : 'Recently'}
+                            {uploadDate && isValid(uploadDate) ? format(uploadDate, 'PP') : 'Recently'}
                           </p>
                         </div>
                       </div>
-                      <Download className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
+                        <Download className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </a>
                     </div>
                   );
                 })

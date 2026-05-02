@@ -31,6 +31,7 @@
         "numberOfBathrooms": { "type": "number" },
         "description": { "type": "string" },
         "isActive": { "type": "boolean" },
+        "tenantIds": { "type": "array", "items": { "type": "string" } },
         "memberIds": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["id", "landlordId", "addressLine1", "city", "zipCode", "isActive"]
@@ -126,7 +127,7 @@
         "definition": {
           "entityName": "Property",
           "schema": { "$ref": "#/backend/entities/Property" },
-          "description": "Rental properties."
+          "description": "Flat properties."
         }
       },
       {
@@ -134,7 +135,7 @@
         "definition": {
           "entityName": "TenantProfile",
           "schema": { "$ref": "#/backend/entities/TenantProfile" },
-          "description": "Resident associations."
+          "description": "Flat tenant associations."
         }
       },
       {
@@ -142,7 +143,7 @@
         "definition": {
           "entityName": "PropertyDocument",
           "schema": { "$ref": "#/backend/entities/PropertyDocument" },
-          "description": "Portfolio vault."
+          "description": "Flat document vault."
         }
       },
       {
@@ -150,7 +151,7 @@
         "definition": {
           "entityName": "MaintenanceRequest",
           "schema": { "$ref": "#/backend/entities/MaintenanceRequest" },
-          "description": "Issue tracking."
+          "description": "Flat issue tracking."
         }
       },
       {
@@ -158,7 +159,7 @@
         "definition": {
           "entityName": "Inspection",
           "schema": { "$ref": "#/backend/entities/Inspection" },
-          "description": "Health checks."
+          "description": "Flat health checks."
         }
       }
     ]

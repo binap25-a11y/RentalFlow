@@ -1,3 +1,4 @@
+
 import {
   collection,
   query,
@@ -13,6 +14,7 @@ import {
  * Filters a top-level collection by landlordId.
  */
 export function getLandlordCollectionQuery(db: Firestore, collectionName: string, userId: string): Query {
+  if (!userId) throw new Error("User ID required");
   return query(
     collection(db, collectionName),
     where("landlordId", "==", userId)
@@ -35,6 +37,16 @@ export function getTenantCollectionQuery(options: {
     throw new Error("User must be authenticated");
   }
 
+  // Properties use tenantIds array-contains
+  if (collectionName === 'properties') {
+    return query(
+      collection(db, collectionName),
+      where("tenantIds", "array-contains", userId),
+      ...additionalConstraints
+    );
+  }
+
+  // Other entities use OR filters matching security rules
   return query(
     collection(db, collectionName),
     or(
