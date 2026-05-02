@@ -112,11 +112,9 @@ export default function PropertiesPage() {
     setIsAddDialogOpen(false);
 
     try {
-      // Logic for stable URL: Use storage URL if exists, else picsum seeded by ID.
-      // We NEVER save a 'blob:' URL to Firestore.
+      // Use existing URL or a stable placeholder while background upload finishes
       let currentPersistentUrl = editingProperty?.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
       
-      // Safety check: if current URL is a local blob, reset to placeholder for persistence
       if (currentPersistentUrl.startsWith('blob:') || !currentPersistentUrl) {
         currentPersistentUrl = `https://picsum.photos/seed/${propertyId}/800/600`;
       }
@@ -151,12 +149,11 @@ export default function PropertiesPage() {
         const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${imageFile.name}`);
         uploadBytes(storageRef, imageFile).then(async (result) => {
           const url = await getDownloadURL(result.ref);
-          // Only update if we successfully got a URL
           if (url) {
             updateDocumentNonBlocking(propertyRef, { imageUrl: url });
           }
         }).catch(err => {
-          console.error("Image upload background failed:", err);
+          console.error("Background image upload failed:", err);
         });
       }
 
@@ -175,8 +172,6 @@ export default function PropertiesPage() {
     deleteDocumentNonBlocking(propertyRef);
     toast({ title: "Asset Decommissioned" });
   };
-
-  if (loading) return <div className="flex flex-col items-center justify-center h-[60vh]"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -306,7 +301,12 @@ export default function PropertiesPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {!properties || properties.length === 0 ? (
+        {loading ? (
+          <div className="col-span-full py-24 text-center flex flex-col items-center justify-center">
+            <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+            <p className="text-muted-foreground font-medium">Syncing portfolio inventory...</p>
+          </div>
+        ) : !properties || properties.length === 0 ? (
           <div className="col-span-full py-24 text-center flex flex-col items-center justify-center bg-muted/10 rounded-[2rem] border-2 border-dashed border-primary/20">
             <Building2 className="w-16 h-16 text-primary/20 mb-6" />
             <h3 className="text-xl font-headline font-bold text-primary/40 mb-2">No Assets Found</h3>
@@ -316,50 +316,57 @@ export default function PropertiesPage() {
             </Button>
           </div>
         ) : (
-          properties.map((property) => (
-            <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card">
-              <div className="relative h-56 w-full overflow-hidden bg-muted">
-                <Image 
-                  src={property.imageUrl && !property.imageUrl.startsWith('blob:') ? property.imageUrl : `https://picsum.photos/seed/${property.id}/800/600`} 
-                  alt={property.addressLine1} 
-                  fill 
-                  className="object-cover transition-transform duration-500 group-hover:scale-105" 
-                  data-ai-hint="property exterior"
-                />
-                <Badge className={cn(
-                  "absolute top-4 right-4 font-bold shadow-lg py-1 px-3",
-                  property.isOccupied ? 'bg-emerald-500' : 'bg-amber-500'
-                )}>
-                  {property.isOccupied ? 'Occupied' : 'Vacant'}
-                </Badge>
-              </div>
-              <CardHeader className="pb-2 text-left space-y-1">
-                <div className="flex justify-between items-start">
-                  <Badge variant="outline" className="text-[10px] uppercase font-bold text-primary/60 border-primary/10">{property.propertyType}</Badge>
-                  <div className="flex gap-2 text-muted-foreground text-xs font-bold">
-                    <span className="flex items-center gap-1"><Bed className="w-3 h-3" /> {property.numberOfBedrooms}</span>
-                    <span className="flex items-center gap-1"><Bath className="w-3 h-3" /> {property.numberOfBathrooms}</span>
-                  </div>
+          properties.map((property) => {
+            const displayImage = property.imageUrl && !property.imageUrl.startsWith('blob:') 
+              ? property.imageUrl 
+              : `https://picsum.photos/seed/${property.id}/800/600`;
+
+            return (
+              <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card">
+                <div className="relative h-56 w-full overflow-hidden bg-muted">
+                  <Image 
+                    src={displayImage} 
+                    alt={property.addressLine1} 
+                    fill 
+                    className="object-cover transition-transform duration-500 group-hover:scale-105" 
+                    unoptimized={displayImage.includes('firebasestorage')}
+                    data-ai-hint="property exterior"
+                  />
+                  <Badge className={cn(
+                    "absolute top-4 right-4 font-bold shadow-lg py-1 px-3",
+                    property.isOccupied ? 'bg-emerald-500' : 'bg-amber-500'
+                  )}>
+                    {property.isOccupied ? 'Occupied' : 'Vacant'}
+                  </Badge>
                 </div>
-                <CardTitle className="text-lg font-bold font-headline truncate">{property.addressLine1}</CardTitle>
-                <p className="text-sm text-muted-foreground flex items-center font-medium"><MapPin className="w-3 h-3 mr-1 text-primary/30" /> {property.city}, {property.zipCode}</p>
-              </CardHeader>
-              <CardContent className="pb-4 text-left">
-                <p className="text-xl font-bold text-primary">£{property.rentAmount}<span className="text-xs text-muted-foreground font-medium"> / mo</span></p>
-              </CardContent>
-              <CardFooter className="flex gap-2 pt-4 border-t border-primary/5">
-                <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-10 border-primary/10 hover:bg-primary hover:text-white transition-all" asChild>
-                  <Link href={`/landlord/properties/${property.id}`}>Manage</Link>
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-10 border-primary/10 hover:bg-primary/5" onClick={() => handleOpenEditDialog(property)}>
-                  Edit
-                </Button>
-                <Button variant="ghost" size="icon" className="rounded-xl h-10 text-destructive/40 hover:text-destructive hover:bg-destructive/5" onClick={() => handleDeleteProperty(property.id)}>
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </CardFooter>
-            </Card>
-          ))
+                <CardHeader className="pb-2 text-left space-y-1">
+                  <div className="flex justify-between items-start">
+                    <Badge variant="outline" className="text-[10px] uppercase font-bold text-primary/60 border-primary/10">{property.propertyType}</Badge>
+                    <div className="flex gap-2 text-muted-foreground text-xs font-bold">
+                      <span className="flex items-center gap-1"><Bed className="w-3 h-3" /> {property.numberOfBedrooms}</span>
+                      <span className="flex items-center gap-1"><Bath className="w-3 h-3" /> {property.numberOfBathrooms}</span>
+                    </div>
+                  </div>
+                  <CardTitle className="text-lg font-bold font-headline truncate">{property.addressLine1}</CardTitle>
+                  <p className="text-sm text-muted-foreground flex items-center font-medium"><MapPin className="w-3 h-3 mr-1 text-primary/30" /> {property.city}, {property.zipCode}</p>
+                </CardHeader>
+                <CardContent className="pb-4 text-left">
+                  <p className="text-xl font-bold text-primary">£{property.rentAmount}<span className="text-xs text-muted-foreground font-medium"> / mo</span></p>
+                </CardContent>
+                <CardFooter className="flex gap-2 pt-4 border-t border-primary/5">
+                  <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-10 border-primary/10 hover:bg-primary hover:text-white transition-all" asChild>
+                    <Link href={`/landlord/properties/${property.id}`}>Manage</Link>
+                  </Button>
+                  <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-10 border-primary/10 hover:bg-primary/5" onClick={() => handleOpenEditDialog(property)}>
+                    Edit
+                  </Button>
+                  <Button variant="ghost" size="icon" className="rounded-xl h-10 text-destructive/40 hover:text-destructive hover:bg-destructive/5" onClick={() => handleDeleteProperty(property.id)}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </CardFooter>
+              </Card>
+            );
+          })
         )}
       </div>
     </div>
