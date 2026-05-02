@@ -37,10 +37,8 @@ export default function PropertiesPage() {
   const [editingProperty, setEditingProperty] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Local state for instant image previews during background upload
   const [uploadingImages, setUploadingImages] = useState<Record<string, string>>({});
 
-  // Form State
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [zipCode, setZipCode] = useState('');
@@ -112,16 +110,13 @@ export default function PropertiesPage() {
     const propertyId = editingProperty ? editingProperty.id : doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
     
-    // 1. Capture the local preview URL instantly for the card
     if (imageFile && previewUrl) {
       setUploadingImages(prev => ({ ...prev, [propertyId]: previewUrl }));
     }
 
-    // Close dialog immediately for an instant feel
     setIsAddDialogOpen(false);
 
     try {
-      // 2. Prepare metadata with a stable seeded placeholder (never store blob URLs in Firestore)
       let currentPersistentUrl = editingProperty?.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
       
       if (currentPersistentUrl.startsWith('blob:') || !currentPersistentUrl) {
@@ -153,16 +148,12 @@ export default function PropertiesPage() {
         setDocumentNonBlocking(propertyRef, { ...baseData, createdAt: serverTimestamp() }, { merge: true });
       }
 
-      // 3. Handle image upload in the background seamlessly
       if (imageFile && storage) {
         const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${imageFile.name}`);
         uploadBytes(storageRef, imageFile).then(async (result) => {
           const url = await getDownloadURL(result.ref);
           if (url) {
-            // Update Firestore with the real storage URL
             updateDocumentNonBlocking(propertyRef, { imageUrl: url });
-            
-            // Remove from local preview tracking to transition to cloud URL
             setUploadingImages(prev => {
               const next = { ...prev };
               delete next[propertyId];
@@ -170,8 +161,6 @@ export default function PropertiesPage() {
             });
           }
         }).catch(err => {
-          console.error("Background image upload failed:", err);
-          // If upload fails, cleanup the optimistic preview
           setUploadingImages(prev => {
             const next = { ...prev };
             delete next[propertyId];
@@ -346,10 +335,6 @@ export default function PropertiesPage() {
           </div>
         ) : (
           properties.map((property) => {
-            // Instant Preview Logic:
-            // 1. Show local blob URL if currently uploading
-            // 2. Show Firestore URL if valid and persistent
-            // 3. Fallback to seeded picsum placeholder
             const displayImage = uploadingImages[property.id] || (property.imageUrl && !property.imageUrl.startsWith('blob:') 
               ? property.imageUrl 
               : `https://picsum.photos/seed/${property.id}/800/600`);
