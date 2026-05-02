@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { 
   Calendar as CalendarIcon, MapPin, Loader2, Download, 
@@ -180,7 +180,8 @@ export default function InspectionsPage() {
     doc.text("Executive Summary", 20, 90);
     doc.setFontSize(10);
     doc.setFont("helvetica", "italic");
-    const splitSummary = doc.splitTextToSize(inspection.summary || "No summary provided", pageWidth - 40);
+    const summaryText = inspection.summary || "No summary provided";
+    const splitSummary = doc.splitTextToSize(summaryText, pageWidth - 40);
     doc.text(splitSummary, 20, 98);
 
     let y = 98 + (splitSummary.length * 5) + 15;
@@ -206,6 +207,7 @@ export default function InspectionsPage() {
         y = 20;
       }
       doc.setFont("helvetica", "normal");
+      doc.setTextColor(0, 0, 0);
       doc.text(item, 25, y);
       
       const isPass = data.status === 'pass';
