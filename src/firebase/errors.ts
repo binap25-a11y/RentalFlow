@@ -3,7 +3,7 @@ import { getAuth, type User } from 'firebase/auth';
 
 export type SecurityRuleContext = {
   path: string;
-  operation: 'get' | 'list' | 'create' | 'update' | 'delete' | 'write';
+  operation: 'get' | 'list' | 'create' | 'update' | 'delete' | 'write' | 'collectionGroup-list';
   requestResourceData?: any;
 };
 
@@ -79,7 +79,9 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   let rawPath = context.path || "";
   
   // Normalize collection group markers
-  rawPath = rawPath.replace('[Collection Group] ', '(collectionGroup)/');
+  if (rawPath.includes('[Collection Group]')) {
+    rawPath = rawPath.replace('[Collection Group] ', '(collectionGroup)/');
+  }
 
   // 1. Strip existing prefix if present to normalize
   let cleanPath = rawPath;

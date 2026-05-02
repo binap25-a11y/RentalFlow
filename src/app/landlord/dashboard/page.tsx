@@ -2,9 +2,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Users, AlertTriangle, FileText, ArrowRight, ShieldAlert, Loader2 } from "lucide-react";
-import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, collectionGroup } from "firebase/firestore";
+import { useUser, useFirestore, useCollection, useMemoFirebase, buildSecureCollectionGroupQuery } from "@/firebase";
+import { collection, where } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { format, isBefore, addDays, isValid, parseISO } from "date-fns";
 import { useMemo, useState, useEffect } from "react";
@@ -27,13 +28,15 @@ export default function LandlordDashboard() {
 
   const documentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(
-      collectionGroup(db, "documents"),
-      where("landlordId", "==", user.uid)
-    );
+    return buildSecureCollectionGroupQuery({
+      db,
+      collectionName: "documents",
+      userId: user.uid,
+      role: "landlord"
+    });
   }, [db, user]);
 
-  const { data: documents, isLoading: isDocsLoading } = useCollection(documentsQuery);
+  const { data: documents, isLoading: isDocsLoading, error: docsError } = useCollection(documentsQuery);
 
   const stats = useMemo(() => {
     if (!isClient) return null;

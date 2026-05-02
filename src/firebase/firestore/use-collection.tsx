@@ -93,7 +93,7 @@ export function useCollection<T = any>(
         }
         
         const contextualError = new FirestorePermissionError({
-          operation: 'list',
+          operation: target._query?.collectionGroup ? 'collectionGroup-list' : 'list',
           path: path,
         });
 
