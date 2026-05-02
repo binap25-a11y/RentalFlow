@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -90,7 +89,6 @@ export default function LoginPage() {
         updatedAt: serverTimestamp(),
       }, { merge: true });
       
-      // Verification attempt
       try {
         await sendEmailVerification(user);
         toast({ title: "Profile Ready", description: "Verification email sent. Welcome to RentalFlow!" });
@@ -211,7 +209,7 @@ export default function LoginPage() {
         <div className="inline-flex items-center justify-center p-3 bg-primary text-primary-foreground rounded-2xl mb-4 shadow-xl">
           <KeyRound className="w-8 h-8" />
         </div>
-        <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight text-left md:text-center">RentalFlow</h1>
+        <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">RentalFlow</h1>
         <p className="text-muted-foreground font-medium">Professional Property Management</p>
       </div>
 
@@ -226,11 +224,11 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
+            <div className="space-y-2 text-left">
               <Label htmlFor="email">Work Email</Label>
               <Input id="email" type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-11" />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 text-left">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="rounded-xl h-11" />

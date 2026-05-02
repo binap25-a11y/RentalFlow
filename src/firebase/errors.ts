@@ -1,4 +1,3 @@
-
 'use client';
 import { getAuth, type User } from 'firebase/auth';
 
@@ -35,9 +34,6 @@ interface SecurityRuleRequest {
   };
 }
 
-/**
- * Builds a security-rule-compliant auth object from the Firebase User.
- */
 function buildAuthObject(currentUser: User | null): FirebaseAuthObject | null {
   if (!currentUser) {
     return null;
@@ -67,9 +63,6 @@ function buildAuthObject(currentUser: User | null): FirebaseAuthObject | null {
   };
 }
 
-/**
- * Builds the complete, simulated request object for the error message.
- */
 function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   let authObject: FirebaseAuthObject | null = null;
   try {
@@ -82,17 +75,14 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
     // Auth not initialized yet
   }
 
-  // Ensure we don't double-prefix the path or leave it inconsistent
   let normalizedPath = context.path;
   const dbPrefix = '/databases/(default)/documents';
   
-  // If the path already has the prefix but is missing the leading slash
-  if (normalizedPath.startsWith('databases/')) {
+  if (normalizedPath.startsWith(dbPrefix)) {
+    // Already has full prefix, do nothing
+  } else if (normalizedPath.startsWith('databases/')) {
     normalizedPath = '/' + normalizedPath;
-  }
-  
-  // If it's a relative path, prefix it properly
-  if (!normalizedPath.startsWith(dbPrefix)) {
+  } else {
     normalizedPath = `${dbPrefix}/${normalizedPath.replace(/^\//, '')}`;
   }
 
@@ -104,17 +94,11 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   };
 }
 
-/**
- * Builds the final, formatted error message for the LLM.
- */
 function buildErrorMessage(requestObject: SecurityRuleRequest): string {
   return `Missing or insufficient permissions: The following request was denied by Firestore Security Rules:
 ${JSON.stringify(requestObject, null, 2)}`;
 }
 
-/**
- * A custom error class designed to be consumed by an LLM for debugging.
- */
 export class FirestorePermissionError extends Error {
   public readonly request: SecurityRuleRequest;
 
