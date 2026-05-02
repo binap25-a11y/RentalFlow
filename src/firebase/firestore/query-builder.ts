@@ -47,7 +47,7 @@ export function buildSecureCollectionGroupQuery(options: {
 
   // Step 1: Force constraint check (CRITICAL)
   if (constraints.length === 0) {
-    throw new Error(`Firestore query for ${collectionName} must include security constraints`);
+    throw new Error(`Firestore query for ${collectionName} must include security constraints to pass security rules.`);
   }
 
   return query(

@@ -8,14 +8,19 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // Optimizing for query-rules alignment: splitting conditions into separate allow blocks.
+    // Splitting list and get permissions to align with Firestore query analyzer requirements.
 
     // 1. Properties
     match /{path=**}/properties/{id} {
-      // Landlord access (list/get)
-      allow list, get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      // Member access (get only)
-      allow get: if isSignedIn() && resource.data.members != null && resource.data.members[request.auth.uid] != null;
+      // Direct access (path-based or filtered list)
+      allow list: if isSignedIn() && (
+        request.query.where('landlordId', '==', request.auth.uid)
+      );
+      
+      allow get: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        (resource.data.members != null && resource.data.members[request.auth.uid] != null)
+      );
       
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
@@ -23,10 +28,16 @@ service cloud.firestore {
 
     // 2. Documents
     match /{path=**}/documents/{id} {
-      // Landlord portfolio list/get
-      allow list, get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      // Tenant specific list/get
-      allow list, get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // Landlord portfolio list
+      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
+      // Tenant specific list
+      allow list: if isSignedIn() && request.query.where('userId', '==', request.auth.uid);
+      
+      // Individual document access
+      allow get: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.userId == request.auth.uid
+      );
       
       allow create, update, delete: if isSignedIn() && (
         request.resource == null || request.resource.data.landlordId == request.auth.uid
@@ -35,10 +46,16 @@ service cloud.firestore {
 
     // 3. Maintenance Requests
     match /{path=**}/maintenanceRequests/{id} {
-      // Landlord portfolio list/get
-      allow list, get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      // Tenant specific list/get
-      allow list, get: if isSignedIn() && resource.data.tenantId == request.auth.uid;
+      // Landlord portfolio list
+      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
+      // Tenant specific list
+      allow list: if isSignedIn() && request.query.where('tenantId', '==', request.auth.uid);
+      
+      // Individual request access
+      allow get: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.tenantId == request.auth.uid
+      );
       
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && (
@@ -49,7 +66,8 @@ service cloud.firestore {
 
     // 4. Inspections
     match /{path=**}/inspections/{id} {
-      allow list, get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
+      allow get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
       
       allow create, update, delete: if isSignedIn() && (
         request.resource == null || request.resource.data.landlordId == request.auth.uid
@@ -58,8 +76,13 @@ service cloud.firestore {
 
     // 5. Tenant Profiles
     match /{path=**}/tenantProfiles/{id} {
-      allow list, get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-      allow list, get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
+      allow list: if isSignedIn() && request.query.where('userId', '==', request.auth.uid);
+      
+      allow get: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.userId == request.auth.uid
+      );
       
       allow create, update, delete: if isSignedIn() && (
         request.resource == null || request.resource.data.landlordId == request.auth.uid
@@ -68,7 +91,9 @@ service cloud.firestore {
 
     // 6. Property Images
     match /{path=**}/images/{id} {
-      allow list, get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
+      allow get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      
       allow create, delete: if isSignedIn() && (
         request.resource == null || request.resource.data.landlordId == request.auth.uid
       );
@@ -76,7 +101,8 @@ service cloud.firestore {
 
     // 7. Emergency Contact Sheets
     match /{path=**}/emergencyContactSheets/{id} {
-      allow list, get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && request.query.where('landlordId', '==', request.auth.uid);
+      allow get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
       allow create: if isSignedIn();
     }
 
