@@ -115,7 +115,9 @@ export default function PropertiesPage() {
       // Logic for stable URL: Use storage URL if exists, else picsum seeded by ID.
       // We NEVER save a 'blob:' URL to Firestore.
       let currentPersistentUrl = editingProperty?.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
-      if (currentPersistentUrl.startsWith('blob:')) {
+      
+      // Safety check: if current URL is a local blob, reset to placeholder for persistence
+      if (currentPersistentUrl.startsWith('blob:') || !currentPersistentUrl) {
         currentPersistentUrl = `https://picsum.photos/seed/${propertyId}/800/600`;
       }
 
@@ -211,7 +213,7 @@ export default function PropertiesPage() {
                     <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/20 aspect-video w-full flex items-center justify-center">
                       {previewUrl ? (
                         <>
-                          <Image src={previewUrl} alt="Preview" fill className="object-cover" />
+                          <Image src={previewUrl} alt="Preview" fill className="object-cover" unoptimized={previewUrl.startsWith('blob:')} />
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                              <Button type="button" variant="secondary" size="sm" className="rounded-lg font-bold" onClick={() => document.getElementById('image-input')?.click()}>Change Photo</Button>
                              <Button type="button" variant="destructive" size="sm" className="rounded-lg font-bold" onClick={() => { setPreviewUrl(null); setImageFile(null); }}>Remove</Button>
@@ -316,9 +318,9 @@ export default function PropertiesPage() {
         ) : (
           properties.map((property) => (
             <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card">
-              <div className="relative h-56 w-full overflow-hidden">
+              <div className="relative h-56 w-full overflow-hidden bg-muted">
                 <Image 
-                  src={property.imageUrl || `https://picsum.photos/seed/${property.id}/800/600`} 
+                  src={property.imageUrl && !property.imageUrl.startsWith('blob:') ? property.imageUrl : `https://picsum.photos/seed/${property.id}/800/600`} 
                   alt={property.addressLine1} 
                   fill 
                   className="object-cover transition-transform duration-500 group-hover:scale-105" 
