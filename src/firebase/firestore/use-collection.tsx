@@ -29,6 +29,7 @@ export interface UseCollectionResult<T> {
   https://github.com/firebase/firebase-js-sdk/blob/c5f08a9bc5da0d2b0207802c972d53724ccef055/packages/firestore/src/lite-api/reference.ts#L143
 */
 export interface InternalQuery extends Query<DocumentData> {
+  path?: string;
   _query?: {
     path?: {
       canonicalString(): string;
@@ -75,21 +76,21 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       async (serverError: FirestoreError) => {
-        // Improved path extraction for collection group queries
-        let path: string = "";
+        // Improved path extraction for better error reporting
+        let path: string = "(unknown path)";
         const target = memoizedTargetRefOrQuery as unknown as InternalQuery;
         
-        if ((target as any).path) {
-          path = (target as any).path;
-        } else if (target._query?.path) {
-          path = target._query.path.toString();
+        if (target.path) {
+          path = target.path;
         } else if (target._query?.collectionGroup) {
           path = `(collectionGroup)/${target._query.collectionGroup}`;
+        } else if (target._query?.path) {
+          path = target._query.path.toString();
         }
         
         const contextualError = new FirestorePermissionError({
           operation: 'list',
-          path: path || "(unknown path)",
+          path: path,
         });
 
         setError(contextualError);

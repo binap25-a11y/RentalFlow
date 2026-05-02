@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -67,7 +66,8 @@ export default function LoginPage() {
             setNeedsProfile(true);
           }
         } catch (e) {
-          // Errors handled by global listener
+          // If we can't read the profile (e.g. initial setup), show the form
+          setNeedsProfile(true);
         }
       };
       checkAndRedirect();
@@ -83,7 +83,7 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      // Update Firebase Auth Display Name to avoid null identities
+      // Update Firebase Auth Display Name
       await updateProfile(user, {
         displayName: `${firstName.trim()} ${lastName.trim()}`
       });
@@ -229,7 +229,7 @@ export default function LoginPage() {
         <p className="text-muted-foreground font-medium">Professional Property Management</p>
       </div>
 
-      <Card className="w-full max-md border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
+      <Card className="w-full max-w-md border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
         <CardHeader className="space-y-1 pb-4 text-center bg-primary/5">
           <CardTitle className="text-2xl font-headline font-bold text-primary">
             {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
