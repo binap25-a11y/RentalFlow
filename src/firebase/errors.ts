@@ -82,6 +82,7 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   if (rawPath.startsWith(dbPrefix)) {
     normalizedPath = rawPath;
   } else if (rawPath.startsWith('[Collection Group]')) {
+    // IR for collection group path is just the prefix + the label
     normalizedPath = `${dbPrefix}/${rawPath}`;
   } else {
     const cleanPath = rawPath.replace(/^\/+|\/+$/g, '');

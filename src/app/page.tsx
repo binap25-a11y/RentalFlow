@@ -50,6 +50,7 @@ export default function LoginPage() {
 
           if (userDoc.exists()) {
             const userData = userDoc.data();
+            // Critical check for identity metadata
             if (!userData.firstName || !userData.lastName || !userData.role) {
               setNeedsProfile(true);
               return;
@@ -67,6 +68,7 @@ export default function LoginPage() {
             setNeedsProfile(true);
           }
         } catch (e) {
+          console.error("Profile check error:", e);
           setNeedsProfile(true);
         }
       };
@@ -84,8 +86,11 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const displayName = `${firstName.trim()} ${lastName.trim()}`;
+      
+      // 1. Update Auth Profile (Essential for identity tokens)
       await updateProfile(user, { displayName });
 
+      // 2. Commit Firestore Profile
       const userDocRef = doc(db, 'users', user.uid);
       const profileData = {
         id: user.uid,
@@ -97,13 +102,16 @@ export default function LoginPage() {
         updatedAt: serverTimestamp(),
       };
 
-      setDocumentNonBlocking(userDocRef, {
+      // We use a regular setDoc here to ensure completion before redirection
+      const { setDoc: firestoreSetDoc } = await import('firebase/firestore');
+      await firestoreSetDoc(userDocRef, {
         ...profileData,
         createdAt: serverTimestamp(),
       }, { merge: true });
       
       toast({ title: "Profile Established", description: `Welcome to LeaseLoop as a ${role}.` });
       
+      // Small delay to allow Firestore state to propagate
       setTimeout(() => {
         isRedirecting.current = true;
         if (role === 'landlord') {
@@ -111,8 +119,9 @@ export default function LoginPage() {
         } else {
           router.replace('/tenant/hub');
         }
-      }, 1000);
+      }, 500);
     } catch (e: any) {
+      console.error("Profile setup failed:", e);
       toast({ variant: "destructive", title: "Setup Failed", description: "Could not establish your identity." });
       setIsLoading(false);
     }

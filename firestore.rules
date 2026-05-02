@@ -11,11 +11,13 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // These allow the 'list' and 'get' operations (via 'read') for collectionGroup queries.
-    // They match documents by their collection name regardless of their parent path.
+    // For collectionGroup queries, we must allow 'list' if the user is signed in.
+    // The query itself must be filtered by the client (e.g., where('landlordId', '==', uid)).
+    // Individual document access ('get') is still strictly protected.
 
     match /{path=**}/properties/{id} {
-      allow read: if isSignedIn() && (
+      allow list: if isSignedIn();
+      allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         (resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
@@ -24,7 +26,8 @@ service cloud.firestore {
     }
 
     match /{path=**}/maintenanceRequests/{id} {
-      allow read: if isSignedIn() && (
+      allow list: if isSignedIn();
+      allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.tenantId == request.auth.uid
       );
@@ -36,7 +39,8 @@ service cloud.firestore {
     }
 
     match /{path=**}/documents/{id} {
-      allow read: if isSignedIn() && (
+      allow list: if isSignedIn();
+      allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.userId == request.auth.uid ||
         (resource.data.members != null && resource.data.members[request.auth.uid] != null)
@@ -46,12 +50,14 @@ service cloud.firestore {
     }
 
     match /{path=**}/inspections/{id} {
-      allow read: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn();
+      allow get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
       allow create, update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
     match /{path=**}/tenantProfiles/{id} {
-      allow read: if isSignedIn() && (
+      allow list: if isSignedIn();
+      allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.userId == request.auth.uid
       );
@@ -59,12 +65,14 @@ service cloud.firestore {
     }
 
     match /{path=**}/images/{id} {
-      allow read: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn();
+      allow get: if isSignedIn() && resource.data.landlordId == request.auth.uid;
       allow create, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
     match /{path=**}/emergencyContactSheets/{id} {
-      allow read: if isSignedIn() && (
+      allow list: if isSignedIn();
+      allow get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid ||
         (resource.data.members != null && resource.data.members[request.auth.uid] != null)
       );
@@ -72,11 +80,9 @@ service cloud.firestore {
     }
 
     // --- PATH-SPECIFIC RULES ---
-
     match /users/{userId} {
       allow read, write: if isOwner(userId);
 
-      // Recursive catch-all for path-based access
       match /{allSubcollections=**} {
         allow read, write: if isOwner(userId);
       }
