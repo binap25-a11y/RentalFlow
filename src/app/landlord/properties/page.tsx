@@ -108,14 +108,16 @@ export default function PropertiesPage() {
     const propertyId = editingProperty ? editingProperty.id : doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
     
-    // Close dialog immediately for better perceived performance
+    // Close dialog immediately for faster feel
     setIsAddDialogOpen(false);
 
     try {
-      // Use existing URL or a seeded picsum placeholder. DO NOT save local blob URLs to Firestore.
-      let finalImageUrl = (editingProperty?.imageUrl && !editingProperty.imageUrl.startsWith('blob:')) 
-        ? editingProperty.imageUrl 
-        : `https://picsum.photos/seed/${propertyId}/800/600`;
+      // Logic for stable URL: Use storage URL if exists, else picsum seeded by ID.
+      // We NEVER save a 'blob:' URL to Firestore.
+      let currentPersistentUrl = editingProperty?.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
+      if (currentPersistentUrl.startsWith('blob:')) {
+        currentPersistentUrl = `https://picsum.photos/seed/${propertyId}/800/600`;
+      }
 
       const baseData = {
         id: propertyId,
@@ -129,7 +131,7 @@ export default function PropertiesPage() {
         numberOfBathrooms: Number(bathrooms),
         rentAmount: Number(rentAmount),
         isOccupied: editingProperty?.isOccupied || false,
-        imageUrl: finalImageUrl,
+        imageUrl: currentPersistentUrl,
         updatedAt: serverTimestamp(),
         tenantIds: editingProperty?.tenantIds || [],
         memberIds: editingProperty?.memberIds || [user.uid],
@@ -147,9 +149,12 @@ export default function PropertiesPage() {
         const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${imageFile.name}`);
         uploadBytes(storageRef, imageFile).then(async (result) => {
           const url = await getDownloadURL(result.ref);
-          updateDocumentNonBlocking(propertyRef, { imageUrl: url });
+          // Only update if we successfully got a URL
+          if (url) {
+            updateDocumentNonBlocking(propertyRef, { imageUrl: url });
+          }
         }).catch(err => {
-          console.error("Image upload failed:", err);
+          console.error("Image upload background failed:", err);
         });
       }
 

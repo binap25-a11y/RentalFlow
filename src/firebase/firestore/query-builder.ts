@@ -11,6 +11,7 @@ import {
 /**
  * 🏠 Landlord Portfolio Queries
  * Filters top-level collections by landlordId.
+ * No collectionGroup is used to ensure security rule performance and predictability.
  */
 export function getLandlordCollectionQuery(db: Firestore, collectionName: string, userId: string): Query<DocumentData> {
   if (!userId) throw new Error("User ID required for landlord query");
