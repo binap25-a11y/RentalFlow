@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -8,13 +9,12 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // Specifically optimized for portfolio-wide listings (Dashboards)
+    // Splitting list rules helps Firestore authorize collectionGroup queries
+    
     match /{path=**}/properties/{id} {
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds);
       allow read: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid ||
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
-      );
-      allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid ||
         (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
       );
@@ -23,7 +23,9 @@ service cloud.firestore {
     }
 
     match /{path=**}/documents/{id} {
-      allow read, list: if isSignedIn() && (
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid ||
         resource.data.userId == request.auth.uid ||
         (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
@@ -35,7 +37,9 @@ service cloud.firestore {
     }
 
     match /{path=**}/maintenanceRequests/{id} {
-      allow read, list: if isSignedIn() && (
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.tenantId == request.auth.uid;
+      allow read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid ||
         resource.data.tenantId == request.auth.uid
       );
@@ -47,7 +51,8 @@ service cloud.firestore {
     }
 
     match /{path=**}/inspections/{id} {
-      allow read, list: if isSignedIn() && (
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid ||
         (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
       );
@@ -55,7 +60,9 @@ service cloud.firestore {
     }
 
     match /{path=**}/tenantProfiles/{id} {
-      allow read, list: if isSignedIn() && (
+      allow list: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid ||
         resource.data.userId == request.auth.uid
       );

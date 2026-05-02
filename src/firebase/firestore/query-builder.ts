@@ -1,3 +1,4 @@
+
 import {
   collection,
   collectionGroup,
@@ -40,13 +41,14 @@ export function buildSecureCollectionGroupQuery(options: {
   const constraints: QueryConstraint[] = [];
 
   // ✅ LANDLORD ACCESS
+  // Portfolio-wide listing for landlords must filter by landlordId to match rules
   if (role === "landlord") {
     constraints.push(where("landlordId", "==", userId));
   }
 
   // ✅ TENANT / MEMBER ACCESS
+  // Residents check direct association OR membership via memberIds
   if (role === "tenant") {
-    // We check direct association OR membership in the property via memberIds array
     constraints.push(
       or(
         where("tenantId", "==", userId),

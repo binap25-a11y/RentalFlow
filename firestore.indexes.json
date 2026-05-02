@@ -1,0 +1,34 @@
+
+{
+  "indexes": [
+    {
+      "collectionGroup": "tenantProfiles",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "landlordId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "documents",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "landlordId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "maintenanceRequests",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "landlordId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inspections",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "landlordId", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
