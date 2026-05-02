@@ -13,17 +13,14 @@ import {
 type UserRole = "landlord" | "tenant";
 
 /**
- * 🏠 Direct subcollection query for properties (Landlord only)
- * This is faster and avoids collectionGroup permission issues.
+ * 🏠 Direct Landlord Queries (Bypasses CollectionGroup Index requirement)
  */
-export function getLandlordPropertiesQuery(db: Firestore, userId: string): Query {
-  return query(
-    collection(db, "users", userId, "properties")
-  );
+export function getLandlordCollectionQuery(db: Firestore, userId: string, collectionName: string): Query {
+  return query(collection(db, "users", userId, collectionName));
 }
 
 /**
- * 🔐 Centralized query builder to enforce Firestore rules compliance for portfolio-wide listings
+ * 🔐 Secure Portfolio Queries (For Residents and shared access)
  */
 export function buildSecureCollectionGroupQuery(options: {
   db: Firestore;
@@ -35,19 +32,17 @@ export function buildSecureCollectionGroupQuery(options: {
   const { db, collectionName, userId, role, additionalConstraints = [] } = options;
 
   if (!userId) {
-    throw new Error("User must be authenticated to build a secure query");
+    throw new Error("User must be authenticated");
   }
 
   const constraints: QueryConstraint[] = [];
 
-  // ✅ LANDLORD ACCESS
-  // Portfolio-wide listing for landlords must filter by landlordId to match rules
+  // ✅ LANDLORD ACCESS (Uses direct path helper in practice, but supported here)
   if (role === "landlord") {
     constraints.push(where("landlordId", "==", userId));
   }
 
   // ✅ TENANT / MEMBER ACCESS
-  // Residents check direct association OR membership via memberIds
   if (role === "tenant") {
     constraints.push(
       or(

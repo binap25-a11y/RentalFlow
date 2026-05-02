@@ -5,28 +5,28 @@
       "collectionGroup": "tenantProfiles",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
-        { "fieldPath": "landlordId", "order": "ASCENDING" }
+        { "fieldPath": "userId", "order": "ASCENDING" }
       ]
     },
     {
       "collectionGroup": "documents",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
-        { "fieldPath": "landlordId", "order": "ASCENDING" }
+        { "fieldPath": "userId", "order": "ASCENDING" }
       ]
     },
     {
       "collectionGroup": "maintenanceRequests",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
-        { "fieldPath": "landlordId", "order": "ASCENDING" }
+        { "fieldPath": "tenantId", "order": "ASCENDING" }
       ]
     },
     {
       "collectionGroup": "inspections",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
-        { "fieldPath": "landlordId", "order": "ASCENDING" }
+        { "fieldPath": "memberIds", "arrayConfig": "CONTAINS" }
       ]
     }
   ],

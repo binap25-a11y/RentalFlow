@@ -5,439 +5,111 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a user of the LeaseLoop application, either a Landlord or a Tenant, with core identification and role information. Assumes an external authentication system handles passwords.",
+      "description": "Represents a user of the LeaseLoop application.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the User entity."
-        },
-        "email": {
-          "type": "string",
-          "description": "The user's email address, used for login and communication.",
-          "format": "email"
-        },
-        "firstName": {
-          "type": "string",
-          "description": "The first name of the user."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "The last name of the user."
-        },
-        "phoneNumber": {
-          "type": "string",
-          "description": "The primary contact phone number for the user."
-        },
-        "role": {
-          "type": "string",
-          "description": "The role of the user within the application (Landlord or Tenant)."
-        }
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "role": { "type": "string" }
       },
-      "required": [
-        "id",
-        "email",
-        "firstName",
-        "lastName",
-        "role"
-      ]
+      "required": ["id", "email", "firstName", "lastName", "role"]
     },
     "Property": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Property",
       "type": "object",
-      "description": "Represents a rental property managed by a landlord within the LeaseLoop system.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Property entity."
-        },
-        "landlordId": {
-          "type": "string",
-          "description": "Reference to the Landlord User who owns or manages this property. (Relationship: User 1:N Property)"
-        },
-        "addressLine1": {
-          "type": "string",
-          "description": "The first line of the property's street address."
-        },
-        "addressLine2": {
-          "type": "string",
-          "description": "The second line of the property's street address (e.g., apartment, suite number)."
-        },
-        "city": {
-          "type": "string",
-          "description": "The city where the property is located."
-        },
-        "state": {
-          "type": "string",
-          "description": "The state or province where the property is located."
-        },
-        "zipCode": {
-          "type": "string",
-          "description": "The postal code of the property's location."
-        },
-        "propertyType": {
-          "type": "string",
-          "description": "The type of property, e.g., 'Apartment', 'House', 'Condo'."
-        },
-        "numberOfBedrooms": {
-          "type": "number",
-          "description": "The number of bedrooms in the property."
-        },
-        "numberOfBathrooms": {
-          "type": "number",
-          "description": "The number of bathrooms in the property."
-        },
-        "squareFootage": {
-          "type": "number",
-          "description": "The total square footage of the property."
-        },
-        "description": {
-          "type": "string",
-          "description": "A detailed description of the property."
-        },
-        "yearBuilt": {
-          "type": "number",
-          "description": "The year the property was built."
-        },
-        "isActive": {
-          "type": "boolean",
-          "description": "Indicates if the property is currently active in the landlord's portfolio."
-        },
-        "members": {
-          "type": "object",
-          "description": "Map of UID to role for access control."
-        }
+        "id": { "type": "string" },
+        "landlordId": { "type": "string" },
+        "addressLine1": { "type": "string" },
+        "city": { "type": "string" },
+        "zipCode": { "type": "string" },
+        "propertyType": { "type": "string" },
+        "numberOfBedrooms": { "type": "number" },
+        "numberOfBathrooms": { "type": "number" },
+        "description": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "memberIds": { "type": "array", "items": { "type": "string" } }
       },
-      "required": [
-        "id",
-        "landlordId",
-        "addressLine1",
-        "city",
-        "state",
-        "zipCode",
-        "propertyType",
-        "numberOfBedrooms",
-        "numberOfBathrooms",
-        "description",
-        "isActive"
-      ]
+      "required": ["id", "landlordId", "addressLine1", "city", "zipCode", "isActive"]
     },
     "TenantProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "TenantProfile",
       "type": "object",
-      "description": "Represents a tenant's specific tenancy details linked to a property, complementing the general User information.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the TenantProfile entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to the User entity for this tenant. (Relationship: User 1:1 TenantProfile)"
-        },
-        "propertyId": {
-          "type": "string",
-          "description": "Reference to the Property this tenant is assigned to. (Relationship: Property 1:N TenantProfile)"
-        },
-        "landlordId": {
-          "type": "string",
-          "description": "Reference to the Landlord User who manages this property."
-        },
-        "leaseStartDate": {
-          "type": "string",
-          "description": "The start date of the tenant's lease agreement.",
-          "format": "date"
-        },
-        "leaseEndDate": {
-          "type": "string",
-          "description": "The end date of the tenant's lease agreement.",
-          "format": "date"
-        },
-        "rentAmount": {
-          "type": "number",
-          "description": "The monthly rent amount for the property."
-        },
-        "securityDeposit": {
-          "type": "number",
-          "description": "The security deposit paid by the tenant."
-        },
-        "emergencyContactName": {
-          "type": "string",
-          "description": "The name of the tenant's emergency contact."
-        },
-        "emergencyContactPhone": {
-          "type": "string",
-          "description": "The phone number of the tenant's emergency contact."
-        },
-        "notes": {
-          "type": "string",
-          "description": "Any additional notes or specific details about the tenancy."
-        }
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "propertyId": { "type": "string" },
+        "landlordId": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "email": { "type": "string" },
+        "leaseStartDate": { "type": "string", "format": "date" },
+        "leaseEndDate": { "type": "string", "format": "date" },
+        "memberIds": { "type": "array", "items": { "type": "string" } }
       },
-      "required": [
-        "id",
-        "userId",
-        "propertyId",
-        "landlordId",
-        "leaseStartDate",
-        "rentAmount"
-      ]
-    },
-    "PropertyImage": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "PropertyImage",
-      "type": "object",
-      "description": "Stores references to images associated with a specific property.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the PropertyImage entity."
-        },
-        "propertyId": {
-          "type": "string",
-          "description": "Reference to the Property this image belongs to."
-        },
-        "landlordId": {
-          "type": "string",
-          "description": "Reference to the Landlord User who owns this property."
-        },
-        "imageUrl": {
-          "type": "string",
-          "description": "The URL of the image.",
-          "format": "uri"
-        },
-        "description": {
-          "type": "string",
-          "description": "A brief description of the image content."
-        },
-        "uploadDate": {
-          "type": "string",
-          "description": "The date and time when the image was uploaded.",
-          "format": "date-time"
-        },
-        "members": {
-          "type": "object",
-          "description": "Map of UID to role for access control."
-        }
-      },
-      "required": [
-        "id",
-        "propertyId",
-        "landlordId",
-        "imageUrl",
-        "uploadDate"
-      ]
+      "required": ["id", "userId", "propertyId", "landlordId"]
     },
     "PropertyDocument": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "PropertyDocument",
       "type": "object",
-      "description": "Stores references to various documents linked to a property.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the PropertyDocument entity."
-        },
-        "propertyId": {
-          "type": "string",
-          "description": "Reference to the Property this document belongs to."
-        },
-        "landlordId": {
-          "type": "string",
-          "description": "Reference to the Landlord User who owns this property."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Optional reference to a specific tenant user."
-        },
-        "documentUrl": {
-          "type": "string",
-          "description": "The URL of the document.",
-          "format": "uri"
-        },
-        "documentType": {
-          "type": "string",
-          "description": "The category or type of the document."
-        },
-        "fileName": {
-          "type": "string",
-          "description": "The original file name of the document."
-        },
-        "description": {
-          "type": "string",
-          "description": "A brief description of the document's content."
-        },
-        "uploadDate": {
-          "type": "string",
-          "description": "The date and time when the document was uploaded.",
-          "format": "date-time"
-        },
-        "expiryDate": {
-          "type": "string",
-          "description": "Optional expiry date for compliance tracking.",
-          "format": "date"
-        },
-        "members": {
-          "type": "object",
-          "description": "Map of UID to role for access control."
-        }
+        "id": { "type": "string" },
+        "propertyId": { "type": "string" },
+        "landlordId": { "type": "string" },
+        "userId": { "type": "string" },
+        "fileUrl": { "type": "string", "format": "uri" },
+        "fileName": { "type": "string" },
+        "documentType": { "type": "string" },
+        "uploadDate": { "type": "string", "format": "date-time" },
+        "expiryDate": { "type": "string", "format": "date" },
+        "memberIds": { "type": "array", "items": { "type": "string" } }
       },
-      "required": [
-        "id",
-        "propertyId",
-        "landlordId",
-        "documentUrl",
-        "documentType",
-        "fileName",
-        "uploadDate"
-      ]
-    },
-    "Inspection": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Inspection",
-      "type": "object",
-      "description": "Records details about property inspections.",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "propertyId": {
-          "type": "string"
-        },
-        "landlordId": {
-          "type": "string"
-        },
-        "scheduledDate": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "conductedDate": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "status": {
-          "type": "string"
-        },
-        "notes": {
-          "type": "string"
-        },
-        "reportUrl": {
-          "type": "string",
-          "format": "uri"
-        },
-        "members": {
-          "type": "object"
-        }
-      },
-      "required": [
-        "id",
-        "propertyId",
-        "landlordId",
-        "scheduledDate",
-        "status"
-      ]
+      "required": ["id", "propertyId", "landlordId", "fileUrl", "fileName"]
     },
     "MaintenanceRequest": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "MaintenanceRequest",
       "type": "object",
-      "description": "Records details of maintenance requests.",
       "properties": {
-        "id": {
-          "type": "string"
-        },
-        "propertyId": {
-          "type": "string"
-        },
-        "tenantId": {
-          "type": "string"
-        },
-        "landlordId": {
-          "type": "string"
-        },
-        "title": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "submissionDate": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "status": {
-          "type": "string"
-        },
-        "priority": {
-          "type": "string"
-        },
-        "category": {
-          "type": "string"
-        },
-        "completionDate": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "landlordNotes": {
-          "type": "string"
-        }
+        "id": { "type": "string" },
+        "propertyId": { "type": "string" },
+        "tenantId": { "type": "string" },
+        "landlordId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string" },
+        "priority": { "type": "string" },
+        "category": { "type": "string" },
+        "createdAt": { "type": "object" },
+        "memberIds": { "type": "array", "items": { "type": "string" } }
       },
-      "required": [
-        "id",
-        "propertyId",
-        "landlordId",
-        "title",
-        "description",
-        "submissionDate",
-        "status"
-      ]
+      "required": ["id", "propertyId", "landlordId", "title", "status"]
     },
-    "EmergencyContactSheet": {
+    "Inspection": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "EmergencyContactSheet",
+      "title": "Inspection",
       "type": "object",
-      "description": "Represents a generated emergency contact sheet.",
       "properties": {
-        "id": {
-          "type": "string"
-        },
-        "propertyId": {
-          "type": "string"
-        },
-        "landlordId": {
-          "type": "string"
-        },
-        "title": {
-          "type": "string"
-        },
-        "documentUrl": {
-          "type": "string",
-          "format": "uri"
-        },
-        "generationDate": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "members": {
-          "type": "object"
-        }
+        "id": { "type": "string" },
+        "propertyId": { "type": "string" },
+        "landlordId": { "type": "string" },
+        "scheduledDate": { "type": "string", "format": "date-time" },
+        "status": { "type": "string" },
+        "findings": { "type": "string" },
+        "summary": { "type": "string" },
+        "healthScore": { "type": "number" },
+        "memberIds": { "type": "array", "items": { "type": "string" } }
       },
-      "required": [
-        "id",
-        "propertyId",
-        "landlordId",
-        "title",
-        "documentUrl",
-        "generationDate"
-      ]
+      "required": ["id", "propertyId", "landlordId", "scheduledDate", "status"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password", "anonymous"]
   },
   "firestore": {
     "structure": [
@@ -445,80 +117,48 @@
         "path": "/users/{userId}",
         "definition": {
           "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores core user profiles."
+          "schema": { "$ref": "#/backend/entities/User" },
+          "description": "User profiles."
         }
       },
       {
         "path": "/users/{landlordId}/properties/{propertyId}",
         "definition": {
           "entityName": "Property",
-          "schema": {
-            "$ref": "#/backend/entities/Property"
-          },
-          "description": "Represents a rental property."
+          "schema": { "$ref": "#/backend/entities/Property" },
+          "description": "Rental properties."
         }
       },
       {
-        "path": "/users/{landlordId}/properties/{propertyId}/tenantProfiles/{tenantProfileId}",
+        "path": "/users/{landlordId}/tenantProfiles/{profileId}",
         "definition": {
           "entityName": "TenantProfile",
-          "schema": {
-            "$ref": "#/backend/entities/TenantProfile"
-          },
-          "description": "Tenancy details for a user assigned to a property."
+          "schema": { "$ref": "#/backend/entities/TenantProfile" },
+          "description": "Resident associations."
         }
       },
       {
-        "path": "/users/{landlordId}/properties/{propertyId}/images/{imageId}",
-        "definition": {
-          "entityName": "PropertyImage",
-          "schema": {
-            "$ref": "#/backend/entities/PropertyImage"
-          },
-          "description": "Property images."
-        }
-      },
-      {
-        "path": "/users/{landlordId}/properties/{propertyId}/documents/{documentId}",
+        "path": "/users/{landlordId}/documents/{docId}",
         "definition": {
           "entityName": "PropertyDocument",
-          "schema": {
-            "$ref": "#/backend/entities/PropertyDocument"
-          },
-          "description": "Property documents."
+          "schema": { "$ref": "#/backend/entities/PropertyDocument" },
+          "description": "Portfolio vault."
         }
       },
       {
-        "path": "/users/{landlordId}/properties/{propertyId}/inspections/{inspectionId}",
-        "definition": {
-          "entityName": "Inspection",
-          "schema": {
-            "$ref": "#/backend/entities/Inspection"
-          },
-          "description": "Inspection records."
-        }
-      },
-      {
-        "path": "/users/{landlordId}/properties/{propertyId}/maintenanceRequests/{requestId}",
+        "path": "/users/{landlordId}/maintenanceRequests/{requestId}",
         "definition": {
           "entityName": "MaintenanceRequest",
-          "schema": {
-            "$ref": "#/backend/entities/MaintenanceRequest"
-          },
-          "description": "Maintenance requests."
+          "schema": { "$ref": "#/backend/entities/MaintenanceRequest" },
+          "description": "Issue tracking."
         }
       },
       {
-        "path": "/users/{landlordId}/properties/{propertyId}/emergencyContactSheets/{sheetId}",
+        "path": "/users/{landlordId}/inspections/{inspectionId}",
         "definition": {
-          "entityName": "EmergencyContactSheet",
-          "schema": {
-            "$ref": "#/backend/entities/EmergencyContactSheet"
-          },
-          "description": "Generated emergency contact sheets."
+          "entityName": "Inspection",
+          "schema": { "$ref": "#/backend/entities/Inspection" },
+          "description": "Health checks."
         }
       }
     ]
