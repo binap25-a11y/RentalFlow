@@ -65,7 +65,7 @@ export function useCollection<T = any>(
     const target = memoizedTargetRefOrQuery as unknown as InternalQuery;
 
     // 🕵️ Diagnostic logging for development
-    console.log("Firestore Query Active:", target);
+    console.log("QUERY DEBUG:", target);
 
     // 🛡️ Safety Guard: CollectionGroup queries must have filters to pass security rules
     if (target?._query?.collectionGroup && (!target?._query?.filters || target._query.filters.length === 0)) {

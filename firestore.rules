@@ -18,6 +18,7 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES (Portfolio-wide listing) ---
+    // Firestore requires these list rules to match the query filters exactly.
     
     // 1. Properties
     match /{path=**}/properties/{id} {
