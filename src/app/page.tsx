@@ -81,10 +81,10 @@ export default function LoginPage() {
     try {
       const displayName = `${firstName.trim()} ${lastName.trim()}`;
       
-      // 1. Update Auth Profile
+      // 1. Update Auth Profile (AWAIT THIS)
       await updateProfile(user, { displayName });
 
-      // 2. Commit Firestore Profile (MUST wait for this)
+      // 2. Commit Firestore Profile (AWAIT THIS)
       const userDocRef = doc(db, 'users', user.uid);
       await setDoc(userDocRef, {
         id: user.uid,
