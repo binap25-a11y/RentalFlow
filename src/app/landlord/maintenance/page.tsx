@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { triageMaintenanceRequest } from "@/ai/flows/maintenance-request-triage";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, getLandlordCollectionQuery } from "@/firebase";
 import { doc, serverTimestamp, collection } from "firebase/firestore";
@@ -38,7 +38,6 @@ export default function MaintenancePage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form state for new request
   const [newRequestTitle, setNewRequestTitle] = useState('');
   const [newRequestDesc, setNewRequestDesc] = useState('');
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
@@ -82,7 +81,6 @@ export default function MaintenancePage() {
     };
 
     setDocumentNonBlocking(requestRef, data, { merge: true });
-
     toast({ title: "Request Logged", description: "Maintenance task has been added to the ledger." });
     
     setIsCreateDialogOpen(false);
@@ -97,7 +95,6 @@ export default function MaintenancePage() {
     setIsTriaging(request.id);
     try {
       const result = await triageMaintenanceRequest({ maintenanceRequest: request.description });
-      
       const requestRef = doc(db, 'maintenanceRequests', request.id);
       
       updateDocumentNonBlocking(requestRef, {
@@ -107,16 +104,9 @@ export default function MaintenancePage() {
         updatedAt: serverTimestamp(),
       });
       
-      toast({
-        title: "AI Triage Complete",
-        description: `Suggested priority: ${result.priority}`,
-      });
+      toast({ title: "AI Triage Complete", description: `Suggested priority: ${result.priority}` });
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Triage failed",
-        description: "Could not analyze request at this time.",
-      });
+      toast({ variant: "destructive", title: "Triage failed", description: "Could not analyze request at this time." });
     } finally {
       setIsTriaging(null);
     }
@@ -198,10 +188,6 @@ export default function MaintenancePage() {
               </form>
             </DialogContent>
           </Dialog>
-          <Button variant="outline" className="rounded-xl border-primary/10 h-11 font-bold">
-            <Filter className="w-4 h-4 mr-2" />
-            Filter
-          </Button>
         </div>
       </div>
 
@@ -228,8 +214,8 @@ export default function MaintenancePage() {
               
               return (
                 <Card key={request.id} className="border-none shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-0">
-                    <div className="p-6 md:col-span-3 space-y-4">
+                  <CardContent className="p-6 pb-4">
+                    <div className="space-y-4">
                       <div className="flex flex-wrap items-center gap-3">
                         <Badge variant="outline" className="text-[10px] uppercase font-bold text-primary/60 border-primary/20">
                           {request.status || 'Pending'}
@@ -259,45 +245,45 @@ export default function MaintenancePage() {
                           <BrainCircuit className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                           <div>
                             <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">AI Recommendation Insight</p>
-                            <p className="text-sm text-black font-body font-medium leading-relaxed">{request.aiTriageNotes}</p>
+                            <p className="text-sm text-black font-body font-bold leading-relaxed">{request.aiTriageNotes}</p>
                           </div>
                         </div>
                       )}
                     </div>
+                  </CardContent>
 
-                    <div className="bg-muted/30 p-6 flex flex-col justify-center gap-3 border-l border-muted/50">
-                      <Button 
-                        className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-primary/10 font-bold h-11 px-6"
-                        onClick={() => handleTriage(request)}
-                        disabled={isTriaging === request.id}
-                      >
-                        {isTriaging === request.id ? (
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        ) : (
-                          <Sparkles className="w-4 h-4 mr-2" />
-                        )}
-                        {isTriaging === request.id ? 'Analyzing...' : 'Auto-Triage'}
-                      </Button>
-                      
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" className="w-full rounded-xl font-bold h-11 px-6 border-primary/20 bg-white hover:bg-primary/5 hover:text-primary transition-all">
-                            Update Status
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48 rounded-xl border-none shadow-xl">
-                          <DropdownMenuItem onClick={() => updateStatus(request, 'in-progress')} className="rounded-lg cursor-pointer font-medium">
-                            <PlayCircle className="w-4 h-4 mr-2 text-blue-500" />
-                            In Progress
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => updateStatus(request, 'completed')} className="rounded-lg cursor-pointer font-medium">
-                            <CheckCircle2 className="w-4 h-4 mr-2 text-green-500" />
-                            Completed
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
+                  <CardFooter className="bg-muted/10 p-4 pt-0 flex flex-col md:flex-row gap-3 border-t border-muted/20 mt-2">
+                    <Button 
+                      className="w-full md:flex-1 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-primary/5 font-bold h-11 px-6 transition-all"
+                      onClick={() => handleTriage(request)}
+                      disabled={isTriaging === request.id}
+                    >
+                      {isTriaging === request.id ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-4 h-4 mr-2" />
+                      )}
+                      {isTriaging === request.id ? 'Analyzing Request...' : 'AI Triage Analysis'}
+                    </Button>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="w-full md:flex-1 rounded-xl font-bold h-11 px-6 border-primary/20 bg-white hover:bg-primary/5 hover:text-primary transition-all">
+                          Update Status
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48 rounded-xl border-none shadow-xl">
+                        <DropdownMenuItem onClick={() => updateStatus(request, 'in-progress')} className="rounded-lg cursor-pointer font-medium">
+                          <PlayCircle className="w-4 h-4 mr-2 text-blue-500" />
+                          In Progress
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => updateStatus(request, 'completed')} className="rounded-lg cursor-pointer font-medium">
+                          <CheckCircle2 className="w-4 h-4 mr-2 text-green-500" />
+                          Completed
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </CardFooter>
                 </Card>
               );
             })
