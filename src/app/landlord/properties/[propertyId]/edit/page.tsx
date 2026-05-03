@@ -73,9 +73,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSubmitting(true);
     
-    // Redirect immediately for an "instant" experience
+    // Optimistic redirect for instant feel
     router.push(`/landlord/properties/${propertyId}`);
-    
+
     try {
       let currentImageUrl = property?.imageUrl || previewUrl;
 
@@ -105,7 +105,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         description: "Your modifications are being synchronized." 
       });
     } catch (error: any) {
-      // Background failure handling
+      console.error("Save background error:", error);
     }
   };
 
