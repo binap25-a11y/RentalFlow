@@ -22,11 +22,12 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Tenant Profiles: Explicitly allow listing for landlords and residents
+    // Tenant Profiles: Explicitly allow listing for landlords and the specific resident
     match /tenantProfiles/{id} {
       allow list, read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
-        resource.data.userId == request.auth.uid
+        resource.data.userId == request.auth.uid ||
+        resource.data.email == request.auth.token.email
       );
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && (
