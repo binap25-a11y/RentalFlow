@@ -6,15 +6,6 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Simplified membership check for list compatibility
-    function isMember() {
-      return isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds) ||
-        (resource.data.tenantIds != null && request.auth.uid in resource.data.tenantIds)
-      );
-    }
-
     // User profiles are private
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
@@ -31,12 +22,11 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Tenant Profiles: Simplified for reliable listing
+    // Tenant Profiles: Explicitly allow listing for landlords and residents
     match /tenantProfiles/{id} {
-      allow list, read: if isSignedIn() && (
+      allow read, list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
-        resource.data.userId == request.auth.uid ||
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
+        resource.data.userId == request.auth.uid
       );
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && (
