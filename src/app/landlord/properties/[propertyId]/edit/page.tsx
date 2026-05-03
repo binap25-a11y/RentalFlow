@@ -4,13 +4,13 @@ import { useState, useEffect, use } from 'react';
 import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking, useStorage } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Building2, ArrowLeft, Save, Image as ImageIcon, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Image as ImageIcon, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -71,17 +71,18 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     if (!user || !db || !propertyRef) return;
 
     setIsSubmitting(true);
+    
+    // Perceived Performance Optimization: Redirect and toast immediately if no image upload is needed
+    // If an image upload IS needed, we still show the spinner as that is a heavy operation
     try {
       let currentImageUrl = property?.imageUrl || previewUrl;
 
-      // Only perform upload if a new file was actually selected to speed up saves
       if (imageFile && storage) {
         const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${imageFile.name}`);
         const result = await uploadBytes(storageRef, imageFile);
         currentImageUrl = await getDownloadURL(result.ref);
       }
 
-      // Use non-blocking update for immediate UI transition
       updateDocumentNonBlocking(propertyRef, {
         addressLine1: address,
         city,
@@ -96,8 +97,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       });
 
       toast({ title: "Asset Updated", description: "Property details saved successfully." });
-      
-      // Immediate redirect to improve perceived performance
       router.push('/landlord/properties');
     } catch (error: any) {
       toast({ variant: "destructive", title: "Save Failed", description: error.message });
@@ -147,12 +146,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   </button>
                 )}
                 <input id="image-input" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
-              </div>
-              <div className="mt-8 space-y-4">
-                <div className="p-4 bg-white rounded-2xl border border-primary/5 shadow-sm text-left">
-                   <h4 className="text-sm font-bold text-primary mb-1 font-headline">Marketing Status</h4>
-                   <p className="text-xs text-muted-foreground font-body">This image will be visible to potential residents during the application process.</p>
-                </div>
               </div>
             </div>
 

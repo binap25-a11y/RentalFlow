@@ -224,9 +224,9 @@ export default function InspectionsPage() {
       
       const isPass = data.status === 'pass';
       if (isPass) {
-        pdf.setTextColor(16, 185, 129); // Standard Emerald Green
+        pdf.setTextColor(16, 185, 129); // Green
       } else {
-        pdf.setTextColor(239, 68, 68); // Standard Rose Red
+        pdf.setTextColor(239, 68, 68); // Red
       }
       
       pdf.setFont("helvetica", "bold");
