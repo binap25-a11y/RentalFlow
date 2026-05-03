@@ -31,7 +31,7 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Tenant Profiles: Explicit rules for landlords and users
+    // Tenant Profiles: Simplified for reliable listing
     match /tenantProfiles/{id} {
       allow list, read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 

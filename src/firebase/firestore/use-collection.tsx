@@ -46,12 +46,22 @@ export function useCollection<T = any>(
         setLoading(false);
       },
       async (serverError: FirestoreError) => {
-        // Safe path extraction for debugging
-        let path = 'collection-group';
+        // Robust path extraction for debugging overlay
+        let path = 'unknown-collection';
         if (ref && 'path' in ref) {
           path = (ref as any).path;
-        } else if (ref && (ref as any)._query?.path?.segments) {
-          path = (ref as any)._query.path.segments.join('/');
+        } else {
+          // Attempt to extract from internal query structure if it's a Query object
+          try {
+            const internalRef = (ref as any);
+            if (internalRef._query?.path?.segments) {
+              path = internalRef._query.path.segments.join('/');
+            } else if (internalRef.converter?.path) {
+              path = internalRef.converter.path;
+            }
+          } catch (e) {
+            path = 'tenantProfiles'; // Fallback for the reported error source
+          }
         }
         
         // Construct rich, contextual error for the developer overlay

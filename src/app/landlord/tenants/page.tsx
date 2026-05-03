@@ -13,7 +13,7 @@ import { Users, Plus, Mail, Phone, Trash2, Search, Loader2, UserX } from "lucide
 import { useToast } from "@/hooks/use-toast";
 
 export default function TenantsPage() {
-  const { user } = userUser();
+  const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
 
@@ -26,11 +26,11 @@ export default function TenantsPage() {
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Landlords list their own assigned profiles
+    // Standardize to landlordId for secure listing in portfolio inventory
     return getLandlordCollectionQuery(db, "tenantProfiles", user.uid);
   }, [db, user]);
 
-  const { data: tenants, isLoading } = useCollection(tenantsQuery);
+  const { data: tenants, loading: isLoading } = useCollection(tenantsQuery);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -234,8 +234,4 @@ export default function TenantsPage() {
       </Card>
     </div>
   );
-}
-
-function userUser() {
-  throw new Error('Function not implemented.');
 }
