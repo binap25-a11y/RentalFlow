@@ -267,7 +267,7 @@ export default function MaintenancePage() {
 
                     <div className="bg-muted/30 p-6 flex flex-col justify-center gap-3 border-l border-muted/50">
                       <Button 
-                        className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-primary/10 font-bold h-11"
+                        className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-primary/10 font-bold h-11 px-6"
                         onClick={() => handleTriage(request)}
                         disabled={isTriaging === request.id}
                       >
@@ -281,7 +281,7 @@ export default function MaintenancePage() {
                       
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="outline" className="w-full rounded-xl font-bold h-11 border-primary/20 bg-white hover:bg-primary/5 hover:text-primary">
+                          <Button variant="outline" className="w-full rounded-xl font-bold h-11 px-6 border-primary/20 bg-white hover:bg-primary/5 hover:text-primary transition-all">
                             Update Status
                           </Button>
                         </DropdownMenuTrigger>
