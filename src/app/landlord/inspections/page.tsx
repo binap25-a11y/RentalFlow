@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -160,102 +159,102 @@ export default function InspectionsPage() {
 
   const downloadPDF = (inspection: any) => {
     const property = properties?.find(p => p.id === inspection.propertyId);
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
+    const pdf = new jsPDF();
+    const pageWidth = pdf.internal.pageSize.getWidth();
     const today = format(new Date(), 'PPp');
     
-    doc.setFillColor(31, 41, 55);
-    doc.rect(0, 0, pageWidth, 40, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
-    doc.text("OFFICIAL AUDIT RECORD", 20, 25);
-    doc.setFontSize(10);
-    doc.text(`Portfolio Registry: RentSafeUK`, 20, 32);
+    pdf.setFillColor(31, 41, 55);
+    pdf.rect(0, 0, pageWidth, 40, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(24);
+    pdf.text("OFFICIAL AUDIT RECORD", 20, 25);
+    pdf.setFontSize(10);
+    pdf.text(`Portfolio Registry: RentSafeUK`, 20, 32);
     
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("Property Subject", 20, 55);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.text(`${property?.addressLine1 || 'Property Asset'}`, 20, 62);
-    doc.text(`${property?.city || 'Unknown'}, ${property?.zipCode || 'No Postcode'}`, 20, 68);
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(14);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Property Subject", 20, 55);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(11);
+    pdf.text(`${property?.addressLine1 || 'Property Asset'}`, 20, 62);
+    pdf.text(`${property?.city || 'Unknown'}, ${property?.zipCode || 'No Postcode'}`, 20, 68);
 
-    doc.setFont("helvetica", "bold");
-    doc.text("Audit Information", pageWidth - 80, 55);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Conducted: ${inspection.conductedDate ? format(new Date(inspection.conductedDate), 'PPp') : 'N/A'}`, pageWidth - 80, 62);
-    doc.text(`Safety Score: ${inspection.healthScore || 0}/100`, pageWidth - 80, 68);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Audit Information", pageWidth - 80, 55);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`Conducted: ${inspection.conductedDate ? format(new Date(inspection.conductedDate), 'PPp') : 'N/A'}`, pageWidth - 80, 62);
+    pdf.text(`Safety Score: ${inspection.healthScore || 0}/100`, pageWidth - 80, 68);
 
-    doc.setDrawColor(229, 231, 235);
-    doc.line(20, 75, pageWidth - 20, 75);
+    pdf.setDrawColor(229, 231, 235);
+    pdf.line(20, 75, pageWidth - 20, 75);
 
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("Executive Summary", 20, 90);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "italic");
+    pdf.setFontSize(14);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Executive Summary", 20, 90);
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "italic");
     const summaryText = inspection.summary || "No summary provided";
-    const splitSummary = doc.splitTextToSize(summaryText, pageWidth - 40);
-    doc.text(splitSummary, 20, 98);
+    const splitSummary = pdf.splitTextToSize(summaryText, pageWidth - 40);
+    pdf.text(splitSummary, 20, 98);
 
     let y = 98 + (splitSummary.length * 5) + 15;
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.text("Condition Audit Breakdown", 20, y);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(14);
+    pdf.text("Condition Audit Breakdown", 20, y);
     y += 8;
 
     const findings = inspection.structuredFindings || {};
     
-    doc.setFontSize(10);
-    doc.setFillColor(243, 244, 246);
-    doc.rect(20, y, pageWidth - 40, 8, 'F');
-    doc.text("Checklist Item", 25, y + 6);
-    doc.text("Status", pageWidth - 60, y + 6);
+    pdf.setFontSize(10);
+    pdf.setFillColor(243, 244, 246);
+    pdf.rect(20, y, pageWidth - 40, 8, 'F');
+    pdf.text("Checklist Item", 25, y + 6);
+    pdf.text("Status", pageWidth - 60, y + 6);
     y += 12;
 
     Object.entries(findings).forEach(([item, data]: [string, any]) => {
       if (y > 270) {
-        doc.addPage();
+        pdf.addPage();
         y = 20;
       }
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(0, 0, 0);
-      doc.text(item, 25, y);
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(item, 25, y);
       
       const isPass = data.status === 'pass';
       if (isPass) {
-        doc.setTextColor(16, 185, 129); // Green
+        pdf.setTextColor(16, 185, 129); // Green
       } else {
-        doc.setTextColor(239, 68, 68); // Red
+        pdf.setTextColor(239, 68, 68); // Red
       }
       
-      doc.setFont("helvetica", "bold");
-      doc.text(isPass ? "PASS" : "FAIL", pageWidth - 60, y);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(isPass ? "PASS" : "FAIL", pageWidth - 60, y);
       
-      doc.setTextColor(107, 114, 128);
-      doc.setFontSize(8);
+      pdf.setTextColor(107, 114, 128);
+      pdf.setFontSize(8);
       if (data.notes) {
-        const splitNotes = doc.splitTextToSize(`Note: ${data.notes}`, pageWidth - 80);
-        doc.text(splitNotes, 25, y + 5);
+        const splitNotes = pdf.splitTextToSize(`Note: ${data.notes}`, pageWidth - 80);
+        pdf.text(splitNotes, 25, y + 5);
         y += (splitNotes.length * 4);
       }
       
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(10);
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(10);
       y += 8;
     });
 
-    const totalPages = doc.internal.getNumberOfPages();
+    const totalPages = pdf.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setTextColor(156, 163, 175);
-      doc.text(`Generated: ${today} | Official Audit Record - Page ${i} of ${totalPages}`, pageWidth / 2, 290, { align: "center" });
+      pdf.setPage(i);
+      pdf.setFontSize(8);
+      pdf.setTextColor(156, 163, 175);
+      pdf.text(`Generated: ${today} | Official Audit Record - Page ${i} of ${totalPages}`, pageWidth / 2, 290, { align: "center" });
     }
     
-    doc.save(`Audit_${property?.addressLine1 || 'Report'}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    pdf.save(`Audit_${property?.addressLine1 || 'Report'}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
   const handleConduct = async () => {

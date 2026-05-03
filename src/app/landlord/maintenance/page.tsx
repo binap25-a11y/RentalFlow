@@ -220,7 +220,7 @@ export default function MaintenancePage() {
               const status = request.status || 'pending';
               
               return (
-                <Card key={request.id} className="border-none shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
+                <Card key={request.id} className="border-none shadow-sm overflow-hidden group hover:shadow-md transition-shadow bg-white rounded-2xl">
                   <CardContent className="p-6 pb-4">
                     <div className="space-y-4">
                       <div className="flex flex-wrap items-center gap-3">
@@ -250,7 +250,7 @@ export default function MaintenancePage() {
                       {request.aiTriageNotes && (
                         <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex gap-3 text-left">
                           <BrainCircuit className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                          <div>
+                          <div className="flex-1">
                             <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">AI Recommendation Insight</p>
                             <p className="text-sm text-black font-body font-bold leading-relaxed">{request.aiTriageNotes}</p>
                           </div>
@@ -261,7 +261,7 @@ export default function MaintenancePage() {
 
                   <CardFooter className="bg-muted/10 p-4 flex flex-col md:flex-row gap-3 border-t border-muted/20">
                     <Button 
-                      className="w-full md:flex-1 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-primary/5 font-bold h-11 px-6 transition-all border border-transparent"
+                      className="w-full md:flex-1 bg-white hover:bg-primary/5 text-primary rounded-xl shadow-sm font-bold h-11 px-6 transition-all border border-primary/20"
                       onClick={() => handleTriage(request)}
                       disabled={isTriaging === request.id}
                     >

@@ -29,10 +29,12 @@ function Calendar({
           buttonVariants({ variant: "outline" }),
           "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute left-1 z-10 rounded-lg"
         ),
+        button_previous_icon: "h-4 w-4",
         button_next: cn(
           buttonVariants({ variant: "outline" }),
           "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute right-1 z-10 rounded-lg"
         ),
+        button_next_icon: "h-4 w-4",
         month_grid: "w-full border-collapse",
         weekdays: "flex w-full mb-2",
         weekday: "text-muted-foreground w-9 font-bold text-[0.7rem] flex items-center justify-center uppercase tracking-tighter h-9",
