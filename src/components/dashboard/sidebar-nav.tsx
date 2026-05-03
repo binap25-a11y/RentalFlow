@@ -12,7 +12,8 @@ import {
   LogOut,
   Home,
   FileText,
-  KeyRound
+  KeyRound,
+  MessageSquare
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
@@ -40,12 +41,14 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
     { label: 'Tenants', icon: Users, href: '/landlord/tenants' },
     { label: 'Maintenance', icon: Wrench, href: '/landlord/maintenance' },
     { label: 'Inspections', icon: FileCheck, href: '/landlord/inspections' },
+    { label: 'Messages', icon: MessageSquare, href: '/landlord/messages' },
   ];
 
   const tenantItems = [
     { label: 'My Hub', icon: Home, href: '/tenant/hub' },
     { label: 'Maintenance', icon: Wrench, href: '/tenant/maintenance' },
     { label: 'Documents', icon: FileText, href: '/tenant/documents' },
+    { label: 'Messages', icon: MessageSquare, href: '/tenant/messages' },
   ];
 
   const items = role === 'landlord' ? landlordItems : tenantItems;

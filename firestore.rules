@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -22,7 +23,7 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Tenant Profiles: Simplified ownership for reliable listing
+    // Tenant Profiles: Landlords and specific users
     match /tenantProfiles/{id} {
       allow list, read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
@@ -32,7 +33,7 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Documents: Secured by landlordId, userId, or membership
+    // Documents: Landlords and members
     match /documents/{id} {
       allow list, get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
@@ -43,7 +44,7 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Maintenance: Secured by landlordId, tenantId or membership
+    // Maintenance: Landlords, tenants, or members
     match /maintenanceRequests/{id} {
       allow list, get, update, delete: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
@@ -64,7 +65,7 @@ service cloud.firestore {
 
     // Messages: Private to members
     match /messages/{id} {
-      allow read: if isSignedIn() && (
+      allow read, list: if isSignedIn() && (
         resource.data.senderId == request.auth.uid || 
         resource.data.receiverId == request.auth.uid ||
         (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)

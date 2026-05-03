@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, use } from 'react';
@@ -104,11 +105,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         description: "Your modifications are being synchronized." 
       });
     } catch (error: any) {
-      toast({ 
-        variant: "destructive", 
-        title: "Save Failed", 
-        description: error.message || "An error occurred while saving." 
-      });
+      // If redirection fails, at least reset submission state
       setIsSubmitting(false);
     }
   };
