@@ -78,21 +78,17 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   const dbPrefix = '/databases/(default)/documents';
   let rawPath = context.path || "collection-group";
   
-  // 1. Normalize collection group markers to prevent double-prefixing
   if (rawPath.includes('[Collection Group]')) {
     rawPath = rawPath.replace('[Collection Group] ', '(collectionGroup)/');
   }
 
-  // 2. Strip existing absolute prefix if present to normalize
   let cleanPath = rawPath;
   if (cleanPath.startsWith(dbPrefix)) {
     cleanPath = cleanPath.substring(dbPrefix.length);
   }
   
-  // Remove leading/trailing slashes for consistent joining
   cleanPath = cleanPath.replace(/^\/+|\/+$/g, '');
 
-  // 3. Build the final absolute path
   const finalPath = cleanPath ? `${dbPrefix}/${cleanPath}` : `${dbPrefix}/unknown`;
 
   return {

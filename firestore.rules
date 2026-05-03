@@ -26,11 +26,18 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Tenant Profiles: Visible to the specific tenant and the landlord
+    // Tenant Profiles: Explicitly allow landlords and tenants to list their own records
     match /tenantProfiles/{id} {
-      allow list, read: if isMember() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow list, read: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        resource.data.userId == request.auth.uid ||
+        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
+      );
       allow create: if isSignedIn();
-      allow update, delete: if isMember();
+      allow update, delete: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
+      );
     }
 
     // Documents: Secured by membership
@@ -49,8 +56,7 @@ service cloud.firestore {
 
     // Inspections: Primarily for landlords, but allow reading if a member
     match /inspections/{id} {
-      allow list: if isMember();
-      allow read: if isMember();
+      allow list, read: if isMember();
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }

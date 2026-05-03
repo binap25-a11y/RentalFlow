@@ -50,8 +50,7 @@ export function getTenantCollectionQuery(options: {
     throw new Error("User must be authenticated for resident query");
   }
 
-  // Properties use tenantIds array-contains for shared access in some legacy contexts,
-  // but moving towards memberIds for all shared entities.
+  // Properties use tenantIds array-contains for shared access
   if (collectionName === 'properties') {
     return query(
       collection(db, collectionName),
@@ -60,7 +59,7 @@ export function getTenantCollectionQuery(options: {
     );
   }
 
-  // TenantProfiles are linked by userId
+  // TenantProfiles are specifically linked by userId for residents
   if (collectionName === 'tenantProfiles') {
     return query(
       collection(db, collectionName),
