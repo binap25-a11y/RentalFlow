@@ -5,7 +5,7 @@ import { triageMaintenanceRequest } from "@/ai/flows/maintenance-request-triage"
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, getMemberCollectionQuery } from "@/firebase";
+import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, getLandlordCollectionQuery } from "@/firebase";
 import { doc, serverTimestamp, collection } from "firebase/firestore";
 import { Wrench, Sparkles, Clock, BrainCircuit, Loader2, CheckCircle2, PlayCircle, Plus, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -43,14 +43,14 @@ export default function MaintenancePage() {
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return getMemberCollectionQuery(db, "properties", user.uid);
+    return getLandlordCollectionQuery(db, "properties", user.uid);
   }, [db, user]);
 
   const { data: properties } = useCollection(propertiesQuery);
 
   const maintenanceQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return getMemberCollectionQuery(db, "maintenanceRequests", user.uid);
+    return getLandlordCollectionQuery(db, "maintenanceRequests", user.uid);
   }, [db, user]);
 
   const { data: requests, loading } = useCollection(maintenanceQuery);

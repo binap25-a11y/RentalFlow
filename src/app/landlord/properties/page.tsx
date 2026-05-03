@@ -1,19 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
-import { useUser, useFirestore, useCollection, getLandlordCollectionQuery, setDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useStorage } from '@/firebase';
+import { useState, useMemo } from 'react';
+import { useUser, useFirestore, useCollection, getLandlordCollectionQuery, setDocumentNonBlocking, deleteDocumentNonBlocking, useStorage } from '@/firebase';
 import { doc, serverTimestamp, collection } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Building2, MapPin, Plus, Save, Image as ImageIcon, Bed, Bath, Loader2, Edit3, Trash2 } from "lucide-react";
+import { Building2, MapPin, Plus, Bed, Bath, Loader2, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import Image from "next/image";
@@ -22,7 +15,6 @@ import { cn } from "@/lib/utils";
 export default function PropertiesPage() {
   const { user } = useUser();
   const db = useFirestore();
-  const storage = useStorage();
   const { toast } = useToast();
 
   const propertiesQuery = useMemo(() => {
@@ -31,151 +23,6 @@ export default function PropertiesPage() {
   }, [db, user]);
 
   const { data: properties, loading } = useCollection(propertiesQuery);
-
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingProperty, setEditingProperty] = useState<any>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const [uploadingImages, setUploadingImages] = useState<Record<string, string>>({});
-
-  const [address, setAddress] = useState('');
-  const [city, setCity] = useState('');
-  const [zipCode, setZipCode] = useState('');
-  const [rentAmount, setRentAmount] = useState('');
-  const [description, setDescription] = useState('');
-  const [propertyType, setPropertyType] = useState('Apartment');
-  const [bedrooms, setBedrooms] = useState('1');
-  const [bathrooms, setBathrooms] = useState('1');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (previewUrl && previewUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    if (file) {
-      setImageFile(file);
-      if (previewUrl && previewUrl.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-    }
-  };
-
-  const resetForm = () => {
-    setAddress('');
-    setCity('');
-    setZipCode('');
-    setRentAmount('');
-    setDescription('');
-    setPropertyType('Apartment');
-    setBedrooms('1');
-    setBathrooms('1');
-    setImageFile(null);
-    setPreviewUrl(null);
-    setEditingProperty(null);
-  };
-
-  const handleOpenAddDialog = () => {
-    resetForm();
-    setIsAddDialogOpen(true);
-  };
-
-  const handleOpenEditDialog = (property: any) => {
-    setEditingProperty(property);
-    setAddress(property.addressLine1 || '');
-    setCity(property.city || '');
-    setZipCode(property.zipCode || '');
-    setRentAmount(property.rentAmount?.toString() || '');
-    setDescription(property.description || '');
-    setPropertyType(property.propertyType || 'Apartment');
-    setBedrooms(property.numberOfBedrooms?.toString() || '1');
-    setBathrooms(property.numberOfBathrooms?.toString() || '1');
-    setPreviewUrl(property.imageUrl || null);
-    setImageFile(null);
-    setIsAddDialogOpen(true);
-  };
-
-  const handleSaveProperty = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !db) return;
-
-    setIsSubmitting(true);
-    const propertyId = editingProperty ? editingProperty.id : doc(collection(db, 'properties')).id;
-    const propertyRef = doc(db, 'properties', propertyId);
-    
-    if (imageFile && previewUrl) {
-      setUploadingImages(prev => ({ ...prev, [propertyId]: previewUrl }));
-    }
-
-    setIsAddDialogOpen(false);
-
-    try {
-      let currentPersistentUrl = editingProperty?.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
-      
-      if (currentPersistentUrl.startsWith('blob:') || !currentPersistentUrl) {
-        currentPersistentUrl = `https://picsum.photos/seed/${propertyId}/800/600`;
-      }
-
-      const baseData = {
-        id: propertyId,
-        landlordId: user.uid,
-        addressLine1: address,
-        city,
-        zipCode,
-        description,
-        propertyType,
-        numberOfBedrooms: Number(bedrooms),
-        numberOfBathrooms: Number(bathrooms),
-        rentAmount: Number(rentAmount),
-        isOccupied: editingProperty?.isOccupied || false,
-        imageUrl: currentPersistentUrl,
-        updatedAt: serverTimestamp(),
-        tenantIds: editingProperty?.tenantIds || [],
-        memberIds: editingProperty?.memberIds || [user.uid],
-        isActive: true
-      };
-
-      if (editingProperty) {
-        updateDocumentNonBlocking(propertyRef, baseData);
-      } else {
-        setDocumentNonBlocking(propertyRef, { ...baseData, createdAt: serverTimestamp() }, { merge: true });
-      }
-
-      if (imageFile && storage) {
-        const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${imageFile.name}`);
-        uploadBytes(storageRef, imageFile).then(async (result) => {
-          const url = await getDownloadURL(result.ref);
-          if (url) {
-            updateDocumentNonBlocking(propertyRef, { imageUrl: url });
-            setUploadingImages(prev => {
-              const next = { ...prev };
-              delete next[propertyId];
-              return next;
-            });
-          }
-        }).catch(err => {
-          setUploadingImages(prev => {
-            const next = { ...prev };
-            delete next[propertyId];
-            return next;
-          });
-        });
-      }
-
-      toast({ title: editingProperty ? "Asset Updated" : "Asset Registered" });
-      resetForm();
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Save Failed", description: error.message });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleDeleteProperty = (propertyId: string) => {
     if (!user || !db) return;
@@ -192,132 +39,12 @@ export default function PropertiesPage() {
           <p className="text-muted-foreground font-medium">Monitoring and managing your property assets.</p>
         </div>
         
-        <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
-          setIsAddDialogOpen(open);
-          if (!open) resetForm();
-        }}>
-          <DialogTrigger asChild>
-            <Button onClick={handleOpenAddDialog} className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-6 shadow-lg shadow-primary/20">
-              <Plus className="w-4 h-4 mr-2" />
-              Register New Asset
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[900px] p-0 rounded-2xl overflow-hidden flex flex-col h-[85vh] border-none shadow-2xl">
-            <DialogHeader className="p-6 bg-primary/5 border-b shrink-0 text-left">
-              <DialogTitle className="text-2xl font-headline font-bold text-primary flex items-center gap-2">
-                <Building2 className="w-6 h-6" />
-                {editingProperty ? 'Modify Asset' : 'Register New Asset'}
-              </DialogTitle>
-              <DialogDescription className="font-medium text-primary/60">Detailed specifications for your rental property.</DialogDescription>
-            </DialogHeader>
-
-            <form onSubmit={handleSaveProperty} className="flex-1 flex flex-col min-h-0">
-              <ScrollArea className="flex-1">
-                <div className="p-6 md:p-8 space-y-8">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Presentation</Label>
-                      <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/20 aspect-video w-full flex items-center justify-center">
-                        {previewUrl ? (
-                          <>
-                            <Image 
-                              src={previewUrl} 
-                              alt="Preview" 
-                              fill 
-                              className="object-cover" 
-                              unoptimized={true} 
-                            />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                               <Button type="button" variant="secondary" size="sm" className="rounded-lg font-bold" onClick={() => document.getElementById('image-input')?.click()}>Change Photo</Button>
-                               <Button type="button" variant="destructive" size="sm" className="rounded-lg font-bold" onClick={() => { setPreviewUrl(null); setImageFile(null); }}>Remove</Button>
-                            </div>
-                          </>
-                        ) : (
-                          <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="flex flex-col items-center gap-3">
-                            <div className="p-4 bg-white rounded-full shadow-sm group-hover:scale-110 transition-transform">
-                              <ImageIcon className="w-8 h-8 text-primary/60" />
-                            </div>
-                            <span className="text-sm font-bold text-primary">Upload Cover Image</span>
-                          </button>
-                        )}
-                        <input id="image-input" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
-                      </div>
-                    </div>
-
-                    <div className="space-y-6 text-left">
-                      <div className="space-y-2">
-                        <Label htmlFor="address" className="font-bold text-xs uppercase text-primary/60">Street Address</Label>
-                        <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="123 Example Street" className="rounded-xl h-11" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="city" className="font-bold text-xs uppercase text-primary/60">City</Label>
-                          <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} required placeholder="London" className="rounded-xl h-11" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="zipCode" className="font-bold text-xs uppercase text-primary/60">Postcode</Label>
-                          <Input id="zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required placeholder="SW1A 1AA" className="rounded-xl h-11" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-                    <div className="space-y-2">
-                      <Label className="font-bold text-xs uppercase text-primary/60">Asset Type</Label>
-                      <Select value={propertyType} onValueChange={setPropertyType}>
-                        <SelectTrigger className="rounded-xl h-11"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Apartment">Apartment</SelectItem>
-                          <SelectItem value="House">House</SelectItem>
-                          <SelectItem value="Condo">Condo</SelectItem>
-                          <SelectItem value="Studio">Studio</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="rent" className="font-bold text-xs uppercase text-primary/60">Monthly Rent (£)</Label>
-                      <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-11" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="font-bold text-xs uppercase text-primary/60">Beds</Label>
-                        <Select value={bedrooms} onValueChange={setBedrooms}>
-                          <SelectTrigger className="rounded-xl h-11"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {['1','2','3','4','5+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="font-bold text-xs uppercase text-primary/60">Baths</Label>
-                        <Select value={bathrooms} onValueChange={setBathrooms}>
-                          <SelectTrigger className="rounded-xl h-11"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {['1','2','3+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 md:col-span-3">
-                      <Label htmlFor="description" className="font-bold text-xs uppercase text-primary/60">Description & Features</Label>
-                      <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Key features, local amenities, etc." className="rounded-xl min-h-[150px]" />
-                    </div>
-                  </div>
-                </div>
-              </ScrollArea>
-              
-              <DialogFooter className="p-6 bg-muted/20 border-t shrink-0 flex gap-4">
-                <Button type="button" variant="ghost" className="rounded-xl h-12 px-6 font-bold" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" className="rounded-xl font-bold bg-primary h-12 px-8 flex-1 md:flex-none md:min-w-[200px]" disabled={isSubmitting}>
-                  {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
-                  {editingProperty ? "Update Asset" : "Register Asset"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button asChild className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-6 shadow-lg shadow-primary/20">
+          <Link href="/landlord/properties/new">
+            <Plus className="w-4 h-4 mr-2" />
+            Register New Asset
+          </Link>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -331,15 +58,13 @@ export default function PropertiesPage() {
             <Building2 className="w-16 h-16 text-primary/20 mb-6" />
             <h3 className="text-xl font-headline font-bold text-primary/40 mb-2">No Assets Found</h3>
             <p className="text-muted-foreground font-medium mb-6">Start by registering your first property asset.</p>
-            <Button variant="outline" onClick={handleOpenAddDialog} className="rounded-xl font-bold border-primary/20 text-primary hover:bg-primary hover:text-white transition-all">
-              Add First Asset
+            <Button variant="outline" asChild className="rounded-xl font-bold border-primary/20 text-primary hover:bg-primary hover:text-white transition-all">
+              <Link href="/landlord/properties/new">Add First Asset</Link>
             </Button>
           </div>
         ) : (
           properties.map((property) => {
-            const displayImage = uploadingImages[property.id] || (property.imageUrl && !property.imageUrl.startsWith('blob:') 
-              ? property.imageUrl 
-              : `https://picsum.photos/seed/${property.id}/800/600`);
+            const displayImage = property.imageUrl || `https://picsum.photos/seed/${property.id}/800/600`;
 
             return (
               <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card">
@@ -352,11 +77,6 @@ export default function PropertiesPage() {
                     unoptimized={true}
                     data-ai-hint="property exterior"
                   />
-                  {uploadingImages[property.id] && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <Loader2 className="w-8 h-8 animate-spin text-white" />
-                    </div>
-                  )}
                   <Badge className={cn(
                     "absolute top-4 right-4 font-bold shadow-lg py-1 px-3",
                     property.isOccupied ? 'bg-emerald-500' : 'bg-amber-500'
@@ -382,8 +102,8 @@ export default function PropertiesPage() {
                   <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-10 border-primary/10 hover:bg-primary hover:text-white transition-all" asChild>
                     <Link href={`/landlord/properties/${property.id}`}>Manage</Link>
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-10 border-primary/10 hover:bg-primary/5" onClick={() => handleOpenEditDialog(property)}>
-                    Edit
+                  <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-10 border-primary/10 hover:bg-primary/5" asChild>
+                    <Link href={`/landlord/properties/${property.id}/edit`}>Edit</Link>
                   </Button>
                   <Button variant="ghost" size="icon" className="rounded-xl h-10 text-destructive/40 hover:text-destructive hover:bg-destructive/5" onClick={() => handleDeleteProperty(property.id)}>
                     <Trash2 className="w-4 h-4" />
