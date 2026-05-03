@@ -146,11 +146,11 @@ export default function MaintenancePage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div>
-          <h1 className="text-3xl font-headline font-bold text-primary mb-2">Maintenance Management</h1>
+          <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Maintenance Management</h1>
           <p className="text-muted-foreground font-medium font-body">Review, prioritize and assign maintenance tasks.</p>
         </div>
         <div className="flex gap-3">
-          <Button onClick={() => setIsCreateDialogOpen(true)} className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-6 shadow-lg shadow-primary/20 font-headline">
+          <Button onClick={() => setIsCreateDialogOpen(true)} className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-6 shadow-lg shadow-primary/20 font-headline text-white">
             <Plus className="w-4 h-4 mr-2" />
             Log New Request
           </Button>
@@ -158,8 +158,8 @@ export default function MaintenancePage() {
             <DialogContent className="sm:max-w-[500px] rounded-2xl border-none shadow-2xl">
               <form onSubmit={handleCreateRequest}>
                 <DialogHeader className="text-left">
-                  <DialogTitle className="text-xl font-bold font-headline">Log Maintenance Task</DialogTitle>
-                  <DialogDescription className="font-medium text-muted-foreground">Manually add a maintenance issue discovered or reported.</DialogDescription>
+                  <DialogTitle className="text-xl font-bold font-headline text-primary">Log Maintenance Task</DialogTitle>
+                  <DialogDescription className="font-medium text-muted-foreground font-body">Manually add a maintenance issue discovered or reported.</DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-6 text-left">
                   <div className="space-y-2">
@@ -187,7 +187,7 @@ export default function MaintenancePage() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 font-headline" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 font-headline text-white hover:bg-primary/90" disabled={isSubmitting}>
                     {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Log Request"}
                   </Button>
                 </DialogFooter>
@@ -230,10 +230,10 @@ export default function MaintenancePage() {
                         <Badge className={`capitalize font-bold border ${getPriorityColor(request.priority)}`}>
                           {request.priority || 'Pending Triage'}
                         </Badge>
-                        <Badge variant="secondary" className="capitalize text-[10px] font-bold">
+                        <Badge variant="secondary" className="capitalize text-[10px] font-bold font-headline">
                           {request.category || 'Uncategorized'}
                         </Badge>
-                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tight ml-auto flex items-center">
+                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tight ml-auto flex items-center font-headline">
                           <Clock className="w-3 h-3 mr-1" /> {createdAt && isValid(createdAt) ? format(createdAt, 'PPp') : 'Recently'}
                         </span>
                       </div>
@@ -279,13 +279,13 @@ export default function MaintenancePage() {
                           Update Status
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48 rounded-xl border-none shadow-xl">
-                        <DropdownMenuItem onClick={() => updateStatus(request, 'in-progress')} className="rounded-lg cursor-pointer font-medium font-body">
+                      <DropdownMenuContent align="end" className="w-48 rounded-xl border-none shadow-xl p-1 bg-white">
+                        <DropdownMenuItem onClick={() => updateStatus(request, 'in-progress')} className="rounded-lg cursor-pointer font-medium font-body focus:bg-primary/5">
                           <PlayCircle className="w-4 h-4 mr-2 text-blue-500" />
                           In Progress
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => updateStatus(request, 'completed')} className="rounded-lg cursor-pointer font-medium font-body">
-                          <CheckCircle2 className="w-4 h-4 mr-2 text-green-500" />
+                        <DropdownMenuItem onClick={() => updateStatus(request, 'completed')} className="rounded-lg cursor-pointer font-medium font-body focus:bg-emerald-50">
+                          <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-500" />
                           Completed
                         </DropdownMenuItem>
                       </DropdownMenuContent>

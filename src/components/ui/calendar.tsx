@@ -37,12 +37,12 @@ function Calendar({
         button_next_icon: "h-4 w-4",
         month_grid: "w-full border-collapse",
         weekdays: "flex w-full mb-2 justify-between",
-        weekday: "text-muted-foreground w-9 font-bold text-[0.7rem] flex items-center justify-center uppercase tracking-tighter h-9 shrink-0",
+        weekday: "text-muted-foreground w-9 font-bold text-[0.7rem] flex items-center justify-center uppercase tracking-tighter h-9 shrink-0 font-headline",
         week: "flex w-full mt-1 justify-between",
         day: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20 shrink-0 flex items-center justify-center",
         day_button: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-medium aria-selected:opacity-100 rounded-lg transition-all flex items-center justify-center"
+          "h-9 w-9 p-0 font-medium aria-selected:opacity-100 rounded-lg transition-all flex items-center justify-center font-body"
         ),
         range_start: "day-range-start",
         range_end: "day-range-end",

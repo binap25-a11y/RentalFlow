@@ -225,9 +225,9 @@ export default function InspectionsPage() {
       
       const isPass = data.status === 'pass';
       if (isPass) {
-        pdf.setTextColor(16, 185, 129); 
+        pdf.setTextColor(16, 185, 129); // Standard Emerald Green
       } else {
-        pdf.setTextColor(239, 68, 68); 
+        pdf.setTextColor(239, 68, 68); // Standard Rose Red
       }
       
       pdf.setFont("helvetica", "bold");
@@ -301,7 +301,7 @@ export default function InspectionsPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div>
-          <h1 className="text-3xl font-headline font-bold text-primary mb-2">Inspections & Audits</h1>
+          <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Inspections & Audits</h1>
           <p className="text-muted-foreground font-medium font-body">Official portfolio compliance tracking and safety records.</p>
         </div>
       </div>
@@ -309,7 +309,7 @@ export default function InspectionsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-1 border-none shadow-sm h-fit">
           <CardHeader>
-            <CardTitle className="text-xl font-headline">Schedule Audit</CardTitle>
+            <CardTitle className="text-xl font-headline text-primary tracking-tight">Schedule Audit</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2 text-left">
@@ -333,13 +333,13 @@ export default function InspectionsPage() {
                 </PopoverContent>
               </Popover>
             </div>
-            <Button className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/10 font-headline" onClick={handleSchedule} disabled={!date || !selectedPropertyId}>Confirm Schedule</Button>
+            <Button className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/10 font-headline bg-primary text-white hover:bg-primary/90" onClick={handleSchedule} disabled={!date || !selectedPropertyId}>Confirm Schedule</Button>
           </CardContent>
         </Card>
 
         <div className="lg:col-span-2 space-y-6">
-          <h3 className="text-xl font-bold font-headline flex items-center">
-            <ClipboardList className="w-5 h-5 mr-2 text-primary" />
+          <h3 className="text-xl font-bold font-headline flex items-center text-primary tracking-tight">
+            <ClipboardList className="w-5 h-5 mr-2" />
             Portfolio Compliance Ledger
           </h3>
           <div className="grid gap-4">
@@ -408,7 +408,7 @@ export default function InspectionsPage() {
                               </div>
                             </ScrollArea>
                             <DialogFooter className="p-6 bg-muted/10 border-t">
-                              <Button className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 font-headline" onClick={handleConduct} disabled={isGenerating}>
+                              <Button className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 font-headline text-white hover:bg-primary/90" onClick={handleConduct} disabled={isGenerating}>
                                 {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Finalizing...</> : <><CheckCircle2 className="w-4 h-4 mr-2" /> Sign & Update Record</>}
                               </Button>
                             </DialogFooter>

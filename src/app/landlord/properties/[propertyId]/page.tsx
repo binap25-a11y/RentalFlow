@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, use, useMemo } from 'react';
-import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useStorage, getMemberCollectionQuery } from '@/firebase';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useStorage, getMemberCollectionQuery, getLandlordCollectionQuery } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,7 +41,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Standardize query to match security rules (Option A)
+    // Align with simplified landlordId-based security rules
     return query(
       collection(db, 'tenantProfiles'), 
       where('propertyId', '==', propertyId),
@@ -53,7 +53,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return getMemberCollectionQuery(db, "documents", user.uid);
+    // Use direct landlordId query to satisfy simplified security rules
+    return getLandlordCollectionQuery(db, "documents", user.uid);
   }, [db, user]);
 
   const { data: documents } = useCollection(docsQuery);
