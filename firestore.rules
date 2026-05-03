@@ -6,6 +6,15 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isMember(data) {
+      return isSignedIn() && (
+        data.landlordId == request.auth.uid || 
+        data.userId == request.auth.uid ||
+        data.tenantId == request.auth.uid ||
+        (data.memberIds != null && request.auth.uid in data.memberIds)
+      );
+    }
+
     // User profiles are private
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
@@ -39,38 +48,21 @@ service cloud.firestore {
 
     // Documents: Secured by membership or direct ownership
     match /documents/{id} {
-      allow list, read: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.userId == request.auth.uid ||
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
-      );
+      allow list, read: if isMember(resource.data) || (isSignedIn() && resource.data.email == request.auth.token.email);
       allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.userId == request.auth.uid
-      );
+      allow update, delete: if isMember(resource.data);
     }
 
     // Maintenance: Secured by membership
     match /maintenanceRequests/{id} {
-      allow list, read: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.tenantId == request.auth.uid ||
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
-      );
+      allow list, read: if isMember(resource.data);
       allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.tenantId == request.auth.uid
-      );
+      allow update, delete: if isMember(resource.data);
     }
 
     // Inspections: Primarily for landlords
     match /inspections/{id} {
-      allow list, read: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
-      );
+      allow list, read: if isMember(resource.data);
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
