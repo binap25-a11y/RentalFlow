@@ -73,19 +73,16 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSubmitting(true);
     
-    // Performance optimization: Instant redirection for perceived speed
-    // We initiate the save process and move the user immediately.
     try {
       let currentImageUrl = property?.imageUrl || previewUrl;
 
-      // Handle image upload if a new file was selected
+      // Only perform upload if a new file is actually present
       if (imageFile && storage) {
-        const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${imageFile.name}`);
+        const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
         const result = await uploadBytes(storageRef, imageFile);
         currentImageUrl = await getDownloadURL(result.ref);
       }
 
-      // Final update data
       const updateData = {
         addressLine1: address,
         city,
@@ -99,15 +96,21 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedAt: serverTimestamp(),
       };
 
-      // Perform non-blocking update
+      // Initiate update and immediately transition UI for "instant" feel
       updateDocumentNonBlocking(propertyRef, updateData);
 
-      toast({ title: "Portfolio Updated", description: "Your changes are being synchronized across the platform." });
+      toast({ 
+        title: "Portfolio Updated", 
+        description: "Your modifications are being synchronized." 
+      });
       
-      // Immediate navigation to ensure the app feels fast
       router.push(`/landlord/properties/${propertyId}`);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Save Error", description: error.message });
+      toast({ 
+        variant: "destructive", 
+        title: "Save Failed", 
+        description: error.message || "An error occurred while saving." 
+      });
       setIsSubmitting(false);
     }
   };
@@ -205,7 +208,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   </div>
                   <div className="space-y-2">
                     <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Bathrooms</Label>
-                    <Select value={bathrooms} onValueChange={setBedrooms}>
+                    <Select value={bathrooms} onValueChange={setBathrooms}>
                       <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {['1','2','3+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
