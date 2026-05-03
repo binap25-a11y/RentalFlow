@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, use, useMemo } from 'react';
-import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useStorage, getMemberCollectionQuery, getLandlordCollectionQuery } from '@/firebase';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useStorage, getLandlordCollectionQuery } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

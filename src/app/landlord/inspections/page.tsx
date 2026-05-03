@@ -8,7 +8,6 @@ import {
   useMemoFirebase, 
   updateDocumentNonBlocking, 
   deleteDocumentNonBlocking,
-  getMemberCollectionQuery,
   getLandlordCollectionQuery 
 } from '@/firebase';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
