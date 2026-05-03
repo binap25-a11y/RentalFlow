@@ -9,6 +9,7 @@ import {
   useMemoFirebase, 
   updateDocumentNonBlocking, 
   deleteDocumentNonBlocking,
+  getMemberCollectionQuery,
   getLandlordCollectionQuery 
 } from '@/firebase';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
@@ -97,7 +98,7 @@ export default function InspectionsPage() {
 
   const inspectionsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return getLandlordCollectionQuery(db, "inspections", user.uid);
+    return getMemberCollectionQuery(db, "inspections", user.uid);
   }, [db, user]);
 
   const { data: inspections, loading: isInspLoading } = useCollection(inspectionsQuery);
@@ -225,10 +226,11 @@ export default function InspectionsPage() {
       
       const isPass = data.status === 'pass';
       if (isPass) {
-        doc.setTextColor(16, 185, 129);
+        doc.setTextColor(16, 185, 129); // Green
       } else {
-        doc.setTextColor(239, 68, 68);
+        doc.setTextColor(239, 68, 68); // Red
       }
+      
       doc.setFont("helvetica", "bold");
       doc.text(isPass ? "PASS" : "FAIL", pageWidth - 60, y);
       

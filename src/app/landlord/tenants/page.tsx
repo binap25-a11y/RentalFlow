@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking, getLandlordCollectionQuery } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking, getMemberCollectionQuery, getLandlordCollectionQuery } from '@/firebase';
 import { collection, doc, serverTimestamp, arrayUnion } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ export default function TenantsPage() {
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return getLandlordCollectionQuery(db, "tenantProfiles", user.uid);
+    return getMemberCollectionQuery(db, "tenantProfiles", user.uid);
   }, [db, user]);
 
   const { data: tenants, isLoading } = useCollection(tenantsQuery);
