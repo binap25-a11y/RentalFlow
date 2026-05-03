@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking, getMemberCollectionQuery, getLandlordCollectionQuery } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking, getLandlordCollectionQuery } from '@/firebase';
 import { collection, doc, serverTimestamp, arrayUnion } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,8 +26,8 @@ export default function TenantsPage() {
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // STANDARD: Use memberIds based query to perfectly satisfy security rules for real-time listing
-    return getMemberCollectionQuery(db, "tenantProfiles", user.uid);
+    // Standardize to landlordId query to perfectly satisfy Option A security rules
+    return getLandlordCollectionQuery(db, "tenantProfiles", user.uid);
   }, [db, user]);
 
   const { data: tenants, loading: isLoading } = useCollection(tenantsQuery);
@@ -101,12 +101,12 @@ export default function TenantsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary mb-2">Residents</h1>
-          <p className="text-muted-foreground font-medium">Manage your tenant database and lease agreements.</p>
+          <p className="text-muted-foreground font-medium font-body">Manage your tenant database and lease agreements.</p>
         </div>
         
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20">
+            <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20 font-headline">
               <Plus className="w-4 h-4 mr-2" />
               Assign New Resident
             </Button>
@@ -120,27 +120,27 @@ export default function TenantsPage() {
               <div className="grid gap-4 py-6 text-left">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName" className="font-bold text-xs uppercase text-primary/60 tracking-wider">First Name</Label>
-                    <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="rounded-xl h-11" />
+                    <Label htmlFor="firstName" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">First Name</Label>
+                    <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="rounded-xl h-11 font-body" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName" className="font-bold text-xs uppercase text-primary/60 tracking-wider">Last Name</Label>
-                    <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required className="rounded-xl h-11" />
+                    <Label htmlFor="lastName" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Last Name</Label>
+                    <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required className="rounded-xl h-11 font-body" />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="font-bold text-xs uppercase text-primary/60 tracking-wider">Email Address</Label>
-                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-11" placeholder="resident@example.com" />
+                  <Label htmlFor="email" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Email Address</Label>
+                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-11 font-body" placeholder="resident@example.com" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="font-bold text-xs uppercase text-primary/60 tracking-wider">Phone Number</Label>
-                  <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required className="rounded-xl h-11" />
+                  <Label htmlFor="phone" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Phone Number</Label>
+                  <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required className="rounded-xl h-11 font-body" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="property" className="font-bold text-xs uppercase text-primary/60 tracking-wider">Assign to Property</Label>
+                  <Label htmlFor="property" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Assign to Property</Label>
                   <select 
                     id="property" 
-                    className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow"
+                    className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow font-body"
                     value={selectedPropertyId}
                     onChange={(e) => setSelectedPropertyId(e.target.value)}
                     required
@@ -153,7 +153,7 @@ export default function TenantsPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20">Confirm Assignment</Button>
+                <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 font-headline">Confirm Assignment</Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -164,7 +164,7 @@ export default function TenantsPage() {
         <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
         <Input 
           placeholder="Search residents by name or email..." 
-          className="pl-10 h-12 rounded-xl bg-white/50 border-primary/10"
+          className="pl-10 h-12 rounded-xl bg-white/50 border-primary/10 font-body"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -175,23 +175,23 @@ export default function TenantsPage() {
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4">
               <Loader2 className="w-10 h-10 animate-spin text-primary" />
-              <p className="text-muted-foreground font-medium">Syncing resident directory...</p>
+              <p className="text-muted-foreground font-medium font-body">Syncing resident directory...</p>
             </div>
           ) : !filteredTenants || filteredTenants.length === 0 ? (
             <div className="px-6 py-24 text-center flex flex-col items-center justify-center">
               <UserX className="w-16 h-16 text-primary/10 mb-6" />
-              <p className="text-muted-foreground font-bold text-lg">No residents found.</p>
-              <p className="text-sm text-muted-foreground mt-1 font-medium">Add a resident to your property assets to see them here.</p>
+              <p className="text-muted-foreground font-bold text-lg font-headline">No residents found.</p>
+              <p className="text-sm text-muted-foreground mt-1 font-medium font-body">Add a resident to your property assets to see them here.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="bg-primary/5 border-b border-primary/10">
                   <tr>
-                    <th className="px-6 py-5 text-xs font-bold uppercase tracking-widest text-primary/60">Resident</th>
-                    <th className="px-6 py-5 text-xs font-bold uppercase tracking-widest text-primary/60">Contact Info</th>
-                    <th className="px-6 py-5 text-xs font-bold uppercase tracking-widest text-primary/60">Asset Assignment</th>
-                    <th className="px-6 py-5 text-xs font-bold uppercase tracking-widest text-primary/60 text-right">Actions</th>
+                    <th className="px-6 py-5 text-xs font-bold uppercase tracking-widest text-primary/60 font-headline">Resident</th>
+                    <th className="px-6 py-5 text-xs font-bold uppercase tracking-widest text-primary/60 font-headline">Contact Info</th>
+                    <th className="px-6 py-5 text-xs font-bold uppercase tracking-widest text-primary/60 font-headline">Asset Assignment</th>
+                    <th className="px-6 py-5 text-xs font-bold uppercase tracking-widest text-primary/60 text-right font-headline">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-primary/5">
@@ -199,23 +199,23 @@ export default function TenantsPage() {
                     <tr key={tenant.id} className="hover:bg-primary/[0.02] transition-colors group">
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-4">
-                          <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold shadow-sm">
+                          <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold shadow-sm font-headline">
                             {tenant.firstName?.[0]}{tenant.lastName?.[0]}
                           </div>
-                          <div>
+                          <div className="text-left">
                             <p className="font-bold text-sm font-headline text-primary">{tenant.firstName} {tenant.lastName}</p>
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Lease Expires: {tenant.leaseEndDate}</p>
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter font-headline">Lease Expires: {tenant.leaseEndDate}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-5">
+                      <td className="px-6 py-5 text-left">
                         <div className="space-y-1">
-                          <p className="text-xs flex items-center font-bold text-muted-foreground"><Mail className="w-3.5 h-3.5 mr-2 text-primary/40" /> {tenant.email}</p>
-                          <p className="text-xs flex items-center font-bold text-muted-foreground"><Phone className="w-3.5 h-3.5 mr-2 text-primary/40" /> {tenant.phoneNumber}</p>
+                          <p className="text-xs flex items-center font-bold text-muted-foreground font-body"><Mail className="w-3.5 h-3.5 mr-2 text-primary/40" /> {tenant.email}</p>
+                          <p className="text-xs flex items-center font-bold text-muted-foreground font-body"><Phone className="w-3.5 h-3.5 mr-2 text-primary/40" /> {tenant.phoneNumber}</p>
                         </div>
                       </td>
-                      <td className="px-6 py-5">
-                        <Badge variant="secondary" className="bg-primary/5 text-primary border-none text-[10px] font-bold px-3 py-1">
+                      <td className="px-6 py-5 text-left">
+                        <Badge variant="secondary" className="bg-primary/5 text-primary border-none text-[10px] font-bold px-3 py-1 font-headline">
                           {properties?.find(p => p.id === tenant.propertyId)?.addressLine1 || 'Pending Migration'}
                         </Badge>
                       </td>

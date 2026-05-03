@@ -313,17 +313,17 @@ export default function InspectionsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2 text-left">
-              <Label className="text-xs uppercase font-bold text-muted-foreground">Select Asset</Label>
-              <select className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
+              <Label className="text-xs uppercase font-bold text-muted-foreground font-headline">Select Asset</Label>
+              <select className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow font-body" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
                 <option value="">Choose a property...</option>
                 {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
               </select>
             </div>
             <div className="space-y-2 text-left">
-              <Label className="text-xs uppercase font-bold text-muted-foreground">Audit Date</Label>
+              <Label className="text-xs uppercase font-bold text-muted-foreground font-headline">Audit Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal h-11 rounded-xl border-input hover:bg-muted/50 transition-colors", !date && "text-muted-foreground")}>
+                  <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal h-11 rounded-xl border-input hover:bg-muted/50 transition-colors font-body", !date && "text-muted-foreground")}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {date ? format(date, "PPP") : <span>Pick a date</span>}
                   </Button>
@@ -333,7 +333,7 @@ export default function InspectionsPage() {
                 </PopoverContent>
               </Popover>
             </div>
-            <Button className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/10" onClick={handleSchedule} disabled={!date || !selectedPropertyId}>Confirm Schedule</Button>
+            <Button className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/10 font-headline" onClick={handleSchedule} disabled={!date || !selectedPropertyId}>Confirm Schedule</Button>
           </CardContent>
         </Card>
 
@@ -345,41 +345,41 @@ export default function InspectionsPage() {
           <div className="grid gap-4">
             {!inspections || inspections.length === 0 ? (
               <div className="py-20 text-center bg-muted/20 rounded-2xl border-2 border-dashed border-primary/10">
-                <p className="text-muted-foreground font-medium">No audit records found.</p>
+                <p className="text-muted-foreground font-medium font-body">No audit records found.</p>
               </div>
             ) : (
               inspections.slice().sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime()).map((inspection) => (
                 <Card key={inspection.id} className="border-none shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row gap-6">
-                      <div className="bg-primary/5 p-4 rounded-2xl flex flex-col items-center justify-center text-primary min-w-[100px] h-fit">
+                      <div className="bg-primary/5 p-4 rounded-2xl flex flex-col items-center justify-center text-primary min-w-[100px] h-fit font-headline">
                         <span className="text-xs font-bold uppercase">{format(new Date(inspection.scheduledDate), 'MMM')}</span>
                         <span className="text-3xl font-bold">{format(new Date(inspection.scheduledDate), 'dd')}</span>
                       </div>
                       <div className="flex-1 space-y-3">
                         <div className="flex items-center justify-between">
-                          <Badge variant={inspection.status === 'completed' ? 'secondary' : 'default'} className="uppercase font-bold text-[10px]">{inspection.status}</Badge>
+                          <Badge variant={inspection.status === 'completed' ? 'secondary' : 'default'} className="uppercase font-bold text-[10px] font-headline">{inspection.status}</Badge>
                           <div className="flex gap-2">
-                            {inspection.status === 'completed' && <Button variant="outline" size="sm" onClick={() => downloadPDF(inspection)} className="rounded-lg h-8 text-primary border-primary/20"><Download className="w-3 h-3 mr-2" /> Export PDF</Button>}
+                            {inspection.status === 'completed' && <Button variant="outline" size="sm" onClick={() => downloadPDF(inspection)} className="rounded-lg h-8 text-primary border-primary/20 font-headline"><Download className="w-3 h-3 mr-2" /> Export PDF</Button>}
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-lg" onClick={() => handleDeleteInspection(inspection.id)}><Trash2 className="w-4 h-4" /></Button>
                           </div>
                         </div>
                         <div className="text-left">
                           <h4 className="text-lg font-bold font-headline">{properties?.find(p => p.id === inspection.propertyId)?.addressLine1 || 'Property Asset'}</h4>
-                          <p className="text-xs text-muted-foreground font-bold flex items-center mt-1">
+                          <p className="text-xs text-muted-foreground font-bold flex items-center mt-1 font-body">
                             {inspection.conductedDate ? `Recorded: ${format(new Date(inspection.conductedDate), 'PPp')}` : `Scheduled: ${format(new Date(inspection.scheduledDate), 'PPP')}`}
                           </p>
                         </div>
                         <Dialog open={activeInspection?.id === inspection.id} onOpenChange={(open) => !open && setActiveInspection(null)}>
                           <DialogTrigger asChild>
-                            <Button className={cn("w-full md:w-auto rounded-xl font-bold h-10 px-6", inspection.status === 'completed' ? "bg-muted hover:bg-muted/80 text-foreground" : "bg-accent hover:bg-accent/90 text-white")} onClick={() => handleOpenAudit(inspection)}>
+                            <Button className={cn("w-full md:w-auto rounded-xl font-bold h-10 px-6 font-headline", inspection.status === 'completed' ? "bg-muted hover:bg-muted/80 text-foreground" : "bg-accent hover:bg-accent/90 text-white")} onClick={() => handleOpenAudit(inspection)}>
                               {inspection.status === 'completed' ? <><Edit3 className="w-4 h-4 mr-2" /> Edit Audit</> : <><PlayCircle className="w-4 h-4 mr-2" /> Start Audit</>}
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="sm:max-w-[700px] p-0 rounded-2xl border-none shadow-2xl flex flex-col h-[85vh] overflow-hidden">
                             <div className="p-6 bg-primary/5 border-b text-left">
                               <DialogTitle className="text-2xl font-headline font-bold">Comprehensive Audit</DialogTitle>
-                              <DialogDescription className="font-medium text-muted-foreground">{inspection.status === 'completed' ? "Updating previous findings." : "Conducting full safety audit."}</DialogDescription>
+                              <DialogDescription className="font-medium text-muted-foreground font-body">{inspection.status === 'completed' ? "Updating previous findings." : "Conducting full safety audit."}</DialogDescription>
                             </div>
                             <ScrollArea className="flex-1">
                               <div className="p-6 space-y-8">
@@ -393,13 +393,13 @@ export default function InspectionsPage() {
                                       {section.items.map(item => (
                                         <div key={item} className="p-4 bg-muted/20 rounded-2xl space-y-4 border border-primary/5">
                                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                            <Label className="font-bold text-sm text-left">{item}</Label>
+                                            <Label className="font-bold text-sm text-left font-body">{item}</Label>
                                             <div className="flex gap-2">
-                                              <Button size="sm" variant={structuredFindings[item]?.status === 'pass' ? 'default' : 'outline'} className="rounded-lg font-bold h-8 px-4" onClick={() => handleStatusChange(item, 'pass')}><Check className="w-3 h-3 mr-2" /> PASS</Button>
-                                              <Button size="sm" variant={structuredFindings[item]?.status === 'fail' ? 'destructive' : 'outline'} className="rounded-lg font-bold h-8 px-4" onClick={() => handleStatusChange(item, 'fail')}><X className="w-3 h-3 mr-2" /> FAIL</Button>
+                                              <Button size="sm" variant={structuredFindings[item]?.status === 'pass' ? 'default' : 'outline'} className="rounded-lg font-bold h-8 px-4 font-headline" onClick={() => handleStatusChange(item, 'pass')}><Check className="w-3 h-3 mr-2" /> PASS</Button>
+                                              <Button size="sm" variant={structuredFindings[item]?.status === 'fail' ? 'destructive' : 'outline'} className="rounded-lg font-bold h-8 px-4 font-headline" onClick={() => handleStatusChange(item, 'fail')}><X className="w-3 h-3 mr-2" /> FAIL</Button>
                                             </div>
                                           </div>
-                                          <Textarea placeholder="Auditor notes..." className="rounded-xl min-h-[60px] bg-white text-sm" value={structuredFindings[item]?.notes || ''} onChange={(e) => handleNotesChange(item, e.target.value)} />
+                                          <Textarea placeholder="Auditor notes..." className="rounded-xl min-h-[60px] bg-white text-sm font-body" value={structuredFindings[item]?.notes || ''} onChange={(e) => handleNotesChange(item, e.target.value)} />
                                         </div>
                                       ))}
                                     </TabsContent>
@@ -408,13 +408,13 @@ export default function InspectionsPage() {
                               </div>
                             </ScrollArea>
                             <DialogFooter className="p-6 bg-muted/10 border-t">
-                              <Button className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20" onClick={handleConduct} disabled={isGenerating}>
+                              <Button className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 font-headline" onClick={handleConduct} disabled={isGenerating}>
                                 {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Finalizing...</> : <><CheckCircle2 className="w-4 h-4 mr-2" /> Sign & Update Record</>}
                               </Button>
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
-                        {inspection.summary && <div className="p-4 bg-muted/40 rounded-xl border border-primary/5 mt-4 text-left"><p className="text-[10px] font-bold text-primary uppercase mb-2">Audit Executive Summary</p><p className="text-sm text-muted-foreground italic leading-relaxed">{inspection.summary}</p></div>}
+                        {inspection.summary && <div className="p-4 bg-muted/40 rounded-xl border border-primary/5 mt-4 text-left"><p className="text-[10px] font-bold text-primary uppercase mb-2 font-headline">Audit Executive Summary</p><p className="text-sm text-muted-foreground italic leading-relaxed font-body">{inspection.summary}</p></div>}
                       </div>
                     </div>
                   </CardContent>

@@ -32,16 +32,14 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Tenant Profiles: Standardized for reliable list validation
+    // Tenant Profiles: Simplified for reliable Landlord & User access
     match /tenantProfiles/{id} {
-      allow list: if isSignedIn() && (
+      allow read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
-        resource.data.userId == request.auth.uid ||
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
+        resource.data.userId == request.auth.uid
       );
-      allow get: if isMember(resource.data) || (isSignedIn() && resource.data.email == request.auth.token.email);
       allow create: if isSignedIn();
-      allow update, delete: if isMember(resource.data);
+      allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
     // Documents: Standardized for reliable list validation

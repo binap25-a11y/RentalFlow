@@ -150,7 +150,7 @@ export default function MaintenancePage() {
           <p className="text-muted-foreground font-medium font-body">Review, prioritize and assign maintenance tasks.</p>
         </div>
         <div className="flex gap-3">
-          <Button onClick={() => setIsCreateDialogOpen(true)} className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-6 shadow-lg shadow-primary/20">
+          <Button onClick={() => setIsCreateDialogOpen(true)} className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-6 shadow-lg shadow-primary/20 font-headline">
             <Plus className="w-4 h-4 mr-2" />
             Log New Request
           </Button>
@@ -163,10 +163,10 @@ export default function MaintenancePage() {
                 </DialogHeader>
                 <div className="grid gap-4 py-6 text-left">
                   <div className="space-y-2">
-                    <Label htmlFor="property" className="font-bold text-xs uppercase text-primary/60 tracking-wider">Property Asset</Label>
+                    <Label htmlFor="property" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Property Asset</Label>
                     <select 
                       id="property" 
-                      className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow"
+                      className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow font-body"
                       value={selectedPropertyId}
                       onChange={(e) => setSelectedPropertyId(e.target.value)}
                       required
@@ -178,16 +178,16 @@ export default function MaintenancePage() {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="title" className="font-bold text-xs uppercase text-primary/60 tracking-wider">Issue Title</Label>
-                    <Input id="title" value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="e.g., HVAC failure in Unit 4" className="rounded-xl h-11" />
+                    <Label htmlFor="title" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Issue Title</Label>
+                    <Input id="title" value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="e.g., HVAC failure in Unit 4" className="rounded-xl h-11 font-body" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="desc" className="font-bold text-xs uppercase text-primary/60 tracking-wider">Detailed Description</Label>
-                    <Textarea id="desc" value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Provide context for AI triage..." className="rounded-xl min-h-[100px]" />
+                    <Label htmlFor="desc" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Detailed Description</Label>
+                    <Textarea id="desc" value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Provide context for AI triage Analysis..." className="rounded-xl min-h-[100px] font-body" />
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 font-headline" disabled={isSubmitting}>
                     {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Log Request"}
                   </Button>
                 </DialogFooter>
@@ -204,7 +204,7 @@ export default function MaintenancePage() {
               <Wrench className="w-10 h-10 text-primary/20" />
             </div>
             <h3 className="text-xl font-bold font-headline text-primary/40">No active requests</h3>
-            <p className="text-sm text-muted-foreground max-w-xs mt-2 font-medium">Maintenance tasks will appear here once logged.</p>
+            <p className="text-sm text-muted-foreground max-w-xs mt-2 font-medium font-body">Maintenance tasks will appear here once logged.</p>
           </Card>
         ) : (
           requests
@@ -221,7 +221,7 @@ export default function MaintenancePage() {
               
               return (
                 <Card key={request.id} className="border-none shadow-sm overflow-hidden group hover:shadow-md transition-shadow bg-white rounded-2xl">
-                  <CardContent className="p-6 pb-4">
+                  <CardContent className="p-6">
                     <div className="space-y-4">
                       <div className="flex flex-wrap items-center gap-3 mb-2">
                         <Badge className={`uppercase text-[10px] font-bold border ${getStatusStyles(status)}`}>
@@ -239,7 +239,7 @@ export default function MaintenancePage() {
                       </div>
                       
                       <div className="space-y-2 text-left">
-                        <div className="flex items-center gap-2 text-primary/60 font-bold text-xs uppercase tracking-wider">
+                        <div className="flex items-center gap-2 text-primary/60 font-bold text-xs uppercase tracking-wider font-headline">
                           <Building2 className="w-3 h-3" />
                           {property?.addressLine1 || 'Unknown Property'}
                         </div>
@@ -251,8 +251,8 @@ export default function MaintenancePage() {
                         <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex gap-3 text-left">
                           <BrainCircuit className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                           <div className="flex-1">
-                            <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">AI Triage Recommendation</p>
-                            <p className="text-sm text-black font-bold leading-relaxed">{request.aiTriageNotes}</p>
+                            <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1 font-headline">AI Triage Recommendation</p>
+                            <p className="text-sm text-black font-bold leading-relaxed font-body">{request.aiTriageNotes}</p>
                           </div>
                         </div>
                       )}
@@ -261,7 +261,7 @@ export default function MaintenancePage() {
 
                   <CardFooter className="bg-muted/10 p-4 flex flex-col md:flex-row gap-3 border-t border-muted/20">
                     <Button 
-                      className="w-full md:flex-1 bg-white hover:bg-primary/5 text-primary rounded-xl shadow-sm font-bold h-11 px-6 transition-all border border-primary/20"
+                      className="w-full md:flex-1 bg-white hover:bg-primary/5 text-primary rounded-xl shadow-sm font-bold h-11 px-6 transition-all border border-primary/20 font-headline"
                       onClick={() => handleTriage(request)}
                       disabled={isTriaging === request.id}
                     >
@@ -270,21 +270,21 @@ export default function MaintenancePage() {
                       ) : (
                         <Sparkles className="w-4 h-4 mr-2" />
                       )}
-                      {isTriaging === request.id ? 'Analyzing Request...' : 'AI Triage Analysis'}
+                      {isTriaging === request.id ? 'Analyzing...' : 'AI Triage Analysis'}
                     </Button>
                     
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="w-full md:flex-1 rounded-xl font-bold h-11 px-6 border-primary/20 bg-white hover:bg-primary/5 hover:text-primary transition-all">
+                        <Button variant="outline" className="w-full md:flex-1 rounded-xl font-bold h-11 px-6 border-primary/20 bg-white hover:bg-primary/5 hover:text-primary transition-all font-headline">
                           Update Status
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48 rounded-xl border-none shadow-xl">
-                        <DropdownMenuItem onClick={() => updateStatus(request, 'in-progress')} className="rounded-lg cursor-pointer font-medium">
+                        <DropdownMenuItem onClick={() => updateStatus(request, 'in-progress')} className="rounded-lg cursor-pointer font-medium font-body">
                           <PlayCircle className="w-4 h-4 mr-2 text-blue-500" />
                           In Progress
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => updateStatus(request, 'completed')} className="rounded-lg cursor-pointer font-medium">
+                        <DropdownMenuItem onClick={() => updateStatus(request, 'completed')} className="rounded-lg cursor-pointer font-medium font-body">
                           <CheckCircle2 className="w-4 h-4 mr-2 text-green-500" />
                           Completed
                         </DropdownMenuItem>
