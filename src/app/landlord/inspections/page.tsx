@@ -379,7 +379,7 @@ export default function InspectionsPage() {
                           <DialogContent className="sm:max-w-[700px] p-0 rounded-2xl border-none shadow-2xl flex flex-col h-[85vh] overflow-hidden">
                             <div className="p-6 bg-primary/5 border-b text-left">
                               <DialogTitle className="text-2xl font-headline font-bold">Comprehensive Audit</DialogTitle>
-                              <DialogDescription className="font-medium">{inspection.status === 'completed' ? "Updating previous findings." : "Conducting full safety audit."}</DialogDescription>
+                              <DialogDescription className="font-medium text-muted-foreground">{inspection.status === 'completed' ? "Updating previous findings." : "Conducting full safety audit."}</DialogDescription>
                             </div>
                             <ScrollArea className="flex-1">
                               <div className="p-6 space-y-8">

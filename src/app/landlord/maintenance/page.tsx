@@ -50,7 +50,6 @@ export default function MaintenancePage() {
 
   const maintenanceQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // STANDARD: Membership-based query perfectly matches firestore.rules
     return getMemberCollectionQuery(db, "maintenanceRequests", user.uid);
   }, [db, user]);
 
@@ -160,7 +159,7 @@ export default function MaintenancePage() {
               <form onSubmit={handleCreateRequest}>
                 <DialogHeader className="text-left">
                   <DialogTitle className="text-xl font-bold font-headline">Log Maintenance Task</DialogTitle>
-                  <DialogDescription className="font-medium">Manually add a maintenance issue discovered or reported.</DialogDescription>
+                  <DialogDescription className="font-medium text-muted-foreground">Manually add a maintenance issue discovered or reported.</DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-6 text-left">
                   <div className="space-y-2">
@@ -222,9 +221,9 @@ export default function MaintenancePage() {
               
               return (
                 <Card key={request.id} className="border-none shadow-sm overflow-hidden group hover:shadow-md transition-shadow bg-white rounded-2xl">
-                  <CardContent className="p-6 pb-4">
+                  <CardContent className="p-6">
                     <div className="space-y-4">
-                      <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3 mb-2">
                         <Badge className={`uppercase text-[10px] font-bold border ${getStatusStyles(status)}`}>
                           {status}
                         </Badge>
@@ -252,7 +251,7 @@ export default function MaintenancePage() {
                         <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex gap-3 text-left">
                           <BrainCircuit className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                           <div className="flex-1">
-                            <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1 text-xs">AI Triage Recommendation</p>
+                            <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">AI Triage Recommendation</p>
                             <p className="text-sm text-black font-bold leading-relaxed">{request.aiTriageNotes}</p>
                           </div>
                         </div>

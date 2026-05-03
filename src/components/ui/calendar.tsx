@@ -39,7 +39,7 @@ function Calendar({
         weekdays: "flex w-full mb-2",
         weekday: "text-muted-foreground w-9 font-bold text-[0.7rem] flex items-center justify-center uppercase tracking-tighter h-9 shrink-0",
         week: "flex w-full mt-1",
-        day: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20 shrink-0",
+        day: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20 shrink-0 flex items-center justify-center",
         day_button: cn(
           buttonVariants({ variant: "ghost" }),
           "h-9 w-9 p-0 font-medium aria-selected:opacity-100 rounded-lg transition-all flex items-center justify-center"
