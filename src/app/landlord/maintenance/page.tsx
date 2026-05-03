@@ -251,7 +251,7 @@ export default function MaintenancePage() {
                         <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex gap-3 text-left">
                           <BrainCircuit className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                           <div className="flex-1">
-                            <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">AI Recommendation Insight</p>
+                            <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1 text-xs">AI Recommendation Insight</p>
                             <p className="text-sm text-black font-bold leading-relaxed">{request.aiTriageNotes}</p>
                           </div>
                         </div>
