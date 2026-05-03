@@ -252,7 +252,7 @@ export default function MaintenancePage() {
                           <BrainCircuit className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                           <div className="flex-1">
                             <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">AI Recommendation Insight</p>
-                            <p className="text-sm text-black font-body font-bold leading-relaxed">{request.aiTriageNotes}</p>
+                            <p className="text-sm text-black font-bold leading-relaxed">{request.aiTriageNotes}</p>
                           </div>
                         </div>
                       )}

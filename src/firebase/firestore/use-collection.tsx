@@ -60,7 +60,7 @@ export function useCollection<T = any>(
               path = internalRef.converter.path;
             }
           } catch (e) {
-            path = 'tenantProfiles'; // Fallback for the reported error source
+            path = 'collection-query';
           }
         }
         
