@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -132,6 +133,15 @@ export default function MaintenancePage() {
     }
   };
 
+  const getStatusStyles = (status: string) => {
+    switch(status?.toLowerCase()) {
+      case 'completed': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      case 'in-progress': return 'bg-sky-100 text-sky-700 border-sky-200';
+      case 'pending': return 'bg-amber-100 text-amber-700 border-amber-200';
+      default: return 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+  };
+
   if (loading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
@@ -211,14 +221,15 @@ export default function MaintenancePage() {
             .map((request) => {
               const createdAt = request.createdAt ? new Date(request.createdAt.seconds * 1000) : null;
               const property = properties?.find(p => p.id === request.propertyId);
+              const status = request.status || 'pending';
               
               return (
                 <Card key={request.id} className="border-none shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
                   <CardContent className="p-6 pb-4">
                     <div className="space-y-4">
                       <div className="flex flex-wrap items-center gap-3">
-                        <Badge variant="outline" className="text-[10px] uppercase font-bold text-primary/60 border-primary/20">
-                          {request.status || 'Pending'}
+                        <Badge className={`uppercase text-[10px] font-bold border ${getStatusStyles(status)}`}>
+                          {status}
                         </Badge>
                         <Badge className={`capitalize font-bold border ${getPriorityColor(request.priority)}`}>
                           {request.priority || 'Pending Triage'}
@@ -252,7 +263,7 @@ export default function MaintenancePage() {
                     </div>
                   </CardContent>
 
-                  <CardFooter className="bg-muted/10 p-4 pt-0 flex flex-col md:flex-row gap-3 border-t border-muted/20 mt-2">
+                  <CardFooter className="bg-muted/10 p-4 flex flex-col md:flex-row gap-3 border-t border-muted/20">
                     <Button 
                       className="w-full md:flex-1 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-primary/5 font-bold h-11 px-6 transition-all"
                       onClick={() => handleTriage(request)}
