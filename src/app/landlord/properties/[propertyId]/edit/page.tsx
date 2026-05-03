@@ -76,7 +76,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     try {
       let currentImageUrl = property?.imageUrl || previewUrl;
 
-      // Only perform upload if a new file is actually present
       if (imageFile && storage) {
         const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
         const result = await uploadBytes(storageRef, imageFile);
@@ -96,7 +95,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedAt: serverTimestamp(),
       };
 
-      // Non-blocking update to provide instant feedback
+      // Non-blocking update for instant feedback
       updateDocumentNonBlocking(propertyRef, updateData);
 
       toast({ 
