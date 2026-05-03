@@ -27,16 +27,26 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Tenant Profiles: Standardized for reliable membership-based listing
+    // Tenant Profiles: Simplified for reliable list validation
     match /tenantProfiles/{id} {
-      allow list, read: if isMember(resource.data) || (isSignedIn() && resource.data.email == request.auth.token.email);
+      allow list: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds) ||
+        resource.data.email == request.auth.token.email
+      );
+      allow get: if isSignedIn() && (isMember(resource.data) || resource.data.email == request.auth.token.email);
       allow create: if isSignedIn();
       allow update, delete: if isMember(resource.data);
     }
 
-    // Documents: Secured by membership
+    // Documents: Simplified for reliable list validation
     match /documents/{id} {
-      allow list, read: if isMember(resource.data) || (isSignedIn() && resource.data.email == request.auth.token.email);
+      allow list: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds) ||
+        resource.data.email == request.auth.token.email
+      );
+      allow get: if isSignedIn() && (isMember(resource.data) || resource.data.email == request.auth.token.email);
       allow create: if isSignedIn();
       allow update, delete: if isMember(resource.data);
     }
