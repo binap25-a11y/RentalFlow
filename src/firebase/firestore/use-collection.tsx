@@ -48,20 +48,17 @@ export function useCollection<T = any>(
       async (serverError: FirestoreError) => {
         // Robust path extraction for debugging overlay
         let path = 'unknown-collection';
-        if (ref && 'path' in ref) {
-          path = (ref as any).path;
-        } else {
-          // Attempt to extract from internal query structure if it's a Query object
-          try {
-            const internalRef = (ref as any);
-            if (internalRef._query?.path?.segments) {
-              path = internalRef._query.path.segments.join('/');
-            } else if (internalRef.converter?.path) {
-              path = internalRef.converter.path;
-            }
-          } catch (e) {
-            path = 'collection-query';
+        
+        try {
+          if (ref && 'path' in ref) {
+            path = (ref as any).path;
+          } else if (ref && (ref as any)._query?.path?.segments) {
+            path = (ref as any)._query.path.segments.join('/');
+          } else if (ref && (ref as any).converter?.path) {
+            path = (ref as any).converter.path;
           }
+        } catch (e) {
+          path = 'collection-query';
         }
         
         // Construct rich, contextual error for the developer overlay

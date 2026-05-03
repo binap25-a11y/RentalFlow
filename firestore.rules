@@ -22,7 +22,7 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Tenant Profiles: Explicitly allow listing for landlords and the specific resident
+    // Tenant Profiles: Secure listing for landlords and residents
     match /tenantProfiles/{id} {
       allow list, read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
@@ -64,7 +64,7 @@ service cloud.firestore {
       );
     }
 
-    // Inspections: Primarily for landlords, but allow reading if a member
+    // Inspections: Primarily for landlords
     match /inspections/{id} {
       allow list, read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
