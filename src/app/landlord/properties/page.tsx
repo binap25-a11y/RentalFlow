@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -203,7 +202,7 @@ export default function PropertiesPage() {
               Register New Asset
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[750px] p-0 rounded-2xl overflow-hidden flex flex-col h-[85vh] border-none shadow-2xl">
+          <DialogContent className="sm:max-w-[900px] p-0 rounded-2xl overflow-hidden flex flex-col h-[85vh] border-none shadow-2xl">
             <DialogHeader className="p-6 bg-primary/5 border-b shrink-0 text-left">
               <DialogTitle className="text-2xl font-headline font-bold text-primary flex items-center gap-2">
                 <Building2 className="w-6 h-6" />
@@ -215,73 +214,76 @@ export default function PropertiesPage() {
             <form onSubmit={handleSaveProperty} className="flex-1 flex flex-col min-h-0">
               <ScrollArea className="flex-1">
                 <div className="p-6 md:p-8 space-y-8">
-                  <div className="space-y-4">
-                    <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Presentation</Label>
-                    <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/20 aspect-video w-full flex items-center justify-center">
-                      {previewUrl ? (
-                        <>
-                          <Image 
-                            src={previewUrl} 
-                            alt="Preview" 
-                            fill 
-                            className="object-cover" 
-                            unoptimized={true} 
-                          />
-                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                             <Button type="button" variant="secondary" size="sm" className="rounded-lg font-bold" onClick={() => document.getElementById('image-input')?.click()}>Change Photo</Button>
-                             <Button type="button" variant="destructive" size="sm" className="rounded-lg font-bold" onClick={() => { setPreviewUrl(null); setImageFile(null); }}>Remove</Button>
-                          </div>
-                        </>
-                      ) : (
-                        <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="flex flex-col items-center gap-3">
-                          <div className="p-4 bg-white rounded-full shadow-sm group-hover:scale-110 transition-transform">
-                            <ImageIcon className="w-8 h-8 text-primary/60" />
-                          </div>
-                          <span className="text-sm font-bold text-primary">Upload Cover Image</span>
-                        </button>
-                      )}
-                      <input id="image-input" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Property Presentation</Label>
+                      <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 transition-all bg-muted/20 aspect-video w-full flex items-center justify-center">
+                        {previewUrl ? (
+                          <>
+                            <Image 
+                              src={previewUrl} 
+                              alt="Preview" 
+                              fill 
+                              className="object-cover" 
+                              unoptimized={true} 
+                            />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                               <Button type="button" variant="secondary" size="sm" className="rounded-lg font-bold" onClick={() => document.getElementById('image-input')?.click()}>Change Photo</Button>
+                               <Button type="button" variant="destructive" size="sm" className="rounded-lg font-bold" onClick={() => { setPreviewUrl(null); setImageFile(null); }}>Remove</Button>
+                            </div>
+                          </>
+                        ) : (
+                          <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="flex flex-col items-center gap-3">
+                            <div className="p-4 bg-white rounded-full shadow-sm group-hover:scale-110 transition-transform">
+                              <ImageIcon className="w-8 h-8 text-primary/60" />
+                            </div>
+                            <span className="text-sm font-bold text-primary">Upload Cover Image</span>
+                          </button>
+                        )}
+                        <input id="image-input" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                      </div>
+                    </div>
+
+                    <div className="space-y-6 text-left">
+                      <div className="space-y-2">
+                        <Label htmlFor="address" className="font-bold text-xs uppercase text-primary/60">Street Address</Label>
+                        <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="123 Example Street" className="rounded-xl h-11" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="city" className="font-bold text-xs uppercase text-primary/60">City</Label>
+                          <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} required placeholder="London" className="rounded-xl h-11" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="zipCode" className="font-bold text-xs uppercase text-primary/60">Postcode</Label>
+                          <Input id="zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required placeholder="SW1A 1AA" className="rounded-xl h-11" />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-                    <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="address" className="font-bold text-xs uppercase text-primary/60">Street Address</Label>
-                      <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="123 Example Street" className="rounded-xl h-12" />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                    <div className="space-y-2">
+                      <Label className="font-bold text-xs uppercase text-primary/60">Asset Type</Label>
+                      <Select value={propertyType} onValueChange={setPropertyType}>
+                        <SelectTrigger className="rounded-xl h-11"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Apartment">Apartment</SelectItem>
+                          <SelectItem value="House">House</SelectItem>
+                          <SelectItem value="Condo">Condo</SelectItem>
+                          <SelectItem value="Studio">Studio</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="city" className="font-bold text-xs uppercase text-primary/60">City</Label>
-                      <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} required placeholder="London" className="rounded-xl h-12" />
+                      <Label htmlFor="rent" className="font-bold text-xs uppercase text-primary/60">Monthly Rent (£)</Label>
+                      <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-11" />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="zipCode" className="font-bold text-xs uppercase text-primary/60">Postcode</Label>
-                      <Input id="zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required placeholder="SW1A 1AA" className="rounded-xl h-12" />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4 md:col-span-2">
-                       <div className="space-y-2">
-                        <Label className="font-bold text-xs uppercase text-primary/60">Asset Type</Label>
-                        <Select value={propertyType} onValueChange={setPropertyType}>
-                          <SelectTrigger className="rounded-xl h-12"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Apartment">Apartment</SelectItem>
-                            <SelectItem value="House">House</SelectItem>
-                            <SelectItem value="Condo">Condo</SelectItem>
-                            <SelectItem value="Studio">Studio</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="rent" className="font-bold text-xs uppercase text-primary/60">Monthly Rent (£)</Label>
-                        <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12" />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 md:col-span-2">
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="font-bold text-xs uppercase text-primary/60">Beds</Label>
                         <Select value={bedrooms} onValueChange={setBedrooms}>
-                          <SelectTrigger className="rounded-xl h-12"><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="rounded-xl h-11"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {['1','2','3','4','5+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
                           </SelectContent>
@@ -290,7 +292,7 @@ export default function PropertiesPage() {
                       <div className="space-y-2">
                         <Label className="font-bold text-xs uppercase text-primary/60">Baths</Label>
                         <Select value={bathrooms} onValueChange={setBathrooms}>
-                          <SelectTrigger className="rounded-xl h-12"><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="rounded-xl h-11"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {['1','2','3+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
                           </SelectContent>
@@ -298,9 +300,9 @@ export default function PropertiesPage() {
                       </div>
                     </div>
 
-                    <div className="space-y-2 md:col-span-2">
+                    <div className="space-y-2 md:col-span-3">
                       <Label htmlFor="description" className="font-bold text-xs uppercase text-primary/60">Description & Features</Label>
-                      <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Key features, local amenities, etc." className="rounded-xl min-h-[120px]" />
+                      <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Key features, local amenities, etc." className="rounded-xl min-h-[150px]" />
                     </div>
                   </div>
                 </div>
