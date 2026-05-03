@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, use } from 'react';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useStorage } from '@/firebase';
-import { doc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useStorage, updateDocumentNonBlocking } from '@/firebase';
+import { doc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,8 +81,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         currentImageUrl = await getDownloadURL(result.ref);
       }
 
-      // Use await updateDoc to ensure persistence before navigation
-      await updateDoc(propertyRef, {
+      // Use updateDocumentNonBlocking for instant feel and immediate redirection
+      updateDocumentNonBlocking(propertyRef, {
         addressLine1: address,
         city,
         zipCode,
@@ -95,7 +95,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedAt: serverTimestamp(),
       });
 
-      toast({ title: "Asset Updated", description: "Property details saved successfully." });
+      toast({ title: "Asset Updated", description: "Changes are being synchronized." });
+      
+      // Immediate redirection for instant feel
       router.push(`/landlord/properties/${propertyId}`);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Save Failed", description: error.message });
