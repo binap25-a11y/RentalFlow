@@ -50,6 +50,7 @@ export default function MaintenancePage() {
 
   const maintenanceQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
+    // STANDARD: Membership-based query perfectly matches firestore.rules
     return getMemberCollectionQuery(db, "maintenanceRequests", user.uid);
   }, [db, user]);
 

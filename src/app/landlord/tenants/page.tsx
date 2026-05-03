@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking, getLandlordCollectionQuery } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking, getMemberCollectionQuery, getLandlordCollectionQuery } from '@/firebase';
 import { collection, doc, serverTimestamp, arrayUnion } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,8 +26,8 @@ export default function TenantsPage() {
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Standardize to landlordId for secure listing in portfolio inventory
-    return getLandlordCollectionQuery(db, "tenantProfiles", user.uid);
+    // STANDARD: Use memberIds based query to perfectly satisfy security rules for real-time listing
+    return getMemberCollectionQuery(db, "tenantProfiles", user.uid);
   }, [db, user]);
 
   const { data: tenants, loading: isLoading } = useCollection(tenantsQuery);

@@ -20,32 +20,21 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
-    // Properties: Shared with tenants via tenantIds or memberIds
+    // Properties: Secured by membership or direct role
     match /properties/{id} {
-      allow list, read: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds) ||
-        (resource.data.tenantIds != null && request.auth.uid in resource.data.tenantIds)
-      );
+      allow list, read: if isMember(resource.data) || (isSignedIn() && resource.data.tenantIds != null && request.auth.uid in resource.data.tenantIds);
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Tenant Profiles: Secure listing for landlords and residents
+    // Tenant Profiles: Simplified for reliable listing
     match /tenantProfiles/{id} {
-      allow list, read: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.userId == request.auth.uid ||
-        resource.data.email == request.auth.token.email
-      );
+      allow list, read: if isMember(resource.data) || (isSignedIn() && resource.data.email == request.auth.token.email);
       allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.userId == request.auth.uid
-      );
+      allow update, delete: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.userId == request.auth.uid);
     }
 
-    // Documents: Secured by membership or direct ownership
+    // Documents: Secured by membership
     match /documents/{id} {
       allow list, read: if isMember(resource.data) || (isSignedIn() && resource.data.email == request.auth.token.email);
       allow create: if isSignedIn();
@@ -59,7 +48,7 @@ service cloud.firestore {
       allow update, delete: if isMember(resource.data);
     }
 
-    // Inspections: Primarily for landlords
+    // Inspections: Primarily for landlords/members
     match /inspections/{id} {
       allow list, read: if isMember(resource.data);
       allow create: if isSignedIn();
