@@ -95,7 +95,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedAt: serverTimestamp(),
       };
 
-      // Non-blocking update for instant feedback
       updateDocumentNonBlocking(propertyRef, updateData);
 
       toast({ 
@@ -103,7 +102,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         description: "Your modifications are being synchronized." 
       });
       
-      // Immediate redirection for "instant" feel
       router.push(`/landlord/properties/${propertyId}`);
     } catch (error: any) {
       toast({ 
@@ -137,22 +135,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
               <div className="relative group overflow-hidden rounded-3xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white aspect-video w-full flex items-center justify-center shadow-inner">
                 {previewUrl ? (
                   <>
-                    <Image 
-                      src={previewUrl} 
-                      alt="Preview" 
-                      fill 
-                      className="object-cover" 
-                      unoptimized={true} 
-                    />
+                    <Image src={previewUrl} alt="Preview" fill className="object-cover" unoptimized={true} />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                        <Button type="button" variant="secondary" size="sm" className="rounded-xl font-bold font-headline" onClick={() => document.getElementById('image-input')?.click()}>Change Photo</Button>
                     </div>
                   </>
                 ) : (
                   <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="flex flex-col items-center gap-3">
-                    <div className="p-5 bg-primary/10 rounded-full shadow-sm">
-                      <ImageIcon className="w-8 h-8 text-primary" />
-                    </div>
+                    <div className="p-5 bg-primary/10 rounded-full shadow-sm"><ImageIcon className="w-8 h-8 text-primary" /></div>
                     <span className="text-sm font-bold text-primary font-headline">Upload Cover Image</span>
                   </button>
                 )}
@@ -176,7 +166,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                     <Input id="zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required placeholder="SW1A 1AA" className="rounded-xl h-12 bg-muted/20 border-none font-body" />
                   </div>
                 </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Asset Type</Label>
@@ -195,28 +184,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                     <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-body" />
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Bedrooms</Label>
-                    <Select value={bedrooms} onValueChange={setBedrooms}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {['1','2','3','4','5+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Bathrooms</Label>
-                    <Select value={bathrooms} onValueChange={setBathrooms}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {['1','2','3+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="description" className="font-bold text-xs uppercase text-primary/60 font-headline">Description & Features</Label>
                   <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Key features, local amenities, etc." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-body" />

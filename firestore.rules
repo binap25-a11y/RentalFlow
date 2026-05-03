@@ -28,11 +28,11 @@ service cloud.firestore {
 
     // Tenant Profiles: Direct ownership check for reliable listing
     match /tenantProfiles/{id} {
-      allow list: if isSignedIn() && (
+      allow read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.userId == request.auth.uid
       );
-      allow get: if isSignedIn() && (
+      allow list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.userId == request.auth.uid
       );

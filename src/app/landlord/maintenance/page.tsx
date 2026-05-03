@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -7,23 +8,11 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, getLandlordCollectionQuery } from "@/firebase";
 import { doc, serverTimestamp, collection } from "firebase/firestore";
-import { Wrench, Sparkles, Clock, BrainCircuit, Loader2, CheckCircle2, PlayCircle, Plus, Building2 } from "lucide-react";
+import { Wrench, Sparkles, Clock, BrainCircuit, Loader2, CheckCircle2, PlayCircle, Plus, Building2, PoundSterling } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, isValid } from "date-fns";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,6 +25,8 @@ export default function MaintenancePage() {
   const [isTriaging, setIsTriaging] = useState<string | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoggingCost, setIsLoggingCost] = useState<string | null>(null);
+  const [costAmount, setCostAmount] = useState('');
 
   const [newRequestTitle, setNewRequestTitle] = useState('');
   const [newRequestDesc, setNewRequestDesc] = useState('');
@@ -58,13 +49,12 @@ export default function MaintenancePage() {
   const handleCreateRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !db || !selectedPropertyId) return;
-
     setIsSubmitting(true);
     const requestId = doc(collection(db, 'maintenanceRequests')).id;
     const requestRef = doc(db, 'maintenanceRequests', requestId);
     const property = properties?.find(p => p.id === selectedPropertyId);
 
-    const data = {
+    setDocumentNonBlocking(requestRef, {
       id: requestId,
       propertyId: selectedPropertyId,
       landlordId: user.uid,
@@ -75,13 +65,12 @@ export default function MaintenancePage() {
       status: 'pending',
       priority: 'routine',
       category: 'other',
+      cost: 0,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    };
+    }, { merge: true });
 
-    setDocumentNonBlocking(requestRef, data, { merge: true });
     toast({ title: "Request Logged", description: "Maintenance task has been added to the ledger." });
-    
     setIsCreateDialogOpen(false);
     setIsSubmitting(false);
     setNewRequestTitle('');
@@ -95,17 +84,15 @@ export default function MaintenancePage() {
     try {
       const result = await triageMaintenanceRequest({ maintenanceRequest: request.description });
       const requestRef = doc(db, 'maintenanceRequests', request.id);
-      
       updateDocumentNonBlocking(requestRef, {
         priority: result.priority,
         category: result.category,
         aiTriageNotes: result.reasoning,
         updatedAt: serverTimestamp(),
       });
-      
       toast({ title: "AI Triage Complete", description: `Suggested priority: ${result.priority}` });
     } catch (error) {
-      toast({ variant: "destructive", title: "Triage failed", description: "Could not analyze request at this time." });
+      toast({ variant: "destructive", title: "Triage failed" });
     } finally {
       setIsTriaging(null);
     }
@@ -114,11 +101,17 @@ export default function MaintenancePage() {
   const updateStatus = (request: any, newStatus: string) => {
     if (!user || !db) return;
     const requestRef = doc(db, 'maintenanceRequests', request.id);
-    updateDocumentNonBlocking(requestRef, {
-      status: newStatus,
-      updatedAt: serverTimestamp(),
-    });
+    updateDocumentNonBlocking(requestRef, { status: newStatus, updatedAt: serverTimestamp() });
     toast({ title: "Status Updated", description: `Task marked as ${newStatus}.` });
+  };
+
+  const handleLogCost = (request: any) => {
+    if (!user || !db || !costAmount) return;
+    const requestRef = doc(db, 'maintenanceRequests', request.id);
+    updateDocumentNonBlocking(requestRef, { cost: Number(costAmount), updatedAt: serverTimestamp() });
+    toast({ title: "Cost Logged", description: `Financial ledger updated with £${costAmount}.` });
+    setIsLoggingCost(null);
+    setCostAmount('');
   };
 
   const getPriorityColor = (priority: string) => {
@@ -127,16 +120,7 @@ export default function MaintenancePage() {
       case 'urgent': return 'bg-orange-500 text-white border-orange-200';
       case 'routine': return 'bg-blue-500 text-white border-blue-200';
       case 'low': return 'bg-slate-400 text-white border-slate-200';
-      default: return 'bg-muted text-muted-foreground border-muted';
-    }
-  };
-
-  const getStatusStyles = (status: string) => {
-    switch(status?.toLowerCase()) {
-      case 'completed': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-      case 'in-progress': return 'bg-sky-100 text-sky-700 border-sky-200';
-      case 'pending': return 'bg-amber-100 text-amber-700 border-amber-200';
-      default: return 'bg-slate-100 text-slate-700 border-slate-200';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -146,156 +130,103 @@ export default function MaintenancePage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div>
-          <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Maintenance Management</h1>
-          <p className="text-muted-foreground font-medium font-body">Review, prioritize and assign maintenance tasks.</p>
+          <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Maintenance Hub</h1>
+          <p className="text-muted-foreground font-medium font-body">Manage repairs and track professional maintenance costs.</p>
         </div>
-        <div className="flex gap-3">
-          <Button onClick={() => setIsCreateDialogOpen(true)} className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-6 shadow-lg shadow-primary/20 font-headline text-white">
-            <Plus className="w-4 h-4 mr-2" />
-            Log New Request
-          </Button>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogContent className="sm:max-w-[500px] rounded-2xl border-none shadow-2xl">
-              <form onSubmit={handleCreateRequest}>
-                <DialogHeader className="text-left">
-                  <DialogTitle className="text-xl font-bold font-headline text-primary">Log Maintenance Task</DialogTitle>
-                  <DialogDescription className="font-medium text-muted-foreground font-body">Manually add a maintenance issue discovered or reported.</DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-6 text-left">
-                  <div className="space-y-2">
-                    <Label htmlFor="property" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Property Asset</Label>
-                    <select 
-                      id="property" 
-                      className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow font-body"
-                      value={selectedPropertyId}
-                      onChange={(e) => setSelectedPropertyId(e.target.value)}
-                      required
-                    >
-                      <option value="">Select a property...</option>
-                      {properties?.map(prop => (
-                        <option key={prop.id} value={prop.id}>{prop.addressLine1}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="title" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Issue Title</Label>
-                    <Input id="title" value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="e.g., HVAC failure in Unit 4" className="rounded-xl h-11 font-body" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="desc" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Detailed Description</Label>
-                    <Textarea id="desc" value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Provide context for AI triage Analysis..." className="rounded-xl min-h-[100px] font-body" />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 font-headline text-white hover:bg-primary/90" disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Log Request"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
+        <Button onClick={() => setIsCreateDialogOpen(true)} className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-6 shadow-lg shadow-primary/20 text-white">
+          <Plus className="w-4 h-4 mr-2" /> Log New Request
+        </Button>
       </div>
 
       <div className="grid gap-6">
         {!requests || requests.length === 0 ? (
-          <Card className="border-dashed border-2 py-24 flex flex-col items-center justify-center text-center bg-muted/10 rounded-[2rem]">
-            <div className="p-6 bg-white rounded-full mb-6 shadow-sm">
-              <Wrench className="w-10 h-10 text-primary/20" />
-            </div>
+          <Card className="border-dashed border-2 py-24 flex flex-col items-center justify-center bg-muted/10 rounded-[2rem]">
+            <Wrench className="w-12 h-12 text-primary/20 mb-4" />
             <h3 className="text-xl font-bold font-headline text-primary/40">No active requests</h3>
-            <p className="text-sm text-muted-foreground max-w-xs mt-2 font-medium font-body">Maintenance tasks will appear here once logged.</p>
           </Card>
         ) : (
-          requests
-            .slice()
-            .sort((a, b) => {
-              const dateA = a.createdAt ? (a.createdAt.seconds || 0) : 0;
-              const dateB = b.createdAt ? (b.createdAt.seconds || 0) : 0;
-              return dateB - dateA;
-            })
-            .map((request) => {
-              const createdAt = request.createdAt ? new Date(request.createdAt.seconds * 1000) : null;
-              const property = properties?.find(p => p.id === request.propertyId);
-              const status = request.status || 'pending';
-              
-              return (
-                <Card key={request.id} className="border-none shadow-sm overflow-hidden group hover:shadow-md transition-shadow bg-white rounded-2xl">
-                  <CardContent className="p-6 pb-4">
-                    <div className="space-y-4">
-                      <div className="flex flex-wrap items-center gap-3 mb-2">
-                        <Badge className={`uppercase text-[10px] font-bold border ${getStatusStyles(status)}`}>
-                          {status}
-                        </Badge>
-                        <Badge className={`capitalize font-bold border ${getPriorityColor(request.priority)}`}>
-                          {request.priority || 'Pending Triage'}
-                        </Badge>
-                        <Badge variant="secondary" className="capitalize text-[10px] font-bold font-headline">
-                          {request.category || 'Uncategorized'}
-                        </Badge>
-                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tight ml-auto flex items-center font-headline">
-                          <Clock className="w-3 h-3 mr-1" /> {createdAt && isValid(createdAt) ? format(createdAt, 'PPp') : 'Recently'}
-                        </span>
-                      </div>
-                      
-                      <div className="space-y-2 text-left">
-                        <div className="flex items-center gap-2 text-primary/60 font-bold text-xs uppercase tracking-wider font-headline">
-                          <Building2 className="w-3 h-3" />
-                          {property?.addressLine1 || 'Unknown Property'}
-                        </div>
-                        <h3 className="text-xl font-bold font-headline group-hover:text-primary transition-colors">{request.title || 'Maintenance Issue'}</h3>
-                        <p className="text-muted-foreground leading-relaxed font-body">{request.description}</p>
-                      </div>
-
-                      {request.aiTriageNotes && (
-                        <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex gap-3 text-left">
-                          <BrainCircuit className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                          <div className="flex-1">
-                            <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1 font-headline">AI Triage Recommendation</p>
-                            <p className="text-sm text-black font-bold leading-relaxed font-body">{request.aiTriageNotes}</p>
-                          </div>
-                        </div>
-                      )}
+          requests.slice().sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).map((request) => (
+            <Card key={request.id} className="border-none shadow-sm overflow-hidden bg-white rounded-2xl group">
+              <CardContent className="p-6">
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <Badge className={cn("uppercase text-[10px] font-bold", request.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-sky-100 text-sky-700')}>
+                    {request.status}
+                  </Badge>
+                  <Badge className={cn("capitalize font-bold", getPriorityColor(request.priority))}>
+                    {request.priority}
+                  </Badge>
+                  {request.cost > 0 && <Badge variant="secondary" className="bg-amber-100 text-amber-700 font-bold border-amber-200">£{request.cost} Spent</Badge>}
+                  <span className="text-[10px] text-muted-foreground font-bold uppercase ml-auto flex items-center">
+                    <Clock className="w-3 h-3 mr-1" /> {request.createdAt ? format(new Date(request.createdAt.seconds * 1000), 'PPp') : 'Just now'}
+                  </span>
+                </div>
+                <div className="space-y-2 text-left">
+                  <h3 className="text-xl font-bold font-headline group-hover:text-primary transition-colors">{request.title}</h3>
+                  <p className="text-muted-foreground font-body">{request.description}</p>
+                </div>
+                {request.aiTriageNotes && (
+                  <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 mt-4 flex gap-3 text-left">
+                    <BrainCircuit className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-[10px] font-bold text-primary uppercase mb-1">AI Triage Recommendation</p>
+                      <p className="text-sm text-black font-bold font-body">{request.aiTriageNotes}</p>
                     </div>
-                  </CardContent>
-
-                  <CardFooter className="bg-muted/10 p-4 flex flex-col md:flex-row gap-3 border-t border-muted/20">
-                    <Button 
-                      className="w-full md:flex-1 bg-white hover:bg-primary/5 text-primary rounded-xl shadow-sm font-bold h-11 px-6 transition-all border border-primary/20 font-headline"
-                      onClick={() => handleTriage(request)}
-                      disabled={isTriaging === request.id}
-                    >
-                      {isTriaging === request.id ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Sparkles className="w-4 h-4 mr-2" />
-                      )}
-                      {isTriaging === request.id ? 'Analyzing...' : 'AI Triage Analysis'}
-                    </Button>
-                    
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="w-full md:flex-1 rounded-xl font-bold h-11 px-6 border-primary/20 bg-white hover:bg-primary/5 hover:text-primary transition-all font-headline">
-                          Update Status
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48 rounded-xl border-none shadow-xl p-1 bg-white">
-                        <DropdownMenuItem onClick={() => updateStatus(request, 'in-progress')} className="rounded-lg cursor-pointer font-medium font-body focus:bg-primary/5">
-                          <PlayCircle className="w-4 h-4 mr-2 text-blue-500" />
-                          In Progress
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => updateStatus(request, 'completed')} className="rounded-lg cursor-pointer font-medium font-body focus:bg-emerald-50">
-                          <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-500" />
-                          Completed
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </CardFooter>
-                </Card>
-              );
-            })
+                  </div>
+                )}
+              </CardContent>
+              <CardFooter className="bg-muted/10 p-4 flex flex-col md:flex-row gap-3 border-t">
+                <Button className="flex-1 bg-white hover:bg-primary/5 text-primary rounded-xl font-bold h-11 border border-primary/20" onClick={() => handleTriage(request)} disabled={isTriaging === request.id}>
+                  {isTriaging === request.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                  AI Triage Analysis
+                </Button>
+                <Dialog open={isLoggingCost === request.id} onOpenChange={(open) => !open && setIsLoggingCost(null)}>
+                  <Button variant="outline" className="flex-1 rounded-xl font-bold h-11 border-primary/20 bg-white" onClick={() => setIsLoggingCost(request.id)}>
+                    <PoundSterling className="w-4 h-4 mr-2" /> Log Expense
+                  </Button>
+                  <DialogContent className="rounded-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Log Maintenance Expense</DialogTitle>
+                      <DialogDescription>Enter the professional cost for this repair task.</DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <Input type="number" placeholder="Amount in £" value={costAmount} onChange={(e) => setCostAmount(e.target.value)} className="rounded-xl h-11" />
+                    </div>
+                    <DialogFooter>
+                      <Button className="w-full rounded-xl" onClick={() => handleLogCost(request)}>Update Financial Ledger</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild><Button variant="outline" className="flex-1 rounded-xl font-bold h-11">Update Status</Button></DropdownMenuTrigger>
+                  <DropdownMenuContent className="rounded-xl">
+                    <DropdownMenuItem onClick={() => updateStatus(request, 'in-progress')}><PlayCircle className="w-4 h-4 mr-2" /> In Progress</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => updateStatus(request, 'completed')}><CheckCircle2 className="w-4 h-4 mr-2" /> Completed</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </CardFooter>
+            </Card>
+          ))
         )}
       </div>
+
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="rounded-2xl">
+          <form onSubmit={handleCreateRequest}>
+            <DialogHeader>
+              <DialogTitle>Log Maintenance Task</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4 text-left">
+              <select className="flex h-11 w-full rounded-xl border px-3 text-sm font-body" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
+                <option value="">Select property...</option>
+                {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+              </select>
+              <Input value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="Issue Title" className="rounded-xl" />
+              <Textarea value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Description..." className="rounded-xl" />
+            </div>
+            <Button type="submit" className="w-full rounded-xl h-12" disabled={isSubmitting}>Log Request</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
