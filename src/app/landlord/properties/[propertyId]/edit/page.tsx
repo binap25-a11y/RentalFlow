@@ -96,7 +96,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedAt: serverTimestamp(),
       };
 
-      // Initiate update and immediately transition UI for "instant" feel
+      // Non-blocking update to provide instant feedback
       updateDocumentNonBlocking(propertyRef, updateData);
 
       toast({ 
@@ -104,6 +104,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         description: "Your modifications are being synchronized." 
       });
       
+      // Immediate redirection for "instant" feel
       router.push(`/landlord/properties/${propertyId}`);
     } catch (error: any) {
       toast({ 

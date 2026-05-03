@@ -7,6 +7,7 @@ import {
   useFirestore, 
   useCollection, 
   useMemoFirebase, 
+  setDocumentNonBlocking,
   updateDocumentNonBlocking, 
   deleteDocumentNonBlocking,
   getLandlordCollectionQuery 
@@ -134,7 +135,8 @@ export default function InspectionsPage() {
     const inspectionId = doc(collection(db, 'inspections')).id;
     const inspectionRef = doc(db, 'inspections', inspectionId);
 
-    updateDocumentNonBlocking(inspectionRef, {
+    // Use setDocumentNonBlocking for initial creation
+    setDocumentNonBlocking(inspectionRef, {
       id: inspectionId,
       propertyId: selectedPropertyId,
       landlordId: user.uid,
@@ -143,7 +145,7 @@ export default function InspectionsPage() {
       status: 'scheduled',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    });
+    }, { merge: true });
 
     toast({ title: "Inspection Scheduled", description: `New inspection set for ${format(date, 'PPP')}` });
     setSelectedPropertyId('');
@@ -225,9 +227,9 @@ export default function InspectionsPage() {
       
       const isPass = data.status === 'pass';
       if (isPass) {
-        pdf.setTextColor(16, 185, 129); // Green (RGB)
+        pdf.setTextColor(16, 185, 129); // Professional Green
       } else {
-        pdf.setTextColor(239, 68, 68); // Red (RGB)
+        pdf.setTextColor(239, 68, 68); // Professional Red
       }
       
       pdf.setFont("helvetica", "bold");
