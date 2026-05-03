@@ -32,14 +32,14 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Tenant Profiles: Simplified for reliable listing using landlordId or userId
+    // Tenant Profiles: Optimized for explicit Landlord and Resident access
     match /tenantProfiles/{id} {
       allow read: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.userId == request.auth.uid);
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Documents: Secured by landlordId or membership
+    // Documents: Secured for listing via landlordId or membership
     match /documents/{id} {
       allow read: if isSignedIn() && (resource.data.landlordId == request.auth.uid || resource.data.userId == request.auth.uid || (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds));
       allow create: if isSignedIn();

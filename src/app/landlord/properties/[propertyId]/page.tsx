@@ -41,7 +41,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Align with simplified landlordId-based security rules
+    // Standardize to landlordId query to perfectly satisfy security rules
     return query(
       collection(db, 'tenantProfiles'), 
       where('propertyId', '==', propertyId),
@@ -54,14 +54,14 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     // Use direct landlordId query to satisfy simplified security rules
-    return getLandlordCollectionQuery(db, "documents", user.uid);
-  }, [db, user]);
+    return query(
+      collection(db, 'documents'),
+      where('propertyId', '==', propertyId),
+      where('landlordId', '==', user.uid)
+    );
+  }, [db, propertyId, user]);
 
-  const { data: documents } = useCollection(docsQuery);
-
-  const propertyDocuments = useMemo(() => {
-    return documents?.filter(d => d.propertyId === propertyId) || [];
-  }, [documents, propertyId]);
+  const { data: propertyDocuments } = useCollection(docsQuery);
 
   const [isEditing, setIsEditing] = useState(false);
   const [rentAmount, setRentAmount] = useState('');
@@ -232,7 +232,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     </div>
                     <div className="flex items-end">
                       <div className="relative w-full">
-                        <Input 
+                        <input 
                           type="file" 
                           id="doc-upload" 
                           className="hidden" 
@@ -240,10 +240,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           disabled={isUploadingDoc}
                         />
                         <Button asChild className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/20" disabled={isUploadingDoc}>
-                          <Label htmlFor="doc-upload" className="cursor-pointer">
+                          <label htmlFor="doc-upload" className="cursor-pointer flex items-center justify-center">
                             {isUploadingDoc ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
                             Upload To Vault
-                          </Label>
+                          </label>
                         </Button>
                       </div>
                     </div>
@@ -252,7 +252,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               </Card>
               
               <div className="grid gap-3">
-                {propertyDocuments.length === 0 ? (
+                {!propertyDocuments || propertyDocuments.length === 0 ? (
                   <p className="text-sm text-muted-foreground italic font-body py-12 text-center border-2 border-dashed rounded-2xl bg-white">
                     The vault is empty. Upload lease agreements or guides.
                   </p>

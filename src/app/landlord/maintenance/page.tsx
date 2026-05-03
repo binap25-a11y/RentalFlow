@@ -90,7 +90,7 @@ export default function MaintenancePage() {
   };
 
   const handleTriage = async (request: any) => {
-    if (!user) return;
+    if (!user || !db) return;
     setIsTriaging(request.id);
     try {
       const result = await triageMaintenanceRequest({ maintenanceRequest: request.description });
@@ -112,7 +112,7 @@ export default function MaintenancePage() {
   };
 
   const updateStatus = (request: any, newStatus: string) => {
-    if (!user) return;
+    if (!user || !db) return;
     const requestRef = doc(db, 'maintenanceRequests', request.id);
     updateDocumentNonBlocking(requestRef, {
       status: newStatus,

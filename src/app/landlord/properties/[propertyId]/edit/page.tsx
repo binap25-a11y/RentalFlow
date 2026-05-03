@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, use } from 'react';
-import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking, useStorage } from '@/firebase';
-import { doc, serverTimestamp } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useStorage } from '@/firebase';
+import { doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,8 +72,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSubmitting(true);
     
-    // Perceived Performance Optimization: Redirect and toast immediately if no image upload is needed
-    // If an image upload IS needed, we still show the spinner as that is a heavy operation
     try {
       let currentImageUrl = property?.imageUrl || previewUrl;
 
@@ -83,7 +81,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         currentImageUrl = await getDownloadURL(result.ref);
       }
 
-      updateDocumentNonBlocking(propertyRef, {
+      // Use await updateDoc to ensure persistence before navigation
+      await updateDoc(propertyRef, {
         addressLine1: address,
         city,
         zipCode,
@@ -97,7 +96,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       });
 
       toast({ title: "Asset Updated", description: "Property details saved successfully." });
-      router.push('/landlord/properties');
+      router.push(`/landlord/properties/${propertyId}`);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Save Failed", description: error.message });
       setIsSubmitting(false);
@@ -118,7 +117,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         </div>
       </div>
 
-      <Card className="border-none shadow-xl overflow-hidden rounded-[2rem] bg-white">
+      <Card className="border-none shadow-xl overflow-hidden rounded-[2rem] bg-white text-left">
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-1 lg:grid-cols-2">
             <div className="p-8 lg:p-12 bg-primary/5 border-r border-primary/10">
