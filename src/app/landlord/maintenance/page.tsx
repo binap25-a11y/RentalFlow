@@ -256,11 +256,11 @@ export default function MaintenancePage() {
                       </div>
 
                       {request.aiTriageNotes && (
-                        <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 flex gap-3 text-left">
+                        <div className="bg-accent/5 border border-accent/10 rounded-xl p-4 flex gap-3 text-left">
                           <BrainCircuit className="w-5 h-5 text-accent shrink-0 mt-0.5" />
                           <div>
                             <p className="text-[10px] font-bold text-accent uppercase tracking-widest mb-1">AI Recommendation Insight</p>
-                            <p className="text-sm text-accent-foreground/80 italic leading-relaxed">{request.aiTriageNotes}</p>
+                            <p className="text-sm text-black italic font-medium leading-relaxed">{request.aiTriageNotes}</p>
                           </div>
                         </div>
                       )}
@@ -282,16 +282,16 @@ export default function MaintenancePage() {
                       
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="outline" className="w-full rounded-xl font-bold h-11 border-primary/10 bg-white">
+                          <Button variant="outline" className="w-full rounded-xl font-bold h-11 border-primary/10 bg-white hover:bg-primary/5 hover:text-primary">
                             Update Status
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48 rounded-xl border-none shadow-xl">
-                          <DropdownMenuItem onClick={() => updateStatus(request, 'in-progress')} className="rounded-lg">
+                          <DropdownMenuItem onClick={() => updateStatus(request, 'in-progress')} className="rounded-lg cursor-pointer">
                             <PlayCircle className="w-4 h-4 mr-2 text-blue-500" />
                             Mark In Progress
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => updateStatus(request, 'completed')} className="rounded-lg">
+                          <DropdownMenuItem onClick={() => updateStatus(request, 'completed')} className="rounded-lg cursor-pointer">
                             <CheckCircle2 className="w-4 h-4 mr-2 text-green-500" />
                             Mark Completed
                           </DropdownMenuItem>
