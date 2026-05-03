@@ -1,12 +1,17 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Users, AlertTriangle, FileText, ArrowRight, ShieldAlert, Loader2 } from "lucide-react";
+import { 
+  Building2, Users, AlertTriangle, FileText, ArrowRight, 
+  ShieldAlert, Loader2, TrendingUp, Wallet, CheckCircle2 
+} from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery, getMemberCollectionQuery } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { isBefore, addDays, isValid, parseISO } from "date-fns";
 import { useMemo, useState, useEffect } from "react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 export default function LandlordDashboard() {
   const { user } = useUser();
@@ -32,30 +37,27 @@ export default function LandlordDashboard() {
   const { data: documents, loading: docsLoading } = useCollection(documentsQuery);
 
   const stats = useMemo(() => {
-    if (!isClient) return null;
+    if (!isClient || !properties) return null;
 
-    const total = properties?.length || 0;
-    const occupied = properties?.filter(p => p.isOccupied).length || 0;
-    const today = new Date();
-    const threshold = addDays(today, 30);
-    
-    const expiring = documents?.filter(d => {
-      if (!d.expiryDate || typeof d.expiryDate !== 'string') return false;
-      try {
-        const expiry = parseISO(d.expiryDate);
-        if (!isValid(expiry)) return false;
-        return isBefore(expiry, threshold);
-      } catch {
-        return false;
-      }
-    }).length || 0;
+    const total = properties.length || 0;
+    const occupied = properties.filter(p => p.isOccupied).length || 0;
+    const totalRent = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
+    const avgYield = total > 0 ? (occupied / total) * 100 : 0;
 
     return [
-      { label: 'Total Properties', value: total, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
-      { label: 'Occupied', value: occupied, icon: Users, color: 'text-violet-600', bg: 'bg-violet-50' },
-      { label: 'Expiring Soon', value: expiring, icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-50' },
+      { label: 'Portfolio Assets', value: total, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
+      { label: 'Monthly Revenue', value: `£${totalRent.toLocaleString()}`, icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+      { label: 'Occupancy Rate', value: `${avgYield.toFixed(0)}%`, icon: TrendingUp, color: 'text-violet-600', bg: 'bg-violet-50' },
     ];
-  }, [properties, documents, isClient]);
+  }, [properties, isClient]);
+
+  const chartData = useMemo(() => {
+    if (!isClient || !properties) return [];
+    return properties.map(p => ({
+      name: p.addressLine1.split(' ')[0],
+      rent: p.rentAmount || 0,
+    })).slice(0, 5);
+  }, [properties, isClient]);
 
   const expiringDocs = useMemo(() => {
     if (!isClient || !documents) return [];
@@ -84,21 +86,21 @@ export default function LandlordDashboard() {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
-        <p className="text-muted-foreground font-medium">Syncing portfolio data...</p>
+        <p className="text-muted-foreground font-medium font-body">Syncing portfolio data...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div>
-        <h1 className="text-3xl font-headline font-bold text-primary mb-2">Portfolio Overview</h1>
-        <p className="text-muted-foreground font-medium font-body">Monitoring your properties and resident requests.</p>
+      <div className="text-left">
+        <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Portfolio Performance</h1>
+        <p className="text-muted-foreground font-medium font-body">Yield analytics and asset monitoring.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats?.map((stat) => (
-          <Card key={stat.label} className="border-none shadow-sm hover:shadow-md transition-shadow">
+          <Card key={stat.label} className="border-none shadow-sm hover:shadow-md transition-shadow rounded-2xl">
             <CardContent className="pt-6 text-left">
               <div className="flex items-center justify-between mb-4">
                 <div className={`${stat.bg} ${stat.color} p-3 rounded-xl`}>
@@ -115,81 +117,81 @@ export default function LandlordDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 border-none shadow-sm">
-          <CardHeader>
+        <Card className="lg:col-span-2 border-none shadow-sm rounded-2xl overflow-hidden">
+          <CardHeader className="text-left pb-2">
             <CardTitle className="text-xl font-headline flex items-center">
-              <ShieldAlert className="w-5 h-5 mr-2 text-amber-500" />
-              Urgent Renewals
+              <TrendingUp className="w-5 h-5 mr-2 text-primary" />
+              Revenue by Asset
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {expiringDocs.length > 0 ? (
-              expiringDocs.map((doc) => {
-                let expiryDate: Date | null = null;
-                try {
-                  expiryDate = parseISO(doc.expiryDate!);
-                } catch {
-                  expiryDate = null;
-                }
-                
-                return (
-                  <div key={doc.id} className="flex items-center justify-between p-4 rounded-xl bg-amber-50 border border-amber-100">
-                    <div className="flex items-center gap-4">
-                      <div className="p-2 bg-white rounded-lg shadow-sm">
-                        <FileText className="w-5 h-5 text-amber-500" />
-                      </div>
-                      <div className="text-left">
-                        <h4 className="font-bold text-sm font-body">{doc.fileName || doc.documentType}</h4>
-                        <p className="text-xs text-muted-foreground font-body">
-                          Expires: {expiryDate && isValid(expiryDate) ? parseISO(doc.expiryDate!).toLocaleDateString() : 'Invalid Date'}
-                        </p>
-                      </div>
+          <CardContent className="h-[300px] pt-4">
+             <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 600}} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12}} />
+                  <Tooltip 
+                    cursor={{fill: '#f8fafc'}}
+                    contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
+                  />
+                  <Bar dataKey="rent" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} barSize={40} />
+                </BarChart>
+             </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-6">
+          <Card className="border-none shadow-sm rounded-2xl">
+            <CardHeader className="text-left">
+              <CardTitle className="text-lg font-headline flex items-center">
+                <ShieldAlert className="w-5 h-5 mr-2 text-amber-500" />
+                Urgent Renewals
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {expiringDocs.length > 0 ? (
+                expiringDocs.map((doc) => (
+                  <div key={doc.id} className="flex items-center justify-between p-3 rounded-xl bg-amber-50 border border-amber-100">
+                    <div className="text-left">
+                      <h4 className="font-bold text-xs font-body truncate max-w-[140px]">{doc.fileName}</h4>
+                      <p className="text-[10px] text-muted-foreground font-body">Exp: {parseISO(doc.expiryDate!).toLocaleDateString()}</p>
                     </div>
-                    <Button variant="ghost" size="sm" asChild>
+                    <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 rounded-full">
                       <Link href={`/landlord/properties/${doc.propertyId}`}>
                         <ArrowRight className="w-4 h-4" />
                       </Link>
                     </Button>
                   </div>
-                );
-              })
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="p-4 bg-muted rounded-full mb-4">
-                  <ShieldAlert className="w-8 h-8 text-muted-foreground" />
+                ))
+              ) : (
+                <div className="py-8 text-center bg-muted/20 rounded-xl">
+                  <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-500 mb-2" />
+                  <p className="text-xs text-muted-foreground font-bold uppercase">All Compliant</p>
                 </div>
-                <h3 className="text-lg font-semibold font-headline mb-1">All compliant</h3>
-                <p className="text-sm text-muted-foreground font-body max-w-xs">No documents require immediate renewal.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
 
-        <Card className="border-none shadow-sm h-fit">
-          <CardHeader>
-            <CardTitle className="text-xl font-headline">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            <Button className="w-full justify-start h-12 bg-primary hover:bg-primary/90 rounded-xl font-headline font-bold text-white" asChild>
-              <Link href="/landlord/properties">
-                <Building2 className="w-5 h-5 mr-3" />
-                Add New Property
-              </Link>
-            </Button>
-            <Button variant="outline" className="w-full justify-start h-12 rounded-xl border-primary/20 hover:bg-primary/5 font-headline font-bold" asChild>
-              <Link href="/landlord/tenants">
-                <Users className="w-5 h-5 mr-3 text-primary" />
-                Assign Resident
-              </Link>
-            </Button>
-            <Button variant="outline" className="w-full justify-start h-12 rounded-xl border-accent/20 hover:bg-accent/5 font-headline font-bold" asChild>
-              <Link href="/landlord/maintenance">
-                <AlertTriangle className="w-5 h-5 mr-3 text-accent" />
-                Maintenance Dashboard
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+          <Card className="border-none shadow-sm rounded-2xl">
+            <CardHeader className="text-left">
+              <CardTitle className="text-lg font-headline">Quick Navigation</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              <Button className="w-full justify-start h-11 bg-primary rounded-xl font-headline font-bold" asChild>
+                <Link href="/landlord/properties/new">
+                  <Building2 className="w-4 h-4 mr-3" />
+                  Add Property
+                </Link>
+              </Button>
+              <Button variant="outline" className="w-full justify-start h-11 rounded-xl font-headline font-bold" asChild>
+                <Link href="/landlord/messages">
+                  <Users className="w-4 h-4 mr-3" />
+                  Messaging Hub
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

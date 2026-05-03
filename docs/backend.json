@@ -12,7 +12,8 @@
         "firstName": { "type": "string" },
         "lastName": { "type": "string" },
         "phoneNumber": { "type": "string" },
-        "role": { "type": "string", "enum": ["landlord", "tenant"] }
+        "role": { "type": "string", "enum": ["landlord", "tenant"] },
+        "avatarUrl": { "type": "string", "format": "uri" }
       },
       "required": ["id", "email", "firstName", "lastName", "role"]
     },
@@ -31,10 +32,12 @@
         "numberOfBathrooms": { "type": "number" },
         "description": { "type": "string" },
         "isActive": { "type": "boolean" },
+        "isOccupied": { "type": "boolean" },
         "tenantIds": { "type": "array", "items": { "type": "string" } },
         "memberIds": { "type": "array", "items": { "type": "string" } },
         "rentAmount": { "type": "number" },
-        "imageUrl": { "type": "string" }
+        "imageUrl": { "type": "string" },
+        "imageUrls": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["id", "landlordId", "addressLine1", "city", "zipCode", "isActive"]
     },
@@ -71,9 +74,25 @@
         "fileName": { "type": "string" },
         "documentType": { "type": "string" },
         "uploadDate": { "type": "string", "format": "date-time" },
-        "expiryDate": { "type": "string", "format": "date" }
+        "expiryDate": { "type": "string", "format": "date" },
+        "aiSummary": { "type": "string" }
       },
       "required": ["id", "propertyId", "landlordId", "fileUrl", "fileName"]
+    },
+    "Message": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Message",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "senderId": { "type": "string" },
+        "receiverId": { "type": "string" },
+        "propertyId": { "type": "string" },
+        "text": { "type": "string" },
+        "timestamp": { "type": "object" },
+        "memberIds": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "senderId", "receiverId", "text", "memberIds"]
     },
     "MaintenanceRequest": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -166,6 +185,14 @@
           "entityName": "Inspection",
           "schema": { "$ref": "#/backend/entities/Inspection" },
           "description": "Property inspection reports."
+        }
+      },
+      {
+        "path": "/messages/{messageId}",
+        "definition": {
+          "entityName": "Message",
+          "schema": { "$ref": "#/backend/entities/Message" },
+          "description": "Platform messaging records."
         }
       }
     ]
