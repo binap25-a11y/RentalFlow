@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { triageMaintenanceRequest } from "@/ai/flows/maintenance-request-triage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, getLandlordCollectionQuery } from "@/firebase";
-import { doc, serverTimestamp } from "firebase/firestore";
-import { Wrench, Sparkles, Clock, Filter, BrainCircuit, Loader2, CheckCircle2, PlayCircle } from "lucide-react";
+import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, getLandlordCollectionQuery } from "@/firebase";
+import { doc, serverTimestamp, collection } from "firebase/firestore";
+import { Wrench, Sparkles, Clock, Filter, BrainCircuit, Loader2, CheckCircle2, PlayCircle, Plus, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, isValid } from "date-fns";
 import {
@@ -16,12 +16,39 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function MaintenancePage() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
+  
   const [isTriaging, setIsTriaging] = useState<string | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Form state for new request
+  const [newRequestTitle, setNewRequestTitle] = useState('');
+  const [newRequestDesc, setNewRequestDesc] = useState('');
+  const [selectedPropertyId, setSelectedPropertyId] = useState('');
+
+  const propertiesQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return getLandlordCollectionQuery(db, "properties", user.uid);
+  }, [db, user]);
+
+  const { data: properties } = useCollection(propertiesQuery);
 
   const maintenanceQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -29,6 +56,42 @@ export default function MaintenancePage() {
   }, [db, user]);
 
   const { data: requests, loading } = useCollection(maintenanceQuery);
+
+  const handleCreateRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !db || !selectedPropertyId) return;
+
+    setIsSubmitting(true);
+    const requestId = doc(collection(db, 'maintenanceRequests')).id;
+    const requestRef = doc(db, 'maintenanceRequests', requestId);
+    const property = properties?.find(p => p.id === selectedPropertyId);
+
+    const data = {
+      id: requestId,
+      propertyId: selectedPropertyId,
+      landlordId: user.uid,
+      tenantId: property?.tenantIds?.[0] || 'landlord-discovered',
+      memberIds: property?.memberIds || [user.uid],
+      title: newRequestTitle,
+      description: newRequestDesc,
+      status: 'pending',
+      priority: 'routine',
+      category: 'other',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+
+    setDocumentNonBlocking(requestRef, data, { merge: true });
+
+    toast({ title: "Request Logged", description: "Maintenance task has been added to the ledger." });
+    
+    // Cleanup
+    setIsCreateDialogOpen(false);
+    setIsSubmitting(false);
+    setNewRequestTitle('');
+    setNewRequestDesc('');
+    setSelectedPropertyId('');
+  };
 
   const handleTriage = async (request: any) => {
     if (!user) return;
@@ -84,13 +147,59 @@ export default function MaintenancePage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary mb-2">Maintenance Management</h1>
           <p className="text-muted-foreground font-medium">Review, prioritize and assign maintenance tasks.</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" className="rounded-xl">
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-6 shadow-lg shadow-primary/20">
+                <Plus className="w-4 h-4 mr-2" />
+                Log New Request
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px] rounded-2xl">
+              <form onSubmit={handleCreateRequest}>
+                <DialogHeader className="text-left">
+                  <DialogTitle className="text-xl font-bold font-headline">Log Maintenance Task</DialogTitle>
+                  <DialogDescription>Manually add a maintenance issue discovered or reported via phone.</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-6 text-left">
+                  <div className="space-y-2">
+                    <Label htmlFor="property" className="font-bold text-xs uppercase text-primary/60 tracking-wider">Property Asset</Label>
+                    <select 
+                      id="property" 
+                      className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow"
+                      value={selectedPropertyId}
+                      onChange={(e) => setSelectedPropertyId(e.target.value)}
+                      required
+                    >
+                      <option value="">Select a property...</option>
+                      {properties?.map(prop => (
+                        <option key={prop.id} value={prop.id}>{prop.addressLine1}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="title" className="font-bold text-xs uppercase text-primary/60 tracking-wider">Issue Title</Label>
+                    <Input id="title" value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="e.g., HVAC failure in Unit 4" className="rounded-xl h-11" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="desc" className="font-bold text-xs uppercase text-primary/60 tracking-wider">Detailed Description</Label>
+                    <Textarea id="desc" value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Provide as much context as possible for AI triage..." className="rounded-xl min-h-[100px]" />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20" disabled={isSubmitting}>
+                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Log Request"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+          <Button variant="outline" className="rounded-xl border-primary/10 h-11">
             <Filter className="w-4 h-4 mr-2" />
             Filter
           </Button>
@@ -99,25 +208,27 @@ export default function MaintenancePage() {
 
       <div className="grid gap-6">
         {!requests || requests.length === 0 ? (
-          <Card className="border-dashed border-2 py-20 flex flex-col items-center justify-center text-center">
-            <div className="p-4 bg-muted rounded-full mb-4">
-              <Wrench className="w-8 h-8 text-muted-foreground" />
+          <Card className="border-dashed border-2 py-24 flex flex-col items-center justify-center text-center bg-muted/10 rounded-[2rem]">
+            <div className="p-6 bg-white rounded-full mb-6 shadow-sm">
+              <Wrench className="w-10 h-10 text-primary/20" />
             </div>
-            <h3 className="text-lg font-bold">No active requests</h3>
-            <p className="text-sm text-muted-foreground max-w-xs">Maintenance requests submitted by your residents will appear here.</p>
+            <h3 className="text-xl font-bold font-headline text-primary/40">No active requests</h3>
+            <p className="text-sm text-muted-foreground max-w-xs mt-2 font-medium">Maintenance tasks will appear here once logged by you or your residents.</p>
           </Card>
         ) : (
           requests
             .slice()
             .sort((a, b) => {
-              const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-              const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+              const dateA = a.createdAt ? (a.createdAt.seconds || 0) : 0;
+              const dateB = b.createdAt ? (b.createdAt.seconds || 0) : 0;
               return dateB - dateA;
             })
             .map((request) => {
-              const createdAt = request.createdAt ? new Date(request.createdAt) : null;
+              const createdAt = request.createdAt ? new Date(request.createdAt.seconds * 1000) : null;
+              const property = properties?.find(p => p.id === request.propertyId);
+              
               return (
-                <Card key={request.id} className="border-none shadow-sm overflow-hidden group">
+                <Card key={request.id} className="border-none shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-0">
                     <div className="p-6 md:col-span-3 space-y-4">
                       <div className="flex flex-wrap items-center gap-3">
@@ -130,22 +241,26 @@ export default function MaintenancePage() {
                         <Badge variant="secondary" className="capitalize text-[10px] font-bold">
                           {request.category || 'Uncategorized'}
                         </Badge>
-                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tight ml-auto">
+                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tight ml-auto flex items-center">
                           <Clock className="w-3 h-3 mr-1" /> {createdAt && isValid(createdAt) ? format(createdAt, 'PPp') : 'Just now'}
                         </span>
                       </div>
                       
-                      <div className="space-y-2">
+                      <div className="space-y-2 text-left">
+                        <div className="flex items-center gap-2 text-primary/60 font-bold text-xs uppercase tracking-wider">
+                          <Building2 className="w-3 h-3" />
+                          {property?.addressLine1 || 'Unknown Property'}
+                        </div>
                         <h3 className="text-xl font-bold font-headline group-hover:text-primary transition-colors">{request.title || 'Maintenance Issue'}</h3>
                         <p className="text-muted-foreground leading-relaxed">{request.description}</p>
                       </div>
 
                       {request.aiTriageNotes && (
-                        <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 flex gap-3">
+                        <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 flex gap-3 text-left">
                           <BrainCircuit className="w-5 h-5 text-accent shrink-0 mt-0.5" />
                           <div>
                             <p className="text-[10px] font-bold text-accent uppercase tracking-widest mb-1">AI Recommendation Insight</p>
-                            <p className="text-sm text-accent-foreground/80 italic">{request.aiTriageNotes}</p>
+                            <p className="text-sm text-accent-foreground/80 italic leading-relaxed">{request.aiTriageNotes}</p>
                           </div>
                         </div>
                       )}
@@ -167,16 +282,16 @@ export default function MaintenancePage() {
                       
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="outline" className="w-full rounded-xl font-bold h-11 border-primary/10">
+                          <Button variant="outline" className="w-full rounded-xl font-bold h-11 border-primary/10 bg-white">
                             Update Status
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48 rounded-xl">
-                          <DropdownMenuItem onClick={() => updateStatus(request, 'in-progress')}>
+                        <DropdownMenuContent align="end" className="w-48 rounded-xl border-none shadow-xl">
+                          <DropdownMenuItem onClick={() => updateStatus(request, 'in-progress')} className="rounded-lg">
                             <PlayCircle className="w-4 h-4 mr-2 text-blue-500" />
                             Mark In Progress
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => updateStatus(request, 'completed')}>
+                          <DropdownMenuItem onClick={() => updateStatus(request, 'completed')} className="rounded-lg">
                             <CheckCircle2 className="w-4 h-4 mr-2 text-green-500" />
                             Mark Completed
                           </DropdownMenuItem>
