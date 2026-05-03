@@ -1,8 +1,7 @@
-
 "use client";
 
 import { useState, use, useMemo } from 'react';
-import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useStorage } from '@/firebase';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useStorage, getMemberCollectionQuery } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,10 +48,16 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(collection(db, 'documents'), where('propertyId', '==', propertyId));
-  }, [db, propertyId]);
+    // Standardize to membership query for security compliance
+    return getMemberCollectionQuery(db, "documents", user.uid);
+  }, [db, user]);
 
   const { data: documents } = useCollection(docsQuery);
+
+  // Filter documents client-side for this property to avoid redundant queries
+  const propertyDocuments = useMemo(() => {
+    return documents?.filter(d => d.propertyId === propertyId) || [];
+  }, [documents, propertyId]);
 
   const [isEditing, setIsEditing] = useState(false);
   const [rentAmount, setRentAmount] = useState('');
@@ -236,12 +241,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               </Card>
               
               <div className="grid gap-3">
-                {!documents || documents.length === 0 ? (
+                {propertyDocuments.length === 0 ? (
                   <p className="text-sm text-muted-foreground italic font-body py-12 text-center border-2 border-dashed rounded-2xl bg-white">
                     The vault is empty. Upload lease agreements or guides.
                   </p>
                 ) : (
-                  documents.map(doc => (
+                  propertyDocuments.map(doc => (
                     <div key={doc.id} className="flex items-center justify-between p-4 bg-white rounded-xl border border-primary/5 shadow-sm hover:shadow-md transition-shadow">
                       <div className="flex items-center gap-4">
                         <div className="p-2 bg-blue-50 rounded-lg">

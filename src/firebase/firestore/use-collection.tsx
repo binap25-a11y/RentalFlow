@@ -46,13 +46,11 @@ export function useCollection<T = any>(
         setLoading(false);
       },
       async (serverError: FirestoreError) => {
-        // Attempt to derive a path for the error context.
-        // CollectionReferences have a .path; complex Queries might not expose it easily.
+        // Safe path extraction for debugging
         let path = 'collection-group';
-        if ('path' in ref) {
-          path = (ref as CollectionReference).path;
-        } else if ((ref as any)._query?.path?.segments) {
-          // Internal access as a fallback to improve developer error messaging.
+        if (ref && 'path' in ref) {
+          path = (ref as any).path;
+        } else if (ref && (ref as any)._query?.path?.segments) {
           path = (ref as any)._query.path.segments.join('/');
         }
         
