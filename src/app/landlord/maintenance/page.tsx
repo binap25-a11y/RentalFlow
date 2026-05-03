@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -177,13 +176,13 @@ export default function MaintenancePage() {
                   </div>
                 )}
               </CardContent>
-              <CardFooter className="bg-muted/5 p-4 flex flex-col sm:flex-row gap-3 border-t">
-                <Button className="flex-1 bg-white hover:bg-primary/5 text-primary rounded-xl font-bold h-12 border border-primary/20 shadow-sm" onClick={() => handleTriage(request)} disabled={isTriaging === request.id}>
+              <CardFooter className="bg-muted/5 p-4 flex flex-wrap gap-3 border-t">
+                <Button className="flex-1 min-w-[140px] bg-white hover:bg-primary/5 text-primary rounded-xl font-bold h-12 border border-primary/20 shadow-sm" onClick={() => handleTriage(request)} disabled={isTriaging === request.id}>
                   {isTriaging === request.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
                   AI Triage Analysis
                 </Button>
                 <Dialog open={isLoggingCost === request.id} onOpenChange={(open) => !open && setIsLoggingCost(null)}>
-                  <Button variant="outline" className="flex-1 rounded-xl font-bold h-12 border-primary/20 bg-white shadow-sm" onClick={() => setIsLoggingCost(request.id)}>
+                  <Button variant="outline" className="flex-1 min-w-[140px] rounded-xl font-bold h-12 border-primary/20 bg-white shadow-sm" onClick={() => setIsLoggingCost(request.id)}>
                     <PoundSterling className="w-4 h-4 mr-2" /> Log Expense
                   </Button>
                   <DialogContent className="rounded-2xl border-none shadow-2xl">
@@ -202,7 +201,7 @@ export default function MaintenancePage() {
                 </Dialog>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="flex-1 rounded-xl font-bold h-12 border-primary/20 bg-white shadow-sm">Update Status</Button>
+                    <Button variant="outline" className="flex-1 min-w-[140px] rounded-xl font-bold h-12 border-primary/20 bg-white shadow-sm">Update Status</Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="rounded-xl border-none shadow-xl min-w-[200px]" align="end">
                     <DropdownMenuItem className="py-3 px-4 font-bold font-body" onClick={() => updateStatus(request, 'in-progress')}>
