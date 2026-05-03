@@ -135,7 +135,6 @@ export default function InspectionsPage() {
     const inspectionId = doc(collection(db, 'inspections')).id;
     const inspectionRef = doc(db, 'inspections', inspectionId);
 
-    // Use setDocumentNonBlocking for initial creation
     setDocumentNonBlocking(inspectionRef, {
       id: inspectionId,
       propertyId: selectedPropertyId,

@@ -10,12 +10,13 @@ import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNo
 import { doc, serverTimestamp, collection } from "firebase/firestore";
 import { Wrench, Sparkles, Clock, BrainCircuit, Loader2, CheckCircle2, PlayCircle, Plus, Building2, PoundSterling } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { format, isValid } from "date-fns";
+import { format } from "date-fns";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 export default function MaintenancePage() {
   const { user } = useUser();

@@ -73,6 +73,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSubmitting(true);
     
+    // Instant UI redirect while background sync completes
+    router.push(`/landlord/properties/${propertyId}`);
+    
     try {
       let currentImageUrl = property?.imageUrl || previewUrl;
 
@@ -101,8 +104,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         title: "Portfolio Updated", 
         description: "Your modifications are being synchronized." 
       });
-      
-      router.push(`/landlord/properties/${propertyId}`);
     } catch (error: any) {
       toast({ 
         variant: "destructive", 

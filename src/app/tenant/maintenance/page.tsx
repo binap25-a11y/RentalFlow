@@ -103,7 +103,7 @@ export default function TenantMaintenancePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <Card className="lg:col-span-1 border-none shadow-sm h-fit text-left">
             <CardHeader className="bg-primary text-white rounded-t-2xl">
-              <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5" /> Maintenance Shield</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-white"><Sparkles className="w-5 h-5" /> Flow Shield</CardTitle>
               <CardDescription className="text-white/70">Let Flow Assistant help you troubleshoot before reporting.</CardDescription>
             </CardHeader>
             <CardContent className="pt-6 space-y-4">
@@ -131,7 +131,7 @@ export default function TenantMaintenancePage() {
                   )}
                   <div className="flex gap-2">
                     <Button variant="outline" className="flex-1 rounded-xl font-bold" onClick={() => setTroubleshootResult(null)}>Try Again</Button>
-                    <Button className="flex-1 rounded-xl font-bold bg-primary text-white" onClick={() => handleSubmit()}>Still Need Help</Button>
+                    <Button className="flex-1 rounded-xl font-bold bg-primary text-white shadow-lg shadow-primary/20" onClick={() => handleSubmit()}>Still Need Help</Button>
                   </div>
                 </div>
               ) : (
@@ -144,7 +144,7 @@ export default function TenantMaintenancePage() {
                     <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Description</Label>
                     <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Tell us what's happening..." className="rounded-xl min-h-[120px]" />
                   </div>
-                  <Button type="button" className="w-full rounded-xl h-12 bg-accent text-white font-bold" disabled={isTroubleshooting || !description} onClick={handleTroubleshoot}>
+                  <Button type="button" className="w-full rounded-xl h-12 bg-accent text-white font-bold shadow-lg shadow-accent/20" disabled={isTroubleshooting || !description} onClick={handleTroubleshoot}>
                     {isTroubleshooting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
                     Troubleshoot with AI
                   </Button>
@@ -161,9 +161,9 @@ export default function TenantMaintenancePage() {
             </h3>
             <div className="grid gap-4">
               {isRequestsLoading ? (
-                <div className="flex justify-center py-20"><Loader2 className="animate-spin" /></div>
+                <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" /></div>
               ) : !requests || requests.length === 0 ? (
-                <div className="py-20 text-center bg-muted/20 rounded-2xl border-2 border-dashed">
+                <div className="py-20 text-center bg-muted/20 rounded-2xl border-2 border-dashed border-primary/10">
                   <p className="text-muted-foreground font-bold">No requests found.</p>
                 </div>
               ) : (

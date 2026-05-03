@@ -14,11 +14,7 @@ service cloud.firestore {
 
     // Properties: Secured by landlordId or tenant membership
     match /properties/{id} {
-      allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        (resource.data.tenantIds != null && request.auth.uid in resource.data.tenantIds)
-      );
-      allow get: if isSignedIn() && (
+      allow list, get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         (resource.data.tenantIds != null && request.auth.uid in resource.data.tenantIds)
       );
@@ -26,13 +22,9 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Tenant Profiles: Direct ownership check for reliable listing
+    // Tenant Profiles: Standardized ownership access for reliable listing
     match /tenantProfiles/{id} {
-      allow read: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.userId == request.auth.uid
-      );
-      allow list: if isSignedIn() && (
+      allow list, read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.userId == request.auth.uid
       );
@@ -42,12 +34,7 @@ service cloud.firestore {
 
     // Documents: Secured by landlordId, userId, or membership
     match /documents/{id} {
-      allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.userId == request.auth.uid ||
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
-      );
-      allow get: if isSignedIn() && (
+      allow list, get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.userId == request.auth.uid ||
         (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
@@ -58,12 +45,7 @@ service cloud.firestore {
 
     // Maintenance: Secured by landlordId, tenantId or membership
     match /maintenanceRequests/{id} {
-      allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        resource.data.tenantId == request.auth.uid ||
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
-      );
-      allow get, update, delete: if isSignedIn() && (
+      allow list, get, update, delete: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         resource.data.tenantId == request.auth.uid ||
         (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
@@ -73,11 +55,7 @@ service cloud.firestore {
 
     // Inspections: Landlords and members
     match /inspections/{id} {
-      allow list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
-      );
-      allow get, update, delete: if isSignedIn() && (
+      allow list, get, update, delete: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
       );
