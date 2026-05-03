@@ -77,7 +77,7 @@ export default function LandlordMessagingPage() {
     <div className="h-[calc(100vh-8rem)] flex flex-col md:flex-row gap-6 animate-in fade-in duration-500">
       <Card className="w-full md:w-80 border-none shadow-sm flex flex-col rounded-2xl overflow-hidden">
         <CardHeader className="bg-primary/5 p-4 border-b">
-          <CardTitle className="text-lg font-headline flex items-center gap-2">
+          <CardTitle className="text-lg font-headline flex items-center gap-2 text-left">
             <MessageSquare className="w-5 h-5 text-primary" /> Conversations
           </CardTitle>
         </CardHeader>

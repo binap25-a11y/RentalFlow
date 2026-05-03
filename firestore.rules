@@ -12,14 +12,13 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
-    // Properties: Secured by landlordId or membership
+    // Properties: Secured by landlordId, tenantIds, or memberIds
     match /properties/{id} {
-      allow read: if isSignedIn() && (
+      allow read, list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds) ||
         (resource.data.tenantIds != null && request.auth.uid in resource.data.tenantIds)
       );
-      allow list: if isSignedIn();
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
@@ -34,7 +33,7 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Documents: Secured for landlords and assigned tenants
+    // Documents: Secured for landlords and assigned tenants via membership
     match /documents/{id} {
       allow read, list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
