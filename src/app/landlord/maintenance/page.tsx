@@ -221,7 +221,7 @@ export default function MaintenancePage() {
               
               return (
                 <Card key={request.id} className="border-none shadow-sm overflow-hidden group hover:shadow-md transition-shadow bg-white rounded-2xl">
-                  <CardContent className="p-6">
+                  <CardContent className="p-6 pb-4">
                     <div className="space-y-4">
                       <div className="flex flex-wrap items-center gap-3 mb-2">
                         <Badge className={`uppercase text-[10px] font-bold border ${getStatusStyles(status)}`}>

@@ -41,20 +41,23 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(collection(db, 'tenantProfiles'), where('propertyId', '==', propertyId));
-  }, [db, propertyId]);
+    // Standardize query to match security rules (Option A)
+    return query(
+      collection(db, 'tenantProfiles'), 
+      where('propertyId', '==', propertyId),
+      where('landlordId', '==', user.uid)
+    );
+  }, [db, propertyId, user]);
 
   const { data: tenants } = useCollection(tenantsQuery);
 
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Standardize to membership query for security compliance
     return getMemberCollectionQuery(db, "documents", user.uid);
   }, [db, user]);
 
   const { data: documents } = useCollection(docsQuery);
 
-  // Filter documents client-side for this property to avoid redundant queries
   const propertyDocuments = useMemo(() => {
     return documents?.filter(d => d.propertyId === propertyId) || [];
   }, [documents, propertyId]);
@@ -145,9 +148,16 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     <p className="text-3xl font-bold text-primary font-headline">£{property.rentAmount}</p>
                   )}
                 </div>
-                <Button variant={isEditing ? "default" : "outline"} onClick={isEditing ? handleUpdateRent : () => setIsEditing(true)} className="rounded-xl font-bold h-11">
-                  {isEditing ? <><Save className="w-4 h-4 mr-2" /> Save</> : <><Edit3 className="w-4 h-4 mr-2" /> Edit Rent</>}
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant={isEditing ? "default" : "outline"} onClick={isEditing ? handleUpdateRent : () => setIsEditing(true)} className="rounded-xl font-bold h-11">
+                    {isEditing ? <><Save className="w-4 h-4 mr-2" /> Save</> : <><Edit3 className="w-4 h-4 mr-2" /> Edit Rent</>}
+                  </Button>
+                  <Button variant="outline" className="rounded-xl font-bold h-11" asChild>
+                    <Link href={`/landlord/properties/${propertyId}/edit`}>
+                      Full Specs
+                    </Link>
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
