@@ -73,7 +73,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSubmitting(true);
     
-    // Non-blocking redirect for instant experience
+    // Redirect immediately for an "instant" experience
     router.push(`/landlord/properties/${propertyId}`);
     
     try {
@@ -105,16 +105,15 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         description: "Your modifications are being synchronized." 
       });
     } catch (error: any) {
-      // If redirection fails, at least reset submission state
-      setIsSubmitting(false);
+      // In non-blocking pattern, the redirect already happened
     }
   };
 
   if (isLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12">
-      <div className="flex items-center gap-4 text-left">
+    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left">
+      <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
           <ArrowLeft className="w-5 h-5" />
         </Button>
@@ -124,7 +123,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         </div>
       </div>
 
-      <Card className="border-none shadow-xl overflow-hidden rounded-[2rem] bg-white text-left">
+      <Card className="border-none shadow-xl overflow-hidden rounded-[2rem] bg-white">
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-1 lg:grid-cols-2">
             <div className="p-8 lg:p-12 bg-primary/5 border-r border-primary/10">
@@ -148,7 +147,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
             </div>
 
             <div className="p-8 lg:p-12 space-y-8">
-              <div className="grid grid-cols-1 gap-6 text-left">
+              <div className="grid grid-cols-1 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="address" className="font-bold text-xs uppercase text-primary/60 font-headline">Street Address</Label>
                   <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="123 Example Street" className="rounded-xl h-12 bg-muted/20 border-none focus:ring-2 focus:ring-primary font-body" />
