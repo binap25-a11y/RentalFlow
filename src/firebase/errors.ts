@@ -76,7 +76,7 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   }
 
   const dbPrefix = '/databases/(default)/documents';
-  let rawPath = context.path || "collection-group";
+  let rawPath = context.path || "unknown-collection";
   
   if (rawPath.includes('[Collection Group]')) {
     rawPath = rawPath.replace('[Collection Group] ', '(collectionGroup)/');

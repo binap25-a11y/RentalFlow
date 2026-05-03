@@ -26,7 +26,7 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Tenant Profiles: Explicitly allow landlords and tenants to list their own records
+    // Tenant Profiles: Explicitly allow landlords and tenants to access their own records
     match /tenantProfiles/{id} {
       allow list, read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -47,8 +46,15 @@ export function useCollection<T = any>(
         setLoading(false);
       },
       async (serverError: FirestoreError) => {
-        // Safe extraction of path for error context
-        const path = (ref as any).path || 'collection-group';
+        // Attempt to derive a path for the error context.
+        // CollectionReferences have a .path; complex Queries might not expose it easily.
+        let path = 'collection-group';
+        if ('path' in ref) {
+          path = (ref as CollectionReference).path;
+        } else if ((ref as any)._query?.path?.segments) {
+          // Internal access as a fallback to improve developer error messaging.
+          path = (ref as any)._query.path.segments.join('/');
+        }
         
         // Construct rich, contextual error for the developer overlay
         const permissionError = new FirestorePermissionError({
