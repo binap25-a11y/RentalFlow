@@ -46,9 +46,12 @@ export function useCollection<T = any>(
         setLoading(false);
       },
       async (serverError: FirestoreError) => {
+        // Attempt to extract the path from the reference for better error context
+        const path = (ref as any).path || (ref as any)._query?.path?.segments?.join('/') || 'collection-group';
+        
         // Construct rich, contextual error for the developer overlay
         const permissionError = new FirestorePermissionError({
-          path: (ref as any).path || 'collection-group',
+          path: path,
           operation: 'list',
         } satisfies SecurityRuleContext);
 

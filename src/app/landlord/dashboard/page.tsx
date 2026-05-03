@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Users, AlertTriangle, FileText, ArrowRight, ShieldAlert, Loader2 } from "lucide-react";
-import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery } from "@/firebase";
+import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery, getMemberCollectionQuery } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { isBefore, addDays, isValid, parseISO } from "date-fns";
@@ -26,7 +26,7 @@ export default function LandlordDashboard() {
 
   const documentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return getLandlordCollectionQuery(db, "documents", user.uid);
+    return getMemberCollectionQuery(db, "documents", user.uid);
   }, [db, user]);
 
   const { data: documents, loading: docsLoading } = useCollection(documentsQuery);

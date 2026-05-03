@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -6,9 +5,9 @@ import { triageMaintenanceRequest } from "@/ai/flows/maintenance-request-triage"
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, getLandlordCollectionQuery } from "@/firebase";
+import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, getMemberCollectionQuery } from "@/firebase";
 import { doc, serverTimestamp, collection } from "firebase/firestore";
-import { Wrench, Sparkles, Clock, Filter, BrainCircuit, Loader2, CheckCircle2, PlayCircle, Plus, Building2 } from "lucide-react";
+import { Wrench, Sparkles, Clock, BrainCircuit, Loader2, CheckCircle2, PlayCircle, Plus, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, isValid } from "date-fns";
 import {
@@ -24,7 +23,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,14 +43,14 @@ export default function MaintenancePage() {
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return getLandlordCollectionQuery(db, "properties", user.uid);
+    return getMemberCollectionQuery(db, "properties", user.uid);
   }, [db, user]);
 
   const { data: properties } = useCollection(propertiesQuery);
 
   const maintenanceQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return getLandlordCollectionQuery(db, "maintenanceRequests", user.uid);
+    return getMemberCollectionQuery(db, "maintenanceRequests", user.uid);
   }, [db, user]);
 
   const { data: requests, loading } = useCollection(maintenanceQuery);
@@ -152,13 +150,11 @@ export default function MaintenancePage() {
           <p className="text-muted-foreground font-medium font-body">Review, prioritize and assign maintenance tasks.</p>
         </div>
         <div className="flex gap-3">
+          <Button onClick={() => setIsCreateDialogOpen(true)} className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-6 shadow-lg shadow-primary/20">
+            <Plus className="w-4 h-4 mr-2" />
+            Log New Request
+          </Button>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-6 shadow-lg shadow-primary/20">
-                <Plus className="w-4 h-4 mr-2" />
-                Log New Request
-              </Button>
-            </DialogTrigger>
             <DialogContent className="sm:max-w-[500px] rounded-2xl border-none shadow-2xl">
               <form onSubmit={handleCreateRequest}>
                 <DialogHeader className="text-left">
@@ -265,7 +261,7 @@ export default function MaintenancePage() {
 
                   <CardFooter className="bg-muted/10 p-4 flex flex-col md:flex-row gap-3 border-t border-muted/20">
                     <Button 
-                      className="w-full md:flex-1 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-primary/5 font-bold h-11 px-6 transition-all"
+                      className="w-full md:flex-1 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-primary/5 font-bold h-11 px-6 transition-all border border-transparent"
                       onClick={() => handleTriage(request)}
                       disabled={isTriaging === request.id}
                     >

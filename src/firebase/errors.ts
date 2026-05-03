@@ -76,7 +76,7 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   }
 
   const dbPrefix = '/databases/(default)/documents';
-  let rawPath = context.path || "";
+  let rawPath = context.path || "collection-group";
   
   // 1. Normalize collection group markers to prevent double-prefixing
   if (rawPath.includes('[Collection Group]')) {
@@ -93,7 +93,7 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   cleanPath = cleanPath.replace(/^\/+|\/+$/g, '');
 
   // 3. Build the final absolute path
-  const finalPath = cleanPath ? `${dbPrefix}/${cleanPath}` : dbPrefix;
+  const finalPath = cleanPath ? `${dbPrefix}/${cleanPath}` : `${dbPrefix}/unknown`;
 
   return {
     auth: authObject,
