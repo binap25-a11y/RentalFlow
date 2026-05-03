@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -25,7 +26,7 @@ import { format } from "date-fns";
 import { 
   Calendar as CalendarIcon, MapPin, Loader2, Download, 
   CheckCircle2, ClipboardList, ShieldAlert, Home, Wrench, 
-  Check, X, AlertTriangle, Info, Trash2
+  Check, X, AlertTriangle, Info, Trash2, Edit3
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -107,6 +108,11 @@ export default function InspectionsPage() {
   const [activeInspection, setActiveInspection] = useState<any>(null);
   const [structuredFindings, setStructuredFindings] = useState<Record<string, { status: 'pass' | 'fail', notes: string }>>({});
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleOpenAudit = (inspection: any) => {
+    setActiveInspection(inspection);
+    setStructuredFindings(inspection.structuredFindings || {});
+  };
 
   const handleStatusChange = (itemId: string, status: 'pass' | 'fail') => {
     setStructuredFindings(prev => ({
@@ -293,7 +299,7 @@ export default function InspectionsPage() {
       updateDocumentNonBlocking(inspectionRef, completedData);
       downloadPDF(completedData);
 
-      toast({ title: "Inspection Completed", description: "Audit finalized and report downloaded." });
+      toast({ title: "Audit Finalized", description: "Official record updated and report downloaded." });
       setActiveInspection(null);
       setStructuredFindings({});
     } catch (error: any) {
@@ -427,82 +433,92 @@ export default function InspectionsPage() {
                             </p>
                           </div>
                           
-                          {inspection.status === 'scheduled' && (
-                            <Dialog open={activeInspection?.id === inspection.id} onOpenChange={(open) => !open && setActiveInspection(null)}>
-                              <DialogTrigger asChild>
-                                <Button className="w-full md:w-auto rounded-xl bg-accent hover:bg-accent/90 text-white font-bold h-10 px-6" onClick={() => setActiveInspection(inspection)}>
-                                  Start Audit
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="sm:max-w-[700px] p-0 rounded-2xl border-none shadow-2xl flex flex-col h-[85vh] overflow-hidden">
-                                <div className="p-6 bg-primary/5 border-b text-left">
-                                  <DialogTitle className="text-2xl font-headline font-bold">Comprehensive Audit</DialogTitle>
-                                  <DialogDescription className="font-medium">Conducting full safety & condition audit for property registry.</DialogDescription>
-                                </div>
-                                
-                                <ScrollArea className="flex-1">
-                                  <div className="p-6 space-y-8">
-                                    <Tabs defaultValue="exterior">
-                                      <TabsList className="w-full grid grid-cols-4 lg:grid-cols-7 h-auto bg-muted/50 p-1 rounded-xl">
-                                        {INSPECTION_SECTIONS.map(s => (
-                                          <TabsTrigger key={s.id} value={s.id} className="rounded-lg py-2">
-                                            <s.icon className="w-4 h-4" />
-                                          </TabsTrigger>
-                                        ))}
-                                      </TabsList>
-                                      
-                                      {INSPECTION_SECTIONS.map(section => (
-                                        <TabsContent key={section.id} value={section.id} className="mt-6 space-y-6">
-                                          <div className="flex items-center gap-2 mb-4">
-                                            <section.icon className="w-5 h-5 text-primary" />
-                                            <h3 className="text-lg font-bold font-headline">{section.title}</h3>
-                                          </div>
-                                          
-                                          {section.items.map(item => (
-                                            <div key={item} className="p-4 bg-muted/20 rounded-2xl space-y-4 border border-primary/5">
-                                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                                <Label className="font-bold text-sm text-left">{item}</Label>
-                                                <div className="flex gap-2 shrink-0">
-                                                  <Button 
-                                                    size="sm" 
-                                                    variant={structuredFindings[item]?.status === 'pass' ? 'default' : 'outline'}
-                                                    className="rounded-lg font-bold h-8 px-4"
-                                                    onClick={() => handleStatusChange(item, 'pass')}
-                                                  >
-                                                    <Check className="w-3 h-3 mr-2" /> PASS
-                                                  </Button>
-                                                  <Button 
-                                                    size="sm" 
-                                                    variant={structuredFindings[item]?.status === 'fail' ? 'destructive' : 'outline'}
-                                                    className="rounded-lg font-bold h-8 px-4"
-                                                    onClick={() => handleStatusChange(item, 'fail')}
-                                                  >
-                                                    <X className="w-3 h-3 mr-2" /> FAIL
-                                                  </Button>
-                                                </div>
-                                              </div>
-                                              <Textarea 
-                                                placeholder="Auditor notes (e.g. Minor wear, needs repair...)" 
-                                                className="rounded-xl min-h-[60px] bg-white text-sm"
-                                                value={structuredFindings[item]?.notes || ''}
-                                                onChange={(e) => handleNotesChange(item, e.target.value)}
-                                              />
-                                            </div>
-                                          ))}
-                                        </TabsContent>
+                          <Dialog open={activeInspection?.id === inspection.id} onOpenChange={(open) => !open && setActiveInspection(null)}>
+                            <DialogTrigger asChild>
+                              <Button 
+                                className={cn(
+                                  "w-full md:w-auto rounded-xl font-bold h-10 px-6",
+                                  inspection.status === 'completed' ? "bg-muted hover:bg-muted/80 text-foreground" : "bg-accent hover:bg-accent/90 text-white"
+                                )}
+                                onClick={() => handleOpenAudit(inspection)}
+                              >
+                                {inspection.status === 'completed' ? (
+                                  <><Edit3 className="w-4 h-4 mr-2" /> Edit Audit</>
+                                ) : (
+                                  <><PlayCircle className="w-4 h-4 mr-2" /> Start Audit</>
+                                )}
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[700px] p-0 rounded-2xl border-none shadow-2xl flex flex-col h-[85vh] overflow-hidden">
+                              <div className="p-6 bg-primary/5 border-b text-left">
+                                <DialogTitle className="text-2xl font-headline font-bold">Comprehensive Audit</DialogTitle>
+                                <DialogDescription className="font-medium">
+                                  {inspection.status === 'completed' ? "Updating previous audit findings and regenerating reports." : "Conducting full safety & condition audit for property registry."}
+                                </DialogDescription>
+                              </div>
+                              
+                              <ScrollArea className="flex-1">
+                                <div className="p-6 space-y-8">
+                                  <Tabs defaultValue="exterior">
+                                    <TabsList className="w-full grid grid-cols-4 lg:grid-cols-7 h-auto bg-muted/50 p-1 rounded-xl">
+                                      {INSPECTION_SECTIONS.map(s => (
+                                        <TabsTrigger key={s.id} value={s.id} className="rounded-lg py-2">
+                                          <s.icon className="w-4 h-4" />
+                                        </TabsTrigger>
                                       ))}
-                                    </Tabs>
-                                  </div>
-                                </ScrollArea>
-                                
-                                <DialogFooter className="p-6 bg-muted/10 border-t">
-                                  <Button className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20" onClick={handleConduct} disabled={isGenerating}>
-                                    {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Finalizing Audit...</> : <><CheckCircle2 className="w-4 h-4 mr-2" /> Sign & Generate Audit Record</>}
-                                  </Button>
-                                </DialogFooter>
-                              </DialogContent>
-                            </Dialog>
-                          )}
+                                    </TabsList>
+                                    
+                                    {INSPECTION_SECTIONS.map(section => (
+                                      <TabsContent key={section.id} value={section.id} className="mt-6 space-y-6">
+                                        <div className="flex items-center gap-2 mb-4">
+                                          <section.icon className="w-5 h-5 text-primary" />
+                                          <h3 className="text-lg font-bold font-headline">{section.title}</h3>
+                                        </div>
+                                        
+                                        {section.items.map(item => (
+                                          <div key={item} className="p-4 bg-muted/20 rounded-2xl space-y-4 border border-primary/5">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                              <Label className="font-bold text-sm text-left">{item}</Label>
+                                              <div className="flex gap-2 shrink-0">
+                                                <Button 
+                                                  size="sm" 
+                                                  variant={structuredFindings[item]?.status === 'pass' ? 'default' : 'outline'}
+                                                  className="rounded-lg font-bold h-8 px-4"
+                                                  onClick={() => handleStatusChange(item, 'pass')}
+                                                >
+                                                  <Check className="w-3 h-3 mr-2" /> PASS
+                                                </Button>
+                                                <Button 
+                                                  size="sm" 
+                                                  variant={structuredFindings[item]?.status === 'fail' ? 'destructive' : 'outline'}
+                                                  className="rounded-lg font-bold h-8 px-4"
+                                                  onClick={() => handleStatusChange(item, 'fail')}
+                                                >
+                                                  <X className="w-3 h-3 mr-2" /> FAIL
+                                                </Button>
+                                              </div>
+                                            </div>
+                                            <Textarea 
+                                              placeholder="Auditor notes (e.g. Minor wear, needs repair...)" 
+                                              className="rounded-xl min-h-[60px] bg-white text-sm"
+                                              value={structuredFindings[item]?.notes || ''}
+                                              onChange={(e) => handleNotesChange(item, e.target.value)}
+                                            />
+                                          </div>
+                                        ))}
+                                      </TabsContent>
+                                    ))}
+                                  </Tabs>
+                                </div>
+                              </ScrollArea>
+                              
+                              <DialogFooter className="p-6 bg-muted/10 border-t">
+                                <Button className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20" onClick={handleConduct} disabled={isGenerating}>
+                                  {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Finalizing Audit...</> : <><CheckCircle2 className="w-4 h-4 mr-2" /> Sign & Update Audit Record</>}
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
 
                           {inspection.summary && (
                             <div className="p-4 bg-muted/40 rounded-xl border border-primary/5 mt-4 text-left">
