@@ -29,7 +29,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
-  // Profile Setup State
   const [role, setRole] = useState<'landlord' | 'tenant'>('landlord');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -81,7 +80,6 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const displayName = `${firstName.trim()} ${lastName.trim()}`;
-      
       await updateProfile(user, { displayName });
 
       const userDocRef = doc(db, 'users', user.uid);
@@ -96,7 +94,6 @@ export default function LoginPage() {
         updatedAt: serverTimestamp(),
       }, { merge: true });
 
-      // Claim Existing Resident Profile by Email
       if (role === 'tenant' && user.email) {
         const tenantProfilesRef = collection(db, 'tenantProfiles');
         const q = query(tenantProfilesRef, where('email', '==', user.email.toLowerCase().trim()));
@@ -104,13 +101,11 @@ export default function LoginPage() {
         
         for (const profileDoc of querySnapshot.docs) {
           const profileData = profileDoc.data();
-          // Update profile with real UID
           await updateDoc(profileDoc.ref, { 
             userId: user.uid,
             tenantId: user.uid,
             memberIds: arrayUnion(user.uid)
           });
-          // Update linked property
           const propertyRef = doc(db, 'properties', profileData.propertyId);
           await updateDoc(propertyRef, {
             tenantIds: arrayUnion(user.uid),
@@ -120,7 +115,6 @@ export default function LoginPage() {
       }
       
       await user.getIdToken(true);
-
       toast({ title: "Profile Ready", description: `Welcome to RentalFlow.` });
       
       isRedirecting.current = true;
@@ -138,7 +132,7 @@ export default function LoginPage() {
     try {
       if (authMode === 'signup') {
         await initiateEmailSignUp(auth, email, password);
-        toast({ title: "Verification Needed", description: "Please set up your profile." });
+        toast({ title: "Account Created", description: "Please complete your profile details." });
       } else {
         await initiateEmailSignIn(auth, email, password);
       }
@@ -162,10 +156,13 @@ export default function LoginPage() {
     }
   };
 
-  if (!mounted || (isUserLoading && !user)) {
+  if (!mounted || isUserLoading || (user && !needsProfile && !isRedirecting.current)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          <p className="text-sm font-medium text-muted-foreground animate-pulse">Authenticating...</p>
+        </div>
       </div>
     );
   }
@@ -233,7 +230,7 @@ export default function LoginPage() {
         <p className="text-muted-foreground font-medium">Professional Rental Management</p>
       </div>
 
-      <Card className="w-full max-md border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
+      <Card className="w-full max-w-md border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
         <CardHeader className="space-y-1 pb-4 text-center bg-primary/5">
           <CardTitle className="text-2xl font-headline font-bold text-primary">
             {authMode === 'login' ? 'Welcome Back' : 'Join Us'}

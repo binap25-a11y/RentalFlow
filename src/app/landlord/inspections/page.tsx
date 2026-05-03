@@ -26,7 +26,7 @@ import { format } from "date-fns";
 import { 
   Calendar as CalendarIcon, MapPin, Loader2, Download, 
   CheckCircle2, ClipboardList, ShieldAlert, Home, Wrench, 
-  Check, X, AlertTriangle, Info, Trash2, Edit3
+  Check, X, AlertTriangle, Info, Trash2, Edit3, PlayCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -164,7 +164,6 @@ export default function InspectionsPage() {
     const pageWidth = doc.internal.pageSize.getWidth();
     const today = format(new Date(), 'PPp');
     
-    // Header
     doc.setFillColor(31, 41, 55);
     doc.rect(0, 0, pageWidth, 40, 'F');
     
@@ -175,7 +174,6 @@ export default function InspectionsPage() {
     doc.setFontSize(10);
     doc.text(`Portfolio Registry: RentSafeUK`, 20, 32);
     
-    // Info Block
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
@@ -194,7 +192,6 @@ export default function InspectionsPage() {
     doc.setDrawColor(229, 231, 235);
     doc.line(20, 75, pageWidth - 20, 75);
 
-    // AI Summary
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text("Executive Summary", 20, 90);
@@ -206,7 +203,6 @@ export default function InspectionsPage() {
 
     let y = 98 + (splitSummary.length * 5) + 15;
 
-    // Breakdown
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.text("Condition Audit Breakdown", 20, y);
@@ -252,7 +248,6 @@ export default function InspectionsPage() {
       y += 8;
     });
 
-    // Footer on all pages
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
