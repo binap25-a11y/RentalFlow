@@ -8,7 +8,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, getLandlordCollectionQuery } from "@/firebase";
 import { doc, serverTimestamp, collection } from "firebase/firestore";
-import { Wrench, Sparkles, Clock, BrainCircuit, Loader2, CheckCircle2, PlayCircle, Plus, Building2, PoundSterling } from "lucide-react";
+import { Wrench, Sparkles, Clock, BrainCircuit, Loader2, CheckCircle2, PlayCircle, Plus, PoundSterling } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -117,10 +117,10 @@ export default function MaintenancePage() {
 
   const getPriorityColor = (priority: string) => {
     switch(priority?.toLowerCase()) {
-      case 'critical': return 'bg-red-500 text-white border-red-200';
-      case 'urgent': return 'bg-orange-500 text-white border-orange-200';
-      case 'routine': return 'bg-blue-500 text-white border-blue-200';
-      case 'low': return 'bg-slate-400 text-white border-slate-200';
+      case 'critical': return 'bg-red-600 text-white';
+      case 'urgent': return 'bg-orange-600 text-white';
+      case 'routine': return 'bg-blue-600 text-white';
+      case 'low': return 'bg-slate-500 text-white';
       default: return 'bg-muted text-muted-foreground';
     }
   };
@@ -128,7 +128,7 @@ export default function MaintenancePage() {
   if (loading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Maintenance Hub</h1>
@@ -147,61 +147,70 @@ export default function MaintenancePage() {
           </Card>
         ) : (
           requests.slice().sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).map((request) => (
-            <Card key={request.id} className="border-none shadow-sm overflow-hidden bg-white rounded-2xl group">
+            <Card key={request.id} className="border-none shadow-sm overflow-hidden bg-white rounded-2xl group border border-transparent hover:border-primary/5 transition-all">
               <CardContent className="p-6">
-                <div className="flex flex-wrap items-center gap-3 mb-4">
-                  <Badge className={cn("uppercase text-[10px] font-bold", request.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-sky-100 text-sky-700')}>
+                <div className="flex flex-wrap items-center gap-3 mb-6">
+                  <Badge className={cn("uppercase text-[10px] font-bold px-3 py-1", request.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-sky-100 text-sky-700')}>
                     {request.status}
                   </Badge>
-                  <Badge className={cn("capitalize font-bold", getPriorityColor(request.priority))}>
+                  <Badge className={cn("capitalize font-bold text-[10px] px-3 py-1", getPriorityColor(request.priority))}>
                     {request.priority}
                   </Badge>
-                  {request.cost > 0 && <Badge variant="secondary" className="bg-amber-100 text-amber-700 font-bold border-amber-200">£{request.cost} Spent</Badge>}
+                  {request.cost > 0 && <Badge variant="secondary" className="bg-amber-100 text-amber-800 font-bold border-amber-200 text-[10px] px-3 py-1">£{request.cost} Spent</Badge>}
                   <span className="text-[10px] text-muted-foreground font-bold uppercase ml-auto flex items-center">
                     <Clock className="w-3 h-3 mr-1" /> {request.createdAt ? format(new Date(request.createdAt.seconds * 1000), 'PPp') : 'Just now'}
                   </span>
                 </div>
-                <div className="space-y-2 text-left">
-                  <h3 className="text-xl font-bold font-headline group-hover:text-primary transition-colors">{request.title}</h3>
-                  <p className="text-muted-foreground font-body">{request.description}</p>
+                
+                <div className="space-y-4 text-left">
+                  <h3 className="text-xl font-bold font-headline group-hover:text-primary transition-colors leading-tight">{request.title}</h3>
+                  <p className="text-muted-foreground font-body leading-relaxed break-words">{request.description}</p>
                 </div>
+
                 {request.aiTriageNotes && (
-                  <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 mt-4 flex gap-3 text-left">
-                    <BrainCircuit className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                  <div className="bg-primary/5 border border-primary/10 rounded-2xl p-5 mt-6 flex gap-4 text-left">
+                    <BrainCircuit className="w-6 h-6 text-primary shrink-0 mt-0.5" />
                     <div className="flex-1">
-                      <p className="text-[10px] font-bold text-primary uppercase mb-1">AI Triage Recommendation</p>
-                      <p className="text-sm text-black font-bold font-body">{request.aiTriageNotes}</p>
+                      <p className="text-[10px] font-bold text-primary uppercase mb-2 tracking-widest font-headline">AI Triage Analysis</p>
+                      <p className="text-sm text-black font-bold font-body leading-relaxed">{request.aiTriageNotes}</p>
                     </div>
                   </div>
                 )}
               </CardContent>
-              <CardFooter className="bg-muted/10 p-4 flex flex-col md:flex-row gap-3 border-t">
-                <Button className="flex-1 bg-white hover:bg-primary/5 text-primary rounded-xl font-bold h-11 border border-primary/20" onClick={() => handleTriage(request)} disabled={isTriaging === request.id}>
+              <CardFooter className="bg-muted/5 p-4 flex flex-col sm:flex-row gap-3 border-t">
+                <Button className="flex-1 bg-white hover:bg-primary/5 text-primary rounded-xl font-bold h-12 border border-primary/20 shadow-sm" onClick={() => handleTriage(request)} disabled={isTriaging === request.id}>
                   {isTriaging === request.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
                   AI Triage Analysis
                 </Button>
                 <Dialog open={isLoggingCost === request.id} onOpenChange={(open) => !open && setIsLoggingCost(null)}>
-                  <Button variant="outline" className="flex-1 rounded-xl font-bold h-11 border-primary/20 bg-white" onClick={() => setIsLoggingCost(request.id)}>
+                  <Button variant="outline" className="flex-1 rounded-xl font-bold h-12 border-primary/20 bg-white shadow-sm" onClick={() => setIsLoggingCost(request.id)}>
                     <PoundSterling className="w-4 h-4 mr-2" /> Log Expense
                   </Button>
-                  <DialogContent className="rounded-2xl">
-                    <DialogHeader>
-                      <DialogTitle>Log Maintenance Expense</DialogTitle>
-                      <DialogDescription>Enter the professional cost for this repair task.</DialogDescription>
+                  <DialogContent className="rounded-2xl border-none shadow-2xl">
+                    <DialogHeader className="text-left">
+                      <DialogTitle className="font-headline text-xl font-bold text-primary">Log Maintenance Expense</DialogTitle>
+                      <DialogDescription className="font-body">Enter the professional cost for this repair task to update your portfolio analytics.</DialogDescription>
                     </DialogHeader>
-                    <div className="py-4">
-                      <Input type="number" placeholder="Amount in £" value={costAmount} onChange={(e) => setCostAmount(e.target.value)} className="rounded-xl h-11" />
+                    <div className="py-6 space-y-2 text-left">
+                      <Label className="text-xs font-bold uppercase text-muted-foreground font-headline">Total Cost (£)</Label>
+                      <Input type="number" placeholder="e.g. 150.00" value={costAmount} onChange={(e) => setCostAmount(e.target.value)} className="rounded-xl h-12 bg-muted/20 border-none font-body" />
                     </div>
                     <DialogFooter>
-                      <Button className="w-full rounded-xl" onClick={() => handleLogCost(request)}>Update Financial Ledger</Button>
+                      <Button className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 text-white font-headline" onClick={() => handleLogCost(request)}>Update Financial Ledger</Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild><Button variant="outline" className="flex-1 rounded-xl font-bold h-11">Update Status</Button></DropdownMenuTrigger>
-                  <DropdownMenuContent className="rounded-xl">
-                    <DropdownMenuItem onClick={() => updateStatus(request, 'in-progress')}><PlayCircle className="w-4 h-4 mr-2" /> In Progress</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => updateStatus(request, 'completed')}><CheckCircle2 className="w-4 h-4 mr-2" /> Completed</DropdownMenuItem>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex-1 rounded-xl font-bold h-12 border-primary/20 bg-white shadow-sm">Update Status</Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="rounded-xl border-none shadow-xl min-w-[200px]" align="end">
+                    <DropdownMenuItem className="py-3 px-4 font-bold font-body" onClick={() => updateStatus(request, 'in-progress')}>
+                      <PlayCircle className="w-4 h-4 mr-3 text-sky-600" /> Mark In Progress
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="py-3 px-4 font-bold font-body" onClick={() => updateStatus(request, 'completed')}>
+                      <CheckCircle2 className="w-4 h-4 mr-3 text-emerald-600" /> Mark Completed
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </CardFooter>
@@ -211,20 +220,35 @@ export default function MaintenancePage() {
       </div>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="rounded-2xl">
+        <DialogContent className="rounded-2xl border-none shadow-2xl">
           <form onSubmit={handleCreateRequest}>
-            <DialogHeader>
-              <DialogTitle>Log Maintenance Task</DialogTitle>
+            <DialogHeader className="text-left">
+              <DialogTitle className="font-headline text-xl font-bold text-primary">Log Maintenance Task</DialogTitle>
+              <DialogDescription className="font-body">Record a new maintenance event for your asset history.</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4 text-left">
-              <select className="flex h-11 w-full rounded-xl border px-3 text-sm font-body" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
-                <option value="">Select property...</option>
-                {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
-              </select>
-              <Input value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="Issue Title" className="rounded-xl" />
-              <Textarea value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Description..." className="rounded-xl" />
+            <div className="grid gap-6 py-6 text-left">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-muted-foreground font-headline tracking-widest">Select Asset</Label>
+                <select className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-body" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
+                  <option value="">Choose a property...</option>
+                  {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-muted-foreground font-headline tracking-widest">Task Title</Label>
+                <Input value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="e.g. Kitchen tap leak" className="rounded-xl h-12 bg-muted/20 border-none font-body" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-muted-foreground font-headline tracking-widest">Detailed Description</Label>
+                <Textarea value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Describe the issue in detail..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-body" />
+              </div>
             </div>
-            <Button type="submit" className="w-full rounded-xl h-12" disabled={isSubmitting}>Log Request</Button>
+            <DialogFooter>
+              <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 text-white font-headline" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                Log Request
+              </Button>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

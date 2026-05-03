@@ -73,7 +73,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSubmitting(true);
     
-    // Instant UI redirect while background sync completes
+    // Non-blocking redirect for instant experience
     router.push(`/landlord/properties/${propertyId}`);
     
     try {

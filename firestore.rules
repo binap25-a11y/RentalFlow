@@ -16,13 +16,14 @@ service cloud.firestore {
     match /properties/{id} {
       allow list, get: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
-        (resource.data.tenantIds != null && request.auth.uid in resource.data.tenantIds)
+        (resource.data.tenantIds != null && request.auth.uid in resource.data.tenantIds) ||
+        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
       );
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Tenant Profiles: Standardized ownership access for reliable listing
+    // Tenant Profiles: Simplified ownership for reliable listing
     match /tenantProfiles/{id} {
       allow list, read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
