@@ -105,7 +105,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         description: "Your modifications are being synchronized." 
       });
     } catch (error: any) {
-      // In non-blocking pattern, the redirect already happened
+      // Background failure handling
     }
   };
 

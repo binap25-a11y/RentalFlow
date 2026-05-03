@@ -7,9 +7,9 @@ import { collection, serverTimestamp, query, where, orderBy, doc } from 'firebas
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Send, Loader2, MessageSquare, User } from "lucide-react";
+import { Send, Loader2, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from 'next/navigation';
@@ -58,7 +58,6 @@ export default function LandlordMessagingPage() {
     if (!user || !db || !selectedTenantId || !messageText.trim()) return;
 
     const messageId = doc(collection(db, 'messages')).id;
-    const messageRef = doc(db, 'messages', messageId);
 
     addDocumentNonBlocking(collection(db, 'messages'), {
       id: messageId,
