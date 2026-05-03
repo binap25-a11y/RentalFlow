@@ -85,7 +85,6 @@ export default function MaintenancePage() {
 
     toast({ title: "Request Logged", description: "Maintenance task has been added to the ledger." });
     
-    // Cleanup
     setIsCreateDialogOpen(false);
     setIsSubmitting(false);
     setNewRequestTitle('');
@@ -150,7 +149,7 @@ export default function MaintenancePage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary mb-2">Maintenance Management</h1>
-          <p className="text-muted-foreground font-medium">Review, prioritize and assign maintenance tasks.</p>
+          <p className="text-muted-foreground font-medium font-body">Review, prioritize and assign maintenance tasks.</p>
         </div>
         <div className="flex gap-3">
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -160,11 +159,11 @@ export default function MaintenancePage() {
                 Log New Request
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] rounded-2xl">
+            <DialogContent className="sm:max-w-[500px] rounded-2xl border-none shadow-2xl">
               <form onSubmit={handleCreateRequest}>
                 <DialogHeader className="text-left">
                   <DialogTitle className="text-xl font-bold font-headline">Log Maintenance Task</DialogTitle>
-                  <DialogDescription>Manually add a maintenance issue discovered or reported via phone.</DialogDescription>
+                  <DialogDescription className="font-medium">Manually add a maintenance issue discovered or reported.</DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-6 text-left">
                   <div className="space-y-2">
@@ -188,7 +187,7 @@ export default function MaintenancePage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="desc" className="font-bold text-xs uppercase text-primary/60 tracking-wider">Detailed Description</Label>
-                    <Textarea id="desc" value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Provide as much context as possible for AI triage..." className="rounded-xl min-h-[100px]" />
+                    <Textarea id="desc" value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Provide context for AI triage..." className="rounded-xl min-h-[100px]" />
                   </div>
                 </div>
                 <DialogFooter>
@@ -199,7 +198,7 @@ export default function MaintenancePage() {
               </form>
             </DialogContent>
           </Dialog>
-          <Button variant="outline" className="rounded-xl border-primary/10 h-11">
+          <Button variant="outline" className="rounded-xl border-primary/10 h-11 font-bold">
             <Filter className="w-4 h-4 mr-2" />
             Filter
           </Button>
@@ -213,7 +212,7 @@ export default function MaintenancePage() {
               <Wrench className="w-10 h-10 text-primary/20" />
             </div>
             <h3 className="text-xl font-bold font-headline text-primary/40">No active requests</h3>
-            <p className="text-sm text-muted-foreground max-w-xs mt-2 font-medium">Maintenance tasks will appear here once logged by you or your residents.</p>
+            <p className="text-sm text-muted-foreground max-w-xs mt-2 font-medium">Maintenance tasks will appear here once logged.</p>
           </Card>
         ) : (
           requests
@@ -242,7 +241,7 @@ export default function MaintenancePage() {
                           {request.category || 'Uncategorized'}
                         </Badge>
                         <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tight ml-auto flex items-center">
-                          <Clock className="w-3 h-3 mr-1" /> {createdAt && isValid(createdAt) ? format(createdAt, 'PPp') : 'Just now'}
+                          <Clock className="w-3 h-3 mr-1" /> {createdAt && isValid(createdAt) ? format(createdAt, 'PPp') : 'Recently'}
                         </span>
                       </div>
                       
@@ -252,15 +251,15 @@ export default function MaintenancePage() {
                           {property?.addressLine1 || 'Unknown Property'}
                         </div>
                         <h3 className="text-xl font-bold font-headline group-hover:text-primary transition-colors">{request.title || 'Maintenance Issue'}</h3>
-                        <p className="text-muted-foreground leading-relaxed">{request.description}</p>
+                        <p className="text-muted-foreground leading-relaxed font-body">{request.description}</p>
                       </div>
 
                       {request.aiTriageNotes && (
-                        <div className="bg-accent/5 border border-accent/10 rounded-xl p-4 flex gap-3 text-left">
-                          <BrainCircuit className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+                        <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex gap-3 text-left">
+                          <BrainCircuit className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                           <div>
-                            <p className="text-[10px] font-bold text-accent uppercase tracking-widest mb-1">AI Recommendation Insight</p>
-                            <p className="text-sm text-black italic font-medium leading-relaxed">{request.aiTriageNotes}</p>
+                            <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">AI Recommendation Insight</p>
+                            <p className="text-sm text-black font-body font-medium leading-relaxed">{request.aiTriageNotes}</p>
                           </div>
                         </div>
                       )}
@@ -268,7 +267,7 @@ export default function MaintenancePage() {
 
                     <div className="bg-muted/30 p-6 flex flex-col justify-center gap-3 border-l border-muted/50">
                       <Button 
-                        className="w-full bg-accent hover:bg-accent/90 text-white rounded-xl shadow-lg shadow-accent/10 font-bold h-11"
+                        className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-primary/10 font-bold h-11"
                         onClick={() => handleTriage(request)}
                         disabled={isTriaging === request.id}
                       >
@@ -282,18 +281,18 @@ export default function MaintenancePage() {
                       
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="outline" className="w-full rounded-xl font-bold h-11 border-primary/10 bg-white hover:bg-primary/5 hover:text-primary">
+                          <Button variant="outline" className="w-full rounded-xl font-bold h-11 border-primary/20 bg-white hover:bg-primary/5 hover:text-primary">
                             Update Status
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48 rounded-xl border-none shadow-xl">
-                          <DropdownMenuItem onClick={() => updateStatus(request, 'in-progress')} className="rounded-lg cursor-pointer">
+                          <DropdownMenuItem onClick={() => updateStatus(request, 'in-progress')} className="rounded-lg cursor-pointer font-medium">
                             <PlayCircle className="w-4 h-4 mr-2 text-blue-500" />
-                            Mark In Progress
+                            In Progress
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => updateStatus(request, 'completed')} className="rounded-lg cursor-pointer">
+                          <DropdownMenuItem onClick={() => updateStatus(request, 'completed')} className="rounded-lg cursor-pointer font-medium">
                             <CheckCircle2 className="w-4 h-4 mr-2 text-green-500" />
-                            Mark Completed
+                            Completed
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

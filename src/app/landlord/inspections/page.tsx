@@ -310,7 +310,7 @@ export default function InspectionsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary mb-2">Inspections & Audits</h1>
-          <p className="text-muted-foreground font-medium">Official portfolio compliance tracking and safety records.</p>
+          <p className="text-muted-foreground font-medium font-body">Official portfolio compliance tracking and safety records.</p>
         </div>
       </div>
 
