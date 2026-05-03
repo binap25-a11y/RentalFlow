@@ -97,7 +97,7 @@ export default function InspectionsPage() {
 
   const inspectionsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return getMemberCollectionQuery(db, "inspections", user.uid);
+    return getLandlordCollectionQuery(db, "inspections", user.uid);
   }, [db, user]);
 
   const { data: inspections, loading: isInspLoading } = useCollection(inspectionsQuery);
