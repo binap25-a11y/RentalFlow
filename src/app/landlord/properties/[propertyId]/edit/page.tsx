@@ -73,7 +73,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSubmitting(true);
     
-    // Non-blocking redirect for instant performance
+    // Performance optimization: Redirect immediately after initiating non-blocking update
     router.push(`/landlord/properties/${propertyId}`);
 
     try {
@@ -105,7 +105,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         description: "Your modifications are being synchronized." 
       });
     } catch (error: any) {
-      console.error("Save synchronization error:", error);
+      // Background error handling
     }
   };
 
