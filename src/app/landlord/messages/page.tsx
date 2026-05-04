@@ -18,7 +18,6 @@ export default function LandlordMessagingPage() {
   const { user } = useUser();
   const db = useFirestore();
   const searchParams = useSearchParams();
-  const initialPropId = searchParams.get('prop');
 
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
   const [messageText, setMessageText] = useState("");
@@ -33,10 +32,10 @@ export default function LandlordMessagingPage() {
 
   const messagesQuery = useMemoFirebase(() => {
     if (!db || !user || !selectedTenantId) return null;
+    // Removed orderBy to ensure rules validate correctly without requiring a composite index immediately
     return query(
       collection(db, 'messages'),
-      where('memberIds', 'array-contains', user.uid),
-      orderBy('timestamp', 'asc')
+      where('memberIds', 'array-contains', user.uid)
     );
   }, [db, user, selectedTenantId]);
 
@@ -45,7 +44,7 @@ export default function LandlordMessagingPage() {
   const activeMessages = allMessages?.filter(m => 
     (m.senderId === user?.uid && m.receiverId === selectedTenantId) ||
     (m.senderId === selectedTenantId && m.receiverId === user?.uid)
-  );
+  ).sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
 
   useEffect(() => {
     if (scrollRef.current) {

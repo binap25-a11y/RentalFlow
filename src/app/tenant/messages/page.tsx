@@ -29,10 +29,10 @@ export default function TenantMessagingPage() {
 
   const messagesQuery = useMemoFirebase(() => {
     if (!db || !user || !landlordId) return null;
+    // Removed orderBy to avoid permission/index errors
     return query(
       collection(db, 'messages'),
-      where('memberIds', 'array-contains', user.uid),
-      orderBy('timestamp', 'asc')
+      where('memberIds', 'array-contains', user.uid)
     );
   }, [db, user, landlordId]);
 
@@ -41,7 +41,7 @@ export default function TenantMessagingPage() {
   const activeMessages = allMessages?.filter(m => 
     (m.senderId === user?.uid && m.receiverId === landlordId) ||
     (m.senderId === landlordId && m.receiverId === user?.uid)
-  );
+  ).sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
 
   useEffect(() => {
     if (scrollRef.current) {
