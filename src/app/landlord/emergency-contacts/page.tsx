@@ -148,74 +148,74 @@ export default function LandlordEmergencyContactsPage() {
 
   const downloadPDF = () => {
     if (!contacts) return;
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
+    const pdfDoc = new jsPDF();
+    const pageWidth = pdfDoc.internal.pageSize.getWidth();
     
     // Header
-    doc.setFillColor(31, 41, 55);
-    doc.rect(0, 0, pageWidth, 40, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
-    doc.text("TENANCY EMERGENCY CONTACTS", 20, 25);
-    doc.setFontSize(10);
-    doc.text(`Official Portfolio Safety Record | Generated: ${format(new Date(), 'PPP')}`, 20, 32);
+    pdfDoc.setFillColor(31, 41, 55);
+    pdfDoc.rect(0, 0, pageWidth, 40, 'F');
+    pdfDoc.setTextColor(255, 255, 255);
+    pdfDoc.setFontSize(22);
+    pdfDoc.text("TENANCY EMERGENCY CONTACTS", 20, 25);
+    pdfDoc.setFontSize(10);
+    pdfDoc.text(`Official Portfolio Safety Record | Generated: ${format(new Date(), 'PPP')}`, 20, 32);
     
-    doc.setTextColor(0, 0, 0);
+    pdfDoc.setTextColor(0, 0, 0);
     let y = 60;
 
     // Standard UK Services Section
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.text("1. STANDARD UK EMERGENCY SERVICES", 20, y);
+    pdfDoc.setFont("helvetica", "bold");
+    pdfDoc.setFontSize(14);
+    pdfDoc.text("1. STANDARD UK EMERGENCY SERVICES", 20, y);
     y += 10;
     
     UK_STANDARD_SERVICES.forEach(service => {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.text(service.name, 20, y);
-      doc.setFont("helvetica", "normal");
-      doc.text(`Tel: ${service.phone}`, pageWidth - 80, y);
+      pdfDoc.setFont("helvetica", "bold");
+      pdfDoc.setFontSize(10);
+      pdfDoc.text(service.name, 20, y);
+      pdfDoc.setFont("helvetica", "normal");
+      pdfDoc.text(`Tel: ${service.phone}`, pageWidth - 80, y);
       y += 8;
     });
 
     y += 15;
 
     // Custom Professional Contacts
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.text("2. PROPERTY-SPECIFIC CONTACTS", 20, y);
+    pdfDoc.setFont("helvetica", "bold");
+    pdfDoc.setFontSize(14);
+    pdfDoc.text("2. PROPERTY-SPECIFIC CONTACTS", 20, y);
     y += 10;
 
     contacts.forEach((contact) => {
       const propName = properties?.find(p => p.id === contact.propertyId)?.addressLine1 || "General Portfolio";
       
       if (y > 260) {
-        doc.addPage();
+        pdfDoc.addPage();
         y = 20;
       }
 
-      doc.setDrawColor(229, 231, 235);
-      doc.line(20, y - 5, pageWidth - 20, y - 5);
+      pdfDoc.setDrawColor(229, 231, 235);
+      pdfDoc.line(20, y - 5, pageWidth - 20, y - 5);
 
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text(contact.role.toUpperCase(), 20, y);
+      pdfDoc.setFont("helvetica", "bold");
+      pdfDoc.setFontSize(12);
+      pdfDoc.text(contact.role.toUpperCase(), 20, y);
       
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.text(`${contact.name}`, 20, y + 7);
-      doc.text(`Tel: ${contact.phone}`, 20, y + 13);
-      if (contact.email) doc.text(`Email: ${contact.email}`, 20, y + 19);
+      pdfDoc.setFont("helvetica", "normal");
+      pdfDoc.setFontSize(10);
+      pdfDoc.text(`${contact.name}`, 20, y + 7);
+      pdfDoc.text(`Tel: ${contact.phone}`, 20, y + 13);
+      if (contact.email) pdfDoc.text(`Email: ${contact.email}`, 20, y + 19);
 
-      doc.setFontSize(9);
-      doc.setTextColor(107, 114, 128);
-      doc.text(`Property: ${propName}`, pageWidth - 80, y);
+      pdfDoc.setFontSize(9);
+      pdfDoc.setTextColor(107, 114, 128);
+      pdfDoc.text(`Property: ${propName}`, pageWidth - 80, y);
       
-      doc.setTextColor(0, 0, 0);
+      pdfDoc.setTextColor(0, 0, 0);
       y += 30;
     });
 
-    doc.save(`Emergency_Contacts_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    pdfDoc.save(`Emergency_Contacts_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
   if (!isClient || isLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;

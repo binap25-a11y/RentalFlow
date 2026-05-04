@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery, addDocumentNonBlocking } from '@/firebase';
-import { collection, serverTimestamp, query, where, orderBy, doc } from 'firebase/firestore';
+import { collection, serverTimestamp, query, where, doc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,13 +31,12 @@ export default function LandlordMessagingPage() {
   const { data: tenants, loading: tenantsLoading } = useCollection(tenantsQuery);
 
   const messagesQuery = useMemoFirebase(() => {
-    if (!db || !user || !selectedTenantId) return null;
-    // Removed orderBy to ensure rules validate correctly without requiring a composite index immediately
+    if (!db || !user) return null;
     return query(
       collection(db, 'messages'),
       where('memberIds', 'array-contains', user.uid)
     );
-  }, [db, user, selectedTenantId]);
+  }, [db, user]);
 
   const { data: allMessages, loading: messagesLoading } = useCollection(messagesQuery);
 

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -39,7 +40,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 
 export default function MaintenancePage() {
   const { user } = useUser();
@@ -201,7 +201,7 @@ export default function MaintenancePage() {
                 )}
               </CardContent>
               <CardFooter className="bg-muted/5 p-4 flex flex-wrap gap-3 border-t">
-                <Button className="flex-1 min-w-[140px] bg-white hover:bg-primary/5 text-primary rounded-xl font-bold h-12 border border-primary/20 shadow-sm" onClick={() => handleTriage(request)} disabled={isTriaging === request.id}>
+                <Button className="flex-1 min-w-[120px] bg-white hover:bg-primary/5 text-primary rounded-xl font-bold h-12 border border-primary/20 shadow-sm" onClick={() => handleTriage(request)} disabled={isTriaging === request.id}>
                   {isTriaging === request.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
                   AI Triage
                 </Button>

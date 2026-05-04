@@ -3,11 +3,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery, addDocumentNonBlocking } from '@/firebase';
-import { collection, serverTimestamp, query, where, orderBy, doc } from 'firebase/firestore';
+import { collection, serverTimestamp, query, where, doc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Loader2, MessageSquare, ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
@@ -28,13 +27,12 @@ export default function TenantMessagingPage() {
   const landlordId = tenantProfiles?.[0]?.landlordId;
 
   const messagesQuery = useMemoFirebase(() => {
-    if (!db || !user || !landlordId) return null;
-    // Removed orderBy to avoid permission/index errors
+    if (!db || !user) return null;
     return query(
       collection(db, 'messages'),
       where('memberIds', 'array-contains', user.uid)
     );
-  }, [db, user, landlordId]);
+  }, [db, user]);
 
   const { data: allMessages, loading } = useCollection(messagesQuery);
 
