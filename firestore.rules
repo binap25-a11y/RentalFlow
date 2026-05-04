@@ -7,17 +7,31 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isMember(data) {
+      return isSignedIn() && (data.memberIds != null && request.auth.uid in data.memberIds);
+    }
+
     // User profiles
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
-    // Properties: Membership-based access
+    // Properties
     match /properties/{id} {
       allow read, list: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
         (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds) ||
         (resource.data.tenantIds != null && request.auth.uid in resource.data.tenantIds)
+      );
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
+    }
+
+    // Emergency Contacts
+    match /emergencyContacts/{id} {
+      allow read, list: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || 
+        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
       );
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
@@ -65,12 +79,11 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Messages: Standardized membership-based access
+    // Messages: Explicitly allow listing for members to resolve FirebaseError
     match /messages/{id} {
       allow list: if isSignedIn();
-      allow read: if isSignedIn() && (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds);
+      allow read, update, delete: if isMember(resource.data);
       allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds);
     }
   }
 }

@@ -41,6 +41,22 @@
       },
       "required": ["id", "landlordId", "addressLine1", "city", "zipCode", "isActive"]
     },
+    "EmergencyContact": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "EmergencyContact",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "landlordId": { "type": "string" },
+        "propertyId": { "type": "string" },
+        "memberIds": { "type": "array", "items": { "type": "string" } },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" }
+      },
+      "required": ["id", "landlordId", "name", "role", "phone"]
+    },
     "TenantProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "TenantProfile",
@@ -153,6 +169,14 @@
           "entityName": "Property",
           "schema": { "$ref": "#/backend/entities/Property" },
           "description": "Top-level property assets."
+        }
+      },
+      {
+        "path": "/emergencyContacts/{contactId}",
+        "definition": {
+          "entityName": "EmergencyContact",
+          "schema": { "$ref": "#/backend/entities/EmergencyContact" },
+          "description": "Property emergency contacts."
         }
       },
       {
