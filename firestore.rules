@@ -65,7 +65,9 @@ service cloud.firestore {
 
     // Messages: Secured by membership array for both read and list
     match /messages/{id} {
-      allow read, list, delete: if isSignedIn() && (request.auth.uid in resource.data.memberIds);
+      allow read, list, delete: if isSignedIn() && (
+        resource.data.memberIds != null && request.auth.uid in resource.data.memberIds
+      );
       allow create: if isSignedIn();
     }
   }
