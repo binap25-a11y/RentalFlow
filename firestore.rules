@@ -81,9 +81,11 @@ service cloud.firestore {
 
     // Messages: Explicitly allow listing for members to resolve FirebaseError
     match /messages/{id} {
-      allow list: if isSignedIn();
-      allow read, update, delete: if isMember(resource.data);
       allow create: if isSignedIn();
+      allow list: if isSignedIn();
+      allow read, update, delete: if isSignedIn() && (
+        resource.data.memberIds != null && request.auth.uid in resource.data.memberIds
+      );
     }
   }
 }

@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { triageMaintenanceRequest } from "@/ai/flows/maintenance-request-triage";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   useUser, 
@@ -94,7 +94,7 @@ export default function MaintenancePage() {
       updatedAt: serverTimestamp(),
     }, { merge: true });
 
-    toast({ title: "Request Logged", description: "Maintenance task has been added to the ledger." });
+    toast({ title: "Request Logged", description: "Maintenance task added to ledger." });
     setIsCreateDialogOpen(false);
     setIsSubmitting(false);
     setNewRequestTitle('');
@@ -133,7 +133,7 @@ export default function MaintenancePage() {
     if (!user || !db || !costAmount) return;
     const requestRef = doc(db, 'maintenanceRequests', request.id);
     updateDocumentNonBlocking(requestRef, { cost: Number(costAmount), updatedAt: serverTimestamp() });
-    toast({ title: "Cost Logged", description: `Financial ledger updated with £${costAmount}.` });
+    toast({ title: "Cost Logged", description: `£${costAmount} added to financial records.` });
     setIsLoggingCost(null);
     setCostAmount('');
   };
@@ -212,7 +212,7 @@ export default function MaintenancePage() {
                   <DialogContent className="rounded-2xl border-none shadow-2xl">
                     <DialogHeader className="text-left">
                       <DialogTitle className="font-headline text-xl font-bold text-primary">Log Maintenance Expense</DialogTitle>
-                      <DialogDescription className="font-body">Enter the professional cost for this repair task to update your portfolio analytics.</DialogDescription>
+                      <DialogDescription className="font-body">Update your portfolio analytics with repair costs.</DialogDescription>
                     </DialogHeader>
                     <div className="py-6 space-y-2 text-left">
                       <Label className="text-xs font-bold uppercase text-muted-foreground font-headline">Total Cost (£)</Label>
@@ -247,7 +247,7 @@ export default function MaintenancePage() {
           <form onSubmit={handleCreateRequest}>
             <DialogHeader className="text-left">
               <DialogTitle className="font-headline text-xl font-bold text-primary">Log Maintenance Task</DialogTitle>
-              <DialogDescription className="font-body">Record a new maintenance event for your asset history.</DialogDescription>
+              <DialogDescription className="font-body">Record a maintenance event for your asset history.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-6 py-6 text-left">
               <div className="space-y-2">
