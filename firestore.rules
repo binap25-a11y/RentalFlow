@@ -7,10 +7,6 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isMember(data) {
-      return isSignedIn() && (data.memberIds != null && request.auth.uid in data.memberIds);
-    }
-
     // User profiles
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
@@ -79,12 +75,14 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Messages: Explicitly allow listing for members to resolve FirebaseError
+    // Messages: Using a single read block to ensure list and get are handled consistently
     match /messages/{id} {
       allow create: if isSignedIn();
-      allow list: if isSignedIn();
-      allow read, update, delete: if isSignedIn() && (
+      allow read: if isSignedIn() && (
         resource.data.memberIds != null && request.auth.uid in resource.data.memberIds
+      );
+      allow update, delete: if isSignedIn() && (
+        resource.data.senderId == request.auth.uid
       );
     }
   }
