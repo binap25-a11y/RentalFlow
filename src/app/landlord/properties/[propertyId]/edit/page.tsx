@@ -105,7 +105,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         description: "Your modifications are being synchronized." 
       });
     } catch (error: any) {
-      // Background error handling
+      // Background error handling is managed by the non-blocking update utility
     }
   };
 
