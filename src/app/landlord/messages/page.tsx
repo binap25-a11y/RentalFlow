@@ -72,22 +72,24 @@ export default function LandlordMessagingPage() {
   if (tenantsLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col md:flex-row gap-6 animate-in fade-in duration-500">
-      <Card className="w-full md:w-80 border-none shadow-sm flex flex-col rounded-2xl overflow-hidden">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500 max-w-5xl mx-auto pb-8">
+      <Card className="w-full border-none shadow-sm flex flex-col rounded-2xl overflow-hidden">
         <CardHeader className="bg-primary/5 p-4 border-b">
           <CardTitle className="text-lg font-headline flex items-center gap-2 text-left">
             <MessageSquare className="w-5 h-5 text-primary" /> Conversations
           </CardTitle>
         </CardHeader>
-        <ScrollArea className="flex-1">
-          <div className="p-2 space-y-1">
+        <CardContent className="p-2">
+          <div className="flex flex-wrap gap-2">
             {tenants?.map(tenant => (
               <button
                 key={tenant.id}
                 onClick={() => setSelectedTenantId(tenant.userId)}
                 className={cn(
-                  "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left",
-                  selectedTenantId === tenant.userId ? "bg-primary text-white shadow-md" : "hover:bg-muted"
+                  "flex items-center gap-3 p-3 rounded-xl transition-all text-left border border-transparent min-w-[200px] flex-1 md:flex-none",
+                  selectedTenantId === tenant.userId 
+                    ? "bg-primary text-white shadow-md" 
+                    : "bg-muted/50 hover:bg-muted"
                 )}
               >
                 <Avatar className="h-10 w-10 border border-white/20">
@@ -104,10 +106,10 @@ export default function LandlordMessagingPage() {
               </button>
             ))}
           </div>
-        </ScrollArea>
+        </CardContent>
       </Card>
 
-      <Card className="flex-1 border-none shadow-sm flex flex-col rounded-2xl overflow-hidden">
+      <Card className="flex-1 border-none shadow-sm flex flex-col rounded-2xl overflow-hidden min-h-[500px]">
         {selectedTenantId ? (
           <>
             <CardHeader className="p-4 border-b bg-muted/30 flex flex-row items-center gap-4">
@@ -123,7 +125,7 @@ export default function LandlordMessagingPage() {
                 <p className="text-[10px] text-muted-foreground font-bold">Resident</p>
               </div>
             </CardHeader>
-            <div className="flex-1 overflow-y-auto p-6 space-y-4" ref={scrollRef}>
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 max-h-[400px]" ref={scrollRef}>
               {activeMessages?.map((msg, i) => (
                 <div key={i} className={cn("flex flex-col max-w-[70%]", msg.senderId === user?.uid ? "ml-auto items-end" : "items-start")}>
                   <div className={cn(
@@ -156,7 +158,7 @@ export default function LandlordMessagingPage() {
           <div className="flex-1 flex flex-col items-center justify-center text-center p-12 opacity-40">
             <MessageSquare className="w-16 h-16 mb-4" />
             <h3 className="text-xl font-bold font-headline">Messaging Hub</h3>
-            <p className="text-sm font-medium">Select a conversation to start messaging your residents.</p>
+            <p className="text-sm font-medium">Select a conversation above to start messaging your residents.</p>
           </div>
         )}
       </Card>
