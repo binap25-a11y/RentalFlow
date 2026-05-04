@@ -73,13 +73,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSubmitting(true);
     
-    // Redirect immediately for an instantaneous feel
+    // Non-blocking redirect for instant performance
     router.push(`/landlord/properties/${propertyId}`);
 
     try {
       let currentImageUrl = property?.imageUrl || previewUrl;
 
-      // Only perform image upload if a new file was selected
       if (imageFile && storage) {
         const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
         const result = await uploadBytes(storageRef, imageFile);
@@ -99,7 +98,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedAt: serverTimestamp(),
       };
 
-      // Perform update asynchronously without awaiting
       updateDocumentNonBlocking(propertyRef, updateData);
 
       toast({ 
@@ -107,7 +105,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         description: "Your modifications are being synchronized." 
       });
     } catch (error: any) {
-      // Background error handling
       console.error("Save synchronization error:", error);
     }
   };
