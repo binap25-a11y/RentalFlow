@@ -65,11 +65,10 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Messages: Using robust membership check for list operations
+    // Messages: Standardized membership-based access
     match /messages/{id} {
-      allow list, read: if isSignedIn() && (
-        resource == null || (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
-      );
+      allow list: if isSignedIn();
+      allow read: if isSignedIn() && (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds);
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds);
     }

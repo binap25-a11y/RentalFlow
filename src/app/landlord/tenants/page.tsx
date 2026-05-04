@@ -1,15 +1,33 @@
+
 "use client";
 
 import { useState } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking, getLandlordCollectionQuery } from '@/firebase';
+import { 
+  useUser, 
+  useFirestore, 
+  useCollection, 
+  useMemoFirebase, 
+  setDocumentNonBlocking, 
+  updateDocumentNonBlocking, 
+  deleteDocumentNonBlocking, 
+  getLandlordCollectionQuery 
+} from '@/firebase';
 import { collection, doc, serverTimestamp, arrayUnion } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Users, Plus, Mail, Phone, Trash2, Search, Loader2, UserX } from "lucide-react";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from "@/components/ui/dialog";
+import { Users, Plus, Mail, Phone, Trash2, Search, Loader2, UserX, Edit3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function TenantsPage() {
@@ -26,14 +44,14 @@ export default function TenantsPage() {
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Standardize to landlordId query to perfectly satisfy Option A security rules
     return getLandlordCollectionQuery(db, "tenantProfiles", user.uid);
   }, [db, user]);
 
   const { data: tenants, loading: isLoading } = useCollection(tenantsQuery);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingTenant, setEditingTenant] = useState<any>(null);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -41,47 +59,75 @@ export default function TenantsPage() {
   const [phone, setPhone] = useState('');
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
 
-  const handleAddTenant = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !db || !selectedPropertyId) return;
-
-    const tenantId = doc(collection(db, 'tenantProfiles')).id;
-    const tenantRef = doc(db, 'tenantProfiles', tenantId);
-    const propertyRef = doc(db, 'properties', selectedPropertyId);
-
-    const placeholderUserId = email.toLowerCase().trim();
-
-    setDocumentNonBlocking(tenantRef, {
-      id: tenantId,
-      firstName,
-      lastName,
-      email: email.toLowerCase().trim(),
-      phoneNumber: phone,
-      userId: placeholderUserId,
-      tenantId: placeholderUserId,
-      propertyId: selectedPropertyId,
-      landlordId: user.uid,
-      memberIds: [user.uid, placeholderUserId],
-      leaseStartDate: new Date().toISOString().split('T')[0],
-      leaseEndDate: new Date(Date.now() + 31536000000).toISOString().split('T')[0],
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
-
-    updateDocumentNonBlocking(propertyRef, {
-      isOccupied: true,
-      tenantIds: arrayUnion(placeholderUserId),
-      memberIds: arrayUnion(placeholderUserId),
-      updatedAt: serverTimestamp(),
-    });
-
-    setIsAddDialogOpen(false);
+  const resetForm = () => {
     setFirstName('');
     setLastName('');
     setEmail('');
     setPhone('');
     setSelectedPropertyId('');
-    toast({ title: "Resident Assigned", description: "The resident can now join using their email." });
+    setEditingTenant(null);
+  };
+
+  const handleEditClick = (tenant: any) => {
+    setEditingTenant(tenant);
+    setFirstName(tenant.firstName);
+    setLastName(tenant.lastName);
+    setEmail(tenant.email);
+    setPhone(tenant.phoneNumber);
+    setSelectedPropertyId(tenant.propertyId);
+    setIsDialogOpen(true);
+  };
+
+  const handleSaveTenant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !db || !selectedPropertyId) return;
+
+    if (editingTenant) {
+      const tenantRef = doc(db, 'tenantProfiles', editingTenant.id);
+      updateDocumentNonBlocking(tenantRef, {
+        firstName,
+        lastName,
+        email: email.toLowerCase().trim(),
+        phoneNumber: phone,
+        propertyId: selectedPropertyId,
+        updatedAt: serverTimestamp(),
+      });
+      toast({ title: "Resident Updated", description: "Changes have been saved to the portfolio." });
+    } else {
+      const tenantId = doc(collection(db, 'tenantProfiles')).id;
+      const tenantRef = doc(db, 'tenantProfiles', tenantId);
+      const propertyRef = doc(db, 'properties', selectedPropertyId);
+      const placeholderUserId = email.toLowerCase().trim();
+
+      setDocumentNonBlocking(tenantRef, {
+        id: tenantId,
+        firstName,
+        lastName,
+        email: email.toLowerCase().trim(),
+        phoneNumber: phone,
+        userId: placeholderUserId,
+        tenantId: placeholderUserId,
+        propertyId: selectedPropertyId,
+        landlordId: user.uid,
+        memberIds: [user.uid, placeholderUserId],
+        leaseStartDate: new Date().toISOString().split('T')[0],
+        leaseEndDate: new Date(Date.now() + 31536000000).toISOString().split('T')[0],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+
+      updateDocumentNonBlocking(propertyRef, {
+        isOccupied: true,
+        tenantIds: arrayUnion(placeholderUserId),
+        memberIds: arrayUnion(placeholderUserId),
+        updatedAt: serverTimestamp(),
+      });
+
+      toast({ title: "Resident Assigned", description: "The resident can now join using their email." });
+    }
+
+    setIsDialogOpen(false);
+    resetForm();
   };
 
   const handleDeleteTenant = (tenant: any) => {
@@ -100,47 +146,54 @@ export default function TenantsPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div>
-          <h1 className="text-3xl font-headline font-bold text-primary mb-2">Residents</h1>
+          <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Residents</h1>
           <p className="text-muted-foreground font-medium font-body">Manage your tenant database and lease agreements.</p>
         </div>
         
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) resetForm();
+        }}>
           <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20 font-headline">
+            <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20 font-headline text-white px-6">
               <Plus className="w-4 h-4 mr-2" />
               Assign New Resident
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px] rounded-2xl border-none shadow-2xl">
-            <form onSubmit={handleAddTenant}>
+            <form onSubmit={handleSaveTenant}>
               <DialogHeader className="text-left">
-                <DialogTitle className="text-xl font-bold font-headline text-primary">Assign Resident</DialogTitle>
-                <DialogDescription className="font-medium text-muted-foreground">Enter the resident's details. They will be linked automatically when they join with this email.</DialogDescription>
+                <DialogTitle className="text-xl font-bold font-headline text-primary">
+                  {editingTenant ? "Update Resident Details" : "Assign Resident"}
+                </DialogTitle>
+                <DialogDescription className="font-medium text-muted-foreground">
+                  {editingTenant ? "Modify the resident's contact or assignment information." : "Enter the resident's details. They will be linked automatically when they join."}
+                </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-6 text-left">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="firstName" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">First Name</Label>
-                    <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="rounded-xl h-11 font-body" />
+                    <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="rounded-xl h-11 font-body bg-muted/20 border-none" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Last Name</Label>
-                    <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required className="rounded-xl h-11 font-body" />
+                    <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required className="rounded-xl h-11 font-body bg-muted/20 border-none" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Email Address</Label>
-                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-11 font-body" placeholder="resident@example.com" />
+                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-11 font-body bg-muted/20 border-none" placeholder="resident@example.com" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Phone Number</Label>
-                  <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required className="rounded-xl h-11 font-body" />
+                  <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required className="rounded-xl h-11 font-body bg-muted/20 border-none" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="property" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Assign to Property</Label>
                   <select 
                     id="property" 
-                    className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow font-body"
+                    className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow font-body"
                     value={selectedPropertyId}
                     onChange={(e) => setSelectedPropertyId(e.target.value)}
                     required
@@ -153,7 +206,9 @@ export default function TenantsPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 font-headline">Confirm Assignment</Button>
+                <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 font-headline text-white hover:bg-primary/90">
+                  {editingTenant ? "Save Changes" : "Confirm Assignment"}
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -220,9 +275,14 @@ export default function TenantsPage() {
                         </Badge>
                       </td>
                       <td className="px-6 py-5 text-right">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive/40 hover:text-destructive hover:bg-destructive/5 rounded-xl transition-all" onClick={() => handleDeleteTenant(tenant)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-primary/40 hover:text-primary hover:bg-primary/5 rounded-xl transition-all" onClick={() => handleEditClick(tenant)}>
+                            <Edit3 className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive/40 hover:text-destructive hover:bg-destructive/5 rounded-xl transition-all" onClick={() => handleDeleteTenant(tenant)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
