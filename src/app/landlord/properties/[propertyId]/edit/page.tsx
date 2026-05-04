@@ -2,7 +2,14 @@
 "use client";
 
 import { useState, useEffect, use } from 'react';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useStorage, updateDocumentNonBlocking } from '@/firebase';
+import { 
+  useUser, 
+  useFirestore, 
+  useDoc, 
+  useMemoFirebase, 
+  useStorage, 
+  updateDocumentNonBlocking 
+} from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
