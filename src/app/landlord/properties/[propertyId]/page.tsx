@@ -163,7 +163,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       ...(tenants?.map(t => t.userId).filter(Boolean) || [])
     ]));
 
-    // Optimistic Update: Create active record instantly
+    // Optimistic Update: Create active record instantly so actions are available
     setDocumentNonBlocking(docRef, {
       id: docId,
       fileName: file.name,
@@ -183,6 +183,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       description: "Asset record initialized instantly." 
     });
 
+    // Reset input immediately to allow sequential uploads
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    setIsUploadingDoc(false);
+
     try {
       const storageRef = ref(storage, `documents/${user.uid}/${propertyId}/${Date.now()}_${file.name}`);
       const uploadResult = await uploadBytes(storageRef, file);
@@ -200,9 +204,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         title: "Upload Error", 
         description: "Failed to store file in vault." 
       });
-    } finally {
-      setIsUploadingDoc(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
