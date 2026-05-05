@@ -25,7 +25,7 @@ import {
   Trash2, Edit3, Loader2, Save, ArrowLeft,
   Download, FileText, Info, ShieldAlert, Upload, 
   Calendar as CalendarIcon, Sparkles, Image as ImageIcon,
-  CheckCircle2, Clock, AlertTriangle, X
+  CheckCircle2, Clock, AlertTriangle, X, Eye
 } from "lucide-react";
 import { 
   Dialog, 
@@ -156,7 +156,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       ...(tenants?.map(t => t.userId).filter(Boolean) || [])
     ]));
 
-    // Instant UI Update: Mark as active immediately so management buttons are available.
+    // Optimistic Update: Create active record instantly
     setDocumentNonBlocking(docRef, {
       id: docId,
       fileName: file.name,
@@ -172,8 +172,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     }, { merge: true });
 
     toast({ 
-      title: "Document Vault", 
-      description: "Item added to ledger instantly." 
+      title: "Document Added", 
+      description: "Asset record initialized." 
     });
 
     try {
@@ -185,17 +185,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         fileUrl: url,
         updatedAt: serverTimestamp(),
       });
-
       setUploadExpiryDate(undefined);
     } catch (error: any) {
-      updateDocumentNonBlocking(docRef, {
-        status: 'failed',
-        error: error.message
-      });
       toast({ 
         variant: "destructive", 
-        title: "Vault Sync Error", 
-        description: "Storage upload failed in background." 
+        title: "Upload Error", 
+        description: "Failed to store file in vault." 
       });
     } finally {
       setIsUploadingDoc(false);
@@ -224,13 +219,13 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       expiryDate: editDocExpiry ? editDocExpiry.toISOString() : null,
       updatedAt: serverTimestamp(),
     });
-    toast({ title: "Metadata Updated", description: "Synchronized with portfolio." });
+    toast({ title: "Metadata Updated", description: "Vault record synchronized." });
     setEditingDoc(null);
   };
 
   const handleSummarizeLease = async (docObj: any) => {
     if (!docObj.fileUrl) {
-      toast({ title: "Asset Syncing", description: "AI review will be available shortly." });
+      toast({ title: "Asset Syncing", description: "Please wait for storage confirmation." });
       return;
     }
     setIsAnalyzing(docObj.id);
@@ -242,7 +237,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         expiryDate: summary.leaseEndDate,
         updatedAt: serverTimestamp(),
       });
-      toast({ title: "AI Analysis Complete", description: "Compliance terms identified." });
+      toast({ title: "AI Analysis Complete", description: "Terms identified." });
     } catch (error) {
       toast({ variant: "destructive", title: "Analysis Failed" });
     } finally {
@@ -357,7 +352,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           </Card>
 
           <Tabs defaultValue="tenants" className="w-full">
-            <TabsList className="grid grid-cols-4 w-full bg-muted/30 p-1 rounded-xl h-auto gap-1 border border-primary/5">
+            <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full bg-muted/30 p-1 rounded-xl h-auto gap-1 border border-primary/5">
               <TabsTrigger value="tenants" className="rounded-lg py-2.5 px-0 font-bold flex flex-col sm:flex-row items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
                 <Users className="w-4 h-4 sm:mr-2" />
                 <span className="text-[10px] sm:text-sm">Residents</span>
@@ -433,7 +428,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                       disabled={isUploadingDoc}
                     >
                       {isUploadingDoc ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-                      Add Document to Vault
+                      Add Document
                     </Button>
                   </div>
                 </CardContent>
@@ -466,7 +461,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                             <DialogContent className="rounded-2xl border-none">
                               <DialogHeader className="text-left">
                                 <DialogTitle className="font-headline font-bold">Edit Metadata</DialogTitle>
-                                <DialogDescription>Update the document record details.</DialogDescription>
+                                <DialogDescription>Update record details.</DialogDescription>
                               </DialogHeader>
                               <div className="py-4 space-y-4 text-left">
                                 <div className="space-y-2">
@@ -489,18 +484,22 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                                 </div>
                               </div>
                               <DialogFooter>
-                                <Button className="w-full rounded-xl h-11 font-bold bg-primary" onClick={handleUpdateDocMetadata}>Save Changes</Button>
+                                <Button className="w-full rounded-xl h-11 font-bold bg-primary text-white" onClick={handleUpdateDocMetadata}>Save Changes</Button>
                               </DialogFooter>
                             </DialogContent>
                           </Dialog>
 
-                          <Button variant="outline" size="sm" onClick={() => handleSummarizeLease(docItem)} disabled={isAnalyzing === docItem.id} className="flex-1 md:flex-none rounded-xl font-bold h-9 border-primary/10 hover:bg-primary/5 transition-all">
+                          <Button variant="outline" size="sm" onClick={() => handleSummarizeLease(docItem)} disabled={isAnalyzing === docItem.id} className="flex-1 md:flex-none rounded-xl font-bold h-9 border-primary/10 hover:bg-primary/5">
                             {isAnalyzing === docItem.id ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Sparkles className="w-3 h-3 mr-2 text-primary" />}
                             AI Review
                           </Button>
+                          
                           <Button variant="ghost" size="icon" asChild className={cn("rounded-xl hover:bg-primary/5 text-primary", !docItem.fileUrl && "opacity-20 pointer-events-none")}>
-                            <a href={docItem.fileUrl} target="_blank" rel="noopener noreferrer"><Download className="w-4 h-4" /></a>
+                            <a href={docItem.fileUrl} target="_blank" rel="noopener noreferrer" title="View Document">
+                              <Eye className="w-4 h-4" />
+                            </a>
                           </Button>
+                          
                           <Button variant="ghost" size="icon" onClick={() => handleDeleteDoc(docItem.id)} className="rounded-xl hover:bg-destructive/5 text-destructive/40 hover:text-destructive">
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -567,7 +566,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     </div>
                     {insp.status === 'completed' && (
                       <Button variant="ghost" size="icon" onClick={() => downloadInspectionPDF(insp)} className="rounded-xl hover:bg-primary/5 text-primary">
-                        <Download className="w-4 h-4" />
+                        <Eye className="w-4 h-4" />
                       </Button>
                     )}
                   </div>
