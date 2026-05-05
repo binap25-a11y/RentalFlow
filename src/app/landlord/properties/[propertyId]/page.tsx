@@ -156,7 +156,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       ...(tenants?.map(t => t.userId).filter(Boolean) || [])
     ]));
 
-    // Optimistic Update: Set status to 'active' immediately for an "instant" feel.
+    // Instant UI Update: Mark as active immediately so management buttons are available.
     setDocumentNonBlocking(docRef, {
       id: docId,
       fileName: file.name,
@@ -172,8 +172,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     }, { merge: true });
 
     toast({ 
-      title: "Document Registered", 
-      description: "Item added to vault instantly." 
+      title: "Document Vault", 
+      description: "Item added to ledger instantly." 
     });
 
     try {
@@ -195,7 +195,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       toast({ 
         variant: "destructive", 
         title: "Vault Sync Error", 
-        description: "Background storage failed." 
+        description: "Storage upload failed in background." 
       });
     } finally {
       setIsUploadingDoc(false);
@@ -207,7 +207,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     if (!db) return;
     const docRef = doc(db, 'documents', id);
     deleteDocumentNonBlocking(docRef);
-    toast({ title: "Document Removed", description: "Ledger updated." });
+    toast({ title: "Document Removed", description: "Record decommissioned from vault." });
   };
 
   const handleOpenEditDoc = (docItem: any) => {
@@ -224,13 +224,13 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       expiryDate: editDocExpiry ? editDocExpiry.toISOString() : null,
       updatedAt: serverTimestamp(),
     });
-    toast({ title: "Document Updated", description: "Metadata synchronized." });
+    toast({ title: "Metadata Updated", description: "Synchronized with portfolio." });
     setEditingDoc(null);
   };
 
   const handleSummarizeLease = async (docObj: any) => {
     if (!docObj.fileUrl) {
-      toast({ title: "Syncing", description: "AI analysis will be available shortly." });
+      toast({ title: "Asset Syncing", description: "AI review will be available shortly." });
       return;
     }
     setIsAnalyzing(docObj.id);
@@ -242,7 +242,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         expiryDate: summary.leaseEndDate,
         updatedAt: serverTimestamp(),
       });
-      toast({ title: "AI Analysis Complete", description: "Lease terms extracted." });
+      toast({ title: "AI Analysis Complete", description: "Compliance terms identified." });
     } catch (error) {
       toast({ variant: "destructive", title: "Analysis Failed" });
     } finally {
@@ -357,22 +357,22 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           </Card>
 
           <Tabs defaultValue="tenants" className="w-full">
-            <TabsList className="grid grid-cols-2 w-full bg-muted/30 p-1 rounded-xl h-auto gap-1 border border-primary/5">
-              <TabsTrigger value="tenants" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                <Users className="w-4 h-4 mr-2" />
-                <span className="text-xs sm:text-sm">Residents</span>
+            <TabsList className="grid grid-cols-4 w-full bg-muted/30 p-1 rounded-xl h-auto gap-1 border border-primary/5">
+              <TabsTrigger value="tenants" className="rounded-lg py-2.5 px-0 font-bold flex flex-col sm:flex-row items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                <Users className="w-4 h-4 sm:mr-2" />
+                <span className="text-[10px] sm:text-sm">Residents</span>
               </TabsTrigger>
-              <TabsTrigger value="docs" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                <FileText className="w-4 h-4 mr-2" />
-                <span className="text-xs sm:text-sm">Vault</span>
+              <TabsTrigger value="docs" className="rounded-lg py-2.5 px-0 font-bold flex flex-col sm:flex-row items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                <FileText className="w-4 h-4 sm:mr-2" />
+                <span className="text-[10px] sm:text-sm">Vault</span>
               </TabsTrigger>
-              <TabsTrigger value="maintenance" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                <Wrench className="w-4 h-4 mr-2" />
-                <span className="text-xs sm:text-sm">Maintenance</span>
+              <TabsTrigger value="maintenance" className="rounded-lg py-2.5 px-0 font-bold flex flex-col sm:flex-row items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                <Wrench className="w-4 h-4 sm:mr-2" />
+                <span className="text-[10px] sm:text-sm">Repairs</span>
               </TabsTrigger>
-              <TabsTrigger value="inspections" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                <FileCheck className="w-4 h-4 mr-2" />
-                <span className="text-xs sm:text-sm">Audits</span>
+              <TabsTrigger value="inspections" className="rounded-lg py-2.5 px-0 font-bold flex flex-col sm:flex-row items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                <FileCheck className="w-4 h-4 sm:mr-2" />
+                <span className="text-[10px] sm:text-sm">Audits</span>
               </TabsTrigger>
             </TabsList>
 
@@ -448,72 +448,62 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           <FileText className="w-6 h-6" />
                         </div>
                         <div className="flex-1 text-left">
-                          <h4 className="font-bold text-sm font-headline group-hover:text-primary transition-colors">{docItem.fileName}</h4>
+                          <h4 className="font-bold text-sm font-headline group-hover:text-primary transition-colors flex items-center gap-2">
+                            {docItem.fileName}
+                            {docItem.fileUrl === '' && <Loader2 className="w-3 h-3 animate-spin text-primary/30" />}
+                          </h4>
                           <div className="flex gap-4 mt-1">
                             {docItem.expiryDate && <span className="text-[10px] text-destructive font-bold uppercase flex items-center"><ShieldAlert className="w-3 h-3 mr-1" /> Exp: {format(new Date(docItem.expiryDate), 'PP')}</span>}
                           </div>
                         </div>
                         <div className="flex gap-2 w-full md:w-auto">
-                          {docItem.status === 'active' ? (
-                            <>
-                              <Dialog open={editingDoc?.id === docItem.id} onOpenChange={(open) => !open && setEditingDoc(null)}>
-                                <DialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" onClick={() => handleOpenEditDoc(docItem)} className="rounded-xl hover:bg-primary/5 text-muted-foreground">
-                                    <Edit3 className="w-4 h-4" />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="rounded-2xl border-none">
-                                  <DialogHeader className="text-left">
-                                    <DialogTitle className="font-headline font-bold">Edit Metadata</DialogTitle>
-                                    <DialogDescription>Update the document record details.</DialogDescription>
-                                  </DialogHeader>
-                                  <div className="py-4 space-y-4 text-left">
-                                    <div className="space-y-2">
-                                      <Label className="text-xs font-bold uppercase text-muted-foreground">Document Name</Label>
-                                      <Input value={editDocName} onChange={(e) => setEditDocName(e.target.value)} className="rounded-xl h-11" />
-                                    </div>
-                                    <div className="space-y-2">
-                                      <Label className="text-xs font-bold uppercase text-muted-foreground">Expiry Date</Label>
-                                      <Popover>
-                                        <PopoverTrigger asChild>
-                                          <Button variant="outline" className="w-full justify-start h-11 rounded-xl">
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {editDocExpiry ? format(editDocExpiry, "PPP") : "No expiry set"}
-                                          </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0 rounded-2xl border-none">
-                                          <Calendar mode="single" selected={editDocExpiry} onSelect={setEditDocExpiry} />
-                                        </PopoverContent>
-                                      </Popover>
-                                    </div>
-                                  </div>
-                                  <DialogFooter>
-                                    <Button className="w-full rounded-xl h-11 font-bold bg-primary" onClick={handleUpdateDocMetadata}>Save Changes</Button>
-                                  </DialogFooter>
-                                </DialogContent>
-                              </Dialog>
-
-                              <Button variant="outline" size="sm" onClick={() => handleSummarizeLease(docItem)} disabled={isAnalyzing === docItem.id} className="flex-1 md:flex-none rounded-xl font-bold h-9 border-primary/10 hover:bg-primary/5 transition-all">
-                                {isAnalyzing === docItem.id ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Sparkles className="w-3 h-3 mr-2 text-primary" />}
-                                AI Review
+                          <Dialog open={editingDoc?.id === docItem.id} onOpenChange={(open) => !open && setEditingDoc(null)}>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" size="icon" onClick={() => handleOpenEditDoc(docItem)} className="rounded-xl hover:bg-primary/5 text-muted-foreground">
+                                <Edit3 className="w-4 h-4" />
                               </Button>
-                              <Button variant="ghost" size="icon" asChild className={cn("rounded-xl hover:bg-primary/5 text-primary", !docItem.fileUrl && "opacity-20 pointer-events-none")}>
-                                <a href={docItem.fileUrl} target="_blank" rel="noopener noreferrer"><Download className="w-4 h-4" /></a>
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={() => handleDeleteDoc(docItem.id)} className="rounded-xl hover:bg-destructive/5 text-destructive/40 hover:text-destructive">
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </>
-                          ) : (
-                            docItem.status !== 'failed' && (
-                              <div className="flex items-center px-4">
-                                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground opacity-30" />
+                            </DialogTrigger>
+                            <DialogContent className="rounded-2xl border-none">
+                              <DialogHeader className="text-left">
+                                <DialogTitle className="font-headline font-bold">Edit Metadata</DialogTitle>
+                                <DialogDescription>Update the document record details.</DialogDescription>
+                              </DialogHeader>
+                              <div className="py-4 space-y-4 text-left">
+                                <div className="space-y-2">
+                                  <Label className="text-xs font-bold uppercase text-muted-foreground">Document Name</Label>
+                                  <Input value={editDocName} onChange={(e) => setEditDocName(e.target.value)} className="rounded-xl h-11" />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-xs font-bold uppercase text-muted-foreground">Expiry Date</Label>
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button variant="outline" className="w-full justify-start h-11 rounded-xl">
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {editDocExpiry ? format(editDocExpiry, "PPP") : "No expiry set"}
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0 rounded-2xl border-none">
+                                      <Calendar mode="single" selected={editDocExpiry} onSelect={setEditDocExpiry} />
+                                    </PopoverContent>
+                                  </Popover>
+                                </div>
                               </div>
-                            )
-                          )}
-                          {docItem.status === 'failed' && (
-                            <Badge variant="destructive" className="font-bold text-[10px] uppercase">Failed</Badge>
-                          )}
+                              <DialogFooter>
+                                <Button className="w-full rounded-xl h-11 font-bold bg-primary" onClick={handleUpdateDocMetadata}>Save Changes</Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+
+                          <Button variant="outline" size="sm" onClick={() => handleSummarizeLease(docItem)} disabled={isAnalyzing === docItem.id} className="flex-1 md:flex-none rounded-xl font-bold h-9 border-primary/10 hover:bg-primary/5 transition-all">
+                            {isAnalyzing === docItem.id ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Sparkles className="w-3 h-3 mr-2 text-primary" />}
+                            AI Review
+                          </Button>
+                          <Button variant="ghost" size="icon" asChild className={cn("rounded-xl hover:bg-primary/5 text-primary", !docItem.fileUrl && "opacity-20 pointer-events-none")}>
+                            <a href={docItem.fileUrl} target="_blank" rel="noopener noreferrer"><Download className="w-4 h-4" /></a>
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteDoc(docItem.id)} className="rounded-xl hover:bg-destructive/5 text-destructive/40 hover:text-destructive">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                       </div>
                     </div>
