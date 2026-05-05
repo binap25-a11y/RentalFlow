@@ -183,9 +183,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       description: "Asset record initialized instantly." 
     });
 
-    // Reset input immediately to allow sequential uploads
+    // Reset UI state immediately so user can add another document
     if (fileInputRef.current) fileInputRef.current.value = '';
     setIsUploadingDoc(false);
+    setUploadExpiryDate(undefined);
 
     try {
       const storageRef = ref(storage, `documents/${user.uid}/${propertyId}/${Date.now()}_${file.name}`);
@@ -196,8 +197,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         fileUrl: url,
         updatedAt: serverTimestamp(),
       });
-      
-      setUploadExpiryDate(undefined);
     } catch (error: any) {
       toast({ 
         variant: "destructive", 
@@ -466,33 +465,33 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                                   <Edit3 className="w-4 h-4" />
                                 </Button>
                               </DialogTrigger>
-                              <DialogContent className="rounded-2xl border-none">
-                                <DialogHeader className="text-left">
-                                  <DialogTitle className="font-headline font-bold">Edit Metadata</DialogTitle>
-                                  <DialogDescription>Update record details.</DialogDescription>
-                                </DialogHeader>
-                                <div className="py-4 space-y-4 text-left">
+                              <DialogContent className="rounded-2xl border-none shadow-2xl p-0 overflow-hidden">
+                                <div className="p-6 bg-primary/5 border-b">
+                                  <DialogTitle className="font-headline font-bold text-xl text-primary">Modify Asset Details</DialogTitle>
+                                  <DialogDescription className="font-medium text-muted-foreground">Refine metadata for official compliance ledger.</DialogDescription>
+                                </div>
+                                <div className="p-6 space-y-6 text-left">
                                   <div className="space-y-2">
-                                    <Label className="text-xs font-bold uppercase text-muted-foreground">Document Name</Label>
-                                    <Input value={editDocName} onChange={(e) => setEditDocName(e.target.value)} className="rounded-xl h-11" />
+                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/60 font-headline">Registry Name</Label>
+                                    <Input value={editDocName} onChange={(e) => setEditDocName(e.target.value)} className="rounded-xl h-12 bg-muted/20 border-none font-body" />
                                   </div>
                                   <div className="space-y-2">
-                                    <Label className="text-xs font-bold uppercase text-muted-foreground">Expiry Date</Label>
+                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/60 font-headline">Compliance Expiry</Label>
                                     <Popover>
                                       <PopoverTrigger asChild>
-                                        <Button variant="outline" className="w-full justify-start h-11 rounded-xl">
-                                          <CalendarIcon className="mr-2 h-4 w-4" />
-                                          {editDocExpiry ? format(editDocExpiry, "PPP") : "No expiry set"}
+                                        <Button variant="outline" className="w-full justify-start h-12 rounded-xl bg-muted/20 border-none font-body">
+                                          <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                                          {editDocExpiry ? format(editDocExpiry, "PPP") : "Set suitable expiry date..."}
                                         </Button>
                                       </PopoverTrigger>
-                                      <PopoverContent className="w-auto p-0 rounded-2xl border-none">
-                                        <Calendar mode="single" selected={editDocExpiry} onSelect={setEditDocExpiry} />
+                                      <PopoverContent className="w-auto p-0 rounded-2xl border-none shadow-2xl" align="start">
+                                        <Calendar mode="single" selected={editDocExpiry} onSelect={setEditDocExpiry} initialFocus />
                                       </PopoverContent>
                                     </Popover>
                                   </div>
                                 </div>
-                                <DialogFooter>
-                                  <Button className="w-full rounded-xl h-11 font-bold bg-primary text-white" onClick={handleUpdateDocMetadata}>Save Changes</Button>
+                                <DialogFooter className="p-6 bg-muted/5 border-t">
+                                  <Button className="w-full rounded-xl h-12 font-bold bg-primary text-white shadow-lg shadow-primary/20 font-headline" onClick={handleUpdateDocMetadata}>Synchronize Record</Button>
                                 </DialogFooter>
                               </DialogContent>
                             </Dialog>

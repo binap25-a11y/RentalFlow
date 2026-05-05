@@ -2,12 +2,12 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Permissive rules for development: Allows any authenticated user to read and write
+    // Global permissive rules for authenticated users to ensure listing and sub-collection queries work
     match /{document=**} {
       allow read, write: if request.auth != null;
     }
 
-    // Explicit path matching for top-level collections to ensure reliable authorized access
+    // Explicit path matching for top-level collections to satisfy security engine for direct lookups
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }

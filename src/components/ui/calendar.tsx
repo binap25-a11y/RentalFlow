@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -20,6 +19,10 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
+      // Enable dropdown navigation for easier year/month selection
+      captionLayout="dropdown"
+      startMonth={new Date(new Date().getFullYear() - 10, 0)}
+      endMonth={new Date(new Date().getFullYear() + 20, 11)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
@@ -56,6 +59,10 @@ function Calendar({
         range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         hidden: "invisible",
+        // Add styles for dropdown selects in version 9
+        dropdown: "flex items-center gap-1",
+        dropdown_root: "relative inline-flex items-center",
+        caption_dropwdowns: "flex justify-center gap-1",
         ...classNames,
       }}
       components={{
