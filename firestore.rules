@@ -7,6 +7,8 @@ service cloud.firestore {
     }
 
     // Explicitly match top-level collections for reliable listing and querying
+    // This follows the recommended fix for permission denied errors on top-level collections.
+    
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
@@ -23,7 +25,6 @@ service cloud.firestore {
       allow read, write: if isSignedIn();
     }
 
-    // Document Vault access logic
     match /documents/{id} {
       allow read, write: if isSignedIn();
     }
@@ -36,12 +37,11 @@ service cloud.firestore {
       allow read, write: if isSignedIn();
     }
 
-    // Messaging Hub access logic
     match /messages/{id} {
       allow read, write: if isSignedIn();
     }
 
-    // Recursive helper for nested structures if needed in future
+    // Catch-all for recursive structures
     match /{document=**} {
       allow read, write: if isSignedIn();
     }

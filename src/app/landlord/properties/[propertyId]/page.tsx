@@ -156,7 +156,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       ...(tenants?.map(t => t.userId).filter(Boolean) || [])
     ]));
 
-    // Optimistic Update: Add doc instantly to ensure zero lag in UI
+    // Optimistic Update: Set status to 'active' immediately for an "instant" feel.
+    // The management buttons (Edit, Delete) will be available immediately.
     setDocumentNonBlocking(docRef, {
       id: docId,
       fileName: file.name,
@@ -230,7 +231,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const handleSummarizeLease = async (docObj: any) => {
     if (!docObj.fileUrl) {
-      toast({ title: "Still Syncing", description: "AI analysis will be available in a few moments." });
+      toast({ title: "Syncing", description: "AI analysis will be available shortly." });
       return;
     }
     setIsAnalyzing(docObj.id);
@@ -242,7 +243,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         expiryDate: summary.leaseEndDate,
         updatedAt: serverTimestamp(),
       });
-      toast({ title: "AI Analysis Complete", description: "Lease terms extracted successfully." });
+      toast({ title: "AI Analysis Complete", description: "Lease terms extracted." });
     } catch (error) {
       toast({ variant: "destructive", title: "Analysis Failed" });
     } finally {
