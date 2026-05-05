@@ -75,7 +75,7 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Messages
+    // Messages - Optimized for membership-based listing
     match /messages/{id} {
       allow create: if isSignedIn();
       allow read, list: if isSignedIn() && (

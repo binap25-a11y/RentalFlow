@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, use, useMemo } from 'react';
-import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useStorage } from '@/firebase';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useStorage, getLandlordCollectionQuery } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +15,8 @@ import {
   Building2, MapPin, Users, Wrench, FileCheck, Phone, 
   Trash2, Edit3, Loader2, Save, ArrowLeft,
   Download, FileText, Info, ShieldAlert, Upload, 
-  Calendar as CalendarIcon, Sparkles, Image as ImageIcon
+  Calendar as CalendarIcon, Sparkles, Image as ImageIcon,
+  CheckCircle2, Clock, AlertTriangle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -33,6 +34,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { jsPDF } from "jspdf";
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -50,6 +52,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
+  // Queries for property-specific data
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -71,6 +74,28 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   }, [db, propertyId, user]);
 
   const { data: propertyDocuments } = useCollection(docsQuery);
+
+  const maintenanceQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return query(
+      collection(db, 'maintenanceRequests'),
+      where('propertyId', '==', propertyId),
+      where('landlordId', '==', user.uid)
+    );
+  }, [db, propertyId, user]);
+
+  const { data: maintenanceRequests } = useCollection(maintenanceQuery);
+
+  const inspectionsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return query(
+      collection(db, 'inspections'),
+      where('propertyId', '==', propertyId),
+      where('landlordId', '==', user.uid)
+    );
+  }, [db, propertyId, user]);
+
+  const { data: inspections } = useCollection(inspectionsQuery);
 
   const [isEditing, setIsEditing] = useState(false);
   const [rentAmount, setRentAmount] = useState('');
@@ -141,6 +166,28 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     } finally {
       setIsAnalyzing(null);
     }
+  };
+
+  const downloadInspectionPDF = (inspection: any) => {
+    const pdf = new jsPDF();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    pdf.setFillColor(31, 41, 55);
+    pdf.rect(0, 0, pageWidth, 40, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(24);
+    pdf.text("OFFICIAL AUDIT RECORD", 20, 25);
+    pdf.setFontSize(10);
+    pdf.text(`Property Asset: ${property?.addressLine1}`, 20, 32);
+    
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(14);
+    pdf.text("Audit Summary", 20, 55);
+    pdf.setFontSize(10);
+    const summaryText = inspection.summary || "No summary provided";
+    const splitSummary = pdf.splitTextToSize(summaryText, pageWidth - 40);
+    pdf.text(splitSummary, 20, 65);
+    
+    pdf.save(`Audit_${property?.addressLine1}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
@@ -311,15 +358,72 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         </Button>
                       </div>
                     </div>
-                    {docItem.aiSummary && (
-                      <div className="mt-4 p-4 bg-primary/5 rounded-xl border border-primary/10 text-left">
-                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2 font-headline">AI Vault Summary</p>
-                        <p className="text-xs font-bold leading-relaxed font-body text-black">{docItem.aiSummary}</p>
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
+            </TabsContent>
+
+            <TabsContent value="maintenance" className="mt-6 space-y-4">
+              {maintenanceRequests && maintenanceRequests.length > 0 ? (
+                maintenanceRequests.map(req => (
+                  <div key={req.id} className="p-4 bg-white rounded-2xl border border-primary/5 shadow-sm flex items-start gap-4">
+                    <div className={cn("p-2 rounded-xl", req.status === 'completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600')}>
+                      <Wrench className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant={req.status === 'completed' ? 'secondary' : 'default'} className="uppercase text-[10px] font-bold">
+                          {req.status}
+                        </Badge>
+                        <span className="text-[10px] text-muted-foreground font-bold">
+                          {req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'PP') : 'Recently'}
+                        </span>
+                      </div>
+                      <h4 className="font-bold text-sm font-headline">{req.title}</h4>
+                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1 font-body">{req.description}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-12 text-center bg-muted/20 rounded-2xl border-2 border-dashed">
+                  <p className="text-sm text-muted-foreground font-bold">No maintenance history for this asset.</p>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="inspections" className="mt-6 space-y-4">
+              {inspections && inspections.length > 0 ? (
+                inspections.map(insp => (
+                  <div key={insp.id} className="p-4 bg-white rounded-2xl border border-primary/5 shadow-sm flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 bg-amber-50 text-amber-600 rounded-xl">
+                        <FileCheck className="w-5 h-5" />
+                      </div>
+                      <div className="text-left">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant={insp.status === 'completed' ? 'secondary' : 'outline'} className="uppercase text-[10px] font-bold">
+                            {insp.status}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground font-bold">
+                            {format(new Date(insp.scheduledDate), 'PP')}
+                          </span>
+                        </div>
+                        <h4 className="font-bold text-sm font-headline">Compliance Audit</h4>
+                        {insp.healthScore && <p className="text-[10px] font-bold text-emerald-600 uppercase mt-0.5">Safety Score: {insp.healthScore}/100</p>}
+                      </div>
+                    </div>
+                    {insp.status === 'completed' && (
+                      <Button variant="ghost" size="icon" onClick={() => downloadInspectionPDF(insp)} className="rounded-xl hover:bg-primary/5">
+                        <Download className="w-4 h-4 text-primary" />
+                      </Button>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="p-12 text-center bg-muted/20 rounded-2xl border-2 border-dashed">
+                  <p className="text-sm text-muted-foreground font-bold">No audit records for this asset.</p>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>
@@ -345,9 +449,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               <p className="text-xs text-muted-foreground font-medium font-body leading-relaxed">
                 Your asset is currently <span className="text-primary font-bold uppercase">Optimized</span>. Resident satisfaction is high and all compliance documents are valid.
               </p>
-              <Button variant="outline" className="w-full rounded-xl font-bold h-11 border-primary/20 hover:bg-primary hover:text-white transition-all">
-                Portfolio Health Audit
-              </Button>
             </CardContent>
           </Card>
         </div>
