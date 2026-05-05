@@ -2,48 +2,39 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isSignedIn() {
-      return request.auth != null;
+    // Permissive rules for development and testing as requested
+    // Allows any authenticated user to read and write to any collection
+    match /{document=**} {
+      allow read, write: if request.auth != null;
     }
 
-    // Explicitly match top-level collections for reliable listing and querying
-    // This follows the recommended fix for permission denied errors on top-level collections.
-    
+    // Explicitly match top-level collections to handle listing and querying correctly
     match /users/{userId} {
-      allow read, write: if isSignedIn() && request.auth.uid == userId;
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
     match /properties/{id} {
-      allow read, write: if isSignedIn();
-    }
-
-    match /emergencyContacts/{id} {
-      allow read, write: if isSignedIn();
-    }
-
-    match /tenantProfiles/{id} {
-      allow read, write: if isSignedIn();
+      allow read, write: if request.auth != null;
     }
 
     match /documents/{id} {
-      allow read, write: if isSignedIn();
-    }
-
-    match /maintenanceRequests/{id} {
-      allow read, write: if isSignedIn();
-    }
-
-    match /inspections/{id} {
-      allow read, write: if isSignedIn();
+      allow read, write: if request.auth != null;
     }
 
     match /messages/{id} {
-      allow read, write: if isSignedIn();
+      allow read, write: if request.auth != null;
     }
 
-    // Catch-all for recursive structures
-    match /{document=**} {
-      allow read, write: if isSignedIn();
+    match /maintenanceRequests/{id} {
+      allow read, write: if request.auth != null;
+    }
+
+    match /inspections/{id} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /tenantProfiles/{id} {
+      allow read, write: if request.auth != null;
     }
   }
 }

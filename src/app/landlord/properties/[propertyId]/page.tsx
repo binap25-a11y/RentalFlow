@@ -157,7 +157,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     ]));
 
     // Optimistic Update: Set status to 'active' immediately for an "instant" feel.
-    // The management buttons (Edit, Delete) will be available immediately.
     setDocumentNonBlocking(docRef, {
       id: docId,
       fileName: file.name,
@@ -358,21 +357,21 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           </Card>
 
           <Tabs defaultValue="tenants" className="w-full">
-            <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full bg-muted/30 p-1 rounded-xl h-auto gap-1 border border-primary/5">
+            <TabsList className="grid grid-cols-2 w-full bg-muted/30 p-1 rounded-xl h-auto gap-1 border border-primary/5">
               <TabsTrigger value="tenants" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                <Users className="w-4 h-4 mr-2 hidden sm:inline" />
+                <Users className="w-4 h-4 mr-2" />
                 <span className="text-xs sm:text-sm">Residents</span>
               </TabsTrigger>
               <TabsTrigger value="docs" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                <FileText className="w-4 h-4 mr-2 hidden sm:inline" />
+                <FileText className="w-4 h-4 mr-2" />
                 <span className="text-xs sm:text-sm">Vault</span>
               </TabsTrigger>
               <TabsTrigger value="maintenance" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                <Wrench className="w-4 h-4 mr-2 hidden sm:inline" />
+                <Wrench className="w-4 h-4 mr-2" />
                 <span className="text-xs sm:text-sm">Maintenance</span>
               </TabsTrigger>
               <TabsTrigger value="inspections" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                <FileCheck className="w-4 h-4 mr-2 hidden sm:inline" />
+                <FileCheck className="w-4 h-4 mr-2" />
                 <span className="text-xs sm:text-sm">Audits</span>
               </TabsTrigger>
             </TabsList>
