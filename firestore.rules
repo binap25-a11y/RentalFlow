@@ -7,6 +7,10 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isMember() {
+      return isSignedIn() && (request.auth.uid in resource.data.memberIds);
+    }
+
     // User profiles
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
@@ -44,7 +48,7 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Documents - Standardized for membership-based listing
+    // Documents - Optimized for membership-based listing
     match /documents/{id} {
       allow create: if isSignedIn();
       allow read, list: if isSignedIn() && (
@@ -78,7 +82,7 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Messages - Optimized for membership-based listing
+    // Messages - Standardized for list-based queries
     match /messages/{id} {
       allow create: if isSignedIn();
       allow read, list: if isSignedIn() && (

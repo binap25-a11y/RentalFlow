@@ -2,7 +2,17 @@
 "use client";
 
 import { useState, use, useMemo, useRef } from 'react';
-import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useStorage, getLandlordCollectionQuery } from '@/firebase';
+import { 
+  useUser, 
+  useFirestore, 
+  useDoc, 
+  useCollection, 
+  useMemoFirebase, 
+  updateDocumentNonBlocking, 
+  setDocumentNonBlocking, 
+  useStorage, 
+  getLandlordCollectionQuery 
+} from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -114,6 +124,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     toast({ title: "Rent Updated" });
   };
 
+  const handleTriggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
   const handleUploadDocument = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user || !db || !storage || !property) return;
@@ -122,13 +136,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const docId = doc(collection(db, 'documents')).id;
 
     try {
-      const storageRef = ref(storage, `documents/${user.uid}/${propertyId}/${file.name}`);
+      const storageRef = ref(storage, `documents/${user.uid}/${propertyId}/${Date.now()}_${file.name}`);
       const uploadResult = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(uploadResult.ref);
 
       const docRef = doc(db, 'documents', docId);
       
-      // Ensure all authorized members (Landlord + all current Residents) are in the memberIds array
       const memberIds = Array.from(new Set([
         user.uid,
         ...(property.memberIds || []),
@@ -153,12 +166,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         description: "The file has been added to the secure property vault." 
       });
       setExpiryDate(undefined);
-      if (e.target) e.target.value = '';
+      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (error: any) {
       toast({ 
         variant: "destructive", 
         title: "Upload Failed", 
-        description: "Could not upload document. Please check your connection." 
+        description: "Could not upload document. Please check storage rules and connection." 
       });
     } finally {
       setIsUploadingDoc(false);
@@ -353,10 +366,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                       ref={fileInputRef} 
                       className="hidden" 
                       onChange={handleUploadDocument} 
-                      disabled={isUploadingDoc} 
                     />
                     <Button 
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={handleTriggerFileInput}
                       className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/20" 
                       disabled={isUploadingDoc}
                     >
