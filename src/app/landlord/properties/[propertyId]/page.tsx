@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useMemo, useRef } from 'react';
@@ -134,47 +133,63 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
     setIsUploadingDoc(true);
     const docId = doc(collection(db, 'documents')).id;
+    const docRef = doc(db, 'documents', docId);
+
+    // Instant Feedback: Optimistic UI record
+    const memberIds = Array.from(new Set([
+      user.uid,
+      ...(property.memberIds || []),
+      ...(tenants?.map(t => t.userId).filter(Boolean) || [])
+    ]));
+
+    setDocumentNonBlocking(docRef, {
+      id: docId,
+      fileName: file.name,
+      fileUrl: '', // Will be updated
+      status: 'uploading',
+      documentType: 'property-asset',
+      propertyId: propertyId,
+      landlordId: user.uid,
+      expiryDate: expiryDate ? expiryDate.toISOString() : null,
+      memberIds: memberIds,
+      uploadDate: new Date().toISOString(),
+      createdAt: serverTimestamp(),
+    }, { merge: true });
+
+    toast({ 
+      title: "Upload Initiated", 
+      description: `Saving ${file.name} to the property vault...` 
+    });
 
     try {
       const storageRef = ref(storage, `documents/${user.uid}/${propertyId}/${Date.now()}_${file.name}`);
       const uploadResult = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(uploadResult.ref);
 
-      const docRef = doc(db, 'documents', docId);
-      
-      const memberIds = Array.from(new Set([
-        user.uid,
-        ...(property.memberIds || []),
-        ...(tenants?.map(t => t.userId).filter(Boolean) || [])
-      ]));
-      
-      setDocumentNonBlocking(docRef, {
-        id: docId,
-        fileName: file.name,
+      updateDocumentNonBlocking(docRef, {
         fileUrl: url,
-        documentType: 'property-asset',
-        propertyId: propertyId,
-        landlordId: user.uid,
-        expiryDate: expiryDate ? expiryDate.toISOString() : null,
-        memberIds: memberIds,
-        uploadDate: new Date().toISOString(),
-        createdAt: serverTimestamp(),
-      }, { merge: true });
+        status: 'active',
+        updatedAt: serverTimestamp(),
+      });
 
       toast({ 
-        title: "Document Uploaded", 
-        description: "The file has been added to the secure property vault." 
+        title: "Vault Updated", 
+        description: "Document is now secure and visible to residents." 
       });
       setExpiryDate(undefined);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (error: any) {
+      updateDocumentNonBlocking(docRef, {
+        status: 'failed',
+        error: error.message
+      });
       toast({ 
         variant: "destructive", 
-        title: "Upload Failed", 
-        description: "Could not upload document. Please check storage rules and connection." 
+        title: "Vault Failure", 
+        description: "Could not finalize document storage." 
       });
     } finally {
       setIsUploadingDoc(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -380,7 +395,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               </Card>
               
               <div className="grid gap-3">
-                {propertyDocuments?.map(docItem => (
+                {propertyDocuments?.slice().sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).map(docItem => (
                   <div key={docItem.id} className="p-4 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-all group">
                     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
                       <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-100 transition-colors">
@@ -389,18 +404,28 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                       <div className="flex-1 text-left">
                         <h4 className="font-bold text-sm font-headline group-hover:text-primary transition-colors">{docItem.fileName}</h4>
                         <div className="flex gap-4 mt-1">
-                          <span className="text-[10px] text-muted-foreground font-bold uppercase flex items-center"><Info className="w-3 h-3 mr-1" /> {docItem.documentType}</span>
+                          <span className="text-[10px] text-muted-foreground font-bold uppercase flex items-center">
+                            <Info className="w-3 h-3 mr-1" /> {docItem.status === 'uploading' ? 'Syncing...' : docItem.documentType}
+                          </span>
                           {docItem.expiryDate && <span className="text-[10px] text-amber-600 font-bold uppercase flex items-center"><ShieldAlert className="w-3 h-3 mr-1" /> Exp: {format(new Date(docItem.expiryDate), 'PP')}</span>}
                         </div>
                       </div>
                       <div className="flex gap-2 w-full md:w-auto">
-                        <Button variant="outline" size="sm" onClick={() => handleSummarizeLease(docItem)} disabled={isAnalyzing === docItem.id} className="flex-1 md:flex-none rounded-xl font-bold h-9 border-primary/10 hover:bg-primary/5">
-                          {isAnalyzing === docItem.id ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Sparkles className="w-3 h-3 mr-2 text-primary" />}
-                          AI Analysis
-                        </Button>
-                        <Button variant="ghost" size="icon" asChild className="rounded-xl hover:bg-primary/5">
-                          <a href={docItem.fileUrl} target="_blank" rel="noopener noreferrer"><Download className="w-4 h-4 text-primary" /></a>
-                        </Button>
+                        {docItem.fileUrl ? (
+                          <>
+                            <Button variant="outline" size="sm" onClick={() => handleSummarizeLease(docItem)} disabled={isAnalyzing === docItem.id} className="flex-1 md:flex-none rounded-xl font-bold h-9 border-primary/10 hover:bg-primary/5">
+                              {isAnalyzing === docItem.id ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Sparkles className="w-3 h-3 mr-2 text-primary" />}
+                              AI Analysis
+                            </Button>
+                            <Button variant="ghost" size="icon" asChild className="rounded-xl hover:bg-primary/5">
+                              <a href={docItem.fileUrl} target="_blank" rel="noopener noreferrer"><Download className="w-4 h-4 text-primary" /></a>
+                            </Button>
+                          </>
+                        ) : (
+                          <div className="flex items-center px-4">
+                            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
