@@ -221,13 +221,15 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             </CardContent>
           </Card>
 
-          <Tabs defaultValue="tenants">
-            <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 rounded-xl h-auto">
-              <TabsTrigger value="tenants" className="rounded-lg py-2 font-bold"><Users className="w-4 h-4 mr-2" /> Residents</TabsTrigger>
-              <TabsTrigger value="docs" className="rounded-lg py-2 font-bold"><FileText className="w-4 h-4 mr-2" /> Portfolio Vault</TabsTrigger>
-              <TabsTrigger value="maintenance" className="rounded-lg py-2 font-bold"><Wrench className="w-4 h-4 mr-2" /> Maintenance</TabsTrigger>
-              <TabsTrigger value="inspections" className="rounded-lg py-2 font-bold"><FileCheck className="w-4 h-4 mr-2" /> Audits</TabsTrigger>
-            </TabsList>
+          <Tabs defaultValue="tenants" className="w-full">
+            <div className="overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
+              <TabsList className="inline-flex w-max min-w-full bg-muted/50 p-1 rounded-xl h-auto">
+                <TabsTrigger value="tenants" className="rounded-lg py-2.5 px-6 font-bold whitespace-nowrap"><Users className="w-4 h-4 mr-2" /> Residents</TabsTrigger>
+                <TabsTrigger value="docs" className="rounded-lg py-2.5 px-6 font-bold whitespace-nowrap"><FileText className="w-4 h-4 mr-2" /> Portfolio Vault</TabsTrigger>
+                <TabsTrigger value="maintenance" className="rounded-lg py-2.5 px-6 font-bold whitespace-nowrap"><Wrench className="w-4 h-4 mr-2" /> Maintenance</TabsTrigger>
+                <TabsTrigger value="inspections" className="rounded-lg py-2.5 px-6 font-bold whitespace-nowrap"><FileCheck className="w-4 h-4 mr-2" /> Audits</TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="tenants" className="mt-6 space-y-4">
                {tenants && tenants.length > 0 ? (

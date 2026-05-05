@@ -384,10 +384,17 @@ export default function InspectionsPage() {
                             </div>
                             <ScrollArea className="flex-1 text-left">
                               <div className="p-6 space-y-8">
-                                <Tabs defaultValue="exterior">
-                                  <TabsList className="w-full grid grid-cols-4 lg:grid-cols-7 h-auto bg-muted/50 p-1 rounded-xl">
-                                    {INSPECTION_SECTIONS.map(s => <TabsTrigger key={s.id} value={s.id} className="rounded-lg py-2"><s.icon className="w-4 h-4" /></TabsTrigger>)}
-                                  </TabsList>
+                                <Tabs defaultValue="exterior" className="w-full">
+                                  <div className="overflow-x-auto pb-2 no-scrollbar">
+                                    <TabsList className="inline-flex w-max min-w-full bg-muted/50 p-1 rounded-xl h-auto">
+                                      {INSPECTION_SECTIONS.map(s => (
+                                        <TabsTrigger key={s.id} value={s.id} className="rounded-lg py-2.5 px-5 flex items-center gap-2">
+                                          <s.icon className="w-4 h-4" />
+                                          <span className="text-xs font-bold hidden sm:inline">{s.title}</span>
+                                        </TabsTrigger>
+                                      ))}
+                                    </TabsList>
+                                  </div>
                                   {INSPECTION_SECTIONS.map(section => (
                                     <TabsContent key={section.id} value={section.id} className="mt-6 space-y-6">
                                       <div className="flex items-center gap-2 mb-4"><section.icon className="w-5 h-5 text-primary" /><h3 className="text-lg font-bold font-headline">{section.title}</h3></div>

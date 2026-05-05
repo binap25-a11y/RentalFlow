@@ -79,7 +79,7 @@ service cloud.firestore {
     match /messages/{id} {
       allow create: if isSignedIn();
       allow read, list: if isSignedIn() && (
-        resource.data.memberIds != null && request.auth.uid in resource.data.memberIds
+        request.auth.uid in resource.data.memberIds
       );
       allow update, delete: if isSignedIn() && (
         resource.data.senderId == request.auth.uid
