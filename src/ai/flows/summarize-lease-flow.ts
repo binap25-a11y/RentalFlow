@@ -1,7 +1,6 @@
-
 'use server';
 /**
- * @fileOverview An AI agent for summarizing lease agreements.
+ * @fileOverview An AI agent for summarizing lease agreements with retry logic for 429 errors.
  */
 
 import { ai } from '@/ai/genkit';
@@ -20,6 +19,8 @@ const SummarizeLeaseOutputSchema = z.object({
   summary: z.string().describe("A professional overview of the lease."),
 });
 export type SummarizeLeaseOutput = z.infer<typeof SummarizeLeaseOutputSchema>;
+
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 export async function summarizeLease(input: SummarizeLeaseInput): Promise<SummarizeLeaseOutput> {
   return summarizeLeaseFlow(input);
@@ -44,7 +45,27 @@ const summarizeLeaseFlow = ai.defineFlow(
     outputSchema: SummarizeLeaseOutputSchema,
   },
   async (input) => {
-    const { output } = await summarizeLeasePrompt(input);
-    return output!;
+    let retries = 3;
+    let lastError: any = null;
+
+    while (retries > 0) {
+      try {
+        const { output } = await summarizeLeasePrompt(input);
+        if (!output) throw new Error("No output generated");
+        return output;
+      } catch (error: any) {
+        lastError = error;
+        // Check for rate limit error (429)
+        if (error.status === 429 || error.message?.includes('429')) {
+          retries--;
+          if (retries > 0) {
+            await sleep(2000); // Wait 2 seconds before retry
+            continue;
+          }
+        }
+        throw error;
+      }
+    }
+    throw lastError || new Error("Max retries exceeded");
   }
 );

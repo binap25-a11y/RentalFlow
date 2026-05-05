@@ -149,7 +149,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const file = e.target.files?.[0];
     if (!file || !user || !db || !storage || !property) return;
 
-    setIsUploadingDoc(true);
+    // Optimistic Reset: Clear input immediately to allow next selection
+    setIsUploadingDoc(false); // We don't block the button anymore
     const docId = doc(collection(db, 'documents')).id;
     const docRef = doc(db, 'documents', docId);
 
@@ -185,7 +186,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
     // Reset UI state immediately so user can add another document
     if (fileInputRef.current) fileInputRef.current.value = '';
-    setIsUploadingDoc(false);
     setUploadExpiryDate(undefined);
 
     try {
@@ -234,6 +234,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const handleSummarizeLease = async (docObj: any) => {
     setIsAnalyzing(docObj.id);
     try {
+      // The flow now handles its own retries for 429s
       const summary = await summarizeLease({ documentText: `Document: ${docObj.fileName}.` });
       const docRef = doc(db!, 'documents', docObj.id);
       updateDocumentNonBlocking(docRef, {
@@ -242,8 +243,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         updatedAt: serverTimestamp(),
       });
       toast({ title: "AI Analysis Complete", description: "Terms identified." });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Analysis Failed" });
+    } catch (error: any) {
+      toast({ 
+        variant: "destructive", 
+        title: "Analysis Failed", 
+        description: error.status === 429 ? "Server busy, please try again shortly." : "AI could not process document." 
+      });
     } finally {
       setIsAnalyzing(null);
     }
