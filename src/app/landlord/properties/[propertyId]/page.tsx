@@ -52,7 +52,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
-  // Queries for property-specific data
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -269,14 +268,24 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           </Card>
 
           <Tabs defaultValue="tenants" className="w-full">
-            <div className="overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
-              <TabsList className="inline-flex w-max min-w-full bg-muted/50 p-1 rounded-xl h-auto">
-                <TabsTrigger value="tenants" className="rounded-lg py-2.5 px-6 font-bold whitespace-nowrap"><Users className="w-4 h-4 mr-2" /> Residents</TabsTrigger>
-                <TabsTrigger value="docs" className="rounded-lg py-2.5 px-6 font-bold whitespace-nowrap"><FileText className="w-4 h-4 mr-2" /> Portfolio Vault</TabsTrigger>
-                <TabsTrigger value="maintenance" className="rounded-lg py-2.5 px-6 font-bold whitespace-nowrap"><Wrench className="w-4 h-4 mr-2" /> Maintenance</TabsTrigger>
-                <TabsTrigger value="inspections" className="rounded-lg py-2.5 px-6 font-bold whitespace-nowrap"><FileCheck className="w-4 h-4 mr-2" /> Audits</TabsTrigger>
-              </TabsList>
-            </div>
+            <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full bg-muted/50 p-1 rounded-xl h-auto gap-1">
+              <TabsTrigger value="tenants" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center">
+                <Users className="w-4 h-4 mr-2 hidden sm:inline" />
+                <span className="text-xs sm:text-sm">Residents</span>
+              </TabsTrigger>
+              <TabsTrigger value="docs" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center">
+                <FileText className="w-4 h-4 mr-2 hidden sm:inline" />
+                <span className="text-xs sm:text-sm">Vault</span>
+              </TabsTrigger>
+              <TabsTrigger value="maintenance" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center">
+                <Wrench className="w-4 h-4 mr-2 hidden sm:inline" />
+                <span className="text-xs sm:text-sm">Maintenance</span>
+              </TabsTrigger>
+              <TabsTrigger value="inspections" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center">
+                <FileCheck className="w-4 h-4 mr-2 hidden sm:inline" />
+                <span className="text-xs sm:text-sm">Audits</span>
+              </TabsTrigger>
+            </TabsList>
 
             <TabsContent value="tenants" className="mt-6 space-y-4">
                {tenants && tenants.length > 0 ? (
