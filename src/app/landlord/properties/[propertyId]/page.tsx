@@ -11,7 +11,6 @@ import {
   setDocumentNonBlocking, 
   deleteDocumentNonBlocking,
   useStorage, 
-  getLandlordCollectionQuery 
 } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -157,12 +156,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       ...(tenants?.map(t => t.userId).filter(Boolean) || [])
     ]));
 
-    // Optimistic Update: Add doc instantly
+    // Optimistic Update: Add doc instantly to ensure zero lag in UI
     setDocumentNonBlocking(docRef, {
       id: docId,
       fileName: file.name,
       fileUrl: '', 
-      status: 'active', // Set active immediately for 'instant' feel
+      status: 'active',
       documentType: 'property-asset',
       propertyId: propertyId,
       landlordId: user.uid,
@@ -230,6 +229,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   };
 
   const handleSummarizeLease = async (docObj: any) => {
+    if (!docObj.fileUrl) {
+      toast({ title: "Still Syncing", description: "AI analysis will be available in a few moments." });
+      return;
+    }
     setIsAnalyzing(docObj.id);
     try {
       const summary = await summarizeLease({ documentText: `Document: ${docObj.fileName}. Path: ${docObj.fileUrl}` });
@@ -451,7 +454,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           </div>
                         </div>
                         <div className="flex gap-2 w-full md:w-auto">
-                          {docItem.status === 'active' && docItem.fileUrl ? (
+                          {docItem.status === 'active' ? (
                             <>
                               <Dialog open={editingDoc?.id === docItem.id} onOpenChange={(open) => !open && setEditingDoc(null)}>
                                 <DialogTrigger asChild>
@@ -494,7 +497,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                                 {isAnalyzing === docItem.id ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Sparkles className="w-3 h-3 mr-2 text-primary" />}
                                 AI Review
                               </Button>
-                              <Button variant="ghost" size="icon" asChild className="rounded-xl hover:bg-primary/5 text-primary">
+                              <Button variant="ghost" size="icon" asChild className={cn("rounded-xl hover:bg-primary/5 text-primary", !docItem.fileUrl && "opacity-20 pointer-events-none")}>
                                 <a href={docItem.fileUrl} target="_blank" rel="noopener noreferrer"><Download className="w-4 h-4" /></a>
                               </Button>
                               <Button variant="ghost" size="icon" onClick={() => handleDeleteDoc(docItem.id)} className="rounded-xl hover:bg-destructive/5 text-destructive/40 hover:text-destructive">

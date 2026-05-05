@@ -6,7 +6,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Top-level collection matching for reliable listing and querying
+    // Explicitly match top-level collections for reliable listing and querying
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
@@ -23,6 +23,7 @@ service cloud.firestore {
       allow read, write: if isSignedIn();
     }
 
+    // Document Vault access logic
     match /documents/{id} {
       allow read, write: if isSignedIn();
     }
@@ -35,6 +36,7 @@ service cloud.firestore {
       allow read, write: if isSignedIn();
     }
 
+    // Messaging Hub access logic
     match /messages/{id} {
       allow read, write: if isSignedIn();
     }
