@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, use, useMemo } from 'react';
+import { useState, use, useMemo, useRef } from 'react';
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useStorage, getLandlordCollectionQuery } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -44,6 +44,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const storage = useStorage();
   const { toast } = useToast();
   const router = useRouter();
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const propertyRef = useMemoFirebase(() => {
     if (!db) return null;
@@ -126,24 +128,38 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
       const docRef = doc(db, 'documents', docId);
       
+      // Ensure all authorized members (Landlord + all current Residents) are in the memberIds array
+      const memberIds = Array.from(new Set([
+        user.uid,
+        ...(property.memberIds || []),
+        ...(tenants?.map(t => t.userId).filter(Boolean) || [])
+      ]));
+      
       setDocumentNonBlocking(docRef, {
         id: docId,
         fileName: file.name,
         fileUrl: url,
         documentType: 'property-asset',
         propertyId: propertyId,
-        userId: user.uid, 
         landlordId: user.uid,
         expiryDate: expiryDate ? expiryDate.toISOString() : null,
-        memberIds: property.memberIds || [user.uid],
+        memberIds: memberIds,
         uploadDate: new Date().toISOString(),
         createdAt: serverTimestamp(),
       }, { merge: true });
 
-      toast({ title: "Document Uploaded" });
+      toast({ 
+        title: "Document Uploaded", 
+        description: "The file has been added to the secure property vault." 
+      });
       setExpiryDate(undefined);
+      if (e.target) e.target.value = '';
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Upload Failed", description: error.message });
+      toast({ 
+        variant: "destructive", 
+        title: "Upload Failed", 
+        description: "Could not upload document. Please check your connection." 
+      });
     } finally {
       setIsUploadingDoc(false);
     }
@@ -332,12 +348,20 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     </Popover>
                   </div>
                   <div className="flex items-end">
-                    <input type="file" id="doc-upload" className="hidden" onChange={handleUploadDocument} disabled={isUploadingDoc} />
-                    <Button asChild className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/20" disabled={isUploadingDoc}>
-                      <label htmlFor="doc-upload" className="cursor-pointer">
-                        {isUploadingDoc ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-                        Add Document to Vault
-                      </label>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      onChange={handleUploadDocument} 
+                      disabled={isUploadingDoc} 
+                    />
+                    <Button 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/20" 
+                      disabled={isUploadingDoc}
+                    >
+                      {isUploadingDoc ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
+                      Add Document to Vault
                     </Button>
                   </div>
                 </CardContent>
