@@ -163,10 +163,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       description: `${file.name} is being secured in the property vault.` 
     });
 
-    // Reset button state immediately for a fast feel
-    setIsUploadingDoc(false);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-
     // Perform the heavy lifting in the background
     try {
       const storageRef = ref(storage, `documents/${user.uid}/${propertyId}/${Date.now()}_${file.name}`);
@@ -194,6 +190,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         title: "Upload Error", 
         description: "An issue occurred during background storage." 
       });
+    } finally {
+      setIsUploadingDoc(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
