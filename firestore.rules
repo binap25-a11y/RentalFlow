@@ -7,7 +7,7 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
 
-    // Explicit path matching for top-level collections to handle listing and specific actions
+    // Explicit path matching for top-level collections to ensure reliable authorized access
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
