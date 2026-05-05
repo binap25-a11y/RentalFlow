@@ -126,7 +126,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const [editDocName, setEditDocName] = useState('');
   const [editDocExpiry, setEditDocExpiry] = useState<Date>();
 
-  // Local state for instant previews of newly uploaded files
   const [localFileUrls, setLocalFileUrls] = useState<Record<string, string>>({});
 
   const handleUpdateRent = () => {
@@ -149,12 +148,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const file = e.target.files?.[0];
     if (!file || !user || !db || !storage || !property) return;
 
-    // Optimistic Reset: Clear input immediately to allow next selection
-    setIsUploadingDoc(false); // We don't block the button anymore
+    // PERFORMANCE OPTIMIZATION: Reset UI instantly so Landlord can add another file immediately
+    setIsUploadingDoc(false); 
     const docId = doc(collection(db, 'documents')).id;
     const docRef = doc(db, 'documents', docId);
 
-    // Generate local URL for instant viewing
+    // Instant local preview generation
     const localUrl = URL.createObjectURL(file);
     setLocalFileUrls(prev => ({ ...prev, [docId]: localUrl }));
 
@@ -164,11 +163,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       ...(tenants?.map(t => t.userId).filter(Boolean) || [])
     ]));
 
-    // Optimistic Update: Create active record instantly so actions are available
+    // OPTIMISTIC WRITE: Set as 'active' instantly to enable Edit/Delete/View buttons
     setDocumentNonBlocking(docRef, {
       id: docId,
       fileName: file.name,
-      fileUrl: '', // Will be updated after storage upload
+      fileUrl: '', 
       status: 'active',
       documentType: 'property-asset',
       propertyId: propertyId,
@@ -184,7 +183,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       description: "Asset record initialized instantly." 
     });
 
-    // Reset UI state immediately so user can add another document
     if (fileInputRef.current) fileInputRef.current.value = '';
     setUploadExpiryDate(undefined);
 
@@ -201,7 +199,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       toast({ 
         variant: "destructive", 
         title: "Upload Error", 
-        description: "Failed to store file in vault." 
+        description: "Storage task failed." 
       });
     }
   };
@@ -210,7 +208,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     if (!db) return;
     const docRef = doc(db, 'documents', id);
     deleteDocumentNonBlocking(docRef);
-    toast({ title: "Document Removed", description: "Record decommissioned from vault." });
+    toast({ title: "Document Removed", description: "EPC or record decommissioned from vault." });
   };
 
   const handleOpenEditDoc = (docItem: any) => {
@@ -227,14 +225,13 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       expiryDate: editDocExpiry ? editDocExpiry.toISOString() : null,
       updatedAt: serverTimestamp(),
     });
-    toast({ title: "Metadata Updated", description: "Vault record synchronized." });
+    toast({ title: "Metadata Updated", description: "Compliance ledger synchronized." });
     setEditingDoc(null);
   };
 
   const handleSummarizeLease = async (docObj: any) => {
     setIsAnalyzing(docObj.id);
     try {
-      // The flow now handles its own retries for 429s
       const summary = await summarizeLease({ documentText: `Document: ${docObj.fileName}.` });
       const docRef = doc(db!, 'documents', docObj.id);
       updateDocumentNonBlocking(docRef, {
@@ -242,12 +239,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         expiryDate: summary.leaseEndDate,
         updatedAt: serverTimestamp(),
       });
-      toast({ title: "AI Analysis Complete", description: "Terms identified." });
+      toast({ title: "AI Analysis Complete", description: "Key terms identified." });
     } catch (error: any) {
       toast({ 
         variant: "destructive", 
         title: "Analysis Failed", 
-        description: error.status === 429 ? "Server busy, please try again shortly." : "AI could not process document." 
+        description: "AI could not process document at this time." 
       });
     } finally {
       setIsAnalyzing(null);
@@ -277,7 +274,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   };
 
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
-  if (!property) return <div className="p-8 text-center">Property not found.</div>;
+  if (!property) return <div className="p-8 text-center font-bold">Property not found in portfolio.</div>;
 
   const gallery = property.imageUrls || [property.imageUrl].filter(Boolean);
 
@@ -361,7 +358,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           </Card>
 
           <Tabs defaultValue="tenants" className="w-full">
-            <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full bg-muted/30 p-1 rounded-xl h-auto gap-1 border border-primary/5">
+            <TabsList className="grid grid-cols-4 w-full bg-muted/30 p-1 rounded-xl h-auto gap-1 border border-primary/5">
               <TabsTrigger value="tenants" className="rounded-lg py-2.5 px-0 font-bold flex flex-col sm:flex-row items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
                 <Users className="w-4 h-4 sm:mr-2" />
                 <span className="text-[10px] sm:text-sm">Residents</span>
@@ -411,12 +408,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               <Card className="border-none shadow-sm bg-primary/5 rounded-2xl border border-primary/5">
                 <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2 text-left">
-                    <Label className="text-[10px] font-bold font-headline uppercase tracking-widest text-primary/60">Compliance Deadline</Label>
+                    <Label className="text-[10px] font-bold font-headline uppercase tracking-widest text-primary/60">Compliance Deadline (Optional)</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button variant="outline" className={cn("w-full justify-start text-left h-11 rounded-xl bg-white border-none shadow-sm font-body", !uploadExpiryDate && "text-muted-foreground")}>
                           <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
-                          {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set expiration..."}
+                          {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Select future date..."}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0 rounded-2xl border-none shadow-2xl" align="start">
@@ -437,7 +434,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                       disabled={isUploadingDoc}
                     >
                       {isUploadingDoc ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-                      Add Document
+                      Add Document to Vault
                     </Button>
                   </div>
                 </CardContent>
@@ -471,7 +468,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                                 </Button>
                               </DialogTrigger>
                               <DialogContent className="rounded-2xl border-none shadow-2xl p-0 overflow-hidden">
-                                <div className="p-6 bg-primary/5 border-b">
+                                <div className="p-6 bg-primary/5 border-b text-left">
                                   <DialogTitle className="font-headline font-bold text-xl text-primary">Modify Asset Details</DialogTitle>
                                   <DialogDescription className="font-medium text-muted-foreground">Refine metadata for official compliance ledger.</DialogDescription>
                                 </div>
@@ -493,6 +490,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                                         <Calendar mode="single" selected={editDocExpiry} onSelect={setEditDocExpiry} initialFocus />
                                       </PopoverContent>
                                     </Popover>
+                                    {editDocExpiry && (
+                                      <Button variant="ghost" size="sm" onClick={() => setEditDocExpiry(undefined)} className="text-[10px] font-bold text-destructive p-0 h-auto hover:bg-transparent">Clear Expiry</Button>
+                                    )}
                                   </div>
                                 </div>
                                 <DialogFooter className="p-6 bg-muted/5 border-t">

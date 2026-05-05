@@ -19,8 +19,9 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
-      // Enable dropdown navigation for easier year/month selection
+      // Enable dropdown navigation for easier year/month selection (e.g. for long-term EPCs)
       captionLayout="dropdown"
+      // Range: 10 years past to 20 years future
       startMonth={new Date(new Date().getFullYear() - 10, 0)}
       endMonth={new Date(new Date().getFullYear() + 20, 11)}
       classNames={{
@@ -59,10 +60,10 @@ function Calendar({
         range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         hidden: "invisible",
-        // Add styles for dropdown selects in version 9
-        dropdown: "flex items-center gap-1",
-        dropdown_root: "relative inline-flex items-center",
-        caption_dropwdowns: "flex justify-center gap-1",
+        // Enhanced Dropdown Styles for RDP v9
+        dropdown: "relative inline-flex items-center",
+        dropdown_root: "flex items-center gap-1",
+        caption_dropdowns: "flex justify-center gap-2 mb-4",
         ...classNames,
       }}
       components={{
