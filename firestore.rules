@@ -43,11 +43,12 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Documents - Standardized for membership listing
+    // Documents - Standardized for Landlord and Membership listing
     match /documents/{id} {
       allow create: if isSignedIn();
       allow read, list: if isSignedIn() && (
-        request.auth.uid in resource.data.memberIds
+        resource.data.landlordId == request.auth.uid ||
+        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
       );
       allow update, delete: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid ||
@@ -59,7 +60,8 @@ service cloud.firestore {
     match /maintenanceRequests/{id} {
       allow create: if isSignedIn();
       allow read, list, update, delete: if isSignedIn() && (
-        request.auth.uid in resource.data.memberIds
+        resource.data.landlordId == request.auth.uid ||
+        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
       );
     }
 
@@ -67,16 +69,19 @@ service cloud.firestore {
     match /inspections/{id} {
       allow create: if isSignedIn();
       allow read, list: if isSignedIn() && (
-        request.auth.uid in resource.data.memberIds
+        resource.data.landlordId == request.auth.uid ||
+        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
       );
       allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
     }
 
-    // Messages - Optimized for array-contains queries
+    // Messages - Optimized for dual-check membership
     match /messages/{id} {
       allow create: if isSignedIn();
       allow read, list: if isSignedIn() && (
-        request.auth.uid in resource.data.memberIds
+        resource.data.senderId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid ||
+        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
       );
       allow update, delete: if isSignedIn() && (
         resource.data.senderId == request.auth.uid
