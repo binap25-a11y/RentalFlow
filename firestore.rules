@@ -6,43 +6,41 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // User profiles
+    // Top-level collection matching for reliable listing and querying
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
-    // Properties
     match /properties/{id} {
       allow read, write: if isSignedIn();
     }
 
-    // Emergency Contacts
     match /emergencyContacts/{id} {
       allow read, write: if isSignedIn();
     }
 
-    // Tenant Profiles
     match /tenantProfiles/{id} {
       allow read, write: if isSignedIn();
     }
 
-    // Documents - Explicit matching for reliable collection listing
     match /documents/{id} {
       allow read, write: if isSignedIn();
     }
 
-    // Maintenance Requests
     match /maintenanceRequests/{id} {
       allow read, write: if isSignedIn();
     }
 
-    // Inspections
     match /inspections/{id} {
       allow read, write: if isSignedIn();
     }
 
-    // Messages - Explicit matching for reliable real-time listing
     match /messages/{id} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Recursive helper for nested structures if needed in future
+    match /{document=**} {
       allow read, write: if isSignedIn();
     }
   }

@@ -9,6 +9,7 @@ import {
   useMemoFirebase, 
   updateDocumentNonBlocking, 
   setDocumentNonBlocking, 
+  deleteDocumentNonBlocking,
   useStorage, 
   getLandlordCollectionQuery 
 } from '@/firebase';
@@ -25,8 +26,17 @@ import {
   Trash2, Edit3, Loader2, Save, ArrowLeft,
   Download, FileText, Info, ShieldAlert, Upload, 
   Calendar as CalendarIcon, Sparkles, Image as ImageIcon,
-  CheckCircle2, Clock, AlertTriangle
+  CheckCircle2, Clock, AlertTriangle, X
 } from "lucide-react";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -107,11 +117,15 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: inspections } = useCollection(inspectionsQuery);
 
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingRent, setIsEditingRent] = useState(false);
   const [rentAmount, setRentAmount] = useState('');
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
-  const [expiryDate, setExpiryDate] = useState<Date>();
+  const [uploadExpiryDate, setUploadExpiryDate] = useState<Date>();
+
+  const [editingDoc, setEditingDoc] = useState<any>(null);
+  const [editDocName, setEditDocName] = useState('');
+  const [editDocExpiry, setEditDocExpiry] = useState<Date>();
 
   const handleUpdateRent = () => {
     if (!propertyRef) return;
@@ -119,7 +133,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       rentAmount: Number(rentAmount),
       updatedAt: serverTimestamp(),
     });
-    setIsEditing(false);
+    setIsEditingRent(false);
     toast({ title: "Rent Updated" });
   };
 
@@ -143,27 +157,26 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       ...(tenants?.map(t => t.userId).filter(Boolean) || [])
     ]));
 
-    // Optimistic UI update: Create doc record immediately
+    // Optimistic Update: Add doc instantly
     setDocumentNonBlocking(docRef, {
       id: docId,
       fileName: file.name,
       fileUrl: '', 
-      status: 'uploading',
+      status: 'active', // Set active immediately for 'instant' feel
       documentType: 'property-asset',
       propertyId: propertyId,
       landlordId: user.uid,
-      expiryDate: expiryDate ? expiryDate.toISOString() : null,
+      expiryDate: uploadExpiryDate ? uploadExpiryDate.toISOString() : null,
       memberIds: memberIds,
       uploadDate: new Date().toISOString(),
       createdAt: serverTimestamp(),
     }, { merge: true });
 
     toast({ 
-      title: "Syncing Document", 
-      description: `${file.name} is being secured in the property vault.` 
+      title: "Document Registered", 
+      description: "Item added to vault instantly." 
     });
 
-    // Perform the heavy lifting in the background
     try {
       const storageRef = ref(storage, `documents/${user.uid}/${propertyId}/${Date.now()}_${file.name}`);
       const uploadResult = await uploadBytes(storageRef, file);
@@ -171,15 +184,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
       updateDocumentNonBlocking(docRef, {
         fileUrl: url,
-        status: 'active',
         updatedAt: serverTimestamp(),
       });
 
-      toast({ 
-        title: "Vault Synchronized", 
-        description: "Official record updated." 
-      });
-      setExpiryDate(undefined);
+      setUploadExpiryDate(undefined);
     } catch (error: any) {
       updateDocumentNonBlocking(docRef, {
         status: 'failed',
@@ -187,13 +195,38 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       });
       toast({ 
         variant: "destructive", 
-        title: "Upload Error", 
-        description: "An issue occurred during background storage." 
+        title: "Vault Sync Error", 
+        description: "Background storage failed." 
       });
     } finally {
       setIsUploadingDoc(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
+  };
+
+  const handleDeleteDoc = (id: string) => {
+    if (!db) return;
+    const docRef = doc(db, 'documents', id);
+    deleteDocumentNonBlocking(docRef);
+    toast({ title: "Document Removed", description: "Ledger updated." });
+  };
+
+  const handleOpenEditDoc = (docItem: any) => {
+    setEditingDoc(docItem);
+    setEditDocName(docItem.fileName);
+    setEditDocExpiry(docItem.expiryDate ? new Date(docItem.expiryDate) : undefined);
+  };
+
+  const handleUpdateDocMetadata = () => {
+    if (!db || !editingDoc) return;
+    const docRef = doc(db, 'documents', editingDoc.id);
+    updateDocumentNonBlocking(docRef, {
+      fileName: editDocName,
+      expiryDate: editDocExpiry ? editDocExpiry.toISOString() : null,
+      updatedAt: serverTimestamp(),
+    });
+    toast({ title: "Document Updated", description: "Metadata synchronized." });
+    setEditingDoc(null);
   };
 
   const handleSummarizeLease = async (docObj: any) => {
@@ -296,13 +329,13 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 <div className="space-y-1">
                   <Label className="text-muted-foreground font-bold text-[10px] uppercase tracking-widest font-headline">Monthly Yield</Label>
                   <div className="flex items-center gap-3">
-                    {isEditing ? (
+                    {isEditingRent ? (
                       <Input type="number" value={rentAmount || property.rentAmount} onChange={(e) => setRentAmount(e.target.value)} className="rounded-xl h-11 w-32 bg-muted/20 border-none" />
                     ) : (
                       <p className="text-4xl font-bold text-primary font-headline">£{property.rentAmount}</p>
                     )}
-                    <Button variant="ghost" size="icon" onClick={isEditing ? handleUpdateRent : () => setIsEditing(true)} className="rounded-full hover:bg-primary/5">
-                      {isEditing ? <Save className="w-4 h-4 text-emerald-600" /> : <Edit3 className="w-4 h-4 text-muted-foreground" />}
+                    <Button variant="ghost" size="icon" onClick={isEditingRent ? handleUpdateRent : () => setIsEditingRent(true)} className="rounded-full hover:bg-primary/5">
+                      {isEditingRent ? <Save className="w-4 h-4 text-emerald-600" /> : <Edit3 className="w-4 h-4 text-muted-foreground" />}
                     </Button>
                   </div>
                 </div>
@@ -374,13 +407,13 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     <Label className="text-[10px] font-bold font-headline uppercase tracking-widest text-primary/60">Compliance Deadline</Label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn("w-full justify-start text-left h-11 rounded-xl bg-white border-none shadow-sm font-body", !expiryDate && "text-muted-foreground")}>
+                        <Button variant="outline" className={cn("w-full justify-start text-left h-11 rounded-xl bg-white border-none shadow-sm font-body", !uploadExpiryDate && "text-muted-foreground")}>
                           <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
-                          {expiryDate ? format(expiryDate, "PPP") : "Set expiration..."}
+                          {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set expiration..."}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0 rounded-2xl border-none shadow-2xl" align="start">
-                        <Calendar mode="single" selected={expiryDate} onSelect={setExpiryDate} initialFocus />
+                        <Calendar mode="single" selected={uploadExpiryDate} onSelect={setUploadExpiryDate} initialFocus />
                       </PopoverContent>
                     </Popover>
                   </div>
@@ -414,21 +447,58 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         <div className="flex-1 text-left">
                           <h4 className="font-bold text-sm font-headline group-hover:text-primary transition-colors">{docItem.fileName}</h4>
                           <div className="flex gap-4 mt-1">
-                            <span className={cn("text-[10px] font-bold uppercase flex items-center", docItem.status === 'active' ? 'text-emerald-600' : 'text-amber-600 animate-pulse')}>
-                              <Info className="w-3 h-3 mr-1" /> {docItem.status === 'active' ? 'Secure' : 'Syncing...'}
-                            </span>
                             {docItem.expiryDate && <span className="text-[10px] text-destructive font-bold uppercase flex items-center"><ShieldAlert className="w-3 h-3 mr-1" /> Exp: {format(new Date(docItem.expiryDate), 'PP')}</span>}
                           </div>
                         </div>
                         <div className="flex gap-2 w-full md:w-auto">
                           {docItem.status === 'active' && docItem.fileUrl ? (
                             <>
+                              <Dialog open={editingDoc?.id === docItem.id} onOpenChange={(open) => !open && setEditingDoc(null)}>
+                                <DialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" onClick={() => handleOpenEditDoc(docItem)} className="rounded-xl hover:bg-primary/5 text-muted-foreground">
+                                    <Edit3 className="w-4 h-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="rounded-2xl border-none">
+                                  <DialogHeader className="text-left">
+                                    <DialogTitle className="font-headline font-bold">Edit Metadata</DialogTitle>
+                                    <DialogDescription>Update the document record details.</DialogDescription>
+                                  </DialogHeader>
+                                  <div className="py-4 space-y-4 text-left">
+                                    <div className="space-y-2">
+                                      <Label className="text-xs font-bold uppercase text-muted-foreground">Document Name</Label>
+                                      <Input value={editDocName} onChange={(e) => setEditDocName(e.target.value)} className="rounded-xl h-11" />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <Label className="text-xs font-bold uppercase text-muted-foreground">Expiry Date</Label>
+                                      <Popover>
+                                        <PopoverTrigger asChild>
+                                          <Button variant="outline" className="w-full justify-start h-11 rounded-xl">
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {editDocExpiry ? format(editDocExpiry, "PPP") : "No expiry set"}
+                                          </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0 rounded-2xl border-none">
+                                          <Calendar mode="single" selected={editDocExpiry} onSelect={setEditDocExpiry} />
+                                        </PopoverContent>
+                                      </Popover>
+                                    </div>
+                                  </div>
+                                  <DialogFooter>
+                                    <Button className="w-full rounded-xl h-11 font-bold bg-primary" onClick={handleUpdateDocMetadata}>Save Changes</Button>
+                                  </DialogFooter>
+                                </DialogContent>
+                              </Dialog>
+
                               <Button variant="outline" size="sm" onClick={() => handleSummarizeLease(docItem)} disabled={isAnalyzing === docItem.id} className="flex-1 md:flex-none rounded-xl font-bold h-9 border-primary/10 hover:bg-primary/5 transition-all">
                                 {isAnalyzing === docItem.id ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Sparkles className="w-3 h-3 mr-2 text-primary" />}
                                 AI Review
                               </Button>
                               <Button variant="ghost" size="icon" asChild className="rounded-xl hover:bg-primary/5 text-primary">
                                 <a href={docItem.fileUrl} target="_blank" rel="noopener noreferrer"><Download className="w-4 h-4" /></a>
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleDeleteDoc(docItem.id)} className="rounded-xl hover:bg-destructive/5 text-destructive/40 hover:text-destructive">
+                                <Trash2 className="w-4 h-4" />
                               </Button>
                             </>
                           ) : (
