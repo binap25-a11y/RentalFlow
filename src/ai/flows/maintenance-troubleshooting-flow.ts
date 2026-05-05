@@ -1,7 +1,6 @@
-
 'use server';
 /**
- * @fileOverview An AI agent for helping residents troubleshoot issues before logging maintenance requests.
+ * @fileOverview An AI agent for troubleshooting issues with retry logic for 429 errors.
  */
 
 import { ai } from '@/ai/genkit';
@@ -19,6 +18,8 @@ const MaintenanceTroubleshootOutputSchema = z.object({
   encouragement: z.string().describe('A helpful message explaining why these steps save time.'),
 });
 export type MaintenanceTroubleshootOutput = z.infer<typeof MaintenanceTroubleshootOutputSchema>;
+
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 export async function maintenanceTroubleshoot(input: MaintenanceTroubleshootInput): Promise<MaintenanceTroubleshootOutput> {
   return maintenanceTroubleshootFlow(input);
@@ -45,7 +46,26 @@ const maintenanceTroubleshootFlow = ai.defineFlow(
     outputSchema: MaintenanceTroubleshootOutputSchema,
   },
   async (input) => {
-    const { output } = await troubleshootPrompt(input);
-    return output!;
+    let retries = 3;
+    let lastError: any = null;
+
+    while (retries > 0) {
+      try {
+        const { output } = await troubleshootPrompt(input);
+        if (!output) throw new Error("No output generated");
+        return output;
+      } catch (error: any) {
+        lastError = error;
+        if (error.status === 429 || error.message?.includes('429')) {
+          retries--;
+          if (retries > 0) {
+            await sleep(2000);
+            continue;
+          }
+        }
+        throw error;
+      }
+    }
+    throw lastError || new Error("Max retries exceeded");
   }
 );

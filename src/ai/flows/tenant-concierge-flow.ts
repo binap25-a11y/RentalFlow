@@ -1,7 +1,6 @@
-
 'use server';
 /**
- * @fileOverview A resident AI concierge agent for answering property queries.
+ * @fileOverview A resident AI concierge agent with retry logic for 429 errors.
  */
 
 import { ai } from '@/ai/genkit';
@@ -18,6 +17,8 @@ const TenantConciergeOutputSchema = z.object({
   suggestedAction: z.string().optional().describe("A suggested next step, if applicable."),
 });
 export type TenantConciergeOutput = z.infer<typeof TenantConciergeOutputSchema>;
+
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 export async function tenantConcierge(input: TenantConciergeInput): Promise<TenantConciergeOutput> {
   return tenantConciergeFlow(input);
@@ -42,7 +43,26 @@ const tenantConciergeFlow = ai.defineFlow(
     outputSchema: TenantConciergeOutputSchema,
   },
   async (input) => {
-    const { output } = await tenantConciergePrompt(input);
-    return output!;
+    let retries = 3;
+    let lastError: any = null;
+
+    while (retries > 0) {
+      try {
+        const { output } = await tenantConciergePrompt(input);
+        if (!output) throw new Error("No output generated");
+        return output;
+      } catch (error: any) {
+        lastError = error;
+        if (error.status === 429 || error.message?.includes('429')) {
+          retries--;
+          if (retries > 0) {
+            await sleep(2000);
+            continue;
+          }
+        }
+        throw error;
+      }
+    }
+    throw lastError || new Error("Max retries exceeded");
   }
 );

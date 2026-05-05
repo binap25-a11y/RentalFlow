@@ -230,6 +230,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   };
 
   const handleSummarizeLease = async (docObj: any) => {
+    if (isAnalyzing) return; // Request Lock
     setIsAnalyzing(docObj.id);
     try {
       const summary = await summarizeLease({ documentText: `Document: ${docObj.fileName}.` });
