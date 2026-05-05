@@ -124,7 +124,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   };
 
   const handleTriggerFileInput = () => {
-    fileInputRef.current?.click();
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   const handleUploadDocument = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,14 +137,13 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const docId = doc(collection(db, 'documents')).id;
     const docRef = doc(db, 'documents', docId);
 
-    // Instant Feedback: Optimistic UI record
     const memberIds = Array.from(new Set([
       user.uid,
       ...(property.memberIds || []),
       ...(tenants?.map(t => t.userId).filter(Boolean) || [])
     ]));
 
-    // Use non-blocking set for "Instant" feel
+    // Optimistic UI update: Create doc record immediately
     setDocumentNonBlocking(docRef, {
       id: docId,
       fileName: file.name,
@@ -158,10 +159,15 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     }, { merge: true });
 
     toast({ 
-      title: "Upload Initiated", 
-      description: `${file.name} is being added to the property vault.` 
+      title: "Syncing Document", 
+      description: `${file.name} is being secured in the property vault.` 
     });
 
+    // Reset button state immediately for a fast feel
+    setIsUploadingDoc(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+
+    // Perform the heavy lifting in the background
     try {
       const storageRef = ref(storage, `documents/${user.uid}/${propertyId}/${Date.now()}_${file.name}`);
       const uploadResult = await uploadBytes(storageRef, file);
@@ -175,7 +181,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
       toast({ 
         title: "Vault Synchronized", 
-        description: "Document successfully secured." 
+        description: "Official record updated." 
       });
       setExpiryDate(undefined);
     } catch (error: any) {
@@ -186,11 +192,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       toast({ 
         variant: "destructive", 
         title: "Upload Error", 
-        description: "An issue occurred during file storage." 
+        description: "An issue occurred during background storage." 
       });
-    } finally {
-      setIsUploadingDoc(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -240,7 +243,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const gallery = property.imageUrls || [property.imageUrl].filter(Boolean);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
+    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full hover:bg-muted">
@@ -320,19 +323,19 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
           <Tabs defaultValue="tenants" className="w-full">
             <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full bg-muted/30 p-1 rounded-xl h-auto gap-1 border border-primary/5">
-              <TabsTrigger value="tenants" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white">
+              <TabsTrigger value="tenants" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
                 <Users className="w-4 h-4 mr-2 hidden sm:inline" />
                 <span className="text-xs sm:text-sm">Residents</span>
               </TabsTrigger>
-              <TabsTrigger value="docs" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white">
+              <TabsTrigger value="docs" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
                 <FileText className="w-4 h-4 mr-2 hidden sm:inline" />
                 <span className="text-xs sm:text-sm">Vault</span>
               </TabsTrigger>
-              <TabsTrigger value="maintenance" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white">
+              <TabsTrigger value="maintenance" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
                 <Wrench className="w-4 h-4 mr-2 hidden sm:inline" />
                 <span className="text-xs sm:text-sm">Maintenance</span>
               </TabsTrigger>
-              <TabsTrigger value="inspections" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white">
+              <TabsTrigger value="inspections" className="rounded-lg py-2.5 px-2 font-bold flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
                 <FileCheck className="w-4 h-4 mr-2 hidden sm:inline" />
                 <span className="text-xs sm:text-sm">Audits</span>
               </TabsTrigger>
@@ -342,11 +345,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                {tenants && tenants.length > 0 ? (
                  tenants.map(tenant => (
                     <div key={tenant.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-all">
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 text-left">
                         <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold text-lg font-headline">
                           {tenant.firstName?.[0]}{tenant.lastName?.[0]}
                         </div>
-                        <div className="text-left">
+                        <div>
                           <p className="font-bold font-headline text-lg text-primary">{tenant.firstName} {tenant.lastName}</p>
                           <p className="text-xs text-muted-foreground font-medium font-body">{tenant.email}</p>
                         </div>
@@ -360,7 +363,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                ) : (
                  <div className="p-16 text-center bg-muted/10 rounded-3xl border-2 border-dashed border-primary/10">
                     <p className="text-sm text-muted-foreground font-bold font-headline mb-4">No residents currently assigned.</p>
-                    <Button asChild className="rounded-xl font-bold bg-primary text-white"><Link href="/landlord/tenants">Link Resident</Link></Button>
+                    <Button asChild className="rounded-xl font-bold bg-primary text-white shadow-lg shadow-primary/10"><Link href="/landlord/tenants">Link Resident</Link></Button>
                  </div>
                )}
             </TabsContent>
@@ -391,7 +394,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     />
                     <Button 
                       onClick={handleTriggerFileInput}
-                      className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/20 bg-primary text-white" 
+                      className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/20 bg-primary text-white transition-all hover:scale-[1.02]" 
                       disabled={isUploadingDoc}
                     >
                       {isUploadingDoc ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
@@ -402,52 +405,63 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               </Card>
               
               <div className="grid gap-3">
-                {propertyDocuments?.slice().sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).map(docItem => (
-                  <div key={docItem.id} className="p-4 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-all group">
-                    <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-                      <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-100 transition-colors shadow-sm">
-                        <FileText className="w-6 h-6" />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <h4 className="font-bold text-sm font-headline group-hover:text-primary transition-colors">{docItem.fileName}</h4>
-                        <div className="flex gap-4 mt-1">
-                          <span className={cn("text-[10px] font-bold uppercase flex items-center", docItem.status === 'active' ? 'text-emerald-600' : 'text-amber-600')}>
-                            <Info className="w-3 h-3 mr-1" /> {docItem.status === 'active' ? 'Secure' : 'Syncing...'}
-                          </span>
-                          {docItem.expiryDate && <span className="text-[10px] text-destructive font-bold uppercase flex items-center"><ShieldAlert className="w-3 h-3 mr-1" /> Exp: {format(new Date(docItem.expiryDate), 'PP')}</span>}
+                {propertyDocuments && propertyDocuments.length > 0 ? (
+                  propertyDocuments.slice().sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).map(docItem => (
+                    <div key={docItem.id} className="p-4 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-all group">
+                      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                        <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-100 transition-colors shadow-sm">
+                          <FileText className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <h4 className="font-bold text-sm font-headline group-hover:text-primary transition-colors">{docItem.fileName}</h4>
+                          <div className="flex gap-4 mt-1">
+                            <span className={cn("text-[10px] font-bold uppercase flex items-center", docItem.status === 'active' ? 'text-emerald-600' : 'text-amber-600 animate-pulse')}>
+                              <Info className="w-3 h-3 mr-1" /> {docItem.status === 'active' ? 'Secure' : 'Syncing...'}
+                            </span>
+                            {docItem.expiryDate && <span className="text-[10px] text-destructive font-bold uppercase flex items-center"><ShieldAlert className="w-3 h-3 mr-1" /> Exp: {format(new Date(docItem.expiryDate), 'PP')}</span>}
+                          </div>
+                        </div>
+                        <div className="flex gap-2 w-full md:w-auto">
+                          {docItem.status === 'active' && docItem.fileUrl ? (
+                            <>
+                              <Button variant="outline" size="sm" onClick={() => handleSummarizeLease(docItem)} disabled={isAnalyzing === docItem.id} className="flex-1 md:flex-none rounded-xl font-bold h-9 border-primary/10 hover:bg-primary/5 transition-all">
+                                {isAnalyzing === docItem.id ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Sparkles className="w-3 h-3 mr-2 text-primary" />}
+                                AI Review
+                              </Button>
+                              <Button variant="ghost" size="icon" asChild className="rounded-xl hover:bg-primary/5 text-primary">
+                                <a href={docItem.fileUrl} target="_blank" rel="noopener noreferrer"><Download className="w-4 h-4" /></a>
+                              </Button>
+                            </>
+                          ) : (
+                            docItem.status !== 'failed' && (
+                              <div className="flex items-center px-4">
+                                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground opacity-30" />
+                              </div>
+                            )
+                          )}
+                          {docItem.status === 'failed' && (
+                            <Badge variant="destructive" className="font-bold text-[10px] uppercase">Failed</Badge>
+                          )}
                         </div>
                       </div>
-                      <div className="flex gap-2 w-full md:w-auto">
-                        {docItem.fileUrl ? (
-                          <>
-                            <Button variant="outline" size="sm" onClick={() => handleSummarizeLease(docItem)} disabled={isAnalyzing === docItem.id} className="flex-1 md:flex-none rounded-xl font-bold h-9 border-primary/10 hover:bg-primary/5">
-                              {isAnalyzing === docItem.id ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Sparkles className="w-3 h-3 mr-2 text-primary" />}
-                              AI Review
-                            </Button>
-                            <Button variant="ghost" size="icon" asChild className="rounded-xl hover:bg-primary/5 text-primary">
-                              <a href={docItem.fileUrl} target="_blank" rel="noopener noreferrer"><Download className="w-4 h-4" /></a>
-                            </Button>
-                          </>
-                        ) : (
-                          <div className="flex items-center px-4">
-                            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground opacity-30" />
-                          </div>
-                        )}
-                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="p-12 text-center bg-muted/5 rounded-3xl border-2 border-dashed border-primary/5">
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Vault Empty</p>
                   </div>
-                ))}
+                )}
               </div>
             </TabsContent>
 
             <TabsContent value="maintenance" className="mt-6 space-y-4">
               {maintenanceRequests && maintenanceRequests.length > 0 ? (
                 maintenanceRequests.map(req => (
-                  <div key={req.id} className="p-4 bg-white rounded-2xl border border-primary/5 shadow-sm flex items-start gap-4 hover:shadow-md transition-all">
+                  <div key={req.id} className="p-4 bg-white rounded-2xl border border-primary/5 shadow-sm flex items-start gap-4 hover:shadow-md transition-all text-left">
                     <div className={cn("p-2 rounded-xl shadow-sm", req.status === 'completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600')}>
                       <Wrench className="w-5 h-5" />
                     </div>
-                    <div className="flex-1 text-left">
+                    <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant={req.status === 'completed' ? 'secondary' : 'default'} className="uppercase text-[10px] font-bold px-2 py-0">
                           {req.status}
@@ -472,11 +486,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               {inspections && inspections.length > 0 ? (
                 inspections.map(insp => (
                   <div key={insp.id} className="p-4 bg-white rounded-2xl border border-primary/5 shadow-sm flex items-center justify-between gap-4 hover:shadow-md transition-all">
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 text-left">
                       <div className="p-2 bg-amber-50 text-amber-600 rounded-xl shadow-sm">
                         <FileCheck className="w-5 h-5" />
                       </div>
-                      <div className="text-left">
+                      <div>
                         <div className="flex items-center gap-2 mb-1">
                           <Badge variant={insp.status === 'completed' ? 'secondary' : 'outline'} className="uppercase text-[10px] font-bold px-2 py-0">
                             {insp.status}
