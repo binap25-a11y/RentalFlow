@@ -182,45 +182,46 @@ export default function LandlordEmergencyContactsPage() {
     
     // 1. Header Styling
     pdfDoc.setFillColor(31, 41, 55);
-    pdfDoc.rect(0, 0, pageWidth, 65, 'F');
+    pdfDoc.rect(0, 0, pageWidth, 75, 'F');
     pdfDoc.setTextColor(255, 255, 255);
     
     // 2. Title & Metadata
     pdfDoc.setFont("helvetica", "bold");
-    pdfDoc.setFontSize(20);
-    pdfDoc.text("TENANCY EMERGENCY CONTACTS", 20, 22);
+    pdfDoc.setFontSize(22);
+    pdfDoc.text("TENANCY EMERGENCY CONTACTS", 20, 25);
     
     pdfDoc.setFont("helvetica", "normal");
     pdfDoc.setFontSize(10);
-    pdfDoc.text(`Official Portfolio Safety Record | Generated: ${today}`, 20, 32);
+    pdfDoc.text(`Official Portfolio Safety Record | Generated: ${today}`, 20, 35);
     
     // 3. Property Address (Positioned below metadata)
+    let headerOffset = 50;
     if (selectedExportPropertyId) {
       const prop = properties?.find(p => p.id === selectedExportPropertyId);
       if (prop) {
         pdfDoc.setFont("helvetica", "bold");
         pdfDoc.setFontSize(12);
         const addrLines = pdfDoc.splitTextToSize(prop.addressLine1.toUpperCase(), pageWidth - 40);
-        pdfDoc.text(addrLines, 20, 45);
+        pdfDoc.text(addrLines, 20, headerOffset);
         
         pdfDoc.setFont("helvetica", "normal");
         pdfDoc.setFontSize(9);
-        pdfDoc.text(`${prop.city}, ${prop.zipCode}`, 20, 45 + (addrLines.length * 6));
+        pdfDoc.text(`${prop.city}, ${prop.zipCode}`, 20, headerOffset + (addrLines.length * 6));
       }
     } else {
       pdfDoc.setFont("helvetica", "bold");
       pdfDoc.setFontSize(11);
-      pdfDoc.text("FULL PORTFOLIO DIRECTORY", 20, 45);
+      pdfDoc.text("FULL PORTFOLIO DIRECTORY", 20, headerOffset);
     }
 
     pdfDoc.setTextColor(0, 0, 0);
-    let y = 80;
+    let y = 90;
 
     // 4. Standard Services Section
     pdfDoc.setFont("helvetica", "bold");
     pdfDoc.setFontSize(14);
     pdfDoc.text("1. PRIMARY EMERGENCY SERVICES", 20, y);
-    y += 10;
+    y += 12;
     
     standardServices.forEach(service => {
       pdfDoc.setFont("helvetica", "bold");
@@ -237,7 +238,7 @@ export default function LandlordEmergencyContactsPage() {
     pdfDoc.setFont("helvetica", "bold");
     pdfDoc.setFontSize(14);
     pdfDoc.text("2. AUTHORIZED PROPERTY PARTNERS", 20, y);
-    y += 10;
+    y += 12;
 
     const filteredProfessionals = professionalPartners.filter(contact => {
       if (!selectedExportPropertyId) return true;
@@ -254,7 +255,7 @@ export default function LandlordEmergencyContactsPage() {
     filteredProfessionals.forEach((contact) => {
       if (y > 250) {
         pdfDoc.addPage();
-        y = 20;
+        y = 25;
       }
 
       pdfDoc.setDrawColor(229, 231, 235);
@@ -263,14 +264,17 @@ export default function LandlordEmergencyContactsPage() {
       pdfDoc.setFont("helvetica", "bold");
       pdfDoc.setFontSize(12);
       pdfDoc.setTextColor(31, 41, 55);
-      pdfDoc.text(contact.role.toUpperCase(), 20, y);
+      
+      const roleLines = pdfDoc.splitTextToSize(contact.role.toUpperCase(), pageWidth - 80);
+      pdfDoc.text(roleLines, 20, y);
       
       pdfDoc.setFont("helvetica", "normal");
       pdfDoc.setFontSize(10);
       pdfDoc.setTextColor(0, 0, 0);
-      pdfDoc.text(`${contact.name}`, 20, y + 7);
-      pdfDoc.text(`Tel: ${contact.phone}`, 20, y + 13);
-      if (contact.email) pdfDoc.text(`Email: ${contact.email}`, 20, y + 19);
+      const nameOffset = y + (roleLines.length * 7);
+      pdfDoc.text(`${contact.name}`, 20, nameOffset);
+      pdfDoc.text(`Tel: ${contact.phone}`, 20, nameOffset + 6);
+      if (contact.email) pdfDoc.text(`Email: ${contact.email}`, 20, nameOffset + 12);
 
       if (!selectedExportPropertyId) {
         const propName = properties?.find(p => p.id === contact.propertyId)?.addressLine1 || "Portfolio-Wide";
@@ -279,7 +283,7 @@ export default function LandlordEmergencyContactsPage() {
         pdfDoc.text(`Assigned: ${propName}`, pageWidth - 20, y, { align: 'right' });
       }
       
-      y += 35;
+      y += 40;
     });
 
     // 6. Footer Metadata
@@ -449,7 +453,7 @@ export default function LandlordEmergencyContactsPage() {
                     </Badge>
                   </CardHeader>
                   <CardContent className="pt-6 space-y-4 text-left">
-                    <div className="flex items-center gap-3 text-lg font-bold text-primary">
+                    <div className="flex items-center gap-3 text-xl font-bold text-primary">
                       <Phone className="w-5 h-5 text-primary/40" />
                       {contact.phone}
                     </div>
