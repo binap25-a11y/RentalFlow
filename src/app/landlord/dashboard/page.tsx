@@ -111,11 +111,6 @@ export default function LandlordDashboard() {
 
     // 3. Status for ALL properties (Ensures 668 London Road etc always show)
     const propertyStatusItems = properties.map(p => {
-      const hasUrgentDoc = docItems.some(d => d.propertyId === p.id && d.urgent);
-      const hasUrgentAudit = inspectionItems.some(i => i.propertyId === p.id && i.urgent);
-      
-      // If there are already urgent items for this property, they will be shown by the filters above.
-      // We only add a "Secure" status for properties that aren't already represented as urgent/upcoming.
       const isAlreadyListed = [...docItems, ...inspectionItems].some(item => item.propertyId === p.id);
       
       if (isAlreadyListed) return null;
@@ -136,7 +131,7 @@ export default function LandlordDashboard() {
       // Put urgent items at top
       if (a.urgent && !b.urgent) return -1;
       if (!a.urgent && b.urgent) return 1;
-      // Put Warnings/Status at bottom if not urgent
+      // Put Status items at bottom
       if (a.type === 'Status' && b.type !== 'Status') return 1;
       if (a.type !== 'Status' && b.type === 'Status') return -1;
       
@@ -258,7 +253,7 @@ export default function LandlordDashboard() {
             </CardHeader>
             <CardContent className="space-y-4">
               {complianceItems.length > 0 ? (
-                complianceItems.slice(0, 10).map((item) => (
+                complianceItems.slice(0, 15).map((item) => (
                   <div 
                     key={`${item.type}-${item.id}`} 
                     className={cn(

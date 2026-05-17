@@ -49,6 +49,7 @@ export default function LandlordEmergencyContactsPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
+  const [selectedExportPropertyId, setSelectedExportPropertyId] = useState<string>("");
 
   useEffect(() => {
     setIsClient(true);
@@ -125,7 +126,6 @@ export default function LandlordEmergencyContactsPage() {
     if (!user || !db) return;
 
     const property = properties?.find(p => p.id === selectedPropertyId);
-    // Ensure all residents of the assigned property can see this contact
     const memberIds = property?.memberIds ? [...new Set([...property.memberIds, user.uid])] : [user.uid];
 
     if (editingContact) {
@@ -186,8 +186,22 @@ export default function LandlordEmergencyContactsPage() {
     pdfDoc.setFontSize(10);
     pdfDoc.text(`Official Portfolio Safety Record | Generated: ${format(new Date(), 'PPP')}`, 20, 32);
     
+    let yStart = 60;
+
+    // Header for Property Specific PDF
+    if (selectedExportPropertyId) {
+      const prop = properties?.find(p => p.id === selectedExportPropertyId);
+      if (prop) {
+        pdfDoc.setTextColor(255, 255, 255);
+        pdfDoc.setFontSize(12);
+        pdfDoc.text(prop.addressLine1.toUpperCase(), pageWidth - 20, 25, { align: 'right' });
+        pdfDoc.setFontSize(9);
+        pdfDoc.text(`${prop.city}, ${prop.zipCode}`, pageWidth - 20, 32, { align: 'right' });
+      }
+    }
+
     pdfDoc.setTextColor(0, 0, 0);
-    let y = 60;
+    let y = yStart;
 
     // 1. Standard Services
     pdfDoc.setFont("helvetica", "bold");
@@ -212,7 +226,12 @@ export default function LandlordEmergencyContactsPage() {
     pdfDoc.text("2. PROFESSIONAL PARTNERS", 20, y);
     y += 10;
 
-    professionalPartners.forEach((contact) => {
+    const filteredProfessionals = professionalPartners.filter(contact => {
+      if (!selectedExportPropertyId) return true;
+      return contact.propertyId === selectedExportPropertyId || !contact.propertyId;
+    });
+
+    filteredProfessionals.forEach((contact) => {
       const propName = properties?.find(p => p.id === contact.propertyId)?.addressLine1 || "General Portfolio";
       
       if (y > 260) {
@@ -233,15 +252,21 @@ export default function LandlordEmergencyContactsPage() {
       pdfDoc.text(`Tel: ${contact.phone}`, 20, y + 13);
       if (contact.email) pdfDoc.text(`Email: ${contact.email}`, 20, y + 19);
 
-      pdfDoc.setFontSize(9);
-      pdfDoc.setTextColor(107, 114, 128);
-      pdfDoc.text(`Property: ${propName}`, pageWidth - 80, y);
+      if (!selectedExportPropertyId) {
+        pdfDoc.setFontSize(9);
+        pdfDoc.setTextColor(107, 114, 128);
+        pdfDoc.text(`Property: ${propName}`, pageWidth - 80, y);
+      }
       
       pdfDoc.setTextColor(0, 0, 0);
       y += 30;
     });
 
-    pdfDoc.save(`Emergency_Contacts_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    const fileName = selectedExportPropertyId 
+      ? `Emergency_Contacts_${properties?.find(p => p.id === selectedExportPropertyId)?.addressLine1.replace(/\s+/g, '_')}.pdf`
+      : `Emergency_Contacts_Portfolio_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+
+    pdfDoc.save(fileName);
   };
 
   if (!isClient || isLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
@@ -253,7 +278,18 @@ export default function LandlordEmergencyContactsPage() {
           <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Emergency Hub</h1>
           <p className="text-muted-foreground font-medium font-body">Manage UK standard services and property-specific professional partners.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 bg-white rounded-xl border border-primary/10 px-3 h-11">
+             <Label className="text-[10px] font-bold uppercase text-muted-foreground">Export Target:</Label>
+             <select 
+               className="bg-transparent text-sm font-bold outline-none cursor-pointer"
+               value={selectedExportPropertyId}
+               onChange={(e) => setSelectedExportPropertyId(e.target.value)}
+             >
+               <option value="">Full Portfolio</option>
+               {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+             </select>
+          </div>
           <Button variant="outline" onClick={downloadPDF} className="rounded-xl font-bold h-11 border-primary/20 bg-white">
             <Download className="w-4 h-4 mr-2" /> Export PDF Directory
           </Button>
