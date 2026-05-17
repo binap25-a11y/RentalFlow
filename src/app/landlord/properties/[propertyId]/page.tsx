@@ -138,7 +138,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     toast({ title: "Rent Updated" });
   };
 
-<<<<<<< HEAD
   const formatSafeDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return null;
     try {
@@ -146,11 +145,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       return isValid(d) ? format(d, 'PP') : 'Pending Review';
     } catch {
       return 'Pending Review';
-=======
+    }
+  };
+
   const handleTriggerFileInput = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
->>>>>>> 97a0d048e2659fabf7ea2d3f9449e7549a8f6a4d
     }
   };
 
@@ -158,12 +158,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const file = e.target.files?.[0];
     if (!file || !user || !db || !storage || !property) return;
 
-    // PERFORMANCE OPTIMIZATION: Reset UI instantly so Landlord can add another file immediately
-    setIsUploadingDoc(false); 
+    setIsUploadingDoc(true); 
     const docId = doc(collection(db, 'documents')).id;
     const docRef = doc(db, 'documents', docId);
 
-    // Instant local preview generation
     const localUrl = URL.createObjectURL(file);
     setLocalFileUrls(prev => ({ ...prev, [docId]: localUrl }));
 
@@ -173,7 +171,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       ...(tenants?.map(t => t.userId).filter(Boolean) || [])
     ]));
 
-    // OPTIMISTIC WRITE: Set as 'active' instantly to enable Edit/Delete/View buttons
     setDocumentNonBlocking(docRef, {
       id: docId,
       fileName: file.name,
@@ -211,6 +208,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         title: "Upload Error", 
         description: "Storage task failed." 
       });
+    } finally {
+      setIsUploadingDoc(false);
     }
   };
 
@@ -240,7 +239,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   };
 
   const handleSummarizeLease = async (docObj: any) => {
-    if (isAnalyzing) return; // Request Lock
+    if (isAnalyzing) return;
     setIsAnalyzing(docObj.id);
     try {
       const summary = await summarizeLease({ documentText: `Document: ${docObj.fileName}.` });
@@ -452,24 +451,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               </Card>
               
               <div className="grid gap-3">
-<<<<<<< HEAD
-                {propertyDocuments?.map(docItem => (
-                  <div key={docItem.id} className="p-4 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-all group">
-                    <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-                      <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-100 transition-colors">
-                        <FileText className="w-6 h-6" />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <h4 className="font-bold text-sm font-headline group-hover:text-primary transition-colors">{docItem.fileName}</h4>
-                        <div className="flex gap-4 mt-1">
-                          <span className="text-[10px] text-muted-foreground font-bold uppercase flex items-center"><Info className="w-3 h-3 mr-1" /> {docItem.documentType}</span>
-                          {docItem.expiryDate && (
-                            <span className="text-[10px] text-amber-600 font-bold uppercase flex items-center">
-                              <ShieldAlert className="w-3 h-3 mr-1" /> 
-                              Exp: {formatSafeDate(docItem.expiryDate)}
-                            </span>
-                          )}
-=======
                 {propertyDocuments && propertyDocuments.length > 0 ? (
                   propertyDocuments.slice().sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).map(docItem => {
                     const viewUrl = docItem.fileUrl || localFileUrls[docItem.id];
@@ -486,7 +467,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                               {!docItem.fileUrl && <Loader2 className="w-3 h-3 animate-spin text-primary/30" />}
                             </h4>
                             <div className="flex gap-4 mt-1">
-                              {docItem.expiryDate && <span className="text-[10px] text-destructive font-bold uppercase flex items-center"><ShieldAlert className="w-3 h-3 mr-1" /> Exp: {format(new Date(docItem.expiryDate), 'PP')}</span>}
+                              {docItem.expiryDate && <span className="text-[10px] text-destructive font-bold uppercase flex items-center"><ShieldAlert className="w-3 h-3 mr-1" /> Exp: {formatSafeDate(docItem.expiryDate)}</span>}
                             </div>
                           </div>
                           <div className="flex gap-2 w-full md:w-auto">
@@ -550,7 +531,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
->>>>>>> 97a0d048e2659fabf7ea2d3f9449e7549a8f6a4d
                         </div>
                       </div>
                     );
