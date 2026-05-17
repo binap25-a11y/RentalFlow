@@ -25,7 +25,7 @@ export default function LandlordDashboard() {
     setIsClient(true);
   }, []);
 
-  // Real-time Queries for all portfolio data using onSnapshot (via useCollection)
+  // Real-time Queries for all portfolio data
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return getLandlordCollectionQuery(db, "properties", user.uid);
@@ -54,65 +54,65 @@ export default function LandlordDashboard() {
 
   const { data: inspections } = useCollection(inspectionsQuery);
 
-  // Safe formatting for dates to avoid RangeError and handle malformed strings
-  const formatSafeDate = (dateStr: string | null | undefined) => {
-    if (!dateStr) return 'TBC';
-    try {
-      const d = parseISO(dateStr);
-      return isValid(d) ? format(d, 'PP') : 'TBC';
-    } catch {
-      return 'TBC';
-    }
+  // Robust date parsing for Roadmap items (handles ISO strings and Firestore Timestamps)
+  const parseFlexDate = (dateVal: any) => {
+    if (!dateVal) return null;
+    if (typeof dateVal === 'string') return parseISO(dateVal);
+    if (dateVal.toDate && typeof dateVal.toDate === 'function') return dateVal.toDate();
+    if (dateVal.seconds) return new Date(dateVal.seconds * 1000);
+    return null;
   };
 
-  // Aggregated Real-Time Compliance Roadmap logic
+  const formatSafeDate = (dateVal: any) => {
+    const d = parseFlexDate(dateVal);
+    return d && isValid(d) ? format(d, 'PP') : 'TBC';
+  };
+
+  // Aggregated Real-Time Compliance Roadmap logic (365-day strategic window)
   const complianceItems = useMemo(() => {
-    if (!isClient || !documents || !inspections) return [];
+    if (!isClient || !documents || !inspections || !properties) return [];
     const today = new Date();
-    // 180-day visibility window for forward planning
-    const threshold = addDays(today, 180);
+    // 365-day visibility window to ensure all property cycles are visible
+    const threshold = addDays(today, 365);
 
     const docItems = documents
       .filter(d => {
-        if (!d.expiryDate) return false;
-        try {
-          const expiry = parseISO(d.expiryDate);
-          // Show expired items and upcoming items up to the threshold
-          return isValid(expiry) && isBefore(expiry, threshold);
-        } catch { return false; }
+        const expiry = parseFlexDate(d.expiryDate);
+        // Show expired items and upcoming items up to the threshold
+        return expiry && isValid(expiry) && isBefore(expiry, threshold);
       })
       .map(d => ({
         id: d.id,
-        title: d.fileName,
-        date: d.expiryDate!,
+        title: `${properties?.find(p => p.id === d.propertyId)?.addressLine1 || d.fileName}`,
+        date: d.expiryDate,
         type: 'Document',
         icon: FileText,
         propertyId: d.propertyId,
-        urgent: isBefore(parseISO(d.expiryDate!), addDays(today, 14))
+        urgent: isBefore(parseFlexDate(d.expiryDate)!, addDays(today, 30))
       }));
 
     const inspectionItems = inspections
       .filter(i => {
-        if (i.status === 'completed' || !i.scheduledDate) return false;
-        try {
-          const scheduled = parseISO(i.scheduledDate);
-          // Show overdue and upcoming audits
-          return isValid(scheduled) && isBefore(scheduled, threshold);
-        } catch { return false; }
+        if (i.status === 'completed') return false;
+        const scheduled = parseFlexDate(i.scheduledDate);
+        // Show overdue and upcoming audits
+        return scheduled && isValid(scheduled) && isBefore(scheduled, threshold);
       })
       .map(i => ({
         id: i.id,
-        title: `${properties?.find(p => p.id === i.propertyId)?.addressLine1 || 'Asset'} Audit`,
-        date: i.scheduledDate!,
+        title: `${properties?.find(p => p.id === i.propertyId)?.addressLine1 || 'Property Asset'} Audit`,
+        date: i.scheduledDate,
         type: 'Audit',
         icon: ClipboardList,
         propertyId: i.propertyId,
-        urgent: isBefore(parseISO(i.scheduledDate!), addDays(today, 7))
+        urgent: isBefore(parseFlexDate(i.scheduledDate)!, addDays(today, 14))
       }));
 
-    return [...docItems, ...inspectionItems].sort((a, b) => 
-      new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
+    return [...docItems, ...inspectionItems].sort((a, b) => {
+      const dateA = parseFlexDate(a.date)?.getTime() || 0;
+      const dateB = parseFlexDate(b.date)?.getTime() || 0;
+      return dateA - dateB;
+    });
   }, [documents, inspections, properties, isClient]);
 
   // Real-time Portfolio Health calculation
@@ -133,7 +133,7 @@ export default function LandlordDashboard() {
     const grossRent = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
     const totalExpenses = maintenance.reduce((acc, r) => acc + (r.cost || 0), 0);
     
-    // Round up the Est. Net Monthly as requested
+    // Round up the final Net Monthly calculation
     const netRevenue = Math.ceil(grossRent - (totalExpenses / 12)); 
     const occupancyRate = total > 0 ? (occupied / total) * 100 : 0;
 
