@@ -178,6 +178,7 @@ export default function LandlordEmergencyContactsPage() {
     const pdfDoc = new jsPDF();
     const pageWidth = pdfDoc.internal.pageSize.getWidth();
     
+    // Header styling
     pdfDoc.setFillColor(31, 41, 55);
     pdfDoc.rect(0, 0, pageWidth, 40, 'F');
     pdfDoc.setTextColor(255, 255, 255);
@@ -194,7 +195,8 @@ export default function LandlordEmergencyContactsPage() {
       if (prop) {
         pdfDoc.setTextColor(255, 255, 255);
         pdfDoc.setFontSize(12);
-        pdfDoc.text(prop.addressLine1.toUpperCase(), pageWidth - 20, 25, { align: 'right' });
+        const addr = pdfDoc.splitTextToSize(prop.addressLine1.toUpperCase(), 80);
+        pdfDoc.text(addr, pageWidth - 20, 25, { align: 'right' });
         pdfDoc.setFontSize(9);
         pdfDoc.text(`${prop.city}, ${prop.zipCode}`, pageWidth - 20, 32, { align: 'right' });
       }
@@ -214,7 +216,7 @@ export default function LandlordEmergencyContactsPage() {
       pdfDoc.setFontSize(10);
       pdfDoc.text(service.name, 20, y);
       pdfDoc.setFont("helvetica", "normal");
-      pdfDoc.text(`Tel: ${service.phone}`, pageWidth - 80, y);
+      pdfDoc.text(`Tel: ${service.phone}`, pageWidth - 20, y, { align: 'right' });
       y += 8;
     });
 
@@ -234,7 +236,7 @@ export default function LandlordEmergencyContactsPage() {
     filteredProfessionals.forEach((contact) => {
       const propName = properties?.find(p => p.id === contact.propertyId)?.addressLine1 || "General Portfolio";
       
-      if (y > 260) {
+      if (y > 250) {
         pdfDoc.addPage();
         y = 20;
       }
@@ -255,7 +257,8 @@ export default function LandlordEmergencyContactsPage() {
       if (!selectedExportPropertyId) {
         pdfDoc.setFontSize(9);
         pdfDoc.setTextColor(107, 114, 128);
-        pdfDoc.text(`Property: ${propName}`, pageWidth - 80, y);
+        const propLabel = pdfDoc.splitTextToSize(`Property: ${propName}`, 60);
+        pdfDoc.text(propLabel, pageWidth - 20, y, { align: 'right' });
       }
       
       pdfDoc.setTextColor(0, 0, 0);
