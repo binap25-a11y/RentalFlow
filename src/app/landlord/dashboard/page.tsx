@@ -7,7 +7,7 @@ import {
   ShieldAlert, Loader2, TrendingUp, Wallet, CheckCircle2,
   Calendar as CalendarIcon, Zap, ClipboardList
 } from "lucide-react";
-import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery, getMemberCollectionQuery } from "@/firebase";
+import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { isBefore, addDays, isValid, parseISO, format } from "date-fns";
@@ -25,6 +25,7 @@ export default function LandlordDashboard() {
     setIsClient(true);
   }, []);
 
+  // Real-time Queries for all portfolio data
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return getLandlordCollectionQuery(db, "properties", user.uid);
@@ -53,10 +54,22 @@ export default function LandlordDashboard() {
 
   const { data: inspections } = useCollection(inspectionsQuery);
 
+  // Safe formatting for dates to avoid RangeError
+  const formatSafeDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return 'TBC';
+    try {
+      const d = parseISO(dateStr);
+      return isValid(d) ? format(d, 'PP') : 'TBC';
+    } catch {
+      return 'TBC';
+    }
+  };
+
+  // Aggregated Compliance Roadmap logic
   const complianceItems = useMemo(() => {
     if (!isClient || !documents || !inspections) return [];
     const today = new Date();
-    // Expand window to 180 days (6 months) to show more of the portfolio roadmap
+    // 180-day portfolio visibility window
     const threshold = addDays(today, 180);
 
     const docItems = documents
@@ -100,16 +113,7 @@ export default function LandlordDashboard() {
     );
   }, [documents, inspections, properties, isClient]);
 
-  const formatSafeDate = (dateStr: string | null | undefined) => {
-    if (!dateStr) return 'TBC';
-    try {
-      const d = parseISO(dateStr);
-      return isValid(d) ? format(d, 'PP') : 'TBC';
-    } catch {
-      return 'TBC';
-    }
-  };
-
+  // Real-time Portfolio Health calculation
   const healthScore = useMemo(() => {
     if (!isClient) return { grade: 'A+', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-200' };
     const urgentCount = complianceItems.filter(i => i.urgent).length;
@@ -118,6 +122,7 @@ export default function LandlordDashboard() {
     return { grade: 'A+', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-200' };
   }, [complianceItems, isClient]);
 
+  // Rounded and responsive portfolio stats
   const stats = useMemo(() => {
     if (!isClient || !properties || !maintenance) return null;
 
@@ -125,12 +130,13 @@ export default function LandlordDashboard() {
     const occupied = properties.filter(p => p.isOccupied).length || 0;
     const grossRent = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
     const totalExpenses = maintenance.reduce((acc, r) => acc + (r.cost || 0), 0);
-    const netRevenue = grossRent - (totalExpenses / 12); 
+    // Round up the Est. Net Monthly
+    const netRevenue = Math.ceil(grossRent - (totalExpenses / 12)); 
     const avgYield = total > 0 ? (occupied / total) * 100 : 0;
 
     return [
       { label: 'Portfolio Assets', value: total.toString(), icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
-      { label: 'Est. Net Monthly', value: `£${Math.ceil(Math.max(0, netRevenue)).toLocaleString()}`, icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+      { label: 'Est. Net Monthly', value: `£${netRevenue.toLocaleString()}`, icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50' },
       { label: 'Occupancy Rate', value: `${avgYield.toFixed(0)}%`, icon: TrendingUp, color: 'text-violet-600', bg: 'bg-violet-50' },
     ];
   }, [properties, maintenance, isClient]);
@@ -177,7 +183,7 @@ export default function LandlordDashboard() {
                 <p className="text-xl md:text-2xl font-bold font-headline break-words">
                   {stat.value}
                 </p>
-                <p className="text-sm text-muted-foreground font-medium font-body break-words">{stat.label}</p>
+                <p className="text-sm text-muted-foreground font-medium font-body">{stat.label}</p>
               </div>
             </CardContent>
           </Card>
