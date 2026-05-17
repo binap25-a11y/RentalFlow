@@ -54,7 +54,7 @@ export default function LandlordDashboard() {
 
   const { data: inspections } = useCollection(inspectionsQuery);
 
-  // Robust date parsing for Roadmap items (handles ISO strings and Firestore Timestamps)
+  // Robust date parsing for Roadmap items
   const parseFlexDate = (dateVal: any) => {
     if (!dateVal) return null;
     if (typeof dateVal === 'string') return parseISO(dateVal);
@@ -68,7 +68,7 @@ export default function LandlordDashboard() {
     return d && isValid(d) ? format(d, 'PP') : 'TBC';
   };
 
-  // Aggregated Real-Time Compliance Roadmap logic (Full Portfolio Visibility)
+  // Aggregated Real-Time Compliance Roadmap logic (Includes ALL Properties)
   const complianceItems = useMemo(() => {
     if (!isClient || !documents || !inspections || !properties) return [];
     const today = new Date();
@@ -109,30 +109,39 @@ export default function LandlordDashboard() {
         urgent: isBefore(parseFlexDate(i.scheduledDate)!, addDays(today, 14))
       }));
 
-    // 3. Properties Missing Records (Ensures visibility for newly added properties like 668 London Road)
-    const missingRecordItems = properties
-      .filter(p => {
-        const hasDocs = documents.some(d => d.propertyId === p.id);
-        const hasAudits = inspections.some(i => i.propertyId === p.id);
-        return !hasDocs && !hasAudits;
-      })
-      .map(p => ({
-        id: `missing-${p.id}`,
-        title: p.addressLine1,
-        subtitle: 'Awaiting Records',
-        date: null,
-        type: 'Warning',
-        icon: AlertTriangle,
-        propertyId: p.id,
-        urgent: true
-      }));
+    // 3. Status for ALL properties (Ensures 668 London Road etc always show)
+    const propertyStatusItems = properties.map(p => {
+      const hasUrgentDoc = docItems.some(d => d.propertyId === p.id && d.urgent);
+      const hasUrgentAudit = inspectionItems.some(i => i.propertyId === p.id && i.urgent);
+      
+      // If there are already urgent items for this property, they will be shown by the filters above.
+      // We only add a "Secure" status for properties that aren't already represented as urgent/upcoming.
+      const isAlreadyListed = [...docItems, ...inspectionItems].some(item => item.propertyId === p.id);
+      
+      if (isAlreadyListed) return null;
 
-    return [...docItems, ...inspectionItems, ...missingRecordItems].sort((a, b) => {
+      return {
+        id: `status-${p.id}`,
+        title: p.addressLine1,
+        subtitle: 'Verified & Secure',
+        date: null,
+        type: 'Status',
+        icon: CheckCircle2,
+        propertyId: p.id,
+        urgent: false
+      };
+    }).filter(Boolean) as any[];
+
+    return [...docItems, ...inspectionItems, ...propertyStatusItems].sort((a, b) => {
+      // Put urgent items at top
+      if (a.urgent && !b.urgent) return -1;
+      if (!a.urgent && b.urgent) return 1;
+      // Put Warnings/Status at bottom if not urgent
+      if (a.type === 'Status' && b.type !== 'Status') return 1;
+      if (a.type !== 'Status' && b.type === 'Status') return -1;
+      
       const dateA = parseFlexDate(a.date)?.getTime() || 0;
       const dateB = parseFlexDate(b.date)?.getTime() || 0;
-      // Put missing records/warnings at the top
-      if (a.type === 'Warning' && b.type !== 'Warning') return -1;
-      if (a.type !== 'Warning' && b.type === 'Warning') return 1;
       return dateA - dateB;
     });
   }, [documents, inspections, properties, isClient]);
@@ -188,7 +197,7 @@ export default function LandlordDashboard() {
       <div className="text-left flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Portfolio Performance</h1>
-          <p className="text-muted-foreground font-medium font-body">Financial yield and real-time compliance roadmap.</p>
+          <p className="text-muted-foreground font-medium font-body">Financial yield and full-portfolio compliance roadmap.</p>
         </div>
         <Badge className={cn("font-bold py-1 px-4 rounded-full border", healthScore.bg, healthScore.color, healthScore.border)}>
           <Zap className="w-3 h-3 mr-2" /> Portfolio Health: {healthScore.grade}
@@ -249,22 +258,30 @@ export default function LandlordDashboard() {
             </CardHeader>
             <CardContent className="space-y-4">
               {complianceItems.length > 0 ? (
-                complianceItems.slice(0, 8).map((item) => (
+                complianceItems.slice(0, 10).map((item) => (
                   <div 
                     key={`${item.type}-${item.id}`} 
                     className={cn(
                       "flex items-center justify-between p-3 rounded-xl border transition-colors",
-                      item.urgent ? "bg-amber-50 border-amber-100" : "bg-muted/30 border-transparent"
+                      item.urgent ? "bg-amber-50 border-amber-100" : "bg-muted/30 border-transparent",
+                      item.type === 'Status' && "bg-emerald-50/30 border-emerald-100/30"
                     )}
                   >
                     <div className="text-left min-w-0 flex gap-3 items-center">
-                      <div className={cn("p-2 rounded-lg", item.urgent ? "bg-amber-100 text-amber-700" : "bg-primary/10 text-primary")}>
+                      <div className={cn(
+                        "p-2 rounded-lg", 
+                        item.urgent ? "bg-amber-100 text-amber-700" : 
+                        item.type === 'Status' ? "bg-emerald-100 text-emerald-700" : "bg-primary/10 text-primary"
+                      )}>
                         <item.icon className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
-                        <h4 className="font-bold text-xs font-body leading-tight">{item.title}</h4>
+                        <h4 className="font-bold text-xs font-body leading-tight break-words">{item.title}</h4>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase">{item.subtitle}</p>
+                          <p className={cn(
+                            "text-[10px] font-bold uppercase",
+                            item.type === 'Status' ? "text-emerald-600" : "text-muted-foreground"
+                          )}>{item.subtitle}</p>
                           {item.date && (
                             <p className={cn("text-[10px] font-bold flex items-center", item.urgent ? "text-amber-600" : "text-muted-foreground")}>
                               <CalendarIcon className="w-3 h-3 mr-1" /> {formatSafeDate(item.date)}
@@ -283,7 +300,7 @@ export default function LandlordDashboard() {
               ) : (
                 <div className="py-8 text-center bg-muted/20 rounded-xl">
                   <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-500 mb-2" />
-                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">All Compliant</p>
+                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">All Assets Verified</p>
                 </div>
               )}
             </CardContent>

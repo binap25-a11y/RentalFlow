@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   useUser, 
   useFirestore, 
@@ -29,13 +29,13 @@ import {
 } from "@/components/ui/dialog";
 import { 
   PhoneCall, Plus, Trash2, Edit3, Loader2, Download, 
-  Phone, Mail, User, Building2, Wrench, ShieldAlert, AlertCircle, Info 
+  Phone, Mail, User, Building2, Wrench, ShieldAlert, AlertCircle, Info, Zap 
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
 
-const UK_STANDARD_SERVICES = [
+const DEFAULT_UK_SERVICES = [
   { name: "Emergency Services (Police, Fire, Ambulance)", phone: "999 or 112", role: "Primary Emergency" },
   { name: "Police Non-Emergency", phone: "101", role: "Non-Urgent Police" },
   { name: "NHS Medical Advice (24/7)", phone: "111", role: "Medical Advice" },
@@ -75,13 +75,18 @@ export default function LandlordEmergencyContactsPage() {
   const [role, setRole] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [category, setCategory] = useState<'standard' | 'professional'>('professional');
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
+
+  const standardServices = useMemo(() => contacts?.filter(c => c.category === 'standard') || [], [contacts]);
+  const professionalPartners = useMemo(() => contacts?.filter(c => !c.category || c.category === 'professional') || [], [contacts]);
 
   const resetForm = () => {
     setName('');
     setRole('');
     setPhone('');
     setEmail('');
+    setCategory('professional');
     setSelectedPropertyId('');
     setEditingContact(null);
   };
@@ -92,8 +97,27 @@ export default function LandlordEmergencyContactsPage() {
     setRole(contact.role);
     setPhone(contact.phone);
     setEmail(contact.email || '');
+    setCategory(contact.category || 'professional');
     setSelectedPropertyId(contact.propertyId || '');
     setIsDialogOpen(true);
+  };
+
+  const handleSeedStandardServices = () => {
+    if (!user || !db) return;
+    DEFAULT_UK_SERVICES.forEach(service => {
+      const contactId = doc(collection(db, 'emergencyContacts')).id;
+      const contactRef = doc(db, 'emergencyContacts', contactId);
+      setDocumentNonBlocking(contactRef, {
+        id: contactId,
+        ...service,
+        category: 'standard',
+        landlordId: user.uid,
+        memberIds: [user.uid],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+    });
+    toast({ title: "Standard Services Imported", description: "Default UK emergency contacts added." });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -101,7 +125,8 @@ export default function LandlordEmergencyContactsPage() {
     if (!user || !db) return;
 
     const property = properties?.find(p => p.id === selectedPropertyId);
-    const memberIds = property?.memberIds || [user.uid];
+    // Ensure all residents of the assigned property can see this contact
+    const memberIds = property?.memberIds ? [...new Set([...property.memberIds, user.uid])] : [user.uid];
 
     if (editingContact) {
       const contactRef = doc(db, 'emergencyContacts', editingContact.id);
@@ -110,7 +135,8 @@ export default function LandlordEmergencyContactsPage() {
         role,
         phone,
         email,
-        propertyId: selectedPropertyId,
+        category,
+        propertyId: selectedPropertyId || null,
         memberIds: memberIds,
         updatedAt: serverTimestamp(),
       });
@@ -125,14 +151,15 @@ export default function LandlordEmergencyContactsPage() {
         role,
         phone,
         email,
+        category,
         landlordId: user.uid,
-        propertyId: selectedPropertyId,
+        propertyId: selectedPropertyId || null,
         memberIds: memberIds,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       }, { merge: true });
 
-      toast({ title: "Contact Registered", description: "New provider added." });
+      toast({ title: "Contact Registered", description: "New provider added to directory." });
     }
 
     setIsDialogOpen(false);
@@ -151,7 +178,6 @@ export default function LandlordEmergencyContactsPage() {
     const pdfDoc = new jsPDF();
     const pageWidth = pdfDoc.internal.pageSize.getWidth();
     
-    // Header
     pdfDoc.setFillColor(31, 41, 55);
     pdfDoc.rect(0, 0, pageWidth, 40, 'F');
     pdfDoc.setTextColor(255, 255, 255);
@@ -163,13 +189,13 @@ export default function LandlordEmergencyContactsPage() {
     pdfDoc.setTextColor(0, 0, 0);
     let y = 60;
 
-    // Standard UK Services Section
+    // 1. Standard Services
     pdfDoc.setFont("helvetica", "bold");
     pdfDoc.setFontSize(14);
-    pdfDoc.text("1. STANDARD UK EMERGENCY SERVICES", 20, y);
+    pdfDoc.text("1. EMERGENCY SERVICES", 20, y);
     y += 10;
     
-    UK_STANDARD_SERVICES.forEach(service => {
+    standardServices.forEach(service => {
       pdfDoc.setFont("helvetica", "bold");
       pdfDoc.setFontSize(10);
       pdfDoc.text(service.name, 20, y);
@@ -180,13 +206,13 @@ export default function LandlordEmergencyContactsPage() {
 
     y += 15;
 
-    // Custom Professional Contacts
+    // 2. Professional Partners
     pdfDoc.setFont("helvetica", "bold");
     pdfDoc.setFontSize(14);
-    pdfDoc.text("2. PROPERTY-SPECIFIC CONTACTS", 20, y);
+    pdfDoc.text("2. PROFESSIONAL PARTNERS", 20, y);
     y += 10;
 
-    contacts.forEach((contact) => {
+    professionalPartners.forEach((contact) => {
       const propName = properties?.find(p => p.id === contact.propertyId)?.addressLine1 || "General Portfolio";
       
       if (y > 260) {
@@ -221,35 +247,42 @@ export default function LandlordEmergencyContactsPage() {
   if (!isClient || isLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto text-left">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto text-left pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Emergency Contacts</h1>
-          <p className="text-muted-foreground font-medium font-body">Manage standard UK services and professional property partners.</p>
+          <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Emergency Hub</h1>
+          <p className="text-muted-foreground font-medium font-body">Manage UK standard services and property-specific professional partners.</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={downloadPDF} className="rounded-xl font-bold h-11 border-primary/20">
-            <Download className="w-4 h-4 mr-2" /> Export Portfolio List
+          <Button variant="outline" onClick={downloadPDF} className="rounded-xl font-bold h-11 border-primary/20 bg-white">
+            <Download className="w-4 h-4 mr-2" /> Export PDF Directory
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20 text-white">
-                <Plus className="w-4 h-4 mr-2" /> Add Partner
+              <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20 text-white px-6">
+                <Plus className="w-4 h-4 mr-2" /> Add Contact
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] rounded-2xl border-none shadow-2xl">
+            <DialogContent className="sm:max-w-[500px] rounded-2xl border-none shadow-2xl p-0 overflow-hidden">
               <form onSubmit={handleSave}>
-                <DialogHeader className="text-left">
-                  <DialogTitle className="text-xl font-bold font-headline text-primary">{editingContact ? "Edit Partner" : "New Professional Partner"}</DialogTitle>
-                  <DialogDescription className="font-medium text-muted-foreground">Register a professional for priority property maintenance.</DialogDescription>
+                <DialogHeader className="p-8 text-left bg-primary/5 border-b">
+                  <DialogTitle className="text-xl font-bold font-headline text-primary">{editingContact ? "Modify Contact" : "New Portfolio Contact"}</DialogTitle>
+                  <DialogDescription className="font-medium text-muted-foreground">Register an emergency service or professional partner.</DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-6">
+                <div className="grid gap-4 p-8">
                   <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Business Name</Label>
+                    <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Contact Category</Label>
+                    <div className="flex gap-2">
+                      <Button type="button" variant={category === 'standard' ? 'default' : 'outline'} className="flex-1 rounded-xl h-10 font-bold" onClick={() => setCategory('standard')}>UK Standard</Button>
+                      <Button type="button" variant={category === 'professional' ? 'default' : 'outline'} className="flex-1 rounded-xl h-10 font-bold" onClick={() => setCategory('professional')}>Professional Partner</Button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Business / Service Name</Label>
                     <Input value={name} onChange={(e) => setName(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none" placeholder="e.g. Rapid Plumbing Ltd" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Professional Role</Label>
+                    <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Designated Role</Label>
                     <Input value={role} onChange={(e) => setRole(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none" placeholder="e.g. Master Plumber" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -262,17 +295,19 @@ export default function LandlordEmergencyContactsPage() {
                       <Input value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none" placeholder="office@..." />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Assign to Property</Label>
-                    <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-body" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
-                      <option value="">General Portfolio</option>
-                      {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
-                    </select>
-                  </div>
+                  {category === 'professional' && (
+                    <div className="space-y-2">
+                      <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Assign to Property</Label>
+                      <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-body" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
+                        <option value="">General Portfolio</option>
+                        {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                      </select>
+                    </div>
+                  )}
                 </div>
-                <DialogFooter>
+                <DialogFooter className="p-8 bg-muted/10 border-t">
                   <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 text-white font-headline">
-                    {editingContact ? "Save Changes" : "Register Partner"}
+                    {editingContact ? "Save Modifications" : "Register Contact"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -284,31 +319,48 @@ export default function LandlordEmergencyContactsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-1 space-y-6">
           <Card className="border-none shadow-sm bg-primary text-white rounded-2xl overflow-hidden">
-            <CardHeader className="pb-4">
+            <CardHeader className="pb-4 border-b border-white/10">
               <CardTitle className="text-lg font-headline flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5" /> UK Standard Services
+                <ShieldAlert className="w-5 h-5" /> Standard Services
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {UK_STANDARD_SERVICES.map((service, i) => (
-                <div key={i} className="space-y-1">
-                  <p className="text-[10px] font-bold uppercase opacity-60">{service.name}</p>
-                  <p className="text-sm font-bold">{service.phone}</p>
+            <CardContent className="pt-6 space-y-6">
+              {standardServices.length > 0 ? (
+                standardServices.map((service) => (
+                  <div key={service.id} className="group relative">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-bold uppercase opacity-60 tracking-widest">{service.role}</p>
+                      <p className="text-sm font-bold">{service.name}</p>
+                      <p className="text-base font-bold text-white/90">{service.phone}</p>
+                    </div>
+                    <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold text-white hover:bg-white/20" onClick={() => handleEdit(service)}>EDIT</Button>
+                      <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold text-red-300 hover:bg-red-500/20" onClick={() => handleDelete(service.id)}>DEL</Button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 space-y-4">
+                  <p className="text-xs opacity-60 font-medium">No standard services initialized.</p>
+                  <Button variant="secondary" size="sm" className="w-full rounded-xl font-bold" onClick={handleSeedStandardServices}>
+                    Import Defaults
+                  </Button>
                 </div>
-              ))}
+              )}
             </CardContent>
           </Card>
         </div>
 
         <div className="lg:col-span-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {!contacts || contacts.length === 0 ? (
+            {!professionalPartners || professionalPartners.length === 0 ? (
               <Card className="col-span-full border-2 border-dashed py-24 flex flex-col items-center justify-center bg-muted/10 rounded-[2rem]">
                 <PhoneCall className="w-12 h-12 text-primary/20 mb-4" />
                 <h3 className="text-xl font-bold font-headline text-primary/40">No custom partners logged</h3>
+                <p className="text-sm text-muted-foreground font-medium">Add professional partners for property-specific maintenance.</p>
               </Card>
             ) : (
-              contacts.map((contact) => (
+              professionalPartners.map((contact) => (
                 <Card key={contact.id} className="border-none shadow-sm hover:shadow-md transition-all rounded-2xl group overflow-hidden bg-white border border-transparent hover:border-primary/10">
                   <CardHeader className="pb-4 bg-primary/5">
                     <div className="flex justify-between items-start">
@@ -330,8 +382,8 @@ export default function LandlordEmergencyContactsPage() {
                     </Badge>
                   </CardHeader>
                   <CardContent className="pt-6 space-y-4">
-                    <div className="flex items-center gap-3 text-sm font-bold text-primary">
-                      <Phone className="w-4 h-4 text-primary/40" />
+                    <div className="flex items-center gap-3 text-lg font-bold text-primary">
+                      <Phone className="w-5 h-5 text-primary/40" />
                       {contact.phone}
                     </div>
                     {contact.email && (
@@ -340,7 +392,7 @@ export default function LandlordEmergencyContactsPage() {
                         {contact.email}
                       </div>
                     )}
-                    <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground pt-2 border-t border-muted/50">
+                    <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground pt-4 border-t border-muted/50">
                       <Building2 className="w-4 h-4 text-primary/40" />
                       {properties?.find(p => p.id === contact.propertyId)?.addressLine1 || "Portfolio General"}
                     </div>

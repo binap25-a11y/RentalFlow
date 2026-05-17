@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   useUser, 
   useFirestore, 
@@ -18,15 +18,6 @@ import {
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
-
-const UK_STANDARD_SERVICES = [
-  { name: "Emergency Services (Police, Fire, Ambulance)", phone: "999 or 112", role: "Primary Emergency" },
-  { name: "Police Non-Emergency", phone: "101", role: "Non-Urgent Police" },
-  { name: "NHS Medical Advice (24/7)", phone: "111", role: "Medical Advice" },
-  { name: "National Gas Emergency", phone: "0800 111 999", role: "Gas Leaks" },
-  { name: "Electricity Emergency", phone: "Contact local DNO", role: "Power Cuts" },
-  { name: "Water Emergency", phone: "Contact supplier", role: "Major Leaks" },
-];
 
 export default function TenantEmergencyContactsPage() {
   const { user } = useUser();
@@ -48,11 +39,13 @@ export default function TenantEmergencyContactsPage() {
 
   const { data: contacts, loading: isLoading } = useCollection(contactsQuery);
 
+  const standardServices = useMemo(() => contacts?.filter(c => c.category === 'standard') || [], [contacts]);
+  const professionalPartners = useMemo(() => contacts?.filter(c => !c.category || c.category === 'professional') || [], [contacts]);
+
   const downloadPDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     
-    // Header
     doc.setFillColor(139, 114, 218); // Accent color (Violet)
     doc.rect(0, 0, pageWidth, 40, 'F');
     doc.setTextColor(255, 255, 255);
@@ -67,10 +60,10 @@ export default function TenantEmergencyContactsPage() {
     // 1. Standard UK Services
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
-    doc.text("1. STANDARD UK EMERGENCY SERVICES", 20, y);
+    doc.text("1. EMERGENCY SERVICES", 20, y);
     y += 10;
     
-    UK_STANDARD_SERVICES.forEach(service => {
+    standardServices.forEach(service => {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.text(service.name, 20, y);
@@ -87,8 +80,8 @@ export default function TenantEmergencyContactsPage() {
     doc.text("2. AUTHORIZED PROPERTY PARTNERS", 20, y);
     y += 10;
 
-    if (contacts && contacts.length > 0) {
-      contacts.forEach((contact) => {
+    if (professionalPartners.length > 0) {
+      professionalPartners.forEach((contact) => {
         if (y > 260) {
           doc.addPage();
           y = 20;
@@ -121,13 +114,13 @@ export default function TenantEmergencyContactsPage() {
   if (!isClient || isLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto text-left">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto text-left pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Emergency Contacts</h1>
-          <p className="text-muted-foreground font-medium font-body">Authorized UK services and property-specific support for your home.</p>
+          <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Support Directory</h1>
+          <p className="text-muted-foreground font-medium font-body">Authorized UK services and property-specific support provided by your landlord.</p>
         </div>
-        <Button variant="outline" onClick={downloadPDF} className="rounded-xl font-bold h-11 border-primary/20 bg-white">
+        <Button variant="outline" onClick={downloadPDF} className="rounded-xl font-bold h-11 border-primary/20 bg-white shadow-sm">
           <Download className="w-4 h-4 mr-2" /> Download Safety Guide
         </Button>
       </div>
@@ -136,7 +129,7 @@ export default function TenantEmergencyContactsPage() {
         <AlertCircle className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
         <div>
           <h3 className="font-bold text-amber-900 font-headline">Immediate Life Danger</h3>
-          <p className="text-sm text-amber-800 font-medium font-body mt-1">If there is immediate danger to life or fire, always call 999 first. For non-life-threatening emergencies, use the specific property contacts listed below.</p>
+          <p className="text-sm text-amber-800 font-medium font-body mt-1">If there is immediate danger to life or fire, always call 999 first. For non-life-threatening property issues, use the authorized contacts below.</p>
         </div>
       </div>
 
@@ -145,33 +138,39 @@ export default function TenantEmergencyContactsPage() {
            <Card className="border-none shadow-sm rounded-2xl overflow-hidden">
              <CardHeader className="bg-primary text-white">
                <CardTitle className="text-lg font-headline flex items-center gap-2">
-                 <ShieldCheck className="w-5 h-5" /> Standard UK Services
+                 <ShieldCheck className="w-5 h-5" /> Authorized Services
                </CardTitle>
              </CardHeader>
              <CardContent className="pt-6 space-y-4">
-                {UK_STANDARD_SERVICES.map((service, i) => (
-                  <div key={i} className="flex justify-between items-start gap-4 border-b border-muted pb-3 last:border-0">
-                    <div className="space-y-0.5">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase">{service.role}</p>
-                      <p className="text-sm font-bold leading-tight">{service.name}</p>
+                {standardServices.length > 0 ? (
+                  standardServices.map((service, i) => (
+                    <div key={i} className="flex justify-between items-start gap-4 border-b border-muted pb-3 last:border-0">
+                      <div className="space-y-0.5 min-w-0">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase truncate">{service.role}</p>
+                        <p className="text-sm font-bold leading-tight break-words">{service.name}</p>
+                      </div>
+                      <p className="text-sm font-bold text-primary whitespace-nowrap">{service.phone}</p>
                     </div>
-                    <p className="text-sm font-bold text-primary whitespace-nowrap">{service.phone}</p>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-muted-foreground text-xs font-medium">
+                    No authorized services listed by management.
                   </div>
-                ))}
+                )}
              </CardContent>
            </Card>
         </div>
 
         <div className="lg:col-span-2">
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             {!contacts || contacts.length === 0 ? (
+             {professionalPartners.length === 0 ? (
                <Card className="col-span-full border-2 border-dashed py-24 flex flex-col items-center justify-center bg-muted/10 rounded-[2rem]">
                  <PhoneCall className="w-12 h-12 text-primary/20 mb-4" />
-                 <h3 className="text-xl font-bold font-headline text-primary/40">No specific partners assigned</h3>
-                 <p className="text-sm text-muted-foreground font-medium mt-1">Your landlord will add property partners here.</p>
+                 <h3 className="text-xl font-bold font-headline text-primary/40">No property partners assigned</h3>
+                 <p className="text-sm text-muted-foreground font-medium mt-1">Authorized professionals will appear here.</p>
                </Card>
              ) : (
-               contacts.map((contact) => (
+               professionalPartners.map((contact) => (
                  <Card key={contact.id} className="border-none shadow-md hover:shadow-lg transition-all rounded-2xl group overflow-hidden bg-white border border-transparent hover:border-accent/10">
                    <CardHeader className="pb-4 bg-accent/5">
                      <div className="flex justify-between items-start">
@@ -188,7 +187,7 @@ export default function TenantEmergencyContactsPage() {
                      </p>
                    </CardHeader>
                    <CardContent className="pt-6 space-y-4">
-                     <div className="flex items-center gap-3 text-lg font-bold text-primary">
+                     <div className="flex items-center gap-3 text-xl font-bold text-primary">
                        <Phone className="w-5 h-5 text-accent/40" />
                        {contact.phone}
                      </div>
