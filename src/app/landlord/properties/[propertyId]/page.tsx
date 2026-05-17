@@ -138,14 +138,17 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     toast({ title: "Rent Updated" });
   };
 
-  const formatSafeDate = (dateStr: string | null | undefined) => {
-    if (!dateStr) return null;
-    try {
-      const d = parseISO(dateStr);
-      return isValid(d) ? format(d, 'PP') : 'Pending Review';
-    } catch {
-      return 'Pending Review';
-    }
+  const parseFlexDate = (dateVal: any) => {
+    if (!dateVal) return null;
+    if (typeof dateVal === 'string') return parseISO(dateVal);
+    if (dateVal.toDate && typeof dateVal.toDate === 'function') return dateVal.toDate();
+    if (dateVal.seconds) return new Date(dateVal.seconds * 1000);
+    return null;
+  };
+
+  const formatSafeDate = (dateVal: any) => {
+    const d = parseFlexDate(dateVal);
+    return d && isValid(d) ? format(d, 'PP') : 'Pending Review';
   };
 
   const handleTriggerFileInput = () => {
