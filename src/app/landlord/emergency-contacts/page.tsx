@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { 
   PhoneCall, Plus, Trash2, Edit3, Loader2, Download, 
-  Phone, Mail, User, Building2, Wrench, ShieldAlert, AlertCircle, Info, Zap 
+  Phone, Mail, User, Building2, Wrench, ShieldAlert, AlertCircle, Info, Zap, Save
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { jsPDF } from "jspdf";
@@ -179,9 +179,9 @@ export default function LandlordEmergencyContactsPage() {
     const pageWidth = pdfDoc.internal.pageSize.getWidth();
     const today = format(new Date(), 'PPp');
     
-    // 1. Header Styling (Increased height to accommodate address)
+    // 1. Header Styling
     pdfDoc.setFillColor(31, 41, 55);
-    pdfDoc.rect(0, 0, pageWidth, 60, 'F');
+    pdfDoc.rect(0, 0, pageWidth, 65, 'F');
     pdfDoc.setTextColor(255, 255, 255);
     
     // 2. Title & Metadata
@@ -193,8 +193,8 @@ export default function LandlordEmergencyContactsPage() {
     pdfDoc.setFontSize(10);
     pdfDoc.text(`Official Portfolio Safety Record | Generated: ${format(new Date(), 'PPP')}`, 20, 29);
     
-    // 3. Property Address (Positioned clearly below metadata)
-    let y = 75; // Starting Y for content
+    // 3. Property Address (Positioned strictly below metadata lines)
+    let y = 80; // Starting Y for standard service content
     if (selectedExportPropertyId) {
       const prop = properties?.find(p => p.id === selectedExportPropertyId);
       if (prop) {
@@ -371,7 +371,11 @@ export default function LandlordEmergencyContactsPage() {
                 </div>
                 <DialogFooter className="p-8 bg-muted/10 border-t">
                   <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 text-white font-headline">
-                    {editingContact ? "Save Modifications" : "Register Contact"}
+                    {editingContact ? (
+                      <><Save className="w-4 h-4 mr-2" /> Save Changes</>
+                    ) : (
+                      "Register Contact"
+                    )}
                   </Button>
                 </DialogFooter>
               </form>
@@ -384,11 +388,11 @@ export default function LandlordEmergencyContactsPage() {
         <div className="lg:col-span-1 space-y-6">
           <Card className="border-none shadow-sm bg-primary text-white rounded-2xl overflow-hidden">
             <CardHeader className="pb-4 border-b border-white/10">
-              <CardTitle className="text-lg font-headline flex items-center gap-2">
+              <CardTitle className="text-lg font-headline flex items-center gap-2 text-left">
                 <ShieldAlert className="w-5 h-5" /> Standard Services
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-6 space-y-6">
+            <CardContent className="pt-6 space-y-6 text-left">
               {standardServices.length > 0 ? (
                 standardServices.map((service) => (
                   <div key={service.id} className="group relative">
@@ -426,7 +430,7 @@ export default function LandlordEmergencyContactsPage() {
             ) : (
               professionalPartners.map((contact) => (
                 <Card key={contact.id} className="border-none shadow-sm hover:shadow-md transition-all rounded-2xl group overflow-hidden bg-white border border-transparent hover:border-primary/10">
-                  <CardHeader className="pb-4 bg-primary/5">
+                  <CardHeader className="pb-4 bg-primary/5 text-left">
                     <div className="flex justify-between items-start">
                       <div className="p-3 bg-white rounded-xl shadow-sm text-primary">
                         <Wrench className="w-5 h-5" />
@@ -445,7 +449,7 @@ export default function LandlordEmergencyContactsPage() {
                       {contact.role}
                     </Badge>
                   </CardHeader>
-                  <CardContent className="pt-6 space-y-4">
+                  <CardContent className="pt-6 space-y-4 text-left">
                     <div className="flex items-center gap-3 text-lg font-bold text-primary">
                       <Phone className="w-5 h-5 text-primary/40" />
                       {contact.phone}

@@ -68,11 +68,11 @@ export default function LandlordDashboard() {
     return d && isValid(d) ? format(d, 'PP') : 'TBC';
   };
 
-  // Aggregated Real-Time Compliance Roadmap logic (Ensures ALL Properties are explicitly checked)
+  // Aggregated Real-Time Compliance Roadmap logic
   const complianceItems = useMemo(() => {
     if (!isClient || !documents || !inspections || !properties) return [];
     const today = new Date();
-    const threshold = addDays(today, 365); // 1 year lookahead
+    const threshold = addDays(today, 365); // 1 year lookahead for roadmap coverage
 
     // 1. Expiring or Overdue Documents
     const docItems = documents
@@ -109,7 +109,7 @@ export default function LandlordDashboard() {
         urgent: isBefore(parseFlexDate(i.scheduledDate)!, addDays(today, 14))
       }));
 
-    // 3. Status for ALL properties (Ensures every property like 668 London Road always shows)
+    // 3. Status for ALL properties (Ensures every property like 668 London Road always shows even if clean)
     const propertyStatusItems = properties.map(p => {
       const isAlreadyListed = [...docItems, ...inspectionItems].some(item => item.propertyId === p.id);
       
