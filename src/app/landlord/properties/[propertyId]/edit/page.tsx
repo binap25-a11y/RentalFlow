@@ -79,9 +79,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     if (!user || !db || !propertyRef) return;
 
     setIsSubmitting(true);
-    
-    // Performance optimization: Redirect immediately after initiating non-blocking update
-    router.push(`/landlord/properties/${propertyId}`);
 
     try {
       let currentImageUrl = property?.imageUrl || previewUrl;
@@ -98,9 +95,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         zipCode,
         description,
         propertyType,
-        numberOfBedrooms: Number(bedrooms),
-        numberOfBathrooms: Number(bathrooms),
-        rentAmount: Number(rentAmount),
+        numberOfBedrooms: parseInt(bedrooms, 10) || 1,
+        numberOfBathrooms: parseInt(bathrooms, 10) || 1,
+        rentAmount: parseFloat(rentAmount) || 0,
         imageUrl: currentImageUrl,
         updatedAt: serverTimestamp(),
       };
@@ -111,8 +108,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         title: "Portfolio Updated", 
         description: "Your modifications are being synchronized." 
       });
+      router.push(`/landlord/properties/${propertyId}`);
     } catch (error: any) {
-      // Background error handling is managed by the non-blocking update utility
+      toast({ variant: "destructive", title: "Update Failed", description: error.message });
+      setIsSubmitting(false);
     }
   };
 
@@ -185,6 +184,26 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   <div className="space-y-2">
                     <Label htmlFor="rent" className="font-bold text-xs uppercase text-primary/60 font-headline">Monthly Rent (£)</Label>
                     <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-body" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Bedrooms</Label>
+                    <Select value={bedrooms} onValueChange={setBedrooms}>
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {['1','2','3','4','5+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Bathrooms</Label>
+                    <Select value={bathrooms} onValueChange={setBathrooms}>
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {['1','2','3+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div className="space-y-2">
