@@ -57,7 +57,7 @@ export default function LandlordDashboard() {
 
     return [
       { label: 'Portfolio Assets', value: total.toString(), icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
-      { label: 'Est. Net Monthly', value: `£${Math.max(0, netRevenue).toLocaleString()}`, icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+      { label: 'Est. Net Monthly', value: `£${Math.ceil(Math.max(0, netRevenue)).toLocaleString()}`, icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50' },
       { label: 'Occupancy Rate', value: `${avgYield.toFixed(0)}%`, icon: TrendingUp, color: 'text-violet-600', bg: 'bg-violet-50' },
     ];
   }, [properties, maintenance, isClient]);
