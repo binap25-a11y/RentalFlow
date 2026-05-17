@@ -37,8 +37,8 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  // Synchronized professional brand identity icon
-  const LOGO_URL = 'https://picsum.photos/seed/rentflow-key-logo/512/512';
+  // Robust professional brand identity seed
+  const LOGO_URL = 'https://picsum.photos/seed/rentflow-v9-blue-key/512/512';
 
   useEffect(() => {
     setMounted(true);
