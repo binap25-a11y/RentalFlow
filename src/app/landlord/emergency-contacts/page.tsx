@@ -177,38 +177,48 @@ export default function LandlordEmergencyContactsPage() {
     if (!contacts) return;
     const pdfDoc = new jsPDF();
     const pageWidth = pdfDoc.internal.pageSize.getWidth();
+    const today = format(new Date(), 'PPp');
     
-    // Header styling
+    // 1. Header Styling (Increased height to accommodate address)
     pdfDoc.setFillColor(31, 41, 55);
-    pdfDoc.rect(0, 0, pageWidth, 40, 'F');
+    pdfDoc.rect(0, 0, pageWidth, 60, 'F');
     pdfDoc.setTextColor(255, 255, 255);
-    pdfDoc.setFontSize(22);
-    pdfDoc.text("TENANCY EMERGENCY CONTACTS", 20, 25);
-    pdfDoc.setFontSize(10);
-    pdfDoc.text(`Official Portfolio Safety Record | Generated: ${format(new Date(), 'PPP')}`, 20, 32);
     
-    let yStart = 60;
-
-    // Header for Property Specific PDF
+    // 2. Title & Metadata
+    pdfDoc.setFont("helvetica", "bold");
+    pdfDoc.setFontSize(20);
+    pdfDoc.text("TENANCY EMERGENCY CONTACTS", 20, 22);
+    
+    pdfDoc.setFont("helvetica", "normal");
+    pdfDoc.setFontSize(10);
+    pdfDoc.text(`Official Portfolio Safety Record | Generated: ${format(new Date(), 'PPP')}`, 20, 29);
+    
+    // 3. Property Address (Positioned clearly below metadata)
+    let y = 75; // Starting Y for content
     if (selectedExportPropertyId) {
       const prop = properties?.find(p => p.id === selectedExportPropertyId);
       if (prop) {
-        pdfDoc.setTextColor(255, 255, 255);
+        pdfDoc.setFont("helvetica", "bold");
         pdfDoc.setFontSize(12);
-        const addr = pdfDoc.splitTextToSize(prop.addressLine1.toUpperCase(), 80);
-        pdfDoc.text(addr, pageWidth - 20, 25, { align: 'right' });
+        const addrLines = pdfDoc.splitTextToSize(prop.addressLine1.toUpperCase(), pageWidth - 40);
+        pdfDoc.text(addrLines, 20, 42);
+        
+        pdfDoc.setFont("helvetica", "normal");
         pdfDoc.setFontSize(9);
-        pdfDoc.text(`${prop.city}, ${prop.zipCode}`, pageWidth - 20, 32, { align: 'right' });
+        pdfDoc.text(`${prop.city}, ${prop.zipCode}`, 20, 42 + (addrLines.length * 6));
       }
+    } else {
+      pdfDoc.setFont("helvetica", "bold");
+      pdfDoc.setFontSize(11);
+      pdfDoc.text("FULL PORTFOLIO DIRECTORY", 20, 42);
     }
 
     pdfDoc.setTextColor(0, 0, 0);
-    let y = yStart;
 
-    // 1. Standard Services
+    // 4. Standard Services Section
     pdfDoc.setFont("helvetica", "bold");
     pdfDoc.setFontSize(14);
-    pdfDoc.text("1. EMERGENCY SERVICES", 20, y);
+    pdfDoc.text("1. PRIMARY EMERGENCY SERVICES", 20, y);
     y += 10;
     
     standardServices.forEach(service => {
@@ -222,10 +232,10 @@ export default function LandlordEmergencyContactsPage() {
 
     y += 15;
 
-    // 2. Professional Partners
+    // 5. Professional Partners Section
     pdfDoc.setFont("helvetica", "bold");
     pdfDoc.setFontSize(14);
-    pdfDoc.text("2. PROFESSIONAL PARTNERS", 20, y);
+    pdfDoc.text("2. AUTHORIZED PROPERTY PARTNERS", 20, y);
     y += 10;
 
     const filteredProfessionals = professionalPartners.filter(contact => {
@@ -233,9 +243,14 @@ export default function LandlordEmergencyContactsPage() {
       return contact.propertyId === selectedExportPropertyId || !contact.propertyId;
     });
 
+    if (filteredProfessionals.length === 0) {
+      pdfDoc.setFont("helvetica", "italic");
+      pdfDoc.setFontSize(10);
+      pdfDoc.setTextColor(107, 114, 128);
+      pdfDoc.text("No property-specific professional partners assigned.", 20, y);
+    }
+
     filteredProfessionals.forEach((contact) => {
-      const propName = properties?.find(p => p.id === contact.propertyId)?.addressLine1 || "General Portfolio";
-      
       if (y > 250) {
         pdfDoc.addPage();
         y = 20;
@@ -246,28 +261,38 @@ export default function LandlordEmergencyContactsPage() {
 
       pdfDoc.setFont("helvetica", "bold");
       pdfDoc.setFontSize(12);
+      pdfDoc.setTextColor(31, 41, 55);
       pdfDoc.text(contact.role.toUpperCase(), 20, y);
       
       pdfDoc.setFont("helvetica", "normal");
       pdfDoc.setFontSize(10);
+      pdfDoc.setTextColor(0, 0, 0);
       pdfDoc.text(`${contact.name}`, 20, y + 7);
       pdfDoc.text(`Tel: ${contact.phone}`, 20, y + 13);
       if (contact.email) pdfDoc.text(`Email: ${contact.email}`, 20, y + 19);
 
       if (!selectedExportPropertyId) {
-        pdfDoc.setFontSize(9);
+        const propName = properties?.find(p => p.id === contact.propertyId)?.addressLine1 || "Portfolio-Wide";
+        pdfDoc.setFontSize(8);
         pdfDoc.setTextColor(107, 114, 128);
-        const propLabel = pdfDoc.splitTextToSize(`Property: ${propName}`, 60);
-        pdfDoc.text(propLabel, pageWidth - 20, y, { align: 'right' });
+        pdfDoc.text(`Assigned: ${propName}`, pageWidth - 20, y, { align: 'right' });
       }
       
-      pdfDoc.setTextColor(0, 0, 0);
-      y += 30;
+      y += 35;
     });
 
+    // 6. Footer Metadata
+    const totalPages = pdfDoc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      pdfDoc.setPage(i);
+      pdfDoc.setFontSize(8);
+      pdfDoc.setTextColor(156, 163, 175);
+      pdfDoc.text(`Generated ${today} | Page ${i} of ${totalPages} | RentalFlow Official Record`, pageWidth / 2, 290, { align: 'center' });
+    }
+
     const fileName = selectedExportPropertyId 
-      ? `Emergency_Contacts_${properties?.find(p => p.id === selectedExportPropertyId)?.addressLine1.replace(/\s+/g, '_')}.pdf`
-      : `Emergency_Contacts_Portfolio_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      ? `Emergency_Directory_${properties?.find(p => p.id === selectedExportPropertyId)?.addressLine1.replace(/\s+/g, '_')}.pdf`
+      : `Portfolio_Emergency_Directory_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
 
     pdfDoc.save(fileName);
   };
@@ -283,7 +308,7 @@ export default function LandlordEmergencyContactsPage() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 bg-white rounded-xl border border-primary/10 px-3 h-11">
-             <Label className="text-[10px] font-bold uppercase text-muted-foreground">Export Target:</Label>
+             <Label className="text-[10px] font-bold uppercase text-muted-foreground">PDF Export Context:</Label>
              <select 
                className="bg-transparent text-sm font-bold outline-none cursor-pointer"
                value={selectedExportPropertyId}
@@ -293,8 +318,8 @@ export default function LandlordEmergencyContactsPage() {
                {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
              </select>
           </div>
-          <Button variant="outline" onClick={downloadPDF} className="rounded-xl font-bold h-11 border-primary/20 bg-white">
-            <Download className="w-4 h-4 mr-2" /> Export PDF Directory
+          <Button variant="outline" onClick={downloadPDF} className="rounded-xl font-bold h-11 border-primary/20 bg-white shadow-sm">
+            <Download className="w-4 h-4 mr-2" /> Export PDF Guide
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>

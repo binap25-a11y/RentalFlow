@@ -68,11 +68,11 @@ export default function LandlordDashboard() {
     return d && isValid(d) ? format(d, 'PP') : 'TBC';
   };
 
-  // Aggregated Real-Time Compliance Roadmap logic (Includes ALL Properties)
+  // Aggregated Real-Time Compliance Roadmap logic (Ensures ALL Properties are explicitly checked)
   const complianceItems = useMemo(() => {
     if (!isClient || !documents || !inspections || !properties) return [];
     const today = new Date();
-    const threshold = addDays(today, 365);
+    const threshold = addDays(today, 365); // 1 year lookahead
 
     // 1. Expiring or Overdue Documents
     const docItems = documents
@@ -109,7 +109,7 @@ export default function LandlordDashboard() {
         urgent: isBefore(parseFlexDate(i.scheduledDate)!, addDays(today, 14))
       }));
 
-    // 3. Status for ALL properties (Ensures 668 London Road etc always show)
+    // 3. Status for ALL properties (Ensures every property like 668 London Road always shows)
     const propertyStatusItems = properties.map(p => {
       const isAlreadyListed = [...docItems, ...inspectionItems].some(item => item.propertyId === p.id);
       
@@ -128,16 +128,20 @@ export default function LandlordDashboard() {
     }).filter(Boolean) as any[];
 
     return [...docItems, ...inspectionItems, ...propertyStatusItems].sort((a, b) => {
-      // Put urgent items at top
+      // Priority 1: Urgency
       if (a.urgent && !b.urgent) return -1;
       if (!a.urgent && b.urgent) return 1;
-      // Put Status items at bottom
-      if (a.type === 'Status' && b.type !== 'Status') return 1;
-      if (a.type !== 'Status' && b.type === 'Status') return -1;
       
+      // Priority 2: Actionable items (Docs/Audits) over Status items
+      if (a.type !== 'Status' && b.type === 'Status') return -1;
+      if (a.type === 'Status' && b.type !== 'Status') return 1;
+      
+      // Priority 3: Chronological for actual dates
       const dateA = parseFlexDate(a.date)?.getTime() || 0;
       const dateB = parseFlexDate(b.date)?.getTime() || 0;
-      return dateA - dateB;
+      if (dateA && dateB) return dateA - dateB;
+      
+      return 0;
     });
   }, [documents, inspections, properties, isClient]);
 
