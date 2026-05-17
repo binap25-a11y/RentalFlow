@@ -20,7 +20,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { format } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
@@ -86,6 +86,16 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     });
     setIsEditing(false);
     toast({ title: "Rent Updated" });
+  };
+
+  const formatSafeDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return null;
+    try {
+      const d = parseISO(dateStr);
+      return isValid(d) ? format(d, 'PP') : 'Pending Review';
+    } catch {
+      return 'Pending Review';
+    }
   };
 
   const handleUploadDocument = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -296,7 +306,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         <h4 className="font-bold text-sm font-headline group-hover:text-primary transition-colors">{docItem.fileName}</h4>
                         <div className="flex gap-4 mt-1">
                           <span className="text-[10px] text-muted-foreground font-bold uppercase flex items-center"><Info className="w-3 h-3 mr-1" /> {docItem.documentType}</span>
-                          {docItem.expiryDate && <span className="text-[10px] text-amber-600 font-bold uppercase flex items-center"><ShieldAlert className="w-3 h-3 mr-1" /> Exp: {format(new Date(docItem.expiryDate), 'PP')}</span>}
+                          {docItem.expiryDate && (
+                            <span className="text-[10px] text-amber-600 font-bold uppercase flex items-center">
+                              <ShieldAlert className="w-3 h-3 mr-1" /> 
+                              Exp: {formatSafeDate(docItem.expiryDate)}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-2 w-full md:w-auto">
