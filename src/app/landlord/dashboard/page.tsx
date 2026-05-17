@@ -68,12 +68,12 @@ export default function LandlordDashboard() {
   const complianceItems = useMemo(() => {
     if (!isClient || !properties) return [];
     const today = new Date();
-    const threshold = addDays(today, 365); 
+    const threshold = addDays(today, 30); 
 
     const docItems = (documents || [])
       .filter(d => {
         const expiry = parseFlexDate(d.expiryDate);
-        return expiry && isValid(expiry) && isBefore(expiry, threshold);
+        return expiry && isValid(expiry) && isBefore(expiry, addDays(today, 365));
       })
       .map(d => ({
         id: d.id,
@@ -83,14 +83,14 @@ export default function LandlordDashboard() {
         type: 'Document',
         icon: FileText,
         propertyId: d.propertyId,
-        urgent: isBefore(parseFlexDate(d.expiryDate)!, addDays(today, 30))
+        urgent: isBefore(parseFlexDate(d.expiryDate)!, threshold)
       }));
 
     const inspectionItems = (inspections || [])
       .filter(i => {
         if (i.status === 'completed') return false;
         const scheduled = parseFlexDate(i.scheduledDate);
-        return scheduled && isValid(scheduled) && isBefore(scheduled, threshold);
+        return scheduled && isValid(scheduled);
       })
       .map(i => ({
         id: i.id,
@@ -104,7 +104,7 @@ export default function LandlordDashboard() {
       }));
 
     const propertyStatusItems = properties.map(p => {
-      // Logic Fix: Check if property has AT LEAST ONE document regardless of expiry
+      // Correct Compliance Logic: Identify properties with ZERO documents
       const allPropDocs = (documents || []).filter(d => d.propertyId === p.id);
       const hasAnyDocs = allPropDocs.length > 0;
       
@@ -121,7 +121,7 @@ export default function LandlordDashboard() {
         };
       }
 
-      // If it has docs, check if it's already in the Roadmap (expiring or scheduled audit)
+      // If it has docs, check if it's already listed in the roadmap for expiry or audit
       const isAlreadyListed = [...docItems, ...inspectionItems].some(item => item.propertyId === p.id);
       if (isAlreadyListed) return null;
 
@@ -142,7 +142,7 @@ export default function LandlordDashboard() {
       if (a.type === 'Missing' && b.type !== 'Missing') return -1;
       if (b.type === 'Missing' && a.type !== 'Missing') return 1;
 
-      // 2. Urgent items (expiring < 30 days)
+      // 2. Urgent items (expiring < 30 days or scheduled < 14 days)
       if (a.urgent && !b.urgent) return -1;
       if (!a.urgent && b.urgent) return 1;
       
@@ -152,7 +152,7 @@ export default function LandlordDashboard() {
       const pB = priorityMap[b.type] ?? 4;
       if (pA !== pB) return pA - pB;
 
-      // 4. Date sorting
+      // 4. Date sorting (for items that have dates)
       const dateA = parseFlexDate(a.date)?.getTime() || 0;
       const dateB = parseFlexDate(b.date)?.getTime() || 0;
       if (dateA && dateB) return dateA - dateB;
@@ -226,7 +226,7 @@ export default function LandlordDashboard() {
                 </div>
               </div>
               <div className="space-y-1">
-                <p className="text-xl md:text-2xl font-bold font-headline break-words">
+                <p className="text-xl md:text-2xl font-bold font-headline">
                   {stat.value}
                 </p>
                 <p className="text-sm text-muted-foreground font-medium font-body">{stat.label}</p>
@@ -333,9 +333,9 @@ export default function LandlordDashboard() {
                 </Link>
               </Button>
               <Button variant="outline" className="w-full justify-start h-11 rounded-xl font-headline font-bold border-primary/20" asChild>
-                <Link href="/landlord/messages">
+                <Link href="/landlord/properties">
                   <TrendingUp className="w-4 h-4 mr-3" />
-                  Financial Reports
+                  Asset Directory
                 </Link>
               </Button>
             </CardContent>

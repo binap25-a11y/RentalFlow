@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -38,7 +37,7 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  // Unified brand logo seed
+  // Unified brand logo seed matching the mobile install icon
   const LOGO_URL = 'https://picsum.photos/seed/rentflow-v2-identity/512/512';
 
   useEffect(() => {
@@ -164,18 +163,17 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <div className="relative w-20 h-20 mb-2">
+          <div className="relative w-24 h-24 mb-4">
             <Image 
               src={LOGO_URL} 
               alt="Logo" 
               fill 
-              className="object-contain rounded-2xl" 
+              className="object-contain rounded-[2rem] shadow-xl" 
               unoptimized 
-              data-ai-hint="property key"
             />
           </div>
           <Loader2 className="w-10 h-10 animate-spin text-primary" />
-          <p className="text-sm font-medium text-muted-foreground animate-pulse">Authenticating...</p>
+          <p className="text-sm font-medium text-muted-foreground animate-pulse">Authenticating Portfolio Access...</p>
         </div>
       </div>
     );
@@ -184,23 +182,22 @@ export default function LoginPage() {
   if (needsProfile && user) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <Card className="w-full max-w-lg border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden animate-in zoom-in duration-300">
-          <CardHeader className="text-center bg-primary/5 pb-8">
+        <Card className="w-full max-w-lg border-none shadow-2xl bg-white overflow-hidden animate-in zoom-in duration-300 rounded-[2.5rem]">
+          <CardHeader className="text-center bg-primary/5 pb-8 pt-10">
             <div className="mx-auto p-1 bg-white rounded-2xl w-fit mb-4 shadow-sm">
                <Image 
                 src={LOGO_URL} 
                 alt="RentalFlow" 
-                width={64} 
-                height={64} 
-                className="rounded-xl" 
+                width={72} 
+                height={72} 
+                className="rounded-2xl" 
                 unoptimized 
-                data-ai-hint="property key"
               />
             </div>
             <CardTitle className="text-2xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
             <CardDescription>Establish your professional profile on RentalFlow.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6 pt-8">
+          <CardContent className="space-y-6 pt-8 px-10 pb-12">
             <div className="grid grid-cols-2 gap-4 text-left">
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">First Name</Label>
@@ -233,7 +230,7 @@ export default function LoginPage() {
               </Tabs>
             </div>
 
-            <Button className="w-full h-12 rounded-xl font-bold bg-primary text-lg" onClick={handleCreateProfile} disabled={isLoading || !firstName || !lastName || !phoneNumber}>
+            <Button className="w-full h-14 rounded-xl font-bold bg-primary text-lg shadow-lg shadow-primary/20" onClick={handleCreateProfile} disabled={isLoading || !firstName || !lastName || !phoneNumber}>
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle2 className="w-5 h-5 mr-2" /> Complete Registration</>}
             </Button>
           </CardContent>
@@ -244,67 +241,66 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      <div className="mb-8 text-center animate-in fade-in slide-in-from-top-4 duration-1000">
-        <div className="inline-flex items-center justify-center p-1 bg-white rounded-[2rem] mb-4 shadow-xl">
+      <div className="mb-10 text-center animate-in fade-in slide-in-from-top-4 duration-1000">
+        <div className="inline-flex items-center justify-center p-1 bg-white rounded-[2.5rem] mb-6 shadow-2xl">
            <Image 
             src={LOGO_URL} 
             alt="RentalFlow" 
-            width={80} 
-            height={80} 
-            className="rounded-[1.75rem]" 
+            width={100} 
+            height={100} 
+            className="rounded-[2.25rem]" 
             unoptimized 
-            data-ai-hint="property key"
           />
         </div>
-        <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">RentalFlow</h1>
-        <p className="text-muted-foreground font-medium">Professional Rental Management</p>
+        <h1 className="text-5xl font-headline font-bold text-primary mb-2 tracking-tighter">RentalFlow</h1>
+        <p className="text-muted-foreground font-medium text-lg">Professional Portfolio Management</p>
       </div>
 
-      <Card className="w-full max-w-md border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
-        <CardHeader className="space-y-1 pb-4 text-center bg-primary/5">
+      <Card className="w-full max-w-md border-none shadow-2xl bg-white overflow-hidden rounded-[2.5rem]">
+        <CardHeader className="space-y-1 pb-4 text-center bg-primary/5 pt-8">
           <CardTitle className="text-2xl font-headline font-bold text-primary">
-            {authMode === 'login' ? 'Welcome Back' : 'Join Us'}
+            {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
           </CardTitle>
           <CardDescription>
-            {authMode === 'login' ? 'Sign in to your portfolio' : 'Start your management journey'}
+            {authMode === 'login' ? 'Sign in to access your ledger' : 'Establish your management presence'}
           </CardDescription>
         </CardHeader>
-        <CardContent className="pt-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="pt-8 px-8 pb-10">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2 text-left">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-11" />
+              <Input id="email" type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-12" />
             </div>
             <div className="space-y-2 text-left">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="rounded-xl h-11" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-muted-foreground">
+                <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="rounded-xl h-12" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3.5 text-muted-foreground">
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full h-12 rounded-xl font-bold bg-primary text-lg" disabled={isLoading}>
+            <Button type="submit" className="w-full h-14 rounded-xl font-bold bg-primary text-lg shadow-lg shadow-primary/20" disabled={isLoading}>
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (authMode === 'login' ? 'Login' : 'Sign Up')}
             </Button>
           </form>
 
-          <div className="relative my-6">
+          <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t"></span>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-4 text-muted-foreground font-bold tracking-widest">or continue with</span>
+              <span className="bg-white px-4 text-muted-foreground font-bold tracking-widest">secure gateway</span>
             </div>
           </div>
 
-          <Button variant="outline" className="w-full h-12 rounded-xl mb-6 font-bold" onClick={handleGoogleSignIn} disabled={isLoading}>
+          <Button variant="outline" className="w-full h-12 rounded-xl mb-6 font-bold border-primary/10 hover:bg-primary/5" onClick={handleGoogleSignIn} disabled={isLoading}>
             <Chrome className="w-5 h-5 mr-3 text-red-500" />
             Continue with Google
           </Button>
 
           <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full text-sm font-bold text-primary/60 hover:text-primary transition-colors">
-            {authMode === 'login' ? "New to RentalFlow? Register here" : "Already have an account? Log in"}
+            {authMode === 'login' ? "New to RentalFlow? Register here" : "Return to login screen"}
           </button>
         </CardContent>
       </Card>
