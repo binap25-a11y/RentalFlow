@@ -7,7 +7,6 @@ import { collection, serverTimestamp, query, where, doc } from 'firebase/firesto
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Loader2, MessageSquare, ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
