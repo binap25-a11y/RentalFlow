@@ -3,9 +3,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
-  Building2, Users, AlertTriangle, FileText, ArrowRight, 
-  ShieldAlert, Loader2, TrendingUp, Wallet, CheckCircle2,
-  Calendar as CalendarIcon, Zap, ClipboardList, Info
+  Building2, Wallet, TrendingUp, FileText, ArrowRight, 
+  ShieldAlert, Loader2, CheckCircle2,
+  Calendar as CalendarIcon, Zap, ClipboardList
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery } from "@/firebase";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,6 @@ export default function LandlordDashboard() {
     setIsClient(true);
   }, []);
 
-  // Real-time Queries for all portfolio data
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return getLandlordCollectionQuery(db, "properties", user.uid);
@@ -54,7 +53,6 @@ export default function LandlordDashboard() {
 
   const { data: inspections } = useCollection(inspectionsQuery);
 
-  // Robust date parsing for Roadmap items
   const parseFlexDate = (dateVal: any) => {
     if (!dateVal) return null;
     if (typeof dateVal === 'string') return parseISO(dateVal);
@@ -68,13 +66,11 @@ export default function LandlordDashboard() {
     return d && isValid(d) ? format(d, 'PP') : 'TBC';
   };
 
-  // Aggregated Real-Time Compliance Roadmap logic
   const complianceItems = useMemo(() => {
     if (!isClient || !properties) return [];
     const today = new Date();
-    const threshold = addDays(today, 365); // 1 year lookahead for roadmap coverage
+    const threshold = addDays(today, 365); 
 
-    // 1. Expiring or Overdue Documents
     const docItems = (documents || [])
       .filter(d => {
         const expiry = parseFlexDate(d.expiryDate);
@@ -82,7 +78,7 @@ export default function LandlordDashboard() {
       })
       .map(d => ({
         id: d.id,
-        title: `${properties?.find(p => p.id === d.propertyId)?.addressLine1 || d.fileName}`,
+        title: `${properties?.find(p => p.id === d.propertyId)?.addressLine1 || d.fileName || 'Portfolio Document'}`,
         subtitle: 'Document Expiry',
         date: d.expiryDate,
         type: 'Document',
@@ -91,7 +87,6 @@ export default function LandlordDashboard() {
         urgent: isBefore(parseFlexDate(d.expiryDate)!, addDays(today, 30))
       }));
 
-    // 2. Upcoming or Overdue Audits
     const inspectionItems = (inspections || [])
       .filter(i => {
         if (i.status === 'completed') return false;
@@ -109,15 +104,13 @@ export default function LandlordDashboard() {
         urgent: isBefore(parseFlexDate(i.scheduledDate)!, addDays(today, 14))
       }));
 
-    // 3. Status for ALL properties (Ensures every property like 668 London Road always shows even if clean)
     const propertyStatusItems = properties.map(p => {
       const isAlreadyListed = [...docItems, ...inspectionItems].some(item => item.propertyId === p.id);
-      
       if (isAlreadyListed) return null;
 
       return {
         id: `status-${p.id}`,
-        title: p.addressLine1,
+        title: p.addressLine1 || 'Property Asset',
         subtitle: 'Verified & Secure',
         date: null,
         type: 'Status',
@@ -128,24 +121,17 @@ export default function LandlordDashboard() {
     }).filter(Boolean) as any[];
 
     return [...docItems, ...inspectionItems, ...propertyStatusItems].sort((a, b) => {
-      // Priority 1: Urgency
       if (a.urgent && !b.urgent) return -1;
       if (!a.urgent && b.urgent) return 1;
-      
-      // Priority 2: Actionable items (Docs/Audits) over Status items
       if (a.type !== 'Status' && b.type === 'Status') return -1;
       if (a.type === 'Status' && b.type !== 'Status') return 1;
-      
-      // Priority 3: Chronological for actual dates
       const dateA = parseFlexDate(a.date)?.getTime() || 0;
       const dateB = parseFlexDate(b.date)?.getTime() || 0;
       if (dateA && dateB) return dateA - dateB;
-      
       return 0;
     });
   }, [documents, inspections, properties, isClient]);
 
-  // Real-time Portfolio Health calculation
   const healthScore = useMemo(() => {
     if (!isClient) return { grade: 'A+', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-200' };
     const urgentCount = complianceItems.filter(i => i.urgent).length;
@@ -154,16 +140,12 @@ export default function LandlordDashboard() {
     return { grade: 'A+', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-200' };
   }, [complianceItems, isClient]);
 
-  // Rounded up revenue and fully displayed portfolio stats
   const stats = useMemo(() => {
     if (!isClient || !properties || !maintenance) return null;
-
     const total = properties.length || 0;
     const occupied = properties.filter(p => p.isOccupied).length || 0;
     const grossRent = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
     const totalExpenses = maintenance.reduce((acc, r) => acc + (r.cost || 0), 0);
-    
-    // Round up the final Net Monthly calculation
     const netRevenue = Math.ceil(grossRent - (totalExpenses / 12)); 
     const occupancyRate = total > 0 ? (occupied / total) * 100 : 0;
 
@@ -177,7 +159,7 @@ export default function LandlordDashboard() {
   const chartData = useMemo(() => {
     if (!isClient || !properties) return [];
     return properties.map(p => ({
-      name: p.addressLine1.split(' ')[0],
+      name: p.addressLine1 ? p.addressLine1.split(' ')[0] : 'Prop',
       rent: p.rentAmount || 0,
     })).slice(0, 5);
   }, [properties, isClient]);
@@ -318,8 +300,8 @@ export default function LandlordDashboard() {
               </Button>
               <Button variant="outline" className="w-full justify-start h-11 rounded-xl font-headline font-bold border-primary/20" asChild>
                 <Link href="/landlord/messages">
-                  <Users className="w-4 h-4 mr-3" />
-                  Messaging Hub
+                  <TrendingUp className="w-4 h-4 mr-3" />
+                  Financial Reports
                 </Link>
               </Button>
             </CardContent>

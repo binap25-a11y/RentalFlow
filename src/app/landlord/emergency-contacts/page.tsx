@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Dialog, 
   DialogContent, 
@@ -30,7 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { 
   PhoneCall, Plus, Trash2, Edit3, Loader2, Download, 
-  Phone, Mail, User, Building2, Wrench, ShieldAlert, AlertCircle, Info, Zap, Save
+  Phone, Mail, Building2, Wrench, ShieldAlert, Save
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { jsPDF } from "jspdf";
@@ -180,12 +179,10 @@ export default function LandlordEmergencyContactsPage() {
     const pageWidth = pdfDoc.internal.pageSize.getWidth();
     const today = format(new Date(), 'PPP');
     
-    // 1. Header Styling
     pdfDoc.setFillColor(31, 41, 55);
     pdfDoc.rect(0, 0, pageWidth, 75, 'F');
     pdfDoc.setTextColor(255, 255, 255);
     
-    // 2. Title & Metadata
     pdfDoc.setFont("helvetica", "bold");
     pdfDoc.setFontSize(22);
     pdfDoc.text("TENANCY EMERGENCY CONTACTS", 20, 25);
@@ -194,7 +191,6 @@ export default function LandlordEmergencyContactsPage() {
     pdfDoc.setFontSize(10);
     pdfDoc.text(`Official Portfolio Safety Record | Generated: ${today}`, 20, 35);
     
-    // 3. Property Address (Positioned below metadata)
     let headerOffset = 50;
     if (selectedExportPropertyId) {
       const prop = properties?.find(p => p.id === selectedExportPropertyId);
@@ -206,7 +202,7 @@ export default function LandlordEmergencyContactsPage() {
         
         pdfDoc.setFont("helvetica", "normal");
         pdfDoc.setFontSize(9);
-        pdfDoc.text(`${prop.city}, ${prop.zipCode}`, 20, headerOffset + (addrLines.length * 6));
+        pdfDoc.text(`${prop.city}, ${prop.zipCode}`, 20, headerOffset + (addrLines.length * 6) + 2);
       }
     } else {
       pdfDoc.setFont("helvetica", "bold");
@@ -217,7 +213,6 @@ export default function LandlordEmergencyContactsPage() {
     pdfDoc.setTextColor(0, 0, 0);
     let y = 90;
 
-    // 4. Standard Services Section
     pdfDoc.setFont("helvetica", "bold");
     pdfDoc.setFontSize(14);
     pdfDoc.text("1. PRIMARY EMERGENCY SERVICES", 20, y);
@@ -234,7 +229,6 @@ export default function LandlordEmergencyContactsPage() {
 
     y += 15;
 
-    // 5. Professional Partners Section
     pdfDoc.setFont("helvetica", "bold");
     pdfDoc.setFontSize(14);
     pdfDoc.text("2. AUTHORIZED PROPERTY PARTNERS", 20, y);
@@ -286,7 +280,6 @@ export default function LandlordEmergencyContactsPage() {
       y += 40;
     });
 
-    // 6. Footer Metadata
     const totalPages = pdfDoc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       pdfDoc.setPage(i);
@@ -328,13 +321,13 @@ export default function LandlordEmergencyContactsPage() {
                 <Plus className="w-4 h-4 mr-2" /> Add Contact
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] rounded-2xl border-none shadow-2xl p-0 overflow-hidden flex flex-col max-h-[90vh]">
+            <DialogContent className="sm:max-w-[500px] rounded-2xl border-none shadow-2xl p-0 overflow-hidden flex flex-col h-[600px] max-h-[90vh]">
               <form onSubmit={handleSave} className="flex flex-col h-full overflow-hidden">
-                <DialogHeader className="p-8 text-left bg-primary/5 border-b">
+                <DialogHeader className="p-8 text-left bg-primary/5 border-b shrink-0">
                   <DialogTitle className="text-xl font-bold font-headline text-primary">{editingContact ? "Modify Contact" : "New Portfolio Contact"}</DialogTitle>
                   <DialogDescription className="font-medium text-muted-foreground">Register an emergency service or professional partner.</DialogDescription>
                 </DialogHeader>
-                <ScrollArea className="flex-1">
+                <div className="flex-1 overflow-y-auto min-h-0">
                   <div className="grid gap-6 p-8">
                     <div className="space-y-2">
                       <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Contact Category</Label>
@@ -371,14 +364,11 @@ export default function LandlordEmergencyContactsPage() {
                       </div>
                     )}
                   </div>
-                </ScrollArea>
-                <DialogFooter className="p-8 bg-muted/10 border-t">
+                </div>
+                <DialogFooter className="p-8 bg-muted/10 border-t shrink-0">
                   <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 text-white font-headline">
-                    {editingContact ? (
-                      <><Save className="w-4 h-4 mr-2" /> Save Changes</>
-                    ) : (
-                      "Register Contact"
-                    )}
+                    <Save className="w-4 h-4 mr-2" />
+                    {editingContact ? "Save Changes" : "Register Contact"}
                   </Button>
                 </DialogFooter>
               </form>
