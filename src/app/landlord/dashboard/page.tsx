@@ -116,7 +116,7 @@ export default function LandlordDashboard() {
                   <stat.icon className="w-6 h-6" />
                 </div>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0">
                 <p className="text-xl md:text-2xl font-bold font-headline truncate" title={stat.value}>
                   {stat.value}
                 </p>
