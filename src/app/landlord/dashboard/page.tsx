@@ -104,17 +104,15 @@ export default function LandlordDashboard() {
       }));
 
     const propertyStatusItems = properties.map(p => {
-      const isAlreadyListed = [...docItems, ...inspectionItems].some(item => item.propertyId === p.id);
-      if (isAlreadyListed) return null;
-
-      // Check if property has at least one document
-      const hasAnyDocs = (documents || []).some(d => d.propertyId === p.id);
+      // Logic Fix: Check if property has AT LEAST ONE document regardless of expiry
+      const allPropDocs = (documents || []).filter(d => d.propertyId === p.id);
+      const hasAnyDocs = allPropDocs.length > 0;
       
       if (!hasAnyDocs) {
         return {
           id: `missing-${p.id}`,
           title: p.addressLine1 || 'Property Asset',
-          subtitle: 'Missing Records',
+          subtitle: 'Missing Documentation',
           date: null,
           type: 'Missing',
           icon: AlertTriangle,
@@ -122,6 +120,10 @@ export default function LandlordDashboard() {
           urgent: true
         };
       }
+
+      // If it has docs, check if it's already in the Roadmap (expiring or scheduled audit)
+      const isAlreadyListed = [...docItems, ...inspectionItems].some(item => item.propertyId === p.id);
+      if (isAlreadyListed) return null;
 
       return {
         id: `status-${p.id}`,
@@ -136,14 +138,21 @@ export default function LandlordDashboard() {
     }).filter(Boolean) as any[];
 
     return [...docItems, ...inspectionItems, ...propertyStatusItems].sort((a, b) => {
+      // 1. Missing Documentation is absolute priority
+      if (a.type === 'Missing' && b.type !== 'Missing') return -1;
+      if (b.type === 'Missing' && a.type !== 'Missing') return 1;
+
+      // 2. Urgent items (expiring < 30 days)
       if (a.urgent && !b.urgent) return -1;
       if (!a.urgent && b.urgent) return 1;
       
+      // 3. Category sorting
       const priorityMap: Record<string, number> = { 'Missing': 0, 'Document': 1, 'Audit': 2, 'Status': 3 };
       const pA = priorityMap[a.type] ?? 4;
       const pB = priorityMap[b.type] ?? 4;
       if (pA !== pB) return pA - pB;
 
+      // 4. Date sorting
       const dateA = parseFlexDate(a.date)?.getTime() || 0;
       const dateB = parseFlexDate(b.date)?.getTime() || 0;
       if (dateA && dateB) return dateA - dateB;
