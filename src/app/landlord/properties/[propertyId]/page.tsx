@@ -185,10 +185,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       createdAt: serverTimestamp(),
     }, { merge: true });
 
-    toast({ 
-      title: "Document Added", 
-      description: "Asset record initialized instantly." 
-    });
+    toast({ title: "Document Added" });
 
     if (fileInputRef.current) fileInputRef.current.value = '';
     setUploadExpiryDate(undefined);
@@ -203,11 +200,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         updatedAt: serverTimestamp(),
       });
     } catch (error: any) {
-      toast({ 
-        variant: "destructive", 
-        title: "Upload Error", 
-        description: "Storage task failed." 
-      });
+      toast({ variant: "destructive", title: "Upload Error" });
     } finally {
       setIsUploadingDoc(false);
     }
@@ -217,7 +210,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     if (!db) return;
     const docRef = doc(db, 'documents', id);
     deleteDocumentNonBlocking(docRef);
-    toast({ title: "Document Removed", description: "EPC or record decommissioned from vault." });
+    toast({ title: "Document Removed" });
   };
 
   const handleOpenEditDoc = (docItem: any) => {
@@ -234,7 +227,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       expiryDate: editDocExpiry ? editDocExpiry.toISOString() : null,
       updatedAt: serverTimestamp(),
     });
-    toast({ title: "Metadata Updated", description: "Compliance ledger synchronized." });
+    toast({ title: "Metadata Updated" });
     setEditingDoc(null);
   };
 
@@ -249,13 +242,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         expiryDate: summary.leaseEndDate,
         updatedAt: serverTimestamp(),
       });
-      toast({ title: "AI Analysis Complete", description: "Key terms identified." });
+      toast({ title: "AI Analysis Complete" });
     } catch (error: any) {
-      toast({ 
-        variant: "destructive", 
-        title: "Analysis Failed", 
-        description: "AI could not process document at this time." 
-      });
+      toast({ variant: "destructive", title: "Analysis Failed" });
     } finally {
       setIsAnalyzing(null);
     }
@@ -271,7 +260,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     pdf.text("OFFICIAL AUDIT RECORD", 20, 25);
     pdf.setFontSize(10);
     pdf.text(`Property Asset: ${property?.addressLine1}`, 20, 32);
-    
     pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(14);
     pdf.text("Audit Summary", 20, 55);
@@ -279,12 +267,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const summaryText = inspection.summary || "No summary provided";
     const splitSummary = pdf.splitTextToSize(summaryText, pageWidth - 40);
     pdf.text(splitSummary, 20, 65);
-    
     pdf.save(`Audit_${property?.addressLine1}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
-  if (!property) return <div className="p-8 text-center font-bold">Property not found in portfolio.</div>;
+  if (!property) return <div className="p-8 text-center font-bold">Property not found.</div>;
 
   const gallery = property.imageUrls || [property.imageUrl].filter(Boolean);
 
@@ -369,19 +356,19 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
           <Tabs defaultValue="tenants" className="w-full">
             <TabsList className="grid grid-cols-4 w-full bg-muted/30 p-1 rounded-xl h-auto gap-1 border border-primary/5">
-              <TabsTrigger value="tenants" className="rounded-lg py-2.5 px-0 font-bold flex flex-col sm:flex-row items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+              <TabsTrigger value="tenants" className="rounded-lg py-2.5 px-0 font-bold flex flex-col sm:flex-row items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white">
                 <Users className="w-4 h-4 sm:mr-2" />
                 <span className="text-[10px] sm:text-sm">Residents</span>
               </TabsTrigger>
-              <TabsTrigger value="docs" className="rounded-lg py-2.5 px-0 font-bold flex flex-col sm:flex-row items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+              <TabsTrigger value="docs" className="rounded-lg py-2.5 px-0 font-bold flex flex-col sm:flex-row items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white">
                 <FileText className="w-4 h-4 sm:mr-2" />
                 <span className="text-[10px] sm:text-sm">Vault</span>
               </TabsTrigger>
-              <TabsTrigger value="maintenance" className="rounded-lg py-2.5 px-0 font-bold flex flex-col sm:flex-row items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+              <TabsTrigger value="maintenance" className="rounded-lg py-2.5 px-0 font-bold flex flex-col sm:flex-row items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white">
                 <Wrench className="w-4 h-4 sm:mr-2" />
                 <span className="text-[10px] sm:text-sm">Repairs</span>
               </TabsTrigger>
-              <TabsTrigger value="inspections" className="rounded-lg py-2.5 px-0 font-bold flex flex-col sm:flex-row items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+              <TabsTrigger value="inspections" className="rounded-lg py-2.5 px-0 font-bold flex flex-col sm:flex-row items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white">
                 <FileCheck className="w-4 h-4 sm:mr-2" />
                 <span className="text-[10px] sm:text-sm">Audits</span>
               </TabsTrigger>
@@ -418,7 +405,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               <Card className="border-none shadow-sm bg-primary/5 rounded-2xl border border-primary/5">
                 <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2 text-left">
-                    <Label className="text-[10px] font-bold font-headline uppercase tracking-widest text-primary/60">Compliance Deadline (Optional)</Label>
+                    <Label className="text-[10px] font-bold font-headline uppercase tracking-widest text-primary/60">Compliance Deadline</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button variant="outline" className={cn("w-full justify-start text-left h-11 rounded-xl bg-white border-none shadow-sm font-body", !uploadExpiryDate && "text-muted-foreground")}>
@@ -432,178 +419,77 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     </Popover>
                   </div>
                   <div className="flex items-end">
-                    <input 
-                      type="file" 
-                      ref={fileInputRef} 
-                      className="hidden" 
-                      onChange={handleUploadDocument} 
-                    />
-                    <Button 
-                      onClick={handleTriggerFileInput}
-                      className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/20 bg-primary text-white transition-all hover:scale-[1.02]" 
-                      disabled={isUploadingDoc}
-                    >
+                    <input type="file" ref={fileInputRef} className="hidden" onChange={handleUploadDocument} />
+                    <Button onClick={handleTriggerFileInput} className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/20 bg-primary text-white" disabled={isUploadingDoc}>
                       {isUploadingDoc ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-                      Add Document to Vault
+                      Add Document
                     </Button>
                   </div>
                 </CardContent>
               </Card>
-              
               <div className="grid gap-3">
-                {propertyDocuments && propertyDocuments.length > 0 ? (
-                  propertyDocuments.slice().sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).map(docItem => {
-                    const viewUrl = docItem.fileUrl || localFileUrls[docItem.id];
-                    
-                    return (
-                      <div key={docItem.id} className="p-4 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-all group">
-                        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-                          <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-100 transition-colors shadow-sm">
-                            <FileText className="w-6 h-6" />
-                          </div>
-                          <div className="flex-1 text-left">
-                            <h4 className="font-bold text-sm font-headline group-hover:text-primary transition-colors flex items-center gap-2">
-                              {docItem.fileName}
-                              {!docItem.fileUrl && <Loader2 className="w-3 h-3 animate-spin text-primary/30" />}
-                            </h4>
-                            <div className="flex gap-4 mt-1">
-                              {docItem.expiryDate && <span className="text-[10px] text-destructive font-bold uppercase flex items-center"><ShieldAlert className="w-3 h-3 mr-1" /> Exp: {formatSafeDate(docItem.expiryDate)}</span>}
-                            </div>
-                          </div>
-                          <div className="flex gap-2 w-full md:w-auto">
-                            <Dialog open={editingDoc?.id === docItem.id} onOpenChange={(open) => !open && setEditingDoc(null)}>
-                              <DialogTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={() => handleOpenEditDoc(docItem)} className="rounded-xl hover:bg-primary/5 text-muted-foreground">
-                                  <Edit3 className="w-4 h-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="rounded-2xl border-none shadow-2xl p-0 overflow-hidden">
-                                <div className="p-6 bg-primary/5 border-b text-left">
-                                  <DialogTitle className="font-headline font-bold text-xl text-primary">Modify Asset Details</DialogTitle>
-                                  <DialogDescription className="font-medium text-muted-foreground">Refine metadata for official compliance ledger.</DialogDescription>
-                                </div>
-                                <div className="p-6 space-y-6 text-left">
-                                  <div className="space-y-2">
-                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/60 font-headline">Registry Name</Label>
-                                    <Input value={editDocName} onChange={(e) => setEditDocName(e.target.value)} className="rounded-xl h-12 bg-muted/20 border-none font-body" />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/60 font-headline">Compliance Expiry</Label>
-                                    <Popover>
-                                      <PopoverTrigger asChild>
-                                        <Button variant="outline" className="w-full justify-start h-12 rounded-xl bg-muted/20 border-none font-body">
-                                          <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
-                                          {editDocExpiry ? format(editDocExpiry, "PPP") : "Set suitable expiry date..."}
-                                        </Button>
-                                      </PopoverTrigger>
-                                      <PopoverContent className="w-auto p-0 rounded-2xl border-none shadow-2xl" align="start">
-                                        <Calendar mode="single" selected={editDocExpiry} onSelect={setEditDocExpiry} initialFocus />
-                                      </PopoverContent>
-                                    </Popover>
-                                    {editDocExpiry && (
-                                      <Button variant="ghost" size="sm" onClick={() => setEditDocExpiry(undefined)} className="text-[10px] font-bold text-destructive p-0 h-auto hover:bg-transparent">Clear Expiry</Button>
-                                    )}
-                                  </div>
-                                </div>
-                                <DialogFooter className="p-6 bg-muted/5 border-t">
-                                  <Button className="w-full rounded-xl h-12 font-bold bg-primary text-white shadow-lg shadow-primary/20 font-headline" onClick={handleUpdateDocMetadata}>Synchronize Record</Button>
-                                </DialogFooter>
-                              </DialogContent>
-                            </Dialog>
-
-                            <Button variant="outline" size="sm" onClick={() => handleSummarizeLease(docItem)} disabled={isAnalyzing === docItem.id} className="flex-1 md:flex-none rounded-xl font-bold h-9 border-primary/10 hover:bg-primary/5">
-                              {isAnalyzing === docItem.id ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Sparkles className="w-3 h-3 mr-2 text-primary" />}
-                              AI Review
-                            </Button>
-                            
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              asChild 
-                              className={cn("rounded-xl hover:bg-primary/5 text-primary", !viewUrl && "opacity-20 pointer-events-none")}
-                            >
-                              <a href={viewUrl} target="_blank" rel="noopener noreferrer" title="View Document">
-                                <Eye className="w-4 h-4" />
-                              </a>
-                            </Button>
-                            
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteDoc(docItem.id)} className="rounded-xl hover:bg-destructive/5 text-destructive/40 hover:text-destructive">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="p-12 text-center bg-muted/5 rounded-3xl border-2 border-dashed border-primary/5">
-                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Vault Empty</p>
+                {propertyDocuments?.map(docItem => (
+                  <div key={docItem.id} className="p-4 bg-white rounded-2xl border border-primary/5 shadow-sm flex items-center gap-4">
+                    <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                      <FileText className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <h4 className="font-bold text-sm font-headline">{docItem.fileName}</h4>
+                      {docItem.expiryDate && <span className="text-[10px] text-destructive font-bold uppercase">Exp: {formatSafeDate(docItem.expiryDate)}</span>}
+                    </div>
+                    <div className="flex gap-2">
+                       <Button variant="outline" size="sm" onClick={() => handleSummarizeLease(docItem)} disabled={isAnalyzing === docItem.id} className="rounded-xl font-bold h-9">
+                         {isAnalyzing === docItem.id ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Sparkles className="w-3 h-3 mr-2 text-primary" />}
+                         AI Review
+                       </Button>
+                       <Button variant="ghost" size="icon" asChild className="rounded-xl hover:bg-primary/5 text-primary">
+                         <a href={docItem.fileUrl} target="_blank" rel="noopener noreferrer"><Eye className="w-4 h-4" /></a>
+                       </Button>
+                       <Button variant="ghost" size="icon" onClick={() => handleDeleteDoc(docItem.id)} className="rounded-xl text-destructive/40 hover:text-destructive">
+                         <Trash2 className="w-4 h-4" />
+                       </Button>
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
             </TabsContent>
 
             <TabsContent value="maintenance" className="mt-6 space-y-4">
-              {maintenanceRequests && maintenanceRequests.length > 0 ? (
-                maintenanceRequests.map(req => (
-                  <div key={req.id} className="p-4 bg-white rounded-2xl border border-primary/5 shadow-sm flex items-start gap-4 hover:shadow-md transition-all text-left">
-                    <div className={cn("p-2 rounded-xl shadow-sm", req.status === 'completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600')}>
-                      <Wrench className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant={req.status === 'completed' ? 'secondary' : 'default'} className="uppercase text-[10px] font-bold px-2 py-0">
-                          {req.status}
-                        </Badge>
-                        <span className="text-[10px] text-muted-foreground font-bold font-body">
-                          {req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'PP') : 'Recently'}
-                        </span>
-                      </div>
-                      <h4 className="font-bold text-sm font-headline text-primary">{req.title}</h4>
-                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1 font-body">{req.description}</p>
-                    </div>
+              {maintenanceRequests?.map(req => (
+                <div key={req.id} className="p-4 bg-white rounded-2xl border border-primary/5 shadow-sm flex items-start gap-4 text-left">
+                  <div className={cn("p-2 rounded-xl", req.status === 'completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600')}>
+                    <Wrench className="w-5 h-5" />
                   </div>
-                ))
-              ) : (
-                <div className="p-16 text-center bg-muted/10 rounded-3xl border-2 border-dashed border-primary/10">
-                  <p className="text-sm text-muted-foreground font-bold font-headline">Zero active maintenance issues.</p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge variant={req.status === 'completed' ? 'secondary' : 'default'} className="uppercase text-[10px] font-bold">{req.status}</Badge>
+                      <span className="text-[10px] text-muted-foreground font-bold">{req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'PP') : 'Recently'}</span>
+                    </div>
+                    <h4 className="font-bold text-sm font-headline text-primary">{req.title}</h4>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{req.description}</p>
+                  </div>
                 </div>
-              )}
+              ))}
             </TabsContent>
 
             <TabsContent value="inspections" className="mt-6 space-y-4">
-              {inspections && inspections.length > 0 ? (
-                inspections.map(insp => (
-                  <div key={insp.id} className="p-4 bg-white rounded-2xl border border-primary/5 shadow-sm flex items-center justify-between gap-4 hover:shadow-md transition-all">
-                    <div className="flex items-center gap-4 text-left">
-                      <div className="p-2 bg-amber-50 text-amber-600 rounded-xl shadow-sm">
-                        <FileCheck className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant={insp.status === 'completed' ? 'secondary' : 'outline'} className="uppercase text-[10px] font-bold px-2 py-0">
-                            {insp.status}
-                          </Badge>
-                          <span className="text-[10px] text-muted-foreground font-bold font-body">
-                            {format(new Date(insp.scheduledDate), 'PP')}
-                          </span>
-                        </div>
-                        <h4 className="font-bold text-sm font-headline text-primary">Compliance Audit</h4>
-                        {insp.healthScore && <p className="text-[10px] font-bold text-emerald-600 uppercase mt-0.5">Asset Condition: {insp.healthScore}/100</p>}
-                      </div>
+              {inspections?.map(insp => (
+                <div key={insp.id} className="p-4 bg-white rounded-2xl border border-primary/5 shadow-sm flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4 text-left">
+                    <div className="p-2 bg-amber-50 text-amber-600 rounded-xl shadow-sm">
+                      <FileCheck className="w-5 h-5" />
                     </div>
-                    {insp.status === 'completed' && (
-                      <Button variant="ghost" size="icon" onClick={() => downloadInspectionPDF(insp)} className="rounded-xl hover:bg-primary/5 text-primary">
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                    )}
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant={insp.status === 'completed' ? 'secondary' : 'outline'} className="uppercase text-[10px] font-bold">{insp.status}</Badge>
+                        <span className="text-[10px] text-muted-foreground font-bold">{format(new Date(insp.scheduledDate), 'PP')}</span>
+                      </div>
+                      <h4 className="font-bold text-sm font-headline">Compliance Audit</h4>
+                    </div>
                   </div>
-                ))
-              ) : (
-                <div className="p-16 text-center bg-muted/10 rounded-3xl border-2 border-dashed border-primary/10">
-                  <p className="text-sm text-muted-foreground font-bold font-headline">No safety audits performed.</p>
+                  {insp.status === 'completed' && <Button variant="ghost" size="icon" onClick={() => downloadInspectionPDF(insp)} className="rounded-xl text-primary"><Eye className="w-4 h-4" /></Button>}
                 </div>
-              )}
+              ))}
             </TabsContent>
           </Tabs>
         </div>
@@ -612,23 +498,16 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-primary text-white">
             <CardHeader className="text-left">
               <CardTitle className="text-lg font-headline flex items-center">
-                <ShieldAlert className="w-5 h-5 mr-3 text-white" />
-                Management Shield
+                <ShieldAlert className="w-5 h-5 mr-3" />
+                Portfolio Status
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6 text-left">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                   <span className="text-xs font-bold uppercase tracking-widest opacity-60">Portfolio Health</span>
-                   <span className="text-sm font-bold">A+ Certified</span>
-                </div>
-                <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                   <div className="h-full bg-emerald-400 w-[95%]"></div>
-                </div>
+            <CardContent className="space-y-4 text-left">
+              <div className="space-y-2">
+                 <div className="flex justify-between items-center text-xs font-bold opacity-60"><span>Compliance</span><span>95%</span></div>
+                 <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden"><div className="h-full bg-emerald-400 w-[95%]"></div></div>
               </div>
-              <p className="text-xs font-medium font-body leading-relaxed opacity-80">
-                This asset is currently <span className="text-white font-bold uppercase">Optimized</span>. Resident satisfaction is verified and all legal compliance documentation is active.
-              </p>
+              <p className="text-xs font-medium font-body leading-relaxed opacity-80">This asset is verified and compliant with UK residential safety regulations.</p>
             </CardContent>
           </Card>
         </div>

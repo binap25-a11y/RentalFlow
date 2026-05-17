@@ -28,11 +28,13 @@ import {
 } from "@/components/ui/dialog";
 import { 
   PhoneCall, Plus, Trash2, Edit3, Loader2, Download, 
-  Phone, Mail, Building2, Wrench, ShieldAlert, Save, Globe
+  Phone, Mail, Building2, Wrench, ShieldAlert, Save, Globe,
+  Filter
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const DEFAULT_UK_SERVICES = [
   { name: "Emergency Services (Police, Fire, Ambulance)", phone: "999 or 112", role: "Primary Emergency" },
@@ -48,7 +50,7 @@ export default function LandlordEmergencyContactsPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
-  const [selectedExportPropertyId, setSelectedExportPropertyId] = useState<string>("");
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string>("");
 
   useEffect(() => {
     setIsClient(true);
@@ -77,10 +79,14 @@ export default function LandlordEmergencyContactsPage() {
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('');
   const [category, setCategory] = useState<'standard' | 'professional'>('professional');
-  const [selectedPropertyId, setSelectedPropertyId] = useState('');
+  const [assignToPropertyId, setAssignToPropertyId] = useState('');
 
   const standardServices = useMemo(() => contacts?.filter(c => c.category === 'standard') || [], [contacts]);
-  const professionalPartners = useMemo(() => contacts?.filter(c => !c.category || c.category === 'professional') || [], [contacts]);
+  const professionalPartners = useMemo(() => {
+    const allProfessionals = contacts?.filter(c => !c.category || c.category === 'professional') || [];
+    if (!selectedPropertyId) return allProfessionals;
+    return allProfessionals.filter(c => c.propertyId === selectedPropertyId || !c.propertyId);
+  }, [contacts, selectedPropertyId]);
 
   const resetForm = () => {
     setName('');
@@ -89,7 +95,7 @@ export default function LandlordEmergencyContactsPage() {
     setEmail('');
     setWebsite('');
     setCategory('professional');
-    setSelectedPropertyId('');
+    setAssignToPropertyId('');
     setEditingContact(null);
   };
 
@@ -101,7 +107,7 @@ export default function LandlordEmergencyContactsPage() {
     setEmail(contact.email || '');
     setWebsite(contact.website || '');
     setCategory(contact.category || 'professional');
-    setSelectedPropertyId(contact.propertyId || '');
+    setAssignToPropertyId(contact.propertyId || '');
     setIsDialogOpen(true);
   };
 
@@ -120,50 +126,44 @@ export default function LandlordEmergencyContactsPage() {
         updatedAt: serverTimestamp(),
       }, { merge: true });
     });
-    toast({ title: "Standard Services Imported", description: "Default UK emergency contacts added." });
+    toast({ title: "Standard Services Imported" });
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !db) return;
 
-    const property = properties?.find(p => p.id === selectedPropertyId);
+    const property = properties?.find(p => p.id === assignToPropertyId);
     const memberIds = property?.memberIds ? [...new Set([...property.memberIds, user.uid])] : [user.uid];
+
+    const payload = {
+      name,
+      role,
+      phone,
+      email,
+      website,
+      category,
+      propertyId: assignToPropertyId || null,
+      memberIds: memberIds,
+      updatedAt: serverTimestamp(),
+    };
 
     if (editingContact) {
       const contactRef = doc(db, 'emergencyContacts', editingContact.id);
-      updateDocumentNonBlocking(contactRef, {
-        name,
-        role,
-        phone,
-        email,
-        website,
-        category,
-        propertyId: selectedPropertyId || null,
-        memberIds: memberIds,
-        updatedAt: serverTimestamp(),
-      });
-      toast({ title: "Contact Updated", description: "Portfolio records synchronized." });
+      updateDocumentNonBlocking(contactRef, payload);
+      toast({ title: "Contact Updated", description: "Changes synchronized." });
     } else {
       const contactId = doc(collection(db, 'emergencyContacts')).id;
       const contactRef = doc(db, 'emergencyContacts', contactId);
       
       setDocumentNonBlocking(contactRef, {
         id: contactId,
-        name,
-        role,
-        phone,
-        email,
-        website,
-        category,
+        ...payload,
         landlordId: user.uid,
-        propertyId: selectedPropertyId || null,
-        memberIds: memberIds,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
       }, { merge: true });
 
-      toast({ title: "Contact Registered", description: "New provider added to directory." });
+      toast({ title: "Contact Registered" });
     }
 
     setIsDialogOpen(false);
@@ -183,7 +183,6 @@ export default function LandlordEmergencyContactsPage() {
     const pageWidth = pdfDoc.internal.pageSize.getWidth();
     const today = format(new Date(), 'PPP');
     
-    // Header background
     pdfDoc.setFillColor(31, 41, 55);
     pdfDoc.rect(0, 0, pageWidth, 75, 'F');
     pdfDoc.setTextColor(255, 255, 255);
@@ -196,23 +195,20 @@ export default function LandlordEmergencyContactsPage() {
     pdfDoc.setFontSize(10);
     pdfDoc.text(`Official Portfolio Safety Record | Generated: ${today}`, 20, 35);
     
-    // Position address clearly below title metadata
     let headerOffset = 50;
-    if (selectedExportPropertyId) {
-      const prop = properties?.find(p => p.id === selectedExportPropertyId);
+    if (selectedPropertyId) {
+      const prop = properties?.find(p => p.id === selectedPropertyId);
       if (prop) {
         pdfDoc.setFont("helvetica", "bold");
         pdfDoc.setFontSize(12);
         const addrLines = pdfDoc.splitTextToSize(prop.addressLine1.toUpperCase(), pageWidth - 40);
         pdfDoc.text(addrLines, 20, headerOffset);
-        
         pdfDoc.setFont("helvetica", "normal");
         pdfDoc.setFontSize(9);
         pdfDoc.text(`${prop.city}, ${prop.zipCode}`, 20, headerOffset + (addrLines.length * 6) + 2);
       }
     } else {
       pdfDoc.setFont("helvetica", "bold");
-      pdfDoc.setFontSize(11);
       pdfDoc.text("FULL PORTFOLIO DIRECTORY", 20, headerOffset);
     }
 
@@ -240,61 +236,23 @@ export default function LandlordEmergencyContactsPage() {
     pdfDoc.text("2. AUTHORIZED PROPERTY PARTNERS", 20, y);
     y += 12;
 
-    const filteredProfessionals = professionalPartners.filter(contact => {
-      if (!selectedExportPropertyId) return true;
-      return contact.propertyId === selectedExportPropertyId || !contact.propertyId;
-    });
-
-    if (filteredProfessionals.length === 0) {
-      pdfDoc.setFont("helvetica", "italic");
-      pdfDoc.setFontSize(10);
-      pdfDoc.setTextColor(107, 114, 128);
-      pdfDoc.text("No property-specific professional partners assigned.", 20, y);
-    }
-
-    filteredProfessionals.forEach((contact) => {
-      if (y > 250) {
-        pdfDoc.addPage();
-        y = 20;
-      }
-
+    professionalPartners.forEach((contact) => {
+      if (y > 250) { pdfDoc.addPage(); y = 20; }
       pdfDoc.setDrawColor(229, 231, 235);
       pdfDoc.line(20, y - 5, pageWidth - 20, y - 5);
-
       pdfDoc.setFont("helvetica", "bold");
       pdfDoc.setFontSize(12);
-      pdfDoc.setTextColor(31, 41, 55);
-      
       const roleLines = pdfDoc.splitTextToSize(contact.role.toUpperCase(), pageWidth - 80);
       pdfDoc.text(roleLines, 20, y);
-      
       pdfDoc.setFont("helvetica", "normal");
       pdfDoc.setFontSize(10);
-      pdfDoc.setTextColor(0, 0, 0);
       const nameOffset = y + (roleLines.length * 7);
       pdfDoc.text(`${contact.name}`, 20, nameOffset);
       pdfDoc.text(`Tel: ${contact.phone}`, 20, nameOffset + 6);
       if (contact.email) pdfDoc.text(`Email: ${contact.email}`, 20, nameOffset + 12);
       if (contact.website) pdfDoc.text(`Web: ${contact.website}`, 20, nameOffset + 18);
-
-      if (!selectedExportPropertyId) {
-        const propName = properties?.find(p => p.id === contact.propertyId)?.addressLine1 || "Portfolio-Wide";
-        pdfDoc.setFontSize(8);
-        pdfDoc.setTextColor(107, 114, 128);
-        pdfDoc.text(`Assigned: ${propName}`, pageWidth - 20, y, { align: 'right' });
-      }
-      
       y += 45;
     });
-
-    // Add page numbers
-    const totalPages = pdfDoc.internal.getNumberOfPages();
-    for (let i = 1; i <= totalPages; i++) {
-      pdfDoc.setPage(i);
-      pdfDoc.setFontSize(8);
-      pdfDoc.setTextColor(156, 163, 175);
-      pdfDoc.text(`Generated Official Record - Page ${i} of ${totalPages}`, pageWidth / 2, 290, { align: 'center' });
-    }
 
     pdfDoc.save(`Emergency_Directory_${today.replace(/\s+/g, '_')}.pdf`);
   };
@@ -309,19 +267,20 @@ export default function LandlordEmergencyContactsPage() {
           <p className="text-muted-foreground font-medium font-body">Manage UK standard services and property-specific professional partners.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 bg-white rounded-xl border border-primary/10 px-3 h-11">
-             <Label className="text-[10px] font-bold uppercase text-muted-foreground">PDF Export Context:</Label>
+          <div className="flex items-center gap-2 bg-white rounded-xl border border-primary/10 px-3 h-11 shadow-sm">
+             <Filter className="w-4 h-4 text-primary/60" />
+             <Label className="text-[10px] font-bold uppercase text-muted-foreground">Context:</Label>
              <select 
                className="bg-transparent text-sm font-bold outline-none cursor-pointer"
-               value={selectedExportPropertyId}
-               onChange={(e) => setSelectedExportPropertyId(e.target.value)}
+               value={selectedPropertyId}
+               onChange={(e) => setSelectedPropertyId(e.target.value)}
              >
                <option value="">Full Portfolio</option>
                {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
              </select>
           </div>
           <Button variant="outline" onClick={downloadPDF} className="rounded-xl font-bold h-11 border-primary/20 bg-white shadow-sm">
-            <Download className="w-4 h-4 mr-2" /> Export PDF Guide
+            <Download className="w-4 h-4 mr-2" /> Export PDF
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
@@ -335,7 +294,7 @@ export default function LandlordEmergencyContactsPage() {
                   <DialogTitle className="text-xl font-bold font-headline text-primary">{editingContact ? "Modify Contact" : "New Portfolio Contact"}</DialogTitle>
                   <DialogDescription className="font-medium text-muted-foreground">Register an emergency service or professional partner.</DialogDescription>
                 </DialogHeader>
-                <div className="flex-1 overflow-y-auto min-h-0">
+                <div className="flex-1 overflow-y-auto min-h-0 bg-white">
                   <div className="grid gap-6 p-8">
                     <div className="space-y-2">
                       <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Contact Category</Label>
@@ -346,33 +305,30 @@ export default function LandlordEmergencyContactsPage() {
                     </div>
                     <div className="space-y-2">
                       <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Business / Service Name</Label>
-                      <Input value={name} onChange={(e) => setName(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none" placeholder="e.g. Rapid Plumbing Ltd" />
+                      <Input value={name} onChange={(e) => setName(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none" />
                     </div>
                     <div className="space-y-2">
                       <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Designated Role</Label>
-                      <Input value={role} onChange={(e) => setRole(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none" placeholder="e.g. Master Plumber" />
+                      <Input value={role} onChange={(e) => setRole(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none" />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Phone</Label>
-                        <Input value={phone} onChange={(e) => setPhone(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none" placeholder="0800..." />
+                        <Input value={phone} onChange={(e) => setPhone(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none" />
                       </div>
                       <div className="space-y-2">
                         <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Email (Optional)</Label>
-                        <Input value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none" placeholder="office@..." />
+                        <Input value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none" />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Web Address (Optional)</Label>
-                      <div className="relative">
-                        <Globe className="absolute left-3 top-3 h-4 w-4 text-primary/40" />
-                        <Input value={website} onChange={(e) => setWebsite(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none pl-10" placeholder="https://..." />
-                      </div>
+                      <Input value={website} onChange={(e) => setWebsite(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none" placeholder="https://..." />
                     </div>
                     {category === 'professional' && (
                       <div className="space-y-2">
                         <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Assign to Property</Label>
-                        <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-body" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
+                        <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-body" value={assignToPropertyId} onChange={(e) => setAssignToPropertyId(e.target.value)}>
                           <option value="">General Portfolio</option>
                           {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
                         </select>
@@ -393,7 +349,7 @@ export default function LandlordEmergencyContactsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-1 space-y-6">
+        <div className="lg:col-span-1">
           <Card className="border-none shadow-sm bg-primary text-white rounded-2xl overflow-hidden">
             <CardHeader className="pb-4 border-b border-white/10">
               <CardTitle className="text-lg font-headline flex items-center gap-2 text-left">
@@ -416,12 +372,7 @@ export default function LandlordEmergencyContactsPage() {
                   </div>
                 ))
               ) : (
-                <div className="text-center py-6 space-y-4">
-                  <p className="text-xs opacity-60 font-medium">No standard services initialized.</p>
-                  <Button variant="secondary" size="sm" className="w-full rounded-xl font-bold" onClick={handleSeedStandardServices}>
-                    Import Defaults
-                  </Button>
-                </div>
+                <Button variant="secondary" size="sm" className="w-full rounded-xl font-bold" onClick={handleSeedStandardServices}>Import Defaults</Button>
               )}
             </CardContent>
           </Card>
@@ -429,11 +380,10 @@ export default function LandlordEmergencyContactsPage() {
 
         <div className="lg:col-span-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {!professionalPartners || professionalPartners.length === 0 ? (
+            {professionalPartners.length === 0 ? (
               <Card className="col-span-full border-2 border-dashed py-24 flex flex-col items-center justify-center bg-muted/10 rounded-[2rem]">
                 <PhoneCall className="w-12 h-12 text-primary/20 mb-4" />
-                <h3 className="text-xl font-bold font-headline text-primary/40">No custom partners logged</h3>
-                <p className="text-sm text-muted-foreground font-medium">Add professional partners for property-specific maintenance.</p>
+                <h3 className="text-xl font-bold font-headline text-primary/40">No partners found for this context</h3>
               </Card>
             ) : (
               professionalPartners.map((contact) => (
@@ -444,10 +394,10 @@ export default function LandlordEmergencyContactsPage() {
                         <Wrench className="w-5 h-5" />
                       </div>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-primary/40 hover:text-primary hover:bg-primary/5" onClick={() => handleEdit(contact)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-primary/40 hover:text-primary" onClick={() => handleEdit(contact)}>
                           <Edit3 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-destructive/40 hover:text-destructive hover:bg-destructive/5" onClick={() => handleDelete(contact.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-destructive/40 hover:text-destructive" onClick={() => handleDelete(contact.id)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -478,7 +428,7 @@ export default function LandlordEmergencyContactsPage() {
                     )}
                     <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground pt-4 border-t border-muted/50">
                       <Building2 className="w-4 h-4 text-primary/40" />
-                      {properties?.find(p => p.id === contact.propertyId)?.addressLine1 || "Portfolio General"}
+                      {properties?.find(p => p.id === contact.propertyId)?.addressLine1 || "Portfolio-Wide"}
                     </div>
                   </CardContent>
                 </Card>
