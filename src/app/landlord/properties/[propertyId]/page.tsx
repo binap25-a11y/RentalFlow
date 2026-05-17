@@ -126,8 +126,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const [editDocName, setEditDocName] = useState('');
   const [editDocExpiry, setEditDocExpiry] = useState<Date>();
 
-  const [localFileUrls, setLocalFileUrls] = useState<Record<string, string>>({});
-
   const handleUpdateRent = () => {
     if (!propertyRef) return;
     updateDocumentNonBlocking(propertyRef, {
@@ -165,9 +163,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const docId = doc(collection(db, 'documents')).id;
     const docRef = doc(db, 'documents', docId);
 
-    const localUrl = URL.createObjectURL(file);
-    setLocalFileUrls(prev => ({ ...prev, [docId]: localUrl }));
-
     const memberIds = Array.from(new Set([
       user.uid,
       ...(property.memberIds || []),
@@ -188,7 +183,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       createdAt: serverTimestamp(),
     }, { merge: true });
 
-    toast({ title: "Document Added" });
+    toast({ title: "Document Initiated" });
 
     if (fileInputRef.current) fileInputRef.current.value = '';
     setUploadExpiryDate(undefined);
@@ -202,6 +197,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         fileUrl: url,
         updatedAt: serverTimestamp(),
       });
+      toast({ title: "Upload Synchronized" });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Upload Error" });
     } finally {
@@ -214,24 +210,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const docRef = doc(db, 'documents', id);
     deleteDocumentNonBlocking(docRef);
     toast({ title: "Document Removed" });
-  };
-
-  const handleOpenEditDoc = (docItem: any) => {
-    setEditingDoc(docItem);
-    setEditDocName(docItem.fileName);
-    setEditDocExpiry(docItem.expiryDate ? new Date(docItem.expiryDate) : undefined);
-  };
-
-  const handleUpdateDocMetadata = () => {
-    if (!db || !editingDoc) return;
-    const docRef = doc(db, 'documents', editingDoc.id);
-    updateDocumentNonBlocking(docRef, {
-      fileName: editDocName,
-      expiryDate: editDocExpiry ? editDocExpiry.toISOString() : null,
-      updatedAt: serverTimestamp(),
-    });
-    toast({ title: "Metadata Updated" });
-    setEditingDoc(null);
   };
 
   const handleSummarizeLease = async (docObj: any) => {

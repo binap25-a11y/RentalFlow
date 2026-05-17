@@ -70,6 +70,7 @@ export default function LandlordDashboard() {
     const today = new Date();
     const threshold = addDays(today, 30); 
 
+    // 1. Map existing document items (expiring soon)
     const docItems = (documents || [])
       .filter(d => {
         const expiry = parseFlexDate(d.expiryDate);
@@ -86,6 +87,7 @@ export default function LandlordDashboard() {
         urgent: isBefore(parseFlexDate(d.expiryDate)!, threshold)
       }));
 
+    // 2. Map existing inspection items (scheduled)
     const inspectionItems = (inspections || [])
       .filter(i => {
         if (i.status === 'completed') return false;
@@ -103,11 +105,12 @@ export default function LandlordDashboard() {
         urgent: isBefore(parseFlexDate(i.scheduledDate)!, addDays(today, 14))
       }));
 
+    // 3. Map property status items (Verified or Missing Records)
     const propertyStatusItems = properties.map(p => {
-      // Logic: Flag properties with ZERO documents as highest priority
       const allPropDocs = (documents || []).filter(d => d.propertyId === p.id);
       const docCount = allPropDocs.length;
       
+      // Absolute Priority: Properties with zero documentation
       if (docCount === 0) {
         return {
           id: `missing-${p.id}`,
@@ -121,11 +124,11 @@ export default function LandlordDashboard() {
         };
       }
 
-      // If it has docs, check if it's already listed for a specific doc expiry or audit
+      // If already listed for an expiry or audit, don't duplicate
       const isAlreadyListed = [...docItems, ...inspectionItems].some(item => item.propertyId === p.id);
       if (isAlreadyListed) return null;
 
-      // If no pending tasks and has documents, it is verified
+      // Safe and Verified
       return {
         id: `status-${p.id}`,
         title: p.addressLine1 || 'Property Asset',
@@ -139,15 +142,15 @@ export default function LandlordDashboard() {
     }).filter(Boolean) as any[];
 
     return [...docItems, ...inspectionItems, ...propertyStatusItems].sort((a, b) => {
-      // 1. Missing Records is absolute priority
+      // Priority 1: Missing Documentation
       if (a.type === 'Missing' && b.type !== 'Missing') return -1;
       if (b.type === 'Missing' && a.type !== 'Missing') return 1;
 
-      // 2. Urgent items (expiring < 30 days or scheduled < 14 days)
+      // Priority 2: Urgent flags
       if (a.urgent && !b.urgent) return -1;
       if (!a.urgent && b.urgent) return 1;
       
-      // 3. Category sorting
+      // Priority 3: Logical grouping
       const priorityMap: Record<string, number> = { 'Missing': 0, 'Document': 1, 'Audit': 2, 'Status': 3 };
       const pA = priorityMap[a.type] ?? 4;
       const pB = priorityMap[b.type] ?? 4;

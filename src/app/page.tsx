@@ -37,7 +37,7 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  // High-fidelity identity logo matching mobile manifest
+  // Synchronized professional brand identity icon
   const LOGO_URL = 'https://picsum.photos/seed/rentflow-v3-key/512/512';
 
   useEffect(() => {
