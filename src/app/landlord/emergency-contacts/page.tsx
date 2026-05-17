@@ -254,7 +254,7 @@ export default function LandlordEmergencyContactsPage() {
     filteredProfessionals.forEach((contact) => {
       if (y > 250) {
         pdfDoc.addPage();
-        y = 25;
+        y = 20;
       }
 
       pdfDoc.setDrawColor(229, 231, 235);
