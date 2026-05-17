@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Building2, Wallet, TrendingUp, FileText, ArrowRight, 
   ShieldAlert, Loader2, CheckCircle2,
-  Calendar as CalendarIcon, Zap, ClipboardList
+  Calendar as CalendarIcon, Zap, ClipboardList, AlertTriangle
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery } from "@/firebase";
 import { Button } from "@/components/ui/button";
@@ -107,6 +107,22 @@ export default function LandlordDashboard() {
       const isAlreadyListed = [...docItems, ...inspectionItems].some(item => item.propertyId === p.id);
       if (isAlreadyListed) return null;
 
+      // Check if property has at least one document
+      const hasAnyDocs = (documents || []).some(d => d.propertyId === p.id);
+      
+      if (!hasAnyDocs) {
+        return {
+          id: `missing-${p.id}`,
+          title: p.addressLine1 || 'Property Asset',
+          subtitle: 'Missing Records',
+          date: null,
+          type: 'Missing',
+          icon: AlertTriangle,
+          propertyId: p.id,
+          urgent: true
+        };
+      }
+
       return {
         id: `status-${p.id}`,
         title: p.addressLine1 || 'Property Asset',
@@ -122,8 +138,12 @@ export default function LandlordDashboard() {
     return [...docItems, ...inspectionItems, ...propertyStatusItems].sort((a, b) => {
       if (a.urgent && !b.urgent) return -1;
       if (!a.urgent && b.urgent) return 1;
-      if (a.type !== 'Status' && b.type === 'Status') return -1;
-      if (a.type === 'Status' && b.type !== 'Status') return 1;
+      
+      const priorityMap: Record<string, number> = { 'Missing': 0, 'Document': 1, 'Audit': 2, 'Status': 3 };
+      const pA = priorityMap[a.type] ?? 4;
+      const pB = priorityMap[b.type] ?? 4;
+      if (pA !== pB) return pA - pB;
+
       const dateA = parseFlexDate(a.date)?.getTime() || 0;
       const dateB = parseFlexDate(b.date)?.getTime() || 0;
       if (dateA && dateB) return dateA - dateB;
@@ -133,7 +153,10 @@ export default function LandlordDashboard() {
 
   const healthScore = useMemo(() => {
     if (!isClient) return { grade: 'A+', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-200' };
-    const urgentCount = complianceItems.filter(i => i.urgent).length;
+    const missingCount = complianceItems.filter(i => i.type === 'Missing').length;
+    const urgentCount = complianceItems.filter(i => i.urgent && i.type !== 'Missing').length;
+
+    if (missingCount > 0) return { grade: 'D', color: 'text-red-700', bg: 'bg-red-100', border: 'border-red-200' };
     if (urgentCount > 3) return { grade: 'C', color: 'text-red-700', bg: 'bg-red-100', border: 'border-red-200' };
     if (urgentCount > 0) return { grade: 'B', color: 'text-amber-700', bg: 'bg-amber-100', border: 'border-amber-200' };
     return { grade: 'A+', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-200' };
@@ -243,6 +266,7 @@ export default function LandlordDashboard() {
                     key={`${item.type}-${item.id}`} 
                     className={cn(
                       "flex items-center justify-between p-3 rounded-xl border transition-colors",
+                      item.type === 'Missing' ? "bg-red-50 border-red-100" :
                       item.urgent ? "bg-amber-50 border-amber-100" : "bg-muted/30 border-transparent",
                       item.type === 'Status' && "bg-emerald-50/30 border-emerald-100/30"
                     )}
@@ -250,6 +274,7 @@ export default function LandlordDashboard() {
                     <div className="text-left min-w-0 flex gap-3 items-center">
                       <div className={cn(
                         "p-2 rounded-lg", 
+                        item.type === 'Missing' ? "bg-red-100 text-red-700" :
                         item.urgent ? "bg-amber-100 text-amber-700" : 
                         item.type === 'Status' ? "bg-emerald-100 text-emerald-700" : "bg-primary/10 text-primary"
                       )}>
@@ -260,7 +285,8 @@ export default function LandlordDashboard() {
                         <div className="flex items-center gap-2 mt-0.5">
                           <p className={cn(
                             "text-[10px] font-bold uppercase",
-                            item.type === 'Status' ? "text-emerald-600" : "text-muted-foreground"
+                            item.type === 'Status' ? "text-emerald-600" : 
+                            item.type === 'Missing' ? "text-red-600" : "text-muted-foreground"
                           )}>{item.subtitle}</p>
                           {item.date && (
                             <p className={cn("text-[10px] font-bold flex items-center", item.urgent ? "text-amber-600" : "text-muted-foreground")}>
