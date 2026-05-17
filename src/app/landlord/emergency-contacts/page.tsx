@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Dialog, 
   DialogContent, 
@@ -177,7 +178,7 @@ export default function LandlordEmergencyContactsPage() {
     if (!contacts) return;
     const pdfDoc = new jsPDF();
     const pageWidth = pdfDoc.internal.pageSize.getWidth();
-    const today = format(new Date(), 'PPp');
+    const today = format(new Date(), 'PPP');
     
     // 1. Header Styling
     pdfDoc.setFillColor(31, 41, 55);
@@ -191,29 +192,29 @@ export default function LandlordEmergencyContactsPage() {
     
     pdfDoc.setFont("helvetica", "normal");
     pdfDoc.setFontSize(10);
-    pdfDoc.text(`Official Portfolio Safety Record | Generated: ${format(new Date(), 'PPP')}`, 20, 29);
+    pdfDoc.text(`Official Portfolio Safety Record | Generated: ${today}`, 20, 32);
     
-    // 3. Property Address (Positioned strictly below metadata lines)
-    let y = 80; // Starting Y for standard service content
+    // 3. Property Address (Positioned below metadata)
     if (selectedExportPropertyId) {
       const prop = properties?.find(p => p.id === selectedExportPropertyId);
       if (prop) {
         pdfDoc.setFont("helvetica", "bold");
         pdfDoc.setFontSize(12);
         const addrLines = pdfDoc.splitTextToSize(prop.addressLine1.toUpperCase(), pageWidth - 40);
-        pdfDoc.text(addrLines, 20, 42);
+        pdfDoc.text(addrLines, 20, 45);
         
         pdfDoc.setFont("helvetica", "normal");
         pdfDoc.setFontSize(9);
-        pdfDoc.text(`${prop.city}, ${prop.zipCode}`, 20, 42 + (addrLines.length * 6));
+        pdfDoc.text(`${prop.city}, ${prop.zipCode}`, 20, 45 + (addrLines.length * 6));
       }
     } else {
       pdfDoc.setFont("helvetica", "bold");
       pdfDoc.setFontSize(11);
-      pdfDoc.text("FULL PORTFOLIO DIRECTORY", 20, 42);
+      pdfDoc.text("FULL PORTFOLIO DIRECTORY", 20, 45);
     }
 
     pdfDoc.setTextColor(0, 0, 0);
+    let y = 80;
 
     // 4. Standard Services Section
     pdfDoc.setFont("helvetica", "bold");
@@ -287,14 +288,10 @@ export default function LandlordEmergencyContactsPage() {
       pdfDoc.setPage(i);
       pdfDoc.setFontSize(8);
       pdfDoc.setTextColor(156, 163, 175);
-      pdfDoc.text(`Generated ${today} | Page ${i} of ${totalPages} | RentalFlow Official Record`, pageWidth / 2, 290, { align: 'center' });
+      pdfDoc.text(`Generated Official Record - Page ${i} of ${totalPages}`, pageWidth / 2, 290, { align: 'center' });
     }
 
-    const fileName = selectedExportPropertyId 
-      ? `Emergency_Directory_${properties?.find(p => p.id === selectedExportPropertyId)?.addressLine1.replace(/\s+/g, '_')}.pdf`
-      : `Portfolio_Emergency_Directory_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-
-    pdfDoc.save(fileName);
+    pdfDoc.save(`Emergency_Directory_${today.replace(/\s+/g, '_')}.pdf`);
   };
 
   if (!isClient || isLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
@@ -327,48 +324,50 @@ export default function LandlordEmergencyContactsPage() {
                 <Plus className="w-4 h-4 mr-2" /> Add Contact
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] rounded-2xl border-none shadow-2xl p-0 overflow-hidden">
-              <form onSubmit={handleSave}>
+            <DialogContent className="sm:max-w-[500px] rounded-2xl border-none shadow-2xl p-0 overflow-hidden flex flex-col max-h-[90vh]">
+              <form onSubmit={handleSave} className="flex flex-col h-full overflow-hidden">
                 <DialogHeader className="p-8 text-left bg-primary/5 border-b">
                   <DialogTitle className="text-xl font-bold font-headline text-primary">{editingContact ? "Modify Contact" : "New Portfolio Contact"}</DialogTitle>
                   <DialogDescription className="font-medium text-muted-foreground">Register an emergency service or professional partner.</DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 p-8">
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Contact Category</Label>
-                    <div className="flex gap-2">
-                      <Button type="button" variant={category === 'standard' ? 'default' : 'outline'} className="flex-1 rounded-xl h-10 font-bold" onClick={() => setCategory('standard')}>UK Standard</Button>
-                      <Button type="button" variant={category === 'professional' ? 'default' : 'outline'} className="flex-1 rounded-xl h-10 font-bold" onClick={() => setCategory('professional')}>Professional Partner</Button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Business / Service Name</Label>
-                    <Input value={name} onChange={(e) => setName(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none" placeholder="e.g. Rapid Plumbing Ltd" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Designated Role</Label>
-                    <Input value={role} onChange={(e) => setRole(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none" placeholder="e.g. Master Plumber" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
+                <ScrollArea className="flex-1">
+                  <div className="grid gap-6 p-8">
                     <div className="space-y-2">
-                      <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Phone</Label>
-                      <Input value={phone} onChange={(e) => setPhone(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none" placeholder="0800..." />
+                      <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Contact Category</Label>
+                      <div className="flex gap-2">
+                        <Button type="button" variant={category === 'standard' ? 'default' : 'outline'} className="flex-1 rounded-xl h-10 font-bold" onClick={() => setCategory('standard')}>UK Standard</Button>
+                        <Button type="button" variant={category === 'professional' ? 'default' : 'outline'} className="flex-1 rounded-xl h-10 font-bold" onClick={() => setCategory('professional')}>Professional Partner</Button>
+                      </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Email (Optional)</Label>
-                      <Input value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none" placeholder="office@..." />
+                      <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Business / Service Name</Label>
+                      <Input value={name} onChange={(e) => setName(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none" placeholder="e.g. Rapid Plumbing Ltd" />
                     </div>
-                  </div>
-                  {category === 'professional' && (
                     <div className="space-y-2">
-                      <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Assign to Property</Label>
-                      <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-body" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
-                        <option value="">General Portfolio</option>
-                        {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
-                      </select>
+                      <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Designated Role</Label>
+                      <Input value={role} onChange={(e) => setRole(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none" placeholder="e.g. Master Plumber" />
                     </div>
-                  )}
-                </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Phone</Label>
+                        <Input value={phone} onChange={(e) => setPhone(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none" placeholder="0800..." />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Email (Optional)</Label>
+                        <Input value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none" placeholder="office@..." />
+                      </div>
+                    </div>
+                    {category === 'professional' && (
+                      <div className="space-y-2">
+                        <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Assign to Property</Label>
+                        <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-body" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
+                          <option value="">General Portfolio</option>
+                          {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
                 <DialogFooter className="p-8 bg-muted/10 border-t">
                   <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 text-white font-headline">
                     {editingContact ? (

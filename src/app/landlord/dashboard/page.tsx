@@ -70,12 +70,12 @@ export default function LandlordDashboard() {
 
   // Aggregated Real-Time Compliance Roadmap logic
   const complianceItems = useMemo(() => {
-    if (!isClient || !documents || !inspections || !properties) return [];
+    if (!isClient || !properties) return [];
     const today = new Date();
     const threshold = addDays(today, 365); // 1 year lookahead for roadmap coverage
 
     // 1. Expiring or Overdue Documents
-    const docItems = documents
+    const docItems = (documents || [])
       .filter(d => {
         const expiry = parseFlexDate(d.expiryDate);
         return expiry && isValid(expiry) && isBefore(expiry, threshold);
@@ -92,7 +92,7 @@ export default function LandlordDashboard() {
       }));
 
     // 2. Upcoming or Overdue Audits
-    const inspectionItems = inspections
+    const inspectionItems = (inspections || [])
       .filter(i => {
         if (i.status === 'completed') return false;
         const scheduled = parseFlexDate(i.scheduledDate);
