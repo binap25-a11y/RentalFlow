@@ -41,7 +41,8 @@ export default function LandlordDashboard() {
 
   const documentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return getMemberCollectionQuery(db, "documents", user.uid);
+    // Use landlord specific query to ensure we see all property documents we own
+    return getLandlordCollectionQuery(db, "documents", user.uid);
   }, [db, user]);
 
   const { data: documents, loading: docsLoading } = useCollection(documentsQuery);
@@ -56,7 +57,8 @@ export default function LandlordDashboard() {
   const complianceItems = useMemo(() => {
     if (!isClient || !documents || !inspections) return [];
     const today = new Date();
-    const threshold = addDays(today, 60);
+    // Expand window to 180 days (6 months) to show more of the portfolio roadmap
+    const threshold = addDays(today, 180);
 
     const docItems = documents
       .filter(d => {
@@ -86,7 +88,7 @@ export default function LandlordDashboard() {
       })
       .map(i => ({
         id: i.id,
-        title: `${properties?.find(p => p.id === i.propertyId)?.addressLine1 || 'Property'} Audit`,
+        title: `${properties?.find(p => p.id === i.propertyId)?.addressLine1 || 'Asset'} Audit`,
         date: i.scheduledDate!,
         type: 'Audit',
         icon: ClipboardList,
@@ -98,6 +100,16 @@ export default function LandlordDashboard() {
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
   }, [documents, inspections, properties, isClient]);
+
+  const formatSafeDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return 'TBC';
+    try {
+      const d = parseISO(dateStr);
+      return isValid(d) ? format(d, 'PP') : 'TBC';
+    } catch {
+      return 'TBC';
+    }
+  };
 
   const healthScore = useMemo(() => {
     if (!isClient) return { grade: 'A+', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-200' };
@@ -207,7 +219,7 @@ export default function LandlordDashboard() {
             </CardHeader>
             <CardContent className="space-y-4">
               {complianceItems.length > 0 ? (
-                complianceItems.slice(0, 5).map((item) => (
+                complianceItems.slice(0, 6).map((item) => (
                   <div 
                     key={`${item.type}-${item.id}`} 
                     className={cn(
@@ -222,7 +234,7 @@ export default function LandlordDashboard() {
                       <div className="min-w-0">
                         <h4 className="font-bold text-xs font-body truncate">{item.title}</h4>
                         <p className={cn("text-[10px] font-bold flex items-center", item.urgent ? "text-amber-600" : "text-muted-foreground")}>
-                          <CalendarIcon className="w-3 h-3 mr-1" /> {format(parseISO(item.date), 'PP')}
+                          <CalendarIcon className="w-3 h-3 mr-1" /> {formatSafeDate(item.date)}
                         </p>
                       </div>
                     </div>
