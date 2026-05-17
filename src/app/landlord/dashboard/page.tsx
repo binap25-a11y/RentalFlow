@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Building2, Users, AlertTriangle, FileText, ArrowRight, 
   ShieldAlert, Loader2, TrendingUp, Wallet, CheckCircle2,
-  Calendar as CalendarIcon, Zap, ClipboardList
+  Calendar as CalendarIcon, Zap, ClipboardList, Info
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery } from "@/firebase";
 import { Button } from "@/components/ui/button";
@@ -68,22 +68,22 @@ export default function LandlordDashboard() {
     return d && isValid(d) ? format(d, 'PP') : 'TBC';
   };
 
-  // Aggregated Real-Time Compliance Roadmap logic (365-day strategic window)
+  // Aggregated Real-Time Compliance Roadmap logic (Full Portfolio Visibility)
   const complianceItems = useMemo(() => {
     if (!isClient || !documents || !inspections || !properties) return [];
     const today = new Date();
-    // 365-day visibility window to ensure all property cycles are visible
     const threshold = addDays(today, 365);
 
+    // 1. Expiring or Overdue Documents
     const docItems = documents
       .filter(d => {
         const expiry = parseFlexDate(d.expiryDate);
-        // Show expired items and upcoming items up to the threshold
         return expiry && isValid(expiry) && isBefore(expiry, threshold);
       })
       .map(d => ({
         id: d.id,
         title: `${properties?.find(p => p.id === d.propertyId)?.addressLine1 || d.fileName}`,
+        subtitle: 'Document Expiry',
         date: d.expiryDate,
         type: 'Document',
         icon: FileText,
@@ -91,16 +91,17 @@ export default function LandlordDashboard() {
         urgent: isBefore(parseFlexDate(d.expiryDate)!, addDays(today, 30))
       }));
 
+    // 2. Upcoming or Overdue Audits
     const inspectionItems = inspections
       .filter(i => {
         if (i.status === 'completed') return false;
         const scheduled = parseFlexDate(i.scheduledDate);
-        // Show overdue and upcoming audits
         return scheduled && isValid(scheduled) && isBefore(scheduled, threshold);
       })
       .map(i => ({
         id: i.id,
         title: `${properties?.find(p => p.id === i.propertyId)?.addressLine1 || 'Property Asset'} Audit`,
+        subtitle: 'Scheduled Audit',
         date: i.scheduledDate,
         type: 'Audit',
         icon: ClipboardList,
@@ -108,9 +109,30 @@ export default function LandlordDashboard() {
         urgent: isBefore(parseFlexDate(i.scheduledDate)!, addDays(today, 14))
       }));
 
-    return [...docItems, ...inspectionItems].sort((a, b) => {
+    // 3. Properties Missing Records (Ensures visibility for newly added properties like 668 London Road)
+    const missingRecordItems = properties
+      .filter(p => {
+        const hasDocs = documents.some(d => d.propertyId === p.id);
+        const hasAudits = inspections.some(i => i.propertyId === p.id);
+        return !hasDocs && !hasAudits;
+      })
+      .map(p => ({
+        id: `missing-${p.id}`,
+        title: p.addressLine1,
+        subtitle: 'Awaiting Records',
+        date: null,
+        type: 'Warning',
+        icon: AlertTriangle,
+        propertyId: p.id,
+        urgent: true
+      }));
+
+    return [...docItems, ...inspectionItems, ...missingRecordItems].sort((a, b) => {
       const dateA = parseFlexDate(a.date)?.getTime() || 0;
       const dateB = parseFlexDate(b.date)?.getTime() || 0;
+      // Put missing records/warnings at the top
+      if (a.type === 'Warning' && b.type !== 'Warning') return -1;
+      if (a.type !== 'Warning' && b.type === 'Warning') return 1;
       return dateA - dateB;
     });
   }, [documents, inspections, properties, isClient]);
@@ -119,7 +141,7 @@ export default function LandlordDashboard() {
   const healthScore = useMemo(() => {
     if (!isClient) return { grade: 'A+', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-200' };
     const urgentCount = complianceItems.filter(i => i.urgent).length;
-    if (urgentCount > 2) return { grade: 'C', color: 'text-red-700', bg: 'bg-red-100', border: 'border-red-200' };
+    if (urgentCount > 3) return { grade: 'C', color: 'text-red-700', bg: 'bg-red-100', border: 'border-red-200' };
     if (urgentCount > 0) return { grade: 'B', color: 'text-amber-700', bg: 'bg-amber-100', border: 'border-amber-200' };
     return { grade: 'A+', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-200' };
   }, [complianceItems, isClient]);
@@ -227,7 +249,7 @@ export default function LandlordDashboard() {
             </CardHeader>
             <CardContent className="space-y-4">
               {complianceItems.length > 0 ? (
-                complianceItems.slice(0, 6).map((item) => (
+                complianceItems.slice(0, 8).map((item) => (
                   <div 
                     key={`${item.type}-${item.id}`} 
                     className={cn(
@@ -240,10 +262,15 @@ export default function LandlordDashboard() {
                         <item.icon className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
-                        <h4 className="font-bold text-xs font-body truncate">{item.title}</h4>
-                        <p className={cn("text-[10px] font-bold flex items-center", item.urgent ? "text-amber-600" : "text-muted-foreground")}>
-                          <CalendarIcon className="w-3 h-3 mr-1" /> {formatSafeDate(item.date)}
-                        </p>
+                        <h4 className="font-bold text-xs font-body leading-tight">{item.title}</h4>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase">{item.subtitle}</p>
+                          {item.date && (
+                            <p className={cn("text-[10px] font-bold flex items-center", item.urgent ? "text-amber-600" : "text-muted-foreground")}>
+                              <CalendarIcon className="w-3 h-3 mr-1" /> {formatSafeDate(item.date)}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 rounded-full shrink-0">
