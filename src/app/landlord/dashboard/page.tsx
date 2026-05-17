@@ -56,7 +56,7 @@ export default function LandlordDashboard() {
     const avgYield = total > 0 ? (occupied / total) * 100 : 0;
 
     return [
-      { label: 'Portfolio Assets', value: total, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
+      { label: 'Portfolio Assets', value: total.toString(), icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
       { label: 'Est. Net Monthly', value: `£${Math.max(0, netRevenue).toLocaleString()}`, icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50' },
       { label: 'Occupancy Rate', value: `${avgYield.toFixed(0)}%`, icon: TrendingUp, color: 'text-violet-600', bg: 'bg-violet-50' },
     ];
@@ -97,7 +97,7 @@ export default function LandlordDashboard() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="text-left flex justify-between items-end">
+      <div className="text-left flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Portfolio Performance</h1>
           <p className="text-muted-foreground font-medium font-body">Financial yield and compliance roadmap.</p>
@@ -109,7 +109,7 @@ export default function LandlordDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats?.map((stat) => (
-          <Card key={stat.label} className="border-none shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+          <Card key={stat.label} className="border-none shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden">
             <CardContent className="pt-6 text-left">
               <div className="flex items-center justify-between mb-4">
                 <div className={`${stat.bg} ${stat.color} p-3 rounded-xl`}>
@@ -117,8 +117,10 @@ export default function LandlordDashboard() {
                 </div>
               </div>
               <div className="space-y-1">
-                <p className="text-2xl font-bold font-headline">{stat.value}</p>
-                <p className="text-sm text-muted-foreground font-medium font-body">{stat.label}</p>
+                <p className="text-xl md:text-2xl font-bold font-headline truncate" title={stat.value}>
+                  {stat.value}
+                </p>
+                <p className="text-sm text-muted-foreground font-medium font-body truncate">{stat.label}</p>
               </div>
             </CardContent>
           </Card>
@@ -161,13 +163,13 @@ export default function LandlordDashboard() {
               {complianceItems.length > 0 ? (
                 complianceItems.map((doc) => (
                   <div key={doc.id} className="flex items-center justify-between p-3 rounded-xl bg-amber-50 border border-amber-100">
-                    <div className="text-left">
-                      <h4 className="font-bold text-xs font-body truncate max-w-[140px]">{doc.fileName}</h4>
+                    <div className="text-left min-w-0">
+                      <h4 className="font-bold text-xs font-body truncate">{doc.fileName}</h4>
                       <p className="text-[10px] text-muted-foreground font-bold flex items-center">
                         <CalendarIcon className="w-3 h-3 mr-1" /> {format(parseISO(doc.expiryDate!), 'PP')}
                       </p>
                     </div>
-                    <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 rounded-full">
+                    <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 rounded-full shrink-0">
                       <Link href={`/landlord/properties/${doc.propertyId}`}>
                         <ArrowRight className="w-4 h-4" />
                       </Link>
