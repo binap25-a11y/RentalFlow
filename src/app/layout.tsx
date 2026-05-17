@@ -13,8 +13,8 @@ export const metadata: Metadata = {
     title: 'RentalFlow',
   },
   icons: {
-    icon: 'https://picsum.photos/seed/rentflow-v3-key/512/512',
-    apple: 'https://picsum.photos/seed/rentflow-v3-key/180/180',
+    icon: 'https://picsum.photos/seed/rentflow-pro-maintenance/512/512',
+    apple: 'https://picsum.photos/seed/rentflow-pro-maintenance/180/180',
   },
 };
 

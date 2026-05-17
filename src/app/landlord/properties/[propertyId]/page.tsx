@@ -122,10 +122,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
   const [uploadExpiryDate, setUploadExpiryDate] = useState<Date>();
 
-  const [editingDoc, setEditingDoc] = useState<any>(null);
-  const [editDocName, setEditDocName] = useState('');
-  const [editDocExpiry, setEditDocExpiry] = useState<Date>();
-
   const handleUpdateRent = () => {
     if (!propertyRef) return;
     updateDocumentNonBlocking(propertyRef, {
