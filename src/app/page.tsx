@@ -37,7 +37,7 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  const LOGO_URL = 'https://picsum.photos/seed/rentflow-key/512/512';
+  const LOGO_URL = 'https://picsum.photos/seed/rentflow-official-identity/512/512';
 
   useEffect(() => {
     setMounted(true);

@@ -81,6 +81,8 @@ export default function LandlordEmergencyContactsPage() {
   const [category, setCategory] = useState<'standard' | 'professional'>('professional');
   const [assignToPropertyId, setAssignToPropertyId] = useState('');
 
+  const selectedProperty = useMemo(() => properties?.find(p => p.id === selectedPropertyId), [properties, selectedPropertyId]);
+
   const standardServices = useMemo(() => contacts?.filter(c => c.category === 'standard') || [], [contacts]);
   const professionalPartners = useMemo(() => {
     const allProfessionals = contacts?.filter(c => !c.category || c.category === 'professional') || [];
@@ -264,7 +266,11 @@ export default function LandlordEmergencyContactsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Emergency Hub</h1>
-          <p className="text-muted-foreground font-medium font-body">Manage UK standard services and property-specific professional partners.</p>
+          <p className="text-muted-foreground font-medium font-body">
+            {selectedProperty 
+              ? `Managing safety records and partners for ${selectedProperty.addressLine1}` 
+              : "Manage UK standard services and property-specific professional partners."}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 bg-white rounded-xl border border-primary/10 px-3 h-11 shadow-sm">
