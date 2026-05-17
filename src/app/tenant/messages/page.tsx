@@ -67,8 +67,9 @@ export default function TenantMessagingPage() {
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col gap-6 animate-in fade-in duration-500 max-w-4xl mx-auto">
-      <Card className="flex-1 border-none shadow-xl flex flex-col rounded-3xl overflow-hidden bg-white">
-        <CardHeader className="p-6 border-b bg-primary text-white flex flex-row items-center gap-4">
+      {/* Header/Connection Card at Top */}
+      <Card className="w-full border-none shadow-xl flex flex-col rounded-3xl overflow-hidden bg-white">
+        <CardHeader className="p-6 bg-primary text-white flex flex-row items-center gap-4">
           <div className="p-3 bg-white/20 rounded-2xl">
             <ShieldCheck className="w-6 h-6 text-white" />
           </div>
@@ -77,7 +78,10 @@ export default function TenantMessagingPage() {
             <p className="text-xs text-white/70 font-bold uppercase tracking-widest">Secure Direct Line</p>
           </div>
         </CardHeader>
-        
+      </Card>
+      
+      {/* Messaging Card Below */}
+      <Card className="flex-1 border-none shadow-xl flex flex-col rounded-3xl overflow-hidden bg-white">
         <div className="flex-1 overflow-y-auto p-6 space-y-6" ref={scrollRef}>
           {!landlordId ? (
             <div className="h-full flex flex-col items-center justify-center text-center opacity-40">

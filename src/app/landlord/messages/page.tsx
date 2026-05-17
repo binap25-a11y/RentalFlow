@@ -31,6 +31,7 @@ export default function LandlordMessagingPage() {
 
   const messagesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
+    // Query filtered by memberIds to match security rules for 'list'
     return query(
       collection(db, 'messages'),
       where('memberIds', 'array-contains', user.uid)
@@ -72,13 +73,14 @@ export default function LandlordMessagingPage() {
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 max-w-5xl mx-auto pb-8">
+      {/* Selection Card at Top */}
       <Card className="w-full border-none shadow-sm flex flex-col rounded-2xl overflow-hidden">
         <CardHeader className="bg-primary/5 p-4 border-b">
           <CardTitle className="text-lg font-headline flex items-center gap-2 text-left">
-            <MessageSquare className="w-5 h-5 text-primary" /> Conversations
+            <MessageSquare className="w-5 h-5 text-primary" /> Select Resident
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-2">
+        <CardContent className="p-4">
           <div className="flex flex-wrap gap-2">
             {tenants?.map(tenant => (
               <button
@@ -108,6 +110,7 @@ export default function LandlordMessagingPage() {
         </CardContent>
       </Card>
 
+      {/* Messaging Card Below */}
       <Card className="flex-1 border-none shadow-sm flex flex-col rounded-2xl overflow-hidden min-h-[500px]">
         {selectedTenantId ? (
           <>
@@ -157,7 +160,7 @@ export default function LandlordMessagingPage() {
           <div className="flex-1 flex flex-col items-center justify-center text-center p-12 opacity-40">
             <MessageSquare className="w-16 h-16 mb-4" />
             <h3 className="text-xl font-bold font-headline">Messaging Hub</h3>
-            <p className="text-sm font-medium">Select a conversation above to start messaging your residents.</p>
+            <p className="text-sm font-medium">Select a resident above to start a secure direct conversation.</p>
           </div>
         )}
       </Card>

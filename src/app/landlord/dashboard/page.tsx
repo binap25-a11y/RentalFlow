@@ -116,11 +116,11 @@ export default function LandlordDashboard() {
                   <stat.icon className="w-6 h-6" />
                 </div>
               </div>
-              <div className="space-y-1 min-w-0">
-                <p className="text-xl md:text-2xl font-bold font-headline truncate" title={stat.value}>
+              <div className="space-y-1">
+                <p className="text-xl md:text-2xl font-bold font-headline break-words">
                   {stat.value}
                 </p>
-                <p className="text-sm text-muted-foreground font-medium font-body truncate">{stat.label}</p>
+                <p className="text-sm text-muted-foreground font-medium font-body break-words">{stat.label}</p>
               </div>
             </CardContent>
           </Card>
