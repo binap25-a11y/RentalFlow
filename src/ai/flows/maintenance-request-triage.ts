@@ -1,10 +1,6 @@
 'use server';
 /**
- * @fileOverview An AI agent for triaging tenant maintenance requests.
- *
- * - triageMaintenanceRequest - A function that handles the maintenance request triage process.
- * - MaintenanceRequestTriageInput - The input type for the triageMaintenanceRequest function.
- * - MaintenanceRequestTriageOutput - The return type for the triageMaintenanceRequest function.
+ * @fileOverview An AI agent for triaging tenant maintenance requests with retry logic.
  */
 
 import { ai } from '@/ai/genkit';
@@ -21,6 +17,8 @@ const MaintenanceRequestTriageOutputSchema = z.object({
   reasoning: z.string().describe('A brief explanation for the suggested priority and category.'),
 });
 export type MaintenanceRequestTriageOutput = z.infer<typeof MaintenanceRequestTriageOutputSchema>;
+
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 export async function triageMaintenanceRequest(input: MaintenanceRequestTriageInput): Promise<MaintenanceRequestTriageOutput> {
   return maintenanceRequestTriageFlow(input);
@@ -49,7 +47,26 @@ const maintenanceRequestTriageFlow = ai.defineFlow(
     outputSchema: MaintenanceRequestTriageOutputSchema,
   },
   async (input) => {
-    const { output } = await triageMaintenanceRequestPrompt(input);
-    return output!;
+    let retries = 3;
+    let lastError: any = null;
+
+    while (retries > 0) {
+      try {
+        const { output } = await triageMaintenanceRequestPrompt(input);
+        if (!output) throw new Error("No output generated");
+        return output;
+      } catch (error: any) {
+        lastError = error;
+        if (error.status === 429 || error.message?.includes('429')) {
+          retries--;
+          if (retries > 0) {
+            await sleep(2000);
+            continue;
+          }
+        }
+        throw error;
+      }
+    }
+    throw lastError || new Error("Max retries exceeded");
   }
 );

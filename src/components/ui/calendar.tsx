@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -20,6 +19,11 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
+      // Enable dropdown navigation for easier year/month selection (e.g. for long-term EPCs)
+      captionLayout="dropdown"
+      // Range: 10 years past to 20 years future
+      startMonth={new Date(new Date().getFullYear() - 10, 0)}
+      endMonth={new Date(new Date().getFullYear() + 20, 11)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
@@ -56,6 +60,10 @@ function Calendar({
         range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         hidden: "invisible",
+        // Enhanced Dropdown Styles for RDP v9
+        dropdown: "relative inline-flex items-center",
+        dropdown_root: "flex items-center gap-1",
+        caption_dropdowns: "flex justify-center gap-2 mb-4",
         ...classNames,
       }}
       components={{
