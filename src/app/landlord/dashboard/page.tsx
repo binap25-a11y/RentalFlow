@@ -41,7 +41,6 @@ export default function LandlordDashboard() {
 
   const documentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Use landlord specific query to ensure we see all property documents we own
     return getLandlordCollectionQuery(db, "documents", user.uid);
   }, [db, user]);
 
