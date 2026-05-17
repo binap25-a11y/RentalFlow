@@ -183,6 +183,7 @@ export default function LandlordEmergencyContactsPage() {
     const pageWidth = pdfDoc.internal.pageSize.getWidth();
     const today = format(new Date(), 'PPP');
     
+    // Header background
     pdfDoc.setFillColor(31, 41, 55);
     pdfDoc.rect(0, 0, pageWidth, 75, 'F');
     pdfDoc.setTextColor(255, 255, 255);
@@ -195,6 +196,7 @@ export default function LandlordEmergencyContactsPage() {
     pdfDoc.setFontSize(10);
     pdfDoc.text(`Official Portfolio Safety Record | Generated: ${today}`, 20, 35);
     
+    // Position address clearly below title metadata
     let headerOffset = 50;
     if (selectedExportPropertyId) {
       const prop = properties?.find(p => p.id === selectedExportPropertyId);
@@ -285,6 +287,7 @@ export default function LandlordEmergencyContactsPage() {
       y += 45;
     });
 
+    // Add page numbers
     const totalPages = pdfDoc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       pdfDoc.setPage(i);
