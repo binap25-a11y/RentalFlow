@@ -12,14 +12,16 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#1e3a8a',
     icons: [
       {
-        src: 'https://picsum.photos/seed/rentflow-icon/192/192',
+        src: 'https://picsum.photos/seed/rentflow-key/192/192',
         sizes: '192x192',
         type: 'image/png',
+        purpose: 'maskable',
       },
       {
-        src: 'https://picsum.photos/seed/rentflow-icon/512/512',
+        src: 'https://picsum.photos/seed/rentflow-key/512/512',
         sizes: '512x512',
         type: 'image/png',
+        purpose: 'any',
       },
     ],
   }

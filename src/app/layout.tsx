@@ -8,12 +8,21 @@ export const metadata: Metadata = {
   title: 'RentalFlow | Rental Maintenance Redefined',
   description: 'Streamline property management and tenant requests with AI-powered triage and structured reports.',
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'RentalFlow',
+  },
+  icons: {
+    apple: 'https://picsum.photos/seed/rentflow-key/180/180',
+  },
 };
 
 export const viewport: Viewport = {
   themeColor: '#1e3a8a',
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
