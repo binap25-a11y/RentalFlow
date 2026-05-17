@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -14,6 +13,7 @@ import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '
 import { doc, getDoc, serverTimestamp, setDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -36,6 +36,8 @@ export default function LoginPage() {
   const [needsProfile, setNeedsProfile] = useState(false);
   
   const isRedirecting = useRef(false);
+
+  const LOGO_URL = 'https://picsum.photos/seed/rentflow-key/512/512';
 
   useEffect(() => {
     setMounted(true);
@@ -160,6 +162,9 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
+          <div className="relative w-20 h-20 mb-2">
+            <Image src={LOGO_URL} alt="Logo" fill className="object-contain rounded-2xl" unoptimized />
+          </div>
           <Loader2 className="w-10 h-10 animate-spin text-primary" />
           <p className="text-sm font-medium text-muted-foreground animate-pulse">Authenticating...</p>
         </div>
@@ -172,8 +177,8 @@ export default function LoginPage() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
         <Card className="w-full max-w-lg border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden animate-in zoom-in duration-300">
           <CardHeader className="text-center bg-primary/5 pb-8">
-            <div className="mx-auto p-3 bg-primary text-primary-foreground rounded-2xl w-fit mb-4">
-              <ShieldCheck className="w-8 h-8" />
+            <div className="mx-auto p-1 bg-white rounded-2xl w-fit mb-4 shadow-sm">
+               <Image src={LOGO_URL} alt="RentalFlow" width={64} height={64} className="rounded-xl" unoptimized />
             </div>
             <CardTitle className="text-2xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
             <CardDescription>Establish your professional profile on RentalFlow.</CardDescription>
@@ -223,8 +228,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div className="mb-8 text-center animate-in fade-in slide-in-from-top-4 duration-1000">
-        <div className="inline-flex items-center justify-center p-3 bg-primary text-primary-foreground rounded-2xl mb-4 shadow-xl">
-          <KeyRound className="w-8 h-8" />
+        <div className="inline-flex items-center justify-center p-1 bg-white rounded-[2rem] mb-4 shadow-xl">
+           <Image src={LOGO_URL} alt="RentalFlow" width={80} height={80} className="rounded-[1.75rem]" unoptimized />
         </div>
         <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">RentalFlow</h1>
         <p className="text-muted-foreground font-medium">Professional Rental Management</p>
