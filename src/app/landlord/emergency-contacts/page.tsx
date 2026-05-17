@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { 
   PhoneCall, Plus, Trash2, Edit3, Loader2, Download, 
-  Phone, Mail, Building2, Wrench, ShieldAlert, Save
+  Phone, Mail, Building2, Wrench, ShieldAlert, Save, Globe
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { jsPDF } from "jspdf";
@@ -76,6 +76,7 @@ export default function LandlordEmergencyContactsPage() {
   const [role, setRole] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [website, setWebsite] = useState('');
   const [category, setCategory] = useState<'standard' | 'professional'>('professional');
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
 
@@ -87,6 +88,7 @@ export default function LandlordEmergencyContactsPage() {
     setRole('');
     setPhone('');
     setEmail('');
+    setWebsite('');
     setCategory('professional');
     setSelectedPropertyId('');
     setEditingContact(null);
@@ -98,6 +100,7 @@ export default function LandlordEmergencyContactsPage() {
     setRole(contact.role);
     setPhone(contact.phone);
     setEmail(contact.email || '');
+    setWebsite(contact.website || '');
     setCategory(contact.category || 'professional');
     setSelectedPropertyId(contact.propertyId || '');
     setIsDialogOpen(true);
@@ -135,6 +138,7 @@ export default function LandlordEmergencyContactsPage() {
         role,
         phone,
         email,
+        website,
         category,
         propertyId: selectedPropertyId || null,
         memberIds: memberIds,
@@ -151,6 +155,7 @@ export default function LandlordEmergencyContactsPage() {
         role,
         phone,
         email,
+        website,
         category,
         landlordId: user.uid,
         propertyId: selectedPropertyId || null,
@@ -269,6 +274,7 @@ export default function LandlordEmergencyContactsPage() {
       pdfDoc.text(`${contact.name}`, 20, nameOffset);
       pdfDoc.text(`Tel: ${contact.phone}`, 20, nameOffset + 6);
       if (contact.email) pdfDoc.text(`Email: ${contact.email}`, 20, nameOffset + 12);
+      if (contact.website) pdfDoc.text(`Web: ${contact.website}`, 20, nameOffset + 18);
 
       if (!selectedExportPropertyId) {
         const propName = properties?.find(p => p.id === contact.propertyId)?.addressLine1 || "Portfolio-Wide";
@@ -277,7 +283,7 @@ export default function LandlordEmergencyContactsPage() {
         pdfDoc.text(`Assigned: ${propName}`, pageWidth - 20, y, { align: 'right' });
       }
       
-      y += 40;
+      y += 45;
     });
 
     const totalPages = pdfDoc.internal.getNumberOfPages();
@@ -321,7 +327,7 @@ export default function LandlordEmergencyContactsPage() {
                 <Plus className="w-4 h-4 mr-2" /> Add Contact
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] rounded-2xl border-none shadow-2xl p-0 overflow-hidden flex flex-col h-[600px] max-h-[90vh]">
+            <DialogContent className="sm:max-w-[500px] rounded-2xl border-none shadow-2xl p-0 overflow-hidden flex flex-col h-[700px] max-h-[90vh]">
               <form onSubmit={handleSave} className="flex flex-col h-full overflow-hidden">
                 <DialogHeader className="p-8 text-left bg-primary/5 border-b shrink-0">
                   <DialogTitle className="text-xl font-bold font-headline text-primary">{editingContact ? "Modify Contact" : "New Portfolio Contact"}</DialogTitle>
@@ -352,6 +358,13 @@ export default function LandlordEmergencyContactsPage() {
                       <div className="space-y-2">
                         <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Email (Optional)</Label>
                         <Input value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none" placeholder="office@..." />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Web Address (Optional)</Label>
+                      <div className="relative">
+                        <Globe className="absolute left-3 top-3 h-4 w-4 text-primary/40" />
+                        <Input value={website} onChange={(e) => setWebsite(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none pl-10" placeholder="https://..." />
                       </div>
                     </div>
                     {category === 'professional' && (
@@ -442,7 +455,7 @@ export default function LandlordEmergencyContactsPage() {
                       {contact.role}
                     </Badge>
                   </CardHeader>
-                  <CardContent className="pt-6 space-y-4 text-left">
+                  <CardContent className="pt-6 space-y-3 text-left">
                     <div className="flex items-center gap-3 text-xl font-bold text-primary">
                       <Phone className="w-5 h-5 text-primary/40" />
                       {contact.phone}
@@ -451,6 +464,14 @@ export default function LandlordEmergencyContactsPage() {
                       <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
                         <Mail className="w-4 h-4 text-primary/40" />
                         {contact.email}
+                      </div>
+                    )}
+                    {contact.website && (
+                      <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
+                        <Globe className="w-4 h-4 text-primary/40" />
+                        <a href={contact.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary hover:underline truncate">
+                          {contact.website.replace(/^https?:\/\//, '')}
+                        </a>
                       </div>
                     )}
                     <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground pt-4 border-t border-muted/50">

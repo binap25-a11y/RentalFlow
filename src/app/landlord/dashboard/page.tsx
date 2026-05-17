@@ -239,7 +239,7 @@ export default function LandlordDashboard() {
             </CardHeader>
             <CardContent className="space-y-4">
               {complianceItems.length > 0 ? (
-                complianceItems.slice(0, 15).map((item) => (
+                complianceItems.map((item) => (
                   <div 
                     key={`${item.type}-${item.id}`} 
                     className={cn(
