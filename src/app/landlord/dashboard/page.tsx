@@ -104,15 +104,15 @@ export default function LandlordDashboard() {
       }));
 
     const propertyStatusItems = properties.map(p => {
-      // Correct Compliance Logic: Identify properties with ZERO documents
+      // Logic: Flag properties with ZERO documents as highest priority
       const allPropDocs = (documents || []).filter(d => d.propertyId === p.id);
-      const hasAnyDocs = allPropDocs.length > 0;
+      const docCount = allPropDocs.length;
       
-      if (!hasAnyDocs) {
+      if (docCount === 0) {
         return {
           id: `missing-${p.id}`,
           title: p.addressLine1 || 'Property Asset',
-          subtitle: 'Missing Documentation',
+          subtitle: 'Missing Documentation (0 Docs)',
           date: null,
           type: 'Missing',
           icon: AlertTriangle,
@@ -121,14 +121,15 @@ export default function LandlordDashboard() {
         };
       }
 
-      // If it has docs, check if it's already listed in the roadmap for expiry or audit
+      // If it has docs, check if it's already listed for a specific doc expiry or audit
       const isAlreadyListed = [...docItems, ...inspectionItems].some(item => item.propertyId === p.id);
       if (isAlreadyListed) return null;
 
+      // If no pending tasks and has documents, it is verified
       return {
         id: `status-${p.id}`,
         title: p.addressLine1 || 'Property Asset',
-        subtitle: 'Verified & Secure',
+        subtitle: `Verified & Secure (${docCount} Docs)`,
         date: null,
         type: 'Status',
         icon: CheckCircle2,
@@ -138,7 +139,7 @@ export default function LandlordDashboard() {
     }).filter(Boolean) as any[];
 
     return [...docItems, ...inspectionItems, ...propertyStatusItems].sort((a, b) => {
-      // 1. Missing Documentation is absolute priority
+      // 1. Missing Records is absolute priority
       if (a.type === 'Missing' && b.type !== 'Missing') return -1;
       if (b.type === 'Missing' && a.type !== 'Missing') return 1;
 
@@ -152,10 +153,6 @@ export default function LandlordDashboard() {
       const pB = priorityMap[b.type] ?? 4;
       if (pA !== pB) return pA - pB;
 
-      // 4. Date sorting (for items that have dates)
-      const dateA = parseFlexDate(a.date)?.getTime() || 0;
-      const dateB = parseFlexDate(b.date)?.getTime() || 0;
-      if (dateA && dateB) return dateA - dateB;
       return 0;
     });
   }, [documents, inspections, properties, isClient]);

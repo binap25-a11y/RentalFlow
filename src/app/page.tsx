@@ -37,8 +37,8 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  // Unified brand logo seed matching the mobile install icon
-  const LOGO_URL = 'https://picsum.photos/seed/rentflow-v2-identity/512/512';
+  // High-fidelity identity logo matching mobile manifest
+  const LOGO_URL = 'https://picsum.photos/seed/rentflow-v3-key/512/512';
 
   useEffect(() => {
     setMounted(true);
