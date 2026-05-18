@@ -1,8 +1,9 @@
+
 "use client";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { LogOut, User, Bell } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import Link from "next/link";
 import { useAuth, useUser } from "@/firebase";
 import { initiateSignOut } from "@/firebase/non-blocking-login";
@@ -81,9 +82,11 @@ export function Header({ role }: HeaderProps) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer py-2 rounded-lg">
-              <User className="mr-2 h-4 w-4" />
-              <span>Profile Settings</span>
+            <DropdownMenuItem className="cursor-pointer py-2 rounded-lg" asChild>
+               <Link href={role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub'}>
+                <User className="mr-2 h-4 w-4" />
+                <span>My Dashboard</span>
+               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 

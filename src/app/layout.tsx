@@ -1,3 +1,4 @@
+
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: 'https://picsum.photos/seed/rentalflow-pro-identity/512/512',
-    apple: 'https://picsum.photos/seed/rentalflow-pro-identity/180/180',
+    apple: 'https://picsum.photos/seed/rentalflow-pro-identity/512/512',
   },
 };
 

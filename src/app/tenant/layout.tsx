@@ -1,10 +1,11 @@
+
 "use client";
 
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 import { Header } from "@/components/dashboard/header";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { Loader2, Lock } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
