@@ -299,10 +299,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     <p className="text-[10px] uppercase font-bold text-muted-foreground font-headline">Status</p>
                     <p className="font-bold font-headline text-primary">{property.isOccupied ? 'Occupied' : 'Vacant'}</p>
                   </div>
-                  <div className="p-4 bg-primary/5 rounded-2xl flex-1 text-center border border-primary/5">
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground font-headline">Config</p>
-                    <p className="font-bold font-headline text-primary">{property.numberOfBedrooms}B / {property.numberOfBathrooms}B</p>
-                  </div>
                 </div>
               </div>
             </CardContent>
@@ -381,9 +377,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                   </div>
                 </CardContent>
               </Card>
-              {/* Document list rendering remains as established */}
             </TabsContent>
-            {/* Maintenance and Inspections tabs remain as established */}
           </Tabs>
         </div>
 
