@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, use, useRef, useEffect } from 'react';
@@ -71,11 +72,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const [sessionPreview, setSessionPreview] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check for a temporary preview URL in session storage to enable "instant" feel
+    // Immediate check for session cache to ensure "instant" transition feel
     const cached = sessionStorage.getItem(`preview_${propertyId}`);
     if (cached) setSessionPreview(cached);
     
-    // Clear the cache if sync is done
+    // Clear the cache only when sync is formally confirmed by Firestore
     if (property && !property.isImageUpdating) {
       sessionStorage.removeItem(`preview_${propertyId}`);
       setSessionPreview(null);
@@ -267,8 +268,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
-  // Prioritize session preview for "instant" update feel
-  const activeImageUrl = sessionPreview || property.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
+  // Seamless logic: prioritize session cache immediately if remote sync is active
+  const activeImageUrl = (property.isImageUpdating && sessionPreview) 
+    ? sessionPreview 
+    : property.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
+
   const gallery = property.imageUrls || [activeImageUrl].filter(Boolean);
 
   return (

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, use } from 'react';
@@ -53,6 +54,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
+    // Only update local state from remote if we aren't currently "dirty" with a local file/preview
     if (property && !isSaving && !imageFile) {
       setAddress(property.addressLine1 || '');
       setCity(property.city || '');
@@ -81,7 +83,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
 
-    // Save temporary preview to session storage for instant details page display
+    // Secure the high-fidelity preview in session storage for the Details page transition
     if (previewUrl && imageFile) {
       sessionStorage.setItem(`preview_${propertyId}`, previewUrl);
     }
@@ -95,24 +97,27 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       numberOfBedrooms: parseInt(bedrooms, 10) || 1,
       numberOfBathrooms: parseInt(bathrooms, 10) || 1,
       rentAmount: parseFloat(rentAmount) || 0,
-      isImageUpdating: !!imageFile,
+      isImageUpdating: !!imageFile, // Trigger the "Syncing" state in Firestore
       updatedAt: serverTimestamp(),
     };
 
-    // 1. Instant Metadata Write
+    // 1. Instant Metadata Write (Non-blocking but critical)
     updateDocumentNonBlocking(propertyRef, updateData);
 
-    // 2. Background File & Relational Handover (Non-Blocking)
+    // 2. Background File & Relational Ledger Sync
     if (imageFile && storage) {
       const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
       
+      // We initiate this, but don't await it to allow instant navigation
       uploadBytes(storageRef, imageFile).then(async (result) => {
         const url = await getDownloadURL(result.ref);
+        // Clear the updating flag and set the real URL
         updateDocumentNonBlocking(propertyRef, { 
           imageUrl: url, 
           isImageUpdating: false,
           updatedAt: serverTimestamp() 
         });
+        // Relational sync (PostgreSQL)
         syncPropertyToDb({ 
           ...updateData, 
           id: propertyId, 
@@ -120,10 +125,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           imageUrl: url 
         });
       }).catch(err => {
-        console.error("Background Sync Failed:", err);
+        console.error("Background Image Sync Error:", err);
         updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
       });
     } else {
+      // Direct relational sync if no image is changing
       syncPropertyToDb({ 
         ...updateData, 
         id: propertyId, 
@@ -133,10 +139,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
 
     toast({ 
-      title: "Asset Updated", 
-      description: "Changes pushed to ledger. Syncing in background." 
+      title: "Asset Specification Saved", 
+      description: "Changes pushed to the ledger. Syncing media in background." 
     });
     
+    // Instant navigation to provide the high-performance feel
     router.push(`/landlord/properties/${propertyId}`);
   };
 

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -53,7 +54,7 @@ export default function NewPropertyPage() {
     const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
-    // Instant local preview cache for seamless details page transition
+    // Instant local preview bridge for seamless details transition
     if (previewUrl && imageFile) {
       sessionStorage.setItem(`preview_${propertyId}`, previewUrl);
     }
@@ -79,10 +80,10 @@ export default function NewPropertyPage() {
       isActive: true
     };
 
-    // 1. Instant Ledger Entry
+    // 1. Instant Ledger Entry (Non-blocking UI feel)
     setDocumentNonBlocking(propertyRef, baseData, { merge: true });
 
-    // 2. Background Persistence Tasks (Non-Blocking)
+    // 2. Background Media & Relational Ledger Sync
     if (imageFile && storage) {
       const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
       
@@ -98,7 +99,7 @@ export default function NewPropertyPage() {
           imageUrl: url 
         });
       }).catch(err => {
-        console.error("Background Sync Error:", err);
+        console.error("Background Media Sync Error:", err);
         updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
       });
     } else {
@@ -107,9 +108,10 @@ export default function NewPropertyPage() {
 
     toast({ 
       title: "Asset Registered", 
-      description: "Portfolio ledger updated. Syncing in background." 
+      description: "Portfolio ledger updated. Syncing media in background." 
     });
     
+    // Immediate navigation to destination
     router.push(`/landlord/properties/${propertyId}`);
   };
 
