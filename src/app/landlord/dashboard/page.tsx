@@ -124,7 +124,7 @@ export default function LandlordDashboard() {
         };
       }
 
-      // If already listed for an expiry or audit, don't duplicate
+      // If already listed for an expiry or audit, don't duplicate the line item
       const isAlreadyListed = [...docItems, ...inspectionItems].some(item => item.propertyId === p.id);
       if (isAlreadyListed) return null;
 
