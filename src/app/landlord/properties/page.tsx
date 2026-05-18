@@ -27,7 +27,7 @@ export default function PropertiesPage() {
   const [sessionPreviews, setSessionPreviews] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // Standardized Instant Bridge: Poll session storage for active syncs
+    // Inventory Bridge: Sync temporary selections across the portfolio view
     if (properties) {
       const previews: Record<string, string> = {};
       properties.forEach(p => {
@@ -82,8 +82,7 @@ export default function PropertiesPage() {
           </div>
         ) : (
           properties.map((property) => {
-            // Standardized Bridge: Use session selection if background update is active
-            // Robust Fallback: Never display empty string or broken URL
+            // Render Priority: 1. Session Bridge (while updating) > 2. Database URL > 3. Fallback
             const displayImage = (property.isImageUpdating && sessionPreviews[property.id])
               ? sessionPreviews[property.id]
               : property.imageUrl || `https://picsum.photos/seed/${property.id}/800/600`;
@@ -97,7 +96,6 @@ export default function PropertiesPage() {
                     fill 
                     className="object-cover transition-transform duration-500 group-hover:scale-105" 
                     unoptimized={true}
-                    data-ai-hint="property exterior"
                   />
                   <Badge className={cn(
                     "absolute top-4 right-4 font-bold shadow-lg py-1 px-3",

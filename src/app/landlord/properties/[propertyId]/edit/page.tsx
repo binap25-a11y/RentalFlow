@@ -54,13 +54,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    // Check for active background sync preview in session
+    // Standardized Bridge: Check for active background sync preview in session
     const cached = sessionStorage.getItem(`preview_${propertyId}`);
     if (cached) setSessionPreview(cached);
   }, [propertyId]);
 
   useEffect(() => {
-    if (property && !isSaving && !imageFile) {
+    if (property && !isSaving) {
       setAddress(property.addressLine1 || '');
       setCity(property.city || '');
       setZipCode(property.zipCode || '');
@@ -70,7 +70,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // If we don't have a fresh file selected, use either the session bridge or the DB URL
+      // If we don't have a fresh file selected in this render session,
+      // intelligently determine the correct visual source
       if (!imageFile) {
         if (property.isImageUpdating && sessionPreview) {
           setPreviewUrl(sessionPreview);
@@ -131,9 +132,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           landlordId: user.uid, 
           imageUrl: url 
         });
-        // We don't clear the session storage here to let the destination page handle the transition
       }).catch(err => {
-        console.error("Silent Sync Error:", err);
+        console.error("Relational Sync Error:", err);
         updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
       });
     } else {
@@ -145,18 +145,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       });
     }
 
-    toast({ 
-      title: "Changes Registered", 
-      description: "Portfolio updated successfully." 
-    });
-    
-    // Immediate navigation - the destination page uses the same session bridge
+    toast({ title: "Changes Registered" });
     router.push(`/landlord/properties/${propertyId}`);
   };
 
   if (isLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
-  // Standardization: Prefer local state, then session bridge, then database URL
+  // Render Priority: 1. Local Selection > 2. Syncing Bridge > 3. Persistent URL > 4. Fallback
   const activeImageUrl = imageFile ? previewUrl : (property?.isImageUpdating && sessionPreview) ? sessionPreview : previewUrl;
 
   return (
