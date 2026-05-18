@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, use, useRef, useEffect } from 'react';
+import { useState, use, useRef, useEffect, useMemo } from 'react';
 import { 
   useUser, 
   useFirestore, 
@@ -48,7 +48,7 @@ import { jsPDF } from "jspdf";
 import { syncDocumentToDb } from "@/lib/actions/db-sync";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { format, isValid, parseISO } from 'date-fns';
+import { format, isValid, isBefore, parseISO } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
@@ -72,11 +72,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const [sessionPreview, setSessionPreview] = useState<string | null>(null);
 
   useEffect(() => {
-    // Instant Bridge: Check for temporary selection in session
     const cached = sessionStorage.getItem(`preview_${propertyId}`);
     if (cached) setSessionPreview(cached);
     
-    // Purge bridge ONLY once the cloud upload is confirmed by the database
     if (property && !property.isImageUpdating) {
       sessionStorage.removeItem(`preview_${propertyId}`);
       setSessionPreview(null);
@@ -131,6 +129,68 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const [rentAmount, setRentAmount] = useState('');
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
   const [uploadExpiryDate, setUploadExpiryDate] = useState<Date>();
+
+  // 🛡️ Real-Time Asset Status Engine
+  const assetStatus = useMemo(() => {
+    let score = 100;
+    const reasons: string[] = [];
+    const today = new Date();
+
+    // 1. Documentation Audit
+    if (!propertyDocuments || propertyDocuments.length === 0) {
+      score -= 30;
+      reasons.push("Missing property records");
+    } else {
+      const expiredDocs = propertyDocuments.filter(d => {
+        if (!d.expiryDate) return false;
+        return isBefore(new Date(d.expiryDate), today);
+      });
+      if (expiredDocs.length > 0) {
+        score -= Math.min(40, expiredDocs.length * 20);
+        reasons.push(`${expiredDocs.length} expired certificate(s)`);
+      }
+    }
+
+    // 2. Maintenance Triage
+    if (maintenanceRequests) {
+      const critical = maintenanceRequests.filter(r => r.status !== 'completed' && r.priority === 'critical');
+      const urgent = maintenanceRequests.filter(r => r.status !== 'completed' && r.priority === 'urgent');
+      
+      if (critical.length > 0) {
+        score -= 40;
+        reasons.push("Pending critical repairs");
+      } else if (urgent.length > 0) {
+        score -= 20;
+        reasons.push("Urgent maintenance required");
+      }
+    }
+
+    // 3. Inspection Continuity
+    if (inspections) {
+      const overdue = inspections.filter(i => {
+        if (i.status === 'completed' || !i.scheduledDate) return false;
+        return isBefore(new Date(i.scheduledDate), today);
+      });
+      if (overdue.length > 0) {
+        score -= 15;
+        reasons.push("Compliance audit overdue");
+      }
+    }
+
+    const finalScore = Math.max(0, score);
+    let color = "bg-emerald-400";
+    let message = "This asset is fully verified and compliant.";
+
+    if (finalScore < 50) {
+      color = "bg-red-500";
+      message = reasons[0] || "Immediate management attention required.";
+    } else if (finalScore < 85) {
+      color = "bg-amber-500";
+      message = reasons[0] || "Asset requires minor compliance updates.";
+    }
+
+    return { score: finalScore, color, message };
+  }, [propertyDocuments, maintenanceRequests, inspections]);
 
   const handleUpdateRent = () => {
     if (!propertyRef) return;
@@ -369,6 +429,50 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                   </div>
                 </CardContent>
               </Card>
+
+              <div className="grid gap-4">
+                {propertyDocuments?.map(doc => (
+                  <div key={doc.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-primary/5">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-bold truncate max-w-[200px]">{doc.fileName}</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">Uploaded {doc.uploadDate ? format(new Date(doc.uploadDate), 'PP') : 'N/A'}</p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="icon" className="rounded-full" asChild>
+                      <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer"><Download className="w-4 h-4" /></a>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="maintenance" className="mt-6 space-y-4">
+               {maintenanceRequests?.map(req => (
+                  <div key={req.id} className="p-5 bg-white rounded-2xl border border-primary/5 text-left">
+                    <div className="flex justify-between items-start mb-2">
+                       <Badge className={cn("text-[10px] font-bold uppercase", req.priority === 'critical' ? 'bg-red-500' : 'bg-blue-500')}>{req.priority}</Badge>
+                       <span className="text-[10px] text-muted-foreground font-bold">{format(new Date(req.createdAt.seconds * 1000), 'PP')}</span>
+                    </div>
+                    <h4 className="font-bold text-primary">{req.title}</h4>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{req.description}</p>
+                  </div>
+               ))}
+            </TabsContent>
+
+            <TabsContent value="inspections" className="mt-6 space-y-4">
+              {inspections?.map(insp => (
+                 <div key={insp.id} className="p-5 bg-white rounded-2xl border border-primary/5 text-left flex justify-between items-center">
+                   <div>
+                     <p className="text-sm font-bold text-primary">Audit: {format(new Date(insp.scheduledDate), 'PP')}</p>
+                     <p className="text-[10px] text-muted-foreground font-bold uppercase">{insp.status}</p>
+                   </div>
+                   <Button variant="outline" size="sm" className="rounded-lg text-xs" asChild><Link href="/landlord/inspections">View</Link></Button>
+                 </div>
+              ))}
             </TabsContent>
           </Tabs>
         </div>
@@ -383,10 +487,20 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             </CardHeader>
             <CardContent className="space-y-4 text-left">
               <div className="space-y-2">
-                 <div className="flex justify-between items-center text-xs font-bold opacity-60"><span>Compliance</span><span>95%</span></div>
-                 <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden"><div className="h-full bg-emerald-400 w-[95%]"></div></div>
+                 <div className="flex justify-between items-center text-xs font-bold opacity-60">
+                   <span>Compliance Score</span>
+                   <span>{assetStatus.score}%</span>
+                 </div>
+                 <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                   <div className={cn("h-full transition-all duration-1000", assetStatus.color)} style={{ width: `${assetStatus.score}%` }}></div>
+                 </div>
               </div>
-              <p className="text-xs font-medium font-body leading-relaxed opacity-80">This asset is verified and compliant with UK residential safety regulations.</p>
+              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                <p className="text-xs font-bold font-body leading-relaxed text-white/90">
+                  {assetStatus.message}
+                </p>
+              </div>
+              <p className="text-[10px] font-bold uppercase opacity-50 tracking-widest text-center mt-2">Real-Time Portfolio Audit</p>
             </CardContent>
           </Card>
         </div>
@@ -394,3 +508,4 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     </div>
   );
 }
+
