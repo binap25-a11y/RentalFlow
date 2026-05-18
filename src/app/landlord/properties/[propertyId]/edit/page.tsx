@@ -83,7 +83,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     try {
       let currentImageUrl = property?.imageUrl || previewUrl;
 
-      // Handle Image Upload if a new file was selected
+      // 1. Handle Image Upload if a new file was selected (Blocking only for the image itself)
       if (imageFile && storage) {
         const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
         const result = await uploadBytes(storageRef, imageFile);
@@ -103,11 +103,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedAt: serverTimestamp(),
       };
 
-      // 1. Update Firestore (Real-time Mirror)
+      // 2. Update Firestore (Real-time Mirror - NON-BLOCKING/OPTIMISTIC)
       updateDocumentNonBlocking(propertyRef, updateData);
 
-      // 2. Sync to PostgreSQL (Relational Ledger)
-      await syncPropertyToDb({
+      // 3. Sync to PostgreSQL (Relational Ledger - NON-BLOCKING)
+      syncPropertyToDb({
         id: propertyId,
         landlordId: user.uid,
         addressLine1: address,
@@ -121,8 +121,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       toast({ 
         title: "Portfolio Updated", 
-        description: "Your modifications and images are persisted in the relational ledger." 
+        description: "Changes synchronized in real-time." 
       });
+      
+      // Navigate immediately for a "real-time" feel
       router.push(`/landlord/properties/${propertyId}`);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Update Failed", description: error.message });
