@@ -4,15 +4,15 @@
 
 @layer base {
   :root {
-    --background: 219 32% 96%;
-    --foreground: 218 49% 15%;
+    --background: 210 40% 98%;
+    --foreground: 218 49% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 218 49% 15%;
+    --card-foreground: 218 49% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 218 49% 15%;
-    --primary: 218 49% 35%;
+    --popover-foreground: 218 49% 12%;
+    --primary: 218 49% 25%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 90%;
+    --secondary: 210 40% 96.1%;
     --secondary-foreground: 218 49% 25%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -22,16 +22,16 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 218 49% 35%;
-    --radius: 0.75rem;
-    --sidebar-background: 218 49% 35%;
+    --ring: 218 49% 25%;
+    --radius: 1rem;
+    --sidebar-background: 218 49% 25%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 199 89% 48%;
     --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 218 49% 28%;
+    --sidebar-accent: 218 49% 18%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 218 49% 40%;
-    --sidebar-ring: 218 49% 35%;
+    --sidebar-border: 218 49% 30%;
+    --sidebar-ring: 218 49% 25%;
   }
 
   .dark {
@@ -65,6 +65,14 @@
     @apply bg-background text-foreground font-body antialiased;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-headline font-bold;
+    @apply font-headline font-bold tracking-tight;
   }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
