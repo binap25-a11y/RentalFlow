@@ -67,7 +67,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
     }
   };
 
-  const LOGO_URL = 'https://picsum.photos/seed/blue-key-branding-2024/512/512';
+  const LOGO_URL = 'https://picsum.photos/seed/rentflow-key-branding-2025/512/512';
 
   return (
     <Sidebar className="border-r border-sidebar-border shadow-2xl">
