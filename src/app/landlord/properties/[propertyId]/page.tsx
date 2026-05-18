@@ -9,7 +9,6 @@ import {
   useMemoFirebase, 
   updateDocumentNonBlocking, 
   setDocumentNonBlocking, 
-  deleteDocumentNonBlocking,
   useStorage, 
 } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
@@ -21,11 +20,11 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Building2, MapPin, Users, Wrench, FileCheck, Phone, 
+  MapPin, Users, Wrench, FileCheck, 
   Trash2, Edit3, Loader2, Save, ArrowLeft,
-  Download, FileText, Info, ShieldAlert, Upload, 
+  Download, FileText, ShieldAlert, Upload, 
   Calendar as CalendarIcon, Sparkles, Image as ImageIcon,
-  CheckCircle2, Clock, AlertTriangle, X, Eye, Bed, Bath
+  Bed, Bath
 } from "lucide-react";
 import { 
   Popover, 
@@ -35,7 +34,6 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { summarizeLease } from "@/ai/flows/summarize-lease-flow";
 import {
   Carousel,
   CarouselContent,
@@ -43,12 +41,16 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { jsPDF } from "jspdf";
 import { syncDocumentToDb } from "@/lib/actions/db-sync";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { format, isValid, isBefore, parseISO } from 'date-fns';
+import { format, isBefore } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
+
+const getGlobalPreview = (id: string) => {
+  if (typeof window === 'undefined') return null;
+  return (window as any).__asset_previews?.[id] || null;
+};
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -67,18 +69,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   }, [db, propertyId]);
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
-
-  const [sessionPreview, setSessionPreview] = useState<string | null>(null);
-
-  useEffect(() => {
-    const cached = sessionStorage.getItem(`preview_${propertyId}`);
-    if (cached) setSessionPreview(cached);
-    
-    if (property && !property.isImageUpdating) {
-      sessionStorage.removeItem(`preview_${propertyId}`);
-      setSessionPreview(null);
-    }
-  }, [property, propertyId]);
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -129,13 +119,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
   const [uploadExpiryDate, setUploadExpiryDate] = useState<Date>();
 
-  // 🛡️ Real-Time Asset Status Engine
+  // 🛡️ Real-Time Asset Status Engine (Bound to Live Collections)
   const assetStatus = useMemo(() => {
     let score = 100;
     const reasons: string[] = [];
     const today = new Date();
 
-    // 1. Documentation Audit
     if (!propertyDocuments || propertyDocuments.length === 0) {
       score -= 30;
       reasons.push("Missing property records");
@@ -150,7 +139,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       }
     }
 
-    // 2. Maintenance Triage
     if (maintenanceRequests) {
       const critical = maintenanceRequests.filter(r => r.status !== 'completed' && r.priority === 'critical');
       const urgent = maintenanceRequests.filter(r => r.status !== 'completed' && r.priority === 'urgent');
@@ -164,7 +152,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       }
     }
 
-    // 3. Inspection Continuity
     if (inspections) {
       const overdue = inspections.filter(i => {
         if (i.status === 'completed' || !i.scheduledDate) return false;
@@ -261,8 +248,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
-  const activeImageUrl = (property.isImageUpdating && sessionPreview) 
-    ? sessionPreview 
+  // Render Priority: 1. Memory Bridge (Live Select) > 2. Database URL > 3. Fallback
+  const memoryUrl = getGlobalPreview(propertyId);
+  const activeImageUrl = (property.isImageUpdating && memoryUrl) 
+    ? memoryUrl 
     : property.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
   const gallery = property.imageUrls || [activeImageUrl].filter(Boolean);
@@ -454,7 +443,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                   <div key={req.id} className="p-5 bg-white rounded-2xl border border-primary/5 text-left">
                     <div className="flex justify-between items-start mb-2">
                        <Badge className={cn("text-[10px] font-bold uppercase", req.priority === 'critical' ? 'bg-red-500' : 'bg-blue-500')}>{req.priority}</Badge>
-                       <span className="text-[10px] text-muted-foreground font-bold">{format(new Date(req.createdAt.seconds * 1000), 'PP')}</span>
+                       <span className="text-[10px] text-muted-foreground font-bold">{req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'PP') : 'Today'}</span>
                     </div>
                     <h4 className="font-bold text-primary">{req.title}</h4>
                     <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{req.description}</p>

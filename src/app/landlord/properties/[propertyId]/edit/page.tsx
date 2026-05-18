@@ -24,6 +24,18 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 
+// Global Memory Bridge to persist ObjectURLs across soft navigation
+const getGlobalPreview = (id: string) => {
+  if (typeof window === 'undefined') return null;
+  return (window as any).__asset_previews?.[id] || null;
+};
+
+const setGlobalPreview = (id: string, url: string) => {
+  if (typeof window === 'undefined') return;
+  if (!(window as any).__asset_previews) (window as any).__asset_previews = {};
+  (window as any).__asset_previews[id] = url;
+};
+
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
   const propertyId = resolvedParams.propertyId;
@@ -50,13 +62,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [bathrooms, setBathrooms] = useState('1');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [sessionPreview, setSessionPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    const cached = sessionStorage.getItem(`preview_${propertyId}`);
-    if (cached) setSessionPreview(cached);
-  }, [propertyId]);
 
   useEffect(() => {
     if (property && !isSaving) {
@@ -69,28 +75,24 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      if (!imageFile) {
-        if (property.isImageUpdating && sessionPreview) {
-          setPreviewUrl(sessionPreview);
-        } else {
-          setPreviewUrl(property.imageUrl || null);
-        }
+      // Memory Bridge Recovery
+      const bridgeUrl = getGlobalPreview(propertyId);
+      if (property.isImageUpdating && bridgeUrl) {
+        setPreviewUrl(bridgeUrl);
+      } else if (!imageFile) {
+        setPreviewUrl(property.imageUrl || null);
       }
     }
-  }, [property, isSaving, imageFile, sessionPreview]);
+  }, [property, isSaving, imageFile, propertyId]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (file) {
       setImageFile(file);
-      
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setPreviewUrl(base64String);
-        sessionStorage.setItem(`preview_${propertyId}`, base64String);
-      };
-      reader.readAsDataURL(file);
+      // Use ObjectURL for zero-quota high-performance preview
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
+      setGlobalPreview(propertyId, objectUrl);
     }
   };
 
@@ -131,8 +133,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           landlordId: user.uid, 
           imageUrl: url 
         });
+        // Bridge Cleanup is handled by Inventory and Details components when isImageUpdating becomes false
       }).catch(err => {
-        console.error("Relational Sync Error:", err);
+        console.error("Storage Sync Error:", err);
         updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
       });
     } else {
@@ -149,8 +152,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   };
 
   if (isLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
-
-  const activeImageUrl = previewUrl || (property?.isImageUpdating && sessionPreview) ? (previewUrl || sessionPreview) : property?.imageUrl;
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left">
@@ -175,9 +176,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
             <div className="p-8 lg:p-12 bg-primary/5 border-r border-primary/10">
               <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 mb-4 block font-headline">Presentation</Label>
               <div className="relative group overflow-hidden rounded-3xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white aspect-video w-full flex items-center justify-center shadow-inner">
-                {activeImageUrl ? (
+                {previewUrl ? (
                   <>
-                    <Image src={activeImageUrl} alt="Preview" fill className="object-cover" unoptimized={true} />
+                    <Image src={previewUrl} alt="Preview" fill className="object-cover" unoptimized={true} />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                        <Button type="button" variant="secondary" size="sm" className="rounded-xl font-bold font-headline" onClick={() => document.getElementById('image-input')?.click()}>Update Photo</Button>
                     </div>

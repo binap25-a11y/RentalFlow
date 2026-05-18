@@ -12,6 +12,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
+const getGlobalPreview = (id: string) => {
+  if (typeof window === 'undefined') return null;
+  return (window as any).__asset_previews?.[id] || null;
+};
+
 export default function PropertiesPage() {
   const { user } = useUser();
   const db = useFirestore();
@@ -27,15 +32,12 @@ export default function PropertiesPage() {
   const [sessionPreviews, setSessionPreviews] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // Inventory Bridge: Sync temporary selections across the portfolio view
     if (properties) {
       const previews: Record<string, string> = {};
       properties.forEach(p => {
-        if (p.isImageUpdating) {
-          const cached = sessionStorage.getItem(`preview_${p.id}`);
-          if (cached) previews[p.id] = cached;
-        } else {
-          sessionStorage.removeItem(`preview_${p.id}`);
+        const memoryUrl = getGlobalPreview(p.id);
+        if (p.isImageUpdating && memoryUrl) {
+          previews[p.id] = memoryUrl;
         }
       });
       setSessionPreviews(previews);
@@ -82,10 +84,7 @@ export default function PropertiesPage() {
           </div>
         ) : (
           properties.map((property) => {
-            // Priority Image Logic
-            const displayImage = (property.isImageUpdating && sessionPreviews[property.id])
-              ? sessionPreviews[property.id]
-              : property.imageUrl || `https://picsum.photos/seed/${property.id}/800/600`;
+            const displayImage = sessionPreviews[property.id] || property.imageUrl || `https://picsum.photos/seed/${property.id}/800/600`;
 
             return (
               <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card">
@@ -105,14 +104,13 @@ export default function PropertiesPage() {
                   </Badge>
                 </div>
                 
-                {/* Asset Specifications - Compact Row Below Image */}
                 <div className="px-6 pt-4 flex flex-wrap gap-2 text-primary/70 text-[10px] font-bold">
-                  <div className="flex items-center gap-1 bg-primary/5 px-2 py-1.5 rounded-lg border border-primary/10 whitespace-nowrap shadow-sm">
-                    <Bed className="w-3.5 h-3.5 text-primary" />
+                  <div className="flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-lg border border-primary/10 whitespace-nowrap shadow-sm min-w-[65px] justify-center">
+                    <Bed className="w-3 h-3 text-primary" />
                     <span>{property.numberOfBedrooms || 1} Bed</span>
                   </div>
-                  <div className="flex items-center gap-1 bg-primary/5 px-2 py-1.5 rounded-lg border border-primary/10 whitespace-nowrap shadow-sm">
-                    <Bath className="w-3.5 h-3.5 text-primary" />
+                  <div className="flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-lg border border-primary/10 whitespace-nowrap shadow-sm min-w-[65px] justify-center">
+                    <Bath className="w-3 h-3 text-primary" />
                     <span>{property.numberOfBathrooms || 1} Bath</span>
                   </div>
                 </div>
