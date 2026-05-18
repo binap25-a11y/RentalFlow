@@ -83,7 +83,6 @@ export default function PropertiesPage() {
           </div>
         ) : (
           properties.map((property) => {
-            // Render Priority: 1. Session Bridge (while updating) > 2. Database URL > 3. Fallback
             const displayImage = (property.isImageUpdating && sessionPreviews[property.id])
               ? sessionPreviews[property.id]
               : property.imageUrl || `https://picsum.photos/seed/${property.id}/800/600`;
@@ -105,15 +104,16 @@ export default function PropertiesPage() {
                     {property.isOccupied ? 'Occupied' : 'Vacant'}
                   </Badge>
                 </div>
-                {/* Repositioned Asset Config below the image */}
-                <div className="px-6 pt-4 flex gap-3 text-primary/60 text-xs font-bold">
-                  <span className="flex items-center gap-1.5 bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/5">
-                    <Bed className="w-3.5 h-3.5" /> {property.numberOfBedrooms || 1} Bedrooms
+                
+                <div className="px-6 pt-4 flex flex-wrap gap-2 text-primary/60 text-[10px] font-bold">
+                  <span className="flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-md border border-primary/5 whitespace-nowrap">
+                    <Bed className="w-3 h-3" /> {property.numberOfBedrooms || 1} Bed
                   </span>
-                  <span className="flex items-center gap-1.5 bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/5">
-                    <Bath className="w-3.5 h-3.5" /> {property.numberOfBathrooms || 1} Bathrooms
+                  <span className="flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-md border border-primary/5 whitespace-nowrap">
+                    <Bath className="w-3 h-3" /> {property.numberOfBathrooms || 1} Bath
                   </span>
                 </div>
+
                 <CardHeader className="pb-2 text-left space-y-1">
                   <div className="flex justify-between items-start">
                     <Badge variant="outline" className="text-[10px] uppercase font-bold text-primary/60 border-primary/10">{property.propertyType}</Badge>

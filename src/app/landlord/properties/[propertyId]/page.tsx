@@ -202,7 +202,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
-  // Render Priority: 1. Session Bridge (while updating) > 2. Database URL > 3. Fallback
   const activeImageUrl = (property.isImageUpdating && sessionPreview) 
     ? sessionPreview 
     : property.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
@@ -262,15 +261,14 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               )}
             </div>
             <CardContent className="pt-8 text-left space-y-8">
-              {/* Corrected Live Config positioning below image */}
-              <div className="flex flex-wrap gap-4 items-center border-b pb-8 border-primary/5">
-                <div className="flex items-center gap-3 text-primary font-bold px-4 py-2 bg-primary/5 rounded-2xl border border-primary/10">
-                  <Bed className="w-5 h-5" /> 
-                  <span className="text-lg">{property.numberOfBedrooms || 1} Bedrooms</span>
+              <div className="flex flex-wrap gap-3 items-center border-b pb-8 border-primary/5">
+                <div className="flex items-center gap-2 text-primary font-bold px-4 py-2 bg-primary/5 rounded-xl border border-primary/10">
+                  <Bed className="w-4 h-4" /> 
+                  <span className="text-base">{property.numberOfBedrooms || 1} Bed</span>
                 </div>
-                <div className="flex items-center gap-3 text-primary font-bold px-4 py-2 bg-primary/5 rounded-2xl border border-primary/10">
-                  <Bath className="w-5 h-5" /> 
-                  <span className="text-lg">{property.numberOfBathrooms || 1} Bathrooms</span>
+                <div className="flex items-center gap-2 text-primary font-bold px-4 py-2 bg-primary/5 rounded-xl border border-primary/10">
+                  <Bath className="w-4 h-4" /> 
+                  <span className="text-base">{property.numberOfBathrooms || 1} Bath</span>
                 </div>
               </div>
 
