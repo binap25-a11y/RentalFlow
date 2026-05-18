@@ -14,8 +14,8 @@ export const metadata: Metadata = {
     title: 'RentalFlow',
   },
   icons: {
-    icon: 'https://picsum.photos/seed/blue-key-brand-v2/512/512',
-    apple: 'https://picsum.photos/seed/blue-key-brand-v2/180/180',
+    icon: 'https://picsum.photos/seed/blue-key-official-v3/512/512',
+    apple: 'https://picsum.photos/seed/blue-key-official-v3/180/180',
   },
 };
 

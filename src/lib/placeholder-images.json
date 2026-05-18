@@ -2,9 +2,9 @@
   "placeholderImages": [
     {
       "id": "brand-logo",
-      "description": "Official Blue Key Branding",
-      "imageUrl": "https://picsum.photos/seed/blue-key-brand-v2/512/512",
-      "imageHint": "blue key"
+      "description": "Official Blue Key Branding - White key on blue circular background",
+      "imageUrl": "https://picsum.photos/seed/blue-key-official-v3/512/512",
+      "imageHint": "blue key icon"
     },
     {
       "id": "prop-1",
