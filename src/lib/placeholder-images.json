@@ -2,9 +2,9 @@
   "placeholderImages": [
     {
       "id": "brand-logo",
-      "description": "Official RentalFlow Premium Blue Key Logo",
-      "imageUrl": "https://picsum.photos/seed/rentflow-premium-blue-key/512/512",
-      "imageHint": "blue key"
+      "description": "RentalFlow Professional Identity - Modern Minimalist Real Estate Emblem",
+      "imageUrl": "https://picsum.photos/seed/rentalflow-pro-identity/512/512",
+      "imageHint": "real estate logo"
     },
     {
       "id": "prop-1",

@@ -38,7 +38,7 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  const BRAND_LOGO_URL = `https://picsum.photos/seed/rentalflow-pro-home/512/512`;
+  const BRAND_LOGO_URL = `https://picsum.photos/seed/rentalflow-pro-identity/512/512`;
 
   useEffect(() => {
     setMounted(true);
@@ -167,11 +167,11 @@ export default function LoginPage() {
             <div className="absolute inset-0 bg-primary/10 rounded-[2.5rem] blur-2xl animate-pulse" />
             <Image 
               src={BRAND_LOGO_URL} 
-              alt="RentalFlow Premium Logo" 
+              alt="RentalFlow Professional Brand" 
               fill 
               className="object-cover rounded-[2.5rem] shadow-2xl ring-4 ring-white relative z-10" 
               unoptimized 
-              data-ai-hint="modern house"
+              data-ai-hint="real estate logo"
             />
           </div>
           
@@ -204,7 +204,7 @@ export default function LoginPage() {
                 height={72} 
                 className="rounded-2xl object-cover" 
                 unoptimized 
-                data-ai-hint="modern house"
+                data-ai-hint="real estate logo"
               />
             </div>
             <CardTitle className="text-2xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
@@ -221,7 +221,7 @@ export default function LoginPage() {
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-headline">Last Name</Label>
-                <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" className="h-12 rounded-xl border-none bg-muted/20" />
+                <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" className="h-12 rounded-xl border-none bg-muted/20" />
               </div>
             </div>
 
@@ -258,12 +258,12 @@ export default function LoginPage() {
         <div className="inline-flex items-center justify-center p-1 bg-white rounded-[2.5rem] mb-6 shadow-2xl ring-4 ring-primary/5 overflow-hidden">
            <Image 
             src={BRAND_LOGO_URL} 
-            alt="RentalFlow Premium Brand" 
+            alt="RentalFlow Professional Brand" 
             width={100} 
             height={100} 
             className="rounded-[2.25rem] object-cover" 
             unoptimized 
-            data-ai-hint="modern house"
+            data-ai-hint="real estate logo"
           />
         </div>
         <h1 className="text-5xl font-headline font-bold text-primary mb-2 tracking-tighter">RentalFlow</h1>
