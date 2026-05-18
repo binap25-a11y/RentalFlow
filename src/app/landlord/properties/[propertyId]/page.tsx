@@ -264,6 +264,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!property) return <div className="p-8 text-center font-bold">Property not found.</div>;
 
+  // Real-time reactive gallery
   const gallery = property.imageUrls || [property.imageUrl].filter(Boolean);
 
   return (

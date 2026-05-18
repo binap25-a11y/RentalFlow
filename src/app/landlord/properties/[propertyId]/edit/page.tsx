@@ -69,7 +69,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const file = e.target.files?.[0] || null;
     if (file) {
       setImageFile(file);
-      // Create instant local preview
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
@@ -79,7 +78,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     e.preventDefault();
     if (!user || !db || !propertyRef) return;
 
-    // 1. Prepare Update Data
+    // 1. Prepare Base Metadata
     const updateData = {
       addressLine1: address,
       city,
@@ -92,34 +91,33 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       updatedAt: serverTimestamp(),
     };
 
-    // 2. IMMEDIATE Metadata Update (Firestore)
-    // This updates the local cache and triggers real-time listeners instantly
+    // 2. IMMEDIATE Text Update (Firestore)
     updateDocumentNonBlocking(propertyRef, updateData);
 
-    // 3. BACKGROUND Tasks (Image & Relational Sync)
+    // 3. BACKGROUND Tasks (Image Upload & Relational Sync)
     if (imageFile && storage) {
       const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
       
       uploadBytes(storageRef, imageFile).then(async (result) => {
         const url = await getDownloadURL(result.ref);
-        // Async update Firestore with final URL
+        // Post-upload Firestore refresh with the REAL secure URL
         updateDocumentNonBlocking(propertyRef, { imageUrl: url, updatedAt: serverTimestamp() });
-        // Async sync to PostgreSQL
+        // Background Sync to PostgreSQL with persistent data
         syncPropertyToDb({ ...updateData, id: propertyId, landlordId: user.uid, imageUrl: url });
       }).catch(err => console.error("Background Upload Sync Failed:", err));
     } else {
-      // Direct Background Relational Sync if no new image
+      // Sync to PostgreSQL instantly if no image change
       syncPropertyToDb({ 
         ...updateData, 
         id: propertyId, 
         landlordId: user.uid, 
-        imageUrl: previewUrl || property?.imageUrl || '' 
+        imageUrl: property?.imageUrl || '' 
       });
     }
 
     toast({ 
       title: "Portfolio Synced", 
-      description: "Changes applied in real-time." 
+      description: "Asset ledger updated in real-time." 
     });
     
     // 4. INSTANT Navigation
@@ -166,7 +164,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                 )}
                 <input id="image-input" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
               </div>
-              <p className="text-[10px] text-muted-foreground font-bold mt-4 uppercase text-center tracking-widest">Selected images preview instantly</p>
+              <p className="text-[10px] text-muted-foreground font-bold mt-4 uppercase text-center tracking-widest">Images preview instantly</p>
             </div>
 
             <div className="p-8 lg:p-12 space-y-8">

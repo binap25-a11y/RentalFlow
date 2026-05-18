@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { Building2, ArrowLeft, Save, Image as ImageIcon, Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -38,7 +39,6 @@ export default function NewPropertyPage() {
     const file = e.target.files?.[0] || null;
     if (file) {
       setImageFile(file);
-      // Instant local preview
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
@@ -64,7 +64,7 @@ export default function NewPropertyPage() {
       numberOfBathrooms: parseInt(bathrooms, 10) || 1,
       rentAmount: parseFloat(rentAmount) || 0,
       isOccupied: false,
-      imageUrl: previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`,
+      imageUrl: `https://picsum.photos/seed/${propertyId}/800/600`, // Temporary seed
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       tenantIds: [],
@@ -72,22 +72,21 @@ export default function NewPropertyPage() {
       isActive: true
     };
 
-    // 2. IMMEDIATE UI FEEDBACK
-    // Initiate Firestore write (updates local cache instantly)
+    // 2. IMMEDIATE Metadata Write (Firestore)
     setDocumentNonBlocking(propertyRef, baseData, { merge: true });
 
-    // 3. BACKGROUND Tasks
+    // 3. BACKGROUND Tasks (Image & Relational Sync)
     if (imageFile && storage) {
       const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
       uploadBytes(storageRef, imageFile).then(async (result) => {
         const url = await getDownloadURL(result.ref);
-        // Post-upload metadata refresh (Firestore)
+        // Async update with REAL URL
         updateDocumentNonBlocking(propertyRef, { imageUrl: url, updatedAt: serverTimestamp() });
-        // Sync to relational ledger (PostgreSQL)
+        // Background Sync to PostgreSQL
         syncPropertyToDb({ ...baseData, imageUrl: url });
-      }).catch(err => console.error("Background Upload/Sync Error:", err));
+      }).catch(err => console.error("Background Sync Error:", err));
     } else {
-      // Sync metadata to PostgreSQL if no custom image
+      // Sync text to PostgreSQL
       syncPropertyToDb(baseData);
     }
 
@@ -125,28 +124,19 @@ export default function NewPropertyPage() {
               <div className="relative group overflow-hidden rounded-3xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white aspect-video w-full flex items-center justify-center shadow-inner">
                 {previewUrl ? (
                   <>
-                    <Image 
-                      src={previewUrl} 
-                      alt="Preview" 
-                      fill 
-                      className="object-cover" 
-                      unoptimized={true} 
-                    />
+                    <Image src={previewUrl} alt="Preview" fill className="object-cover" unoptimized={true} />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                        <Button type="button" variant="secondary" size="sm" className="rounded-xl font-bold font-headline" onClick={() => document.getElementById('image-input')?.click()}>Update Photo</Button>
                     </div>
                   </>
                 ) : (
                   <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="flex flex-col items-center gap-3">
-                    <div className="p-5 bg-primary/10 rounded-full shadow-sm">
-                      <ImageIcon className="w-8 h-8 text-primary" />
-                    </div>
+                    <div className="p-5 bg-primary/10 rounded-full shadow-sm"><ImageIcon className="w-8 h-8 text-primary" /></div>
                     <span className="text-sm font-bold text-primary font-headline">Upload Asset Image</span>
                   </button>
                 )}
                 <input id="image-input" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
               </div>
-              <p className="text-[10px] text-muted-foreground font-bold mt-4 uppercase text-center tracking-widest">Real-time image verification active</p>
             </div>
 
             <div className="p-8 lg:p-12 space-y-8">
