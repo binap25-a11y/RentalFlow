@@ -33,6 +33,7 @@ export function useCollection<T = any>(
 
     setLoading(true);
 
+    // CRITICAL: The error callback must NOT be async to avoid SDK assertion failures.
     const unsubscribe = onSnapshot(
       ref,
       (snapshot: QuerySnapshot<DocumentData>) => {
@@ -45,7 +46,7 @@ export function useCollection<T = any>(
         setError(null);
         setLoading(false);
       },
-      async (serverError: FirestoreError) => {
+      (serverError: FirestoreError) => {
         // Robust path extraction for debugging overlay
         let path = 'unknown-collection';
         

@@ -24,7 +24,7 @@ service cloud.firestore {
     
     // Notifications: The primary real-time alert feed
     match /notifications/{notificationId} {
-      // Prioritize memberIds list check to support array-contains queries used in the UI
+      // Simplified for list queries using array-contains on memberIds
       allow read: if isSignedIn() && (
         request.auth.uid in resource.data.memberIds || 
         request.auth.uid == resource.data.userId
@@ -52,10 +52,26 @@ service cloud.firestore {
       allow write, create: if isSignedIn();
     }
 
-    // Default rules for other managed collections using membership pattern
-    match /documents/{id} { allow read, write: if isSignedIn() && request.auth.uid in resource.data.memberIds; }
-    match /messages/{id} { allow read, write: if isSignedIn() && request.auth.uid in resource.data.memberIds; }
-    match /inspections/{id} { allow read, write: if isSignedIn() && request.auth.uid in resource.data.memberIds; }
-    match /emergencyContacts/{id} { allow read, write: if isSignedIn() && request.auth.uid in resource.data.memberIds; }
+    // Membership-based security pattern for all shared assets
+    match /documents/{id} { 
+      allow read: if isSignedIn() && (request.auth.uid in resource.data.memberIds || request.auth.uid == resource.data.landlordId);
+      allow write: if isSignedIn() && request.auth.uid == resource.data.landlordId;
+      allow create: if isSignedIn();
+    }
+    
+    match /messages/{id} { 
+      allow read: if isSignedIn() && request.auth.uid in resource.data.memberIds;
+      allow write, create: if isSignedIn();
+    }
+    
+    match /inspections/{id} { 
+      allow read: if isSignedIn() && (request.auth.uid in resource.data.memberIds || request.auth.uid == resource.data.landlordId);
+      allow write, create: if isSignedIn();
+    }
+    
+    match /emergencyContacts/{id} { 
+      allow read: if isSignedIn() && (request.auth.uid in resource.data.memberIds || request.auth.uid == resource.data.landlordId);
+      allow write, create: if isSignedIn();
+    }
   }
 }
