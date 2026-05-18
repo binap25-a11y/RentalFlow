@@ -3,9 +3,9 @@
   "placeholderImages": [
     {
       "id": "brand-logo",
-      "description": "Official House Branding - Professional house icon",
-      "imageUrl": "https://picsum.photos/seed/rentflow-house-2025/512/512",
-      "imageHint": "modern house icon"
+      "description": "Official Master Key Branding - Professional key icon",
+      "imageUrl": "https://picsum.photos/seed/rentflow-master-key/512/512",
+      "imageHint": "professional key icon"
     },
     {
       "id": "logo-option-a",

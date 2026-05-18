@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Eye, EyeOff, Chrome, User as UserIcon, Phone, CheckCircle2, Lock, Sparkles } from "lucide-react";
+import { Loader2, Eye, EyeOff, Chrome, User as UserIcon, Phone, CheckCircle2, Lock, Sparkles, ShieldCheck } from "lucide-react";
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp, setDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -39,14 +39,9 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  const LOGO_OPTIONS = [
-    { id: 'A', name: 'Modern Estate', seed: 'rentflow-modern-estate' },
-    { id: 'B', name: 'The Master Key', seed: 'rentflow-master-key' },
-    { id: 'C', name: 'Apartment Hub', seed: 'rentflow-apartments-pro' },
-    { id: 'D', name: 'Secure Home', seed: 'rentflow-secure-home' },
-  ];
-
-  const CURRENT_LOGO = `https://picsum.photos/seed/${LOGO_OPTIONS[0].seed}/512/512`;
+  // Locked in Option B: The Master Key
+  const BRAND_LOGO_SEED = 'rentflow-master-key';
+  const CURRENT_LOGO = `https://picsum.photos/seed/${BRAND_LOGO_SEED}/512/512`;
 
   useEffect(() => {
     setMounted(true);
@@ -179,7 +174,7 @@ export default function LoginPage() {
               fill 
               className="object-contain rounded-[2.5rem] shadow-2xl ring-4 ring-white relative z-10" 
               unoptimized 
-              data-ai-hint="brand logo"
+              data-ai-hint="professional key icon"
             />
           </div>
           
@@ -212,7 +207,7 @@ export default function LoginPage() {
                 height={72} 
                 className="rounded-2xl" 
                 unoptimized 
-                data-ai-hint="brand logo"
+                data-ai-hint="professional key icon"
               />
             </div>
             <CardTitle className="text-2xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
@@ -271,14 +266,14 @@ export default function LoginPage() {
             height={100} 
             className="rounded-[2.25rem]" 
             unoptimized 
-            data-ai-hint="brand logo"
+            data-ai-hint="professional key icon"
           />
         </div>
         <h1 className="text-5xl font-headline font-bold text-primary mb-2 tracking-tighter">RentalFlow</h1>
         <p className="text-muted-foreground font-medium text-lg font-body">Professional Portfolio Management</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl w-full">
+      <div className="max-w-xl w-full">
         <Card className="w-full border-none shadow-2xl bg-white overflow-hidden rounded-[2.5rem]">
           <CardHeader className="space-y-1 pb-4 text-center bg-primary/5 pt-8">
             <CardTitle className="text-2xl font-headline font-bold text-primary">
@@ -327,68 +322,18 @@ export default function LoginPage() {
             </button>
           </CardContent>
         </Card>
+      </div>
 
-        <div className="space-y-8 flex flex-col justify-center">
-          <div className="space-y-2 text-left">
-            <Badge className="bg-accent text-white font-bold uppercase tracking-widest px-4 py-1">
-              <Sparkles className="w-3 h-3 mr-2" /> Brand Selection Preview
-            </Badge>
-            <h2 className="text-3xl font-headline font-bold text-primary">Identity Selection</h2>
-            <p className="text-muted-foreground font-medium">Please review these visual directions for your RentalFlow logo. Which style resonates most with your professional vision?</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            {LOGO_OPTIONS.map((opt) => (
-              <div key={opt.id} className="group relative bg-white p-6 rounded-[2rem] shadow-sm border border-primary/5 flex flex-col items-center gap-4 hover:shadow-xl transition-all cursor-pointer">
-                <div className="relative w-24 h-24 rounded-2xl overflow-hidden shadow-inner ring-1 ring-primary/5">
-                  <Image 
-                    src={`https://picsum.photos/seed/${opt.seed}/512/512`} 
-                    alt={opt.name} 
-                    fill 
-                    className="object-cover" 
-                    unoptimized 
-                    data-ai-hint="logo option"
-                  />
-                </div>
-                <div className="text-center">
-                  <p className="font-headline font-bold text-sm text-primary">{opt.name}</p>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">Option {opt.id}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/10 text-left">
-            <p className="text-xs font-bold text-primary uppercase mb-2 flex items-center">
-              <Info className="w-4 h-4 mr-2" /> Selection Instructions
-            </p>
-            <p className="text-sm text-slate-600 leading-relaxed font-body">
-              Once you have decided on a visual style, please reply with the <strong>Option Letter (A, B, C, or D)</strong>. I will then perform a global synchronization to lock this identity across all platform entry points.
-            </p>
-          </div>
-        </div>
+      <div className="mt-12 flex items-center gap-6 opacity-40 grayscale hover:grayscale-0 transition-all">
+         <div className="flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Compliant Architecture</span>
+         </div>
+         <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">AI Assisted Triage</span>
+         </div>
       </div>
     </div>
-  );
-}
-
-function Info(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 16v-4" />
-      <path d="M12 8h.01" />
-    </svg>
   );
 }
