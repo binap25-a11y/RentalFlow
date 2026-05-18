@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -6,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Eye, EyeOff, Chrome, User as UserIcon, Phone, CheckCircle2, Lock, Sparkles, ShieldCheck } from "lucide-react";
 import { useAuth, useFirestore, useUser } from '@/firebase';
@@ -39,9 +40,8 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  // Locked Identity: Option B (The Master Key)
-  const BRAND_LOGO_SEED = 'rentflow-master-key';
-  const CURRENT_LOGO = `https://picsum.photos/seed/${BRAND_LOGO_SEED}/512/512`;
+  // Unified Identity
+  const BRAND_LOGO_URL = `https://picsum.photos/seed/rentflow-v2025-brand-key/512/512`;
 
   useEffect(() => {
     setMounted(true);
@@ -169,12 +169,12 @@ export default function LoginPage() {
           <div className="relative w-32 h-32 mb-8 animate-in fade-in zoom-in-95 duration-1000 slide-in-from-bottom-8">
             <div className="absolute inset-0 bg-primary/10 rounded-[2.5rem] blur-2xl animate-pulse" />
             <Image 
-              src={CURRENT_LOGO} 
-              alt="RentalFlow Official Logo" 
+              src={BRAND_LOGO_URL} 
+              alt="RentalFlow Professional Logo" 
               fill 
-              className="object-contain rounded-[2.5rem] shadow-2xl ring-4 ring-white relative z-10" 
+              className="object-cover rounded-[2.5rem] shadow-2xl ring-4 ring-white relative z-10" 
               unoptimized 
-              data-ai-hint="professional key icon"
+              data-ai-hint="property key"
             />
           </div>
           
@@ -199,15 +199,15 @@ export default function LoginPage() {
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
         <Card className="w-full max-w-lg border-none shadow-2xl bg-white overflow-hidden animate-in zoom-in duration-300 rounded-[2.5rem]">
           <CardHeader className="text-center bg-primary/5 pb-8 pt-10">
-            <div className="mx-auto p-1 bg-white rounded-2xl w-fit mb-4 shadow-sm">
+            <div className="mx-auto p-1 bg-white rounded-2xl w-fit mb-4 shadow-sm overflow-hidden">
                <Image 
-                src={CURRENT_LOGO} 
+                src={BRAND_LOGO_URL} 
                 alt="RentalFlow" 
                 width={72} 
                 height={72} 
-                className="rounded-2xl" 
+                className="rounded-2xl object-cover" 
                 unoptimized 
-                data-ai-hint="professional key icon"
+                data-ai-hint="property key"
               />
             </div>
             <CardTitle className="text-2xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
@@ -258,15 +258,15 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
       <div className="mb-10 text-center animate-in fade-in slide-in-from-top-4 duration-1000">
-        <div className="inline-flex items-center justify-center p-1 bg-white rounded-[2.5rem] mb-6 shadow-2xl ring-4 ring-primary/5">
+        <div className="inline-flex items-center justify-center p-1 bg-white rounded-[2.5rem] mb-6 shadow-2xl ring-4 ring-primary/5 overflow-hidden">
            <Image 
-            src={CURRENT_LOGO} 
+            src={BRAND_LOGO_URL} 
             alt="RentalFlow Professional Brand" 
             width={100} 
             height={100} 
-            className="rounded-[2.25rem]" 
+            className="rounded-[2.25rem] object-cover" 
             unoptimized 
-            data-ai-hint="professional key icon"
+            data-ai-hint="property key"
           />
         </div>
         <h1 className="text-5xl font-headline font-bold text-primary mb-2 tracking-tighter">RentalFlow</h1>

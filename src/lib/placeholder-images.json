@@ -2,9 +2,9 @@
   "placeholderImages": [
     {
       "id": "brand-logo",
-      "description": "Official Master Key Branding - Professional key icon",
-      "imageUrl": "https://picsum.photos/seed/rentflow-master-key/512/512",
-      "imageHint": "professional key icon"
+      "description": "Official RentalFlow Brand Logo",
+      "imageUrl": "https://picsum.photos/seed/rentflow-v2025-brand-key/512/512",
+      "imageHint": "property key"
     },
     {
       "id": "prop-1",

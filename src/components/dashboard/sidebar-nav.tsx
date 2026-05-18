@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -66,7 +67,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
     }
   };
 
-  const LOGO_URL = 'https://picsum.photos/seed/rentflow-master-key/512/512';
+  const LOGO_URL = 'https://picsum.photos/seed/rentflow-v2025-brand-key/512/512';
 
   return (
     <Sidebar className="border-r border-sidebar-border shadow-2xl">
@@ -83,7 +84,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
               fill 
               className="object-cover" 
               unoptimized 
-              data-ai-hint="professional key icon"
+              data-ai-hint="property key"
             />
           </div>
           <span className="font-headline font-bold text-xl tracking-tight text-sidebar-foreground">RentalFlow</span>

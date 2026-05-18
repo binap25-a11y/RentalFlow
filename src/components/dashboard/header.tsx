@@ -1,3 +1,4 @@
+
 "use client";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -34,7 +35,7 @@ export function Header({ role }: HeaderProps) {
     router.push('/');
   };
 
-  const LOGO_URL = 'https://picsum.photos/seed/rentflow-master-key/512/512';
+  const LOGO_URL = 'https://picsum.photos/seed/rentflow-v2025-brand-key/512/512';
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 bg-white/50 backdrop-blur-sm sticky top-0 z-30">
@@ -49,7 +50,7 @@ export function Header({ role }: HeaderProps) {
               fill 
               className="object-cover" 
               unoptimized 
-              data-ai-hint="professional key icon"
+              data-ai-hint="property key"
             />
           </div>
           <span className="font-headline font-bold text-lg tracking-tight text-primary">RentalFlow</span>
