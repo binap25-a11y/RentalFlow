@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -8,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { Loader2, Eye, EyeOff, Chrome, User as UserIcon, Phone, CheckCircle2, Lock, Sparkles, ShieldCheck } from "lucide-react";
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
@@ -39,7 +39,7 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  // Locked in Option B: The Master Key
+  // Locked Identity: Option B (The Master Key)
   const BRAND_LOGO_SEED = 'rentflow-master-key';
   const CURRENT_LOGO = `https://picsum.photos/seed/${BRAND_LOGO_SEED}/512/512`;
 
