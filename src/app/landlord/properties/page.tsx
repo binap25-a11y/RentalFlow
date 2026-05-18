@@ -104,13 +104,18 @@ export default function PropertiesPage() {
                     {property.isOccupied ? 'Occupied' : 'Vacant'}
                   </Badge>
                 </div>
+                {/* Repositioned Asset Config below the image */}
+                <div className="px-6 pt-4 flex gap-3 text-primary/60 text-xs font-bold">
+                  <span className="flex items-center gap-1.5 bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/5">
+                    <Bed className="w-3.5 h-3.5" /> {property.numberOfBedrooms} Bedrooms
+                  </span>
+                  <span className="flex items-center gap-1.5 bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/5">
+                    <Bath className="w-3.5 h-3.5" /> {property.numberOfBathrooms} Bathrooms
+                  </span>
+                </div>
                 <CardHeader className="pb-2 text-left space-y-1">
                   <div className="flex justify-between items-start">
                     <Badge variant="outline" className="text-[10px] uppercase font-bold text-primary/60 border-primary/10">{property.propertyType}</Badge>
-                    <div className="flex gap-3 text-primary/40 text-xs font-bold bg-primary/5 px-2 py-0.5 rounded-lg border border-primary/5">
-                      <span className="flex items-center gap-1"><Bed className="w-3 h-3" /> {property.numberOfBedrooms}B</span>
-                      <span className="flex items-center gap-1"><Bath className="w-3 h-3" /> {property.numberOfBathrooms}B</span>
-                    </div>
                   </div>
                   <CardTitle className="text-lg font-bold font-headline truncate">{property.addressLine1}</CardTitle>
                   <p className="text-sm text-muted-foreground flex items-center font-medium"><MapPin className="w-3 h-3 mr-1 text-primary/30" /> {property.city}, {property.zipCode}</p>

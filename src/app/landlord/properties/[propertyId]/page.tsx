@@ -222,10 +222,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               <p className="text-muted-foreground flex items-center font-medium font-body text-sm">
                 <MapPin className="w-4 h-4 mr-1 text-primary/60" /> {property.city}, {property.zipCode}
               </p>
-              <div className="flex items-center gap-3 text-primary/60 text-xs font-bold px-3 py-1 bg-primary/5 rounded-full border border-primary/10">
-                <span className="flex items-center gap-1.5"><Bed className="w-3.5 h-3.5" /> {property.numberOfBedrooms}B</span>
-                <span className="flex items-center gap-1.5"><Bath className="w-3.5 h-3.5" /> {property.numberOfBathrooms}B</span>
-              </div>
             </div>
           </div>
         </div>
@@ -265,7 +261,19 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 </div>
               )}
             </div>
-            <CardContent className="pt-8 text-left space-y-6">
+            <CardContent className="pt-8 text-left space-y-8">
+              {/* Repositioned Configuration below the Carousel */}
+              <div className="flex flex-wrap gap-4 items-center border-b pb-8 border-primary/5">
+                <div className="flex items-center gap-3 text-primary font-bold px-4 py-2 bg-primary/5 rounded-2xl border border-primary/10">
+                  <Bed className="w-5 h-5" /> 
+                  <span className="text-lg">{property.numberOfBedrooms} Bedrooms</span>
+                </div>
+                <div className="flex items-center gap-3 text-primary font-bold px-4 py-2 bg-primary/5 rounded-2xl border border-primary/10">
+                  <Bath className="w-5 h-5" /> 
+                  <span className="text-lg">{property.numberOfBathrooms} Bathrooms</span>
+                </div>
+              </div>
+
               <div className="flex flex-wrap gap-6 items-end">
                 <div className="space-y-1">
                   <Label className="text-muted-foreground font-bold text-[10px] uppercase tracking-widest font-headline">Monthly Yield</Label>
