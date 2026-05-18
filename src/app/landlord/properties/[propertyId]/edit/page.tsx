@@ -50,7 +50,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [bathrooms, setBathrooms] = useState('1');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [sessionPreview, setSessionPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    // Check for active background sync preview in session
+    const cached = sessionStorage.getItem(`preview_${propertyId}`);
+    if (cached) setSessionPreview(cached);
+  }, [propertyId]);
 
   useEffect(() => {
     if (property && !isSaving && !imageFile) {
@@ -62,9 +69,17 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setPropertyType(property.propertyType || 'Apartment');
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
-      setPreviewUrl(property.imageUrl || null);
+      
+      // If we don't have a fresh file selected, use either the session bridge or the DB URL
+      if (!imageFile) {
+        if (property.isImageUpdating && sessionPreview) {
+          setPreviewUrl(sessionPreview);
+        } else {
+          setPreviewUrl(property.imageUrl || null);
+        }
+      }
     }
-  }, [property, isSaving, imageFile]);
+  }, [property, isSaving, imageFile, sessionPreview]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
@@ -72,7 +87,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setImageFile(file);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
-      // Immediate Session Bridge populate
+      // Immediately populate session bridge to ensure app-wide consistency
       sessionStorage.setItem(`preview_${propertyId}`, url);
     }
   };
@@ -116,6 +131,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           landlordId: user.uid, 
           imageUrl: url 
         });
+        // We don't clear the session storage here to let the destination page handle the transition
       }).catch(err => {
         console.error("Silent Sync Error:", err);
         updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
@@ -134,11 +150,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       description: "Portfolio updated successfully." 
     });
     
-    // Immediate navigation
+    // Immediate navigation - the destination page uses the same session bridge
     router.push(`/landlord/properties/${propertyId}`);
   };
 
   if (isLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+
+  // Standardization: Prefer local state, then session bridge, then database URL
+  const activeImageUrl = imageFile ? previewUrl : (property?.isImageUpdating && sessionPreview) ? sessionPreview : previewUrl;
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left">
@@ -163,9 +182,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
             <div className="p-8 lg:p-12 bg-primary/5 border-r border-primary/10">
               <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 mb-4 block font-headline">Presentation</Label>
               <div className="relative group overflow-hidden rounded-3xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white aspect-video w-full flex items-center justify-center shadow-inner">
-                {previewUrl ? (
+                {activeImageUrl ? (
                   <>
-                    <Image src={previewUrl} alt="Preview" fill className="object-cover" unoptimized={true} />
+                    <Image src={activeImageUrl} alt="Preview" fill className="object-cover" unoptimized={true} />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                        <Button type="button" variant="secondary" size="sm" className="rounded-xl font-bold font-headline" onClick={() => document.getElementById('image-input')?.click()}>Update Photo</Button>
                     </div>
