@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -7,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { KeyRound, Loader2, Eye, EyeOff, ShieldCheck, Chrome, User as UserIcon, Phone, CheckCircle2, Lock } from "lucide-react";
+import { Loader2, Eye, EyeOff, Chrome, User as UserIcon, Phone, CheckCircle2, Lock } from "lucide-react";
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp, setDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -39,7 +40,7 @@ export default function LoginPage() {
   const isRedirecting = useRef(false);
 
   // High-resolution blue key brand seed - synchronized across app
-  const LOGO_URL = 'https://picsum.photos/seed/rentflow-blue-key-v12/512/512';
+  const LOGO_URL = 'https://picsum.photos/seed/rentflow-blue-key-official/512/512';
 
   useEffect(() => {
     setMounted(true);
@@ -160,20 +161,19 @@ export default function LoginPage() {
     }
   };
 
-  // High-Fidelity Professional Introduction
   if (!mounted || isUserLoading || (user && !needsProfile && !isRedirecting.current)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 overflow-hidden">
         <div className="relative flex flex-col items-center">
-          {/* Enhanced Logo Entry */}
           <div className="relative w-32 h-32 mb-8 animate-in fade-in zoom-in-95 duration-1000 slide-in-from-bottom-8">
             <div className="absolute inset-0 bg-primary/10 rounded-[2.5rem] blur-2xl animate-pulse" />
             <Image 
               src={LOGO_URL} 
-              alt="RentalFlow" 
+              alt="RentalFlow Logo" 
               fill 
               className="object-contain rounded-[2.5rem] shadow-2xl ring-4 ring-white relative z-10" 
               unoptimized 
+              data-ai-hint="blue key logo"
             />
           </div>
           
@@ -206,6 +206,7 @@ export default function LoginPage() {
                 height={72} 
                 className="rounded-2xl" 
                 unoptimized 
+                data-ai-hint="blue key"
               />
             </div>
             <CardTitle className="text-2xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
@@ -216,21 +217,21 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-headline">First Name</Label>
                 <div className="relative">
-                  <UserIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jane" className="pl-10 h-11 rounded-xl border-none bg-muted/20" />
+                  <UserIcon className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+                  <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jane" className="pl-10 h-12 rounded-xl border-none bg-muted/20" />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-headline">Last Name</Label>
-                <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" className="h-11 rounded-xl border-none bg-muted/20" />
+                <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" className="h-12 rounded-xl border-none bg-muted/20" />
               </div>
             </div>
 
             <div className="space-y-2 text-left">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-headline">Phone Number</Label>
               <div className="relative">
-                <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+44 7700 900000" className="pl-10 h-11 rounded-xl border-none bg-muted/20" />
+                <Phone className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+                <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+44 7700 900000" className="pl-10 h-12 rounded-xl border-none bg-muted/20" />
               </div>
             </div>
 
@@ -264,6 +265,7 @@ export default function LoginPage() {
             height={100} 
             className="rounded-[2.25rem]" 
             unoptimized 
+            data-ai-hint="blue key"
           />
         </div>
         <h1 className="text-5xl font-headline font-bold text-primary mb-2 tracking-tighter">RentalFlow</h1>

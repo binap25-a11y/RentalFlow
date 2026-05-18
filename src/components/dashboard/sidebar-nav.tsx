@@ -12,7 +12,6 @@ import {
   LogOut,
   Home,
   FileText,
-  KeyRound,
   MessageSquare,
   PhoneCall
 } from 'lucide-react';
@@ -21,6 +20,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/firebase";
 import { initiateSignOut } from "@/firebase/non-blocking-login";
+import Image from "next/image";
 
 interface SidebarNavProps {
   role: 'landlord' | 'tenant';
@@ -67,16 +67,25 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
     }
   };
 
+  const LOGO_URL = 'https://picsum.photos/seed/rentflow-blue-key-official/512/512';
+
   return (
     <Sidebar className="border-r border-sidebar-border shadow-2xl">
       <SidebarHeader className="p-6">
         <Link 
           href={dashboardHref} 
-          className="flex items-center gap-2 group" 
+          className="flex items-center gap-3 group" 
           onClick={handleItemClick}
         >
-          <div className="p-2 bg-sidebar-primary rounded-xl transition-transform group-hover:scale-110">
-            <KeyRound className="w-5 h-5 text-sidebar-primary-foreground" />
+          <div className="relative h-10 w-10 rounded-xl overflow-hidden shadow-lg transition-transform group-hover:scale-110">
+            <Image 
+              src={LOGO_URL} 
+              alt="RentalFlow" 
+              fill 
+              className="object-cover" 
+              unoptimized 
+              data-ai-hint="blue key"
+            />
           </div>
           <span className="font-headline font-bold text-xl tracking-tight text-sidebar-foreground">RentalFlow</span>
         </Link>

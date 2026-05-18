@@ -3,7 +3,7 @@
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { KeyRound, LogOut, User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import Link from "next/link";
 import { useAuth, useUser } from "@/firebase";
 import { initiateSignOut } from "@/firebase/non-blocking-login";
@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface HeaderProps {
   role: 'landlord' | 'tenant';
@@ -34,14 +35,23 @@ export function Header({ role }: HeaderProps) {
     router.push('/');
   };
 
+  const LOGO_URL = 'https://picsum.photos/seed/rentflow-blue-key-official/512/512';
+
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 bg-white/50 backdrop-blur-sm sticky top-0 z-30">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
-        <Link href={dashboardHref} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <div className="p-1.5 bg-primary rounded-lg">
-            <KeyRound className="w-4 h-4 text-primary-foreground" />
+        <Link href={dashboardHref} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          <div className="relative h-8 w-8 rounded-lg overflow-hidden shadow-sm">
+            <Image 
+              src={LOGO_URL} 
+              alt="Logo" 
+              fill 
+              className="object-cover" 
+              unoptimized 
+              data-ai-hint="blue key"
+            />
           </div>
           <span className="font-headline font-bold text-lg tracking-tight text-primary">RentalFlow</span>
         </Link>
