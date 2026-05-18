@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   },
 
   experimental: {
-    // allowedDevOrigins removed to resolve TypeScript mismatch (Option A)
+    // Experimental flags removed to ensure stability across development workstations
   },
 
   images: {
@@ -17,31 +17,26 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'placehold.co',
-        port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
-        port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'picsum.photos',
-        port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'firebasestorage.googleapis.com',
-        port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: '*.firebasestorage.app',
-        port: '',
         pathname: '/**',
       },
     ],
