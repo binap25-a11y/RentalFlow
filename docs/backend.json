@@ -68,10 +68,7 @@
         "propertyId": { "type": "string" },
         "landlordId": { "type": "string" },
         "scheduledDate": { "type": "string", "format": "date-time" },
-        "conductedDate": { "type": "string", "format": "date-time" },
         "status": { "type": "string", "enum": ["scheduled", "completed"] },
-        "summary": { "type": "string" },
-        "healthScore": { "type": "number" },
         "memberIds": { "type": "array", "items": { "type": "string" } }
       }
     },
@@ -84,10 +81,6 @@
         "name": { "type": "string" },
         "role": { "type": "string" },
         "phone": { "type": "string" },
-        "email": { "type": "string" },
-        "category": { "type": "string", "enum": ["standard", "professional"] },
-        "propertyId": { "type": "string" },
-        "landlordId": { "type": "string" },
         "memberIds": { "type": "array", "items": { "type": "string" } }
       }
     }
@@ -104,10 +97,6 @@
       "schema": { "$ref": "#/backend/entities/Property" },
       "description": "Portfolio assets."
     },
-    "/tenantProfiles/{profileId}": {
-      "schema": { "type": "object" },
-      "description": "Resident assignment records."
-    },
     "/notifications/{notificationId}": {
       "schema": { "$ref": "#/backend/entities/Notification" },
       "description": "User alerts."
@@ -116,14 +105,6 @@
       "schema": { "$ref": "#/backend/entities/MaintenanceRequest" },
       "description": "Maintenance tracking records."
     },
-    "/documents/{documentId}": {
-      "schema": { "type": "object" },
-      "description": "Shared property vault documents."
-    },
-    "/messages/{messageId}": {
-      "schema": { "type": "object" },
-      "description": "Secure direct messages."
-    },
     "/inspections/{inspectionId}": {
       "schema": { "$ref": "#/backend/entities/Inspection" },
       "description": "Compliance audit records."
@@ -131,6 +112,18 @@
     "/emergencyContacts/{contactId}": {
       "schema": { "$ref": "#/backend/entities/EmergencyContact" },
       "description": "Authorized property partners."
+    },
+    "/tenantProfiles/{profileId}": {
+      "schema": { "type": "object" },
+      "description": "Resident assignment records."
+    },
+    "/documents/{documentId}": {
+      "schema": { "type": "object" },
+      "description": "Shared property vault documents."
+    },
+    "/messages/{messageId}": {
+      "schema": { "type": "object" },
+      "description": "Secure direct messages."
     }
   }
 }

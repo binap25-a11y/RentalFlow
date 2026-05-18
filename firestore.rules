@@ -22,13 +22,10 @@ service cloud.firestore {
       allow create: if isSignedIn();
     }
     
-    // Notifications: The primary real-time alert feed
+    // Notifications: High-performance real-time alert feed
     match /notifications/{notificationId} {
-      // Simplified for list queries using array-contains on memberIds
-      allow read: if isSignedIn() && (
-        request.auth.uid in resource.data.memberIds || 
-        request.auth.uid == resource.data.userId
-      );
+      // Prioritize memberIds for provably safe 'array-contains' queries
+      allow read: if isSignedIn() && (request.auth.uid in resource.data.memberIds);
       allow write, create: if isSignedIn();
     }
     
@@ -36,7 +33,6 @@ service cloud.firestore {
     match /maintenanceRequests/{requestId} {
       allow read: if isSignedIn() && (
         request.auth.uid == resource.data.landlordId || 
-        request.auth.uid == resource.data.tenantId || 
         request.auth.uid in resource.data.memberIds
       );
       allow write, create: if isSignedIn();
@@ -52,25 +48,25 @@ service cloud.firestore {
       allow write, create: if isSignedIn();
     }
 
-    // Membership-based security pattern for all shared assets
+    // Membership-based security pattern for all shared portfolio assets
     match /documents/{id} { 
-      allow read: if isSignedIn() && (request.auth.uid in resource.data.memberIds || request.auth.uid == resource.data.landlordId);
-      allow write: if isSignedIn() && request.auth.uid == resource.data.landlordId;
+      allow read: if isSignedIn() && (request.auth.uid in resource.data.memberIds);
+      allow write: if isSignedIn() && (request.auth.uid == resource.data.landlordId);
       allow create: if isSignedIn();
     }
     
     match /messages/{id} { 
-      allow read: if isSignedIn() && request.auth.uid in resource.data.memberIds;
+      allow read: if isSignedIn() && (request.auth.uid in resource.data.memberIds);
       allow write, create: if isSignedIn();
     }
     
     match /inspections/{id} { 
-      allow read: if isSignedIn() && (request.auth.uid in resource.data.memberIds || request.auth.uid == resource.data.landlordId);
+      allow read: if isSignedIn() && (request.auth.uid in resource.data.memberIds);
       allow write, create: if isSignedIn();
     }
     
     match /emergencyContacts/{id} { 
-      allow read: if isSignedIn() && (request.auth.uid in resource.data.memberIds || request.auth.uid == resource.data.landlordId);
+      allow read: if isSignedIn() && (request.auth.uid in resource.data.memberIds);
       allow write, create: if isSignedIn();
     }
   }
