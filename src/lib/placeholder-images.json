@@ -3,8 +3,8 @@
     {
       "id": "brand-logo",
       "description": "Official RentalFlow Brand Logo",
-      "imageUrl": "https://picsum.photos/seed/rentflow-v2025-brand-key/512/512",
-      "imageHint": "property key"
+      "imageUrl": "https://picsum.photos/seed/rentflow-branding-house-key/512/512",
+      "imageHint": "house key"
     },
     {
       "id": "prop-1",

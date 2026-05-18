@@ -3,9 +3,9 @@
   "placeholderImages": [
     {
       "id": "brand-logo",
-      "description": "RentalFlow Professional Identity - Property Key Visual",
-      "imageUrl": "https://picsum.photos/seed/rentflow-key-branding-2025/512/512",
-      "imageHint": "property key"
+      "description": "RentalFlow Professional Identity - House and Key Visual",
+      "imageUrl": "https://picsum.photos/seed/rentflow-branding-house-key/512/512",
+      "imageHint": "house key"
     },
     {
       "id": "prop-1",
