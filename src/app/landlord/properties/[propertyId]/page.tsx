@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, use, useRef, useEffect } from 'react';
@@ -129,7 +130,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const [isEditingRent, setIsEditingRent] = useState(false);
   const [rentAmount, setRentAmount] = useState('');
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
   const [uploadExpiryDate, setUploadExpiryDate] = useState<Date>();
 
   const handleUpdateRent = () => {
@@ -262,15 +262,15 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               )}
             </div>
             <CardContent className="pt-8 text-left space-y-8">
-              {/* Repositioned Configuration below the Carousel */}
+              {/* Corrected Live Config positioning below image */}
               <div className="flex flex-wrap gap-4 items-center border-b pb-8 border-primary/5">
                 <div className="flex items-center gap-3 text-primary font-bold px-4 py-2 bg-primary/5 rounded-2xl border border-primary/10">
                   <Bed className="w-5 h-5" /> 
-                  <span className="text-lg">{property.numberOfBedrooms} Bedrooms</span>
+                  <span className="text-lg">{property.numberOfBedrooms || 1} Bedrooms</span>
                 </div>
                 <div className="flex items-center gap-3 text-primary font-bold px-4 py-2 bg-primary/5 rounded-2xl border border-primary/10">
                   <Bath className="w-5 h-5" /> 
-                  <span className="text-lg">{property.numberOfBathrooms} Bathrooms</span>
+                  <span className="text-lg">{property.numberOfBathrooms || 1} Bathrooms</span>
                 </div>
               </div>
 

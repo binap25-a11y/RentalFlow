@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, use } from 'react';
@@ -61,6 +62,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
   useEffect(() => {
     if (property && !isSaving) {
+      // Prevent data snapping: Only update local state if user is not currently saving
       setAddress(property.addressLine1 || '');
       setCity(property.city || '');
       setZipCode(property.zipCode || '');
@@ -70,8 +72,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // If we don't have a fresh file selected in this render session,
-      // intelligently determine the correct visual source
       if (!imageFile) {
         if (property.isImageUpdating && sessionPreview) {
           setPreviewUrl(sessionPreview);
@@ -151,7 +151,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
   if (isLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
-  // Render Priority: 1. Local Selection > 2. Syncing Bridge > 3. Persistent URL > 4. Fallback
   const activeImageUrl = imageFile ? previewUrl : (property?.isImageUpdating && sessionPreview) ? sessionPreview : previewUrl;
 
   return (

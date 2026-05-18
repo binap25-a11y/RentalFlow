@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -107,10 +108,10 @@ export default function PropertiesPage() {
                 {/* Repositioned Asset Config below the image */}
                 <div className="px-6 pt-4 flex gap-3 text-primary/60 text-xs font-bold">
                   <span className="flex items-center gap-1.5 bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/5">
-                    <Bed className="w-3.5 h-3.5" /> {property.numberOfBedrooms} Bedrooms
+                    <Bed className="w-3.5 h-3.5" /> {property.numberOfBedrooms || 1} Bedrooms
                   </span>
                   <span className="flex items-center gap-1.5 bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/5">
-                    <Bath className="w-3.5 h-3.5" /> {property.numberOfBathrooms} Bathrooms
+                    <Bath className="w-3.5 h-3.5" /> {property.numberOfBathrooms || 1} Bathrooms
                   </span>
                 </div>
                 <CardHeader className="pb-2 text-left space-y-1">
