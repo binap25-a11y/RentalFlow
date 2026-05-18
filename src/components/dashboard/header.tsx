@@ -35,7 +35,7 @@ export function Header({ role }: HeaderProps) {
     router.push('/');
   };
 
-  const LOGO_URL = 'https://picsum.photos/seed/rentflow-v2025-brand-key/512/512';
+  const LOGO_URL = 'https://picsum.photos/seed/rentflow-key-branding-2025/512/512';
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 bg-white/50 backdrop-blur-sm sticky top-0 z-30">

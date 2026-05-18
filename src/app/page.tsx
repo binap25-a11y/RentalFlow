@@ -40,8 +40,8 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  // Unified Identity
-  const BRAND_LOGO_URL = `https://picsum.photos/seed/rentflow-v2025-brand-key/512/512`;
+  // Unified Professional Identity
+  const BRAND_LOGO_URL = `https://picsum.photos/seed/rentflow-key-branding-2025/512/512`;
 
   useEffect(() => {
     setMounted(true);
