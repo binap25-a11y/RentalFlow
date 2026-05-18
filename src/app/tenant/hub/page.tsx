@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
@@ -277,12 +278,12 @@ export default function TenantHub() {
              <CardContent className="p-8 space-y-4">
                 {documents && documents.length > 0 ? (
                   documents.slice(0, 3).map(doc => (
-                    <div key={doc.id} className="flex items-center justify-between p-3 bg-muted/10 rounded-xl">
-                       <div className="flex items-center gap-3">
-                         <FileText className="w-4 h-4 text-primary/40" />
-                         <span className="text-xs font-bold text-primary truncate max-w-[120px]">{doc.fileName}</span>
+                    <div key={doc.id} className="flex items-center justify-between p-3 bg-muted/10 rounded-xl gap-3">
+                       <div className="flex items-center gap-3 min-w-0 flex-1">
+                         <FileText className="w-4 h-4 text-primary/40 shrink-0" />
+                         <span className="text-xs font-bold text-primary truncate">{doc.fileName}</span>
                        </div>
-                       <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-white" asChild>
+                       <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-white shrink-0" asChild>
                          <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer"><Download className="w-3.5 h-3.5" /></a>
                        </Button>
                     </div>

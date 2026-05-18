@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, use, useRef, useMemo } from 'react';
@@ -399,8 +400,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button variant="outline" className={cn("w-full justify-start text-left h-12 rounded-xl bg-white border-none shadow-sm font-body", !uploadExpiryDate && "text-muted-foreground")}>
-                          <CalendarIcon className="mr-3 h-4 w-4 text-primary" />
-                          {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set deadline (Optional)"}
+                          <CalendarIcon className="mr-3 h-4 w-4 text-primary shrink-0" />
+                          <span className="truncate flex-1">
+                            {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set deadline (Optional)"}
+                          </span>
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0 rounded-2xl border-none shadow-2xl" align="start">
@@ -412,50 +415,57 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     <input type="file" ref={fileInputRef} className="hidden" onChange={handleUploadDocument} />
                     <Button onClick={() => fileInputRef.current?.click()} className="w-full rounded-xl h-12 font-bold shadow-lg shadow-primary/20 bg-primary text-white" disabled={isUploadingDoc}>
                       {isUploadingDoc ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-                      Push to Vault
+                      <span className="truncate">Push to Vault</span>
                     </Button>
                   </div>
                 </CardContent>
               </Card>
 
               <div className="grid gap-4">
-                {propertyDocuments?.map(doc => {
-                  const downloadUrl = getMemoryAsset(doc.id) || doc.fileUrl;
-                  return (
-                    <div key={doc.id} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-all">
-                      <div className="flex items-center gap-4 text-left">
-                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                          <FileText className="w-6 h-6" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold truncate max-w-[300px] text-primary">{doc.fileName}</p>
-                          <div className="flex items-center gap-3 mt-1">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase">Uploaded: {doc.uploadDate ? format(new Date(doc.uploadDate), 'PP') : 'Recently'}</p>
-                            {doc.expiryDate && (
-                              <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-amber-200 text-amber-700 bg-amber-50">Expires {format(new Date(doc.expiryDate), 'PP')}</Badge>
-                            )}
+                {!propertyDocuments || propertyDocuments.length === 0 ? (
+                  <div className="py-20 text-center bg-muted/5 rounded-[2rem] border-2 border-dashed border-primary/5">
+                    <FileText className="w-12 h-12 text-primary/10 mx-auto mb-4" />
+                    <p className="text-muted-foreground font-bold font-headline opacity-50">Vault is empty.</p>
+                  </div>
+                ) : (
+                  propertyDocuments.map(doc => {
+                    const downloadUrl = getMemoryAsset(doc.id) || doc.fileUrl;
+                    return (
+                      <div key={doc.id} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-all gap-4">
+                        <div className="flex items-center gap-4 text-left min-w-0 flex-1">
+                          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+                            <FileText className="w-6 h-6" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold truncate text-primary">{doc.fileName}</p>
+                            <div className="flex items-center gap-3 mt-1 flex-wrap">
+                              <p className="text-[10px] text-muted-foreground font-bold uppercase whitespace-nowrap">Uploaded: {doc.uploadDate ? format(new Date(doc.uploadDate), 'PP') : 'Recently'}</p>
+                              {doc.expiryDate && (
+                                <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-amber-200 text-amber-700 bg-amber-50 whitespace-nowrap">Expires {format(new Date(doc.expiryDate), 'PP')}</Badge>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex gap-2">
-                        {downloadUrl ? (
-                          <Button variant="ghost" size="icon" className="rounded-xl hover:bg-primary/5 text-primary h-11 w-11" asChild>
-                            <a href={downloadUrl} target="_blank" rel="noopener noreferrer" download={doc.fileName}>
-                              <Download className="w-5 h-5" />
-                            </a>
+                        <div className="flex gap-2 shrink-0">
+                          {downloadUrl ? (
+                            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-primary/5 text-primary h-11 w-11" asChild>
+                              <a href={downloadUrl} target="_blank" rel="noopener noreferrer" download={doc.fileName}>
+                                <Download className="w-5 h-5" />
+                              </a>
+                            </Button>
+                          ) : (
+                            <div className="px-4 py-2 flex items-center gap-3 bg-muted/50 rounded-xl">
+                              <Loader2 className="w-4 h-4 animate-spin text-primary/40" />
+                            </div>
+                          )}
+                          <Button variant="ghost" size="icon" className="rounded-xl hover:bg-destructive/5 text-destructive/40 hover:text-destructive h-11 w-11" onClick={() => handleDeleteDocument(doc.id)}>
+                            <Trash2 className="w-5 h-5" />
                           </Button>
-                        ) : (
-                          <div className="px-4 py-2 flex items-center gap-3 bg-muted/50 rounded-xl">
-                            <Loader2 className="w-4 h-4 animate-spin text-primary/40" />
-                          </div>
-                        )}
-                        <Button variant="ghost" size="icon" className="rounded-xl hover:bg-destructive/5 text-destructive/40 hover:text-destructive h-11 w-11" onClick={() => handleDeleteDocument(doc.id)}>
-                          <Trash2 className="w-5 h-5" />
-                        </Button>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </TabsContent>
 
@@ -489,15 +499,15 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             <TabsContent value="inspections" className="mt-8 space-y-4">
               {inspections && inspections.length > 0 ? (
                 inspections.map(insp => (
-                   <div key={insp.id} className="p-6 bg-white rounded-[1.75rem] border border-primary/5 text-left flex justify-between items-center group hover:shadow-md transition-all">
-                     <div className="flex items-center gap-5">
-                       <div className={cn("p-4 rounded-2xl flex flex-col items-center justify-center min-w-[70px]", insp.status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700')}>
+                   <div key={insp.id} className="p-6 bg-white rounded-[1.75rem] border border-primary/5 text-left flex justify-between items-center group hover:shadow-md transition-all gap-4">
+                     <div className="flex items-center gap-5 min-w-0">
+                       <div className={cn("p-4 rounded-2xl flex flex-col items-center justify-center min-w-[70px] shrink-0", insp.status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700')}>
                          <span className="text-[10px] font-bold uppercase">{insp.scheduledDate ? format(new Date(insp.scheduledDate), 'MMM') : 'TBC'}</span>
                          <span className="text-2xl font-bold font-headline">{insp.scheduledDate ? format(new Date(insp.scheduledDate), 'dd') : '??'}</span>
                        </div>
-                       <div>
-                         <h4 className="text-lg font-bold text-primary font-headline">Compliance Audit Record</h4>
-                         <div className="flex items-center gap-3 mt-1">
+                       <div className="min-w-0">
+                         <h4 className="text-lg font-bold text-primary font-headline truncate">Compliance Audit Record</h4>
+                         <div className="flex items-center gap-3 mt-1 flex-wrap">
                            <Badge variant={insp.status === 'completed' ? 'secondary' : 'default'} className="uppercase text-[9px] font-bold">{insp.status}</Badge>
                            {insp.healthScore && (
                              <span className="text-[10px] font-bold text-emerald-600 flex items-center"><CheckCircle2 className="w-3 h-3 mr-1" /> Score: {insp.healthScore}/100</span>
@@ -505,7 +515,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                          </div>
                        </div>
                      </div>
-                     <Button variant="outline" className="rounded-xl font-bold h-11 border-primary/20 hover:bg-primary hover:text-white transition-all" asChild>
+                     <Button variant="outline" className="rounded-xl font-bold h-11 border-primary/20 hover:bg-primary hover:text-white transition-all shrink-0" asChild>
                        <Link href="/landlord/inspections">View Audit <ChevronRight className="w-4 h-4 ml-1" /></Link>
                      </Button>
                    </div>

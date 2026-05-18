@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -32,18 +33,20 @@
         "memberIds": { "type": "array", "items": { "type": "string" } }
       }
     },
-    "Notification": {
-      "title": "Notification",
-      "description": "Platform alerts for maintenance, messages, and documents.",
+    "PropertyDocument": {
+      "title": "PropertyDocument",
+      "description": "A shared document in the property vault.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "userId": { "type": "string" },
-        "title": { "type": "string" },
-        "message": { "type": "string" },
-        "type": { "type": "string", "enum": ["maintenance", "message", "vault", "system"] },
-        "isRead": { "type": "boolean" },
-        "memberIds": { "type": "array", "items": { "type": "string" } }
+        "fileName": { "type": "string" },
+        "fileUrl": { "type": "string" },
+        "documentType": { "type": "string" },
+        "propertyId": { "type": "string" },
+        "landlordId": { "type": "string" },
+        "memberIds": { "type": "array", "items": { "type": "string" } },
+        "expiryDate": { "type": "string", "format": "date-time" },
+        "uploadDate": { "type": "string", "format": "date-time" }
       }
     },
     "MaintenanceRequest": {
@@ -56,7 +59,8 @@
         "title": { "type": "string" },
         "status": { "type": "string" },
         "priority": { "type": "string" },
-        "memberIds": { "type": "array", "items": { "type": "string" } }
+        "memberIds": { "type": "array", "items": { "type": "string" } },
+        "cost": { "type": "number" }
       }
     },
     "Inspection": {
@@ -69,7 +73,9 @@
         "landlordId": { "type": "string" },
         "scheduledDate": { "type": "string", "format": "date-time" },
         "status": { "type": "string", "enum": ["scheduled", "completed"] },
-        "memberIds": { "type": "array", "items": { "type": "string" } }
+        "memberIds": { "type": "array", "items": { "type": "string" } },
+        "healthScore": { "type": "number" },
+        "summary": { "type": "string" }
       }
     },
     "EmergencyContact": {
@@ -97,10 +103,6 @@
       "schema": { "$ref": "#/backend/entities/Property" },
       "description": "Portfolio assets."
     },
-    "/notifications/{notificationId}": {
-      "schema": { "$ref": "#/backend/entities/Notification" },
-      "description": "User alerts."
-    },
     "/maintenanceRequests/{requestId}": {
       "schema": { "$ref": "#/backend/entities/MaintenanceRequest" },
       "description": "Maintenance tracking records."
@@ -118,7 +120,7 @@
       "description": "Resident assignment records."
     },
     "/documents/{documentId}": {
-      "schema": { "type": "object" },
+      "schema": { "$ref": "#/backend/entities/PropertyDocument" },
       "description": "Shared property vault documents."
     },
     "/messages/{messageId}": {
