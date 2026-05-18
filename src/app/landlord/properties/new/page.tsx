@@ -55,6 +55,7 @@ export default function NewPropertyPage() {
     try {
       let currentImageUrl = previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
+      // Handle Image Upload to Firebase Storage
       if (imageFile && storage) {
         const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
         const result = await uploadBytes(storageRef, imageFile);
@@ -84,7 +85,7 @@ export default function NewPropertyPage() {
       // 1. Sync to Firestore (Real-time Layer)
       setDocumentNonBlocking(propertyRef, baseData, { merge: true });
 
-      // 2. Sync to PostgreSQL (Relational Ledger Layer)
+      // 2. Sync to PostgreSQL (Relational Ledger Mirror)
       await syncPropertyToDb({
         id: propertyId,
         landlordId: user.uid,
@@ -97,7 +98,7 @@ export default function NewPropertyPage() {
         description
       });
 
-      toast({ title: "Asset Registered", description: "Property added to relational ledger." });
+      toast({ title: "Asset Registered", description: "Property and image persisted across relational ledger." });
       router.push('/landlord/properties');
     } catch (error: any) {
       toast({ variant: "destructive", title: "Registration Failed", description: error.message });
