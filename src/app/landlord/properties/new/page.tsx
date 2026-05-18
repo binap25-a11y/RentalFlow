@@ -34,6 +34,7 @@ export default function NewPropertyPage() {
   const [bathrooms, setBathrooms] = useState('1');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
@@ -44,10 +45,11 @@ export default function NewPropertyPage() {
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !db) return;
 
+    setIsSaving(true);
     const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
@@ -64,7 +66,7 @@ export default function NewPropertyPage() {
       numberOfBathrooms: parseInt(bathrooms, 10) || 1,
       rentAmount: parseFloat(rentAmount) || 0,
       isOccupied: false,
-      imageUrl: `https://picsum.photos/seed/${propertyId}/800/600`, // Temporary seed
+      imageUrl: `https://picsum.photos/seed/${propertyId}/800/600`, // Initial temp placeholder
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       tenantIds: [],
@@ -75,24 +77,26 @@ export default function NewPropertyPage() {
     // 2. IMMEDIATE Metadata Write (Firestore)
     setDocumentNonBlocking(propertyRef, baseData, { merge: true });
 
-    // 3. BACKGROUND Tasks (Image & Relational Sync)
+    // 3. Background Tasks (Image & Relational Sync)
     if (imageFile && storage) {
       const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
+      
       uploadBytes(storageRef, imageFile).then(async (result) => {
         const url = await getDownloadURL(result.ref);
-        // Async update with REAL URL
+        // Post-upload updates
         updateDocumentNonBlocking(propertyRef, { imageUrl: url, updatedAt: serverTimestamp() });
-        // Background Sync to PostgreSQL
         syncPropertyToDb({ ...baseData, imageUrl: url });
-      }).catch(err => console.error("Background Sync Error:", err));
+      }).catch(err => {
+        console.error("Background Registration Sync Error:", err);
+      });
     } else {
-      // Sync text to PostgreSQL
+      // Sync text-only to PostgreSQL
       syncPropertyToDb(baseData);
     }
 
     toast({ 
       title: "Asset Registered", 
-      description: "Asset ledger updated in real-time." 
+      description: "Asset ledger updated. Image is processing." 
     });
     
     // 4. INSTANT Navigation
@@ -205,8 +209,8 @@ export default function NewPropertyPage() {
           </div>
           <CardFooter className="p-8 bg-muted/10 border-t flex justify-end gap-4">
             <Button type="button" variant="ghost" className="rounded-xl h-12 px-8 font-bold font-headline" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" className="rounded-xl font-bold bg-primary h-12 px-12 shadow-lg shadow-primary/20 min-w-[200px] font-headline text-white hover:bg-primary/90 transition-transform active:scale-95">
-              <Save className="w-5 h-5 mr-2" />
+            <Button type="submit" disabled={isSaving} className="rounded-xl font-bold bg-primary h-12 px-12 shadow-lg shadow-primary/20 min-w-[200px] font-headline text-white hover:bg-primary/90 transition-transform active:scale-95">
+              {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
               Register Asset
             </Button>
           </CardFooter>
