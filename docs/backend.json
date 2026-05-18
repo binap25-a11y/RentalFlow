@@ -59,6 +59,38 @@
         "priority": { "type": "string" },
         "memberIds": { "type": "array", "items": { "type": "string" } }
       }
+    },
+    "Inspection": {
+      "title": "Inspection",
+      "description": "Property compliance audit record.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "propertyId": { "type": "string" },
+        "landlordId": { "type": "string" },
+        "scheduledDate": { "type": "string", "format": "date-time" },
+        "conductedDate": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["scheduled", "completed"] },
+        "summary": { "type": "string" },
+        "healthScore": { "type": "number" },
+        "memberIds": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "EmergencyContact": {
+      "title": "EmergencyContact",
+      "description": "Service partner or emergency resource contact details.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "category": { "type": "string", "enum": ["standard", "professional"] },
+        "propertyId": { "type": "string" },
+        "landlordId": { "type": "string" },
+        "memberIds": { "type": "array", "items": { "type": "string" } }
+      }
     }
   },
   "auth": {
@@ -94,11 +126,11 @@
       "description": "Secure direct messages."
     },
     "/inspections/{inspectionId}": {
-      "schema": { "type": "object" },
+      "schema": { "$ref": "#/backend/entities/Inspection" },
       "description": "Compliance audit records."
     },
     "/emergencyContacts/{contactId}": {
-      "schema": { "type": "object" },
+      "schema": { "$ref": "#/backend/entities/EmergencyContact" },
       "description": "Authorized property partners."
     }
   }

@@ -35,10 +35,10 @@ service cloud.firestore {
     // --- Real-Time Notifications ---
     match /notifications/{id} {
       allow create: if isSignedIn();
-      // Use explicit read logic to satisfy query-level security
+      // Ensure listing (queries) are allowed via the memberIds filter used in the UI
       allow read, update: if isSignedIn() && (
-        request.auth.uid == resource.data.userId ||
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
+        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds) ||
+        request.auth.uid == resource.data.userId
       );
     }
 
