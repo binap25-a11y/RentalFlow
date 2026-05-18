@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, use, useRef, useEffect, useMemo } from 'react';
@@ -119,7 +120,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
   const [uploadExpiryDate, setUploadExpiryDate] = useState<Date>();
 
-  // 🛡️ Real-Time Asset Status Engine (Bound to Live Collections)
   const assetStatus = useMemo(() => {
     let score = 100;
     const reasons: string[] = [];
@@ -248,7 +248,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
-  // Render Priority: 1. Memory Bridge (Live Select) > 2. Database URL > 3. Fallback
   const memoryUrl = getGlobalPreview(propertyId);
   const activeImageUrl = (property.isImageUpdating && memoryUrl) 
     ? memoryUrl 
@@ -308,19 +307,19 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 </div>
               )}
             </div>
-            <CardContent className="pt-8 text-left space-y-8">
-              <div className="flex flex-wrap gap-3 items-center border-b pb-8 border-primary/5">
-                <div className="flex items-center gap-2 text-primary font-bold px-4 py-2 bg-primary/5 rounded-xl border border-primary/10">
-                  <Bed className="w-4 h-4" /> 
-                  <span className="text-base">{property.numberOfBedrooms || 1} Bed</span>
+            <CardContent className="pt-6 text-left space-y-8">
+              <div className="flex flex-wrap gap-2 items-center">
+                <div className="flex items-center gap-1.5 text-primary font-bold px-3 py-1 bg-primary/5 rounded-lg border border-primary/10">
+                  <Bed className="w-3.5 h-3.5" /> 
+                  <span className="text-xs">{property.numberOfBedrooms || 1} Bed</span>
                 </div>
-                <div className="flex items-center gap-2 text-primary font-bold px-4 py-2 bg-primary/5 rounded-xl border border-primary/10">
-                  <Bath className="w-4 h-4" /> 
-                  <span className="text-base">{property.numberOfBathrooms || 1} Bath</span>
+                <div className="flex items-center gap-1.5 text-primary font-bold px-3 py-1 bg-primary/5 rounded-lg border border-primary/10">
+                  <Bath className="w-3.5 h-3.5" /> 
+                  <span className="text-xs">{property.numberOfBathrooms || 1} Bath</span>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-6 items-end">
+              <div className="flex flex-wrap gap-6 items-end border-t pt-6 border-primary/5">
                 <div className="space-y-1">
                   <Label className="text-muted-foreground font-bold text-[10px] uppercase tracking-widest font-headline">Monthly Yield</Label>
                   <div className="flex items-center gap-3">
@@ -420,7 +419,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
               <div className="grid gap-4">
                 {propertyDocuments?.map(doc => (
-                  <div key={doc.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-primary/5">
+                  <div key={doc.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-primary/5 shadow-sm">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
                         <FileText className="w-5 h-5" />
@@ -430,9 +429,18 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         <p className="text-[10px] text-muted-foreground font-medium">Uploaded {doc.uploadDate ? format(new Date(doc.uploadDate), 'PP') : 'N/A'}</p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" className="rounded-full" asChild>
-                      <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer"><Download className="w-4 h-4" /></a>
-                    </Button>
+                    {doc.fileUrl ? (
+                      <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/5 text-primary" asChild title="Download">
+                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" download={doc.fileName}>
+                          <Download className="w-4 h-4" />
+                        </a>
+                      </Button>
+                    ) : (
+                      <div className="p-2 flex items-center gap-2">
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase">Syncing</span>
+                        <Loader2 className="w-4 h-4 animate-spin text-primary/30" />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

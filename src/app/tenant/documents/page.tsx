@@ -68,13 +68,13 @@ export default function TenantDocumentsPage() {
           filteredDocs.map((doc) => {
             const createdAt = doc.createdAt ? new Date(doc.createdAt.seconds * 1000) : null;
             return (
-              <Card key={doc.id} className="border-none shadow-sm hover:shadow-md transition-all group">
+              <Card key={doc.id} className="border-none shadow-sm hover:shadow-md transition-all group overflow-hidden">
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start mb-2">
                     <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
                       <FileText className="w-5 h-5" />
                     </div>
-                    <Badge variant="outline" className="text-[10px] font-bold">
+                    <Badge variant="outline" className="text-[10px] font-bold uppercase">
                       {doc.documentType || 'Other'}
                     </Badge>
                   </div>
@@ -95,12 +95,20 @@ export default function TenantDocumentsPage() {
                       </div>
                     )}
                   </div>
-                  <Button variant="outline" className="w-full rounded-lg border-primary/10 hover:bg-primary/5 h-9 text-xs font-bold" asChild>
-                    <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
-                      <Download className="w-3 h-3 mr-2" />
-                      Download Copy
-                    </a>
-                  </Button>
+                  
+                  {doc.fileUrl ? (
+                    <Button variant="outline" className="w-full rounded-lg border-primary/10 hover:bg-primary/5 h-9 text-xs font-bold" asChild>
+                      <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" download={doc.fileName}>
+                        <Download className="w-3 h-3 mr-2" />
+                        Download Copy
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button variant="outline" className="w-full rounded-lg border-primary/10 h-9 text-xs font-bold" disabled>
+                      <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                      Syncing with Cloud...
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             );
