@@ -15,7 +15,6 @@ import { doc, getDoc, serverTimestamp, setDoc, collection, query, where, getDocs
 import { updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -39,6 +38,7 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
+  // 🔑 High-Fidelity Brand Identity: Premium Blue Key
   const BRAND_LOGO_URL = `https://picsum.photos/seed/rentflow-premium-blue-key/512/512`;
 
   useEffect(() => {
