@@ -8,11 +8,8 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
 
-  // @ts-expect-error: allowedDevOrigins is an experimental Next.js option
   experimental: {
-    allowedDevOrigins: [
-      "https://3000-firebase-leaseloop-4-1779055012886.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev"
-    ]
+    // allowedDevOrigins removed to resolve TypeScript mismatch (Option A)
   },
 
   images: {
