@@ -105,7 +105,7 @@ export default function PropertiesPage() {
                   </Badge>
                 </div>
                 
-                {/* Asset Specifications - Redesigned for better fit */}
+                {/* Asset Specifications - Compact Row Below Image */}
                 <div className="px-6 pt-4 flex flex-wrap gap-2 text-primary/70 text-[10px] font-bold">
                   <div className="flex items-center gap-1 bg-primary/5 px-2 py-1.5 rounded-lg border border-primary/10 whitespace-nowrap shadow-sm">
                     <Bed className="w-3.5 h-3.5 text-primary" />

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useRef, useEffect, useMemo } from 'react';
@@ -508,4 +507,3 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     </div>
   );
 }
-

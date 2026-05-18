@@ -83,9 +83,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const file = e.target.files?.[0] || null;
     if (file) {
       setImageFile(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-      sessionStorage.setItem(`preview_${propertyId}`, url);
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setPreviewUrl(base64String);
+        sessionStorage.setItem(`preview_${propertyId}`, base64String);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -145,7 +150,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
   if (isLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
-  const activeImageUrl = imageFile ? previewUrl : (property?.isImageUpdating && sessionPreview) ? sessionPreview : previewUrl;
+  const activeImageUrl = previewUrl || (property?.isImageUpdating && sessionPreview) ? (previewUrl || sessionPreview) : property?.imageUrl;
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left">

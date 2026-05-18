@@ -40,8 +40,13 @@ export default function NewPropertyPage() {
     const file = e.target.files?.[0] || null;
     if (file) {
       setImageFile(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setPreviewUrl(base64String);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -54,7 +59,7 @@ export default function NewPropertyPage() {
     const propertyRef = doc(db, 'properties', propertyId);
 
     // Standardized Instant Bridge: Cache selection for immediate app-wide display
-    if (previewUrl && imageFile) {
+    if (previewUrl) {
       sessionStorage.setItem(`preview_${propertyId}`, previewUrl);
     }
 
