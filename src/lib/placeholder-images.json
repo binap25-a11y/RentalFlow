@@ -2,9 +2,9 @@
   "placeholderImages": [
     {
       "id": "brand-logo",
-      "description": "Official Blue Key Branding - White key on blue circular background",
-      "imageUrl": "https://picsum.photos/seed/rentflow-key-branding-2025/512/512",
-      "imageHint": "white key blue circle"
+      "description": "Official House Branding - Professional house icon",
+      "imageUrl": "https://picsum.photos/seed/rentflow-house-2025/512/512",
+      "imageHint": "modern house icon"
     },
     {
       "id": "prop-1",

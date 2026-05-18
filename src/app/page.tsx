@@ -38,7 +38,7 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  const LOGO_URL = 'https://picsum.photos/seed/rentflow-key-branding-2025/512/512';
+  const LOGO_URL = 'https://picsum.photos/seed/rentflow-house-2025/512/512';
 
   useEffect(() => {
     setMounted(true);
@@ -171,7 +171,7 @@ export default function LoginPage() {
               fill 
               className="object-contain rounded-[2.5rem] shadow-2xl ring-4 ring-white relative z-10" 
               unoptimized 
-              data-ai-hint="white key blue circle"
+              data-ai-hint="modern house icon"
             />
           </div>
           
@@ -204,7 +204,7 @@ export default function LoginPage() {
                 height={72} 
                 className="rounded-2xl" 
                 unoptimized 
-                data-ai-hint="white key blue circle"
+                data-ai-hint="modern house icon"
               />
             </div>
             <CardTitle className="text-2xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
@@ -263,7 +263,7 @@ export default function LoginPage() {
             height={100} 
             className="rounded-[2.25rem]" 
             unoptimized 
-            data-ai-hint="white key blue circle"
+            data-ai-hint="modern house icon"
           />
         </div>
         <h1 className="text-5xl font-headline font-bold text-primary mb-2 tracking-tighter">RentalFlow</h1>
