@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -39,7 +38,6 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  // 🏠 High-Fidelity Brand Identity: Modern Professional Home
   const BRAND_LOGO_URL = `https://picsum.photos/seed/rentalflow-pro-home/512/512`;
 
   useEffect(() => {
