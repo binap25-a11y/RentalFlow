@@ -17,6 +17,13 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 
+// Zero-Quota High-Performance Memory Bridge
+const setMemoryAsset = (id: string, url: string) => {
+  if (typeof window === 'undefined') return;
+  if (!(window as any).__asset_bridge) (window as any).__asset_bridge = {};
+  (window as any).__asset_bridge[id] = url;
+};
+
 export default function NewPropertyPage() {
   const { user } = useUser();
   const db = useFirestore();
@@ -40,13 +47,8 @@ export default function NewPropertyPage() {
     const file = e.target.files?.[0] || null;
     if (file) {
       setImageFile(file);
-      
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setPreviewUrl(base64String);
-      };
-      reader.readAsDataURL(file);
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
     }
   };
 
@@ -58,12 +60,11 @@ export default function NewPropertyPage() {
     const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
-    // Standardized Instant Bridge: Cache selection for immediate app-wide display
+    // Register with Memory Bridge for instant navigation consistency
     if (previewUrl) {
-      sessionStorage.setItem(`preview_${propertyId}`, previewUrl);
+      setMemoryAsset(propertyId, previewUrl);
     }
 
-    // Use a deterministic placeholder until high-res sync is complete
     const fallbackUrl = `https://picsum.photos/seed/${propertyId}/800/600`;
 
     const baseData = {
@@ -106,7 +107,6 @@ export default function NewPropertyPage() {
           imageUrl: url 
         });
       }).catch(err => {
-        console.error("Silent Sync Error:", err);
         updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
       });
     } else {
@@ -118,7 +118,6 @@ export default function NewPropertyPage() {
       description: "Portfolio updated successfully." 
     });
     
-    // Immediate navigation
     router.push(`/landlord/properties/${propertyId}`);
   };
 
@@ -210,7 +209,7 @@ export default function NewPropertyPage() {
                   </div>
                   <div className="space-y-2">
                     <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Bathrooms</Label>
-                    <Select value={bathrooms} onValueChange={setBathrooms}>
+                    <Select value={bathrooms} onValueChange={setBedrooms}>
                       <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {['1','2','3+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
