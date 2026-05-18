@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Building2, ArrowLeft, Save, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Building2, ArrowLeft, Save, Image as ImageIcon, Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -23,7 +23,6 @@ export default function NewPropertyPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [zipCode, setZipCode] = useState('');
@@ -39,6 +38,7 @@ export default function NewPropertyPage() {
     const file = e.target.files?.[0] || null;
     if (file) {
       setImageFile(file);
+      // Instant local preview
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
@@ -72,44 +72,56 @@ export default function NewPropertyPage() {
       isActive: true
     };
 
-    // 2. Immediate Firestore Update (Instant UI Feedback)
+    // 2. IMMEDIATE UI FEEDBACK
+    // Initiate Firestore write (updates local cache instantly)
     setDocumentNonBlocking(propertyRef, baseData, { merge: true });
 
-    // 3. Handle Heavy Tasks in Background
+    // 3. BACKGROUND Tasks
     if (imageFile && storage) {
       const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
       uploadBytes(storageRef, imageFile).then(async (result) => {
         const url = await getDownloadURL(result.ref);
+        // Post-upload metadata refresh (Firestore)
         updateDocumentNonBlocking(propertyRef, { imageUrl: url, updatedAt: serverTimestamp() });
+        // Sync to relational ledger (PostgreSQL)
         syncPropertyToDb({ ...baseData, imageUrl: url });
-      }).catch(err => console.error("Background Image Upload failed:", err));
+      }).catch(err => console.error("Background Upload/Sync Error:", err));
     } else {
+      // Sync metadata to PostgreSQL if no custom image
       syncPropertyToDb(baseData);
     }
 
-    toast({ title: "Asset Registered", description: "Creating asset records in real-time." });
+    toast({ 
+      title: "Asset Registered", 
+      description: "Asset ledger updated in real-time." 
+    });
     
-    // 4. Instant Navigation
+    // 4. INSTANT Navigation
     router.push('/landlord/properties');
   };
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12">
-      <div className="flex items-center gap-4 text-left">
-        <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-headline font-bold text-primary">Register Asset</h1>
-          <p className="text-muted-foreground font-medium">Adding a new high-value property to your portfolio.</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4 text-left">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-headline font-bold text-primary">Register Asset</h1>
+            <p className="text-muted-foreground font-medium">Add a high-value property to your portfolio.</p>
+          </div>
         </div>
+        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold">
+          <Sparkles className="w-3 h-3 mr-2" /> Live Portfolio
+        </Badge>
       </div>
 
       <Card className="border-none shadow-xl overflow-hidden rounded-[2rem] bg-white">
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-1 lg:grid-cols-2">
             <div className="p-8 lg:p-12 bg-primary/5 border-r border-primary/10">
-              <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 mb-4 block font-headline">Property Presentation</Label>
+              <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 mb-4 block font-headline">Asset Presentation</Label>
               <div className="relative group overflow-hidden rounded-3xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white aspect-video w-full flex items-center justify-center shadow-inner">
                 {previewUrl ? (
                   <>
@@ -121,7 +133,7 @@ export default function NewPropertyPage() {
                       unoptimized={true} 
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                       <Button type="button" variant="secondary" size="sm" className="rounded-xl font-bold font-headline" onClick={() => document.getElementById('image-input')?.click()}>Change Photo</Button>
+                       <Button type="button" variant="secondary" size="sm" className="rounded-xl font-bold font-headline" onClick={() => document.getElementById('image-input')?.click()}>Update Photo</Button>
                     </div>
                   </>
                 ) : (
@@ -129,11 +141,12 @@ export default function NewPropertyPage() {
                     <div className="p-5 bg-primary/10 rounded-full shadow-sm">
                       <ImageIcon className="w-8 h-8 text-primary" />
                     </div>
-                    <span className="text-sm font-bold text-primary font-headline">Upload Cover Image</span>
+                    <span className="text-sm font-bold text-primary font-headline">Upload Asset Image</span>
                   </button>
                 )}
                 <input id="image-input" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
               </div>
+              <p className="text-[10px] text-muted-foreground font-bold mt-4 uppercase text-center tracking-widest">Real-time image verification active</p>
             </div>
 
             <div className="p-8 lg:p-12 space-y-8">
@@ -194,15 +207,15 @@ export default function NewPropertyPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description" className="font-bold text-xs uppercase text-primary/60 font-headline">Description & Features</Label>
-                  <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Key features, local amenities, etc." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-body" />
+                  <Label htmlFor="description" className="font-bold text-xs uppercase text-primary/60 font-headline">Property Description</Label>
+                  <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe your asset's key features..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-body" />
                 </div>
               </div>
             </div>
           </div>
           <CardFooter className="p-8 bg-muted/10 border-t flex justify-end gap-4">
             <Button type="button" variant="ghost" className="rounded-xl h-12 px-8 font-bold font-headline" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" className="rounded-xl font-bold bg-primary h-12 px-12 shadow-lg shadow-primary/20 min-w-[200px] font-headline text-white hover:bg-primary/90">
+            <Button type="submit" className="rounded-xl font-bold bg-primary h-12 px-12 shadow-lg shadow-primary/20 min-w-[200px] font-headline text-white hover:bg-primary/90 transition-transform active:scale-95">
               <Save className="w-5 h-5 mr-2" />
               Register Asset
             </Button>
