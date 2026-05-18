@@ -242,6 +242,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       toast({ variant: "destructive", title: "Upload Failed" });
     } finally {
       setIsUploadingDoc(false);
+      setUploadExpiryDate(undefined);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
@@ -257,7 +258,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
-  const activeImageUrl = property.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
+  const activeImageUrl = property.imageUrl || `https://picsum.photos/seed/rentalflow-pro-identity/800/600`;
   const gallery = property.imageUrls || [activeImageUrl].filter(Boolean);
 
   const getPriorityColor = (priority: string) => {
@@ -399,10 +400,16 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     <Label className="text-[10px] font-bold font-headline uppercase tracking-widest text-primary/60">Compliance Expiry</Label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn("w-full justify-start text-left h-12 rounded-xl bg-white border-none shadow-sm font-body", !uploadExpiryDate && "text-muted-foreground")}>
+                        <Button 
+                          variant="outline" 
+                          className={cn(
+                            "w-full justify-start text-left h-12 rounded-xl bg-white border-none shadow-sm font-body px-4", 
+                            !uploadExpiryDate && "text-muted-foreground"
+                          )}
+                        >
                           <CalendarIcon className="mr-3 h-4 w-4 text-primary shrink-0" />
-                          <span className="truncate flex-1">
-                            {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set deadline (Optional)"}
+                          <span className="flex-1 truncate text-xs sm:text-sm">
+                            {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set Deadline (Optional)"}
                           </span>
                         </Button>
                       </PopoverTrigger>
@@ -447,7 +454,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           </div>
                         </div>
                         <div className="flex gap-2 shrink-0">
-                          {downloadUrl ? (
+                          {downloadUrl && downloadUrl !== 'pending' ? (
                             <Button variant="ghost" size="icon" className="rounded-xl hover:bg-primary/5 text-primary h-11 w-11" asChild>
                               <a href={downloadUrl} target="_blank" rel="noopener noreferrer" download={doc.fileName}>
                                 <Download className="w-5 h-5" />
