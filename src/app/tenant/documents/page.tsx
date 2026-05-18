@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
@@ -97,17 +96,17 @@ export default function TenantDocumentsPage() {
                   </div>
                   
                   {doc.fileUrl ? (
-                    <Button variant="outline" className="w-full rounded-lg border-primary/10 hover:bg-primary/5 h-9 text-xs font-bold" asChild>
+                    <Button variant="outline" className="w-full rounded-lg border-primary/10 hover:bg-primary/5 h-10 font-bold" asChild>
                       <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" download={doc.fileName}>
-                        <Download className="w-3 h-3 mr-2" />
-                        Download Copy
+                        <Download className="w-4 h-4 mr-2" />
+                        Download Record
                       </a>
                     </Button>
                   ) : (
-                    <Button variant="outline" className="w-full rounded-lg border-primary/10 h-9 text-xs font-bold" disabled>
-                      <Loader2 className="w-3 h-3 mr-2 animate-spin" />
-                      Syncing with Cloud...
-                    </Button>
+                    <div className="w-full flex items-center justify-center gap-3 bg-muted/30 h-10 rounded-lg border border-dashed border-primary/10">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Verifying Link</span>
+                      <Loader2 className="w-3 h-3 animate-spin text-primary/40" />
+                    </div>
                   )}
                 </CardContent>
               </Card>

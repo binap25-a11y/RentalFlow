@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useRef, useEffect, useMemo } from 'react';
@@ -43,7 +42,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { syncDocumentToDb } from "@/lib/actions/db-sync";
+import { syncDocumentToDb, deleteDocumentFromDb } from "@/lib/actions/db-sync";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format, isBefore } from 'date-fns';
@@ -203,6 +202,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       ...(tenants?.map(t => t.userId).filter(Boolean) || [])
     ]));
 
+    // 1. Initial optimistic registry
     setDocumentNonBlocking(docRef, {
       id: docId,
       fileName: file.name,
@@ -218,15 +218,18 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     }, { merge: true });
 
     try {
+      // 2. Storage Sync
       const storageRef = ref(storage, `documents/${user.uid}/${propertyId}/${Date.now()}_${file.name}`);
       const uploadResult = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(uploadResult.ref);
 
+      // 3. Final URL verification
       updateDocumentNonBlocking(docRef, {
         fileUrl: url,
         updatedAt: serverTimestamp(),
       });
 
+      // 4. Relational redundant sync
       syncDocumentToDb({
         id: docId,
         propertyId: propertyId,
@@ -237,20 +240,26 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         expiryDate: uploadExpiryDate ? uploadExpiryDate.toISOString() : null
       });
 
-      toast({ title: "Vault Updated" });
+      toast({ title: "Vault Updated", description: "Document is now ready for retrieval." });
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Upload Failed" });
+      toast({ variant: "destructive", title: "Upload Failed", description: "Could not persist document to cloud storage." });
     } finally {
       setIsUploadingDoc(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  const handleDeleteDocument = (docId: string) => {
+  const handleDeleteDocument = async (docId: string) => {
     if (!db) return;
     const docRef = doc(db, 'documents', docId);
+    
+    // 1. Real-time removal
     deleteDocumentNonBlocking(docRef);
-    toast({ title: "Document Removed", description: "The item has been deleted from the vault." });
+    
+    // 2. Relational cleanup
+    deleteDocumentFromDb(docId);
+    
+    toast({ title: "Document Removed", description: "Record decommissioned from all ledgers." });
   };
 
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
@@ -445,9 +454,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           </a>
                         </Button>
                       ) : (
-                        <div className="p-2 flex items-center gap-2">
-                          <span className="text-[9px] font-bold text-muted-foreground uppercase">Syncing</span>
-                          <Loader2 className="w-4 h-4 animate-spin text-primary/30" />
+                        <div className="px-3 py-1 flex items-center gap-2 bg-muted/50 rounded-lg">
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Syncing</span>
+                          <Loader2 className="w-3 h-3 animate-spin text-primary/40" />
                         </div>
                       )}
                       <Button variant="ghost" size="icon" className="rounded-full hover:bg-destructive/5 text-destructive/40 hover:text-destructive" onClick={() => handleDeleteDocument(doc.id)} title="Delete">

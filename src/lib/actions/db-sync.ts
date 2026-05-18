@@ -94,3 +94,16 @@ export async function syncDocumentToDb(docData: {
     client.release();
   }
 }
+
+export async function deleteDocumentFromDb(docId: string) {
+  const client = await pool.connect();
+  try {
+    await client.query('DELETE FROM documents WHERE id = $1', [docId]);
+    return { success: true };
+  } catch (error) {
+    console.error('Relational Deletion Error (Document):', error);
+    return { success: false, error };
+  } finally {
+    client.release();
+  }
+}
