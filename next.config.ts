@@ -1,19 +1,24 @@
-
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
   typescript: {
     ignoreBuildErrors: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
+
   experimental: {
+    serverActions: {
+      allowedOrigins: [
+        "https://3000-firebase-leaseloop-4-1779055012886.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev"
+      ]
+    },
     allowedDevOrigins: [
       "https://3000-firebase-leaseloop-4-1779055012886.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev"
     ]
   },
+
   images: {
     remotePatterns: [
       {
