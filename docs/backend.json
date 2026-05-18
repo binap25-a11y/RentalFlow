@@ -44,7 +44,6 @@
         "message": { "type": "string" },
         "type": { "type": "string", "enum": ["maintenance", "message", "vault", "system"] },
         "isRead": { "type": "boolean" },
-        "link": { "type": "string" },
         "memberIds": { "type": "array", "items": { "type": "string" } }
       }
     },
@@ -74,6 +73,10 @@
       "schema": { "$ref": "#/backend/entities/Property" },
       "description": "Portfolio assets."
     },
+    "/tenantProfiles/{profileId}": {
+      "schema": { "type": "object" },
+      "description": "Resident assignment records."
+    },
     "/notifications/{notificationId}": {
       "schema": { "$ref": "#/backend/entities/Notification" },
       "description": "User alerts."
@@ -81,6 +84,22 @@
     "/maintenanceRequests/{requestId}": {
       "schema": { "$ref": "#/backend/entities/MaintenanceRequest" },
       "description": "Maintenance tracking records."
+    },
+    "/documents/{documentId}": {
+      "schema": { "type": "object" },
+      "description": "Shared property vault documents."
+    },
+    "/messages/{messageId}": {
+      "schema": { "type": "object" },
+      "description": "Secure direct messages."
+    },
+    "/inspections/{inspectionId}": {
+      "schema": { "type": "object" },
+      "description": "Compliance audit records."
+    },
+    "/emergencyContacts/{contactId}": {
+      "schema": { "type": "object" },
+      "description": "Authorized property partners."
     }
   }
 }
