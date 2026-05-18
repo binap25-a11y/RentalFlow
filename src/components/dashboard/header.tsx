@@ -1,13 +1,13 @@
-
 "use client";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Bell } from "lucide-react";
 import Link from "next/link";
 import { useAuth, useUser } from "@/firebase";
 import { initiateSignOut } from "@/firebase/non-blocking-login";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,7 +35,7 @@ export function Header({ role }: HeaderProps) {
     router.push('/');
   };
 
-  const LOGO_URL = 'https://picsum.photos/seed/rentalflow-pro-identity/512/512';
+  const BRAND_LOGO_URL = 'https://picsum.photos/seed/rentalflow-pro-identity/512/512';
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 bg-white/50 backdrop-blur-sm sticky top-0 z-30">
@@ -45,7 +45,7 @@ export function Header({ role }: HeaderProps) {
         <Link href={dashboardHref} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div className="relative h-8 w-8 rounded-lg overflow-hidden shadow-sm">
             <Image 
-              src={LOGO_URL} 
+              src={BRAND_LOGO_URL} 
               alt="RentalFlow Logo" 
               fill 
               className="object-cover" 

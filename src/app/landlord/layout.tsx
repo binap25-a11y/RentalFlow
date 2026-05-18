@@ -1,4 +1,3 @@
-
 "use client";
 
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
@@ -49,6 +48,7 @@ export default function LandlordLayout({
               fill 
               className="object-cover rounded-3xl relative z-10" 
               unoptimized 
+              data-ai-hint="real estate logo"
             />
           </div>
           <div className="flex items-center gap-2">
