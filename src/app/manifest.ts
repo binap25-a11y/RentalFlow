@@ -1,4 +1,3 @@
-
 import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
@@ -12,13 +11,13 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#1e3a8a',
     icons: [
       {
-        src: 'https://picsum.photos/seed/blue-key-official-v1/192/192',
+        src: 'https://picsum.photos/seed/blue-key-master-v1/192/192',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'maskable',
       },
       {
-        src: 'https://picsum.photos/seed/blue-key-official-v1/512/512',
+        src: 'https://picsum.photos/seed/blue-key-master-v1/512/512',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',

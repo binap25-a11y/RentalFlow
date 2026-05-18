@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -8,14 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Eye, EyeOff, Chrome, User as UserIcon, Phone, CheckCircle2, Lock, ShieldCheck } from "lucide-react";
+import { Loader2, Eye, EyeOff, Chrome, User as UserIcon, Phone, CheckCircle2, Lock } from "lucide-react";
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp, setDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -39,8 +37,8 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  // High-Quality Blue Key Identity Seed
-  const LOGO_URL = 'https://picsum.photos/seed/blue-key-official-v1/512/512';
+  // Definitive Blue Key Identity
+  const LOGO_URL = 'https://picsum.photos/seed/blue-key-master-v1/512/512';
 
   useEffect(() => {
     setMounted(true);
@@ -173,7 +171,7 @@ export default function LoginPage() {
               fill 
               className="object-contain rounded-[2.5rem] shadow-2xl ring-4 ring-white relative z-10" 
               unoptimized 
-              data-ai-hint="blue key logo"
+              data-ai-hint="blue key"
             />
           </div>
           

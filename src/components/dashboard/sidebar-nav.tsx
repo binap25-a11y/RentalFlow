@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -67,7 +66,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
     }
   };
 
-  const LOGO_URL = 'https://picsum.photos/seed/blue-key-official-v1/512/512';
+  const LOGO_URL = 'https://picsum.photos/seed/blue-key-master-v1/512/512';
 
   return (
     <Sidebar className="border-r border-sidebar-border shadow-2xl">
