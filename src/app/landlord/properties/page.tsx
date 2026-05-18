@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -91,7 +92,6 @@ export default function PropertiesPage() {
                   </Badge>
                 </div>
                 
-                {/* COMPACT SPECS TAGS - RE-INTRODUCED & POSITIONED BELOW IMAGE */}
                 <div className="px-6 pt-4 flex flex-wrap gap-2 items-center">
                   <div className="flex items-center gap-1.5 bg-primary/5 px-2 py-1 rounded-lg border border-primary/10 shadow-sm min-w-[65px] justify-center">
                     <Bed className="w-3 h-3 text-primary" />
