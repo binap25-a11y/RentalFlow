@@ -53,6 +53,11 @@ export default function NewPropertyPage() {
     const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
+    // Instant local preview cache for seamless details page transition
+    if (previewUrl && imageFile) {
+      sessionStorage.setItem(`preview_${propertyId}`, previewUrl);
+    }
+
     const baseData = {
       id: propertyId,
       landlordId: user.uid,
@@ -77,13 +82,12 @@ export default function NewPropertyPage() {
     // 1. Instant Ledger Entry
     setDocumentNonBlocking(propertyRef, baseData, { merge: true });
 
-    // 2. Background Persistence Tasks
+    // 2. Background Persistence Tasks (Non-Blocking)
     if (imageFile && storage) {
       const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
       
       uploadBytes(storageRef, imageFile).then(async (result) => {
         const url = await getDownloadURL(result.ref);
-        // Final updates
         updateDocumentNonBlocking(propertyRef, { 
           imageUrl: url, 
           isImageUpdating: false,
@@ -95,6 +99,7 @@ export default function NewPropertyPage() {
         });
       }).catch(err => {
         console.error("Background Sync Error:", err);
+        updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
       });
     } else {
       syncPropertyToDb(baseData);
@@ -102,10 +107,10 @@ export default function NewPropertyPage() {
 
     toast({ 
       title: "Asset Registered", 
-      description: "Portfolio ledger updated. Syncing images in background." 
+      description: "Portfolio ledger updated. Syncing in background." 
     });
     
-    router.push('/landlord/properties');
+    router.push(`/landlord/properties/${propertyId}`);
   };
 
   return (

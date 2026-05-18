@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use, useRef } from 'react';
+import { useState, use, useRef, useEffect } from 'react';
 import { 
   useUser, 
   useFirestore, 
@@ -67,6 +67,20 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   }, [db, propertyId]);
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
+
+  const [sessionPreview, setSessionPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check for a temporary preview URL in session storage to enable "instant" feel
+    const cached = sessionStorage.getItem(`preview_${propertyId}`);
+    if (cached) setSessionPreview(cached);
+    
+    // Clear the cache if sync is done
+    if (property && !property.isImageUpdating) {
+      sessionStorage.removeItem(`preview_${propertyId}`);
+      setSessionPreview(null);
+    }
+  }, [property, propertyId]);
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -253,7 +267,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
-  const gallery = property.imageUrls || [property.imageUrl].filter(Boolean);
+  // Prioritize session preview for "instant" update feel
+  const activeImageUrl = sessionPreview || property.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
+  const gallery = property.imageUrls || [activeImageUrl].filter(Boolean);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-12">
@@ -285,9 +301,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         <div className="lg:col-span-2 space-y-8">
           <Card className="border-none shadow-sm overflow-hidden bg-white rounded-3xl relative">
             {property.isImageUpdating && (
-              <div className="absolute inset-0 bg-white/60 backdrop-blur-md z-30 flex flex-col items-center justify-center text-primary animate-in fade-in">
-                <Loader2 className="w-10 h-10 animate-spin mb-4" />
-                <p className="font-bold text-xs uppercase tracking-[0.2em] font-headline">Synchronizing Assets...</p>
+              <div className="absolute top-4 right-4 z-40">
+                <Badge className="bg-primary/90 text-white border-none px-3 py-1.5 font-bold shadow-xl animate-pulse">
+                  <Loader2 className="w-3 h-3 mr-2 animate-spin" /> Syncing Asset...
+                </Badge>
               </div>
             )}
             <div className="relative group">

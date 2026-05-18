@@ -81,6 +81,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
 
+    // Save temporary preview to session storage for instant details page display
+    if (previewUrl && imageFile) {
+      sessionStorage.setItem(`preview_${propertyId}`, previewUrl);
+    }
+
     const updateData = {
       addressLine1: address,
       city,
@@ -97,19 +102,17 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     // 1. Instant Metadata Write
     updateDocumentNonBlocking(propertyRef, updateData);
 
-    // 2. Background File & Relational Handover
+    // 2. Background File & Relational Handover (Non-Blocking)
     if (imageFile && storage) {
       const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
       
       uploadBytes(storageRef, imageFile).then(async (result) => {
         const url = await getDownloadURL(result.ref);
-        // Final update with secure URL
         updateDocumentNonBlocking(propertyRef, { 
           imageUrl: url, 
           isImageUpdating: false,
           updatedAt: serverTimestamp() 
         });
-        // Sync to relational ledger using correct camelCase keys
         syncPropertyToDb({ 
           ...updateData, 
           id: propertyId, 
@@ -117,10 +120,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           imageUrl: url 
         });
       }).catch(err => {
-        console.error("Background Upload Sync Failed:", err);
+        console.error("Background Sync Failed:", err);
+        updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
       });
     } else {
-      // Direct Relational Mirroring
       syncPropertyToDb({ 
         ...updateData, 
         id: propertyId, 
@@ -131,7 +134,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     toast({ 
       title: "Asset Updated", 
-      description: "Specifications saved. Images are syncing in background." 
+      description: "Changes pushed to ledger. Syncing in background." 
     });
     
     router.push(`/landlord/properties/${propertyId}`);
