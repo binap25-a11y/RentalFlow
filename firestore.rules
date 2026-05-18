@@ -24,14 +24,10 @@ service cloud.firestore {
     
     // Notifications: The primary real-time alert feed
     match /notifications/{notificationId} {
-      // Explicitly allow list queries based on memberIds or userId to resolve permission denials
-      allow list: if isSignedIn() && (
+      // Prioritize memberIds list check to support array-contains queries used in the UI
+      allow read: if isSignedIn() && (
         request.auth.uid in resource.data.memberIds || 
         request.auth.uid == resource.data.userId
-      );
-      allow get: if isSignedIn() && (
-        request.auth.uid == resource.data.userId || 
-        request.auth.uid in resource.data.memberIds
       );
       allow write, create: if isSignedIn();
     }
