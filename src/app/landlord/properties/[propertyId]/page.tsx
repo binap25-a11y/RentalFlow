@@ -10,6 +10,7 @@ import {
   useMemoFirebase, 
   updateDocumentNonBlocking, 
   setDocumentNonBlocking, 
+  deleteDocumentNonBlocking,
   useStorage, 
 } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
@@ -245,6 +246,13 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     }
   };
 
+  const handleDeleteDocument = (docId: string) => {
+    if (!db) return;
+    const docRef = doc(db, 'documents', docId);
+    deleteDocumentNonBlocking(docRef);
+    toast({ title: "Document Removed", description: "The item has been deleted from the vault." });
+  };
+
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
@@ -308,14 +316,14 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               )}
             </div>
             <CardContent className="pt-6 text-left space-y-8">
-              <div className="flex flex-wrap gap-2 items-center">
-                <div className="flex items-center gap-1.5 text-primary font-bold px-3 py-1 bg-primary/5 rounded-lg border border-primary/10">
-                  <Bed className="w-3.5 h-3.5" /> 
-                  <span className="text-xs">{property.numberOfBedrooms || 1} Bed</span>
+              <div className="flex flex-wrap gap-3 items-center">
+                <div className="flex items-center gap-2 text-primary font-bold px-4 py-2 bg-primary/5 rounded-xl border border-primary/10 shadow-sm">
+                  <Bed className="w-4 h-4 text-primary" /> 
+                  <span className="text-sm">{property.numberOfBedrooms || 1} Bed</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-primary font-bold px-3 py-1 bg-primary/5 rounded-lg border border-primary/10">
-                  <Bath className="w-3.5 h-3.5" /> 
-                  <span className="text-xs">{property.numberOfBathrooms || 1} Bath</span>
+                <div className="flex items-center gap-2 text-primary font-bold px-4 py-2 bg-primary/5 rounded-xl border border-primary/10 shadow-sm">
+                  <Bath className="w-4 h-4 text-primary" /> 
+                  <span className="text-sm">{property.numberOfBathrooms || 1} Bath</span>
                 </div>
               </div>
 
@@ -419,28 +427,33 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
               <div className="grid gap-4">
                 {propertyDocuments?.map(doc => (
-                  <div key={doc.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-primary/5 shadow-sm">
+                  <div key={doc.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
                         <FileText className="w-5 h-5" />
                       </div>
                       <div className="text-left">
                         <p className="text-sm font-bold truncate max-w-[200px]">{doc.fileName}</p>
-                        <p className="text-[10px] text-muted-foreground font-medium">Uploaded {doc.uploadDate ? format(new Date(doc.uploadDate), 'PP') : 'N/A'}</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">Uploaded {doc.uploadDate ? format(new Date(doc.uploadDate), 'PP') : 'Recently'}</p>
                       </div>
                     </div>
-                    {doc.fileUrl ? (
-                      <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/5 text-primary" asChild title="Download">
-                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" download={doc.fileName}>
-                          <Download className="w-4 h-4" />
-                        </a>
+                    <div className="flex gap-1">
+                      {doc.fileUrl ? (
+                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/5 text-primary" asChild title="Download">
+                          <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" download={doc.fileName}>
+                            <Download className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      ) : (
+                        <div className="p-2 flex items-center gap-2">
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase">Syncing</span>
+                          <Loader2 className="w-4 h-4 animate-spin text-primary/30" />
+                        </div>
+                      )}
+                      <Button variant="ghost" size="icon" className="rounded-full hover:bg-destructive/5 text-destructive/40 hover:text-destructive" onClick={() => handleDeleteDocument(doc.id)} title="Delete">
+                        <Trash2 className="w-4 h-4" />
                       </Button>
-                    ) : (
-                      <div className="p-2 flex items-center gap-2">
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase">Syncing</span>
-                        <Loader2 className="w-4 h-4 animate-spin text-primary/30" />
-                      </div>
-                    )}
+                    </div>
                   </div>
                 ))}
               </div>
