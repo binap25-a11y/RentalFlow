@@ -8,6 +8,30 @@
       "imageHint": "modern house icon"
     },
     {
+      "id": "logo-option-a",
+      "description": "Modern Estate Icon",
+      "imageUrl": "https://picsum.photos/seed/rentflow-modern-estate/512/512",
+      "imageHint": "modern house icon"
+    },
+    {
+      "id": "logo-option-b",
+      "description": "Professional Key Icon",
+      "imageUrl": "https://picsum.photos/seed/rentflow-master-key/512/512",
+      "imageHint": "professional key icon"
+    },
+    {
+      "id": "logo-option-c",
+      "description": "Apartment Portfolio Icon",
+      "imageUrl": "https://picsum.photos/seed/rentflow-apartments-pro/512/512",
+      "imageHint": "apartment building icon"
+    },
+    {
+      "id": "logo-option-d",
+      "description": "Secure Home Icon",
+      "imageUrl": "https://picsum.photos/seed/rentflow-secure-home/512/512",
+      "imageHint": "house shield icon"
+    },
+    {
       "id": "prop-1",
       "description": "Modern Apartment",
       "imageUrl": "https://picsum.photos/seed/prop1/800/600",

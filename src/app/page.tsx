@@ -8,13 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Eye, EyeOff, Chrome, User as UserIcon, Phone, CheckCircle2, Lock } from "lucide-react";
+import { Loader2, Eye, EyeOff, Chrome, User as UserIcon, Phone, CheckCircle2, Lock, Sparkles } from "lucide-react";
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp, setDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -38,7 +39,14 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  const LOGO_URL = 'https://picsum.photos/seed/rentflow-house-2025/512/512';
+  const LOGO_OPTIONS = [
+    { id: 'A', name: 'Modern Estate', seed: 'rentflow-modern-estate' },
+    { id: 'B', name: 'The Master Key', seed: 'rentflow-master-key' },
+    { id: 'C', name: 'Apartment Hub', seed: 'rentflow-apartments-pro' },
+    { id: 'D', name: 'Secure Home', seed: 'rentflow-secure-home' },
+  ];
+
+  const CURRENT_LOGO = `https://picsum.photos/seed/${LOGO_OPTIONS[0].seed}/512/512`;
 
   useEffect(() => {
     setMounted(true);
@@ -166,12 +174,12 @@ export default function LoginPage() {
           <div className="relative w-32 h-32 mb-8 animate-in fade-in zoom-in-95 duration-1000 slide-in-from-bottom-8">
             <div className="absolute inset-0 bg-primary/10 rounded-[2.5rem] blur-2xl animate-pulse" />
             <Image 
-              src={LOGO_URL} 
+              src={CURRENT_LOGO} 
               alt="RentalFlow Official Logo" 
               fill 
               className="object-contain rounded-[2.5rem] shadow-2xl ring-4 ring-white relative z-10" 
               unoptimized 
-              data-ai-hint="modern house icon"
+              data-ai-hint="brand logo"
             />
           </div>
           
@@ -198,13 +206,13 @@ export default function LoginPage() {
           <CardHeader className="text-center bg-primary/5 pb-8 pt-10">
             <div className="mx-auto p-1 bg-white rounded-2xl w-fit mb-4 shadow-sm">
                <Image 
-                src={LOGO_URL} 
+                src={CURRENT_LOGO} 
                 alt="RentalFlow" 
                 width={72} 
                 height={72} 
                 className="rounded-2xl" 
                 unoptimized 
-                data-ai-hint="modern house icon"
+                data-ai-hint="brand logo"
               />
             </div>
             <CardTitle className="text-2xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
@@ -257,67 +265,130 @@ export default function LoginPage() {
       <div className="mb-10 text-center animate-in fade-in slide-in-from-top-4 duration-1000">
         <div className="inline-flex items-center justify-center p-1 bg-white rounded-[2.5rem] mb-6 shadow-2xl ring-4 ring-primary/5">
            <Image 
-            src={LOGO_URL} 
+            src={CURRENT_LOGO} 
             alt="RentalFlow Professional Brand" 
             width={100} 
             height={100} 
             className="rounded-[2.25rem]" 
             unoptimized 
-            data-ai-hint="modern house icon"
+            data-ai-hint="brand logo"
           />
         </div>
         <h1 className="text-5xl font-headline font-bold text-primary mb-2 tracking-tighter">RentalFlow</h1>
         <p className="text-muted-foreground font-medium text-lg font-body">Professional Portfolio Management</p>
       </div>
 
-      <Card className="w-full max-w-md border-none shadow-2xl bg-white overflow-hidden rounded-[2.5rem]">
-        <CardHeader className="space-y-1 pb-4 text-center bg-primary/5 pt-8">
-          <CardTitle className="text-2xl font-headline font-bold text-primary">
-            {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
-          </CardTitle>
-          <CardDescription className="font-medium">
-            {authMode === 'login' ? 'Sign in to access your ledger' : 'Establish your management presence'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-8 px-8 pb-10">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2 text-left">
-              <Label htmlFor="email" className="font-bold text-xs uppercase text-muted-foreground tracking-widest font-headline">Email</Label>
-              <Input id="email" type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-12 border-none bg-muted/20 font-body" />
-            </div>
-            <div className="space-y-2 text-left">
-              <Label htmlFor="password" title="Password" className="font-bold text-xs uppercase text-muted-foreground tracking-widest font-headline">Password</Label>
-              <div className="relative">
-                <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="rounded-xl h-12 border-none bg-muted/20 font-body" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3.5 text-muted-foreground hover:text-primary transition-colors">
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl w-full">
+        <Card className="w-full border-none shadow-2xl bg-white overflow-hidden rounded-[2.5rem]">
+          <CardHeader className="space-y-1 pb-4 text-center bg-primary/5 pt-8">
+            <CardTitle className="text-2xl font-headline font-bold text-primary">
+              {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
+            </CardTitle>
+            <CardDescription className="font-medium">
+              {authMode === 'login' ? 'Sign in to access your ledger' : 'Establish your management presence'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-8 px-8 pb-10">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2 text-left">
+                <Label htmlFor="email" className="font-bold text-xs uppercase text-muted-foreground tracking-widest font-headline">Email</Label>
+                <Input id="email" type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-12 border-none bg-muted/20 font-body" />
+              </div>
+              <div className="space-y-2 text-left">
+                <Label htmlFor="password" title="Password" className="font-bold text-xs uppercase text-muted-foreground tracking-widest font-headline">Password</Label>
+                <div className="relative">
+                  <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="rounded-xl h-12 border-none bg-muted/20 font-body" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3.5 text-muted-foreground hover:text-primary transition-colors">
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
+              <Button type="submit" className="w-full h-14 rounded-xl font-bold bg-primary text-lg shadow-lg shadow-primary/20 font-headline" disabled={isLoading}>
+                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (authMode === 'login' ? 'Login' : 'Sign Up')}
+              </Button>
+            </form>
+
+            <div className="relative my-8">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t"></span>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-4 text-muted-foreground font-bold tracking-widest">secure gateway</span>
               </div>
             </div>
-            <Button type="submit" className="w-full h-14 rounded-xl font-bold bg-primary text-lg shadow-lg shadow-primary/20 font-headline" disabled={isLoading}>
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (authMode === 'login' ? 'Login' : 'Sign Up')}
-            </Button>
-          </form>
 
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t"></span>
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-4 text-muted-foreground font-bold tracking-widest">secure gateway</span>
-            </div>
+            <Button variant="outline" className="w-full h-12 rounded-xl mb-6 font-bold border-primary/10 hover:bg-primary/5 font-headline" onClick={handleGoogleSignIn} disabled={isLoading}>
+              <Chrome className="w-5 h-5 mr-3 text-red-500" />
+              Continue with Google
+            </Button>
+
+            <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full text-sm font-bold text-primary/60 hover:text-primary transition-colors font-headline">
+              {authMode === 'login' ? "New to RentalFlow? Register here" : "Return to login screen"}
+            </button>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-8 flex flex-col justify-center">
+          <div className="space-y-2 text-left">
+            <Badge className="bg-accent text-white font-bold uppercase tracking-widest px-4 py-1">
+              <Sparkles className="w-3 h-3 mr-2" /> Brand Selection Preview
+            </Badge>
+            <h2 className="text-3xl font-headline font-bold text-primary">Identity Selection</h2>
+            <p className="text-muted-foreground font-medium">Please review these visual directions for your RentalFlow logo. Which style resonates most with your professional vision?</p>
           </div>
 
-          <Button variant="outline" className="w-full h-12 rounded-xl mb-6 font-bold border-primary/10 hover:bg-primary/5 font-headline" onClick={handleGoogleSignIn} disabled={isLoading}>
-            <Chrome className="w-5 h-5 mr-3 text-red-500" />
-            Continue with Google
-          </Button>
+          <div className="grid grid-cols-2 gap-4">
+            {LOGO_OPTIONS.map((opt) => (
+              <div key={opt.id} className="group relative bg-white p-6 rounded-[2rem] shadow-sm border border-primary/5 flex flex-col items-center gap-4 hover:shadow-xl transition-all cursor-pointer">
+                <div className="relative w-24 h-24 rounded-2xl overflow-hidden shadow-inner ring-1 ring-primary/5">
+                  <Image 
+                    src={`https://picsum.photos/seed/${opt.seed}/512/512`} 
+                    alt={opt.name} 
+                    fill 
+                    className="object-cover" 
+                    unoptimized 
+                    data-ai-hint="logo option"
+                  />
+                </div>
+                <div className="text-center">
+                  <p className="font-headline font-bold text-sm text-primary">{opt.name}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">Option {opt.id}</p>
+                </div>
+              </div>
+            ))}
+          </div>
 
-          <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full text-sm font-bold text-primary/60 hover:text-primary transition-colors font-headline">
-            {authMode === 'login' ? "New to RentalFlow? Register here" : "Return to login screen"}
-          </button>
-        </CardContent>
-      </Card>
+          <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/10 text-left">
+            <p className="text-xs font-bold text-primary uppercase mb-2 flex items-center">
+              <Info className="w-4 h-4 mr-2" /> Selection Instructions
+            </p>
+            <p className="text-sm text-slate-600 leading-relaxed font-body">
+              Once you have decided on a visual style, please reply with the <strong>Option Letter (A, B, C, or D)</strong>. I will then perform a global synchronization to lock this identity across all platform entry points.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
+  );
+}
+
+function Info(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </svg>
   );
 }
