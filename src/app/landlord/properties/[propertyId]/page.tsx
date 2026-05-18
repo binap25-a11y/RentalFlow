@@ -48,6 +48,7 @@ import { syncDocumentToDb } from "@/lib/actions/db-sync";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format, isValid, parseISO } from 'date-fns';
+import { useToast } from "@/hooks/use-toast";
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
