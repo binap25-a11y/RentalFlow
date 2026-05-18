@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, use } from 'react';
@@ -22,6 +21,7 @@ import { ArrowLeft, Save, Image as ImageIcon, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { syncPropertyToDb } from "@/lib/actions/db-sync";
 
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -59,6 +59,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setRentAmount(property.rentAmount?.toString() || '');
       setDescription(property.description || '');
       setPropertyType(property.propertyType || 'Apartment');
+      setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       setPreviewUrl(property.imageUrl || null);
@@ -102,11 +103,25 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedAt: serverTimestamp(),
       };
 
+      // 1. Update Firestore
       updateDocumentNonBlocking(propertyRef, updateData);
+
+      // 2. Sync to PostgreSQL
+      await syncPropertyToDb({
+        id: propertyId,
+        landlordId: user.uid,
+        addressLine1: address,
+        city,
+        zipCode,
+        rentAmount: parseFloat(rentAmount) || 0,
+        imageUrl: currentImageUrl || '',
+        propertyType,
+        description
+      });
 
       toast({ 
         title: "Portfolio Updated", 
-        description: "Your modifications are being synchronized." 
+        description: "Your modifications are mirrored in the relational ledger." 
       });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (error: any) {

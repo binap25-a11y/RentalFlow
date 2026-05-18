@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -15,6 +14,7 @@ import { Building2, ArrowLeft, Save, Image as ImageIcon, Loader2 } from "lucide-
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { syncPropertyToDb } from "@/lib/actions/db-sync";
 
 export default function NewPropertyPage() {
   const { user } = useUser();
@@ -81,9 +81,23 @@ export default function NewPropertyPage() {
         isActive: true
       };
 
+      // 1. Sync to Firestore (Real-time Layer)
       setDocumentNonBlocking(propertyRef, baseData, { merge: true });
 
-      toast({ title: "Asset Registered", description: "New property added to portfolio." });
+      // 2. Sync to PostgreSQL (Relational Ledger Layer)
+      await syncPropertyToDb({
+        id: propertyId,
+        landlordId: user.uid,
+        addressLine1: address,
+        city,
+        zipCode,
+        rentAmount: parseFloat(rentAmount) || 0,
+        imageUrl: currentImageUrl,
+        propertyType,
+        description
+      });
+
+      toast({ title: "Asset Registered", description: "Property added to relational ledger." });
       router.push('/landlord/properties');
     } catch (error: any) {
       toast({ variant: "destructive", title: "Registration Failed", description: error.message });

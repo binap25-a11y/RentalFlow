@@ -53,6 +53,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { jsPDF } from "jspdf";
+import { syncDocumentToDb } from "@/lib/actions/db-sync";
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -165,6 +166,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       ...(tenants?.map(t => t.userId).filter(Boolean) || [])
     ]));
 
+    // 1. Initial Metadata Entry (Firestore)
     setDocumentNonBlocking(docRef, {
       id: docId,
       fileName: file.name,
@@ -179,21 +181,33 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       createdAt: serverTimestamp(),
     }, { merge: true });
 
-    toast({ title: "Document Initiated" });
-
     if (fileInputRef.current) fileInputRef.current.value = '';
     setUploadExpiryDate(undefined);
 
     try {
+      // 2. Upload to Storage
       const storageRef = ref(storage, `documents/${user.uid}/${propertyId}/${Date.now()}_${file.name}`);
       const uploadResult = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(uploadResult.ref);
 
+      // 3. Finalize Metadata (Firestore)
       updateDocumentNonBlocking(docRef, {
         fileUrl: url,
         updatedAt: serverTimestamp(),
       });
-      toast({ title: "Upload Synchronized" });
+
+      // 4. Sync to PostgreSQL (Relational Ledger)
+      await syncDocumentToDb({
+        id: docId,
+        propertyId: propertyId,
+        landlordId: user.uid,
+        fileName: file.name,
+        fileUrl: url,
+        documentType: 'property-asset',
+        expiryDate: uploadExpiryDate ? uploadExpiryDate.toISOString() : null
+      });
+
+      toast({ title: "Document Synchronized", description: "Metadata mirrored in relational ledger." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Upload Error" });
     } finally {
