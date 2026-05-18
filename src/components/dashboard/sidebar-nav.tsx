@@ -67,7 +67,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
     }
   };
 
-  const LOGO_URL = 'https://picsum.photos/seed/rentflow-premium-blue-key/512/512';
+  const LOGO_URL = 'https://picsum.photos/seed/rentalflow-pro-home/512/512';
 
   return (
     <Sidebar className="border-r border-sidebar-border shadow-2xl">
@@ -84,7 +84,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
               fill 
               className="object-cover" 
               unoptimized 
-              data-ai-hint="blue key"
+              data-ai-hint="modern house"
             />
           </div>
           <span className="font-headline font-bold text-xl tracking-tight text-sidebar-foreground">RentalFlow</span>

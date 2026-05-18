@@ -3,9 +3,9 @@
   "placeholderImages": [
     {
       "id": "brand-logo",
-      "description": "RentalFlow Professional Identity - Premium Blue Key Visual",
-      "imageUrl": "https://picsum.photos/seed/rentflow-premium-blue-key/512/512",
-      "imageHint": "blue key"
+      "description": "RentalFlow Professional Identity - Modern Architecture Icon",
+      "imageUrl": "https://picsum.photos/seed/rentalflow-pro-home/512/512",
+      "imageHint": "modern house"
     },
     {
       "id": "prop-1",
