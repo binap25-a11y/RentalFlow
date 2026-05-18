@@ -25,7 +25,7 @@ import {
   Trash2, Edit3, Loader2, Save, ArrowLeft,
   Download, FileText, Info, ShieldAlert, Upload, 
   Calendar as CalendarIcon, Sparkles, Image as ImageIcon,
-  CheckCircle2, Clock, AlertTriangle, X, Eye
+  CheckCircle2, Clock, AlertTriangle, X, Eye, Bed, Bath
 } from "lucide-react";
 import { 
   Popover, 
@@ -199,26 +199,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     }
   };
 
-  const downloadInspectionPDF = (inspection: any) => {
-    const pdf = new jsPDF();
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    pdf.setFillColor(31, 41, 55);
-    pdf.rect(0, 0, pageWidth, 40, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(24);
-    pdf.text("OFFICIAL AUDIT RECORD", 20, 25);
-    pdf.setFontSize(10);
-    pdf.text(`Property Asset: ${property?.addressLine1}`, 20, 32);
-    pdf.setTextColor(0, 0, 0);
-    pdf.setFontSize(14);
-    pdf.text("Audit Summary", 20, 55);
-    pdf.setFontSize(10);
-    const summaryText = inspection.summary || "No summary provided";
-    const splitSummary = pdf.splitTextToSize(summaryText, pageWidth - 40);
-    pdf.text(splitSummary, 20, 65);
-    pdf.save(`Audit_${property?.addressLine1}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-  };
-
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
@@ -238,9 +218,15 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           </Button>
           <div>
             <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">{property.addressLine1}</h1>
-            <p className="text-muted-foreground flex items-center font-medium font-body">
-              <MapPin className="w-4 h-4 mr-1 text-primary/60" /> {property.city}, {property.zipCode}
-            </p>
+            <div className="flex items-center gap-4 mt-1">
+              <p className="text-muted-foreground flex items-center font-medium font-body text-sm">
+                <MapPin className="w-4 h-4 mr-1 text-primary/60" /> {property.city}, {property.zipCode}
+              </p>
+              <div className="flex items-center gap-3 text-primary/60 text-xs font-bold px-3 py-1 bg-primary/5 rounded-full border border-primary/10">
+                <span className="flex items-center gap-1.5"><Bed className="w-3.5 h-3.5" /> {property.numberOfBedrooms}B</span>
+                <span className="flex items-center gap-1.5"><Bath className="w-3.5 h-3.5" /> {property.numberOfBathrooms}B</span>
+              </div>
+            </div>
           </div>
         </div>
         <div className="flex gap-2">

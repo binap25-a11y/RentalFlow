@@ -6,7 +6,7 @@ import { doc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Building2, MapPin, Plus, Bed, Bath, Loader2, Trash2 } from "lucide-react";
+import { Building2, MapPin, Plus, Bed, Bath, Loader2, Trash2, Edit3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import Image from "next/image";
@@ -107,9 +107,9 @@ export default function PropertiesPage() {
                 <CardHeader className="pb-2 text-left space-y-1">
                   <div className="flex justify-between items-start">
                     <Badge variant="outline" className="text-[10px] uppercase font-bold text-primary/60 border-primary/10">{property.propertyType}</Badge>
-                    <div className="flex gap-2 text-muted-foreground text-xs font-bold">
-                      <span className="flex items-center gap-1"><Bed className="w-3 h-3" /> {property.numberOfBedrooms}</span>
-                      <span className="flex items-center gap-1"><Bath className="w-3 h-3" /> {property.numberOfBathrooms}</span>
+                    <div className="flex gap-3 text-primary/40 text-xs font-bold bg-primary/5 px-2 py-0.5 rounded-lg border border-primary/5">
+                      <span className="flex items-center gap-1"><Bed className="w-3 h-3" /> {property.numberOfBedrooms}B</span>
+                      <span className="flex items-center gap-1"><Bath className="w-3 h-3" /> {property.numberOfBathrooms}B</span>
                     </div>
                   </div>
                   <CardTitle className="text-lg font-bold font-headline truncate">{property.addressLine1}</CardTitle>
