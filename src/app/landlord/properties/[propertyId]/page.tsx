@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useRef, useEffect } from 'react';
@@ -268,8 +267,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
-  // Seamless logic: prioritize session cache immediately if remote sync is active
-  // This makes the transition feel "instant" without needing explicit "Syncing" labels
+  // Invisible sync: prioritize session bridge for instant feedback
   const activeImageUrl = (property.isImageUpdating && sessionPreview) 
     ? sessionPreview 
     : property.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
@@ -291,7 +289,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           </div>
         </div>
         <div className="flex gap-2">
-           <Button variant="outline" className="rounded-xl font-bold h-11 border-primary/20" asChild>
+           <Button variant="outline" className="rounded-xl font-bold h-11 border-primary/20 bg-white" asChild>
              <Link href={`/landlord/properties/${propertyId}/edit`}>
                <Edit3 className="w-4 h-4 mr-2" /> Specification
              </Link>
@@ -305,7 +303,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           <Card className="border-none shadow-sm overflow-hidden bg-white rounded-3xl relative">
-            {/* Visual indicators removed to make it feel truly instant as per request */}
             <div className="relative group">
               {gallery.length > 0 ? (
                 <Carousel className="w-full">
@@ -440,7 +437,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                       {docItem.expiryDate && <span className="text-[10px] text-destructive font-bold uppercase">Exp: {formatSafeDate(docItem.expiryDate)}</span>}
                     </div>
                     <div className="flex gap-2">
-                       <Button variant="outline" size="sm" onClick={() => handleSummarizeLease(docItem)} disabled={isAnalyzing === docItem.id} className="rounded-xl font-bold h-9">
+                       <Button variant="outline" size="sm" onClick={() => handleSummarizeLease(docItem)} disabled={isAnalyzing === docItem.id} className="rounded-xl font-bold h-9 bg-white">
                          {isAnalyzing === docItem.id ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Sparkles className="w-3 h-3 mr-2 text-primary" />}
                          AI Review
                        </Button>

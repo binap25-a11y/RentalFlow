@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -12,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Building2, ArrowLeft, Save, Image as ImageIcon, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, Save, Image as ImageIcon, Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -54,7 +53,7 @@ export default function NewPropertyPage() {
     const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
-    // Instant local preview bridge for seamless details transition
+    // Invisible sync: Secure high-fidelity preview in session storage for instant app-wide feel
     if (previewUrl && imageFile) {
       sessionStorage.setItem(`preview_${propertyId}`, previewUrl);
     }
@@ -80,10 +79,10 @@ export default function NewPropertyPage() {
       isActive: true
     };
 
-    // 1. Instant Ledger Entry (Non-blocking UI feel)
+    // 1. Instant Ledger Entry (Non-blocking)
     setDocumentNonBlocking(propertyRef, baseData, { merge: true });
 
-    // 2. Background Media & Relational Ledger Sync
+    // 2. Background Media & Relational Sync
     if (imageFile && storage) {
       const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
       
@@ -108,10 +107,10 @@ export default function NewPropertyPage() {
 
     toast({ 
       title: "Asset Registered", 
-      description: "Portfolio ledger updated. Syncing media in background." 
+      description: "Portfolio ledger updated instantly." 
     });
     
-    // Immediate navigation to destination
+    // Immediate navigation
     router.push(`/landlord/properties/${propertyId}`);
   };
 

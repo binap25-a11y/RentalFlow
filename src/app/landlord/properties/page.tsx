@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from 'react';
-import { useUser, useFirestore, useCollection, getLandlordCollectionQuery, setDocumentNonBlocking, deleteDocumentNonBlocking, useStorage } from '@/firebase';
-import { doc, serverTimestamp, collection } from 'firebase/firestore';
+import { useState, useMemo, useEffect } from 'react';
+import { useUser, useFirestore, useCollection, getLandlordCollectionQuery, deleteDocumentNonBlocking } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,25 @@ export default function PropertiesPage() {
 
   const { data: properties, loading } = useCollection(propertiesQuery);
 
+  const [sessionPreviews, setSessionPreviews] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    // Synchronize local session previews for properties currently updating in background
+    if (properties) {
+      const previews: Record<string, string> = {};
+      properties.forEach(p => {
+        if (p.isImageUpdating) {
+          const cached = sessionStorage.getItem(`preview_${p.id}`);
+          if (cached) previews[p.id] = cached;
+        } else {
+          // Cleanup finished syncs
+          sessionStorage.removeItem(`preview_${p.id}`);
+        }
+      });
+      setSessionPreviews(previews);
+    }
+  }, [properties]);
+
   const handleDeleteProperty = (propertyId: string) => {
     if (!user || !db) return;
     const propertyRef = doc(db, 'properties', propertyId);
@@ -39,7 +58,7 @@ export default function PropertiesPage() {
           <p className="text-muted-foreground font-medium">Monitoring and managing your property assets.</p>
         </div>
         
-        <Button asChild className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-6 shadow-lg shadow-primary/20">
+        <Button asChild className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-6 shadow-lg shadow-primary/20 text-white">
           <Link href="/landlord/properties/new">
             <Plus className="w-4 h-4 mr-2" />
             Register New Asset
@@ -64,7 +83,10 @@ export default function PropertiesPage() {
           </div>
         ) : (
           properties.map((property) => {
-            const displayImage = property.imageUrl || `https://picsum.photos/seed/${property.id}/800/600`;
+            // Invisible sync: prioritize session bridge for instant inventory feedback
+            const displayImage = (property.isImageUpdating && sessionPreviews[property.id])
+              ? sessionPreviews[property.id]
+              : property.imageUrl || `https://picsum.photos/seed/${property.id}/800/600`;
 
             return (
               <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card">

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, use } from 'react';
@@ -83,7 +82,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
 
-    // Secure the high-fidelity preview in session storage for the Details page transition
+    // Invisible sync: Secure high-fidelity preview in session storage for instant app-wide feel
     if (previewUrl && imageFile) {
       sessionStorage.setItem(`preview_${propertyId}`, previewUrl);
     }
@@ -97,27 +96,25 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       numberOfBedrooms: parseInt(bedrooms, 10) || 1,
       numberOfBathrooms: parseInt(bathrooms, 10) || 1,
       rentAmount: parseFloat(rentAmount) || 0,
-      isImageUpdating: !!imageFile, // Trigger the "Syncing" state in Firestore
+      isImageUpdating: !!imageFile, 
       updatedAt: serverTimestamp(),
     };
 
-    // 1. Instant Metadata Write (Non-blocking but critical)
+    // 1. Instant Metadata Write (Non-blocking)
     updateDocumentNonBlocking(propertyRef, updateData);
 
-    // 2. Background File & Relational Ledger Sync
+    // 2. Background Media & Relational Sync
     if (imageFile && storage) {
       const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
       
-      // We initiate this, but don't await it to allow instant navigation
       uploadBytes(storageRef, imageFile).then(async (result) => {
         const url = await getDownloadURL(result.ref);
-        // Clear the updating flag and set the real URL
         updateDocumentNonBlocking(propertyRef, { 
           imageUrl: url, 
           isImageUpdating: false,
           updatedAt: serverTimestamp() 
         });
-        // Relational sync (PostgreSQL)
+        // Mirror to PostgreSQL ledger
         syncPropertyToDb({ 
           ...updateData, 
           id: propertyId, 
@@ -125,11 +122,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           imageUrl: url 
         });
       }).catch(err => {
-        console.error("Background Image Sync Error:", err);
+        console.error("Background Media Sync Error:", err);
         updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
       });
     } else {
-      // Direct relational sync if no image is changing
       syncPropertyToDb({ 
         ...updateData, 
         id: propertyId, 
@@ -140,10 +136,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     toast({ 
       title: "Asset Specification Saved", 
-      description: "Changes pushed to the ledger. Syncing media in background." 
+      description: "Portfolio ledger updated instantly." 
     });
     
-    // Instant navigation to provide the high-performance feel
+    // Immediate navigation for high-performance feel
     router.push(`/landlord/properties/${propertyId}`);
   };
 
@@ -187,7 +183,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                 )}
                 <input id="image-input" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
               </div>
-              <p className="text-[10px] text-muted-foreground font-bold mt-4 uppercase text-center tracking-widest">Images preview instantly</p>
             </div>
 
             <div className="p-8 lg:p-12 space-y-8">
