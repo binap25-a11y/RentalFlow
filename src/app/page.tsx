@@ -210,8 +210,8 @@ export default function LoginPage() {
             <CardTitle className="text-2xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
             <CardDescription className="font-medium">Establish your professional profile on RentalFlow.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6 pt-8 px-10 pb-12">
-            <div className="grid grid-cols-2 gap-4 text-left">
+          <CardContent className="space-y-6 pt-8 px-10 pb-12 text-left">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-headline">First Name</Label>
                 <div className="relative">
@@ -225,7 +225,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="space-y-2 text-left">
+            <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-headline">Phone Number</Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
@@ -233,7 +233,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="space-y-4 text-left">
+            <div className="space-y-4">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-headline">Select Role</Label>
               <Tabs value={role} onValueChange={(v) => setRole(v as any)} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-xl h-12">

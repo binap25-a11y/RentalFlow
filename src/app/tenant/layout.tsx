@@ -4,10 +4,11 @@ import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 import { Header } from "@/components/dashboard/header";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 import { doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import Image from "next/image";
 
 export default function TenantLayout({
   children,
@@ -33,10 +34,27 @@ export default function TenantLayout({
     }
   }, [user, isUserLoading, profile, isProfileLoading, router]);
 
+  const BRAND_LOGO_URL = `https://picsum.photos/seed/rentalflow-pro-identity/512/512`;
+
   if (isUserLoading || isProfileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="relative flex flex-col items-center">
+          <div className="relative w-24 h-24 mb-6">
+            <div className="absolute inset-0 bg-primary/10 rounded-3xl blur-xl animate-pulse" />
+            <Image 
+              src={BRAND_LOGO_URL} 
+              alt="Loading" 
+              fill 
+              className="object-cover rounded-3xl relative z-10" 
+              unoptimized 
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Resolving Profile</p>
+          </div>
+        </div>
       </div>
     );
   }
