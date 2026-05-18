@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getTenantCollectionQuery, addDocumentNonBlocking } from "@/firebase";
@@ -52,6 +51,21 @@ export default function TenantHub() {
 
   const { data: documents } = useCollection(documentsQuery);
 
+  const [sessionPreview, setSessionPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (property) {
+      // Standardized Instant Bridge: Resident views also check for session selections
+      const cached = sessionStorage.getItem(`preview_${property.id}`);
+      if (cached) setSessionPreview(cached);
+      
+      if (!property.isImageUpdating) {
+        sessionStorage.removeItem(`preview_${property.id}`);
+        setSessionPreview(null);
+      }
+    }
+  }, [property]);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -94,6 +108,11 @@ export default function TenantHub() {
     );
   }
 
+  // Standardized Bridge: Use session selection if background update is active
+  const displayImage = (property.isImageUpdating && sessionPreview)
+    ? sessionPreview
+    : property.imageUrl || "https://picsum.photos/seed/home/800/600";
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 text-left">
@@ -114,8 +133,8 @@ export default function TenantHub() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           <Card className="border-none shadow-sm overflow-hidden rounded-3xl">
-            <div className="relative h-72 w-full">
-              <Image src={property.imageUrl || "https://picsum.photos/seed/home/800/600"} alt={property.addressLine1} fill className="object-cover" />
+            <div className="relative h-72 w-full bg-muted">
+              <Image src={displayImage} alt={property.addressLine1} fill className="object-cover" unoptimized />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               <div className="absolute bottom-6 left-6 text-white text-left">
                 <Badge className="bg-emerald-500 mb-3 font-bold uppercase tracking-widest text-[10px]">Active Lease</Badge>
@@ -146,14 +165,14 @@ export default function TenantHub() {
           <Card className="border-none shadow-lg rounded-3xl overflow-hidden flex flex-col h-[500px]">
              <CardHeader className="bg-primary text-white text-left py-4">
                 <CardTitle className="text-xl font-headline flex items-center"><Sparkles className="w-5 h-5 mr-2" /> Flow Assistant</CardTitle>
-                <CardDescription className="text-white/70 text-xs">Ask me anything about your property or tenancy.</CardDescription>
+                <CardDescription className="text-white/70 text-xs">Ask about your property or tenancy.</CardDescription>
              </CardHeader>
              <CardContent className="flex-1 flex flex-col p-0">
                 <div className="flex-1 overflow-y-auto p-6 space-y-4" ref={scrollRef}>
                    {chatHistory.length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-40">
                          <Bot className="w-12 h-12" />
-                         <p className="text-sm font-medium max-w-[200px]">I'm here to help. Ask about bin collection, heating, or local amenities.</p>
+                         <p className="text-sm font-medium max-w-[200px]">Ask about bin collection, heating, or local amenities.</p>
                       </div>
                    ) : (
                       chatHistory.map((chat, i) => (
@@ -167,7 +186,7 @@ export default function TenantHub() {
                         </div>
                       ))
                    )}
-                   {isChatting && <div className="flex gap-2 p-2"><Loader2 className="w-4 h-4 animate-spin text-accent" /><span className="text-[10px] font-bold uppercase text-accent">Flow is thinking...</span></div>}
+                   {isChatting && <div className="flex gap-2 p-2"><Loader2 className="w-4 h-4 animate-spin text-accent" /><span className="text-[10px] font-bold uppercase text-accent">Thinking...</span></div>}
                 </div>
                 <div className="p-4 border-t bg-white">
                    <form onSubmit={handleAskConcierge} className="flex gap-2">

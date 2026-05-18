@@ -53,7 +53,7 @@ export default function NewPropertyPage() {
     const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
-    // Invisible sync: Secure high-fidelity preview in session storage for instant app-wide feel
+    // Standardized Instant Bridge: Cache selection for immediate app-wide display
     if (previewUrl && imageFile) {
       sessionStorage.setItem(`preview_${propertyId}`, previewUrl);
     }
@@ -82,7 +82,7 @@ export default function NewPropertyPage() {
     // 1. Instant Ledger Entry (Non-blocking)
     setDocumentNonBlocking(propertyRef, baseData, { merge: true });
 
-    // 2. Background Media & Relational Sync
+    // 2. Background Media & Relational Sync (Silent)
     if (imageFile && storage) {
       const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
       
@@ -98,7 +98,7 @@ export default function NewPropertyPage() {
           imageUrl: url 
         });
       }).catch(err => {
-        console.error("Background Media Sync Error:", err);
+        console.error("Silent Sync Error:", err);
         updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
       });
     } else {
@@ -107,7 +107,7 @@ export default function NewPropertyPage() {
 
     toast({ 
       title: "Asset Registered", 
-      description: "Portfolio ledger updated instantly." 
+      description: "Portfolio updated successfully." 
     });
     
     // Immediate navigation
@@ -135,7 +135,7 @@ export default function NewPropertyPage() {
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-1 lg:grid-cols-2">
             <div className="p-8 lg:p-12 bg-primary/5 border-r border-primary/10">
-              <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 mb-4 block font-headline">Asset Presentation</Label>
+              <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 mb-4 block font-headline">Presentation</Label>
               <div className="relative group overflow-hidden rounded-3xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white aspect-video w-full flex items-center justify-center shadow-inner">
                 {previewUrl ? (
                   <>
@@ -212,8 +212,8 @@ export default function NewPropertyPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description" className="font-bold text-xs uppercase text-primary/60 font-headline">Property Description</Label>
-                  <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe your asset's key features..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-body" />
+                  <Label htmlFor="description" className="font-bold text-xs uppercase text-primary/60 font-headline">Description</Label>
+                  <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe key asset features..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-body" />
                 </div>
               </div>
             </div>

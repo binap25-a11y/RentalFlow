@@ -53,7 +53,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    // Only update local state from remote if we aren't currently "dirty" with a local file/preview
     if (property && !isSaving && !imageFile) {
       setAddress(property.addressLine1 || '');
       setCity(property.city || '');
@@ -82,7 +81,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
 
-    // Invisible sync: Secure high-fidelity preview in session storage for instant app-wide feel
+    // Instant Visual Handover: Cache high-fidelity selection for app-wide instant feel
     if (previewUrl && imageFile) {
       sessionStorage.setItem(`preview_${propertyId}`, previewUrl);
     }
@@ -103,7 +102,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     // 1. Instant Metadata Write (Non-blocking)
     updateDocumentNonBlocking(propertyRef, updateData);
 
-    // 2. Background Media & Relational Sync
+    // 2. Background Media & Relational Sync (Silent)
     if (imageFile && storage) {
       const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
       
@@ -114,7 +113,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           isImageUpdating: false,
           updatedAt: serverTimestamp() 
         });
-        // Mirror to PostgreSQL ledger
         syncPropertyToDb({ 
           ...updateData, 
           id: propertyId, 
@@ -122,7 +120,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           imageUrl: url 
         });
       }).catch(err => {
-        console.error("Background Media Sync Error:", err);
+        console.error("Silent Sync Error:", err);
         updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
       });
     } else {
@@ -135,11 +133,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
 
     toast({ 
-      title: "Asset Specification Saved", 
-      description: "Portfolio ledger updated instantly." 
+      title: "Changes Registered", 
+      description: "Portfolio updated successfully." 
     });
     
-    // Immediate navigation for high-performance feel
+    // Immediate navigation
     router.push(`/landlord/properties/${propertyId}`);
   };
 
@@ -166,7 +164,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-1 lg:grid-cols-2">
             <div className="p-8 lg:p-12 bg-primary/5 border-r border-primary/10">
-              <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 mb-4 block font-headline">Property Presentation</Label>
+              <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 mb-4 block font-headline">Presentation</Label>
               <div className="relative group overflow-hidden rounded-3xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white aspect-video w-full flex items-center justify-center shadow-inner">
                 {previewUrl ? (
                   <>

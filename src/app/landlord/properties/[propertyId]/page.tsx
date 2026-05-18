@@ -71,11 +71,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const [sessionPreview, setSessionPreview] = useState<string | null>(null);
 
   useEffect(() => {
-    // Immediate check for session cache to ensure "instant" transition feel
+    // Standardized Instant Bridge: Check session cache immediately
     const cached = sessionStorage.getItem(`preview_${propertyId}`);
     if (cached) setSessionPreview(cached);
     
-    // Clear the cache only when sync is formally confirmed by Firestore
+    // Automatically clear bridge once sync is confirmed by database
     if (property && !property.isImageUpdating) {
       sessionStorage.removeItem(`preview_${propertyId}`);
       setSessionPreview(null);
@@ -139,7 +139,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       updatedAt: serverTimestamp(),
     });
     setIsEditingRent(false);
-    toast({ title: "Rent Updated" });
+    toast({ title: "Yield Adjusted" });
   };
 
   const parseFlexDate = (dateVal: any) => {
@@ -199,7 +199,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         updatedAt: serverTimestamp(),
       });
 
-      await syncDocumentToDb({
+      syncDocumentToDb({
         id: docId,
         propertyId: propertyId,
         landlordId: user.uid,
@@ -222,7 +222,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     if (!db) return;
     const docRef = doc(db, 'documents', id);
     deleteDocumentNonBlocking(docRef);
-    toast({ title: "Document Removed" });
+    toast({ title: "Asset Removed" });
   };
 
   const handleSummarizeLease = async (docObj: any) => {
@@ -238,7 +238,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       });
       toast({ title: "AI Analysis Complete" });
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Analysis Failed" });
+      toast({ variant: "destructive", title: "Analysis Offline" });
     } finally {
       setIsAnalyzing(null);
     }
@@ -267,7 +267,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
-  // Invisible sync: prioritize session bridge for instant feedback
+  // Standardization: Use bridge for instant preview while isImageUpdating is true
   const activeImageUrl = (property.isImageUpdating && sessionPreview) 
     ? sessionPreview 
     : property.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
@@ -345,7 +345,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     <p className="font-bold font-headline text-primary">{property.isOccupied ? 'Occupied' : 'Vacant'}</p>
                   </div>
                   <div className="p-4 bg-primary/5 rounded-2xl flex-1 text-center border border-primary/5">
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground font-headline">Configuration</p>
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground font-headline">Config</p>
                     <p className="font-bold font-headline text-primary">{property.numberOfBedrooms}B / {property.numberOfBathrooms}B</p>
                   </div>
                 </div>
@@ -388,13 +388,13 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                       </div>
                       <div className="text-right hidden sm:block">
                         <Badge variant="outline" className="font-bold border-primary/20 text-primary mb-1">Active</Badge>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase">Lease Ends: {tenant.leaseEndDate}</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase">Ends: {tenant.leaseEndDate}</p>
                       </div>
                     </div>
                  ))
                ) : (
                  <div className="p-16 text-center bg-muted/10 rounded-3xl border-2 border-dashed border-primary/10">
-                    <p className="text-sm text-muted-foreground font-bold font-headline mb-4">No residents currently assigned.</p>
+                    <p className="text-sm text-muted-foreground font-bold font-headline mb-4">No residents assigned.</p>
                     <Button asChild className="rounded-xl font-bold bg-primary text-white shadow-lg shadow-primary/10"><Link href="/landlord/tenants">Link Resident</Link></Button>
                  </div>
                )}
@@ -498,7 +498,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             <CardHeader className="text-left">
               <CardTitle className="text-lg font-headline flex items-center">
                 <ShieldAlert className="w-5 h-5 mr-3" />
-                Portfolio Status
+                Asset Status
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-left">

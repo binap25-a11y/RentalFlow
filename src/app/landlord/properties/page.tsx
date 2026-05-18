@@ -27,7 +27,7 @@ export default function PropertiesPage() {
   const [sessionPreviews, setSessionPreviews] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // Synchronize local session previews for properties currently updating in background
+    // Standardized Instant Bridge: Poll session storage for active syncs
     if (properties) {
       const previews: Record<string, string> = {};
       properties.forEach(p => {
@@ -35,7 +35,6 @@ export default function PropertiesPage() {
           const cached = sessionStorage.getItem(`preview_${p.id}`);
           if (cached) previews[p.id] = cached;
         } else {
-          // Cleanup finished syncs
           sessionStorage.removeItem(`preview_${p.id}`);
         }
       });
@@ -83,7 +82,7 @@ export default function PropertiesPage() {
           </div>
         ) : (
           properties.map((property) => {
-            // Invisible sync: prioritize session bridge for instant inventory feedback
+            // Standardized Bridge: Use session selection if background update is active
             const displayImage = (property.isImageUpdating && sessionPreviews[property.id])
               ? sessionPreviews[property.id]
               : property.imageUrl || `https://picsum.photos/seed/${property.id}/800/600`;
