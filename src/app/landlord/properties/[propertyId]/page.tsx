@@ -407,7 +407,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           )}
                         >
                           <CalendarIcon className="mr-3 h-4 w-4 text-primary shrink-0" />
-                          <span className="flex-1 truncate text-[11px] sm:text-xs md:text-sm font-bold">
+                          <span className="flex-1 truncate text-xs sm:text-sm font-bold">
                             {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set Deadline (Optional)"}
                           </span>
                         </Button>

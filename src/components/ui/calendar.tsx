@@ -19,11 +19,8 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn("p-4 bg-white rounded-2xl shadow-xl", className)}
-      // Enable professional dropdown navigation for year/month
-      captionLayout="dropdown"
-      // Range: 5 years past to 20 years future for property compliance
-      startMonth={new Date(new Date().getFullYear() - 5, 0)}
-      endMonth={new Date(new Date().getFullYear() + 20, 11)}
+      // Standard professional layout to prevent duplication in RDP v9
+      captionLayout="label"
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
@@ -34,12 +31,10 @@ function Calendar({
           buttonVariants({ variant: "outline" }),
           "h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 absolute left-1 z-10 rounded-xl border-primary/10 shadow-sm"
         ),
-        button_previous_icon: "h-4 w-4",
         button_next: cn(
           buttonVariants({ variant: "outline" }),
           "h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 absolute right-1 z-10 rounded-xl border-primary/10 shadow-sm"
         ),
-        button_next_icon: "h-4 w-4",
         month_grid: "w-full border-collapse",
         weekdays: "flex w-full mb-3 justify-between",
         weekday: "text-muted-foreground w-9 font-bold text-[10px] flex items-center justify-center uppercase tracking-widest h-9 shrink-0 font-headline opacity-60",
@@ -49,21 +44,13 @@ function Calendar({
           buttonVariants({ variant: "ghost" }),
           "h-9 w-9 p-0 font-bold aria-selected:opacity-100 rounded-xl transition-all flex items-center justify-center font-body hover:bg-primary/5 hover:text-primary"
         ),
-        range_start: "day-range-start",
-        range_end: "day-range-end",
         selected:
           "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground shadow-xl scale-110",
         today: "bg-accent/10 text-accent font-bold ring-1 ring-accent/20",
         outside:
           "day-outside text-muted-foreground opacity-30 aria-selected:bg-accent/50 aria-selected:text-muted-foreground",
         disabled: "text-muted-foreground opacity-50",
-        range_middle:
-          "aria-selected:bg-accent aria-selected:text-accent-foreground",
         hidden: "invisible",
-        // Dropdown styling for RDP v9
-        dropdown: "relative inline-flex items-center",
-        dropdown_root: "flex items-center gap-2",
-        caption_dropdowns: "flex justify-center gap-3 mb-4",
         ...classNames,
       }}
       components={{
