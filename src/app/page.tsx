@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Eye, EyeOff, Chrome, User as UserIcon, Phone, CheckCircle2, Lock } from "lucide-react";
+import { Loader2, Eye, EyeOff, Chrome, User as UserIcon, Phone, CheckCircle2, Lock, ShieldCheck } from "lucide-react";
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp, setDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -39,8 +39,8 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  // Synchronized professional Blue Key Identity
-  const LOGO_URL = 'https://picsum.photos/seed/rentflow-v2024-blue-key/512/512';
+  // Synchronized Professional Blue Key Identity
+  const LOGO_URL = 'https://picsum.photos/seed/rentflow-blue-key-official/512/512';
 
   useEffect(() => {
     setMounted(true);
@@ -169,7 +169,7 @@ export default function LoginPage() {
             <div className="absolute inset-0 bg-primary/10 rounded-[2.5rem] blur-2xl animate-pulse" />
             <Image 
               src={LOGO_URL} 
-              alt="RentalFlow Logo" 
+              alt="RentalFlow Official Logo" 
               fill 
               className="object-contain rounded-[2.5rem] shadow-2xl ring-4 ring-white relative z-10" 
               unoptimized 
@@ -260,7 +260,7 @@ export default function LoginPage() {
         <div className="inline-flex items-center justify-center p-1 bg-white rounded-[2.5rem] mb-6 shadow-2xl ring-4 ring-primary/5">
            <Image 
             src={LOGO_URL} 
-            alt="RentalFlow" 
+            alt="RentalFlow Professional Brand" 
             width={100} 
             height={100} 
             className="rounded-[2.25rem]" 

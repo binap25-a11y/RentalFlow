@@ -35,7 +35,7 @@ export function Header({ role }: HeaderProps) {
     router.push('/');
   };
 
-  const LOGO_URL = 'https://picsum.photos/seed/rentflow-v2024-blue-key/512/512';
+  const LOGO_URL = 'https://picsum.photos/seed/rentflow-blue-key-official/512/512';
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 bg-white/50 backdrop-blur-sm sticky top-0 z-30">
@@ -46,7 +46,7 @@ export function Header({ role }: HeaderProps) {
           <div className="relative h-8 w-8 rounded-lg overflow-hidden shadow-sm">
             <Image 
               src={LOGO_URL} 
-              alt="Logo" 
+              alt="RentalFlow Logo" 
               fill 
               className="object-cover" 
               unoptimized 
