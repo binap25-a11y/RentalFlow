@@ -1,8 +1,113 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+    // Utility functions for robust access control
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isMember() {
+      return isSignedIn() && (request.auth.uid in resource.data.memberIds);
+    }
+
+    // User profiles are private to the individual owner
+    match /users/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // Properties: Accessible by landlord or any assigned member (tenant)
+    match /properties/{propertyId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.landlordId || 
+        request.auth.uid in resource.data.memberIds || 
+        request.auth.uid in resource.data.tenantIds
+      );
+      allow write: if isSignedIn() && request.auth.uid == resource.data.landlordId;
+      allow create: if isSignedIn();
+    }
+    
+    // Tenant Profiles: Bridge between landlords and users
+    match /tenantProfiles/{profileId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.landlordId || 
+        request.auth.uid == resource.data.userId || 
+        request.auth.uid in resource.data.memberIds ||
+        (request.auth.token.email != null && request.auth.token.email.lower() == resource.data.email.lower())
+      );
+      allow write: if isSignedIn() && (
+        request.auth.uid == resource.data.landlordId || 
+        request.auth.uid == resource.data.userId ||
+        (request.auth.token.email != null && request.auth.token.email.lower() == resource.data.email.lower())
+      );
+      allow create: if isSignedIn();
+    }
+    
+    // Notifications: The primary real-time alert feed
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.userId || 
+        request.auth.uid in resource.data.memberIds
+      );
+      allow write: if isSignedIn();
+      allow create: if isSignedIn();
+    }
+    
+    // Maintenance Requests: Collaborative repair tracking
+    match /maintenanceRequests/{requestId} {
+      allow read, write: if isSignedIn() && (
+        request.auth.uid == resource.data.landlordId || 
+        request.auth.uid == resource.data.tenantId || 
+        request.auth.uid in resource.data.memberIds
+      );
+      allow create: if isSignedIn();
+    }
+    
+    // Documents: The secure property vault
+    match /documents/{documentId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.landlordId || 
+        request.auth.uid in resource.data.memberIds
+      );
+      allow write: if isSignedIn() && (
+        request.auth.uid == resource.data.landlordId || 
+        request.auth.uid in resource.data.memberIds
+      );
+      allow create: if isSignedIn();
+    }
+    
+    // Messages: Secure direct lines between management and residents
+    match /messages/{messageId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid in resource.data.memberIds
+      );
+      allow write: if isSignedIn();
+      allow create: if isSignedIn();
+    }
+    
+    // Inspections: Official safety and compliance records
+    match /inspections/{inspectionId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.landlordId || 
+        request.auth.uid in resource.data.memberIds
+      );
+      allow write: if isSignedIn() && (
+        request.auth.uid == resource.data.landlordId || 
+        request.auth.uid in resource.data.memberIds
+      );
+      allow create: if isSignedIn();
+    }
+    
+    // Emergency Contacts: Authorized property partners
+    match /emergencyContacts/{contactId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.landlordId || 
+        request.auth.uid in resource.data.memberIds
+      );
+      allow write: if isSignedIn() && (
+        request.auth.uid == resource.data.landlordId || 
+        request.auth.uid in resource.data.memberIds
+      );
+      allow create: if isSignedIn();
     }
   }
 }
