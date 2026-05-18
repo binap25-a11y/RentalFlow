@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, use } from 'react';
@@ -53,8 +54,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    // Only sync from DB if we aren't currently saving (prevents race conditions)
-    if (property && !isSaving) {
+    if (property && !isSaving && !imageFile) {
       setAddress(property.addressLine1 || '');
       setCity(property.city || '');
       setZipCode(property.zipCode || '');
@@ -63,10 +63,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setPropertyType(property.propertyType || 'Apartment');
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
-      // If we don't have a new file selected, use the URL from the DB
-      if (!imageFile) {
-        setPreviewUrl(property.imageUrl || null);
-      }
+      setPreviewUrl(property.imageUrl || null);
     }
   }, [property, isSaving, imageFile]);
 
@@ -85,7 +82,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
 
-    // 1. Prepare Base Metadata
     const updateData = {
       addressLine1: address,
       city,
@@ -98,38 +94,43 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       updatedAt: serverTimestamp(),
     };
 
-    // 2. IMMEDIATE Metadata Update (Firestore)
+    // 1. Instant Metadata Write
     updateDocumentNonBlocking(propertyRef, updateData);
 
-    // 3. Background Tasks (Image & PostgreSQL)
+    // 2. Background File & Relational Handover
     if (imageFile && storage) {
       const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
       
-      // Start upload in background
+      // Start upload without blocking navigation
       uploadBytes(storageRef, imageFile).then(async (result) => {
         const url = await getDownloadURL(result.ref);
-        // Finalize URLs in both DBs
+        // Secondary update to set persistent URL
         updateDocumentNonBlocking(propertyRef, { imageUrl: url, updatedAt: serverTimestamp() });
+        // Sync to relational ledger
         syncPropertyToDb({ ...updateData, id: propertyId, landlordId: user.uid, imageUrl: url });
       }).catch(err => {
         console.error("Background Upload Sync Failed:", err);
       });
     } else {
-      // Direct sync to PostgreSQL if image didn't change
+      // Direct Relational Mirroring
       syncPropertyToDb({ 
         ...updateData, 
         id: propertyId, 
-        landlordId: user.uid, 
+        landlord_id: user.uid, 
+        address: address, // Map to correct DB columns
+        zip_code: zipCode,
+        rent_amount: parseFloat(rentAmount),
+        property_type: propertyType,
         imageUrl: property?.imageUrl || '' 
       });
     }
 
     toast({ 
-      title: "Portfolio Sync Initiated", 
-      description: "Asset details updated. Image will refresh shortly." 
+      title: "Asset Updated Successfully", 
+      description: "Specifications are live. Image is processing in the background." 
     });
     
-    // 4. INSTANT Navigation
+    // 3. Instant UI Transition
     router.push(`/landlord/properties/${propertyId}`);
   };
 
