@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -54,11 +53,6 @@ export default function NewPropertyPage() {
     const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
-    // Initial Image URL selection: use temporary seed ONLY if no image provided
-    const initialImageUrl = imageFile 
-      ? "" // Leave empty so the details page knows to wait or show a local-preview if handled
-      : `https://picsum.photos/seed/${propertyId}/800/600`;
-
     const baseData = {
       id: propertyId,
       landlordId: user.uid,
@@ -71,7 +65,8 @@ export default function NewPropertyPage() {
       numberOfBathrooms: parseInt(bathrooms, 10) || 1,
       rentAmount: parseFloat(rentAmount) || 0,
       isOccupied: false,
-      imageUrl: initialImageUrl,
+      isImageUpdating: !!imageFile,
+      imageUrl: imageFile ? "" : `https://picsum.photos/seed/${propertyId}/800/600`,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       tenantIds: [],
@@ -88,31 +83,28 @@ export default function NewPropertyPage() {
       
       uploadBytes(storageRef, imageFile).then(async (result) => {
         const url = await getDownloadURL(result.ref);
-        // Update both layers once secure URL is ready
-        updateDocumentNonBlocking(propertyRef, { imageUrl: url, updatedAt: serverTimestamp() });
+        // Final updates
+        updateDocumentNonBlocking(propertyRef, { 
+          imageUrl: url, 
+          isImageUpdating: false,
+          updatedAt: serverTimestamp() 
+        });
         syncPropertyToDb({ 
-          id: propertyId, 
-          landlordId: user.uid, 
-          addressLine1: address, 
-          city, 
-          zipCode, 
-          rentAmount: parseFloat(rentAmount), 
-          propertyType, 
+          ...baseData, 
           imageUrl: url 
         });
       }).catch(err => {
-        console.error("Background Registration Sync Error:", err);
+        console.error("Background Sync Error:", err);
       });
     } else {
       syncPropertyToDb(baseData);
     }
 
     toast({ 
-      title: "Asset Successfully Registered", 
-      description: "Portfolio ledger updated. Asset image is processing." 
+      title: "Asset Registered", 
+      description: "Portfolio ledger updated. Syncing images in background." 
     });
     
-    // 3. Instant UI Transition
     router.push('/landlord/properties');
   };
 

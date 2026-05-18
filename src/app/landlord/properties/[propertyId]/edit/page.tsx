@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, use } from 'react';
@@ -91,6 +90,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       numberOfBedrooms: parseInt(bedrooms, 10) || 1,
       numberOfBathrooms: parseInt(bathrooms, 10) || 1,
       rentAmount: parseFloat(rentAmount) || 0,
+      isImageUpdating: !!imageFile,
       updatedAt: serverTimestamp(),
     };
 
@@ -101,13 +101,21 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     if (imageFile && storage) {
       const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
       
-      // Start upload without blocking navigation
       uploadBytes(storageRef, imageFile).then(async (result) => {
         const url = await getDownloadURL(result.ref);
-        // Secondary update to set persistent URL
-        updateDocumentNonBlocking(propertyRef, { imageUrl: url, updatedAt: serverTimestamp() });
-        // Sync to relational ledger
-        syncPropertyToDb({ ...updateData, id: propertyId, landlordId: user.uid, imageUrl: url });
+        // Final update with secure URL
+        updateDocumentNonBlocking(propertyRef, { 
+          imageUrl: url, 
+          isImageUpdating: false,
+          updatedAt: serverTimestamp() 
+        });
+        // Sync to relational ledger using correct camelCase keys
+        syncPropertyToDb({ 
+          ...updateData, 
+          id: propertyId, 
+          landlordId: user.uid, 
+          imageUrl: url 
+        });
       }).catch(err => {
         console.error("Background Upload Sync Failed:", err);
       });
@@ -116,21 +124,16 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       syncPropertyToDb({ 
         ...updateData, 
         id: propertyId, 
-        landlord_id: user.uid, 
-        address: address, // Map to correct DB columns
-        zip_code: zipCode,
-        rent_amount: parseFloat(rentAmount),
-        property_type: propertyType,
+        landlordId: user.uid,
         imageUrl: property?.imageUrl || '' 
       });
     }
 
     toast({ 
-      title: "Asset Updated Successfully", 
-      description: "Specifications are live. Image is processing in the background." 
+      title: "Asset Updated", 
+      description: "Specifications saved. Images are syncing in background." 
     });
     
-    // 3. Instant UI Transition
     router.push(`/landlord/properties/${propertyId}`);
   };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use, useMemo, useRef } from 'react';
+import { useState, use, useRef } from 'react';
 import { 
   useUser, 
   useFirestore, 
@@ -28,19 +28,10 @@ import {
   CheckCircle2, Clock, AlertTriangle, X, Eye
 } from "lucide-react";
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { format, isValid, parseISO } from 'date-fns';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -54,6 +45,9 @@ import {
 } from "@/components/ui/carousel";
 import { jsPDF } from "jspdf";
 import { syncDocumentToDb } from "@/lib/actions/db-sync";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { format, isValid, parseISO } from 'date-fns';
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -166,7 +160,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       ...(tenants?.map(t => t.userId).filter(Boolean) || [])
     ]));
 
-    // 1. Initial Metadata Entry (Firestore)
     setDocumentNonBlocking(docRef, {
       id: docId,
       fileName: file.name,
@@ -181,22 +174,16 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       createdAt: serverTimestamp(),
     }, { merge: true });
 
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    setUploadExpiryDate(undefined);
-
     try {
-      // 2. Upload to Storage
       const storageRef = ref(storage, `documents/${user.uid}/${propertyId}/${Date.now()}_${file.name}`);
       const uploadResult = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(uploadResult.ref);
 
-      // 3. Finalize Metadata (Firestore)
       updateDocumentNonBlocking(docRef, {
         fileUrl: url,
         updatedAt: serverTimestamp(),
       });
 
-      // 4. Sync to PostgreSQL (Relational Ledger)
       await syncDocumentToDb({
         id: docId,
         propertyId: propertyId,
@@ -207,11 +194,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         expiryDate: uploadExpiryDate ? uploadExpiryDate.toISOString() : null
       });
 
-      toast({ title: "Document Synchronized", description: "Metadata mirrored in relational ledger." });
+      toast({ title: "Vault Updated" });
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Upload Error" });
+      toast({ variant: "destructive", title: "Upload Failed" });
     } finally {
       setIsUploadingDoc(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -262,9 +250,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   };
 
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
-  if (!property) return <div className="p-8 text-center font-bold">Property not found.</div>;
+  if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
-  // Real-time reactive gallery
   const gallery = property.imageUrls || [property.imageUrl].filter(Boolean);
 
   return (
@@ -295,7 +282,13 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <Card className="border-none shadow-sm overflow-hidden bg-white rounded-3xl">
+          <Card className="border-none shadow-sm overflow-hidden bg-white rounded-3xl relative">
+            {property.isImageUpdating && (
+              <div className="absolute inset-0 bg-white/60 backdrop-blur-md z-30 flex flex-col items-center justify-center text-primary animate-in fade-in">
+                <Loader2 className="w-10 h-10 animate-spin mb-4" />
+                <p className="font-bold text-xs uppercase tracking-[0.2em] font-headline">Synchronizing Assets...</p>
+              </div>
+            )}
             <div className="relative group">
               {gallery.length > 0 ? (
                 <Carousel className="w-full">

@@ -37,7 +37,7 @@ export async function syncPropertyToDb(propertyData: {
       )
     `);
 
-    // Perform Upsert
+    // Perform Upsert with correct mapping
     await client.query(
       `INSERT INTO properties (id, landlord_id, address, city, zip_code, rent_amount, image_url, property_type, description)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
