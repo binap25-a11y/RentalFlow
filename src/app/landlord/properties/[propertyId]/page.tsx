@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useRef, useMemo } from 'react';
@@ -403,12 +402,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         <Button 
                           variant="outline" 
                           className={cn(
-                            "w-full justify-start text-left h-12 rounded-xl bg-white border-none shadow-sm font-body px-4", 
+                            "w-full justify-start text-left h-12 rounded-xl bg-white border-none shadow-sm font-body px-4 transition-all hover:scale-[1.01]", 
                             !uploadExpiryDate && "text-muted-foreground"
                           )}
                         >
                           <CalendarIcon className="mr-3 h-4 w-4 text-primary shrink-0" />
-                          <span className="flex-1 truncate text-xs sm:text-sm">
+                          <span className="flex-1 truncate text-[11px] sm:text-xs md:text-sm font-bold">
                             {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set Deadline (Optional)"}
                           </span>
                         </Button>
@@ -420,7 +419,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                   </div>
                   <div className="flex items-end">
                     <input type="file" ref={fileInputRef} className="hidden" onChange={handleUploadDocument} />
-                    <Button onClick={() => fileInputRef.current?.click()} className="w-full rounded-xl h-12 font-bold shadow-lg shadow-primary/20 bg-primary text-white" disabled={isUploadingDoc}>
+                    <Button onClick={() => fileInputRef.current?.click()} className="w-full rounded-xl h-12 font-bold shadow-lg shadow-primary/20 bg-primary text-white transition-transform active:scale-95" disabled={isUploadingDoc}>
                       {isUploadingDoc ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
                       <span className="truncate">Push to Vault</span>
                     </Button>
@@ -444,18 +443,18 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                             <FileText className="w-6 h-6" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-bold truncate text-primary">{doc.fileName}</p>
-                            <div className="flex items-center gap-3 mt-1 flex-wrap">
-                              <p className="text-[10px] text-muted-foreground font-bold uppercase whitespace-nowrap">Uploaded: {doc.uploadDate ? format(new Date(doc.uploadDate), 'PP') : 'Recently'}</p>
+                            <p className="text-sm font-bold truncate text-primary leading-tight">{doc.fileName}</p>
+                            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                              <p className="text-[9px] text-muted-foreground font-bold uppercase whitespace-nowrap bg-muted/30 px-2 py-0.5 rounded-full">Uploaded: {doc.uploadDate ? format(new Date(doc.uploadDate), 'PP') : 'Recently'}</p>
                               {doc.expiryDate && (
-                                <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-amber-200 text-amber-700 bg-amber-50 whitespace-nowrap">Expires {format(new Date(doc.expiryDate), 'PP')}</Badge>
+                                <Badge variant="outline" className="text-[9px] h-5 px-2 border-amber-200 text-amber-700 bg-amber-50 whitespace-nowrap font-bold">Expires {format(new Date(doc.expiryDate), 'PP')}</Badge>
                               )}
                             </div>
                           </div>
                         </div>
                         <div className="flex gap-2 shrink-0">
                           {downloadUrl && downloadUrl !== 'pending' ? (
-                            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-primary/5 text-primary h-11 w-11" asChild>
+                            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-primary/5 text-primary h-11 w-11 shadow-sm border border-transparent hover:border-primary/10 transition-all" asChild>
                               <a href={downloadUrl} target="_blank" rel="noopener noreferrer" download={doc.fileName}>
                                 <Download className="w-5 h-5" />
                               </a>
@@ -465,7 +464,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                               <Loader2 className="w-4 h-4 animate-spin text-primary/40" />
                             </div>
                           )}
-                          <Button variant="ghost" size="icon" className="rounded-xl hover:bg-destructive/5 text-destructive/40 hover:text-destructive h-11 w-11" onClick={() => handleDeleteDocument(doc.id)}>
+                          <Button variant="ghost" size="icon" className="rounded-xl hover:bg-destructive/5 text-destructive/40 hover:text-destructive h-11 w-11 transition-all" onClick={() => handleDeleteDocument(doc.id)}>
                             <Trash2 className="w-5 h-5" />
                           </Button>
                         </div>
