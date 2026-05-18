@@ -269,6 +269,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
   // Seamless logic: prioritize session cache immediately if remote sync is active
+  // This makes the transition feel "instant" without needing explicit "Syncing" labels
   const activeImageUrl = (property.isImageUpdating && sessionPreview) 
     ? sessionPreview 
     : property.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
@@ -304,13 +305,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           <Card className="border-none shadow-sm overflow-hidden bg-white rounded-3xl relative">
-            {property.isImageUpdating && (
-              <div className="absolute top-4 right-4 z-40">
-                <Badge className="bg-primary/90 text-white border-none px-3 py-1.5 font-bold shadow-xl animate-pulse">
-                  <Loader2 className="w-3 h-3 mr-2 animate-spin" /> Syncing Asset...
-                </Badge>
-              </div>
-            )}
+            {/* Visual indicators removed to make it feel truly instant as per request */}
             <div className="relative group">
               {gallery.length > 0 ? (
                 <Carousel className="w-full">
