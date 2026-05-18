@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use, useRef, useEffect, useMemo } from 'react';
+import { useState, use, useRef, useMemo } from 'react';
 import { 
   useUser, 
   useFirestore, 
@@ -48,9 +48,16 @@ import { useRouter } from "next/navigation";
 import { format, isBefore } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
 
-const getGlobalPreview = (id: string) => {
+// Zero-Quota High-Performance Memory Bridge
+const getMemoryAsset = (id: string) => {
   if (typeof window === 'undefined') return null;
-  return (window as any).__asset_previews?.[id] || null;
+  return (window as any).__asset_bridge?.[id] || null;
+};
+
+const setMemoryAsset = (id: string, url: string) => {
+  if (typeof window === 'undefined') return;
+  if (!(window as any).__asset_bridge) (window as any).__asset_bridge = {};
+  (window as any).__asset_bridge[id] = url;
 };
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
@@ -93,7 +100,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: propertyDocuments } = useCollection(docsQuery);
 
-  const maintenanceQuery = useMemoFirebase(() => {
+  const maintenanceRequestsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
       collection(db, 'maintenanceRequests'),
@@ -102,7 +109,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     );
   }, [db, propertyId, user]);
 
-  const { data: maintenanceRequests } = useCollection(maintenanceQuery);
+  const { data: maintenanceRequests } = useCollection(maintenanceRequestsQuery);
 
   const inspectionsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -195,6 +202,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     setIsUploadingDoc(true); 
     const docId = doc(collection(db, 'documents')).id;
     const docRef = doc(db, 'documents', docId);
+    
+    // Instant Bridge: Allow immediate download from local blob
+    const localUrl = URL.createObjectURL(file);
+    setMemoryAsset(docId, localUrl);
 
     const memberIds = Array.from(new Set([
       user.uid,
@@ -202,8 +213,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       ...(tenants?.map(t => t.userId).filter(Boolean) || [])
     ]));
 
-    // 1. Initial optimistic registry
-    setDocumentNonBlocking(docRef, {
+    const baseDocData = {
       id: docId,
       fileName: file.name,
       fileUrl: '', 
@@ -215,30 +225,28 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       memberIds: memberIds,
       uploadDate: new Date().toISOString(),
       createdAt: serverTimestamp(),
-    }, { merge: true });
+    };
+
+    // 1. Instant Ledger Entry
+    setDocumentNonBlocking(docRef, baseDocData, { merge: true });
+
+    // 2. Instant Relational Sync (Pending State)
+    syncDocumentToDb({ ...baseDocData, fileUrl: 'pending' });
 
     try {
-      // 2. Storage Sync
+      // 3. Background Storage Sync
       const storageRef = ref(storage, `documents/${user.uid}/${propertyId}/${Date.now()}_${file.name}`);
       const uploadResult = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(uploadResult.ref);
 
-      // 3. Final URL verification
+      // 4. Permanent URL Verification
       updateDocumentNonBlocking(docRef, {
         fileUrl: url,
         updatedAt: serverTimestamp(),
       });
 
-      // 4. Relational redundant sync
-      syncDocumentToDb({
-        id: docId,
-        propertyId: propertyId,
-        landlordId: user.uid,
-        fileName: file.name,
-        fileUrl: url,
-        documentType: 'property-asset',
-        expiryDate: uploadExpiryDate ? uploadExpiryDate.toISOString() : null
-      });
+      // 5. Final Relational Update
+      syncDocumentToDb({ ...baseDocData, fileUrl: url });
 
       toast({ title: "Vault Updated", description: "Document is now ready for retrieval." });
     } catch (error: any) {
@@ -252,20 +260,15 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const handleDeleteDocument = async (docId: string) => {
     if (!db) return;
     const docRef = doc(db, 'documents', docId);
-    
-    // 1. Real-time removal
     deleteDocumentNonBlocking(docRef);
-    
-    // 2. Relational cleanup
     deleteDocumentFromDb(docId);
-    
-    toast({ title: "Document Removed", description: "Record decommissioned from all ledgers." });
+    toast({ title: "Document Removed" });
   };
 
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
-  const memoryUrl = getGlobalPreview(propertyId);
+  const memoryUrl = getMemoryAsset(propertyId);
   const activeImageUrl = (property.isImageUpdating && memoryUrl) 
     ? memoryUrl 
     : property.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
@@ -324,15 +327,17 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 </div>
               )}
             </div>
+            
             <CardContent className="pt-6 text-left space-y-8">
-              <div className="flex flex-wrap gap-3 items-center">
-                <div className="flex items-center gap-2 text-primary font-bold px-4 py-2 bg-primary/5 rounded-xl border border-primary/10 shadow-sm">
-                  <Bed className="w-4 h-4 text-primary" /> 
-                  <span className="text-sm">{property.numberOfBedrooms || 1} Bed</span>
+              {/* COMPACT SPECS ROW */}
+              <div className="flex flex-wrap gap-2 items-center">
+                <div className="flex items-center gap-1.5 bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 shadow-sm">
+                  <Bed className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-bold text-primary">{property.numberOfBedrooms || 1} Bed</span>
                 </div>
-                <div className="flex items-center gap-2 text-primary font-bold px-4 py-2 bg-primary/5 rounded-xl border border-primary/10 shadow-sm">
-                  <Bath className="w-4 h-4 text-primary" /> 
-                  <span className="text-sm">{property.numberOfBathrooms || 1} Bath</span>
+                <div className="flex items-center gap-1.5 bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 shadow-sm">
+                  <Bath className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-bold text-primary">{property.numberOfBathrooms || 1} Bath</span>
                 </div>
               </div>
 
@@ -435,36 +440,39 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               </Card>
 
               <div className="grid gap-4">
-                {propertyDocuments?.map(doc => (
-                  <div key={doc.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                        <FileText className="w-5 h-5" />
-                      </div>
-                      <div className="text-left">
-                        <p className="text-sm font-bold truncate max-w-[200px]">{doc.fileName}</p>
-                        <p className="text-[10px] text-muted-foreground font-medium">Uploaded {doc.uploadDate ? format(new Date(doc.uploadDate), 'PP') : 'Recently'}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-1">
-                      {doc.fileUrl ? (
-                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/5 text-primary" asChild title="Download">
-                          <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" download={doc.fileName}>
-                            <Download className="w-4 h-4" />
-                          </a>
-                        </Button>
-                      ) : (
-                        <div className="px-3 py-1 flex items-center gap-2 bg-muted/50 rounded-lg">
-                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Syncing</span>
-                          <Loader2 className="w-3 h-3 animate-spin text-primary/40" />
+                {propertyDocuments?.map(doc => {
+                  const downloadUrl = getMemoryAsset(doc.id) || doc.fileUrl;
+                  return (
+                    <div key={doc.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                          <FileText className="w-5 h-5" />
                         </div>
-                      )}
-                      <Button variant="ghost" size="icon" className="rounded-full hover:bg-destructive/5 text-destructive/40 hover:text-destructive" onClick={() => handleDeleteDocument(doc.id)} title="Delete">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                        <div className="text-left">
+                          <p className="text-sm font-bold truncate max-w-[200px]">{doc.fileName}</p>
+                          <p className="text-[10px] text-muted-foreground font-medium">Uploaded {doc.uploadDate ? format(new Date(doc.uploadDate), 'PP') : 'Recently'}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        {downloadUrl ? (
+                          <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/5 text-primary" asChild title="Download">
+                            <a href={downloadUrl} target="_blank" rel="noopener noreferrer" download={doc.fileName}>
+                              <Download className="w-4 h-4" />
+                            </a>
+                          </Button>
+                        ) : (
+                          <div className="px-3 py-1 flex items-center gap-2 bg-muted/50 rounded-lg">
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Mirroring</span>
+                            <Loader2 className="w-3 h-3 animate-spin text-primary/40" />
+                          </div>
+                        )}
+                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-destructive/5 text-destructive/40 hover:text-destructive" onClick={() => handleDeleteDocument(doc.id)} title="Delete">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </TabsContent>
 

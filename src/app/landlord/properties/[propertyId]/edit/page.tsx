@@ -24,16 +24,16 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 
-// Global Memory Bridge to persist ObjectURLs across soft navigation
-const getGlobalPreview = (id: string) => {
+// Zero-Quota High-Performance Memory Bridge
+const getMemoryAsset = (id: string) => {
   if (typeof window === 'undefined') return null;
-  return (window as any).__asset_previews?.[id] || null;
+  return (window as any).__asset_bridge?.[id] || null;
 };
 
-const setGlobalPreview = (id: string, url: string) => {
+const setMemoryAsset = (id: string, url: string) => {
   if (typeof window === 'undefined') return;
-  if (!(window as any).__asset_previews) (window as any).__asset_previews = {};
-  (window as any).__asset_previews[id] = url;
+  if (!(window as any).__asset_bridge) (window as any).__asset_bridge = {};
+  (window as any).__asset_bridge[id] = url;
 };
 
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
@@ -75,8 +75,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // Memory Bridge Recovery
-      const bridgeUrl = getGlobalPreview(propertyId);
+      // Mirroring Bridge Recovery
+      const bridgeUrl = getMemoryAsset(propertyId);
       if (property.isImageUpdating && bridgeUrl) {
         setPreviewUrl(bridgeUrl);
       } else if (!imageFile) {
@@ -89,10 +89,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const file = e.target.files?.[0] || null;
     if (file) {
       setImageFile(file);
-      // Use ObjectURL for zero-quota high-performance preview
       const objectUrl = URL.createObjectURL(file);
       setPreviewUrl(objectUrl);
-      setGlobalPreview(propertyId, objectUrl);
+      setMemoryAsset(propertyId, objectUrl);
     }
   };
 
@@ -115,7 +114,16 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       updatedAt: serverTimestamp(),
     };
 
+    // 1. Instant Firestore Sync
     updateDocumentNonBlocking(propertyRef, updateData);
+
+    // 2. Instant Relational Sync (Pending image)
+    syncPropertyToDb({ 
+      ...updateData, 
+      id: propertyId, 
+      landlordId: user.uid, 
+      imageUrl: property?.imageUrl || '' 
+    });
 
     if (imageFile && storage) {
       const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
@@ -127,23 +135,15 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           isImageUpdating: false,
           updatedAt: serverTimestamp() 
         });
+        // 3. Final Relational URL Update
         syncPropertyToDb({ 
           ...updateData, 
           id: propertyId, 
           landlordId: user.uid, 
           imageUrl: url 
         });
-        // Bridge Cleanup is handled by Inventory and Details components when isImageUpdating becomes false
       }).catch(err => {
-        console.error("Storage Sync Error:", err);
         updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
-      });
-    } else {
-      syncPropertyToDb({ 
-        ...updateData, 
-        id: propertyId, 
-        landlordId: user.uid,
-        imageUrl: property?.imageUrl || '' 
       });
     }
 

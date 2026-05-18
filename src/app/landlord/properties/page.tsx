@@ -12,9 +12,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-const getGlobalPreview = (id: string) => {
+// Instant Memory Asset Retriever
+const getMemoryAsset = (id: string) => {
   if (typeof window === 'undefined') return null;
-  return (window as any).__asset_previews?.[id] || null;
+  return (window as any).__asset_bridge?.[id] || null;
 };
 
 export default function PropertiesPage() {
@@ -28,21 +29,6 @@ export default function PropertiesPage() {
   }, [db, user]);
 
   const { data: properties, loading } = useCollection(propertiesQuery);
-
-  const [sessionPreviews, setSessionPreviews] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    if (properties) {
-      const previews: Record<string, string> = {};
-      properties.forEach(p => {
-        const memoryUrl = getGlobalPreview(p.id);
-        if (p.isImageUpdating && memoryUrl) {
-          previews[p.id] = memoryUrl;
-        }
-      });
-      setSessionPreviews(previews);
-    }
-  }, [properties]);
 
   const handleDeleteProperty = (propertyId: string) => {
     if (!user || !db) return;
@@ -84,7 +70,8 @@ export default function PropertiesPage() {
           </div>
         ) : (
           properties.map((property) => {
-            const displayImage = sessionPreviews[property.id] || property.imageUrl || `https://picsum.photos/seed/${property.id}/800/600`;
+            // Priority: Memory Bridge (Live) > Database URL > Placeholder
+            const displayImage = getMemoryAsset(property.id) || property.imageUrl || `https://picsum.photos/seed/${property.id}/800/600`;
 
             return (
               <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card">
@@ -104,14 +91,15 @@ export default function PropertiesPage() {
                   </Badge>
                 </div>
                 
-                <div className="px-6 pt-4 flex flex-wrap gap-2 text-primary/70 text-[10px] font-bold">
-                  <div className="flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-lg border border-primary/10 whitespace-nowrap shadow-sm min-w-[65px] justify-center">
-                    <Bed className="w-3 h-3 text-primary" />
-                    <span>{property.numberOfBedrooms || 1} Bed</span>
+                {/* COMPACT SPECS TAGS - RE-INTRODUCED & POSITIONED BELOW IMAGE */}
+                <div className="px-6 pt-4 flex flex-wrap gap-2 items-center">
+                  <div className="flex items-center gap-1.5 bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/10 shadow-sm min-w-[70px] justify-center">
+                    <Bed className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-[10px] font-bold text-primary">{property.numberOfBedrooms || 1} Bed</span>
                   </div>
-                  <div className="flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-lg border border-primary/10 whitespace-nowrap shadow-sm min-w-[65px] justify-center">
-                    <Bath className="w-3 h-3 text-primary" />
-                    <span>{property.numberOfBathrooms || 1} Bath</span>
+                  <div className="flex items-center gap-1.5 bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/10 shadow-sm min-w-[70px] justify-center">
+                    <Bath className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-[10px] font-bold text-primary">{property.numberOfBathrooms || 1} Bath</span>
                   </div>
                 </div>
 
