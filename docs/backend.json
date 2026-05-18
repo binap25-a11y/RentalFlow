@@ -1,52 +1,86 @@
 
 {
-        "path": "/emergencyContacts/{contactId}",
-        "definition": {
-          "entityName": "EmergencyContact",
-          "schema": { "$ref": "#/backend/entities/EmergencyContact" },
-          "description": "Property emergency contacts."
-        }
-      },
-      {
-        "path": "/tenantProfiles/{profileId}",
-        "definition": {
-          "entityName": "TenantProfile",
-          "schema": { "$ref": "#/backend/entities/TenantProfile" },
-          "description": "Resident associations."
-        }
-      },
-      {
-        "path": "/documents/{docId}",
-        "definition": {
-          "entityName": "PropertyDocument",
-          "schema": { "$ref": "#/backend/entities/PropertyDocument" },
-          "description": "Document vault items."
-        }
-      },
-      {
-        "path": "/maintenanceRequests/{requestId}",
-        "definition": {
-          "entityName": "MaintenanceRequest",
-          "schema": { "$ref": "#/backend/entities/MaintenanceRequest" },
-          "description": "Maintenance tracking records."
-        }
-      },
-      {
-        "path": "/inspections/{inspectionId}",
-        "definition": {
-          "entityName": "Inspection",
-          "schema": { "$ref": "#/backend/entities/Inspection" },
-          "description": "Property inspection reports."
-        }
-      },
-      {
-        "path": "/messages/{messageId}",
-        "definition": {
-          "entityName": "Message",
-          "schema": { "$ref": "#/backend/entities/Message" },
-          "description": "Platform messaging records."
-        }
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account and role metadata.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "role": { "type": "string", "enum": ["landlord", "tenant"] },
+        "phoneNumber": { "type": "string" }
       }
-    ]
+    },
+    "Property": {
+      "title": "Property",
+      "description": "Real estate asset details.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "addressLine1": { "type": "string" },
+        "city": { "type": "string" },
+        "zipCode": { "type": "string" },
+        "rentAmount": { "type": "number" },
+        "imageUrl": { "type": "string" },
+        "propertyType": { "type": "string" },
+        "numberOfBedrooms": { "type": "number" },
+        "numberOfBathrooms": { "type": "number" },
+        "isOccupied": { "type": "boolean" },
+        "tenantIds": { "type": "array", "items": { "type": "string" } },
+        "memberIds": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Platform alerts for maintenance, messages, and documents.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["maintenance", "message", "vault", "system"] },
+        "isRead": { "type": "boolean" },
+        "link": { "type": "string" },
+        "memberIds": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "MaintenanceRequest": {
+      "title": "MaintenanceRequest",
+      "description": "Repair and upkeep tracking.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "propertyId": { "type": "string" },
+        "title": { "type": "string" },
+        "status": { "type": "string" },
+        "priority": { "type": "string" },
+        "memberIds": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "auth": {
+    "providers": ["email", "google"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/backend/entities/UserProfile" },
+      "description": "User profiles."
+    },
+    "/properties/{propertyId}": {
+      "schema": { "$ref": "#/backend/entities/Property" },
+      "description": "Portfolio assets."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/backend/entities/Notification" },
+      "description": "User alerts."
+    },
+    "/maintenanceRequests/{requestId}": {
+      "schema": { "$ref": "#/backend/entities/MaintenanceRequest" },
+      "description": "Maintenance tracking records."
+    }
   }
 }

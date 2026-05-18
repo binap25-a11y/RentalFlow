@@ -1,32 +1,33 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
     function isSignedIn() {
       return request.auth != null;
     }
 
-    // Global permissive rules for authenticated users to ensure listing and sub-collection queries work
     match /{document=**} {
       allow read, write: if isSignedIn();
     }
 
-    // Explicit path matching for top-level collections to satisfy security engine for direct lookups
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /notifications/{id} {
+      allow read, update: if isSignedIn() && request.auth.uid in resource.data.memberIds;
+      allow create: if isSignedIn();
     }
 
     match /properties/{id} {
       allow read, write: if isSignedIn();
     }
 
-    // Explicit documents rule to ensure reliable deletion and listing for portfolio management
     match /documents/{id} {
       allow read, write: if isSignedIn();
     }
 
-    // Maintenance Requests
     match /maintenanceRequests/{id} {
       allow read, list, update, delete: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid || 
@@ -36,17 +37,6 @@ service cloud.firestore {
       allow create: if isSignedIn();
     }
 
-    // Inspections
-    match /inspections/{id} {
-      allow read, list: if isSignedIn() && (
-        resource.data.landlordId == request.auth.uid || 
-        (resource.data.memberIds != null && request.auth.uid in resource.data.memberIds)
-      );
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && resource.data.landlordId == request.auth.uid;
-    }
-
-    // Messages - Standardized for membership listing
     match /messages/{id} {
       allow create: if isSignedIn();
       allow read, list: if isSignedIn() && (
@@ -55,14 +45,6 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && (
         resource.data.senderId == request.auth.uid
       );
-    }
-    
-    match /tenantProfiles/{id} {
-      allow read, write: if isSignedIn();
-    }
-
-    match /emergencyContacts/{id} {
-      allow read, write: if isSignedIn();
     }
   }
 }

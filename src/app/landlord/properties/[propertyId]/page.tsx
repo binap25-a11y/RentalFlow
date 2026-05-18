@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, use, useRef, useMemo } from 'react';
@@ -11,6 +12,7 @@ import {
   setDocumentNonBlocking, 
   deleteDocumentNonBlocking,
   useStorage, 
+  addDocumentNonBlocking
 } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -203,14 +205,14 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const docId = doc(collection(db, 'documents')).id;
     const docRef = doc(db, 'documents', docId);
     
-    // Instant Bridge: Allow immediate download from local blob
     const localUrl = URL.createObjectURL(file);
     setMemoryAsset(docId, localUrl);
 
+    const residentIds = tenants?.map(t => t.userId).filter(Boolean) || [];
     const memberIds = Array.from(new Set([
       user.uid,
       ...(property.memberIds || []),
-      ...(tenants?.map(t => t.userId).filter(Boolean) || [])
+      ...residentIds
     ]));
 
     const baseDocData = {
@@ -227,30 +229,39 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       createdAt: serverTimestamp(),
     };
 
-    // 1. Instant Ledger Entry
     setDocumentNonBlocking(docRef, baseDocData, { merge: true });
-
-    // 2. Instant Relational Sync (Pending State)
     syncDocumentToDb({ ...baseDocData, fileUrl: 'pending' });
 
     try {
-      // 3. Background Storage Sync
       const storageRef = ref(storage, `documents/${user.uid}/${propertyId}/${Date.now()}_${file.name}`);
       const uploadResult = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(uploadResult.ref);
 
-      // 4. Permanent URL Verification
       updateDocumentNonBlocking(docRef, {
         fileUrl: url,
         updatedAt: serverTimestamp(),
       });
 
-      // 5. Final Relational Update
       syncDocumentToDb({ ...baseDocData, fileUrl: url });
+
+      // Notify Residents
+      residentIds.forEach(tenantId => {
+        const notificationId = doc(collection(db, 'notifications')).id;
+        addDocumentNonBlocking(collection(db, 'notifications'), {
+          id: notificationId,
+          userId: tenantId,
+          title: 'New Document Uploaded',
+          message: `${file.name} has been added to your property vault.`,
+          type: 'vault',
+          isRead: false,
+          memberIds: [tenantId],
+          createdAt: serverTimestamp()
+        });
+      });
 
       toast({ title: "Vault Updated", description: "Document is now ready for retrieval." });
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Upload Failed", description: "Could not persist document to cloud storage." });
+      toast({ variant: "destructive", title: "Upload Failed", description: "Could not persist document." });
     } finally {
       setIsUploadingDoc(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -329,7 +340,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             </div>
             
             <CardContent className="pt-6 text-left space-y-8">
-              {/* COMPACT SPECS ROW */}
               <div className="flex flex-wrap gap-2 items-center">
                 <div className="flex items-center gap-1.5 bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 shadow-sm">
                   <Bed className="w-3.5 h-3.5 text-primary" />

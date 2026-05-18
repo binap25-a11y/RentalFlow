@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -62,6 +63,19 @@ export default function LandlordMessagingPage() {
       text: messageText.trim(),
       timestamp: serverTimestamp(),
       memberIds: [user.uid, selectedTenantId]
+    });
+
+    // Notify Tenant
+    const notificationId = doc(collection(db, 'notifications')).id;
+    addDocumentNonBlocking(collection(db, 'notifications'), {
+      id: notificationId,
+      userId: selectedTenantId,
+      title: 'New Message from Landlord',
+      message: messageText.trim(),
+      type: 'message',
+      isRead: false,
+      memberIds: [selectedTenantId],
+      createdAt: serverTimestamp()
     });
 
     setMessageText("");

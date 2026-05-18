@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, getTenantCollectionQuery } from "@/firebase";
+import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, getTenantCollectionQuery, addDocumentNonBlocking } from "@/firebase";
 import { doc, serverTimestamp, collection } from "firebase/firestore";
 import { maintenanceTroubleshoot, type MaintenanceTroubleshootOutput } from "@/ai/flows/maintenance-troubleshooting-flow";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -62,7 +62,7 @@ export default function TenantMaintenancePage() {
     const requestId = doc(collection(db, 'maintenanceRequests')).id;
     const requestRef = doc(db, 'maintenanceRequests', requestId);
 
-    setDocumentNonBlocking(requestRef, {
+    const payload = {
       id: requestId,
       propertyId: activeProfile.propertyId,
       landlordId: activeProfile.landlordId,
@@ -76,7 +76,22 @@ export default function TenantMaintenancePage() {
       cost: 0,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    }, { merge: true });
+    };
+
+    setDocumentNonBlocking(requestRef, payload, { merge: true });
+
+    // Notify Landlord
+    const notificationId = doc(collection(db, 'notifications')).id;
+    addDocumentNonBlocking(collection(db, 'notifications'), {
+      id: notificationId,
+      userId: activeProfile.landlordId,
+      title: 'New Maintenance Request',
+      message: `${activeProfile.firstName} reported: ${title}`,
+      type: 'maintenance',
+      isRead: false,
+      memberIds: [activeProfile.landlordId],
+      createdAt: serverTimestamp()
+    });
 
     toast({ title: "Request Submitted", description: "Your landlord has been notified." });
     setTitle('');

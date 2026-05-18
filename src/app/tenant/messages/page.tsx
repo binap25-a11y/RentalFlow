@@ -23,7 +23,8 @@ export default function TenantMessagingPage() {
   }, [db, user]);
 
   const { data: tenantProfiles } = useCollection(tenantProfileQuery);
-  const landlordId = tenantProfiles?.[0]?.landlordId;
+  const profile = tenantProfiles?.[0];
+  const landlordId = profile?.landlordId;
 
   const messagesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -60,6 +61,19 @@ export default function TenantMessagingPage() {
       memberIds: [user.uid, landlordId]
     });
 
+    // Notify Landlord
+    const notificationId = doc(collection(db, 'notifications')).id;
+    addDocumentNonBlocking(collection(db, 'notifications'), {
+      id: notificationId,
+      userId: landlordId,
+      title: 'New Message from Resident',
+      message: `${profile?.firstName || 'Resident'}: ${messageText.trim()}`,
+      type: 'message',
+      isRead: false,
+      memberIds: [landlordId],
+      createdAt: serverTimestamp()
+    });
+
     setMessageText("");
   };
 
@@ -67,7 +81,6 @@ export default function TenantMessagingPage() {
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col gap-6 animate-in fade-in duration-500 max-w-4xl mx-auto">
-      {/* Header/Connection Card at Top */}
       <Card className="w-full border-none shadow-xl flex flex-col rounded-3xl overflow-hidden bg-white">
         <CardHeader className="p-6 bg-primary text-white flex flex-row items-center gap-4">
           <div className="p-3 bg-white/20 rounded-2xl">
@@ -80,7 +93,6 @@ export default function TenantMessagingPage() {
         </CardHeader>
       </Card>
       
-      {/* Messaging Card Below */}
       <Card className="flex-1 border-none shadow-xl flex flex-col rounded-3xl overflow-hidden bg-white">
         <div className="flex-1 overflow-y-auto p-6 space-y-6" ref={scrollRef}>
           {!landlordId ? (
@@ -104,7 +116,7 @@ export default function TenantMessagingPage() {
                 )}>
                   {msg.text}
                 </div>
-                <span className="text-[10px] text-muted-foreground mt-2 font-bold uppercase tracking-tighter">
+                <span className="text-[10px] text-muted-foreground mt-2 font-bold uppercase tracking-tighter text-left">
                   {msg.timestamp ? format(new Date(msg.timestamp.seconds * 1000), 'PPp') : 'Just now'}
                 </span>
               </div>
