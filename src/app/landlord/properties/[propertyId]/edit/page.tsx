@@ -72,6 +72,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setImageFile(file);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
+      // Immediate Session Bridge populate
+      sessionStorage.setItem(`preview_${propertyId}`, url);
     }
   };
 
@@ -81,12 +83,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
 
-    // Instant Visual Handover: Cache high-fidelity selection for app-wide instant feel
-    if (previewUrl && imageFile) {
-      sessionStorage.setItem(`preview_${propertyId}`, previewUrl);
-    }
-
-    const updateData = {
+    const updateData: any = {
       addressLine1: address,
       city,
       zipCode,

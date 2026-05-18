@@ -109,9 +109,10 @@ export default function TenantHub() {
   }
 
   // Standardized Bridge: Use session selection if background update is active
+  // Robust Fallback: Deterministic placeholder if no valid URL exists
   const displayImage = (property.isImageUpdating && sessionPreview)
     ? sessionPreview
-    : property.imageUrl || "https://picsum.photos/seed/home/800/600";
+    : property.imageUrl || `https://picsum.photos/seed/${property.id}/800/600`;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">

@@ -268,6 +268,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
   // Standardization: Use bridge for instant preview while isImageUpdating is true
+  // Fallback: Never display empty string or broken URL
   const activeImageUrl = (property.isImageUpdating && sessionPreview) 
     ? sessionPreview 
     : property.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;

@@ -83,6 +83,7 @@ export default function PropertiesPage() {
         ) : (
           properties.map((property) => {
             // Standardized Bridge: Use session selection if background update is active
+            // Robust Fallback: Never display empty string or broken URL
             const displayImage = (property.isImageUpdating && sessionPreviews[property.id])
               ? sessionPreviews[property.id]
               : property.imageUrl || `https://picsum.photos/seed/${property.id}/800/600`;

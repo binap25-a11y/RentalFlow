@@ -58,6 +58,9 @@ export default function NewPropertyPage() {
       sessionStorage.setItem(`preview_${propertyId}`, previewUrl);
     }
 
+    // Use a deterministic placeholder until high-res sync is complete
+    const fallbackUrl = `https://picsum.photos/seed/${propertyId}/800/600`;
+
     const baseData = {
       id: propertyId,
       landlordId: user.uid,
@@ -71,7 +74,7 @@ export default function NewPropertyPage() {
       rentAmount: parseFloat(rentAmount) || 0,
       isOccupied: false,
       isImageUpdating: !!imageFile,
-      imageUrl: imageFile ? "" : `https://picsum.photos/seed/${propertyId}/800/600`,
+      imageUrl: fallbackUrl, 
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       tenantIds: [],
