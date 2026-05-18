@@ -37,8 +37,8 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  // Restore high-resolution blue key brand seed
-  const LOGO_URL = 'https://picsum.photos/seed/rentflow-key-fixed-v1/512/512';
+  // High-resolution blue key brand seed
+  const LOGO_URL = 'https://picsum.photos/seed/rentflow-blue-key-v12/512/512';
 
   useEffect(() => {
     setMounted(true);

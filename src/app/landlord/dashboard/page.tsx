@@ -107,6 +107,7 @@ export default function LandlordDashboard() {
 
     // 3. Map property status items (Verified or Missing Records)
     const propertyStatusItems = properties.map(p => {
+      // Robust document count check
       const allPropDocs = (documents || []).filter(d => d.propertyId === p.id);
       const docCount = allPropDocs.length;
       
@@ -115,7 +116,7 @@ export default function LandlordDashboard() {
         return {
           id: `missing-${p.id}`,
           title: p.addressLine1 || 'Property Asset',
-          subtitle: 'Missing Documentation (0 Docs)',
+          subtitle: 'Missing Records (0 Docs)',
           date: null,
           type: 'Missing',
           icon: AlertTriangle,
