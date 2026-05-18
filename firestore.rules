@@ -1,17 +1,14 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Utility functions for robust access control
     function isSignedIn() {
       return request.auth != null;
     }
     
-    // User profiles are private to the individual owner
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
     
-    // Properties: Accessible by landlord or any assigned member
     match /properties/{propertyId} {
       allow read: if isSignedIn() && (
         request.auth.uid == resource.data.landlordId || 
@@ -22,14 +19,6 @@ service cloud.firestore {
       allow create: if isSignedIn();
     }
     
-    // Notifications: High-performance real-time alert feed
-    match /notifications/{notificationId} {
-      // Prioritize memberIds for provably safe 'array-contains' queries
-      allow read: if isSignedIn() && (request.auth.uid in resource.data.memberIds);
-      allow write, create: if isSignedIn();
-    }
-    
-    // Maintenance Requests: Collaborative repair tracking
     match /maintenanceRequests/{requestId} {
       allow read: if isSignedIn() && (
         request.auth.uid == resource.data.landlordId || 
@@ -38,7 +27,6 @@ service cloud.firestore {
       allow write, create: if isSignedIn();
     }
     
-    // Tenant Profiles: Bridge between landlords and users
     match /tenantProfiles/{profileId} {
       allow read: if isSignedIn() && (
         request.auth.uid == resource.data.landlordId || 
@@ -48,7 +36,6 @@ service cloud.firestore {
       allow write, create: if isSignedIn();
     }
 
-    // Membership-based security pattern for all shared portfolio assets
     match /documents/{id} { 
       allow read: if isSignedIn() && (request.auth.uid in resource.data.memberIds);
       allow write: if isSignedIn() && (request.auth.uid == resource.data.landlordId);

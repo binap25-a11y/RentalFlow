@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useRef, useMemo } from 'react';
@@ -50,7 +49,6 @@ import { useRouter } from "next/navigation";
 import { format, isBefore } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
 
-// Zero-Quota High-Performance Memory Bridge
 const getMemoryAsset = (id: string) => {
   if (typeof window === 'undefined') return null;
   return (window as any).__asset_bridge?.[id] || null;
@@ -243,21 +241,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       });
 
       syncDocumentToDb({ ...baseDocData, fileUrl: url });
-
-      // Notify Residents
-      residentIds.forEach(tenantId => {
-        const notificationId = doc(collection(db, 'notifications')).id;
-        addDocumentNonBlocking(collection(db, 'notifications'), {
-          id: notificationId,
-          userId: tenantId,
-          title: 'New Document Uploaded',
-          message: `${file.name} has been added to your property vault.`,
-          type: 'vault',
-          isRead: false,
-          memberIds: [tenantId],
-          createdAt: serverTimestamp()
-        });
-      });
 
       toast({ title: "Vault Updated", description: "Document is now ready for retrieval." });
     } catch (error: any) {

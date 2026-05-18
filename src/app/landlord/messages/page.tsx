@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -16,7 +15,6 @@ import { useSearchParams } from 'next/navigation';
 export default function LandlordMessagingPage() {
   const { user } = useUser();
   const db = useFirestore();
-  const searchParams = useSearchParams();
 
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
   const [messageText, setMessageText] = useState("");
@@ -63,19 +61,6 @@ export default function LandlordMessagingPage() {
       text: messageText.trim(),
       timestamp: serverTimestamp(),
       memberIds: [user.uid, selectedTenantId]
-    });
-
-    // Notify Tenant
-    const notificationId = doc(collection(db, 'notifications')).id;
-    addDocumentNonBlocking(collection(db, 'notifications'), {
-      id: notificationId,
-      userId: selectedTenantId,
-      title: 'New Message from Landlord',
-      message: messageText.trim(),
-      type: 'message',
-      isRead: false,
-      memberIds: [selectedTenantId],
-      createdAt: serverTimestamp()
     });
 
     setMessageText("");

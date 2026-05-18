@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -79,19 +78,6 @@ export default function TenantMaintenancePage() {
     };
 
     setDocumentNonBlocking(requestRef, payload, { merge: true });
-
-    // Notify Landlord
-    const notificationId = doc(collection(db, 'notifications')).id;
-    addDocumentNonBlocking(collection(db, 'notifications'), {
-      id: notificationId,
-      userId: activeProfile.landlordId,
-      title: 'New Maintenance Request',
-      message: `${activeProfile.firstName} reported: ${title}`,
-      type: 'maintenance',
-      isRead: false,
-      memberIds: [activeProfile.landlordId],
-      createdAt: serverTimestamp()
-    });
 
     toast({ title: "Request Submitted", description: "Your landlord has been notified." });
     setTitle('');
