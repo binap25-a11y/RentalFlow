@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -83,6 +82,7 @@ export default function PropertiesPage() {
           </div>
         ) : (
           properties.map((property) => {
+            // Priority Image Logic
             const displayImage = (property.isImageUpdating && sessionPreviews[property.id])
               ? sessionPreviews[property.id]
               : property.imageUrl || `https://picsum.photos/seed/${property.id}/800/600`;
@@ -105,13 +105,16 @@ export default function PropertiesPage() {
                   </Badge>
                 </div>
                 
-                <div className="px-6 pt-4 flex flex-wrap gap-2 text-primary/60 text-[10px] font-bold">
-                  <span className="flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-md border border-primary/5 whitespace-nowrap">
-                    <Bed className="w-3 h-3" /> {property.numberOfBedrooms || 1} Bed
-                  </span>
-                  <span className="flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-md border border-primary/5 whitespace-nowrap">
-                    <Bath className="w-3 h-3" /> {property.numberOfBathrooms || 1} Bath
-                  </span>
+                {/* Asset Specifications - Redesigned for better fit */}
+                <div className="px-6 pt-4 flex flex-wrap gap-2 text-primary/70 text-[10px] font-bold">
+                  <div className="flex items-center gap-1 bg-primary/5 px-2 py-1.5 rounded-lg border border-primary/10 whitespace-nowrap shadow-sm">
+                    <Bed className="w-3.5 h-3.5 text-primary" />
+                    <span>{property.numberOfBedrooms || 1} Bed</span>
+                  </div>
+                  <div className="flex items-center gap-1 bg-primary/5 px-2 py-1.5 rounded-lg border border-primary/10 whitespace-nowrap shadow-sm">
+                    <Bath className="w-3.5 h-3.5 text-primary" />
+                    <span>{property.numberOfBathrooms || 1} Bath</span>
+                  </div>
                 </div>
 
                 <CardHeader className="pb-2 text-left space-y-1">

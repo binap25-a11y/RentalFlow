@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, use } from 'react';
@@ -55,14 +54,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    // Standardized Bridge: Check for active background sync preview in session
     const cached = sessionStorage.getItem(`preview_${propertyId}`);
     if (cached) setSessionPreview(cached);
   }, [propertyId]);
 
   useEffect(() => {
     if (property && !isSaving) {
-      // Prevent data snapping: Only update local state if user is not currently saving
       setAddress(property.addressLine1 || '');
       setCity(property.city || '');
       setZipCode(property.zipCode || '');
@@ -88,7 +85,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setImageFile(file);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
-      // Immediately populate session bridge to ensure app-wide consistency
       sessionStorage.setItem(`preview_${propertyId}`, url);
     }
   };
@@ -112,10 +108,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       updatedAt: serverTimestamp(),
     };
 
-    // 1. Instant Metadata Write (Non-blocking)
     updateDocumentNonBlocking(propertyRef, updateData);
 
-    // 2. Background Media & Relational Sync (Silent)
     if (imageFile && storage) {
       const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
       

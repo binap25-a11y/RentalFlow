@@ -1,4 +1,3 @@
-
 'use server';
 
 import pool from '@/lib/db';
@@ -17,16 +16,26 @@ export async function syncPropertyToDb(propertyData: {
   rentAmount: number;
   imageUrl: string;
   propertyType: string;
+  numberOfBedrooms: number;
+  numberOfBathrooms: number;
   description?: string;
 }) {
-  const { id, landlordId, addressLine1, city, zipCode, rentAmount, imageUrl, propertyType, description } = propertyData;
+  const { 
+    id, landlordId, addressLine1, city, zipCode, 
+    rentAmount, imageUrl, propertyType, 
+    numberOfBedrooms, numberOfBathrooms, description 
+  } = propertyData;
+  
   const client = await pool.connect();
   try {
     // Perform Upsert with correct mapping
-    // We assume the table is created by a separate migration or on app init once.
     await client.query(
-      `INSERT INTO properties (id, landlord_id, address, city, zip_code, rent_amount, image_url, property_type, description)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO properties (
+        id, landlord_id, address, city, zip_code, 
+        rent_amount, image_url, property_type, 
+        bedrooms, bathrooms, description
+      )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        ON CONFLICT (id) DO UPDATE SET
          address = EXCLUDED.address,
          city = EXCLUDED.city,
@@ -34,9 +43,15 @@ export async function syncPropertyToDb(propertyData: {
          rent_amount = EXCLUDED.rent_amount,
          image_url = EXCLUDED.image_url,
          property_type = EXCLUDED.property_type,
+         bedrooms = EXCLUDED.bedrooms,
+         bathrooms = EXCLUDED.bathrooms,
          description = EXCLUDED.description,
          synced_at = CURRENT_TIMESTAMP`,
-      [id, landlordId, addressLine1, city, zipCode, rentAmount, imageUrl, propertyType, description]
+      [
+        id, landlordId, addressLine1, city, zipCode, 
+        rentAmount, imageUrl, propertyType, 
+        numberOfBedrooms, numberOfBathrooms, description
+      ]
     );
     return { success: true };
   } catch (error) {
