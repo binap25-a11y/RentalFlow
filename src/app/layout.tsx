@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
-  title: 'RentalFlow | Professional Rental Management',
+  title: 'RentalFlow | Premium Property Management',
   description: 'Streamline property management and tenant requests with AI-powered triage and structured reports.',
   manifest: '/manifest.json',
   appleWebApp: {
@@ -14,8 +14,8 @@ export const metadata: Metadata = {
     title: 'RentalFlow',
   },
   icons: {
-    icon: 'https://picsum.photos/seed/rentflow-branding-house-key/512/512',
-    apple: 'https://picsum.photos/seed/rentflow-branding-house-key/180/180',
+    icon: 'https://picsum.photos/seed/rentflow-premium-blue-key/512/512',
+    apple: 'https://picsum.photos/seed/rentflow-premium-blue-key/180/180',
   },
 };
 

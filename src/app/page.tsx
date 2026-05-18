@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -40,7 +39,7 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  const BRAND_LOGO_URL = `https://picsum.photos/seed/rentflow-branding-house-key/512/512`;
+  const BRAND_LOGO_URL = `https://picsum.photos/seed/rentflow-premium-blue-key/512/512`;
 
   useEffect(() => {
     setMounted(true);
@@ -169,16 +168,16 @@ export default function LoginPage() {
             <div className="absolute inset-0 bg-primary/10 rounded-[2.5rem] blur-2xl animate-pulse" />
             <Image 
               src={BRAND_LOGO_URL} 
-              alt="RentalFlow Professional Logo" 
+              alt="RentalFlow Premium Logo" 
               fill 
               className="object-cover rounded-[2.5rem] shadow-2xl ring-4 ring-white relative z-10" 
               unoptimized 
-              data-ai-hint="house key"
+              data-ai-hint="blue key"
             />
           </div>
           
           <div className="flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-            <h1 className="text-3xl font-headline font-bold text-primary tracking-tighter">RentalFlow</h1>
+            <h1 className="text-4xl font-headline font-bold text-primary tracking-tighter">RentalFlow</h1>
             <div className="flex items-center gap-3">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
               <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.2em] font-headline">Establishing Secure Ledger</p>
@@ -206,7 +205,7 @@ export default function LoginPage() {
                 height={72} 
                 className="rounded-2xl object-cover" 
                 unoptimized 
-                data-ai-hint="house key"
+                data-ai-hint="blue key"
               />
             </div>
             <CardTitle className="text-2xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
@@ -260,16 +259,16 @@ export default function LoginPage() {
         <div className="inline-flex items-center justify-center p-1 bg-white rounded-[2.5rem] mb-6 shadow-2xl ring-4 ring-primary/5 overflow-hidden">
            <Image 
             src={BRAND_LOGO_URL} 
-            alt="RentalFlow Professional Brand" 
+            alt="RentalFlow Premium Brand" 
             width={100} 
             height={100} 
             className="rounded-[2.25rem] object-cover" 
             unoptimized 
-            data-ai-hint="house key"
+            data-ai-hint="blue key"
           />
         </div>
         <h1 className="text-5xl font-headline font-bold text-primary mb-2 tracking-tighter">RentalFlow</h1>
-        <p className="text-muted-foreground font-medium text-lg font-body">Professional Portfolio Management</p>
+        <p className="text-muted-foreground font-medium text-lg font-body">Premium Portfolio Management</p>
       </div>
 
       <div className="max-w-xl w-full">
