@@ -7,13 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { KeyRound, Loader2, Eye, EyeOff, ShieldCheck, Chrome, User as UserIcon, Phone, CheckCircle2 } from "lucide-react";
+import { KeyRound, Loader2, Eye, EyeOff, ShieldCheck, Chrome, User as UserIcon, Phone, CheckCircle2, Lock } from "lucide-react";
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp, setDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -159,21 +160,34 @@ export default function LoginPage() {
     }
   };
 
+  // High-Fidelity Professional Introduction
   if (!mounted || isUserLoading || (user && !needsProfile && !isRedirecting.current)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <div className="relative w-24 h-24 mb-4">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 overflow-hidden">
+        <div className="relative flex flex-col items-center">
+          {/* Enhanced Logo Entry */}
+          <div className="relative w-32 h-32 mb-8 animate-in fade-in zoom-in-95 duration-1000 slide-in-from-bottom-8">
+            <div className="absolute inset-0 bg-primary/10 rounded-[2.5rem] blur-2xl animate-pulse" />
             <Image 
               src={LOGO_URL} 
-              alt="Logo" 
+              alt="RentalFlow" 
               fill 
-              className="object-contain rounded-[2rem] shadow-xl" 
+              className="object-contain rounded-[2.5rem] shadow-2xl ring-4 ring-white relative z-10" 
               unoptimized 
             />
           </div>
-          <Loader2 className="w-10 h-10 animate-spin text-primary" />
-          <p className="text-sm font-medium text-muted-foreground animate-pulse">Authenticating Portfolio Access...</p>
+          
+          <div className="flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+            <h1 className="text-3xl font-headline font-bold text-primary tracking-tighter">RentalFlow</h1>
+            <div className="flex items-center gap-3">
+              <Loader2 className="w-5 h-5 animate-spin text-primary" />
+              <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.2em] font-headline">Establishing Secure Ledger</p>
+            </div>
+            <div className="mt-8 flex items-center gap-2 px-4 py-1.5 bg-white rounded-full border shadow-sm">
+              <Lock className="w-3 h-3 text-emerald-500" />
+              <span className="text-[10px] font-bold text-slate-500 uppercase">Bank-Grade Portfolio Security Active</span>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -181,7 +195,7 @@ export default function LoginPage() {
 
   if (needsProfile && user) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
         <Card className="w-full max-w-lg border-none shadow-2xl bg-white overflow-hidden animate-in zoom-in duration-300 rounded-[2.5rem]">
           <CardHeader className="text-center bg-primary/5 pb-8 pt-10">
             <div className="mx-auto p-1 bg-white rounded-2xl w-fit mb-4 shadow-sm">
@@ -195,33 +209,33 @@ export default function LoginPage() {
               />
             </div>
             <CardTitle className="text-2xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
-            <CardDescription>Establish your professional profile on RentalFlow.</CardDescription>
+            <CardDescription className="font-medium">Establish your professional profile on RentalFlow.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 pt-8 px-10 pb-12">
             <div className="grid grid-cols-2 gap-4 text-left">
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">First Name</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-headline">First Name</Label>
                 <div className="relative">
                   <UserIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jane" className="pl-10 h-11 rounded-xl" />
+                  <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jane" className="pl-10 h-11 rounded-xl border-none bg-muted/20" />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Last Name</Label>
-                <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" className="h-11 rounded-xl" />
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-headline">Last Name</Label>
+                <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" className="h-11 rounded-xl border-none bg-muted/20" />
               </div>
             </div>
 
             <div className="space-y-2 text-left">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Phone Number</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-headline">Phone Number</Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+44 7700 900000" className="pl-10 h-11 rounded-xl" />
+                <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+44 7700 900000" className="pl-10 h-11 rounded-xl border-none bg-muted/20" />
               </div>
             </div>
 
             <div className="space-y-4 text-left">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select Role</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-headline">Select Role</Label>
               <Tabs value={role} onValueChange={(v) => setRole(v as any)} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-xl h-12">
                   <TabsTrigger value="landlord" className="rounded-lg font-bold">Landlord</TabsTrigger>
@@ -230,7 +244,7 @@ export default function LoginPage() {
               </Tabs>
             </div>
 
-            <Button className="w-full h-14 rounded-xl font-bold bg-primary text-lg shadow-lg shadow-primary/20" onClick={handleCreateProfile} disabled={isLoading || !firstName || !lastName || !phoneNumber}>
+            <Button className="w-full h-14 rounded-xl font-bold bg-primary text-lg shadow-lg shadow-primary/20 font-headline" onClick={handleCreateProfile} disabled={isLoading || !firstName || !lastName || !phoneNumber}>
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle2 className="w-5 h-5 mr-2" /> Complete Registration</>}
             </Button>
           </CardContent>
@@ -240,9 +254,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
       <div className="mb-10 text-center animate-in fade-in slide-in-from-top-4 duration-1000">
-        <div className="inline-flex items-center justify-center p-1 bg-white rounded-[2.5rem] mb-6 shadow-2xl">
+        <div className="inline-flex items-center justify-center p-1 bg-white rounded-[2.5rem] mb-6 shadow-2xl ring-4 ring-primary/5">
            <Image 
             src={LOGO_URL} 
             alt="RentalFlow" 
@@ -253,7 +267,7 @@ export default function LoginPage() {
           />
         </div>
         <h1 className="text-5xl font-headline font-bold text-primary mb-2 tracking-tighter">RentalFlow</h1>
-        <p className="text-muted-foreground font-medium text-lg">Professional Portfolio Management</p>
+        <p className="text-muted-foreground font-medium text-lg font-body">Professional Portfolio Management</p>
       </div>
 
       <Card className="w-full max-w-md border-none shadow-2xl bg-white overflow-hidden rounded-[2.5rem]">
@@ -261,26 +275,26 @@ export default function LoginPage() {
           <CardTitle className="text-2xl font-headline font-bold text-primary">
             {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="font-medium">
             {authMode === 'login' ? 'Sign in to access your ledger' : 'Establish your management presence'}
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-8 px-8 pb-10">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2 text-left">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-12" />
+              <Label htmlFor="email" className="font-bold text-xs uppercase text-muted-foreground tracking-widest font-headline">Email</Label>
+              <Input id="email" type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-12 border-none bg-muted/20 font-body" />
             </div>
             <div className="space-y-2 text-left">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" title="Password" className="font-bold text-xs uppercase text-muted-foreground tracking-widest font-headline">Password</Label>
               <div className="relative">
-                <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="rounded-xl h-12" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3.5 text-muted-foreground">
+                <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="rounded-xl h-12 border-none bg-muted/20 font-body" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3.5 text-muted-foreground hover:text-primary transition-colors">
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full h-14 rounded-xl font-bold bg-primary text-lg shadow-lg shadow-primary/20" disabled={isLoading}>
+            <Button type="submit" className="w-full h-14 rounded-xl font-bold bg-primary text-lg shadow-lg shadow-primary/20 font-headline" disabled={isLoading}>
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (authMode === 'login' ? 'Login' : 'Sign Up')}
             </Button>
           </form>
@@ -294,12 +308,12 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <Button variant="outline" className="w-full h-12 rounded-xl mb-6 font-bold border-primary/10 hover:bg-primary/5" onClick={handleGoogleSignIn} disabled={isLoading}>
+          <Button variant="outline" className="w-full h-12 rounded-xl mb-6 font-bold border-primary/10 hover:bg-primary/5 font-headline" onClick={handleGoogleSignIn} disabled={isLoading}>
             <Chrome className="w-5 h-5 mr-3 text-red-500" />
             Continue with Google
           </Button>
 
-          <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full text-sm font-bold text-primary/60 hover:text-primary transition-colors">
+          <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full text-sm font-bold text-primary/60 hover:text-primary transition-colors font-headline">
             {authMode === 'login' ? "New to RentalFlow? Register here" : "Return to login screen"}
           </button>
         </CardContent>

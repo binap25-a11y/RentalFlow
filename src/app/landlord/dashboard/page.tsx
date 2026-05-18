@@ -200,7 +200,7 @@ export default function LandlordDashboard() {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
-        <p className="text-muted-foreground font-medium font-body">Syncing portfolio ledger...</p>
+        <p className="text-muted-foreground font-medium font-body uppercase tracking-widest text-xs">Syncing portfolio ledger...</p>
       </div>
     );
   }
@@ -212,7 +212,7 @@ export default function LandlordDashboard() {
           <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Portfolio Performance</h1>
           <p className="text-muted-foreground font-medium font-body">Financial yield and full-portfolio compliance roadmap.</p>
         </div>
-        <Badge className={cn("font-bold py-1 px-4 rounded-full border", healthScore.bg, healthScore.color, healthScore.border)}>
+        <Badge className={cn("font-bold py-1 px-4 rounded-full border shadow-sm", healthScore.bg, healthScore.color, healthScore.border)}>
           <Zap className="w-3 h-3 mr-2" /> Portfolio Health: {healthScore.grade}
         </Badge>
       </div>
@@ -222,15 +222,15 @@ export default function LandlordDashboard() {
           <Card key={stat.label} className="border-none shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden">
             <CardContent className="pt-6 text-left">
               <div className="flex items-center justify-between mb-4">
-                <div className={`${stat.bg} ${stat.color} p-3 rounded-xl`}>
+                <div className={`${stat.bg} ${stat.color} p-3 rounded-xl shadow-inner`}>
                   <stat.icon className="w-6 h-6" />
                 </div>
               </div>
               <div className="space-y-1">
-                <p className="text-xl md:text-2xl font-bold font-headline">
+                <p className="text-xl md:text-2xl font-bold font-headline tracking-tight">
                   {stat.value}
                 </p>
-                <p className="text-sm text-muted-foreground font-medium font-body">{stat.label}</p>
+                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider font-headline">{stat.label}</p>
               </div>
             </CardContent>
           </Card>
@@ -239,23 +239,23 @@ export default function LandlordDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-2 border-none shadow-sm rounded-2xl overflow-hidden">
-          <CardHeader className="text-left pb-2">
+          <CardHeader className="text-left pb-2 border-b bg-muted/5">
             <CardTitle className="text-xl font-headline flex items-center">
               <TrendingUp className="w-5 h-5 mr-2 text-primary" />
               Revenue by Asset
             </CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px] pt-4">
+          <CardContent className="h-[300px] pt-8">
              <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 600}} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12}} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 600, fill: '#64748b'}} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#94a3b8'}} />
                   <Tooltip 
                     cursor={{fill: '#f8fafc'}}
-                    contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
+                    contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)'}}
                   />
-                  <Bar dataKey="rent" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} barSize={40} />
+                  <Bar dataKey="rent" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} barSize={40} />
                 </BarChart>
              </ResponsiveContainer>
           </CardContent>
@@ -263,19 +263,19 @@ export default function LandlordDashboard() {
 
         <div className="space-y-6">
           <Card className="border-none shadow-sm rounded-2xl">
-            <CardHeader className="text-left">
+            <CardHeader className="text-left pb-3 border-b bg-muted/5">
               <CardTitle className="text-lg font-headline flex items-center">
                 <ShieldAlert className="w-5 h-5 mr-2 text-primary" />
                 Compliance Roadmap
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-4">
               {complianceItems.length > 0 ? (
                 complianceItems.map((item) => (
                   <div 
                     key={`${item.type}-${item.id}`} 
                     className={cn(
-                      "flex items-center justify-between p-3 rounded-xl border transition-colors",
+                      "flex items-center justify-between p-3 rounded-xl border transition-all hover:scale-[1.02]",
                       item.type === 'Missing' ? "bg-red-50 border-red-100" :
                       item.urgent ? "bg-amber-50 border-amber-100" : "bg-muted/30 border-transparent",
                       item.type === 'Status' && "bg-emerald-50/30 border-emerald-100/30"
@@ -283,7 +283,7 @@ export default function LandlordDashboard() {
                   >
                     <div className="text-left min-w-0 flex gap-3 items-center">
                       <div className={cn(
-                        "p-2 rounded-lg", 
+                        "p-2 rounded-lg shadow-sm", 
                         item.type === 'Missing' ? "bg-red-100 text-red-700" :
                         item.urgent ? "bg-amber-100 text-amber-700" : 
                         item.type === 'Status' ? "bg-emerald-100 text-emerald-700" : "bg-primary/10 text-primary"
@@ -291,10 +291,10 @@ export default function LandlordDashboard() {
                         <item.icon className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
-                        <h4 className="font-bold text-xs font-body leading-tight break-words">{item.title}</h4>
+                        <h4 className="font-bold text-xs font-headline leading-tight break-words">{item.title}</h4>
                         <div className="flex items-center gap-2 mt-0.5">
                           <p className={cn(
-                            "text-[10px] font-bold uppercase",
+                            "text-[10px] font-bold uppercase tracking-wider",
                             item.type === 'Status' ? "text-emerald-600" : 
                             item.type === 'Missing' ? "text-red-600" : "text-muted-foreground"
                           )}>{item.subtitle}</p>
@@ -306,7 +306,7 @@ export default function LandlordDashboard() {
                         </div>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 rounded-full shrink-0">
+                    <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 rounded-full shrink-0 hover:bg-white/50">
                       <Link href={`/landlord/properties/${item.propertyId}`}>
                         <ArrowRight className="w-4 h-4" />
                       </Link>
@@ -314,29 +314,33 @@ export default function LandlordDashboard() {
                   </div>
                 ))
               ) : (
-                <div className="py-8 text-center bg-muted/20 rounded-xl">
+                <div className="py-8 text-center bg-muted/20 rounded-xl border border-dashed">
                   <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-500 mb-2" />
-                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">All Assets Verified</p>
+                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">All Assets Verified</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
           <Card className="border-none shadow-sm rounded-2xl">
-            <CardHeader className="text-left">
-              <CardTitle className="text-lg font-headline">Quick Navigation</CardTitle>
+            <CardHeader className="text-left pb-3 bg-muted/5 border-b">
+              <CardTitle className="text-lg font-headline">Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-3">
-              <Button className="w-full justify-start h-11 bg-primary rounded-xl font-headline font-bold shadow-lg shadow-primary/20" asChild>
+            <CardContent className="grid gap-3 pt-4">
+              <Button className="w-full justify-start h-12 bg-primary rounded-xl font-headline font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform" asChild>
                 <Link href="/landlord/properties/new">
-                  <Building2 className="w-4 h-4 mr-3" />
-                  Add Property
+                  <div className="p-1.5 bg-white/20 rounded-lg mr-3">
+                    <Building2 className="w-4 h-4 text-white" />
+                  </div>
+                  Add Property Asset
                 </Link>
               </Button>
-              <Button variant="outline" className="w-full justify-start h-11 rounded-xl font-headline font-bold border-primary/20" asChild>
+              <Button variant="outline" className="w-full justify-start h-12 rounded-xl font-headline font-bold border-primary/10 hover:bg-primary/5 hover:scale-[1.02] transition-transform" asChild>
                 <Link href="/landlord/properties">
-                  <TrendingUp className="w-4 h-4 mr-3" />
-                  Asset Directory
+                  <div className="p-1.5 bg-primary/5 rounded-lg mr-3">
+                    <TrendingUp className="w-4 h-4 text-primary" />
+                  </div>
+                  Inventory Directory
                 </Link>
               </Button>
             </CardContent>
