@@ -11,7 +11,6 @@ import {
   setDocumentNonBlocking, 
   deleteDocumentNonBlocking,
   useStorage, 
-  addDocumentNonBlocking
 } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -25,8 +24,8 @@ import {
   MapPin, Users, Wrench, FileCheck, 
   Trash2, Edit3, Loader2, Save, ArrowLeft,
   Download, FileText, ShieldAlert, Upload, 
-  Calendar as CalendarIcon, Sparkles, Image as ImageIcon,
-  Bed, Bath
+  Calendar as CalendarIcon, Image as ImageIcon,
+  Bed, Bath, ChevronRight, AlertTriangle, CheckCircle2
 } from "lucide-react";
 import { 
   Popover, 
@@ -49,6 +48,7 @@ import { useRouter } from "next/navigation";
 import { format, isBefore } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
 
+// Zero-Quota Memory Bridge
 const getMemoryAsset = (id: string) => {
   if (typeof window === 'undefined') return null;
   return (window as any).__asset_bridge?.[id] || null;
@@ -147,15 +147,14 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     }
 
     if (maintenanceRequests) {
-      const critical = maintenanceRequests.filter(r => r.status !== 'completed' && r.priority === 'critical');
-      const urgent = maintenanceRequests.filter(r => r.status !== 'completed' && r.priority === 'urgent');
-      
+      const active = maintenanceRequests.filter(r => r.status !== 'completed');
+      const critical = active.filter(r => r.priority === 'critical');
       if (critical.length > 0) {
         score -= 40;
         reasons.push("Pending critical repairs");
-      } else if (urgent.length > 0) {
-        score -= 20;
-        reasons.push("Urgent maintenance required");
+      } else if (active.length > 0) {
+        score -= 15;
+        reasons.push(`${active.length} active repair(s)`);
       }
     }
 
@@ -165,21 +164,21 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         return isBefore(new Date(i.scheduledDate), today);
       });
       if (overdue.length > 0) {
-        score -= 15;
+        score -= 20;
         reasons.push("Compliance audit overdue");
       }
     }
 
     const finalScore = Math.max(0, score);
     let color = "bg-emerald-400";
-    let message = "This asset is fully verified and compliant.";
+    let message = "Fully verified and compliant.";
 
-    if (finalScore < 50) {
+    if (finalScore < 60) {
       color = "bg-red-500";
-      message = reasons[0] || "Immediate management attention required.";
-    } else if (finalScore < 85) {
+      message = reasons[0] || "Immediate attention required.";
+    } else if (finalScore < 90) {
       color = "bg-amber-500";
-      message = reasons[0] || "Asset requires minor compliance updates.";
+      message = reasons[0] || "Minor compliance updates required.";
     }
 
     return { score: finalScore, color, message };
@@ -207,11 +206,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     setMemoryAsset(docId, localUrl);
 
     const residentIds = tenants?.map(t => t.userId).filter(Boolean) || [];
-    const memberIds = Array.from(new Set([
-      user.uid,
-      ...(property.memberIds || []),
-      ...residentIds
-    ]));
+    const memberIds = Array.from(new Set([user.uid, ...(property.memberIds || []), ...residentIds]));
 
     const baseDocData = {
       id: docId,
@@ -241,10 +236,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       });
 
       syncDocumentToDb({ ...baseDocData, fileUrl: url });
-
-      toast({ title: "Vault Updated", description: "Document is now ready for retrieval." });
+      toast({ title: "Vault Updated" });
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Upload Failed", description: "Could not persist document." });
+      toast({ variant: "destructive", title: "Upload Failed" });
     } finally {
       setIsUploadingDoc(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -262,27 +256,30 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
-  const memoryUrl = getMemoryAsset(propertyId);
-  const activeImageUrl = (property.isImageUpdating && memoryUrl) 
-    ? memoryUrl 
-    : property.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
-
+  const activeImageUrl = property.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
   const gallery = property.imageUrls || [activeImageUrl].filter(Boolean);
+
+  const getPriorityColor = (priority: string) => {
+    switch(priority?.toLowerCase()) {
+      case 'critical': return 'bg-red-500 text-white';
+      case 'urgent': return 'bg-orange-500 text-white';
+      case 'routine': return 'bg-blue-500 text-white';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full hover:bg-muted">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
             <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">{property.addressLine1}</h1>
-            <div className="flex items-center gap-4 mt-1">
-              <p className="text-muted-foreground flex items-center font-medium font-body text-sm">
-                <MapPin className="w-4 h-4 mr-1 text-primary/60" /> {property.city}, {property.zipCode}
-              </p>
-            </div>
+            <p className="text-muted-foreground flex items-center font-medium font-body text-sm mt-1">
+              <MapPin className="w-4 h-4 mr-1 text-primary/60" /> {property.city}, {property.zipCode}
+            </p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -292,129 +289,118 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
              </Link>
            </Button>
            <Button className="rounded-xl font-bold h-11 shadow-lg shadow-primary/20 bg-primary text-white" asChild>
-             <Link href={`/landlord/messages?prop=${propertyId}`}>Message Residents</Link>
+             <Link href={`/landlord/messages?prop=${propertyId}`}>Contact Residents</Link>
            </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <Card className="border-none shadow-sm overflow-hidden bg-white rounded-3xl relative">
-            <div className="relative group">
-              {gallery.length > 0 ? (
-                <Carousel className="w-full">
-                  <CarouselContent>
-                    {gallery.map((url: string, index: number) => (
-                      <CarouselItem key={index}>
-                        <div className="relative h-[400px] w-full bg-muted">
-                          <Image src={url} alt={`Property ${index}`} fill className="object-cover" unoptimized={true} />
-                        </div>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <CarouselPrevious className="left-4 bg-white/80" />
-                  <CarouselNext className="right-4 bg-white/80" />
-                </Carousel>
-              ) : (
-                <div className="h-[400px] bg-muted/30 flex items-center justify-center text-muted-foreground">
-                  <ImageIcon className="w-12 h-12 opacity-20" />
-                </div>
-              )}
-            </div>
+          <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2.5rem]">
+            <Carousel className="w-full">
+              <CarouselContent>
+                {gallery.map((url: string, index: number) => (
+                  <CarouselItem key={index}>
+                    <div className="relative h-[400px] w-full bg-muted">
+                      <Image src={url} alt={`Property ${index}`} fill className="object-cover" unoptimized={true} />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-4 bg-white/80" />
+              <CarouselNext className="right-4 bg-white/80" />
+            </Carousel>
             
-            <CardContent className="pt-6 text-left space-y-8">
-              <div className="flex flex-wrap gap-2 items-center">
-                <div className="flex items-center gap-1.5 bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 shadow-sm">
-                  <Bed className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-xs font-bold text-primary">{property.numberOfBedrooms || 1} Bed</span>
+            <CardContent className="pt-6 text-left p-10 space-y-8">
+              <div className="flex flex-wrap gap-4 items-center">
+                <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl border border-primary/10">
+                  <Bed className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-bold text-primary">{property.numberOfBedrooms || 1} Bed</span>
                 </div>
-                <div className="flex items-center gap-1.5 bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 shadow-sm">
-                  <Bath className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-xs font-bold text-primary">{property.numberOfBathrooms || 1} Bath</span>
+                <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl border border-primary/10">
+                  <Bath className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-bold text-primary">{property.numberOfBathrooms || 1} Bath</span>
                 </div>
+                <Badge variant="outline" className="h-10 px-4 rounded-xl border-primary/10 font-bold text-primary bg-primary/[0.02]">
+                  {property.propertyType}
+                </Badge>
               </div>
 
-              <div className="flex flex-wrap gap-6 items-end border-t pt-6 border-primary/5">
+              <div className="flex flex-wrap gap-12 items-end border-t pt-8 border-primary/5">
                 <div className="space-y-1">
                   <Label className="text-muted-foreground font-bold text-[10px] uppercase tracking-widest font-headline">Monthly Yield</Label>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-4">
                     {isEditingRent ? (
-                      <Input type="number" value={rentAmount || property.rentAmount} onChange={(e) => setRentAmount(e.target.value)} className="rounded-xl h-11 w-32 bg-muted/20 border-none" />
+                      <Input type="number" value={rentAmount || property.rentAmount} onChange={(e) => setRentAmount(e.target.value)} className="rounded-xl h-12 w-32 bg-muted/20 border-none font-bold" />
                     ) : (
                       <p className="text-4xl font-bold text-primary font-headline">£{property.rentAmount}</p>
                     )}
-                    <Button variant="ghost" size="icon" onClick={isEditingRent ? handleUpdateRent : () => setIsEditingRent(true)} className="rounded-full hover:bg-primary/5">
-                      {isEditingRent ? <Save className="w-4 h-4 text-emerald-600" /> : <Edit3 className="w-4 h-4 text-muted-foreground" />}
+                    <Button variant="ghost" size="icon" onClick={isEditingRent ? handleUpdateRent : () => setIsEditingRent(true)} className="rounded-full">
+                      {isEditingRent ? <Save className="w-5 h-5 text-emerald-600" /> : <Edit3 className="w-5 h-5 text-muted-foreground" />}
                     </Button>
                   </div>
                 </div>
-                <div className="flex-1 flex gap-4">
-                  <div className="p-4 bg-primary/5 rounded-2xl flex-1 text-center border border-primary/5">
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground font-headline">Status</p>
-                    <p className="font-bold font-headline text-primary">{property.isOccupied ? 'Occupied' : 'Vacant'}</p>
-                  </div>
+                <div className="p-4 px-8 bg-primary/5 rounded-2xl border border-primary/5">
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground font-headline mb-1">Portfolio Status</p>
+                  <p className={cn("font-bold font-headline text-lg", property.isOccupied ? 'text-emerald-600' : 'text-amber-600')}>{property.isOccupied ? 'Occupied' : 'Vacant'}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Tabs defaultValue="tenants" className="w-full">
-            <TabsList className="grid grid-cols-4 w-full bg-muted/30 p-1 rounded-xl h-auto gap-1 border border-primary/5">
-              <TabsTrigger value="tenants" className="rounded-lg py-2.5 px-0 font-bold flex flex-col sm:flex-row items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white">
-                <Users className="w-4 h-4 sm:mr-2" />
-                <span className="text-[10px] sm:text-sm">Residents</span>
+            <TabsList className="grid grid-cols-4 w-full bg-muted/30 p-1.5 rounded-[1.25rem] h-auto gap-2 border border-primary/5">
+              <TabsTrigger value="tenants" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                <Users className="w-4 h-4 mr-2" /> Residents
               </TabsTrigger>
-              <TabsTrigger value="docs" className="rounded-lg py-2.5 px-0 font-bold flex flex-col sm:flex-row items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white">
-                <FileText className="w-4 h-4 sm:mr-2" />
-                <span className="text-[10px] sm:text-sm">Vault</span>
+              <TabsTrigger value="docs" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                <FileText className="w-4 h-4 mr-2" /> Vault
               </TabsTrigger>
-              <TabsTrigger value="maintenance" className="rounded-lg py-2.5 px-0 font-bold flex flex-col sm:flex-row items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white">
-                <Wrench className="w-4 h-4 sm:mr-2" />
-                <span className="text-[10px] sm:text-sm">Repairs</span>
+              <TabsTrigger value="maintenance" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                <Wrench className="w-4 h-4 mr-2" /> Repairs
               </TabsTrigger>
-              <TabsTrigger value="inspections" className="rounded-lg py-2.5 px-0 font-bold flex flex-col sm:flex-row items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-white">
-                <FileCheck className="w-4 h-4 sm:mr-2" />
-                <span className="text-[10px] sm:text-sm">Audits</span>
+              <TabsTrigger value="inspections" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                <FileCheck className="w-4 h-4 mr-2" /> Audits
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="tenants" className="mt-6 space-y-4">
+            <TabsContent value="tenants" className="mt-8 space-y-4">
                {tenants && tenants.length > 0 ? (
                  tenants.map(tenant => (
-                    <div key={tenant.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-all">
-                      <div className="flex items-center gap-4 text-left">
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold text-lg font-headline">
+                    <div key={tenant.id} className="flex items-center justify-between p-6 bg-white rounded-[1.75rem] border border-primary/5 shadow-sm hover:shadow-md transition-all">
+                      <div className="flex items-center gap-5 text-left">
+                        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold text-xl font-headline">
                           {tenant.firstName?.[0]}{tenant.lastName?.[0]}
                         </div>
                         <div>
-                          <p className="font-bold font-headline text-lg text-primary">{tenant.firstName} {tenant.lastName}</p>
-                          <p className="text-xs text-muted-foreground font-medium font-body">{tenant.email}</p>
+                          <p className="font-bold font-headline text-xl text-primary">{tenant.firstName} {tenant.lastName}</p>
+                          <p className="text-sm text-muted-foreground font-medium font-body">{tenant.email}</p>
                         </div>
                       </div>
-                      <div className="text-right hidden sm:block">
-                        <Badge variant="outline" className="font-bold border-primary/20 text-primary mb-1">Active</Badge>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase">Ends: {tenant.leaseEndDate}</p>
+                      <div className="text-right">
+                        <Badge variant="outline" className="font-bold border-emerald-200 text-emerald-700 bg-emerald-50 mb-1">Active Lease</Badge>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Expires: {tenant.leaseEndDate}</p>
                       </div>
                     </div>
                  ))
                ) : (
-                 <div className="p-16 text-center bg-muted/10 rounded-3xl border-2 border-dashed border-primary/10">
-                    <p className="text-sm text-muted-foreground font-bold font-headline mb-4">No residents assigned.</p>
-                    <Button asChild className="rounded-xl font-bold bg-primary text-white shadow-lg shadow-primary/10"><Link href="/landlord/tenants">Link Resident</Link></Button>
+                 <div className="p-20 text-center bg-muted/10 rounded-[2.5rem] border-2 border-dashed border-primary/10">
+                    <p className="text-sm text-muted-foreground font-bold font-headline mb-4 opacity-50">No residents assigned to this asset.</p>
+                    <Button asChild className="rounded-xl font-bold bg-primary text-white px-8"><Link href="/landlord/tenants">Assign Resident</Link></Button>
                  </div>
                )}
             </TabsContent>
 
-            <TabsContent value="docs" className="mt-6 space-y-6">
-              <Card className="border-none shadow-sm bg-primary/5 rounded-2xl border border-primary/5">
-                <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <TabsContent value="docs" className="mt-8 space-y-6">
+              <Card className="border-none shadow-sm bg-primary/5 rounded-[1.75rem] border border-primary/5 overflow-hidden">
+                <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2 text-left">
-                    <Label className="text-[10px] font-bold font-headline uppercase tracking-widest text-primary/60">Compliance Deadline</Label>
+                    <Label className="text-[10px] font-bold font-headline uppercase tracking-widest text-primary/60">Compliance Expiry</Label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn("w-full justify-start text-left h-11 rounded-xl bg-white border-none shadow-sm font-body", !uploadExpiryDate && "text-muted-foreground")}>
-                          <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
-                          {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Select future date..."}
+                        <Button variant="outline" className={cn("w-full justify-start text-left h-12 rounded-xl bg-white border-none shadow-sm font-body", !uploadExpiryDate && "text-muted-foreground")}>
+                          <CalendarIcon className="mr-3 h-4 w-4 text-primary" />
+                          {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set deadline (Optional)"}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0 rounded-2xl border-none shadow-2xl" align="start">
@@ -424,9 +410,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                   </div>
                   <div className="flex items-end">
                     <input type="file" ref={fileInputRef} className="hidden" onChange={handleUploadDocument} />
-                    <Button onClick={() => fileInputRef.current?.click()} className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/20 bg-primary text-white" disabled={isUploadingDoc}>
+                    <Button onClick={() => fileInputRef.current?.click()} className="w-full rounded-xl h-12 font-bold shadow-lg shadow-primary/20 bg-primary text-white" disabled={isUploadingDoc}>
                       {isUploadingDoc ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-                      Add Document
+                      Push to Vault
                     </Button>
                   </div>
                 </CardContent>
@@ -436,31 +422,35 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 {propertyDocuments?.map(doc => {
                   const downloadUrl = getMemoryAsset(doc.id) || doc.fileUrl;
                   return (
-                    <div key={doc.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-shadow">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                          <FileText className="w-5 h-5" />
+                    <div key={doc.id} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-all">
+                      <div className="flex items-center gap-4 text-left">
+                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                          <FileText className="w-6 h-6" />
                         </div>
-                        <div className="text-left">
-                          <p className="text-sm font-bold truncate max-w-[200px]">{doc.fileName}</p>
-                          <p className="text-[10px] text-muted-foreground font-medium">Uploaded {doc.uploadDate ? format(new Date(doc.uploadDate), 'PP') : 'Recently'}</p>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold truncate max-w-[300px] text-primary">{doc.fileName}</p>
+                          <div className="flex items-center gap-3 mt-1">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase">Uploaded: {doc.uploadDate ? format(new Date(doc.uploadDate), 'PP') : 'Recently'}</p>
+                            {doc.expiryDate && (
+                              <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-amber-200 text-amber-700 bg-amber-50">Expires {format(new Date(doc.expiryDate), 'PP')}</Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex gap-1">
+                      <div className="flex gap-2">
                         {downloadUrl ? (
-                          <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/5 text-primary" asChild title="Download">
+                          <Button variant="ghost" size="icon" className="rounded-xl hover:bg-primary/5 text-primary h-11 w-11" asChild>
                             <a href={downloadUrl} target="_blank" rel="noopener noreferrer" download={doc.fileName}>
-                              <Download className="w-4 h-4" />
+                              <Download className="w-5 h-5" />
                             </a>
                           </Button>
                         ) : (
-                          <div className="px-3 py-1 flex items-center gap-2 bg-muted/50 rounded-lg">
-                            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Mirroring</span>
-                            <Loader2 className="w-3 h-3 animate-spin text-primary/40" />
+                          <div className="px-4 py-2 flex items-center gap-3 bg-muted/50 rounded-xl">
+                            <Loader2 className="w-4 h-4 animate-spin text-primary/40" />
                           </div>
                         )}
-                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-destructive/5 text-destructive/40 hover:text-destructive" onClick={() => handleDeleteDocument(doc.id)} title="Delete">
-                          <Trash2 className="w-4 h-4" />
+                        <Button variant="ghost" size="icon" className="rounded-xl hover:bg-destructive/5 text-destructive/40 hover:text-destructive h-11 w-11" onClick={() => handleDeleteDocument(doc.id)}>
+                          <Trash2 className="w-5 h-5" />
                         </Button>
                       </div>
                     </div>
@@ -469,57 +459,93 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               </div>
             </TabsContent>
 
-            <TabsContent value="maintenance" className="mt-6 space-y-4">
-               {maintenanceRequests?.map(req => (
-                  <div key={req.id} className="p-5 bg-white rounded-2xl border border-primary/5 text-left">
-                    <div className="flex justify-between items-start mb-2">
-                       <Badge className={cn("text-[10px] font-bold uppercase", req.priority === 'critical' ? 'bg-red-500' : 'bg-blue-500')}>{req.priority}</Badge>
-                       <span className="text-[10px] text-muted-foreground font-bold">{req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'PP') : 'Today'}</span>
+            <TabsContent value="maintenance" className="mt-8 space-y-4">
+               {maintenanceRequests && maintenanceRequests.length > 0 ? (
+                 maintenanceRequests.map(req => (
+                    <div key={req.id} className="p-6 bg-white rounded-[1.75rem] border border-primary/5 text-left group hover:shadow-md transition-all">
+                      <div className="flex justify-between items-start mb-4">
+                         <div className="flex items-center gap-3">
+                           <Badge className={cn("text-[10px] font-bold uppercase px-3 py-1", getPriorityColor(req.priority))}>{req.priority}</Badge>
+                           <Badge variant="outline" className="text-[10px] font-bold uppercase border-primary/10">{req.status}</Badge>
+                         </div>
+                         <span className="text-[10px] text-muted-foreground font-bold flex items-center"><CalendarIcon className="w-3 h-3 mr-1" /> {req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'PP') : 'Today'}</span>
+                      </div>
+                      <h4 className="font-bold text-xl text-primary font-headline mb-2">{req.title}</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 font-body">{req.description}</p>
+                      <div className="mt-4 pt-4 border-t border-primary/5 flex justify-end">
+                        <Button variant="ghost" className="text-xs font-bold text-primary rounded-xl" asChild>
+                          <Link href="/landlord/maintenance">Manage in Hub <ChevronRight className="w-4 h-4 ml-1" /></Link>
+                        </Button>
+                      </div>
                     </div>
-                    <h4 className="font-bold text-primary">{req.title}</h4>
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{req.description}</p>
-                  </div>
-               ))}
+                 ))
+               ) : (
+                 <div className="py-20 text-center bg-muted/10 rounded-[2rem] border-2 border-dashed border-primary/10">
+                   <p className="text-muted-foreground font-bold opacity-50">No maintenance repairs logged for this property.</p>
+                 </div>
+               )}
             </TabsContent>
 
-            <TabsContent value="inspections" className="mt-6 space-y-4">
-              {inspections?.map(insp => (
-                 <div key={insp.id} className="p-5 bg-white rounded-2xl border border-primary/5 text-left flex justify-between items-center">
-                   <div>
-                     <p className="text-sm font-bold text-primary">Audit: {format(new Date(insp.scheduledDate), 'PP')}</p>
-                     <p className="text-[10px] text-muted-foreground font-bold uppercase">{insp.status}</p>
+            <TabsContent value="inspections" className="mt-8 space-y-4">
+              {inspections && inspections.length > 0 ? (
+                inspections.map(insp => (
+                   <div key={insp.id} className="p-6 bg-white rounded-[1.75rem] border border-primary/5 text-left flex justify-between items-center group hover:shadow-md transition-all">
+                     <div className="flex items-center gap-5">
+                       <div className={cn("p-4 rounded-2xl flex flex-col items-center justify-center min-w-[70px]", insp.status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700')}>
+                         <span className="text-[10px] font-bold uppercase">{insp.scheduledDate ? format(new Date(insp.scheduledDate), 'MMM') : 'TBC'}</span>
+                         <span className="text-2xl font-bold font-headline">{insp.scheduledDate ? format(new Date(insp.scheduledDate), 'dd') : '??'}</span>
+                       </div>
+                       <div>
+                         <h4 className="text-lg font-bold text-primary font-headline">Compliance Audit Record</h4>
+                         <div className="flex items-center gap-3 mt-1">
+                           <Badge variant={insp.status === 'completed' ? 'secondary' : 'default'} className="uppercase text-[9px] font-bold">{insp.status}</Badge>
+                           {insp.healthScore && (
+                             <span className="text-[10px] font-bold text-emerald-600 flex items-center"><CheckCircle2 className="w-3 h-3 mr-1" /> Score: {insp.healthScore}/100</span>
+                           )}
+                         </div>
+                       </div>
+                     </div>
+                     <Button variant="outline" className="rounded-xl font-bold h-11 border-primary/20 hover:bg-primary hover:text-white transition-all" asChild>
+                       <Link href="/landlord/inspections">View Audit <ChevronRight className="w-4 h-4 ml-1" /></Link>
+                     </Button>
                    </div>
-                   <Button variant="outline" size="sm" className="rounded-lg text-xs" asChild><Link href="/landlord/inspections">View</Link></Button>
-                 </div>
-              ))}
+                ))
+              ) : (
+                <div className="py-20 text-center bg-muted/10 rounded-[2rem] border-2 border-dashed border-primary/10">
+                  <p className="text-muted-foreground font-bold opacity-50">No official audits have been recorded.</p>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>
 
         <div className="space-y-8">
-          <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-primary text-white">
-            <CardHeader className="text-left">
-              <CardTitle className="text-lg font-headline flex items-center">
-                <ShieldAlert className="w-5 h-5 mr-3" />
-                Asset Status
+          <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-primary text-white">
+            <CardHeader className="text-left p-8 bg-white/5">
+              <CardTitle className="text-xl font-headline flex items-center">
+                <ShieldAlert className="w-6 h-6 mr-3 text-accent" />
+                Asset Compliance Status
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 text-left">
-              <div className="space-y-2">
-                 <div className="flex justify-between items-center text-xs font-bold opacity-60">
-                   <span>Compliance Score</span>
+            <CardContent className="space-y-6 text-left p-8">
+              <div className="space-y-3">
+                 <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest opacity-60">
+                   <span>Composite Grade</span>
                    <span>{assetStatus.score}%</span>
                  </div>
-                 <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                 <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
                    <div className={cn("h-full transition-all duration-1000", assetStatus.color)} style={{ width: `${assetStatus.score}%` }}></div>
                  </div>
               </div>
-              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                <p className="text-xs font-bold font-body leading-relaxed text-white/90">
-                  {assetStatus.message}
-                </p>
+              <div className="p-5 bg-white/10 rounded-[1.5rem] border border-white/10 backdrop-blur-md">
+                <div className="flex gap-3 items-start">
+                   <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+                   <p className="text-sm font-bold font-body leading-relaxed">
+                     {assetStatus.message}
+                   </p>
+                </div>
               </div>
-              <p className="text-[10px] font-bold uppercase opacity-50 tracking-widest text-center mt-2">Real-Time Portfolio Audit</p>
+              <p className="text-[10px] font-bold uppercase opacity-30 tracking-[0.3em] text-center mt-4">Real-Time Portfolio Audit Engine</p>
             </CardContent>
           </Card>
         </div>
