@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { useUser, useFirestore, setDocumentNonBlocking, useStorage } from '@/firebase';
+import { useUser, useFirestore, setDocumentNonBlocking, useStorage, updateDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp, collection } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardFooter } from "@/components/ui/card";
@@ -44,68 +44,53 @@ export default function NewPropertyPage() {
     }
   };
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !db) return;
 
-    setIsSubmitting(true);
     const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
-    try {
-      let currentImageUrl = previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
+    // 1. Prepare Base Data
+    const baseData = {
+      id: propertyId,
+      landlordId: user.uid,
+      addressLine1: address,
+      city,
+      zipCode,
+      description,
+      propertyType,
+      numberOfBedrooms: parseInt(bedrooms, 10) || 1,
+      numberOfBathrooms: parseInt(bathrooms, 10) || 1,
+      rentAmount: parseFloat(rentAmount) || 0,
+      isOccupied: false,
+      imageUrl: previewUrl || `https://picsum.photos/seed/${propertyId}/800/600`,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      tenantIds: [],
+      memberIds: [user.uid],
+      isActive: true
+    };
 
-      // 1. Handle Image Upload to Firebase Storage
-      if (imageFile && storage) {
-        const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
-        const result = await uploadBytes(storageRef, imageFile);
-        currentImageUrl = await getDownloadURL(result.ref);
-      }
+    // 2. Immediate Firestore Update (Instant UI Feedback)
+    setDocumentNonBlocking(propertyRef, baseData, { merge: true });
 
-      const baseData = {
-        id: propertyId,
-        landlordId: user.uid,
-        addressLine1: address,
-        city,
-        zipCode,
-        description,
-        propertyType,
-        numberOfBedrooms: parseInt(bedrooms, 10) || 1,
-        numberOfBathrooms: parseInt(bathrooms, 10) || 1,
-        rentAmount: parseFloat(rentAmount) || 0,
-        isOccupied: false,
-        imageUrl: currentImageUrl,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        tenantIds: [],
-        memberIds: [user.uid],
-        isActive: true
-      };
-
-      // 2. Sync to Firestore (Real-time Layer - NON-BLOCKING)
-      setDocumentNonBlocking(propertyRef, baseData, { merge: true });
-
-      // 3. Sync to PostgreSQL (Relational Ledger Mirror - NON-BLOCKING)
-      syncPropertyToDb({
-        id: propertyId,
-        landlordId: user.uid,
-        addressLine1: address,
-        city,
-        zipCode,
-        rentAmount: parseFloat(rentAmount) || 0,
-        imageUrl: currentImageUrl,
-        propertyType,
-        description
-      });
-
-      toast({ title: "Asset Registered", description: "Changes saved in real-time." });
-      
-      // Navigate immediately
-      router.push('/landlord/properties');
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Registration Failed", description: error.message });
-      setIsSubmitting(false);
+    // 3. Handle Heavy Tasks in Background
+    if (imageFile && storage) {
+      const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
+      uploadBytes(storageRef, imageFile).then(async (result) => {
+        const url = await getDownloadURL(result.ref);
+        updateDocumentNonBlocking(propertyRef, { imageUrl: url, updatedAt: serverTimestamp() });
+        syncPropertyToDb({ ...baseData, imageUrl: url });
+      }).catch(err => console.error("Background Image Upload failed:", err));
+    } else {
+      syncPropertyToDb(baseData);
     }
+
+    toast({ title: "Asset Registered", description: "Creating asset records in real-time." });
+    
+    // 4. Instant Navigation
+    router.push('/landlord/properties');
   };
 
   return (
@@ -217,8 +202,8 @@ export default function NewPropertyPage() {
           </div>
           <CardFooter className="p-8 bg-muted/10 border-t flex justify-end gap-4">
             <Button type="button" variant="ghost" className="rounded-xl h-12 px-8 font-bold font-headline" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" className="rounded-xl font-bold bg-primary h-12 px-12 shadow-lg shadow-primary/20 min-w-[200px] font-headline text-white hover:bg-primary/90" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
+            <Button type="submit" className="rounded-xl font-bold bg-primary h-12 px-12 shadow-lg shadow-primary/20 min-w-[200px] font-headline text-white hover:bg-primary/90">
+              <Save className="w-5 h-5 mr-2" />
               Register Asset
             </Button>
           </CardFooter>

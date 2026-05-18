@@ -74,62 +74,55 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
   };
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !db || !propertyRef) return;
 
-    setIsSubmitting(true);
+    // 1. Prepare Update Data
+    const updateData = {
+      addressLine1: address,
+      city,
+      zipCode,
+      description,
+      propertyType,
+      numberOfBedrooms: parseInt(bedrooms, 10) || 1,
+      numberOfBathrooms: parseInt(bathrooms, 10) || 1,
+      rentAmount: parseFloat(rentAmount) || 0,
+      updatedAt: serverTimestamp(),
+    };
 
-    try {
-      let currentImageUrl = property?.imageUrl || previewUrl;
+    // 2. Immediate Firestore Update (Text Fields Only First)
+    // This provides instant feedback via Firestore's real-time listeners on the next page
+    updateDocumentNonBlocking(propertyRef, updateData);
 
-      // 1. Handle Image Upload if a new file was selected (Blocking only for the image itself)
-      if (imageFile && storage) {
-        const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
-        const result = await uploadBytes(storageRef, imageFile);
-        currentImageUrl = await getDownloadURL(result.ref);
-      }
-
-      const updateData = {
-        addressLine1: address,
-        city,
-        zipCode,
-        description,
-        propertyType,
-        numberOfBedrooms: parseInt(bedrooms, 10) || 1,
-        numberOfBathrooms: parseInt(bathrooms, 10) || 1,
-        rentAmount: parseFloat(rentAmount) || 0,
-        imageUrl: currentImageUrl,
-        updatedAt: serverTimestamp(),
-      };
-
-      // 2. Update Firestore (Real-time Mirror - NON-BLOCKING/OPTIMISTIC)
-      updateDocumentNonBlocking(propertyRef, updateData);
-
-      // 3. Sync to PostgreSQL (Relational Ledger - NON-BLOCKING)
-      syncPropertyToDb({
-        id: propertyId,
-        landlordId: user.uid,
-        addressLine1: address,
-        city,
-        zipCode,
-        rentAmount: parseFloat(rentAmount) || 0,
-        imageUrl: currentImageUrl || '',
-        propertyType,
-        description
+    // 3. Handle Image & Relational Sync in Background
+    if (imageFile && storage) {
+      const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
+      // Background promise for upload - does not block UI
+      uploadBytes(storageRef, imageFile).then(async (result) => {
+        const url = await getDownloadURL(result.ref);
+        // Post-upload metadata refresh
+        updateDocumentNonBlocking(propertyRef, { imageUrl: url, updatedAt: serverTimestamp() });
+        // Background sync to PostgreSQL with the final URL
+        syncPropertyToDb({ ...updateData, id: propertyId, landlordId: user.uid, imageUrl: url });
+      }).catch(err => console.error("Background Image Sync error:", err));
+    } else {
+      // Instant Background Sync if no image change
+      syncPropertyToDb({ 
+        ...updateData, 
+        id: propertyId, 
+        landlordId: user.uid, 
+        imageUrl: property?.imageUrl || '' 
       });
-
-      toast({ 
-        title: "Portfolio Updated", 
-        description: "Changes synchronized in real-time." 
-      });
-      
-      // Navigate immediately for a "real-time" feel
-      router.push(`/landlord/properties/${propertyId}`);
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Update Failed", description: error.message });
-      setIsSubmitting(false);
     }
+
+    toast({ 
+      title: "Portfolio Updated", 
+      description: "Changes applied instantly." 
+    });
+    
+    // 4. Navigate Immediately for "Real-Time" feel
+    router.push(`/landlord/properties/${propertyId}`);
   };
 
   if (isLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
@@ -232,8 +225,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </div>
           <CardFooter className="p-8 bg-muted/10 border-t flex justify-end gap-4">
             <Button type="button" variant="ghost" className="rounded-xl h-12 px-8 font-bold font-headline" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" className="rounded-xl font-bold bg-primary h-12 px-12 shadow-lg shadow-primary/20 min-w-[200px] font-headline text-white hover:bg-primary/90" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
+            <Button type="submit" className="rounded-xl font-bold bg-primary h-12 px-12 shadow-lg shadow-primary/20 min-w-[200px] font-headline text-white hover:bg-primary/90">
+              <Save className="w-5 h-5 mr-2" />
               Save Changes
             </Button>
           </CardFooter>
