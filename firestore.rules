@@ -6,16 +6,12 @@ service cloud.firestore {
       return request.auth != null;
     }
     
-    function isMember() {
-      return isSignedIn() && (request.auth.uid in resource.data.memberIds);
-    }
-
     // User profiles are private to the individual owner
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
     
-    // Properties: Accessible by landlord or any assigned member (tenant)
+    // Properties: Accessible by landlord or any assigned member
     match /properties/{propertyId} {
       allow read: if isSignedIn() && (
         request.auth.uid == resource.data.landlordId || 
@@ -26,88 +22,44 @@ service cloud.firestore {
       allow create: if isSignedIn();
     }
     
+    // Notifications: The primary real-time alert feed
+    match /notifications/{notificationId} {
+      // Explicitly allow list queries based on memberIds or userId to resolve permission denials
+      allow list: if isSignedIn() && (
+        request.auth.uid in resource.data.memberIds || 
+        request.auth.uid == resource.data.userId
+      );
+      allow get: if isSignedIn() && (
+        request.auth.uid == resource.data.userId || 
+        request.auth.uid in resource.data.memberIds
+      );
+      allow write, create: if isSignedIn();
+    }
+    
+    // Maintenance Requests: Collaborative repair tracking
+    match /maintenanceRequests/{requestId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.landlordId || 
+        request.auth.uid == resource.data.tenantId || 
+        request.auth.uid in resource.data.memberIds
+      );
+      allow write, create: if isSignedIn();
+    }
+    
     // Tenant Profiles: Bridge between landlords and users
     match /tenantProfiles/{profileId} {
       allow read: if isSignedIn() && (
         request.auth.uid == resource.data.landlordId || 
         request.auth.uid == resource.data.userId || 
-        request.auth.uid in resource.data.memberIds ||
-        (request.auth.token.email != null && request.auth.token.email.lower() == resource.data.email.lower())
+        request.auth.uid in resource.data.memberIds
       );
-      allow write: if isSignedIn() && (
-        request.auth.uid == resource.data.landlordId || 
-        request.auth.uid == resource.data.userId ||
-        (request.auth.token.email != null && request.auth.token.email.lower() == resource.data.email.lower())
-      );
-      allow create: if isSignedIn();
+      allow write, create: if isSignedIn();
     }
-    
-    // Notifications: The primary real-time alert feed
-    match /notifications/{notificationId} {
-      allow read: if isSignedIn() && (
-        request.auth.uid == resource.data.userId || 
-        request.auth.uid in resource.data.memberIds
-      );
-      allow write: if isSignedIn();
-      allow create: if isSignedIn();
-    }
-    
-    // Maintenance Requests: Collaborative repair tracking
-    match /maintenanceRequests/{requestId} {
-      allow read, write: if isSignedIn() && (
-        request.auth.uid == resource.data.landlordId || 
-        request.auth.uid == resource.data.tenantId || 
-        request.auth.uid in resource.data.memberIds
-      );
-      allow create: if isSignedIn();
-    }
-    
-    // Documents: The secure property vault
-    match /documents/{documentId} {
-      allow read: if isSignedIn() && (
-        request.auth.uid == resource.data.landlordId || 
-        request.auth.uid in resource.data.memberIds
-      );
-      allow write: if isSignedIn() && (
-        request.auth.uid == resource.data.landlordId || 
-        request.auth.uid in resource.data.memberIds
-      );
-      allow create: if isSignedIn();
-    }
-    
-    // Messages: Secure direct lines between management and residents
-    match /messages/{messageId} {
-      allow read: if isSignedIn() && (
-        request.auth.uid in resource.data.memberIds
-      );
-      allow write: if isSignedIn();
-      allow create: if isSignedIn();
-    }
-    
-    // Inspections: Official safety and compliance records
-    match /inspections/{inspectionId} {
-      allow read: if isSignedIn() && (
-        request.auth.uid == resource.data.landlordId || 
-        request.auth.uid in resource.data.memberIds
-      );
-      allow write: if isSignedIn() && (
-        request.auth.uid == resource.data.landlordId || 
-        request.auth.uid in resource.data.memberIds
-      );
-      allow create: if isSignedIn();
-    }
-    
-    // Emergency Contacts: Authorized property partners
-    match /emergencyContacts/{contactId} {
-      allow read: if isSignedIn() && (
-        request.auth.uid == resource.data.landlordId || 
-        request.auth.uid in resource.data.memberIds
-      );
-      allow write: if isSignedIn() && (
-        request.auth.uid == resource.data.landlordId || 
-        request.auth.uid in resource.data.memberIds
-      );
-      allow create: if isSignedIn();
-    }
+
+    // Default rules for other managed collections using membership pattern
+    match /documents/{id} { allow read, write: if isSignedIn() && request.auth.uid in resource.data.memberIds; }
+    match /messages/{id} { allow read, write: if isSignedIn() && request.auth.uid in resource.data.memberIds; }
+    match /inspections/{id} { allow read, write: if isSignedIn() && request.auth.uid in resource.data.memberIds; }
+    match /emergencyContacts/{id} { allow read, write: if isSignedIn() && request.auth.uid in resource.data.memberIds; }
   }
 }
