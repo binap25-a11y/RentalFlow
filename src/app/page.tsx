@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -37,8 +38,8 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  // Definitive Blue Key Identity
-  const LOGO_URL = 'https://picsum.photos/seed/blue-key-master-v1/512/512';
+  // Definitive Professional Brand Identity
+  const LOGO_URL = 'https://picsum.photos/seed/blue-key-brand-v2/512/512';
 
   useEffect(() => {
     setMounted(true);
@@ -171,7 +172,7 @@ export default function LoginPage() {
               fill 
               className="object-contain rounded-[2.5rem] shadow-2xl ring-4 ring-white relative z-10" 
               unoptimized 
-              data-ai-hint="blue key"
+              data-ai-hint="blue house key"
             />
           </div>
           
@@ -204,7 +205,7 @@ export default function LoginPage() {
                 height={72} 
                 className="rounded-2xl" 
                 unoptimized 
-                data-ai-hint="blue key"
+                data-ai-hint="blue house key"
               />
             </div>
             <CardTitle className="text-2xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
@@ -263,7 +264,7 @@ export default function LoginPage() {
             height={100} 
             className="rounded-[2.25rem]" 
             unoptimized 
-            data-ai-hint="blue key"
+            data-ai-hint="blue house key"
           />
         </div>
         <h1 className="text-5xl font-headline font-bold text-primary mb-2 tracking-tighter">RentalFlow</h1>
