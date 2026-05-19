@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, use } from 'react';
@@ -102,13 +103,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     try {
       let uploadedUrls: string[] = [];
       
-      // 1. Instant Bridge Update for Zero-Latency Previews
-      const currentFullGallery = [...existingImageUrls, ...newPreviewUrls];
-      if (currentFullGallery.length > 0) {
-         setMemoryAssets(propertyId, currentFullGallery);
-      }
-
-      // 2. Suppabase Storage Sync
       if (newImageFiles.length > 0) {
         const uploadPromises = newImageFiles.map((file, index) => {
           const formData = new FormData();
@@ -124,10 +118,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const finalGallery = [...existingImageUrls, ...uploadedUrls];
       const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
       
-      // Update bridge with permanent links immediately
+      // Update local bridge for zero-latency carousel update
       setMemoryAssets(propertyId, finalGallery);
 
-      // 3. Construct PLAIN OBJECT for Server Action (strip non-serializable Timestamps)
+      // Construct STRICTLY PLAIN OBJECT for Server Action (remove all Firestore objects/Timestamps)
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -150,7 +144,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedAt: serverTimestamp(),
       };
 
-      // 4. Harden Persistence: Sequential Await to ensure database integrity
+      // Sequentially wait for Firestore write and Postgres sync
       await setDoc(propertyRef, firestoreUpdateData, { merge: true });
       await syncPropertyToDb(serializableData);
 

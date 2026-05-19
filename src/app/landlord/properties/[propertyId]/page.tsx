@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, use, useRef, useMemo, useEffect } from 'react';
@@ -42,6 +43,7 @@ import {
 } from "@/components/ui/carousel";
 import { syncDocumentToDb, deleteDocumentFromDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format, isBefore } from 'date-fns';
@@ -186,14 +188,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return { score: finalScore, color, message };
   }, [propertyDocuments, maintenanceRequests, inspections]);
 
-  // HARDEN: Simplified and prioritize Memory Bridge for instant feedback
   const gallery = useMemo(() => {
     if (!isClient) return [];
     
-    // First, check for session-based memory bridge (intended state)
     const bridgeUrls = getMemoryAssets(propertyId);
-    
-    // Then, look at current DB data
     let dbUrls: string[] = [];
     if (property) {
       dbUrls = property.imageUrls && Array.isArray(property.imageUrls) 
@@ -203,18 +201,16 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
     const cleanDbUrls = dbUrls.filter(url => url && typeof url === 'string' && url.length > 5);
 
-    // Prioritize the bridge if it exists (it contains the most recent uploads in this session)
     if (bridgeUrls && bridgeUrls.length > 0) {
       return bridgeUrls;
     }
 
-    // Otherwise use DB URLs
     if (cleanDbUrls.length > 0) {
       return cleanDbUrls;
     }
 
-    // Default fallback
-    return [`https://picsum.photos/seed/${propertyId}/800/600`];
+    const officialPlaceholder = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl;
+    return [officialPlaceholder || `https://picsum.photos/seed/${propertyId}/800/600`];
   }, [property, propertyId, isClient]);
 
   const handleUpdateRent = () => {
@@ -235,7 +231,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const docId = doc(collection(db, 'documents')).id;
     const docRef = doc(db, 'documents', docId);
     
-    // Local session cache for documents
     setMemoryAsset(docId, URL.createObjectURL(file));
 
     const residentIds = tenants?.map(t => t.userId).filter(Boolean) || [];
@@ -249,7 +244,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       const result = await uploadToSupabase(formData, 'property-documents', path);
       
       if (result.success && result.url) {
-        // Construct PLAIN OBJECT for Server Action to avoid serialization errors
         const serializableDocData = {
           id: docId,
           fileName: file.name,
@@ -260,7 +254,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           expiryDate: uploadExpiryDate ? uploadExpiryDate.toISOString() : null,
         };
 
-        // Update both Firebase (real-time) and Postgres (relational ledger)
         await setDoc(docRef, { 
           ...serializableDocData, 
           status: 'active',

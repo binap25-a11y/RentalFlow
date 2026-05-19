@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -68,12 +69,6 @@ export default function NewPropertyPage() {
       let finalImageUrl = '';
       let finalImageUrls: string[] = [];
 
-      // 1. Instant Memory Sync for Zero-Latency during redirection
-      if (previewUrls.length > 0) {
-        setMemoryAssets(propertyId, previewUrls);
-      }
-
-      // 2. Persistent Supabase Uploads
       if (imageFiles.length > 0) {
         const uploadPromises = imageFiles.map((file, index) => {
           const formData = new FormData();
@@ -87,12 +82,13 @@ export default function NewPropertyPage() {
         
         if (finalImageUrls.length > 0) {
           finalImageUrl = finalImageUrls[0];
-          // Update bridge with permanent URLs immediately for persistence
-          setMemoryAssets(propertyId, finalImageUrls);
         }
       }
 
-      // 3. Construct SERIALIZABLE PLAIN OBJECT for Server Action (remove Timestamps)
+      // Local session cache for instant preview upon redirect
+      setMemoryAssets(propertyId, finalImageUrls.length > 0 ? finalImageUrls : previewUrls);
+
+      // Construct STRICTLY PLAIN OBJECT for Server Action (strip all Timestamps)
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -118,7 +114,7 @@ export default function NewPropertyPage() {
         updatedAt: serverTimestamp(),
       };
 
-      // 4. Harden Persistence: Sequential Await to ensure database integrity
+      // Sequentially wait for Firestore write and Postgres sync
       await setDoc(propertyRef, firestoreData, { merge: true });
       await syncPropertyToDb(serializableData);
 
@@ -212,7 +208,7 @@ export default function NewPropertyPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="city" className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">City</Label>
-                    <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} required placeholder="London" className="rounded-xl h-12 bg-muted/20 border-none font-body font-medium" />
+                    <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-body font-medium" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="zipCode" className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Postcode</Label>
