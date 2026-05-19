@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, use, useRef, useMemo, useEffect } from 'react';
@@ -187,7 +188,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return { score: finalScore, color, message };
   }, [propertyDocuments, maintenanceRequests, inspections]);
 
-  // HARDEN: Unified gallery logic to ensure instant detail updates and consistent placeholder
+  // HARDEN: Standardized gallery logic to ensure instant detail updates and consistent placeholder
   const gallery = useMemo(() => {
     if (!isClient) return [];
     

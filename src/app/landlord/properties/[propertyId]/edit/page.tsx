@@ -144,7 +144,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedAt: serverTimestamp(),
       };
 
-      // Sequentially wait for Firestore write and Postgres sync
+      // Sequentially wait for Firestore write and Postgres sync before navigation
       await setDoc(propertyRef, firestoreUpdateData, { merge: true });
       await syncPropertyToDb(serializableData);
 

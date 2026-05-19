@@ -47,8 +47,8 @@ export default function NewPropertyPage() {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
       setImageFiles(prev => [...prev, ...files]);
-      const new previews = files.map(file => URL.createObjectURL(file));
-      setPreviewUrls(prev => [...prev, ...previews]);
+      const newPreviews = files.map(file => URL.createObjectURL(file));
+      setPreviewUrls(prev => [...prev, ...newPreviews]);
     }
   };
 
@@ -114,7 +114,7 @@ export default function NewPropertyPage() {
         updatedAt: serverTimestamp(),
       };
 
-      // Sequentially wait for Firestore write and Postgres sync
+      // Sequentially wait for Firestore write and Postgres sync before navigation
       await setDoc(propertyRef, firestoreData, { merge: true });
       await syncPropertyToDb(serializableData);
 

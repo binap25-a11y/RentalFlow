@@ -18,8 +18,9 @@ import { format, isValid } from "date-fns";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { tenantConcierge } from "@/ai/flows/tenant-concierge-flow";
 import { cn } from "@/lib/utils";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
-const getMemoryAsset = (id: string) => {
+const getMemoryAsset = (id: string): string[] | null => {
   if (typeof window === 'undefined') return null;
   return (window as any).__asset_bridge?.[id] || null;
 };
@@ -31,6 +32,11 @@ export default function TenantHub() {
   const [isChatting, setIsChatting] = useState(false);
   const [chatHistory, setChatHistory] = useState<{role: 'user' | 'bot', text: string}[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const propertyQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -87,6 +93,17 @@ export default function TenantHub() {
     }
   };
 
+  const activeImageUrl = useMemo(() => {
+    if (!isClient || !property) return '';
+    const bridgeAssets = getMemoryAsset(property.id);
+    const dbUrl = property.imageUrl;
+    const officialPlaceholder = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || `https://picsum.photos/seed/prop-fallback/800/600`;
+    
+    return (bridgeAssets && bridgeAssets.length > 0) 
+      ? bridgeAssets[0] 
+      : (dbUrl && dbUrl.length > 5 ? dbUrl : officialPlaceholder);
+  }, [property, isClient]);
+
   if (isPropLoading || isRequestsLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] space-y-6">
@@ -116,10 +133,6 @@ export default function TenantHub() {
       </div>
     );
   }
-
-  const bridgeUrl = getMemoryAsset(property.id);
-  const dbUrl = property.imageUrl;
-  const activeImageUrl = bridgeUrl || (dbUrl && dbUrl.length > 5 ? dbUrl : `https://picsum.photos/seed/${property.id}/800/600`);
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-12">
