@@ -131,7 +131,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       };
 
       // CRITICAL: Construct a clean, plain object for the Server Action to avoid serialization errors
-      // Stripping out Firestore Timestamp objects which cannot be passed to Server Functions
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
