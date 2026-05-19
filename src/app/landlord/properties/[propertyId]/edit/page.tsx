@@ -6,11 +6,9 @@ import {
   useFirestore, 
   useDoc, 
   useMemoFirebase, 
-  useStorage, 
   updateDocumentNonBlocking 
 } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
+import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 
 // Zero-Quota High-Performance Memory Bridge
 const getMemoryAsset = (id: string) => {
@@ -41,7 +40,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const propertyId = resolvedParams.propertyId;
   const { user } = useUser();
   const db = useFirestore();
-  const storage = useStorage();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -75,7 +73,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // Mirroring Bridge Recovery
       const bridgeUrl = getMemoryAsset(propertyId);
       if (property.isImageUpdating && bridgeUrl) {
         setPreviewUrl(bridgeUrl);
@@ -114,10 +111,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       updatedAt: serverTimestamp(),
     };
 
-    // 1. Instant Firestore Sync
     updateDocumentNonBlocking(propertyRef, updateData);
 
-    // 2. Instant Relational Sync (Pending image)
     syncPropertyToDb({ 
       ...updateData, 
       id: propertyId, 
@@ -125,24 +120,23 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       imageUrl: property?.imageUrl || '' 
     });
 
-    if (imageFile && storage) {
-      const storageRef = ref(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`);
+    if (imageFile) {
+      const formData = new FormData();
+      formData.append('file', imageFile);
+      const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`;
       
-      uploadBytes(storageRef, imageFile).then(async (result) => {
-        const url = await getDownloadURL(result.ref);
-        updateDocumentNonBlocking(propertyRef, { 
-          imageUrl: url, 
-          isImageUpdating: false,
-          updatedAt: serverTimestamp() 
-        });
-        // 3. Final Relational URL Update
-        syncPropertyToDb({ 
-          ...updateData, 
-          id: propertyId, 
-          landlordId: user.uid, 
-          imageUrl: url 
-        });
-      }).catch(err => {
+      uploadToSupabase(formData, 'property-images', path).then((result) => {
+        if (result.success && result.url) {
+          updateDocumentNonBlocking(propertyRef, { 
+            imageUrl: result.url, 
+            isImageUpdating: false,
+            updatedAt: serverTimestamp() 
+          });
+          syncPropertyToDb({ ...updateData, id: propertyId, landlordId: user.uid, imageUrl: result.url });
+        } else {
+          updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
+        }
+      }).catch(() => {
         updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
       });
     }

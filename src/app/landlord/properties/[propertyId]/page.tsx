@@ -10,10 +10,8 @@ import {
   updateDocumentNonBlocking, 
   setDocumentNonBlocking, 
   deleteDocumentNonBlocking,
-  useStorage, 
 } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   MapPin, Users, Wrench, FileCheck, 
   Trash2, Edit3, Loader2, Save, ArrowLeft,
-  Download, FileText, ShieldAlert, Upload, 
+  Download, FileText, Upload, 
   Calendar as CalendarIcon, 
   Bed, Bath, ChevronRight, AlertTriangle, CheckCircle2,
   Clock, ShieldCheck
@@ -44,6 +42,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { syncDocumentToDb, deleteDocumentFromDb } from "@/lib/actions/db-sync";
+import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format, isBefore } from 'date-fns';
@@ -66,7 +65,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const propertyId = resolvedParams.propertyId;
   const { user } = useUser();
   const db = useFirestore();
-  const storage = useStorage();
   const { toast } = useToast();
   const router = useRouter();
   
@@ -197,7 +195,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const handleUploadDocument = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user || !db || !storage || !property) return;
+    if (!file || !user || !db || !property) return;
 
     setIsUploadingDoc(true); 
     const docId = doc(collection(db, 'documents')).id;
@@ -227,17 +225,22 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     syncDocumentToDb({ ...baseDocData, fileUrl: 'pending' });
 
     try {
-      const storageRef = ref(storage, `documents/${user.uid}/${propertyId}/${Date.now()}_${file.name}`);
-      const uploadResult = await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(uploadResult.ref);
-
-      updateDocumentNonBlocking(docRef, {
-        fileUrl: url,
-        updatedAt: serverTimestamp(),
-      });
-
-      syncDocumentToDb({ ...baseDocData, fileUrl: url });
-      toast({ title: "Vault Updated" });
+      const formData = new FormData();
+      formData.append('file', file);
+      const path = `vault/${user.uid}/${propertyId}/${Date.now()}_${file.name}`;
+      
+      const result = await uploadToSupabase(formData, 'property-documents', path);
+      
+      if (result.success && result.url) {
+        updateDocumentNonBlocking(docRef, {
+          fileUrl: result.url,
+          updatedAt: serverTimestamp(),
+        });
+        syncDocumentToDb({ ...baseDocData, fileUrl: result.url });
+        toast({ title: "Vault Updated" });
+      } else {
+        throw new Error(result.error);
+      }
     } catch (error: any) {
       toast({ variant: "destructive", title: "Upload Failed" });
     } finally {
@@ -542,7 +545,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-primary text-white sticky top-24">
             <CardHeader className="text-left p-8 bg-white/5">
               <CardTitle className="text-xl font-headline flex items-center">
-                <ShieldAlert className="w-6 h-6 mr-3 text-accent" />
+                <AlertTriangle className="w-6 h-6 mr-3 text-accent" />
                 Asset Health Score
               </CardTitle>
             </CardHeader>
