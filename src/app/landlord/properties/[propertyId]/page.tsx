@@ -183,6 +183,20 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return { score: finalScore, color, message };
   }, [propertyDocuments, maintenanceRequests, inspections]);
 
+  // Reactive Multi-Image Gallery with Instant Bridge Prioritization
+  const gallery = useMemo(() => {
+    if (!property) return [];
+    const bridgeUrl = getMemoryAsset(propertyId);
+    const dbUrls = property.imageUrls && property.imageUrls.length > 0 
+      ? property.imageUrls 
+      : (property.imageUrl ? [property.imageUrl] : []);
+
+    if (bridgeUrl && !dbUrls.includes(bridgeUrl)) {
+      return [bridgeUrl, ...dbUrls];
+    }
+    return dbUrls.length > 0 ? dbUrls : [`https://picsum.photos/seed/${propertyId}/800/600`];
+  }, [property, propertyId]);
+
   const handleUpdateRent = () => {
     if (!propertyRef) return;
     updateDocumentNonBlocking(propertyRef, {
@@ -258,16 +272,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     toast({ title: "Document Removed" });
   };
 
-  if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
-  if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
-
-  // Multi-Image Instant Synchronization Logic
-  const bridgeUrl = getMemoryAsset(propertyId);
-  const activeImageUrl = bridgeUrl || property.imageUrl || `https://picsum.photos/seed/rentalflow-pro-identity/800/600`;
-  const gallery = property.imageUrls && property.imageUrls.length > 0 
-    ? (bridgeUrl && !property.imageUrls.includes(bridgeUrl) ? [bridgeUrl, ...property.imageUrls] : property.imageUrls)
-    : [activeImageUrl];
-
   const getPriorityColor = (priority: string) => {
     switch(priority?.toLowerCase()) {
       case 'critical': return 'bg-red-500 text-white';
@@ -276,6 +280,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       default: return 'bg-muted text-muted-foreground';
     }
   };
+
+  if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+  if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-12">
@@ -415,7 +422,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           )}
                         >
                           <CalendarIcon className="mr-3 h-4 w-4 text-primary shrink-0" />
-                          <span className="flex-1 text-[13px] font-bold truncate">
+                          <span className="flex-1 text-[13px] font-bold">
                             {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set Deadline (Optional)"}
                           </span>
                         </Button>
