@@ -47,8 +47,8 @@ export default function NewPropertyPage() {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
       setImageFiles(prev => [...prev, ...files]);
-      const newPreviews = files.map(file => URL.createObjectURL(file));
-      setPreviewUrls(prev => [...prev, ...newPreviews]);
+      const new previews = files.map(file => URL.createObjectURL(file));
+      setPreviewUrls(prev => [...prev, ...previews]);
     }
   };
 
