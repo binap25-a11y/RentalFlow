@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, use } from 'react';
@@ -113,11 +112,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const finalGallery = [...existingImageUrls, ...uploadedUrls];
       const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
       
-      // Update session memory bridge for instant feedback on redirect
       if (primaryUrl) setMemoryAsset(propertyId, primaryUrl);
 
-      // CRITICAL: Construct a clean, plain object for the Server Action to avoid serialization errors
-      // stripping non-serializable Firestore specific fields
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -138,7 +134,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedAt: serverTimestamp(),
       };
 
-      // HARDEN: Wait for Firestore write before redirecting to ensure persistence
       await setDoc(propertyRef, firestoreUpdateData, { merge: true });
       await syncPropertyToDb(serializableData);
 

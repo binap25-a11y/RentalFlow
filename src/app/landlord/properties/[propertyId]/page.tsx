@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useRef, useMemo, useEffect } from 'react';
@@ -188,7 +187,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return { score: finalScore, color, message };
   }, [propertyDocuments, maintenanceRequests, inspections]);
 
-  // HARDEN: Reactive Gallery Sync Engine
   const gallery = useMemo(() => {
     if (!isClient) return [];
     
@@ -201,10 +199,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         : (property.imageUrl && property.imageUrl.length > 5 ? [property.imageUrl] : []);
     }
 
-    // Filter out temporary blobs from DB record to avoid broken links after reload
     const cleanDbUrls = dbUrls.filter(url => url && !url.startsWith('blob:'));
 
-    // If we have a session bridge URL (uploaded just now), prioritize it at the front
     if (bridgeUrl) {
       const otherUrls = cleanDbUrls.filter(u => u !== bridgeUrl);
       return [bridgeUrl, ...otherUrls];
@@ -259,7 +255,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           createdAt: serverTimestamp(),
         };
         
-        // Construct plain serializable data for the server action
         const serializableDocData = {
           id: docId,
           propertyId: propertyId,
@@ -270,7 +265,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           expiryDate: uploadExpiryDate ? uploadExpiryDate.toISOString() : null,
         };
 
-        // HARDEN: Wait for Firestore commit before syncing to PostgreSQL
         await setDoc(docRef, finalDocData, { merge: true });
         await syncDocumentToDb(serializableDocData);
         

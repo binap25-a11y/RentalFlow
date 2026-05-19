@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -69,7 +68,6 @@ export default function NewPropertyPage() {
       let finalImageUrl = '';
       let finalImageUrls: string[] = [];
 
-      // 1. Upload to Supabase first to get permanent URLs
       if (imageFiles.length > 0) {
         const uploadPromises = imageFiles.map((file, index) => {
           const formData = new FormData();
@@ -83,13 +81,10 @@ export default function NewPropertyPage() {
         
         if (finalImageUrls.length > 0) {
           finalImageUrl = finalImageUrls[0];
-          // Update visual bridge for the next page to use immediately
           setMemoryAsset(propertyId, finalImageUrl);
         }
       }
 
-      // 2. CRITICAL: Construct a clean, plain object for the Server Action to avoid serialization errors
-      // Stripping Firestore specific Timestamp objects before passing to syncPropertyToDb
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -115,7 +110,6 @@ export default function NewPropertyPage() {
         isActive: true
       };
 
-      // 3. Await all writes before redirecting to ensure persistence
       await setDoc(propertyRef, firestoreData, { merge: true });
       await syncPropertyToDb(serializableData);
 
