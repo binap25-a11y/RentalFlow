@@ -65,7 +65,7 @@ export default function NewPropertyPage() {
     const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
-    // Seed bridge for instant cross-page preview before Supabase sync completes
+    // CRITICAL: Seed bridge INSTANTLY with local preview for zero-latency feedback
     if (previewUrls.length > 0) {
       setMemoryAsset(propertyId, previewUrls[0]);
     }
@@ -85,7 +85,7 @@ export default function NewPropertyPage() {
       rentAmount: parseFloat(rentAmount) || 0,
       isOccupied: false,
       isImageUpdating: imageFiles.length > 0,
-      imageUrl: fallbackUrl, 
+      imageUrl: previewUrls[0] || fallbackUrl, 
       imageUrls: [],
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -104,6 +104,7 @@ export default function NewPropertyPage() {
         return uploadToSupabase(formData, 'property-images', path);
       });
 
+      // Background upload process
       Promise.all(uploadPromises).then((results) => {
         const successfulUrls = results.filter(r => r.success && r.url).map(r => r.url!);
         if (successfulUrls.length > 0) {
@@ -114,7 +115,6 @@ export default function NewPropertyPage() {
             updatedAt: serverTimestamp() 
           });
           syncPropertyToDb({ ...baseData, imageUrl: successfulUrls[0], imageUrls: successfulUrls });
-          // Ensure bridge remains synced with final URL
           setMemoryAsset(propertyId, successfulUrls[0]);
         } else {
           updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
@@ -126,7 +126,7 @@ export default function NewPropertyPage() {
       syncPropertyToDb(baseData);
     }
 
-    toast({ title: "Asset Registered", description: "Portfolio updated with multi-image support." });
+    toast({ title: "Asset Registered", description: "Portfolio inventory updated instantly." });
     router.push(`/landlord/properties/${propertyId}`);
   };
 
@@ -138,22 +138,22 @@ export default function NewPropertyPage() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-headline font-bold text-primary">Register Asset</h1>
-            <p className="text-muted-foreground font-medium">Add a high-value property with a photo gallery.</p>
+            <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">Register Asset</h1>
+            <p className="text-muted-foreground font-medium font-body">Add a high-value property with a photo gallery.</p>
           </div>
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold">
-          <Sparkles className="w-3 h-3 mr-2" /> Live Portfolio
+          <Sparkles className="w-3 h-3 mr-2" /> Live Specification
         </Badge>
       </div>
 
-      <Card className="border-none shadow-xl overflow-hidden rounded-[2rem] bg-white">
+      <Card className="border-none shadow-xl overflow-hidden rounded-[2rem] bg-white border border-primary/5">
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-1 lg:grid-cols-2">
             <div className="p-8 lg:p-12 bg-primary/5 border-r border-primary/10">
               <div className="flex justify-between items-center mb-6">
-                <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 block font-headline">Photo Gallery</Label>
-                <Button type="button" variant="ghost" size="sm" className="h-8 rounded-lg font-bold text-[10px] uppercase" onClick={() => document.getElementById('image-input')?.click()}>
+                <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 block font-headline">Gallery Management</Label>
+                <Button type="button" variant="ghost" size="sm" className="h-8 rounded-lg font-bold text-[10px] uppercase font-headline" onClick={() => document.getElementById('image-input')?.click()}>
                   <Plus className="w-3 h-3 mr-1" /> Add Photos
                 </Button>
               </div>
@@ -161,7 +161,7 @@ export default function NewPropertyPage() {
               {previewUrls.length > 0 ? (
                 <div className="grid grid-cols-2 gap-4">
                   {previewUrls.map((url, index) => (
-                    <div key={index} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border border-primary/10">
+                    <div key={index} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border border-primary/10 bg-white">
                       <Image src={url} alt={`Preview ${index}`} fill className="object-cover" unoptimized={true} />
                       <button 
                         type="button" 
@@ -171,7 +171,7 @@ export default function NewPropertyPage() {
                         <X className="w-3.5 h-3.5" />
                       </button>
                       {index === 0 && (
-                        <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary text-white text-[8px] font-bold uppercase rounded-md shadow-lg">Primary</div>
+                        <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline">Primary Cover</div>
                       )}
                     </div>
                   ))}
@@ -181,43 +181,43 @@ export default function NewPropertyPage() {
                     className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white flex flex-col items-center justify-center gap-2 group"
                   >
                     <Plus className="w-6 h-6 text-primary/20 group-hover:text-primary/40 transition-colors" />
-                    <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">More</span>
+                    <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest font-headline">Add More</span>
                   </button>
                 </div>
               ) : (
                 <div className="relative group overflow-hidden rounded-3xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white aspect-video w-full flex items-center justify-center shadow-inner">
                   <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="flex flex-col items-center gap-3">
                     <div className="p-5 bg-primary/10 rounded-full shadow-sm"><ImageIcon className="w-8 h-8 text-primary" /></div>
-                    <span className="text-sm font-bold text-primary font-headline">Upload Gallery Photos</span>
+                    <span className="text-sm font-bold text-primary font-headline">Upload Specification Photos</span>
                   </button>
                 </div>
               )}
               <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
-              <p className="mt-4 text-[10px] text-muted-foreground font-medium text-center uppercase tracking-wider opacity-60">High-fidelity uploads supported.</p>
+              <p className="mt-4 text-[10px] text-muted-foreground font-bold text-center uppercase tracking-widest opacity-60 font-headline">Professional Assets Supported.</p>
             </div>
 
             <div className="p-8 lg:p-12 space-y-8">
               <div className="grid grid-cols-1 gap-6 text-left">
                 <div className="space-y-2">
-                  <Label htmlFor="address" className="font-bold text-xs uppercase text-primary/60 font-headline">Street Address</Label>
-                  <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="123 Example Street" className="rounded-xl h-12 bg-muted/20 border-none focus:ring-2 focus:ring-primary font-body" />
+                  <Label htmlFor="address" className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Street Address</Label>
+                  <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="123 Example Street" className="rounded-xl h-12 bg-muted/20 border-none focus:ring-2 focus:ring-primary font-body font-medium" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="city" className="font-bold text-xs uppercase text-primary/60 font-headline">City</Label>
-                    <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} required placeholder="London" className="rounded-xl h-12 bg-muted/20 border-none font-body" />
+                    <Label htmlFor="city" className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">City</Label>
+                    <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} required placeholder="London" className="rounded-xl h-12 bg-muted/20 border-none font-body font-medium" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="zipCode" className="font-bold text-xs uppercase text-primary/60 font-headline">Postcode</Label>
-                    <Input id="zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required placeholder="SW1A 1AA" className="rounded-xl h-12 bg-muted/20 border-none font-body" />
+                    <Label htmlFor="zipCode" className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Postcode</Label>
+                    <Input id="zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required placeholder="SW1A 1AA" className="rounded-xl h-12 bg-muted/20 border-none font-body font-medium" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Asset Type</Label>
+                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Asset Class</Label>
                     <Select value={propertyType} onValueChange={setPropertyType}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Apartment">Apartment</SelectItem>
                         <SelectItem value="House">House</SelectItem>
@@ -227,25 +227,25 @@ export default function NewPropertyPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="rent" className="font-bold text-xs uppercase text-primary/60 font-headline">Monthly Rent (£)</Label>
-                    <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-body" />
+                    <Label htmlFor="rent" className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Monthly Yield (£)</Label>
+                    <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Bedrooms</Label>
+                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Bedrooms</Label>
                     <Select value={bedrooms} onValueChange={setBedrooms}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {['1','2','3','4','5+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Bathrooms</Label>
+                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Bathrooms</Label>
                     <Select value={bathrooms} onValueChange={setBathrooms}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {['1','2','3+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
                       </SelectContent>
@@ -254,8 +254,8 @@ export default function NewPropertyPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description" className="font-bold text-xs uppercase text-primary/60 font-headline">Description</Label>
-                  <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe key asset features..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-body" />
+                  <Label htmlFor="description" className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Property Description</Label>
+                  <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Detail key asset features and high-value specifications..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-body font-medium" />
                 </div>
               </div>
             </div>
@@ -264,7 +264,7 @@ export default function NewPropertyPage() {
             <Button type="button" variant="ghost" className="rounded-xl h-12 px-8 font-bold font-headline" onClick={() => router.back()}>Cancel</Button>
             <Button type="submit" disabled={isSaving} className="rounded-xl font-bold bg-primary h-12 px-12 shadow-lg shadow-primary/20 min-w-[200px] font-headline text-white hover:bg-primary/90 transition-transform active:scale-95">
               {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
-              Register Asset
+              Register Portfolio Asset
             </Button>
           </CardFooter>
         </form>

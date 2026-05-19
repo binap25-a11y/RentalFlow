@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, use } from 'react';
@@ -98,7 +97,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
 
-    // Initial update for textual data
+    // INSTANT BRIDGE UPDATE: Prioritize first new image or first existing image
+    if (newPreviewUrls.length > 0) {
+      setMemoryAsset(propertyId, newPreviewUrls[0]);
+    } else if (existingImageUrls.length > 0) {
+      setMemoryAsset(propertyId, existingImageUrls[0]);
+    }
+
     const updateData: any = {
       addressLine1: address,
       city,
@@ -114,7 +119,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     updateDocumentNonBlocking(propertyRef, updateData);
 
-    // Synchronize current local gallery
     const combinedGallery = [...existingImageUrls];
     
     if (newImageFiles.length > 0) {
@@ -153,14 +157,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       };
       updateDocumentNonBlocking(propertyRef, finalUpdate);
       syncPropertyToDb({ ...updateData, id: propertyId, landlordId: user.uid, ...finalUpdate });
-      if (combinedGallery[0]) setMemoryAsset(propertyId, combinedGallery[0]);
     }
 
-    toast({ title: "Gallery Synced" });
+    toast({ title: "Portfolio Updated", description: "Changes synchronized across dashboard." });
     router.push(`/landlord/properties/${propertyId}`);
   };
 
-  if (isLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+  if (isLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left">
@@ -171,7 +174,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </Button>
           <div>
             <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">Modify Asset</h1>
-            <p className="text-muted-foreground font-medium font-body">Refining gallery and specs for {address || 'Property'}.</p>
+            <p className="text-muted-foreground font-medium font-body">Refining specs and gallery for {address || 'Property'}.</p>
           </div>
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold">
@@ -179,21 +182,20 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         </Badge>
       </div>
 
-      <Card className="border-none shadow-xl overflow-hidden rounded-[2rem] bg-white">
+      <Card className="border-none shadow-xl overflow-hidden rounded-[2rem] bg-white border border-primary/5">
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-1 lg:grid-cols-2">
             <div className="p-8 lg:p-12 bg-primary/5 border-r border-primary/10">
               <div className="flex justify-between items-center mb-6">
-                <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 block font-headline">Asset Gallery</Label>
-                <Button type="button" variant="ghost" size="sm" className="h-8 rounded-lg font-bold text-[10px] uppercase" onClick={() => document.getElementById('image-input')?.click()}>
-                  <Plus className="w-3 h-3 mr-1" /> Add More
+                <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 block font-headline">Gallery Ledger</Label>
+                <Button type="button" variant="ghost" size="sm" className="h-8 rounded-lg font-bold text-[10px] uppercase font-headline" onClick={() => document.getElementById('image-input')?.click()}>
+                  <Plus className="w-3 h-3 mr-1" /> Add Photos
                 </Button>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                {/* Existing Images */}
                 {existingImageUrls.map((url, index) => (
-                  <div key={`existing-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border border-primary/10">
+                  <div key={`existing-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border border-primary/10 bg-white">
                     <Image src={url} alt={`Existing ${index}`} fill className="object-cover" unoptimized={true} />
                     <button 
                       type="button" 
@@ -203,15 +205,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       <X className="w-3.5 h-3.5" />
                     </button>
                     {index === 0 && (
-                      <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-emerald-500 text-white text-[8px] font-bold uppercase rounded-md shadow-lg">Current Cover</div>
+                      <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-emerald-500 text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline">Cover</div>
                     )}
                   </div>
                 ))}
                 
-                {/* New Previews */}
                 {newPreviewUrls.map((url, index) => (
-                  <div key={`new-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border-2 border-dashed border-accent/40">
-                    <Image src={url} alt={`New ${index}`} fill className="object-cover opacity-60" unoptimized={true} />
+                  <div key={`new-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border-2 border-dashed border-accent/40 bg-white">
+                    <Image src={url} alt={`New ${index}`} fill className="object-cover opacity-80" unoptimized={true} />
                     <button 
                       type="button" 
                       onClick={() => removeNewImage(index)}
@@ -219,7 +220,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
-                    <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-accent text-white text-[8px] font-bold uppercase rounded-md shadow-lg">New Batch</div>
                   </div>
                 ))}
 
@@ -229,7 +229,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white flex flex-col items-center justify-center gap-2 group"
                 >
                   <Plus className="w-6 h-6 text-primary/20 group-hover:text-primary/40" />
-                  <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">Select Files</span>
+                  <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest font-headline">Select New</span>
                 </button>
               </div>
               <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
@@ -238,24 +238,24 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
             <div className="p-8 lg:p-12 space-y-8">
               <div className="grid grid-cols-1 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="address" className="font-bold text-xs uppercase text-primary/60 font-headline">Street Address</Label>
-                  <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="123 Example Street" className="rounded-xl h-12 bg-muted/20 border-none focus:ring-2 focus:ring-primary font-body" />
+                  <Label htmlFor="address" className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Street Address</Label>
+                  <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="city" className="font-bold text-xs uppercase text-primary/60 font-headline">City</Label>
-                    <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} required placeholder="London" className="rounded-xl h-12 bg-muted/20 border-none font-body" />
+                    <Label htmlFor="city" className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">City</Label>
+                    <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="zipCode" className="font-bold text-xs uppercase text-primary/60 font-headline">Postcode</Label>
-                    <Input id="zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required placeholder="SW1A 1AA" className="rounded-xl h-12 bg-muted/20 border-none font-body" />
+                    <Label htmlFor="zipCode" className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Postcode</Label>
+                    <Input id="zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Asset Type</Label>
+                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Asset Class</Label>
                     <Select value={propertyType} onValueChange={setPropertyType}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Apartment">Apartment</SelectItem>
                         <SelectItem value="House">House</SelectItem>
@@ -265,24 +265,24 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="rent" className="font-bold text-xs uppercase text-primary/60 font-headline">Monthly Rent (£)</Label>
-                    <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-body" />
+                    <Label htmlFor="rent" className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Monthly Yield (£)</Label>
+                    <Input id="rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Bedrooms</Label>
+                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Bedrooms</Label>
                     <Select value={bedrooms} onValueChange={setBedrooms}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {['1','2','3','4','5+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Bathrooms</Label>
+                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Bathrooms</Label>
                     <Select value={bathrooms} onValueChange={setBathrooms}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {['1','2','3+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
                       </SelectContent>
@@ -290,8 +290,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description" className="font-bold text-xs uppercase text-primary/60 font-headline">Features & Details</Label>
-                  <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Highlight key property features..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-body" />
+                  <Label htmlFor="description" className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Asset Narrative</Label>
+                  <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Highlight high-fidelity property features..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-body font-medium" />
                 </div>
               </div>
             </div>
@@ -300,7 +300,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
             <Button type="button" variant="ghost" className="rounded-xl h-12 px-8 font-bold font-headline" onClick={() => router.back()}>Cancel</Button>
             <Button type="submit" disabled={isSaving} className="rounded-xl font-bold bg-primary h-12 px-12 shadow-lg shadow-primary/20 min-w-[200px] font-headline text-white hover:bg-primary/90 transition-transform active:scale-95">
               {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
-              Save Changes
+              Save Specification
             </Button>
           </CardFooter>
         </form>
