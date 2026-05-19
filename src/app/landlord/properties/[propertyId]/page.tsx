@@ -48,7 +48,6 @@ import { useRouter } from "next/navigation";
 import { format, isBefore } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
 
-// Instant Visibility Memory Bridge for Cross-Page Visual Sync
 const getMemoryAsset = (id: string) => {
   if (typeof window === 'undefined') return null;
   return (window as any).__asset_bridge?.[id] || null;
@@ -188,7 +187,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return { score: finalScore, color, message };
   }, [propertyDocuments, maintenanceRequests, inspections]);
 
-  // Reactive Multi-Image Gallery with Persistent Storage Support
   const gallery = useMemo(() => {
     const bridgeUrl = getMemoryAsset(propertyId);
     let dbUrls: string[] = [];
@@ -199,11 +197,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         : (property.imageUrl ? [property.imageUrl] : []);
     }
 
-    // Filter out blob URLs from the database list to prevent breakage on reload
-    const cleanDbUrls = dbUrls.filter(url => !url.startsWith('blob:'));
+    const cleanDbUrls = dbUrls.filter(url => url && !url.startsWith('blob:'));
 
-    // Prioritize bridge URL to avoid "flash of old image" during background sync
-    // The bridge is ephemeral and is cleared on reload, so we only use it while valid
     if (bridgeUrl && !cleanDbUrls.includes(bridgeUrl)) {
       return [bridgeUrl, ...cleanDbUrls];
     }
@@ -229,7 +224,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const docId = doc(collection(db, 'documents')).id;
     const docRef = doc(db, 'documents', docId);
     
-    // Instant feedback for the doc list
     const localUrl = URL.createObjectURL(file);
     setMemoryAsset(docId, localUrl);
 
@@ -239,7 +233,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const baseDocData = {
       id: docId,
       fileName: file.name,
-      fileUrl: localUrl, // Temporary placeholder
+      fileUrl: localUrl,
       status: 'active',
       documentType: 'property-asset',
       propertyId: propertyId,
@@ -438,7 +432,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           )}
                         >
                           <CalendarIcon className="mr-3 h-4 w-4 text-primary shrink-0" />
-                          <span className="flex-1 text-[13px] font-bold">
+                          <span className="flex-1 text-[13px] font-bold truncate whitespace-normal leading-tight">
                             {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set Deadline (Optional)"}
                           </span>
                         </Button>
