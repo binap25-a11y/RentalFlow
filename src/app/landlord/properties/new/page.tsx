@@ -64,16 +64,16 @@ export default function NewPropertyPage() {
     const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
-    // Immediate feedback in current session via memory bridge
+    // Provide instant visual feedback in the current session
     if (previewUrls.length > 0) {
       setMemoryAsset(propertyId, previewUrls[0]);
     }
 
-    let finalImageUrl = `https://picsum.photos/seed/${propertyId}/800/600`;
+    let finalImageUrl = '';
     let finalImageUrls: string[] = [];
 
     try {
-      // Hardened: Await image uploads before committing to Firestore
+      // Harden: Await all image uploads to Supabase BEFORE committing the record to Firestore
       if (imageFiles.length > 0) {
         const uploadPromises = imageFiles.map((file, index) => {
           const formData = new FormData();
@@ -84,9 +84,11 @@ export default function NewPropertyPage() {
 
         const results = await Promise.all(uploadPromises);
         finalImageUrls = results.filter(r => r.success && r.url).map(r => r.url!);
+        
         if (finalImageUrls.length > 0) {
           finalImageUrl = finalImageUrls[0];
-          setMemoryAsset(propertyId, finalImageUrl); // Update with real URL once ready
+          // Refresh the memory asset with the permanent public URL
+          setMemoryAsset(propertyId, finalImageUrl);
         }
       }
 
@@ -102,7 +104,7 @@ export default function NewPropertyPage() {
         numberOfBathrooms: parseInt(bathrooms, 10) || 1,
         rentAmount: parseFloat(rentAmount) || 0,
         isOccupied: false,
-        imageUrl: finalImageUrl,
+        imageUrl: finalImageUrl, // Saved as empty if no images, allowing UI dynamic fallback
         imageUrls: finalImageUrls,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -111,14 +113,15 @@ export default function NewPropertyPage() {
         isActive: true
       };
 
-      await setDocumentNonBlocking(propertyRef, baseData, { merge: true });
+      // Initiate non-blocking write to Firestore with the final permanent URLs
+      setDocumentNonBlocking(propertyRef, baseData, { merge: true });
       await syncPropertyToDb(baseData);
 
-      toast({ title: "Asset Registered", description: "Portfolio inventory updated and remembered." });
+      toast({ title: "Asset Registered", description: "Portfolio inventory updated and remembered permanently." });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
-      console.error("Save failed:", err);
-      toast({ variant: "destructive", title: "Registration Failed", description: "The server encountered an issue. Check file sizes." });
+      console.error("Asset registration failed:", err);
+      toast({ variant: "destructive", title: "Registration Failed", description: "The server encountered an issue while saving asset metadata." });
       setIsSaving(false);
     }
   };

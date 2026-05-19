@@ -197,12 +197,15 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         : (property.imageUrl ? [property.imageUrl] : []);
     }
 
+    // Filter out temporary blob URLs that might have leaked into Firestore (harden reload)
     const cleanDbUrls = dbUrls.filter(url => url && !url.startsWith('blob:'));
 
+    // Prioritize bridge assets for instant feedback within a single session
     if (bridgeUrl && !cleanDbUrls.includes(bridgeUrl)) {
       return [bridgeUrl, ...cleanDbUrls];
     }
 
+    // Fallback to high-fidelity placeholder ONLY if database is truly empty and no bridge asset exists
     return cleanDbUrls.length > 0 ? cleanDbUrls : [`https://picsum.photos/seed/${propertyId}/800/600`];
   }, [property, propertyId, isClient]);
 
