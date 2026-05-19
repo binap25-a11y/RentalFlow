@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -78,8 +79,9 @@ export default function PropertiesPage() {
           properties.map((property) => {
             const bridgeUrl = getMemoryAsset(property.id);
             const dbUrl = property.imageUrl;
-            const isDbUrlValid = dbUrl && !dbUrl.startsWith('blob:');
-            const displayImage = bridgeUrl || (isDbUrlValid ? dbUrl : `https://picsum.photos/seed/${property.id}/800/600`);
+            
+            // Logic to prioritize bridge (blob/just uploaded) or fallback to picsum if none exists
+            const displayImage = bridgeUrl || (dbUrl && dbUrl.length > 5 ? dbUrl : `https://picsum.photos/seed/${property.id}/800/600`);
 
             return (
               <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card border border-transparent hover:border-primary/5">

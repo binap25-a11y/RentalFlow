@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
@@ -118,8 +119,7 @@ export default function TenantHub() {
 
   const bridgeUrl = getMemoryAsset(property.id);
   const dbUrl = property.imageUrl;
-  const isDbUrlValid = dbUrl && !dbUrl.startsWith('blob:');
-  const activeImageUrl = bridgeUrl || (isDbUrlValid ? dbUrl : `https://picsum.photos/seed/rentalflow-pro-identity/800/600`);
+  const activeImageUrl = bridgeUrl || (dbUrl && dbUrl.length > 5 ? dbUrl : `https://picsum.photos/seed/${property.id}/800/600`);
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-12">

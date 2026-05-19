@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -87,28 +88,8 @@ export default function NewPropertyPage() {
         }
       }
 
-      const baseData = {
-        id: propertyId,
-        landlordId: user.uid,
-        addressLine1: address,
-        city,
-        zipCode,
-        description,
-        propertyType,
-        numberOfBedrooms: parseInt(bedrooms, 10) || 1,
-        numberOfBathrooms: parseInt(bathrooms, 10) || 1,
-        rentAmount: parseFloat(rentAmount) || 0,
-        isOccupied: false,
-        imageUrl: finalImageUrl,
-        imageUrls: finalImageUrls,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        tenantIds: [],
-        memberIds: [user.uid],
-        isActive: true
-      };
-
       // 2. CRITICAL: Construct a clean, plain object for the Server Action to avoid serialization errors
+      // Stripping Firestore specific Timestamp objects before passing to syncPropertyToDb
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -124,8 +105,18 @@ export default function NewPropertyPage() {
         description: description,
       };
 
+      const firestoreData = {
+        ...serializableData,
+        isOccupied: false,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        tenantIds: [],
+        memberIds: [user.uid],
+        isActive: true
+      };
+
       // 3. Await all writes before redirecting to ensure persistence
-      await setDoc(propertyRef, baseData, { merge: true });
+      await setDoc(propertyRef, firestoreData, { merge: true });
       await syncPropertyToDb(serializableData);
 
       toast({ title: "Asset Registered", description: "Portfolio inventory updated and remembered permanently." });

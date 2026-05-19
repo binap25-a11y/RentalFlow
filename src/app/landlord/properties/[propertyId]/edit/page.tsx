@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, use } from 'react';
@@ -115,22 +116,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       // Update session memory bridge for instant feedback on redirect
       if (primaryUrl) setMemoryAsset(propertyId, primaryUrl);
 
-      const updateData: any = {
-        ...property,
-        addressLine1: address,
-        city,
-        zipCode,
-        description,
-        propertyType,
-        numberOfBedrooms: parseInt(bedrooms, 10) || 1,
-        numberOfBathrooms: parseInt(bathrooms, 10) || 1,
-        rentAmount: parseFloat(rentAmount) || 0,
-        imageUrl: primaryUrl,
-        imageUrls: finalGallery,
-        updatedAt: serverTimestamp(),
-      };
-
       // CRITICAL: Construct a clean, plain object for the Server Action to avoid serialization errors
+      // stripping non-serializable Firestore specific fields
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -146,8 +133,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         description: description,
       };
 
+      const firestoreUpdateData = {
+        ...serializableData,
+        updatedAt: serverTimestamp(),
+      };
+
       // HARDEN: Wait for Firestore write before redirecting to ensure persistence
-      await setDoc(propertyRef, updateData, { merge: true });
+      await setDoc(propertyRef, firestoreUpdateData, { merge: true });
       await syncPropertyToDb(serializableData);
 
       toast({ title: "Portfolio Updated", description: "Changes synchronized and remembered permanently." });

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, use, useRef, useMemo, useEffect } from 'react';
@@ -197,7 +198,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     if (property) {
       dbUrls = property.imageUrls && property.imageUrls.length > 0 
         ? property.imageUrls 
-        : (property.imageUrl ? [property.imageUrl] : []);
+        : (property.imageUrl && property.imageUrl.length > 5 ? [property.imageUrl] : []);
     }
 
     // Filter out temporary blobs from DB record to avoid broken links after reload
@@ -236,20 +237,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const residentIds = tenants?.map(t => t.userId).filter(Boolean) || [];
     const memberIds = Array.from(new Set([user.uid, ...(property.memberIds || []), ...residentIds]));
 
-    const baseDocData = {
-      id: docId,
-      fileName: file.name,
-      fileUrl: localUrl,
-      status: 'active',
-      documentType: 'property-asset',
-      propertyId: propertyId,
-      landlordId: user.uid,
-      expiryDate: uploadExpiryDate ? uploadExpiryDate.toISOString() : null,
-      memberIds: memberIds,
-      uploadDate: new Date().toISOString(),
-      createdAt: serverTimestamp(),
-    };
-
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -258,7 +245,19 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       const result = await uploadToSupabase(formData, 'property-documents', path);
       
       if (result.success && result.url) {
-        const finalDocData = { ...baseDocData, fileUrl: result.url };
+        const finalDocData = {
+          id: docId,
+          fileName: file.name,
+          fileUrl: result.url,
+          status: 'active',
+          documentType: 'property-asset',
+          propertyId: propertyId,
+          landlordId: user.uid,
+          expiryDate: uploadExpiryDate ? uploadExpiryDate.toISOString() : null,
+          memberIds: memberIds,
+          uploadDate: new Date().toISOString(),
+          createdAt: serverTimestamp(),
+        };
         
         // Construct plain serializable data for the server action
         const serializableDocData = {
