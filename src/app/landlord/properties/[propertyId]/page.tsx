@@ -185,16 +185,20 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   // Reactive Multi-Image Gallery with Instant Bridge Prioritization
   const gallery = useMemo(() => {
-    if (!property) return [];
     const bridgeUrl = getMemoryAsset(propertyId);
-    const dbUrls = property.imageUrls && property.imageUrls.length > 0 
-      ? property.imageUrls 
-      : (property.imageUrl ? [property.imageUrl] : []);
+    let dbUrls: string[] = [];
+
+    if (property) {
+      dbUrls = property.imageUrls && property.imageUrls.length > 0 
+        ? property.imageUrls 
+        : (property.imageUrl ? [property.imageUrl] : []);
+    }
 
     // Prioritize latest upload from bridge if not yet in DB
     if (bridgeUrl && !dbUrls.includes(bridgeUrl)) {
       return [bridgeUrl, ...dbUrls];
     }
+
     return dbUrls.length > 0 ? dbUrls : [`https://picsum.photos/seed/${propertyId}/800/600`];
   }, [property, propertyId]);
 
@@ -419,12 +423,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         <Button 
                           variant="outline" 
                           className={cn(
-                            "w-full justify-start text-left h-12 rounded-xl bg-white border-none shadow-sm font-body px-4 transition-all hover:scale-[1.01] overflow-hidden", 
+                            "w-full justify-start text-left h-12 rounded-xl bg-white border-none shadow-sm font-body px-4 transition-all hover:scale-[1.01]", 
                             !uploadExpiryDate && "text-muted-foreground"
                           )}
                         >
                           <CalendarIcon className="mr-3 h-4 w-4 text-primary shrink-0" />
-                          <span className="flex-1 text-[13px] font-bold">
+                          <span className="flex-1 text-[13px] font-bold whitespace-nowrap">
                             {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set Deadline (Optional)"}
                           </span>
                         </Button>
