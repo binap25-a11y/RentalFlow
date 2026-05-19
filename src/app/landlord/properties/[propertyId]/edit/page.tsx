@@ -127,7 +127,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       // Update bridge with permanent links immediately
       setMemoryAssets(propertyId, finalGallery);
 
-      // 3. Construct PLAIN OBJECT for Server Action (strip timestamps)
+      // 3. Construct PLAIN OBJECT for Server Action (strip non-serializable Timestamps)
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -150,7 +150,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedAt: serverTimestamp(),
       };
 
-      // 4. Harden Persistence: Sequential Await
+      // 4. Harden Persistence: Sequential Await to ensure database integrity
       await setDoc(propertyRef, firestoreUpdateData, { merge: true });
       await syncPropertyToDb(serializableData);
 

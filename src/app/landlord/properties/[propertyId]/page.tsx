@@ -8,7 +8,6 @@ import {
   useCollection, 
   useMemoFirebase, 
   updateDocumentNonBlocking, 
-  setDocumentNonBlocking, 
   deleteDocumentNonBlocking,
 } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where, setDoc } from 'firebase/firestore';
@@ -56,7 +55,7 @@ const getMemoryAssets = (id: string): string[] | null => {
 const setMemoryAsset = (id: string, url: string) => {
   if (typeof window === 'undefined') return;
   if (!(window as any).__asset_bridge) (window as any).__asset_bridge = {};
-  (window as any).__asset_bridge[id] = url;
+  (window as any).__asset_bridge[id] = [url];
 };
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
@@ -187,13 +186,15 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return { score: finalScore, color, message };
   }, [propertyDocuments, maintenanceRequests, inspections]);
 
-  // HARDEN: Unified Gallery Logic that prioritizes memory bridge reactively
+  // HARDEN: Simplified and prioritize Memory Bridge for instant feedback
   const gallery = useMemo(() => {
     if (!isClient) return [];
     
+    // First, check for session-based memory bridge (intended state)
     const bridgeUrls = getMemoryAssets(propertyId);
+    
+    // Then, look at current DB data
     let dbUrls: string[] = [];
-
     if (property) {
       dbUrls = property.imageUrls && Array.isArray(property.imageUrls) 
         ? property.imageUrls 
@@ -202,13 +203,18 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
     const cleanDbUrls = dbUrls.filter(url => url && typeof url === 'string' && url.length > 5);
 
+    // Prioritize the bridge if it exists (it contains the most recent uploads in this session)
     if (bridgeUrls && bridgeUrls.length > 0) {
-      // Create a set of URLs to avoid duplicates between bridge and DB
-      const merged = Array.from(new Set([...bridgeUrls, ...cleanDbUrls]));
-      return merged.length > 0 ? merged : [`https://picsum.photos/seed/${propertyId}/800/600`];
+      return bridgeUrls;
     }
 
-    return cleanDbUrls.length > 0 ? cleanDbUrls : [`https://picsum.photos/seed/${propertyId}/800/600`];
+    // Otherwise use DB URLs
+    if (cleanDbUrls.length > 0) {
+      return cleanDbUrls;
+    }
+
+    // Default fallback
+    return [`https://picsum.photos/seed/${propertyId}/800/600`];
   }, [property, propertyId, isClient]);
 
   const handleUpdateRent = () => {
@@ -229,9 +235,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const docId = doc(collection(db, 'documents')).id;
     const docRef = doc(db, 'documents', docId);
     
-    // Memory Bridge for Documents
-    const localUrl = URL.createObjectURL(file);
-    setMemoryAsset(docId, localUrl);
+    // Local session cache for documents
+    setMemoryAsset(docId, URL.createObjectURL(file));
 
     const residentIds = tenants?.map(t => t.userId).filter(Boolean) || [];
     const memberIds = Array.from(new Set([user.uid, ...(property.memberIds || []), ...residentIds]));
@@ -244,30 +249,28 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       const result = await uploadToSupabase(formData, 'property-documents', path);
       
       if (result.success && result.url) {
-        // Construct PLAIN OBJECT for Server Action
-        const finalDocData = {
+        // Construct PLAIN OBJECT for Server Action to avoid serialization errors
+        const serializableDocData = {
           id: docId,
           fileName: file.name,
           fileUrl: result.url,
-          status: 'active',
           documentType: 'property-asset',
           propertyId: propertyId,
           landlordId: user.uid,
           expiryDate: uploadExpiryDate ? uploadExpiryDate.toISOString() : null,
-          memberIds: memberIds,
-          uploadDate: new Date().toISOString()
-        };
-        
-        const serializableDocData = {
-          ...finalDocData,
-          createdAt: new Date().toISOString() // String instead of Timestamp
         };
 
-        // Write both to ensure sync
-        await setDoc(docRef, { ...finalDocData, createdAt: serverTimestamp() }, { merge: true });
+        // Update both Firebase (real-time) and Postgres (relational ledger)
+        await setDoc(docRef, { 
+          ...serializableDocData, 
+          status: 'active',
+          memberIds: memberIds,
+          uploadDate: new Date().toISOString(),
+          createdAt: serverTimestamp() 
+        }, { merge: true });
+
         await syncDocumentToDb(serializableDocData);
         
-        setMemoryAsset(docId, result.url);
         toast({ title: "Vault Updated" });
       } else {
         throw new Error(result.error);

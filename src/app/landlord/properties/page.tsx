@@ -76,8 +76,11 @@ export default function PropertiesPage() {
           </div>
         ) : (
           properties.map((property) => {
+            // HARDEN: Unified gallery logic to prevent stale thumbnails
             const bridgeAssets = getMemoryAssets(property.id);
             const dbUrl = property.imageUrl;
+            
+            // Prioritize bridge for instant session-based feedback
             const displayImage = (bridgeAssets && bridgeAssets.length > 0) 
               ? bridgeAssets[0] 
               : (dbUrl && dbUrl.length > 5 ? dbUrl : `https://picsum.photos/seed/${property.id}/800/600`);

@@ -68,7 +68,7 @@ export default function NewPropertyPage() {
       let finalImageUrl = '';
       let finalImageUrls: string[] = [];
 
-      // 1. Instant Memory Sync for Zero-Latency
+      // 1. Instant Memory Sync for Zero-Latency during redirection
       if (previewUrls.length > 0) {
         setMemoryAssets(propertyId, previewUrls);
       }
@@ -87,12 +87,12 @@ export default function NewPropertyPage() {
         
         if (finalImageUrls.length > 0) {
           finalImageUrl = finalImageUrls[0];
-          // Update bridge with permanent URLs if available already
+          // Update bridge with permanent URLs immediately for persistence
           setMemoryAssets(propertyId, finalImageUrls);
         }
       }
 
-      // 3. Construct SERIALIZABLE PLAIN OBJECT for Server Action
+      // 3. Construct SERIALIZABLE PLAIN OBJECT for Server Action (remove Timestamps)
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -107,18 +107,18 @@ export default function NewPropertyPage() {
         numberOfBathrooms: parseInt(bathrooms, 10) || 1,
         description: description,
         isOccupied: false,
-        tenantIds: [],
-        memberIds: [user.uid],
-        isActive: true
+        memberIds: [user.uid]
       };
 
       const firestoreData = {
         ...serializableData,
+        tenantIds: [],
+        isActive: true,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
 
-      // 4. Harden Persistence: Sequential Await
+      // 4. Harden Persistence: Sequential Await to ensure database integrity
       await setDoc(propertyRef, firestoreData, { merge: true });
       await syncPropertyToDb(serializableData);
 
