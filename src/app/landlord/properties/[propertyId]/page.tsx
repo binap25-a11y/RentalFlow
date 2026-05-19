@@ -11,7 +11,7 @@ import {
   setDocumentNonBlocking, 
   deleteDocumentNonBlocking,
 } from '@/firebase';
-import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, query, where, setDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -271,8 +271,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           expiryDate: uploadExpiryDate ? uploadExpiryDate.toISOString() : null,
         };
 
-        await setDocumentNonBlocking(docRef, finalDocData, { merge: true });
+        // HARDEN: Wait for Firestore commit before syncing to PostgreSQL
+        await setDoc(docRef, finalDocData, { merge: true });
         await syncDocumentToDb(serializableDocData);
+        
         setMemoryAsset(docId, result.url);
         toast({ title: "Vault Updated" });
       } else {

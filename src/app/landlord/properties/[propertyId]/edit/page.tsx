@@ -146,9 +146,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         description: description,
       };
 
-      // Ensure Firestore record is committed first
+      // HARDEN: Wait for Firestore write before redirecting to ensure persistence
       await setDoc(propertyRef, updateData, { merge: true });
-      // Then sync to relational ledger using plain object
       await syncPropertyToDb(serializableData);
 
       toast({ title: "Portfolio Updated", description: "Changes synchronized and remembered permanently." });
