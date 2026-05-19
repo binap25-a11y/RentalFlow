@@ -5,10 +5,9 @@ import {
   useUser, 
   useFirestore, 
   useDoc, 
-  useMemoFirebase, 
-  updateDocumentNonBlocking 
+  useMemoFirebase,
 } from '@/firebase';
-import { doc, serverTimestamp } from 'firebase/firestore';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,11 +95,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
 
-    // Visual synchronization for current session
-    if (newPreviewUrls.length > 0) {
-      setMemoryAsset(propertyId, newPreviewUrls[0]);
-    }
-
     try {
       let uploadedUrls: string[] = [];
       if (newImageFiles.length > 0) {
@@ -121,6 +115,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       if (primaryUrl) setMemoryAsset(propertyId, primaryUrl);
 
       const updateData: any = {
+        ...property,
         addressLine1: address,
         city,
         zipCode,
@@ -134,10 +129,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedAt: serverTimestamp(),
       };
 
-      await updateDocumentNonBlocking(propertyRef, updateData);
+      // HARDEN: Wait for Firestore write before redirecting to ensure persistence
+      await setDoc(propertyRef, updateData, { merge: true });
       await syncPropertyToDb({ ...updateData, id: propertyId, landlordId: user.uid });
 
-      toast({ title: "Portfolio Updated", description: "Changes synchronized and remembered across dash." });
+      toast({ title: "Portfolio Updated", description: "Changes synchronized and remembered permanently." });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Update failed:", err);

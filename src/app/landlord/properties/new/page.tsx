@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from 'react';
-import { useUser, useFirestore, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
-import { doc, serverTimestamp, collection } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { doc, serverTimestamp, collection, setDoc } from 'firebase/firestore';
 import { Card, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,16 +64,16 @@ export default function NewPropertyPage() {
     const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
-    // Provide instant visual feedback in the current session
+    // Instant Visual Bridge for current session
     if (previewUrls.length > 0) {
       setMemoryAsset(propertyId, previewUrls[0]);
     }
 
-    let finalImageUrl = '';
-    let finalImageUrls: string[] = [];
-
     try {
-      // Harden: Await all image uploads to Supabase BEFORE committing the record to Firestore
+      let finalImageUrl = '';
+      let finalImageUrls: string[] = [];
+
+      // Await all uploads to ensure permanent URLs are available before saving the record
       if (imageFiles.length > 0) {
         const uploadPromises = imageFiles.map((file, index) => {
           const formData = new FormData();
@@ -87,7 +87,6 @@ export default function NewPropertyPage() {
         
         if (finalImageUrls.length > 0) {
           finalImageUrl = finalImageUrls[0];
-          // Refresh the memory asset with the permanent public URL
           setMemoryAsset(propertyId, finalImageUrl);
         }
       }
@@ -104,7 +103,7 @@ export default function NewPropertyPage() {
         numberOfBathrooms: parseInt(bathrooms, 10) || 1,
         rentAmount: parseFloat(rentAmount) || 0,
         isOccupied: false,
-        imageUrl: finalImageUrl, // Saved as empty if no images, allowing UI dynamic fallback
+        imageUrl: finalImageUrl,
         imageUrls: finalImageUrls,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -113,8 +112,8 @@ export default function NewPropertyPage() {
         isActive: true
       };
 
-      // Initiate non-blocking write to Firestore with the final permanent URLs
-      setDocumentNonBlocking(propertyRef, baseData, { merge: true });
+      // HARDEN: Wait for Firestore before redirecting to ensure persistence after reload
+      await setDoc(propertyRef, baseData, { merge: true });
       await syncPropertyToDb(baseData);
 
       toast({ title: "Asset Registered", description: "Portfolio inventory updated and remembered permanently." });
@@ -196,7 +195,6 @@ export default function NewPropertyPage() {
                 </div>
               )}
               <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
-              <p className="mt-4 text-[10px] text-muted-foreground font-bold text-center uppercase tracking-widest opacity-60 font-headline">Professional Assets Supported.</p>
             </div>
 
             <div className="p-8 lg:p-12 space-y-8">
