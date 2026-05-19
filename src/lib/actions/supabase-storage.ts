@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 
 /**
  * Uploads a file to a specific Supabase bucket.
- * @param file The file object (sent from a client-side FormData).
+ * @param formData FormData containing the file.
  * @param bucket The destination bucket ('property-images' or 'property-documents').
  * @param path The specific file path/name within the bucket.
  */
@@ -22,9 +22,14 @@ export async function uploadToSupabase(
     const file = formData.get('file') as File;
     if (!file) throw new Error('No file provided');
 
+    // Convert file to buffer for server-side upload
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
     const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(path, file, {
+      .upload(path, buffer, {
+        contentType: file.type,
         cacheControl: '3600',
         upsert: true,
       });
