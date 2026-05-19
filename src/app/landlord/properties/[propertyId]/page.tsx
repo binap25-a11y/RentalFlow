@@ -187,6 +187,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return { score: finalScore, color, message };
   }, [propertyDocuments, maintenanceRequests, inspections]);
 
+  // HARDEN: Unified Gallery Logic that prioritizes memory bridge reactively
   const gallery = useMemo(() => {
     if (!isClient) return [];
     
@@ -194,12 +195,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     let dbUrls: string[] = [];
 
     if (property) {
-      dbUrls = property.imageUrls && property.imageUrls.length > 0 
+      dbUrls = property.imageUrls && Array.isArray(property.imageUrls) 
         ? property.imageUrls 
-        : (property.imageUrl && property.imageUrl.length > 5 ? [property.imageUrl] : []);
+        : (property.imageUrl ? [property.imageUrl] : []);
     }
 
-    const cleanDbUrls = dbUrls.filter(url => url && !url.startsWith('blob:'));
+    const cleanDbUrls = dbUrls.filter(url => url && typeof url === 'string' && url.length > 5);
 
     if (bridgeUrl) {
       const otherUrls = cleanDbUrls.filter(u => u !== bridgeUrl);
@@ -227,6 +228,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const docId = doc(collection(db, 'documents')).id;
     const docRef = doc(db, 'documents', docId);
     
+    // Memory Bridge for Documents
     const localUrl = URL.createObjectURL(file);
     setMemoryAsset(docId, localUrl);
 
@@ -241,6 +243,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       const result = await uploadToSupabase(formData, 'property-documents', path);
       
       if (result.success && result.url) {
+        // Construct PLAIN OBJECT for Server Action
         const finalDocData = {
           id: docId,
           fileName: file.name,
@@ -251,21 +254,16 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           landlordId: user.uid,
           expiryDate: uploadExpiryDate ? uploadExpiryDate.toISOString() : null,
           memberIds: memberIds,
-          uploadDate: new Date().toISOString(),
-          createdAt: serverTimestamp(),
+          uploadDate: new Date().toISOString()
         };
         
         const serializableDocData = {
-          id: docId,
-          propertyId: propertyId,
-          landlordId: user.uid,
-          fileName: file.name,
-          fileUrl: result.url,
-          documentType: 'property-asset',
-          expiryDate: uploadExpiryDate ? uploadExpiryDate.toISOString() : null,
+          ...finalDocData,
+          createdAt: new Date().toISOString() // String instead of Timestamp
         };
 
-        await setDoc(docRef, finalDocData, { merge: true });
+        // Write both to ensure sync
+        await setDoc(docRef, { ...finalDocData, createdAt: serverTimestamp() }, { merge: true });
         await syncDocumentToDb(serializableDocData);
         
         setMemoryAsset(docId, result.url);

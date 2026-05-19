@@ -67,7 +67,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setPropertyType(property.propertyType || 'Apartment');
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
-      setExistingImageUrls(property.imageUrls || [property.imageUrl].filter(Boolean));
+      // HARDEN: Ensure we initialize correctly from the database arrays
+      const urls = property.imageUrls && Array.isArray(property.imageUrls) 
+        ? property.imageUrls 
+        : (property.imageUrl ? [property.imageUrl] : []);
+      setExistingImageUrls(urls.filter(u => u && typeof u === 'string' && u.length > 5));
     }
   }, [property, isSaving]);
 
@@ -98,6 +102,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     try {
       let uploadedUrls: string[] = [];
       if (newImageFiles.length > 0) {
+        // Instant Bridge Update for Zero-Latency
+        if (newPreviewUrls.length > 0) {
+           setMemoryAsset(propertyId, newPreviewUrls[0]);
+        }
+
         const uploadPromises = newImageFiles.map((file, index) => {
           const formData = new FormData();
           formData.append('file', file);
@@ -114,6 +123,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       
       if (primaryUrl) setMemoryAsset(propertyId, primaryUrl);
 
+      // CRITICAL: Construct PLAIN OBJECT for Server Action (strip timestamps)
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -127,6 +137,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         numberOfBedrooms: parseInt(bedrooms, 10) || 1,
         numberOfBathrooms: parseInt(bathrooms, 10) || 1,
         description: description,
+        isOccupied: property?.isOccupied || false,
+        memberIds: property?.memberIds || [user.uid]
       };
 
       const firestoreUpdateData = {
@@ -134,6 +146,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedAt: serverTimestamp(),
       };
 
+      // HARDEN: Wait for both writes before navigation to ensure persistence
       await setDoc(propertyRef, firestoreUpdateData, { merge: true });
       await syncPropertyToDb(serializableData);
 

@@ -69,6 +69,11 @@ export default function NewPropertyPage() {
       let finalImageUrls: string[] = [];
 
       if (imageFiles.length > 0) {
+        // Instant Bridge Update
+        if (previewUrls.length > 0) {
+          setMemoryAsset(propertyId, previewUrls[0]);
+        }
+
         const uploadPromises = imageFiles.map((file, index) => {
           const formData = new FormData();
           formData.append('file', file);
@@ -85,6 +90,7 @@ export default function NewPropertyPage() {
         }
       }
 
+      // CRITICAL: Construct PLAIN OBJECT for Server Action (no Firestore timestamps)
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -98,18 +104,19 @@ export default function NewPropertyPage() {
         numberOfBedrooms: parseInt(bedrooms, 10) || 1,
         numberOfBathrooms: parseInt(bathrooms, 10) || 1,
         description: description,
-      };
-
-      const firestoreData = {
-        ...serializableData,
         isOccupied: false,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
         tenantIds: [],
         memberIds: [user.uid],
         isActive: true
       };
 
+      const firestoreData = {
+        ...serializableData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+
+      // HARDEN: Wait for writes sequentially to ensure persistence
       await setDoc(propertyRef, firestoreData, { merge: true });
       await syncPropertyToDb(serializableData);
 
