@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -18,7 +17,7 @@ import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 
-// Zero-Quota High-Performance Memory Bridge
+// High-Performance Memory Bridge for Cross-Page Instant Sync
 const setMemoryAsset = (id: string, url: string) => {
   if (typeof window === 'undefined') return;
   if (!(window as any).__asset_bridge) (window as any).__asset_bridge = {};
@@ -66,7 +65,7 @@ export default function NewPropertyPage() {
     const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
-    // Populate bridge with first image for instant cross-page preview
+    // Seed bridge for instant cross-page preview before Supabase sync completes
     if (previewUrls.length > 0) {
       setMemoryAsset(propertyId, previewUrls[0]);
     }
@@ -115,6 +114,8 @@ export default function NewPropertyPage() {
             updatedAt: serverTimestamp() 
           });
           syncPropertyToDb({ ...baseData, imageUrl: successfulUrls[0], imageUrls: successfulUrls });
+          // Ensure bridge remains synced with final URL
+          setMemoryAsset(propertyId, successfulUrls[0]);
         } else {
           updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
         }

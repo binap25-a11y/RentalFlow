@@ -18,7 +18,7 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { tenantConcierge } from "@/ai/flows/tenant-concierge-flow";
 import { cn } from "@/lib/utils";
 
-// Instant Memory Asset Retriever for Multi-Page Sync
+// Instant Memory Asset Retriever for Cross-Page Visual Sync
 const getMemoryAsset = (id: string) => {
   if (typeof window === 'undefined') return null;
   return (window as any).__asset_bridge?.[id] || null;
@@ -117,7 +117,7 @@ export default function TenantHub() {
     );
   }
 
-  // Instant Visual Sync for Resident Hero
+  // Instant Visual Sync Logic for Resident hero image
   const bridgeUrl = getMemoryAsset(property.id);
   const activeImageUrl = bridgeUrl || property.imageUrl || `https://picsum.photos/seed/rentalflow-pro-identity/800/600`;
 

@@ -12,7 +12,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-// Instant Memory Asset Retriever
+// Instant Memory Asset Retriever for Cross-Page Sync
 const getMemoryAsset = (id: string) => {
   if (typeof window === 'undefined') return null;
   return (window as any).__asset_bridge?.[id] || null;
@@ -70,7 +70,7 @@ export default function PropertiesPage() {
           </div>
         ) : (
           properties.map((property) => {
-            // Priority: Memory Bridge (Live) > Database URL > Placeholder
+            // Priority: Memory Bridge (Instant) > Database URL > Placeholder
             const displayImage = getMemoryAsset(property.id) || property.imageUrl || `https://picsum.photos/seed/${property.id}/800/600`;
 
             return (

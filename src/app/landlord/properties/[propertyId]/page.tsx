@@ -48,7 +48,7 @@ import { useRouter } from "next/navigation";
 import { format, isBefore } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
 
-// Instant Visibility Memory Bridge
+// Instant Visibility Memory Bridge for Cross-Page Visual Sync
 const getMemoryAsset = (id: string) => {
   if (typeof window === 'undefined') return null;
   return (window as any).__asset_bridge?.[id] || null;
@@ -201,7 +201,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const docId = doc(collection(db, 'documents')).id;
     const docRef = doc(db, 'documents', docId);
     
-    // Create instant local memory URL for immediate feedback
     const localUrl = URL.createObjectURL(file);
     setMemoryAsset(docId, localUrl);
 
@@ -262,10 +261,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
-  // Multi-Image Gallery Synchronization
+  // Multi-Image Instant Synchronization Logic
   const bridgeUrl = getMemoryAsset(propertyId);
   const activeImageUrl = bridgeUrl || property.imageUrl || `https://picsum.photos/seed/rentalflow-pro-identity/800/600`;
-  const gallery = property.imageUrls && property.imageUrls.length > 0 ? property.imageUrls : [activeImageUrl];
+  const gallery = property.imageUrls && property.imageUrls.length > 0 
+    ? (bridgeUrl && !property.imageUrls.includes(bridgeUrl) ? [bridgeUrl, ...property.imageUrls] : property.imageUrls)
+    : [activeImageUrl];
 
   const getPriorityColor = (priority: string) => {
     switch(priority?.toLowerCase()) {
