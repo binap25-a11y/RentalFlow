@@ -12,7 +12,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-// Instant Memory Asset Retriever for Cross-Page Sync
 const getMemoryAsset = (id: string) => {
   if (typeof window === 'undefined') return null;
   return (window as any).__asset_bridge?.[id] || null;
@@ -77,14 +76,10 @@ export default function PropertiesPage() {
           </div>
         ) : (
           properties.map((property) => {
-            // Priority: Memory Bridge (Instant) > Database URL > Placeholder
-            // blob URLs are invalid after reload, so bridgeUrl is null on reload
             const bridgeUrl = getMemoryAsset(property.id);
             const dbUrl = property.imageUrl;
-            
-            // On reload, dbUrl must be a persistent Supabase URL. 
-            // If it's a blob, it will fail to load, which is why New/Edit must update db correctly.
-            const displayImage = bridgeUrl || dbUrl || `https://picsum.photos/seed/${property.id}/800/600`;
+            const isDbUrlValid = dbUrl && !dbUrl.startsWith('blob:');
+            const displayImage = bridgeUrl || (isDbUrlValid ? dbUrl : `https://picsum.photos/seed/${property.id}/800/600`);
 
             return (
               <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card border border-transparent hover:border-primary/5">

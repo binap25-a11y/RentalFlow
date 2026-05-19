@@ -23,7 +23,6 @@ import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 
-// Zero-Quota High-Performance Memory Bridge
 const setMemoryAsset = (id: string, url: string) => {
   if (typeof window === 'undefined') return;
   if (!(window as any).__asset_bridge) (window as any).__asset_bridge = {};
@@ -97,7 +96,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
 
-    // INSTANT BRIDGE UPDATE: Prioritize first new image or first existing image
     if (newPreviewUrls.length > 0) {
       setMemoryAsset(propertyId, newPreviewUrls[0]);
     } else if (existingImageUrls.length > 0) {
@@ -117,15 +115,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       updatedAt: serverTimestamp(),
     };
 
-    // Update metadata immediately with local URLs as placeholders
     updateDocumentNonBlocking(propertyRef, {
       ...updateData,
-      imageUrl: newPreviewUrls[0] || existingImageUrls[0] || '',
-      imageUrls: [...existingImageUrls, ...newPreviewUrls]
+      imageUrl: property?.imageUrl || '', 
+      imageUrls: existingImageUrls
     });
 
-    const combinedGallery = [...existingImageUrls];
-    
     if (newImageFiles.length > 0) {
       const uploadPromises = newImageFiles.map((file, index) => {
         const formData = new FormData();
@@ -136,8 +131,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       Promise.all(uploadPromises).then((results) => {
         const successfulUrls = results.filter(r => r.success && r.url).map(r => r.url!);
-        const finalGallery = [...combinedGallery, ...successfulUrls];
-        
+        const finalGallery = [...existingImageUrls, ...successfulUrls];
         if (finalGallery.length > 0) {
           const finalUpdate = {
             imageUrl: finalGallery[0],
@@ -152,13 +146,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
         }
       }).catch((err) => {
-        console.error("Upload process failed:", err);
+        console.error("Background update failed:", err);
         updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
       });
     } else {
       const finalUpdate = {
-        imageUrl: combinedGallery[0] || '',
-        imageUrls: combinedGallery,
+        imageUrl: existingImageUrls[0] || '',
+        imageUrls: existingImageUrls,
         updatedAt: serverTimestamp()
       };
       updateDocumentNonBlocking(propertyRef, finalUpdate);

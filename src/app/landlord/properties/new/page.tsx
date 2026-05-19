@@ -17,7 +17,6 @@ import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 
-// High-Performance Memory Bridge for Cross-Page Instant Sync
 const setMemoryAsset = (id: string, url: string) => {
   if (typeof window === 'undefined') return;
   if (!(window as any).__asset_bridge) (window as any).__asset_bridge = {};
@@ -65,14 +64,12 @@ export default function NewPropertyPage() {
     const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
-    // CRITICAL: Seed bridge INSTANTLY with local preview for zero-latency feedback
     if (previewUrls.length > 0) {
       setMemoryAsset(propertyId, previewUrls[0]);
     }
 
     const fallbackUrl = `https://picsum.photos/seed/${propertyId}/800/600`;
 
-    // Base data with temporary blob/placeholder for instant UI update
     const baseData = {
       id: propertyId,
       landlordId: user.uid,
@@ -86,8 +83,8 @@ export default function NewPropertyPage() {
       rentAmount: parseFloat(rentAmount) || 0,
       isOccupied: false,
       isImageUpdating: imageFiles.length > 0,
-      imageUrl: previewUrls[0] || fallbackUrl, 
-      imageUrls: previewUrls, // Temporary local previews
+      imageUrl: fallbackUrl, // Persistent fallback while uploading
+      imageUrls: [], // Initial empty array
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       tenantIds: [],
@@ -105,34 +102,23 @@ export default function NewPropertyPage() {
         return uploadToSupabase(formData, 'property-images', path);
       });
 
-      // Background upload process to replace temporary URLs with permanent ones
       Promise.all(uploadPromises).then((results) => {
         const successfulUrls = results.filter(r => r.success && r.url).map(r => r.url!);
         if (successfulUrls.length > 0) {
           const finalImageUrl = successfulUrls[0];
-          const finalImageUrls = successfulUrls;
-
           updateDocumentNonBlocking(propertyRef, { 
             imageUrl: finalImageUrl, 
-            imageUrls: finalImageUrls,
+            imageUrls: successfulUrls,
             isImageUpdating: false,
             updatedAt: serverTimestamp() 
           });
-
-          // Sync to relational ledger if available
-          syncPropertyToDb({ 
-            ...baseData, 
-            imageUrl: finalImageUrl, 
-            imageUrls: finalImageUrls 
-          });
-          
-          // Refresh bridge with permanent URL
+          syncPropertyToDb({ ...baseData, imageUrl: finalImageUrl, imageUrls: successfulUrls });
           setMemoryAsset(propertyId, finalImageUrl);
         } else {
           updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
         }
       }).catch((err) => {
-        console.error("Upload process failed:", err);
+        console.error("Background upload failed:", err);
         updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
       });
     } else {
