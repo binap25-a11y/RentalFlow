@@ -24,8 +24,9 @@ import {
   MapPin, Users, Wrench, FileCheck, 
   Trash2, Edit3, Loader2, Save, ArrowLeft,
   Download, FileText, ShieldAlert, Upload, 
-  Calendar as CalendarIcon, Image as ImageIcon,
-  Bed, Bath, ChevronRight, AlertTriangle, CheckCircle2
+  Calendar as CalendarIcon, 
+  Bed, Bath, ChevronRight, AlertTriangle, CheckCircle2,
+  Clock, ShieldCheck
 } from "lucide-react";
 import { 
   Popover, 
@@ -303,7 +304,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 {gallery.map((url: string, index: number) => (
                   <CarouselItem key={index}>
                     <div className="relative h-[400px] w-full bg-muted">
-                      <Image src={url} alt={`Property ${index}`} fill className="object-cover" unoptimized={true} />
+                      <Image src={url} alt={`Property ${index}`} fill className="object-cover" unoptimized={true} data-ai-hint="luxury property" />
                     </div>
                   </CarouselItem>
                 ))}
@@ -407,7 +408,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           )}
                         >
                           <CalendarIcon className="mr-3 h-4 w-4 text-primary shrink-0" />
-                          <span className="flex-1 truncate text-xs sm:text-sm font-bold">
+                          <span className="flex-1 text-[13px] font-bold">
                             {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set Deadline (Optional)"}
                           </span>
                         </Button>
@@ -454,7 +455,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         </div>
                         <div className="flex gap-2 shrink-0">
                           {downloadUrl && downloadUrl !== 'pending' ? (
-                            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-primary/5 text-primary h-11 w-11 shadow-sm border border-transparent hover:border-primary/10 transition-all" asChild>
+                            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-primary/5 text-primary h-11 w-11 shadow-sm border border-transparent hover:border-primary/10 transition-all" asChild title="Download">
                               <a href={downloadUrl} target="_blank" rel="noopener noreferrer" download={doc.fileName}>
                                 <Download className="w-5 h-5" />
                               </a>
@@ -464,7 +465,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                               <Loader2 className="w-4 h-4 animate-spin text-primary/40" />
                             </div>
                           )}
-                          <Button variant="ghost" size="icon" className="rounded-xl hover:bg-destructive/5 text-destructive/40 hover:text-destructive h-11 w-11 transition-all" onClick={() => handleDeleteDocument(doc.id)}>
+                          <Button variant="ghost" size="icon" className="rounded-xl hover:bg-destructive/5 text-destructive/40 hover:text-destructive h-11 w-11 transition-all" onClick={() => handleDeleteDocument(doc.id)} title="Remove">
                             <Trash2 className="w-5 h-5" />
                           </Button>
                         </div>
@@ -481,23 +482,24 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     <div key={req.id} className="p-6 bg-white rounded-[1.75rem] border border-primary/5 text-left group hover:shadow-md transition-all">
                       <div className="flex justify-between items-start mb-4">
                          <div className="flex items-center gap-3">
-                           <Badge className={cn("text-[10px] font-bold uppercase px-3 py-1", getPriorityColor(req.priority))}>{req.priority}</Badge>
-                           <Badge variant="outline" className="text-[10px] font-bold uppercase border-primary/10">{req.status}</Badge>
+                           <Badge className={cn("text-[10px] font-bold uppercase px-3 py-1 shadow-sm", getPriorityColor(req.priority))}>{req.priority}</Badge>
+                           <Badge variant="outline" className="text-[10px] font-bold uppercase border-primary/10 bg-primary/[0.02]">{req.status}</Badge>
                          </div>
-                         <span className="text-[10px] text-muted-foreground font-bold flex items-center"><CalendarIcon className="w-3 h-3 mr-1" /> {req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'PP') : 'Today'}</span>
+                         <span className="text-[10px] text-muted-foreground font-bold flex items-center opacity-60"><Clock className="w-3 h-3 mr-1" /> {req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'PP') : 'Recently'}</span>
                       </div>
-                      <h4 className="font-bold text-xl text-primary font-headline mb-2">{req.title}</h4>
-                      <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 font-body">{req.description}</p>
-                      <div className="mt-4 pt-4 border-t border-primary/5 flex justify-end">
-                        <Button variant="ghost" className="text-xs font-bold text-primary rounded-xl" asChild>
-                          <Link href="/landlord/maintenance">Manage in Hub <ChevronRight className="w-4 h-4 ml-1" /></Link>
+                      <h4 className="font-bold text-xl text-primary font-headline mb-2 leading-tight">{req.title}</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 font-body font-medium">{req.description}</p>
+                      <div className="mt-6 pt-4 border-t border-primary/5 flex justify-end">
+                        <Button variant="ghost" className="text-xs font-bold text-primary rounded-xl hover:bg-primary/5" asChild>
+                          <Link href="/landlord/maintenance">Open Maintenance Hub <ChevronRight className="w-4 h-4 ml-1" /></Link>
                         </Button>
                       </div>
                     </div>
                  ))
                ) : (
-                 <div className="py-20 text-center bg-muted/10 rounded-[2rem] border-2 border-dashed border-primary/10">
-                   <p className="text-muted-foreground font-bold opacity-50">No maintenance repairs logged for this property.</p>
+                 <div className="py-20 text-center bg-muted/10 rounded-[2.5rem] border-2 border-dashed border-primary/10">
+                   <Wrench className="w-12 h-12 text-primary/10 mx-auto mb-4" />
+                   <p className="text-muted-foreground font-bold font-headline opacity-50">No maintenance repairs logged for this property.</p>
                  </div>
                )}
             </TabsContent>
@@ -507,28 +509,29 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 inspections.map(insp => (
                    <div key={insp.id} className="p-6 bg-white rounded-[1.75rem] border border-primary/5 text-left flex justify-between items-center group hover:shadow-md transition-all gap-4">
                      <div className="flex items-center gap-5 min-w-0">
-                       <div className={cn("p-4 rounded-2xl flex flex-col items-center justify-center min-w-[70px] shrink-0", insp.status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700')}>
-                         <span className="text-[10px] font-bold uppercase">{insp.scheduledDate ? format(new Date(insp.scheduledDate), 'MMM') : 'TBC'}</span>
+                       <div className={cn("p-4 rounded-2xl flex flex-col items-center justify-center min-w-[70px] shrink-0 shadow-inner", insp.status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700')}>
+                         <span className="text-[10px] font-bold uppercase opacity-60 tracking-wider">{insp.scheduledDate ? format(new Date(insp.scheduledDate), 'MMM') : 'TBC'}</span>
                          <span className="text-2xl font-bold font-headline">{insp.scheduledDate ? format(new Date(insp.scheduledDate), 'dd') : '??'}</span>
                        </div>
                        <div className="min-w-0">
-                         <h4 className="text-lg font-bold text-primary font-headline truncate">Compliance Audit Record</h4>
-                         <div className="flex items-center gap-3 mt-1 flex-wrap">
-                           <Badge variant={insp.status === 'completed' ? 'secondary' : 'default'} className="uppercase text-[9px] font-bold">{insp.status}</Badge>
+                         <h4 className="text-lg font-bold text-primary font-headline truncate">Safety & Compliance Audit</h4>
+                         <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                           <Badge variant={insp.status === 'completed' ? 'secondary' : 'default'} className="uppercase text-[9px] font-bold shadow-sm">{insp.status}</Badge>
                            {insp.healthScore && (
-                             <span className="text-[10px] font-bold text-emerald-600 flex items-center"><CheckCircle2 className="w-3 h-3 mr-1" /> Score: {insp.healthScore}/100</span>
+                             <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center border border-emerald-100"><CheckCircle2 className="w-3 h-3 mr-1" /> Score: {insp.healthScore}/100</span>
                            )}
                          </div>
                        </div>
                      </div>
-                     <Button variant="outline" className="rounded-xl font-bold h-11 border-primary/20 hover:bg-primary hover:text-white transition-all shrink-0" asChild>
-                       <Link href="/landlord/inspections">View Audit <ChevronRight className="w-4 h-4 ml-1" /></Link>
+                     <Button variant="outline" className="rounded-xl font-bold h-11 border-primary/20 hover:bg-primary hover:text-white transition-all shrink-0 shadow-sm" asChild>
+                       <Link href="/landlord/inspections">Audit Details <ChevronRight className="w-4 h-4 ml-1" /></Link>
                      </Button>
                    </div>
                 ))
               ) : (
-                <div className="py-20 text-center bg-muted/10 rounded-[2rem] border-2 border-dashed border-primary/10">
-                  <p className="text-muted-foreground font-bold opacity-50">No official audits have been recorded.</p>
+                <div className="py-20 text-center bg-muted/10 rounded-[2.5rem] border-2 border-dashed border-primary/10">
+                  <ShieldCheck className="w-12 h-12 text-primary/10 mx-auto mb-4" />
+                  <p className="text-muted-foreground font-bold font-headline opacity-50">No official audits have been recorded.</p>
                 </div>
               )}
             </TabsContent>
@@ -536,11 +539,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         </div>
 
         <div className="space-y-8">
-          <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-primary text-white">
+          <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-primary text-white sticky top-24">
             <CardHeader className="text-left p-8 bg-white/5">
               <CardTitle className="text-xl font-headline flex items-center">
                 <ShieldAlert className="w-6 h-6 mr-3 text-accent" />
-                Asset Compliance Status
+                Asset Health Score
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6 text-left p-8">
