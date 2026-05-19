@@ -188,10 +188,14 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return { score: finalScore, color, message };
   }, [propertyDocuments, maintenanceRequests, inspections]);
 
+  // HARDEN: Reactive gallery synchronization
   const gallery = useMemo(() => {
     if (!isClient) return [];
     
+    // 1. Priority: Local Session Bridge (Instant feedback after upload)
     const bridgeUrls = getMemoryAssets(propertyId);
+    
+    // 2. Database URLs
     let dbUrls: string[] = [];
     if (property) {
       dbUrls = property.imageUrls && Array.isArray(property.imageUrls) 
@@ -201,14 +205,17 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
     const cleanDbUrls = dbUrls.filter(url => url && typeof url === 'string' && url.length > 5);
 
+    // If bridge has more recent session data, use it
     if (bridgeUrls && bridgeUrls.length > 0) {
       return bridgeUrls;
     }
 
+    // Otherwise use DB
     if (cleanDbUrls.length > 0) {
       return cleanDbUrls;
     }
 
+    // Final Fallback: Official Placeholder
     const officialPlaceholder = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl;
     return [officialPlaceholder || `https://picsum.photos/seed/${propertyId}/800/600`];
   }, [property, propertyId, isClient]);
@@ -244,6 +251,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       const result = await uploadToSupabase(formData, 'property-documents', path);
       
       if (result.success && result.url) {
+        // Construct plain object for Postgres sync
         const serializableDocData = {
           id: docId,
           fileName: file.name,
@@ -254,6 +262,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           expiryDate: uploadExpiryDate ? uploadExpiryDate.toISOString() : null,
         };
 
+        // Wait for Firestore commit
         await setDoc(docRef, { 
           ...serializableDocData, 
           status: 'active',
@@ -262,6 +271,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           createdAt: serverTimestamp() 
         }, { merge: true });
 
+        // Wait for Postgres sync
         await syncDocumentToDb(serializableDocData);
         
         toast({ title: "Vault Updated" });
@@ -606,3 +616,4 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     </div>
   );
 }
+

@@ -315,3 +315,4 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     </div>
   );
 }
+
