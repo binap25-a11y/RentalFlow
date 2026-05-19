@@ -117,7 +117,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       updatedAt: serverTimestamp(),
     };
 
-    updateDocumentNonBlocking(propertyRef, updateData);
+    // Update metadata immediately with local URLs as placeholders
+    updateDocumentNonBlocking(propertyRef, {
+      ...updateData,
+      imageUrl: newPreviewUrls[0] || existingImageUrls[0] || '',
+      imageUrls: [...existingImageUrls, ...newPreviewUrls]
+    });
 
     const combinedGallery = [...existingImageUrls];
     
@@ -146,7 +151,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         } else {
           updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
         }
-      }).catch(() => {
+      }).catch((err) => {
+        console.error("Upload process failed:", err);
         updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
       });
     } else {

@@ -78,7 +78,13 @@ export default function PropertiesPage() {
         ) : (
           properties.map((property) => {
             // Priority: Memory Bridge (Instant) > Database URL > Placeholder
-            const displayImage = getMemoryAsset(property.id) || property.imageUrl || `https://picsum.photos/seed/${property.id}/800/600`;
+            // blob URLs are invalid after reload, so bridgeUrl is null on reload
+            const bridgeUrl = getMemoryAsset(property.id);
+            const dbUrl = property.imageUrl;
+            
+            // On reload, dbUrl must be a persistent Supabase URL. 
+            // If it's a blob, it will fail to load, which is why New/Edit must update db correctly.
+            const displayImage = bridgeUrl || dbUrl || `https://picsum.photos/seed/${property.id}/800/600`;
 
             return (
               <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card border border-transparent hover:border-primary/5">

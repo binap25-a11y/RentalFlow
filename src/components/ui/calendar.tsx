@@ -11,7 +11,7 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
 /**
  * Re-engineered for React Day Picker v9 compatibility.
- * Resolves duplicate header issue by relying on standard v9 caption layouts.
+ * Resolves duplicate header issue by relying on standard v9 layouts.
  */
 function Calendar({
   className,
@@ -23,7 +23,6 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn("p-4 bg-white rounded-2xl shadow-xl", className)}
-      captionLayout="label"
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",

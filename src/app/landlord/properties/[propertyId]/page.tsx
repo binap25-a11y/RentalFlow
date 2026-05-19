@@ -188,7 +188,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return { score: finalScore, color, message };
   }, [propertyDocuments, maintenanceRequests, inspections]);
 
-  // Reactive Multi-Image Gallery with Instant Bridge Prioritization
+  // Reactive Multi-Image Gallery with Persistent Storage Support
   const gallery = useMemo(() => {
     const bridgeUrl = getMemoryAsset(propertyId);
     let dbUrls: string[] = [];
@@ -199,12 +199,16 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         : (property.imageUrl ? [property.imageUrl] : []);
     }
 
+    // Filter out blob URLs from the database list to prevent breakage on reload
+    const cleanDbUrls = dbUrls.filter(url => !url.startsWith('blob:'));
+
     // Prioritize bridge URL to avoid "flash of old image" during background sync
-    if (bridgeUrl && !dbUrls.includes(bridgeUrl)) {
-      return [bridgeUrl, ...dbUrls];
+    // The bridge is ephemeral and is cleared on reload, so we only use it while valid
+    if (bridgeUrl && !cleanDbUrls.includes(bridgeUrl)) {
+      return [bridgeUrl, ...cleanDbUrls];
     }
 
-    return dbUrls.length > 0 ? dbUrls : [`https://picsum.photos/seed/${propertyId}/800/600`];
+    return cleanDbUrls.length > 0 ? cleanDbUrls : [`https://picsum.photos/seed/${propertyId}/800/600`];
   }, [property, propertyId, isClient]);
 
   const handleUpdateRent = () => {
@@ -235,7 +239,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const baseDocData = {
       id: docId,
       fileName: file.name,
-      fileUrl: localUrl, 
+      fileUrl: localUrl, // Temporary placeholder
       status: 'active',
       documentType: 'property-asset',
       propertyId: propertyId,
@@ -434,7 +438,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           )}
                         >
                           <CalendarIcon className="mr-3 h-4 w-4 text-primary shrink-0" />
-                          <span className="flex-1 text-[13px] font-bold truncate">
+                          <span className="flex-1 text-[13px] font-bold">
                             {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set Deadline (Optional)"}
                           </span>
                         </Button>
@@ -480,7 +484,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           </div>
                         </div>
                         <div className="flex gap-2 shrink-0">
-                          {downloadUrl && downloadUrl !== 'pending' ? (
+                          {downloadUrl && downloadUrl !== 'pending' && !downloadUrl.startsWith('blob:') ? (
                             <Button variant="ghost" size="icon" className="rounded-xl hover:bg-primary/5 text-primary h-11 w-11 shadow-sm border border-transparent hover:border-primary/10 transition-all" asChild title="Download">
                               <a href={downloadUrl} target="_blank" rel="noopener noreferrer" download={doc.fileName}>
                                 <Download className="w-5 h-5" />

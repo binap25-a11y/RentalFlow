@@ -72,6 +72,7 @@ export default function NewPropertyPage() {
 
     const fallbackUrl = `https://picsum.photos/seed/${propertyId}/800/600`;
 
+    // Base data with temporary blob/placeholder for instant UI update
     const baseData = {
       id: propertyId,
       landlordId: user.uid,
@@ -86,7 +87,7 @@ export default function NewPropertyPage() {
       isOccupied: false,
       isImageUpdating: imageFiles.length > 0,
       imageUrl: previewUrls[0] || fallbackUrl, 
-      imageUrls: [],
+      imageUrls: previewUrls, // Temporary local previews
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       tenantIds: [],
@@ -104,22 +105,34 @@ export default function NewPropertyPage() {
         return uploadToSupabase(formData, 'property-images', path);
       });
 
-      // Background upload process
+      // Background upload process to replace temporary URLs with permanent ones
       Promise.all(uploadPromises).then((results) => {
         const successfulUrls = results.filter(r => r.success && r.url).map(r => r.url!);
         if (successfulUrls.length > 0) {
+          const finalImageUrl = successfulUrls[0];
+          const finalImageUrls = successfulUrls;
+
           updateDocumentNonBlocking(propertyRef, { 
-            imageUrl: successfulUrls[0], 
-            imageUrls: successfulUrls,
+            imageUrl: finalImageUrl, 
+            imageUrls: finalImageUrls,
             isImageUpdating: false,
             updatedAt: serverTimestamp() 
           });
-          syncPropertyToDb({ ...baseData, imageUrl: successfulUrls[0], imageUrls: successfulUrls });
-          setMemoryAsset(propertyId, successfulUrls[0]);
+
+          // Sync to relational ledger if available
+          syncPropertyToDb({ 
+            ...baseData, 
+            imageUrl: finalImageUrl, 
+            imageUrls: finalImageUrls 
+          });
+          
+          // Refresh bridge with permanent URL
+          setMemoryAsset(propertyId, finalImageUrl);
         } else {
           updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
         }
-      }).catch(() => {
+      }).catch((err) => {
+        console.error("Upload process failed:", err);
         updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
       });
     } else {
