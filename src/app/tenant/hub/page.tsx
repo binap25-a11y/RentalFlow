@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
@@ -18,6 +17,12 @@ import { format, isValid } from "date-fns";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { tenantConcierge } from "@/ai/flows/tenant-concierge-flow";
 import { cn } from "@/lib/utils";
+
+// Instant Memory Asset Retriever for Multi-Page Sync
+const getMemoryAsset = (id: string) => {
+  if (typeof window === 'undefined') return null;
+  return (window as any).__asset_bridge?.[id] || null;
+};
 
 export default function TenantHub() {
   const { user } = useUser();
@@ -112,7 +117,9 @@ export default function TenantHub() {
     );
   }
 
-  const activeImageUrl = property.imageUrl || `https://picsum.photos/seed/rentalflow-pro-identity/800/600`;
+  // Instant Visual Sync for Resident Hero
+  const bridgeUrl = getMemoryAsset(property.id);
+  const activeImageUrl = bridgeUrl || property.imageUrl || `https://picsum.photos/seed/rentalflow-pro-identity/800/600`;
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-12">

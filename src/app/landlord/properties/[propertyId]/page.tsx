@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useRef, useMemo } from 'react';
@@ -49,7 +48,7 @@ import { useRouter } from "next/navigation";
 import { format, isBefore } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
 
-// Zero-Quota Memory Bridge for Instant UI Updates
+// Instant Visibility Memory Bridge
 const getMemoryAsset = (id: string) => {
   if (typeof window === 'undefined') return null;
   return (window as any).__asset_bridge?.[id] || null;
@@ -263,6 +262,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
+  // Multi-Image Gallery Synchronization
   const bridgeUrl = getMemoryAsset(propertyId);
   const activeImageUrl = bridgeUrl || property.imageUrl || `https://picsum.photos/seed/rentalflow-pro-identity/800/600`;
   const gallery = property.imageUrls && property.imageUrls.length > 0 ? property.imageUrls : [activeImageUrl];
@@ -402,19 +402,19 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             <TabsContent value="docs" className="mt-8 space-y-6">
               <Card className="border-none shadow-sm bg-primary/5 rounded-[1.75rem] border border-primary/5 overflow-hidden">
                 <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2 text-left">
+                  <div className="space-y-2 text-left min-w-0">
                     <Label className="text-[10px] font-bold font-headline uppercase tracking-widest text-primary/60">Compliance Expiry</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button 
                           variant="outline" 
                           className={cn(
-                            "w-full justify-start text-left h-12 rounded-xl bg-white border-none shadow-sm font-body px-4 transition-all hover:scale-[1.01]", 
+                            "w-full justify-start text-left h-12 rounded-xl bg-white border-none shadow-sm font-body px-4 transition-all hover:scale-[1.01] overflow-hidden", 
                             !uploadExpiryDate && "text-muted-foreground"
                           )}
                         >
                           <CalendarIcon className="mr-3 h-4 w-4 text-primary shrink-0" />
-                          <span className="flex-1 text-[13px] font-bold">
+                          <span className="flex-1 text-[13px] font-bold truncate">
                             {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set Deadline (Optional)"}
                           </span>
                         </Button>
