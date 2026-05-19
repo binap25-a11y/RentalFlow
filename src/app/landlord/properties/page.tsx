@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -83,6 +82,7 @@ export default function PropertiesPage() {
                     fill 
                     className="object-cover transition-transform duration-500 group-hover:scale-105" 
                     unoptimized={true}
+                    data-ai-hint="real estate"
                   />
                   <Badge className={cn(
                     "absolute top-4 right-4 font-bold shadow-lg py-1 px-3",

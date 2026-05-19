@@ -172,7 +172,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
               <div className="relative group overflow-hidden rounded-3xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white aspect-video w-full flex items-center justify-center shadow-inner">
                 {previewUrl ? (
                   <>
-                    <Image src={previewUrl} alt="Preview" fill className="object-cover" unoptimized={true} />
+                    <Image src={previewUrl} alt="Preview" fill className="object-cover" unoptimized={true} data-ai-hint="real estate" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                        <Button type="button" variant="secondary" size="sm" className="rounded-xl font-bold font-headline" onClick={() => document.getElementById('image-input')?.click()}>Update Photo</Button>
                     </div>

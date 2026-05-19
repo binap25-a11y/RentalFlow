@@ -201,6 +201,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const docId = doc(collection(db, 'documents')).id;
     const docRef = doc(db, 'documents', docId);
     
+    // Create instant local memory URL
     const localUrl = URL.createObjectURL(file);
     setMemoryAsset(docId, localUrl);
 
@@ -261,7 +262,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   if (isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!property) return <div className="p-8 text-center font-bold">Asset record not found.</div>;
 
-  const activeImageUrl = property.imageUrl || `https://picsum.photos/seed/rentalflow-pro-identity/800/600`;
+  // Use Memory Bridge for hero image if Firestore is still syncing
+  const bridgeUrl = getMemoryAsset(propertyId);
+  const activeImageUrl = bridgeUrl || property.imageUrl || `https://picsum.photos/seed/rentalflow-pro-identity/800/600`;
   const gallery = property.imageUrls || [activeImageUrl].filter(Boolean);
 
   const getPriorityColor = (priority: string) => {
