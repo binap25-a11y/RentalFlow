@@ -244,9 +244,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       createdAt: serverTimestamp(),
     };
 
-    setDocumentNonBlocking(docRef, baseDocData, { merge: true });
-    syncDocumentToDb({ ...baseDocData, fileUrl: 'pending' });
-
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -255,18 +252,16 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       const result = await uploadToSupabase(formData, 'property-documents', path);
       
       if (result.success && result.url) {
-        updateDocumentNonBlocking(docRef, {
-          fileUrl: result.url,
-          updatedAt: serverTimestamp(),
-        });
-        syncDocumentToDb({ ...baseDocData, fileUrl: result.url });
+        const finalDocData = { ...baseDocData, fileUrl: result.url };
+        await setDocumentNonBlocking(docRef, finalDocData, { merge: true });
+        await syncDocumentToDb(finalDocData);
         setMemoryAsset(docId, result.url);
         toast({ title: "Vault Updated" });
       } else {
         throw new Error(result.error);
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Upload Failed" });
+      toast({ variant: "destructive", title: "Upload Failed", description: error.message });
     } finally {
       setIsUploadingDoc(false);
       setUploadExpiryDate(undefined);
@@ -328,7 +323,14 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 {gallery.map((url: string, index: number) => (
                   <CarouselItem key={index}>
                     <div className="relative h-[450px] w-full bg-muted">
-                      <Image src={url} alt={`Property ${index}`} fill className="object-cover" unoptimized={true} data-ai-hint="luxury property" />
+                      <Image 
+                        src={url} 
+                        alt={`Property ${index}`} 
+                        fill 
+                        className="object-cover" 
+                        unoptimized={true} 
+                        data-ai-hint="luxury property" 
+                      />
                     </div>
                   </CarouselItem>
                 ))}
@@ -432,7 +434,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           )}
                         >
                           <CalendarIcon className="mr-3 h-4 w-4 text-primary shrink-0" />
-                          <span className="flex-1 text-[13px] font-bold truncate whitespace-normal leading-tight">
+                          <span className="flex-1 text-[13px] font-bold whitespace-normal leading-tight">
                             {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set Deadline (Optional)"}
                           </span>
                         </Button>

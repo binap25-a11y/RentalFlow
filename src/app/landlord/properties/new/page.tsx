@@ -64,71 +64,63 @@ export default function NewPropertyPage() {
     const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
-    // Provide instant feedback in session
+    // Immediate feedback in current session via memory bridge
     if (previewUrls.length > 0) {
       setMemoryAsset(propertyId, previewUrls[0]);
     }
 
-    // Never save blob URLs to Firestore. Use a high-fidelity placeholder until upload finishes.
-    const fallbackUrl = `https://picsum.photos/seed/${propertyId}/800/600`;
+    let finalImageUrl = `https://picsum.photos/seed/${propertyId}/800/600`;
+    let finalImageUrls: string[] = [];
 
-    const baseData = {
-      id: propertyId,
-      landlordId: user.uid,
-      addressLine1: address,
-      city,
-      zipCode,
-      description,
-      propertyType,
-      numberOfBedrooms: parseInt(bedrooms, 10) || 1,
-      numberOfBathrooms: parseInt(bathrooms, 10) || 1,
-      rentAmount: parseFloat(rentAmount) || 0,
-      isOccupied: false,
-      isImageUpdating: imageFiles.length > 0,
-      imageUrl: fallbackUrl,
-      imageUrls: [],
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      tenantIds: [],
-      memberIds: [user.uid],
-      isActive: true
-    };
+    try {
+      // Hardened: Await image uploads before committing to Firestore
+      if (imageFiles.length > 0) {
+        const uploadPromises = imageFiles.map((file, index) => {
+          const formData = new FormData();
+          formData.append('file', file);
+          const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${file.name}`;
+          return uploadToSupabase(formData, 'property-images', path);
+        });
 
-    setDocumentNonBlocking(propertyRef, baseData, { merge: true });
-
-    if (imageFiles.length > 0) {
-      const uploadPromises = imageFiles.map((file, index) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${file.name}`;
-        return uploadToSupabase(formData, 'property-images', path);
-      });
-
-      Promise.all(uploadPromises).then((results) => {
-        const successfulUrls = results.filter(r => r.success && r.url).map(r => r.url!);
-        if (successfulUrls.length > 0) {
-          const finalImageUrl = successfulUrls[0];
-          updateDocumentNonBlocking(propertyRef, { 
-            imageUrl: finalImageUrl, 
-            imageUrls: successfulUrls,
-            isImageUpdating: false,
-            updatedAt: serverTimestamp() 
-          });
-          syncPropertyToDb({ ...baseData, imageUrl: finalImageUrl, imageUrls: successfulUrls });
-          setMemoryAsset(propertyId, finalImageUrl);
-        } else {
-          updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
+        const results = await Promise.all(uploadPromises);
+        finalImageUrls = results.filter(r => r.success && r.url).map(r => r.url!);
+        if (finalImageUrls.length > 0) {
+          finalImageUrl = finalImageUrls[0];
+          setMemoryAsset(propertyId, finalImageUrl); // Update with real URL once ready
         }
-      }).catch((err) => {
-        console.error("Background upload failed:", err);
-        updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
-      });
-    } else {
-      syncPropertyToDb(baseData);
-    }
+      }
 
-    toast({ title: "Asset Registered", description: "Portfolio inventory updated instantly." });
-    router.push(`/landlord/properties/${propertyId}`);
+      const baseData = {
+        id: propertyId,
+        landlordId: user.uid,
+        addressLine1: address,
+        city,
+        zipCode,
+        description,
+        propertyType,
+        numberOfBedrooms: parseInt(bedrooms, 10) || 1,
+        numberOfBathrooms: parseInt(bathrooms, 10) || 1,
+        rentAmount: parseFloat(rentAmount) || 0,
+        isOccupied: false,
+        imageUrl: finalImageUrl,
+        imageUrls: finalImageUrls,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        tenantIds: [],
+        memberIds: [user.uid],
+        isActive: true
+      };
+
+      await setDocumentNonBlocking(propertyRef, baseData, { merge: true });
+      await syncPropertyToDb(baseData);
+
+      toast({ title: "Asset Registered", description: "Portfolio inventory updated and remembered." });
+      router.push(`/landlord/properties/${propertyId}`);
+    } catch (err: any) {
+      console.error("Save failed:", err);
+      toast({ variant: "destructive", title: "Registration Failed", description: "The server encountered an issue. Check file sizes." });
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -163,7 +155,14 @@ export default function NewPropertyPage() {
                 <div className="grid grid-cols-2 gap-4">
                   {previewUrls.map((url, index) => (
                     <div key={index} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border border-primary/10 bg-white">
-                      <Image src={url} alt={`Preview ${index}`} fill className="object-cover" unoptimized={true} />
+                      <Image 
+                        src={url} 
+                        alt={`Preview ${index}`} 
+                        fill 
+                        className="object-cover" 
+                        unoptimized={true} 
+                        data-ai-hint="property interior"
+                      />
                       <button 
                         type="button" 
                         onClick={() => removeImage(index)}
@@ -264,8 +263,7 @@ export default function NewPropertyPage() {
           <CardFooter className="p-8 bg-muted/10 border-t flex justify-end gap-4">
             <Button type="button" variant="ghost" className="rounded-xl h-12 px-8 font-bold font-headline" onClick={() => router.back()}>Cancel</Button>
             <Button type="submit" disabled={isSaving} className="rounded-xl font-bold bg-primary h-12 px-12 shadow-lg shadow-primary/20 min-w-[200px] font-headline text-white hover:bg-primary/90 transition-transform active:scale-95">
-              {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
-              Register Portfolio Asset
+              {isSaving ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Syncing...</> : <><Save className="w-5 h-5 mr-2" /> Register Portfolio Asset</>}
             </Button>
           </CardFooter>
         </form>

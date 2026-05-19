@@ -96,73 +96,54 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
 
-    // Immediate visual sync for current session
+    // Visual synchronization for current session
     if (newPreviewUrls.length > 0) {
       setMemoryAsset(propertyId, newPreviewUrls[0]);
-    } else if (existingImageUrls.length > 0) {
-      setMemoryAsset(propertyId, existingImageUrls[0]);
     }
 
-    const updateData: any = {
-      addressLine1: address,
-      city,
-      zipCode,
-      description,
-      propertyType,
-      numberOfBedrooms: parseInt(bedrooms, 10) || 1,
-      numberOfBathrooms: parseInt(bathrooms, 10) || 1,
-      rentAmount: parseFloat(rentAmount) || 0,
-      isImageUpdating: newImageFiles.length > 0, 
-      updatedAt: serverTimestamp(),
-    };
+    try {
+      let uploadedUrls: string[] = [];
+      if (newImageFiles.length > 0) {
+        const uploadPromises = newImageFiles.map((file, index) => {
+          const formData = new FormData();
+          formData.append('file', file);
+          const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${file.name}`;
+          return uploadToSupabase(formData, 'property-images', path);
+        });
 
-    // Update with current persistent data first (avoiding blobs)
-    updateDocumentNonBlocking(propertyRef, {
-      ...updateData,
-      imageUrl: property?.imageUrl || '', 
-      imageUrls: existingImageUrls
-    });
+        const results = await Promise.all(uploadPromises);
+        uploadedUrls = results.filter(r => r.success && r.url).map(r => r.url!);
+      }
 
-    if (newImageFiles.length > 0) {
-      const uploadPromises = newImageFiles.map((file, index) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${file.name}`;
-        return uploadToSupabase(formData, 'property-images', path);
-      });
+      const finalGallery = [...existingImageUrls, ...uploadedUrls];
+      const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
+      
+      if (primaryUrl) setMemoryAsset(propertyId, primaryUrl);
 
-      Promise.all(uploadPromises).then((results) => {
-        const successfulUrls = results.filter(r => r.success && r.url).map(r => r.url!);
-        const finalGallery = [...existingImageUrls, ...successfulUrls];
-        if (finalGallery.length > 0) {
-          const finalUpdate = {
-            imageUrl: finalGallery[0],
-            imageUrls: finalGallery,
-            isImageUpdating: false,
-            updatedAt: serverTimestamp()
-          };
-          updateDocumentNonBlocking(propertyRef, finalUpdate);
-          syncPropertyToDb({ ...updateData, id: propertyId, landlordId: user.uid, ...finalUpdate });
-          setMemoryAsset(propertyId, finalGallery[0]);
-        } else {
-          updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
-        }
-      }).catch((err) => {
-        console.error("Background update failed:", err);
-        updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
-      });
-    } else {
-      const finalUpdate = {
-        imageUrl: existingImageUrls[0] || '',
-        imageUrls: existingImageUrls,
-        updatedAt: serverTimestamp()
+      const updateData: any = {
+        addressLine1: address,
+        city,
+        zipCode,
+        description,
+        propertyType,
+        numberOfBedrooms: parseInt(bedrooms, 10) || 1,
+        numberOfBathrooms: parseInt(bathrooms, 10) || 1,
+        rentAmount: parseFloat(rentAmount) || 0,
+        imageUrl: primaryUrl,
+        imageUrls: finalGallery,
+        updatedAt: serverTimestamp(),
       };
-      updateDocumentNonBlocking(propertyRef, finalUpdate);
-      syncPropertyToDb({ ...updateData, id: propertyId, landlordId: user.uid, ...finalUpdate });
-    }
 
-    toast({ title: "Portfolio Updated", description: "Changes synchronized across dashboard." });
-    router.push(`/landlord/properties/${propertyId}`);
+      await updateDocumentNonBlocking(propertyRef, updateData);
+      await syncPropertyToDb({ ...updateData, id: propertyId, landlordId: user.uid });
+
+      toast({ title: "Portfolio Updated", description: "Changes synchronized and remembered across dash." });
+      router.push(`/landlord/properties/${propertyId}`);
+    } catch (err: any) {
+      console.error("Update failed:", err);
+      toast({ variant: "destructive", title: "Update Failed", description: "The server encountered an issue with your asset data." });
+      setIsSaving(false);
+    }
   };
 
   if (isLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
@@ -198,7 +179,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
               <div className="grid grid-cols-2 gap-4">
                 {existingImageUrls.map((url, index) => (
                   <div key={`existing-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border border-primary/10 bg-white">
-                    <Image src={url} alt={`Existing ${index}`} fill className="object-cover" unoptimized={true} />
+                    <Image 
+                      src={url} 
+                      alt={`Existing ${index}`} 
+                      fill 
+                      className="object-cover" 
+                      unoptimized={true} 
+                      data-ai-hint="property view"
+                    />
                     <button 
                       type="button" 
                       onClick={() => removeExistingImage(index)}
@@ -214,7 +202,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                 
                 {newPreviewUrls.map((url, index) => (
                   <div key={`new-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border-2 border-dashed border-accent/40 bg-white">
-                    <Image src={url} alt={`New ${index}`} fill className="object-cover opacity-80" unoptimized={true} />
+                    <Image 
+                      src={url} 
+                      alt={`New ${index}`} 
+                      fill 
+                      className="object-cover opacity-80" 
+                      unoptimized={true} 
+                      data-ai-hint="modern home"
+                    />
                     <button 
                       type="button" 
                       onClick={() => removeNewImage(index)}
@@ -301,8 +296,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           <CardFooter className="p-8 bg-muted/10 border-t flex justify-end gap-4">
             <Button type="button" variant="ghost" className="rounded-xl h-12 px-8 font-bold font-headline" onClick={() => router.back()}>Cancel</Button>
             <Button type="submit" disabled={isSaving} className="rounded-xl font-bold bg-primary h-12 px-12 shadow-lg shadow-primary/20 min-w-[200px] font-headline text-white hover:bg-primary/90 transition-transform active:scale-95">
-              {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
-              Save Specification
+              {isSaving ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Syncing...</> : <><Save className="w-5 h-5 mr-2" /> Save Specification</>}
             </Button>
           </CardFooter>
         </form>

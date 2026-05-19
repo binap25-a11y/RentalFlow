@@ -9,7 +9,7 @@ const nextConfig = {
 
   experimental: {
     serverActions: {
-      bodySizeLimit: '10mb',
+      bodySizeLimit: '20mb',
       allowedOrigins: [
         "3000-firebase-leaseloop-6-1779214977805.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev",
         "6000-firebase-leaseloop-6-1779214977805.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev",
