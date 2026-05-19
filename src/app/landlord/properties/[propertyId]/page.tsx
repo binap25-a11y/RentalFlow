@@ -191,6 +191,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       ? property.imageUrls 
       : (property.imageUrl ? [property.imageUrl] : []);
 
+    // Prioritize latest upload from bridge if not yet in DB
     if (bridgeUrl && !dbUrls.includes(bridgeUrl)) {
       return [bridgeUrl, ...dbUrls];
     }
@@ -215,6 +216,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const docId = doc(collection(db, 'documents')).id;
     const docRef = doc(db, 'documents', docId);
     
+    // Instant feedback for the doc list
     const localUrl = URL.createObjectURL(file);
     setMemoryAsset(docId, localUrl);
 
