@@ -12,7 +12,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-const getMemoryAsset = (id: string) => {
+const getMemoryAssets = (id: string): string[] | null => {
   if (typeof window === 'undefined') return null;
   return (window as any).__asset_bridge?.[id] || null;
 };
@@ -76,9 +76,11 @@ export default function PropertiesPage() {
           </div>
         ) : (
           properties.map((property) => {
-            const bridgeUrl = getMemoryAsset(property.id);
+            const bridgeAssets = getMemoryAssets(property.id);
             const dbUrl = property.imageUrl;
-            const displayImage = bridgeUrl || (dbUrl && dbUrl.length > 5 ? dbUrl : `https://picsum.photos/seed/${property.id}/800/600`);
+            const displayImage = (bridgeAssets && bridgeAssets.length > 0) 
+              ? bridgeAssets[0] 
+              : (dbUrl && dbUrl.length > 5 ? dbUrl : `https://picsum.photos/seed/${property.id}/800/600`);
 
             return (
               <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card border border-transparent hover:border-primary/5">

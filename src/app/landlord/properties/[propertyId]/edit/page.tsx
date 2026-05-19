@@ -22,10 +22,10 @@ import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 
-const setMemoryAsset = (id: string, url: string) => {
+const setMemoryAssets = (id: string, urls: string[]) => {
   if (typeof window === 'undefined') return;
   if (!(window as any).__asset_bridge) (window as any).__asset_bridge = {};
-  (window as any).__asset_bridge[id] = url;
+  (window as any).__asset_bridge[id] = urls;
 };
 
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
@@ -67,7 +67,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setPropertyType(property.propertyType || 'Apartment');
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
-      // HARDEN: Ensure we initialize correctly from the database arrays
+      
       const urls = property.imageUrls && Array.isArray(property.imageUrls) 
         ? property.imageUrls 
         : (property.imageUrl ? [property.imageUrl] : []);
@@ -101,12 +101,15 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     try {
       let uploadedUrls: string[] = [];
-      if (newImageFiles.length > 0) {
-        // Instant Bridge Update for Zero-Latency
-        if (newPreviewUrls.length > 0) {
-           setMemoryAsset(propertyId, newPreviewUrls[0]);
-        }
+      
+      // 1. Instant Bridge Update for Zero-Latency Previews
+      const currentFullGallery = [...existingImageUrls, ...newPreviewUrls];
+      if (currentFullGallery.length > 0) {
+         setMemoryAssets(propertyId, currentFullGallery);
+      }
 
+      // 2. Suppabase Storage Sync
+      if (newImageFiles.length > 0) {
         const uploadPromises = newImageFiles.map((file, index) => {
           const formData = new FormData();
           formData.append('file', file);
@@ -121,9 +124,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const finalGallery = [...existingImageUrls, ...uploadedUrls];
       const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
       
-      if (primaryUrl) setMemoryAsset(propertyId, primaryUrl);
+      // Update bridge with permanent links immediately
+      setMemoryAssets(propertyId, finalGallery);
 
-      // CRITICAL: Construct PLAIN OBJECT for Server Action (strip timestamps)
+      // 3. Construct PLAIN OBJECT for Server Action (strip timestamps)
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -146,7 +150,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedAt: serverTimestamp(),
       };
 
-      // HARDEN: Wait for both writes before navigation to ensure persistence
+      // 4. Harden Persistence: Sequential Await
       await setDoc(propertyRef, firestoreUpdateData, { merge: true });
       await syncPropertyToDb(serializableData);
 

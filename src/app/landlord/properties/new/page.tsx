@@ -17,10 +17,10 @@ import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 
-const setMemoryAsset = (id: string, url: string) => {
+const setMemoryAssets = (id: string, urls: string[]) => {
   if (typeof window === 'undefined') return;
   if (!(window as any).__asset_bridge) (window as any).__asset_bridge = {};
-  (window as any).__asset_bridge[id] = url;
+  (window as any).__asset_bridge[id] = urls;
 };
 
 export default function NewPropertyPage() {
@@ -68,12 +68,13 @@ export default function NewPropertyPage() {
       let finalImageUrl = '';
       let finalImageUrls: string[] = [];
 
-      if (imageFiles.length > 0) {
-        // Instant Bridge Update
-        if (previewUrls.length > 0) {
-          setMemoryAsset(propertyId, previewUrls[0]);
-        }
+      // 1. Instant Memory Sync for Zero-Latency
+      if (previewUrls.length > 0) {
+        setMemoryAssets(propertyId, previewUrls);
+      }
 
+      // 2. Persistent Supabase Uploads
+      if (imageFiles.length > 0) {
         const uploadPromises = imageFiles.map((file, index) => {
           const formData = new FormData();
           formData.append('file', file);
@@ -86,11 +87,12 @@ export default function NewPropertyPage() {
         
         if (finalImageUrls.length > 0) {
           finalImageUrl = finalImageUrls[0];
-          setMemoryAsset(propertyId, finalImageUrl);
+          // Update bridge with permanent URLs if available already
+          setMemoryAssets(propertyId, finalImageUrls);
         }
       }
 
-      // CRITICAL: Construct PLAIN OBJECT for Server Action (no Firestore timestamps)
+      // 3. Construct SERIALIZABLE PLAIN OBJECT for Server Action
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -116,7 +118,7 @@ export default function NewPropertyPage() {
         updatedAt: serverTimestamp(),
       };
 
-      // HARDEN: Wait for writes sequentially to ensure persistence
+      // 4. Harden Persistence: Sequential Await
       await setDoc(propertyRef, firestoreData, { merge: true });
       await syncPropertyToDb(serializableData);
 

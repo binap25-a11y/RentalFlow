@@ -48,7 +48,7 @@ import { useRouter } from "next/navigation";
 import { format, isBefore } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
 
-const getMemoryAsset = (id: string) => {
+const getMemoryAssets = (id: string): string[] | null => {
   if (typeof window === 'undefined') return null;
   return (window as any).__asset_bridge?.[id] || null;
 };
@@ -191,7 +191,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const gallery = useMemo(() => {
     if (!isClient) return [];
     
-    const bridgeUrl = getMemoryAsset(propertyId);
+    const bridgeUrls = getMemoryAssets(propertyId);
     let dbUrls: string[] = [];
 
     if (property) {
@@ -202,9 +202,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
     const cleanDbUrls = dbUrls.filter(url => url && typeof url === 'string' && url.length > 5);
 
-    if (bridgeUrl) {
-      const otherUrls = cleanDbUrls.filter(u => u !== bridgeUrl);
-      return [bridgeUrl, ...otherUrls];
+    if (bridgeUrls && bridgeUrls.length > 0) {
+      // Create a set of URLs to avoid duplicates between bridge and DB
+      const merged = Array.from(new Set([...bridgeUrls, ...cleanDbUrls]));
+      return merged.length > 0 ? merged : [`https://picsum.photos/seed/${propertyId}/800/600`];
     }
 
     return cleanDbUrls.length > 0 ? cleanDbUrls : [`https://picsum.photos/seed/${propertyId}/800/600`];
@@ -473,7 +474,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                   </div>
                 ) : (
                   propertyDocuments.map(doc => {
-                    const downloadUrl = getMemoryAsset(doc.id) || doc.fileUrl;
+                    const downloadUrl = getMemoryAssets(doc.id)?.[0] || doc.fileUrl;
                     return (
                       <div key={doc.id} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-all gap-4">
                         <div className="flex items-center gap-4 text-left min-w-0 flex-1">
