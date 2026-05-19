@@ -10,6 +10,9 @@ const nextConfig = {
   experimental: {
     serverActions: {
       allowedOrigins: [
+        "3000-firebase-leaseloop-6-1779214977805.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev",
+        "6000-firebase-leaseloop-6-1779214977805.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev",
+        "9002-firebase-leaseloop-6-1779214977805.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev",
         "3000-firebase-leaseloop-4-1779055012886.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev",
         "6000-firebase-leaseloop-4-1779055012886.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev",
         "9002-firebase-leaseloop-4-1779055012886.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev"
