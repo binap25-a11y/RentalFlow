@@ -19,12 +19,12 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn("p-4 bg-white rounded-2xl shadow-xl", className)}
-      // Set to 'label' to ensure a single, professional header in RDP v9
+      // Set to 'label' and disable extra caption elements to prevent duplication in v9
       captionLayout="label"
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
-        month_caption: "flex justify-center pt-1 relative items-center mb-4",
+        month_caption: "flex justify-center pt-1 relative items-center mb-4 h-9",
         caption_label: "text-sm font-bold font-headline text-primary",
         nav: "space-x-1 flex items-center",
         button_previous: cn(
