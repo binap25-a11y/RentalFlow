@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useRef, useMemo, useEffect } from 'react';
@@ -188,7 +187,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return { score: finalScore, color, message };
   }, [propertyDocuments, maintenanceRequests, inspections]);
 
-  // HARDEN: Unified gallery logic to ensure instant detail updates
+  // HARDEN: Unified gallery logic to ensure instant detail updates and consistent placeholder
   const gallery = useMemo(() => {
     if (!isClient) return [];
     
@@ -215,7 +214,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       return cleanDbUrls;
     }
 
-    // Final Fallback: Official Placeholder
+    // Final Fallback: Official Professional Placeholder (avoid random road images)
     const officialPlaceholder = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl;
     return [officialPlaceholder || `https://picsum.photos/seed/${propertyId}/800/600`];
   }, [property, propertyId, isClient]);

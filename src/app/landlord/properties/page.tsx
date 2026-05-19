@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 const getMemoryAssets = (id: string): string[] | null => {
   if (typeof window === 'undefined') return null;
@@ -76,14 +77,14 @@ export default function PropertiesPage() {
           </div>
         ) : (
           properties.map((property) => {
-            // HARDEN: Unified gallery logic to prevent stale thumbnails
+            // HARDEN: Prioritize Memory Bridge for instant feedback, then DB, then official placeholder
             const bridgeAssets = getMemoryAssets(property.id);
             const dbUrl = property.imageUrl;
+            const officialPlaceholder = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || `https://picsum.photos/seed/prop-fallback/800/600`;
             
-            // Prioritize bridge for instant session-based feedback
             const displayImage = (bridgeAssets && bridgeAssets.length > 0) 
               ? bridgeAssets[0] 
-              : (dbUrl && dbUrl.length > 5 ? dbUrl : `https://picsum.photos/seed/${property.id}/800/600`);
+              : (dbUrl && dbUrl.length > 5 ? dbUrl : officialPlaceholder);
 
             return (
               <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card border border-transparent hover:border-primary/5">
