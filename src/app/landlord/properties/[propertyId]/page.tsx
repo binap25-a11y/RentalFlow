@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useRef, useMemo, useEffect } from 'react';
@@ -212,7 +211,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
     // Final Fallback: Official Professional Placeholder (avoid random road images)
     const officialPlaceholder = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl;
-    return [officialPlaceholder || `https://picsum.photos/seed/${propertyId}/800/600`];
+    return [officialPlaceholder || `https://picsum.photos/seed/prop-fallback/800/600`];
   }, [property, propertyId, isClient]);
 
   const handleUpdateRent = () => {
