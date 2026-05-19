@@ -64,10 +64,12 @@ export default function NewPropertyPage() {
     const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
+    // Provide instant feedback in session
     if (previewUrls.length > 0) {
       setMemoryAsset(propertyId, previewUrls[0]);
     }
 
+    // Never save blob URLs to Firestore. Use a high-fidelity placeholder until upload finishes.
     const fallbackUrl = `https://picsum.photos/seed/${propertyId}/800/600`;
 
     const baseData = {
@@ -83,8 +85,8 @@ export default function NewPropertyPage() {
       rentAmount: parseFloat(rentAmount) || 0,
       isOccupied: false,
       isImageUpdating: imageFiles.length > 0,
-      imageUrl: fallbackUrl, // Persistent fallback while uploading
-      imageUrls: [], // Initial empty array
+      imageUrl: fallbackUrl,
+      imageUrls: [],
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       tenantIds: [],

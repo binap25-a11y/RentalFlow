@@ -96,6 +96,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
 
+    // Immediate visual sync for current session
     if (newPreviewUrls.length > 0) {
       setMemoryAsset(propertyId, newPreviewUrls[0]);
     } else if (existingImageUrls.length > 0) {
@@ -115,6 +116,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       updatedAt: serverTimestamp(),
     };
 
+    // Update with current persistent data first (avoiding blobs)
     updateDocumentNonBlocking(propertyRef, {
       ...updateData,
       imageUrl: property?.imageUrl || '', 
