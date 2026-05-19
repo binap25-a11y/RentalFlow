@@ -187,7 +187,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return { score: finalScore, color, message };
   }, [propertyDocuments, maintenanceRequests, inspections]);
 
+  // HARDEN: Reactive Gallery Sync Engine
   const gallery = useMemo(() => {
+    if (!isClient) return [];
+    
     const bridgeUrl = getMemoryAsset(propertyId);
     let dbUrls: string[] = [];
 
@@ -197,10 +200,13 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         : (property.imageUrl ? [property.imageUrl] : []);
     }
 
+    // Filter out temporary blobs from DB record to avoid broken links after reload
     const cleanDbUrls = dbUrls.filter(url => url && !url.startsWith('blob:'));
 
-    if (bridgeUrl && !cleanDbUrls.includes(bridgeUrl)) {
-      return [bridgeUrl, ...cleanDbUrls];
+    // If we have a session bridge URL (uploaded just now), prioritize it at the front
+    if (bridgeUrl) {
+      const otherUrls = cleanDbUrls.filter(u => u !== bridgeUrl);
+      return [bridgeUrl, ...otherUrls];
     }
 
     return cleanDbUrls.length > 0 ? cleanDbUrls : [`https://picsum.photos/seed/${propertyId}/800/600`];
@@ -333,7 +339,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             <Carousel className="w-full">
               <CarouselContent>
                 {gallery.map((url: string, index: number) => (
-                  <CarouselItem key={index}>
+                  <CarouselItem key={`${url}-${index}`}>
                     <div className="relative h-[450px] w-full bg-muted">
                       <Image 
                         src={url} 

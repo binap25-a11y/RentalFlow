@@ -64,7 +64,7 @@ export default function NewPropertyPage() {
     const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
-    // Instant Visual Bridge for current session
+    // Instant Visual Bridge for current session feedback
     if (previewUrls.length > 0) {
       setMemoryAsset(propertyId, previewUrls[0]);
     }
@@ -73,7 +73,6 @@ export default function NewPropertyPage() {
       let finalImageUrl = '';
       let finalImageUrls: string[] = [];
 
-      // Await all uploads to ensure permanent URLs are available before saving the record
       if (imageFiles.length > 0) {
         const uploadPromises = imageFiles.map((file, index) => {
           const formData = new FormData();
@@ -112,7 +111,8 @@ export default function NewPropertyPage() {
         isActive: true
       };
 
-      // Construct a clean, plain object for the Server Action to avoid serialization errors
+      // CRITICAL: Construct a clean, plain object for the Server Action to avoid serialization errors
+      // Objects with toJSON methods (like serverTimestamp placeholder) cannot be passed to Server Functions
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -128,9 +128,9 @@ export default function NewPropertyPage() {
         description: description,
       };
 
-      // HARDEN: Wait for Firestore before redirecting to ensure persistence after reload
+      // Await Firestore write fully
       await setDoc(propertyRef, baseData, { merge: true });
-      // Pass only plain data to avoid "toJSON method" serialization error
+      // Then sync to relational database using plain data
       await syncPropertyToDb(serializableData);
 
       toast({ title: "Asset Registered", description: "Portfolio inventory updated and remembered permanently." });

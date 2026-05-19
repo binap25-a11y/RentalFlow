@@ -112,6 +112,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const finalGallery = [...existingImageUrls, ...uploadedUrls];
       const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
       
+      // Update session memory bridge for instant feedback on redirect
       if (primaryUrl) setMemoryAsset(propertyId, primaryUrl);
 
       const updateData: any = {
@@ -129,7 +130,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedAt: serverTimestamp(),
       };
 
-      // Construct a clean, plain object for the Server Action to avoid serialization errors
+      // CRITICAL: Construct a clean, plain object for the Server Action to avoid serialization errors
+      // Stripping out Firestore Timestamp objects which cannot be passed to Server Functions
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -145,9 +147,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         description: description,
       };
 
-      // HARDEN: Await Firestore write fully
+      // Ensure Firestore record is committed first
       await setDoc(propertyRef, updateData, { merge: true });
-      // Pass only the plain serializable data to the server function
+      // Then sync to relational ledger using plain object
       await syncPropertyToDb(serializableData);
 
       toast({ title: "Portfolio Updated", description: "Changes synchronized and remembered permanently." });
