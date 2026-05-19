@@ -51,13 +51,8 @@ import { useToast } from "@/hooks/use-toast";
 
 const getMemoryAssets = (id: string): string[] | null => {
   if (typeof window === 'undefined') return null;
-  return (window as any).__asset_bridge?.[id] || null;
-};
-
-const setMemoryAsset = (id: string, url: string) => {
-  if (typeof window === 'undefined') return;
-  if (!(window as any).__asset_bridge) (window as any).__asset_bridge = {};
-  (window as any).__asset_bridge[id] = [url];
+  const bridge = (window as any).__asset_bridge;
+  return bridge?.[id] || null;
 };
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
@@ -238,8 +233,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const docId = doc(collection(db, 'documents')).id;
     const docRef = doc(db, 'documents', docId);
     
-    setMemoryAsset(docId, URL.createObjectURL(file));
-
     const residentIds = tenants?.map(t => t.userId).filter(Boolean) || [];
     const memberIds = Array.from(new Set([user.uid, ...(property.memberIds || []), ...residentIds]));
 
@@ -480,7 +473,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                   </div>
                 ) : (
                   propertyDocuments.map(doc => {
-                    const downloadUrl = getMemoryAssets(doc.id)?.[0] || doc.fileUrl;
+                    const downloadUrl = doc.fileUrl;
                     return (
                       <div key={doc.id} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-all gap-4">
                         <div className="flex items-center gap-4 text-left min-w-0 flex-1">

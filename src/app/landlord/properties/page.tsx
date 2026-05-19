@@ -16,7 +16,8 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 const getMemoryAssets = (id: string): string[] | null => {
   if (typeof window === 'undefined') return null;
-  return (window as any).__asset_bridge?.[id] || null;
+  const bridge = (window as any).__asset_bridge;
+  return bridge?.[id] || null;
 };
 
 export default function PropertiesPage() {
