@@ -88,7 +88,7 @@ export default function NewPropertyPage() {
       // Local session cache for instant preview upon redirect
       setMemoryAssets(propertyId, finalImageUrls.length > 0 ? finalImageUrls : previewUrls);
 
-      // Construct STRICTLY PLAIN OBJECT for Server Action (strip all Timestamps)
+      // Construct STRICTLY PLAIN OBJECT for Server Action (strip all Timestamps to avoid serialization error)
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -274,4 +274,3 @@ export default function NewPropertyPage() {
     </div>
   );
 }
-

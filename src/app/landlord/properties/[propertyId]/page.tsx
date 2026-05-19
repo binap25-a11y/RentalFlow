@@ -188,11 +188,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return { score: finalScore, color, message };
   }, [propertyDocuments, maintenanceRequests, inspections]);
 
-  // HARDEN: Reactive gallery synchronization
+  // HARDEN: Unified gallery logic to ensure instant detail updates
   const gallery = useMemo(() => {
     if (!isClient) return [];
     
-    // 1. Priority: Local Session Bridge (Instant feedback after upload)
+    // 1. Priority: Local Session Bridge (Instant feedback after upload/edit)
     const bridgeUrls = getMemoryAssets(propertyId);
     
     // 2. Database URLs
@@ -205,7 +205,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
     const cleanDbUrls = dbUrls.filter(url => url && typeof url === 'string' && url.length > 5);
 
-    // If bridge has more recent session data, use it
+    // If bridge has session data, use it for zero-latency consistency
     if (bridgeUrls && bridgeUrls.length > 0) {
       return bridgeUrls;
     }
@@ -251,7 +251,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       const result = await uploadToSupabase(formData, 'property-documents', path);
       
       if (result.success && result.url) {
-        // Construct plain object for Postgres sync
+        // Construct plain object for Postgres sync to avoid serialization error
         const serializableDocData = {
           id: docId,
           fileName: file.name,
@@ -616,4 +616,3 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     </div>
   );
 }
-
