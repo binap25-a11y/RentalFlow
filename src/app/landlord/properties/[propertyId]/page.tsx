@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, use, useRef, useMemo } from 'react';
@@ -264,7 +265,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const bridgeUrl = getMemoryAsset(propertyId);
   const activeImageUrl = bridgeUrl || property.imageUrl || `https://picsum.photos/seed/rentalflow-pro-identity/800/600`;
-  const gallery = property.imageUrls || [activeImageUrl].filter(Boolean);
+  const gallery = property.imageUrls && property.imageUrls.length > 0 ? property.imageUrls : [activeImageUrl];
 
   const getPriorityColor = (priority: string) => {
     switch(priority?.toLowerCase()) {
@@ -308,7 +309,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               <CarouselContent>
                 {gallery.map((url: string, index: number) => (
                   <CarouselItem key={index}>
-                    <div className="relative h-[400px] w-full bg-muted">
+                    <div className="relative h-[450px] w-full bg-muted">
                       <Image src={url} alt={`Property ${index}`} fill className="object-cover" unoptimized={true} data-ai-hint="luxury property" />
                     </div>
                   </CarouselItem>

@@ -1,3 +1,4 @@
+
 'use server';
 
 import pool from '@/lib/db';
@@ -16,6 +17,7 @@ export async function syncPropertyToDb(propertyData: {
   zipCode: string;
   rentAmount: number;
   imageUrl: string;
+  imageUrls?: string[];
   propertyType: string;
   numberOfBedrooms: number;
   numberOfBathrooms: number;
@@ -28,7 +30,7 @@ export async function syncPropertyToDb(propertyData: {
 
   const { 
     id, landlordId, addressLine1, city, zipCode, 
-    rentAmount, imageUrl, propertyType, 
+    rentAmount, imageUrl, imageUrls, propertyType, 
     numberOfBedrooms, numberOfBathrooms, description 
   } = propertyData;
   
@@ -38,16 +40,17 @@ export async function syncPropertyToDb(propertyData: {
       await client.query(
         `INSERT INTO properties (
           id, landlord_id, address, city, zip_code, 
-          rent_amount, image_url, property_type, 
+          rent_amount, image_url, image_urls, property_type, 
           bedrooms, bathrooms, description
         )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
          ON CONFLICT (id) DO UPDATE SET
            address = EXCLUDED.address,
            city = EXCLUDED.city,
            zip_code = EXCLUDED.zip_code,
            rent_amount = EXCLUDED.rent_amount,
            image_url = EXCLUDED.image_url,
+           image_urls = EXCLUDED.image_urls,
            property_type = EXCLUDED.property_type,
            bedrooms = EXCLUDED.bedrooms,
            bathrooms = EXCLUDED.bathrooms,
@@ -55,7 +58,7 @@ export async function syncPropertyToDb(propertyData: {
            synced_at = CURRENT_TIMESTAMP`,
         [
           id, landlordId, addressLine1, city, zipCode, 
-          rentAmount, imageUrl, propertyType, 
+          rentAmount, imageUrl, JSON.stringify(imageUrls || []), propertyType, 
           numberOfBedrooms, numberOfBathrooms, description
         ]
       );

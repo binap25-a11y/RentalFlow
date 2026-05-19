@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -10,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Image as ImageIcon, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, Save, Image as ImageIcon, Loader2, Sparkles, X, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -38,17 +39,23 @@ export default function NewPropertyPage() {
   const [propertyType, setPropertyType] = useState('Apartment');
   const [bedrooms, setBedrooms] = useState('1');
   const [bathrooms, setBathrooms] = useState('1');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    if (file) {
-      setImageFile(file);
-      const objectUrl = URL.createObjectURL(file);
-      setPreviewUrl(objectUrl);
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setImageFiles(prev => [...prev, ...files]);
+      const newPreviews = files.map(file => URL.createObjectURL(file));
+      setPreviewUrls(prev => [...prev, ...newPreviews]);
     }
+  };
+
+  const removeImage = (index: number) => {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -59,9 +66,9 @@ export default function NewPropertyPage() {
     const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
-    // Populate bridge for instant cross-page preview
-    if (previewUrl) {
-      setMemoryAsset(propertyId, previewUrl);
+    // Populate bridge with first image for instant cross-page preview
+    if (previewUrls.length > 0) {
+      setMemoryAsset(propertyId, previewUrls[0]);
     }
 
     const fallbackUrl = `https://picsum.photos/seed/${propertyId}/800/600`;
@@ -78,8 +85,9 @@ export default function NewPropertyPage() {
       numberOfBathrooms: parseInt(bathrooms, 10) || 1,
       rentAmount: parseFloat(rentAmount) || 0,
       isOccupied: false,
-      isImageUpdating: !!imageFile,
+      isImageUpdating: imageFiles.length > 0,
       imageUrl: fallbackUrl, 
+      imageUrls: [],
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       tenantIds: [],
@@ -89,19 +97,24 @@ export default function NewPropertyPage() {
 
     setDocumentNonBlocking(propertyRef, baseData, { merge: true });
 
-    if (imageFile) {
-      const formData = new FormData();
-      formData.append('file', imageFile);
-      const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`;
-      
-      uploadToSupabase(formData, 'property-images', path).then((result) => {
-        if (result.success && result.url) {
+    if (imageFiles.length > 0) {
+      const uploadPromises = imageFiles.map((file, index) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${file.name}`;
+        return uploadToSupabase(formData, 'property-images', path);
+      });
+
+      Promise.all(uploadPromises).then((results) => {
+        const successfulUrls = results.filter(r => r.success && r.url).map(r => r.url!);
+        if (successfulUrls.length > 0) {
           updateDocumentNonBlocking(propertyRef, { 
-            imageUrl: result.url, 
+            imageUrl: successfulUrls[0], 
+            imageUrls: successfulUrls,
             isImageUpdating: false,
             updatedAt: serverTimestamp() 
           });
-          syncPropertyToDb({ ...baseData, imageUrl: result.url });
+          syncPropertyToDb({ ...baseData, imageUrl: successfulUrls[0], imageUrls: successfulUrls });
         } else {
           updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
         }
@@ -112,7 +125,7 @@ export default function NewPropertyPage() {
       syncPropertyToDb(baseData);
     }
 
-    toast({ title: "Asset Registered", description: "Portfolio updated successfully." });
+    toast({ title: "Asset Registered", description: "Portfolio updated with multi-image support." });
     router.push(`/landlord/properties/${propertyId}`);
   };
 
@@ -125,7 +138,7 @@ export default function NewPropertyPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-headline font-bold text-primary">Register Asset</h1>
-            <p className="text-muted-foreground font-medium">Add a high-value property to your portfolio.</p>
+            <p className="text-muted-foreground font-medium">Add a high-value property with a photo gallery.</p>
           </div>
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold">
@@ -137,23 +150,49 @@ export default function NewPropertyPage() {
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-1 lg:grid-cols-2">
             <div className="p-8 lg:p-12 bg-primary/5 border-r border-primary/10">
-              <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 mb-4 block font-headline">Presentation</Label>
-              <div className="relative group overflow-hidden rounded-3xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white aspect-video w-full flex items-center justify-center shadow-inner">
-                {previewUrl ? (
-                  <>
-                    <Image src={previewUrl} alt="Preview" fill className="object-cover" unoptimized={true} data-ai-hint="real estate" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                       <Button type="button" variant="secondary" size="sm" className="rounded-xl font-bold font-headline" onClick={() => document.getElementById('image-input')?.click()}>Update Photo</Button>
+              <div className="flex justify-between items-center mb-6">
+                <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 block font-headline">Photo Gallery</Label>
+                <Button type="button" variant="ghost" size="sm" className="h-8 rounded-lg font-bold text-[10px] uppercase" onClick={() => document.getElementById('image-input')?.click()}>
+                  <Plus className="w-3 h-3 mr-1" /> Add Photos
+                </Button>
+              </div>
+
+              {previewUrls.length > 0 ? (
+                <div className="grid grid-cols-2 gap-4">
+                  {previewUrls.map((url, index) => (
+                    <div key={index} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border border-primary/10">
+                      <Image src={url} alt={`Preview ${index}`} fill className="object-cover" unoptimized={true} />
+                      <button 
+                        type="button" 
+                        onClick={() => removeImage(index)}
+                        className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                      {index === 0 && (
+                        <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary text-white text-[8px] font-bold uppercase rounded-md shadow-lg">Primary</div>
+                      )}
                     </div>
-                  </>
-                ) : (
+                  ))}
+                  <button 
+                    type="button" 
+                    onClick={() => document.getElementById('image-input')?.click()}
+                    className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white flex flex-col items-center justify-center gap-2 group"
+                  >
+                    <Plus className="w-6 h-6 text-primary/20 group-hover:text-primary/40 transition-colors" />
+                    <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">More</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="relative group overflow-hidden rounded-3xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white aspect-video w-full flex items-center justify-center shadow-inner">
                   <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="flex flex-col items-center gap-3">
                     <div className="p-5 bg-primary/10 rounded-full shadow-sm"><ImageIcon className="w-8 h-8 text-primary" /></div>
-                    <span className="text-sm font-bold text-primary font-headline">Upload Asset Image</span>
+                    <span className="text-sm font-bold text-primary font-headline">Upload Gallery Photos</span>
                   </button>
-                )}
-                <input id="image-input" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
-              </div>
+                </div>
+              )}
+              <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
+              <p className="mt-4 text-[10px] text-muted-foreground font-medium text-center uppercase tracking-wider opacity-60">High-fidelity uploads supported.</p>
             </div>
 
             <div className="p-8 lg:p-12 space-y-8">

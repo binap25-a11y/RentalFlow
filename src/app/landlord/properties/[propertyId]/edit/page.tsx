@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, use } from 'react';
@@ -16,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Image as ImageIcon, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, Save, Image as ImageIcon, Loader2, Sparkles, X, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -24,11 +25,6 @@ import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 
 // Zero-Quota High-Performance Memory Bridge
-const getMemoryAsset = (id: string) => {
-  if (typeof window === 'undefined') return null;
-  return (window as any).__asset_bridge?.[id] || null;
-};
-
 const setMemoryAsset = (id: string, url: string) => {
   if (typeof window === 'undefined') return;
   if (!(window as any).__asset_bridge) (window as any).__asset_bridge = {};
@@ -58,8 +54,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [propertyType, setPropertyType] = useState('Apartment');
   const [bedrooms, setBedrooms] = useState('1');
   const [bathrooms, setBathrooms] = useState('1');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  
+  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+  const [newPreviewUrls, setNewPreviewUrls] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -72,24 +70,26 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setPropertyType(property.propertyType || 'Apartment');
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
-      
-      const bridgeUrl = getMemoryAsset(propertyId);
-      if (property.isImageUpdating && bridgeUrl) {
-        setPreviewUrl(bridgeUrl);
-      } else if (!imageFile) {
-        setPreviewUrl(property.imageUrl || null);
-      }
+      setExistingImageUrls(property.imageUrls || [property.imageUrl].filter(Boolean));
     }
-  }, [property, isSaving, imageFile, propertyId]);
+  }, [property, isSaving]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    if (file) {
-      setImageFile(file);
-      const objectUrl = URL.createObjectURL(file);
-      setPreviewUrl(objectUrl);
-      setMemoryAsset(propertyId, objectUrl);
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setNewImageFiles(prev => [...prev, ...files]);
+      const newPreviews = files.map(file => URL.createObjectURL(file));
+      setNewPreviewUrls(prev => [...prev, ...newPreviews]);
     }
+  };
+
+  const removeNewImage = (index: number) => {
+    setNewImageFiles(prev => prev.filter((_, i) => i !== index));
+    setNewPreviewUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingImage = (index: number) => {
+    setExistingImageUrls(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -98,6 +98,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
 
+    // Initial update for textual data
     const updateData: any = {
       addressLine1: address,
       city,
@@ -107,41 +108,55 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       numberOfBedrooms: parseInt(bedrooms, 10) || 1,
       numberOfBathrooms: parseInt(bathrooms, 10) || 1,
       rentAmount: parseFloat(rentAmount) || 0,
-      isImageUpdating: !!imageFile, 
+      isImageUpdating: newImageFiles.length > 0, 
       updatedAt: serverTimestamp(),
     };
 
     updateDocumentNonBlocking(propertyRef, updateData);
 
-    syncPropertyToDb({ 
-      ...updateData, 
-      id: propertyId, 
-      landlordId: user.uid, 
-      imageUrl: property?.imageUrl || '' 
-    });
+    // Synchronize current local gallery
+    const combinedGallery = [...existingImageUrls];
+    
+    if (newImageFiles.length > 0) {
+      const uploadPromises = newImageFiles.map((file, index) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${file.name}`;
+        return uploadToSupabase(formData, 'property-images', path);
+      });
 
-    if (imageFile) {
-      const formData = new FormData();
-      formData.append('file', imageFile);
-      const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${imageFile.name}`;
-      
-      uploadToSupabase(formData, 'property-images', path).then((result) => {
-        if (result.success && result.url) {
-          updateDocumentNonBlocking(propertyRef, { 
-            imageUrl: result.url, 
+      Promise.all(uploadPromises).then((results) => {
+        const successfulUrls = results.filter(r => r.success && r.url).map(r => r.url!);
+        const finalGallery = [...combinedGallery, ...successfulUrls];
+        
+        if (finalGallery.length > 0) {
+          const finalUpdate = {
+            imageUrl: finalGallery[0],
+            imageUrls: finalGallery,
             isImageUpdating: false,
-            updatedAt: serverTimestamp() 
-          });
-          syncPropertyToDb({ ...updateData, id: propertyId, landlordId: user.uid, imageUrl: result.url });
+            updatedAt: serverTimestamp()
+          };
+          updateDocumentNonBlocking(propertyRef, finalUpdate);
+          syncPropertyToDb({ ...updateData, id: propertyId, landlordId: user.uid, ...finalUpdate });
+          setMemoryAsset(propertyId, finalGallery[0]);
         } else {
           updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
         }
       }).catch(() => {
         updateDocumentNonBlocking(propertyRef, { isImageUpdating: false });
       });
+    } else {
+      const finalUpdate = {
+        imageUrl: combinedGallery[0] || '',
+        imageUrls: combinedGallery,
+        updatedAt: serverTimestamp()
+      };
+      updateDocumentNonBlocking(propertyRef, finalUpdate);
+      syncPropertyToDb({ ...updateData, id: propertyId, landlordId: user.uid, ...finalUpdate });
+      if (combinedGallery[0]) setMemoryAsset(propertyId, combinedGallery[0]);
     }
 
-    toast({ title: "Changes Registered" });
+    toast({ title: "Gallery Synced" });
     router.push(`/landlord/properties/${propertyId}`);
   };
 
@@ -156,7 +171,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </Button>
           <div>
             <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">Modify Asset</h1>
-            <p className="text-muted-foreground font-medium font-body">Refining specs for {address || 'Property'}.</p>
+            <p className="text-muted-foreground font-medium font-body">Refining gallery and specs for {address || 'Property'}.</p>
           </div>
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold">
@@ -168,23 +183,56 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-1 lg:grid-cols-2">
             <div className="p-8 lg:p-12 bg-primary/5 border-r border-primary/10">
-              <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 mb-4 block font-headline">Presentation</Label>
-              <div className="relative group overflow-hidden rounded-3xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white aspect-video w-full flex items-center justify-center shadow-inner">
-                {previewUrl ? (
-                  <>
-                    <Image src={previewUrl} alt="Preview" fill className="object-cover" unoptimized={true} data-ai-hint="real estate" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                       <Button type="button" variant="secondary" size="sm" className="rounded-xl font-bold font-headline" onClick={() => document.getElementById('image-input')?.click()}>Update Photo</Button>
-                    </div>
-                  </>
-                ) : (
-                  <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="flex flex-col items-center gap-3">
-                    <div className="p-5 bg-primary/10 rounded-full shadow-sm"><ImageIcon className="w-8 h-8 text-primary" /></div>
-                    <span className="text-sm font-bold text-primary font-headline">Upload Asset Image</span>
-                  </button>
-                )}
-                <input id="image-input" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+              <div className="flex justify-between items-center mb-6">
+                <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 block font-headline">Asset Gallery</Label>
+                <Button type="button" variant="ghost" size="sm" className="h-8 rounded-lg font-bold text-[10px] uppercase" onClick={() => document.getElementById('image-input')?.click()}>
+                  <Plus className="w-3 h-3 mr-1" /> Add More
+                </Button>
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Existing Images */}
+                {existingImageUrls.map((url, index) => (
+                  <div key={`existing-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border border-primary/10">
+                    <Image src={url} alt={`Existing ${index}`} fill className="object-cover" unoptimized={true} />
+                    <button 
+                      type="button" 
+                      onClick={() => removeExistingImage(index)}
+                      className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                    {index === 0 && (
+                      <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-emerald-500 text-white text-[8px] font-bold uppercase rounded-md shadow-lg">Current Cover</div>
+                    )}
+                  </div>
+                ))}
+                
+                {/* New Previews */}
+                {newPreviewUrls.map((url, index) => (
+                  <div key={`new-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border-2 border-dashed border-accent/40">
+                    <Image src={url} alt={`New ${index}`} fill className="object-cover opacity-60" unoptimized={true} />
+                    <button 
+                      type="button" 
+                      onClick={() => removeNewImage(index)}
+                      className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full opacity-100 transition-opacity hover:bg-red-500"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                    <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-accent text-white text-[8px] font-bold uppercase rounded-md shadow-lg">New Batch</div>
+                  </div>
+                ))}
+
+                <button 
+                  type="button" 
+                  onClick={() => document.getElementById('image-input')?.click()}
+                  className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white flex flex-col items-center justify-center gap-2 group"
+                >
+                  <Plus className="w-6 h-6 text-primary/20 group-hover:text-primary/40" />
+                  <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">Select Files</span>
+                </button>
+              </div>
+              <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
             </div>
 
             <div className="p-8 lg:p-12 space-y-8">

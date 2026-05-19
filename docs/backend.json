@@ -25,6 +25,7 @@
         "zipCode": { "type": "string" },
         "rentAmount": { "type": "number" },
         "imageUrl": { "type": "string" },
+        "imageUrls": { "type": "array", "items": { "type": "string" } },
         "propertyType": { "type": "string" },
         "numberOfBedrooms": { "type": "number" },
         "numberOfBathrooms": { "type": "number" },
