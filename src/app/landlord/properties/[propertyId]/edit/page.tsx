@@ -129,9 +129,26 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedAt: serverTimestamp(),
       };
 
-      // HARDEN: Wait for Firestore write before redirecting to ensure persistence
+      // Construct a clean, plain object for the Server Action to avoid serialization errors
+      const serializableData = {
+        id: propertyId,
+        landlordId: user.uid,
+        addressLine1: address,
+        city,
+        zipCode,
+        rentAmount: parseFloat(rentAmount) || 0,
+        imageUrl: primaryUrl,
+        imageUrls: finalGallery,
+        propertyType,
+        numberOfBedrooms: parseInt(bedrooms, 10) || 1,
+        numberOfBathrooms: parseInt(bathrooms, 10) || 1,
+        description: description,
+      };
+
+      // HARDEN: Await Firestore write fully
       await setDoc(propertyRef, updateData, { merge: true });
-      await syncPropertyToDb({ ...updateData, id: propertyId, landlordId: user.uid });
+      // Pass only the plain serializable data to the server function
+      await syncPropertyToDb(serializableData);
 
       toast({ title: "Portfolio Updated", description: "Changes synchronized and remembered permanently." });
       router.push(`/landlord/properties/${propertyId}`);

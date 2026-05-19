@@ -253,8 +253,20 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       
       if (result.success && result.url) {
         const finalDocData = { ...baseDocData, fileUrl: result.url };
+        
+        // Construct plain serializable data for the server action
+        const serializableDocData = {
+          id: docId,
+          propertyId: propertyId,
+          landlordId: user.uid,
+          fileName: file.name,
+          fileUrl: result.url,
+          documentType: 'property-asset',
+          expiryDate: uploadExpiryDate ? uploadExpiryDate.toISOString() : null,
+        };
+
         await setDocumentNonBlocking(docRef, finalDocData, { merge: true });
-        await syncDocumentToDb(finalDocData);
+        await syncDocumentToDb(serializableDocData);
         setMemoryAsset(docId, result.url);
         toast({ title: "Vault Updated" });
       } else {

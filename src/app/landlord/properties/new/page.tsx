@@ -112,9 +112,26 @@ export default function NewPropertyPage() {
         isActive: true
       };
 
+      // Construct a clean, plain object for the Server Action to avoid serialization errors
+      const serializableData = {
+        id: propertyId,
+        landlordId: user.uid,
+        addressLine1: address,
+        city,
+        zipCode,
+        rentAmount: parseFloat(rentAmount) || 0,
+        imageUrl: finalImageUrl,
+        imageUrls: finalImageUrls,
+        propertyType,
+        numberOfBedrooms: parseInt(bedrooms, 10) || 1,
+        numberOfBathrooms: parseInt(bathrooms, 10) || 1,
+        description: description,
+      };
+
       // HARDEN: Wait for Firestore before redirecting to ensure persistence after reload
       await setDoc(propertyRef, baseData, { merge: true });
-      await syncPropertyToDb(baseData);
+      // Pass only plain data to avoid "toJSON method" serialization error
+      await syncPropertyToDb(serializableData);
 
       toast({ title: "Asset Registered", description: "Portfolio inventory updated and remembered permanently." });
       router.push(`/landlord/properties/${propertyId}`);
