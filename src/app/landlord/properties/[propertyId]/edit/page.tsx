@@ -102,7 +102,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     try {
       let uploadedUrls: string[] = [];
       
-      // HARDEN: Atomic Supabase Upload
+      // 1. Atomic Supabase Upload
       if (newImageFiles.length > 0) {
         const uploadPromises = newImageFiles.map((file, index) => {
           const formData = new FormData();
@@ -118,10 +118,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const finalGallery = [...existingImageUrls, ...uploadedUrls];
       const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
       
-      // Update local bridge for zero-latency carousel update
+      // Update local session bridge for zero-latency redirection feedback
       setMemoryAssets(propertyId, finalGallery);
 
-      // HARDEN: Construct Strictly Serializable Object (No Timestamps for Server Action)
+      // 2. Construct Clean Serializable Object (No Timestamps for Server Action)
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -139,7 +139,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         memberIds: property?.memberIds || [user.uid]
       };
 
-      // Sequential Write: Firestore (Source of Truth) -> Postgres (Redundant Analytics)
+      // 3. Sequential Write: Firestore (Source of Truth) -> Postgres (Redundant Analytics)
+      // AWAIT these sequentially before navigating
       await setDoc(propertyRef, {
         ...serializableData,
         updatedAt: serverTimestamp(),
@@ -151,7 +152,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Update failed:", err);
-      toast({ variant: "destructive", title: "Update Failed", description: "The server encountered an issue with your asset data." });
+      toast({ variant: "destructive", title: "Update Failed", description: "The server encountered an issue while saving asset metadata." });
       setIsSaving(false);
     }
   };

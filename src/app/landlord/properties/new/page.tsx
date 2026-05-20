@@ -68,7 +68,7 @@ export default function NewPropertyPage() {
       let finalImageUrl = '';
       let finalImageUrls: string[] = [];
 
-      // HARDEN: Atomic Supabase Upload
+      // 1. Atomic Supabase Upload
       if (imageFiles.length > 0) {
         const uploadPromises = imageFiles.map((file, index) => {
           const formData = new FormData();
@@ -85,10 +85,10 @@ export default function NewPropertyPage() {
         }
       }
 
-      // Sync persistent URLs to bridge before navigation
-      setMemoryAssets(propertyId, finalImageUrls.length > 0 ? finalImageUrls : []);
+      // Sync persistent URLs to bridge for zero-latency redirection feedback
+      setMemoryAssets(propertyId, finalImageUrls);
 
-      // HARDEN: Construct Strictly Serializable Object (No Timestamps for Server Action)
+      // 2. Construct Clean Serializable Object (No Timestamps for Server Action)
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -106,7 +106,8 @@ export default function NewPropertyPage() {
         memberIds: [user.uid]
       };
 
-      // Sequential Write: Firestore (Persistent Source) -> Postgres (Redundant Analytics)
+      // 3. Sequential Write: Firestore (Persistent Source) -> Postgres (Redundant Analytics)
+      // AWAIT these to ensure data is committed before navigation
       await setDoc(propertyRef, {
         ...serializableData,
         tenantIds: [],
@@ -148,7 +149,7 @@ export default function NewPropertyPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2">
             <div className="p-8 lg:p-12 bg-primary/5 border-r border-primary/10">
               <div className="flex justify-between items-center mb-6">
-                <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 block font-headline">Vault Management</Label>
+                <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 block font-headline">Gallery Management</Label>
                 <Button type="button" variant="ghost" size="sm" className="h-8 rounded-lg font-bold text-[10px] uppercase font-headline" onClick={() => document.getElementById('image-input')?.click()}>
                   <Plus className="w-3 h-3 mr-1" /> Add Photos
                 </Button>

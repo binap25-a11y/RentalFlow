@@ -182,14 +182,14 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return { score: finalScore, color, message };
   }, [propertyDocuments, maintenanceRequests, inspections]);
 
-  // HARDEN: Professional tiered gallery resolution logic
+  // Unified image resolution logic with strict tiered priority
   const gallery = useMemo(() => {
     if (!isClient) return [];
     
-    // 1. Session Memory Bridge (Instant redirection feedback)
+    // 1. Session Memory Bridge (Highest priority for instant redirection feedback)
     const bridgeUrls = getMemoryAssets(propertyId);
     
-    // 2. Verified Database URLs
+    // 2. Persistent Database URLs
     let dbUrls: string[] = [];
     if (property) {
       dbUrls = property.imageUrls && Array.isArray(property.imageUrls) 
@@ -202,7 +202,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     if (bridgeUrls && bridgeUrls.length > 0) return bridgeUrls;
     if (cleanDbUrls.length > 0) return cleanDbUrls;
 
-    // 3. Official Professional Fallback
+    // 3. Official Professional Fallback (Consistent placeholder)
     const officialPlaceholder = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl;
     return [officialPlaceholder || `https://picsum.photos/seed/prop-fallback/800/600`];
   }, [property, propertyId, isClient]);

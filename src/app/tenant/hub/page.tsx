@@ -93,7 +93,7 @@ export default function TenantHub() {
     }
   };
 
-  // HARDEN: Standardized image resolution logic for residents
+  // Tiered image resolution logic for residents
   const activeImageUrl = useMemo(() => {
     if (!isClient || !property) return '';
     const bridgeAssets = getMemoryAsset(property.id);
