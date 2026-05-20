@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
@@ -94,6 +93,7 @@ export default function TenantHub() {
     }
   };
 
+  // HARDEN: Standardized image resolution logic for residents
   const activeImageUrl = useMemo(() => {
     if (!isClient || !property) return '';
     const bridgeAssets = getMemoryAsset(property.id);

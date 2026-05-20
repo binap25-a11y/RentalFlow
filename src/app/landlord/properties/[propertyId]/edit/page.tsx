@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, use } from 'react';
@@ -103,6 +102,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     try {
       let uploadedUrls: string[] = [];
       
+      // HARDEN: Atomic Supabase Upload
       if (newImageFiles.length > 0) {
         const uploadPromises = newImageFiles.map((file, index) => {
           const formData = new FormData();
@@ -121,7 +121,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       // Update local bridge for zero-latency carousel update
       setMemoryAssets(propertyId, finalGallery);
 
-      // Construct STRICTLY PLAIN OBJECT for Server Action (remove all Firestore objects/Timestamps)
+      // HARDEN: Construct Strictly Serializable Object (No Timestamps for Server Action)
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -139,16 +139,15 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         memberIds: property?.memberIds || [user.uid]
       };
 
-      const firestoreUpdateData = {
+      // Sequential Write: Firestore (Source of Truth) -> Postgres (Redundant Analytics)
+      await setDoc(propertyRef, {
         ...serializableData,
         updatedAt: serverTimestamp(),
-      };
+      }, { merge: true });
 
-      // Sequentially wait for Firestore write and Postgres sync before navigation
-      await setDoc(propertyRef, firestoreUpdateData, { merge: true });
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Portfolio Updated", description: "Changes synchronized and remembered permanently." });
+      toast({ title: "Portfolio Updated", description: "All specifications and photos permanently synchronized." });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Update failed:", err);
@@ -168,11 +167,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </Button>
           <div>
             <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">Modify Asset</h1>
-            <p className="text-muted-foreground font-medium font-body">Refining specs and gallery for {address || 'Property'}.</p>
+            <p className="text-muted-foreground font-medium font-body">Refining persistent specs and gallery for {address || 'Property'}.</p>
           </div>
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold">
-          <Sparkles className="w-3 h-3 mr-2" /> Live Specification
+          <Sparkles className="w-3 h-3 mr-2" /> Specification Engine
         </Badge>
       </div>
 

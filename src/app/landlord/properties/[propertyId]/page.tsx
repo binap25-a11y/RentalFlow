@@ -182,14 +182,14 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return { score: finalScore, color, message };
   }, [propertyDocuments, maintenanceRequests, inspections]);
 
-  // HARDEN: Standardized gallery logic to ensure instant detail updates and consistent placeholder
+  // HARDEN: Professional tiered gallery resolution logic
   const gallery = useMemo(() => {
     if (!isClient) return [];
     
-    // 1. Priority: Local Session Bridge (Instant feedback after upload/edit)
+    // 1. Session Memory Bridge (Instant redirection feedback)
     const bridgeUrls = getMemoryAssets(propertyId);
     
-    // 2. Database URLs
+    // 2. Verified Database URLs
     let dbUrls: string[] = [];
     if (property) {
       dbUrls = property.imageUrls && Array.isArray(property.imageUrls) 
@@ -199,17 +199,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
     const cleanDbUrls = dbUrls.filter(url => url && typeof url === 'string' && url.length > 5);
 
-    // If bridge has session data, use it for zero-latency consistency
-    if (bridgeUrls && bridgeUrls.length > 0) {
-      return bridgeUrls;
-    }
+    if (bridgeUrls && bridgeUrls.length > 0) return bridgeUrls;
+    if (cleanDbUrls.length > 0) return cleanDbUrls;
 
-    // Otherwise use DB
-    if (cleanDbUrls.length > 0) {
-      return cleanDbUrls;
-    }
-
-    // Final Fallback: Official Professional Placeholder (avoid random road images)
+    // 3. Official Professional Fallback
     const officialPlaceholder = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl;
     return [officialPlaceholder || `https://picsum.photos/seed/prop-fallback/800/600`];
   }, [property, propertyId, isClient]);
@@ -243,7 +236,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       const result = await uploadToSupabase(formData, 'property-documents', path);
       
       if (result.success && result.url) {
-        // Construct plain object for Postgres sync to avoid serialization error
         const serializableDocData = {
           id: docId,
           fileName: file.name,
@@ -254,7 +246,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           expiryDate: uploadExpiryDate ? uploadExpiryDate.toISOString() : null,
         };
 
-        // Wait for Firestore commit
         await setDoc(docRef, { 
           ...serializableDocData, 
           status: 'active',
@@ -263,9 +254,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           createdAt: serverTimestamp() 
         }, { merge: true });
 
-        // Wait for Postgres sync
         await syncDocumentToDb(serializableDocData);
-        
         toast({ title: "Vault Updated" });
       } else {
         throw new Error(result.error);

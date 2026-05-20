@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -11,9 +10,9 @@ import { buttonVariants } from "@/components/ui/button"
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
 /**
- * 📅 Standard Portfolio Calendar
- * Hardened for React Day Picker v9 to prevent duplicate headers.
- * Uses captionLayout="label" as primary month/year indicator.
+ * 📅 Professional Portfolio Calendar
+ * Re-engineered for React Day Picker v9 compatibility.
+ * Removes duplicate month/year headers by utilizing native caption labels.
  */
 function Calendar({
   className,
@@ -24,7 +23,6 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      captionLayout="label"
       className={cn("p-4 bg-white rounded-2xl shadow-xl", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",

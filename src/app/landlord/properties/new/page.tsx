@@ -68,6 +68,7 @@ export default function NewPropertyPage() {
       let finalImageUrl = '';
       let finalImageUrls: string[] = [];
 
+      // HARDEN: Atomic Supabase Upload
       if (imageFiles.length > 0) {
         const uploadPromises = imageFiles.map((file, index) => {
           const formData = new FormData();
@@ -84,10 +85,10 @@ export default function NewPropertyPage() {
         }
       }
 
-      // Local session cache for instant preview upon redirect
-      setMemoryAssets(propertyId, finalImageUrls.length > 0 ? finalImageUrls : previewUrls);
+      // Sync persistent URLs to bridge before navigation
+      setMemoryAssets(propertyId, finalImageUrls.length > 0 ? finalImageUrls : []);
 
-      // Construct STRICTLY PLAIN OBJECT for Server Action (strip all Timestamps to avoid serialization error)
+      // HARDEN: Construct Strictly Serializable Object (No Timestamps for Server Action)
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -105,19 +106,18 @@ export default function NewPropertyPage() {
         memberIds: [user.uid]
       };
 
-      const firestoreData = {
+      // Sequential Write: Firestore (Persistent Source) -> Postgres (Redundant Analytics)
+      await setDoc(propertyRef, {
         ...serializableData,
         tenantIds: [],
         isActive: true,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      };
+      }, { merge: true });
 
-      // Sequentially wait for Firestore write and Postgres sync before navigation
-      await setDoc(propertyRef, firestoreData, { merge: true });
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Asset Registered", description: "Portfolio inventory updated and remembered permanently." });
+      toast({ title: "Asset Registered", description: "Permanent URLs synchronized and stored." });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Asset registration failed:", err);
@@ -135,11 +135,11 @@ export default function NewPropertyPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">Register Asset</h1>
-            <p className="text-muted-foreground font-medium font-body">Add a high-value property with a photo gallery.</p>
+            <p className="text-muted-foreground font-medium font-body">Add a high-value property with persistent gallery storage.</p>
           </div>
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold">
-          <Sparkles className="w-3 h-3 mr-2" /> Live Specification
+          <Sparkles className="w-3 h-3 mr-2" /> Specification Engine
         </Badge>
       </div>
 
@@ -148,7 +148,7 @@ export default function NewPropertyPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2">
             <div className="p-8 lg:p-12 bg-primary/5 border-r border-primary/10">
               <div className="flex justify-between items-center mb-6">
-                <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 block font-headline">Gallery Management</Label>
+                <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 block font-headline">Vault Management</Label>
                 <Button type="button" variant="ghost" size="sm" className="h-8 rounded-lg font-bold text-[10px] uppercase font-headline" onClick={() => document.getElementById('image-input')?.click()}>
                   <Plus className="w-3 h-3 mr-1" /> Add Photos
                 </Button>

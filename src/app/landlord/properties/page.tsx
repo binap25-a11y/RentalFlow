@@ -78,7 +78,7 @@ export default function PropertiesPage() {
           </div>
         ) : (
           properties.map((property) => {
-            // HARDEN: Prioritize Memory Bridge for instant feedback, then DB, then official placeholder
+            // HARDEN: Unified image resolution logic
             const bridgeAssets = getMemoryAssets(property.id);
             const dbUrl = property.imageUrl;
             const officialPlaceholder = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || `https://picsum.photos/seed/prop-fallback/800/600`;
