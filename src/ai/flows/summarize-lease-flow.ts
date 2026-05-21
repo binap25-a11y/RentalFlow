@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI agent for summarizing lease agreements.
@@ -7,6 +8,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { googleAI } from '@genkit-ai/google-genai';
 
 const SummarizeLeaseInputSchema = z.object({
   documentText: z.string().describe("The raw text content of the lease agreement."),
@@ -30,7 +32,7 @@ export async function summarizeLease(input: SummarizeLeaseInput): Promise<Summar
 
 const summarizeLeasePrompt = ai.definePrompt({
   name: 'summarizeLeasePrompt',
-  model: 'googleai/gemini-2.0-flash',
+  model: googleAI.model('gemini-2.0-flash'),
   input: { schema: SummarizeLeaseInputSchema },
   output: { schema: SummarizeLeaseOutputSchema },
   prompt: `You are an expert legal AI specializing in UK residential property law.

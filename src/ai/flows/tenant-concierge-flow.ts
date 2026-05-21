@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A resident AI concierge agent with hardened model configuration.
@@ -7,6 +8,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { googleAI } from '@genkit-ai/google-genai';
 
 const TenantConciergeInputSchema = z.object({
   query: z.string().describe("The resident's question."),
@@ -28,7 +30,7 @@ export async function tenantConcierge(input: TenantConciergeInput): Promise<Tena
 
 const tenantConciergePrompt = ai.definePrompt({
   name: 'tenantConciergePrompt',
-  model: 'googleai/gemini-2.0-flash',
+  model: googleAI.model('gemini-2.0-flash'),
   input: { schema: TenantConciergeInputSchema },
   output: { schema: TenantConciergeOutputSchema },
   prompt: `You are 'Flow', the AI Concierge for a modern rental property.
