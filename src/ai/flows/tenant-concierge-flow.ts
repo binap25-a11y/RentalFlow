@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview A resident AI concierge agent with retry logic for 429 errors.
+ * @fileOverview A resident AI concierge agent with hardened model configuration.
  */
 
 import { ai } from '@/ai/genkit';
@@ -26,6 +26,7 @@ export async function tenantConcierge(input: TenantConciergeInput): Promise<Tena
 
 const tenantConciergePrompt = ai.definePrompt({
   name: 'tenantConciergePrompt',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: TenantConciergeInputSchema },
   output: { schema: TenantConciergeOutputSchema },
   prompt: `You are 'Flow', the AI Concierge for a modern rental property.
@@ -53,14 +54,11 @@ const tenantConciergeFlow = ai.defineFlow(
         return output;
       } catch (error: any) {
         lastError = error;
-        if (error.status === 429 || error.message?.includes('429')) {
-          retries--;
-          if (retries > 0) {
-            await sleep(2000);
-            continue;
-          }
+        retries--;
+        if (retries > 0) {
+          await sleep(2000);
+          continue;
         }
-        throw error;
       }
     }
     throw lastError || new Error("Max retries exceeded");

@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview An AI agent for troubleshooting issues with retry logic for 429 errors.
+ * @fileOverview An AI agent for troubleshooting issues with hardened model configuration.
  */
 
 import { ai } from '@/ai/genkit';
@@ -27,16 +27,15 @@ export async function maintenanceTroubleshoot(input: MaintenanceTroubleshootInpu
 
 const troubleshootPrompt = ai.definePrompt({
   name: 'maintenanceTroubleshootPrompt',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: MaintenanceTroubleshootInputSchema },
   output: { schema: MaintenanceTroubleshootOutputSchema },
   prompt: `You are 'Flow Support', an expert home maintenance assistant.
 A resident has reported this issue: "{{{issueDescription}}}"
 
-Your goal is to suggest 3-4 simple, safe troubleshooting steps they can take right now that might fix the problem without a professional call-out.
-Examples: Resetting a trip switch, checking boiler pressure, bleeding a radiator, or checking if a plug is loose.
-
+Suggest 3-4 simple, safe troubleshooting steps. 
 ALWAYS include a clear safety warning if electricity, gas, or heavy water leaks are involved.
-If the issue is obviously serious (e.g., major flood, no heat in winter, electrical smoke), set canSelfFix to false and provide immediate safety instructions.`,
+If the issue is obviously serious, set canSelfFix to false and provide immediate safety instructions.`,
 });
 
 const maintenanceTroubleshootFlow = ai.defineFlow(
@@ -56,14 +55,11 @@ const maintenanceTroubleshootFlow = ai.defineFlow(
         return output;
       } catch (error: any) {
         lastError = error;
-        if (error.status === 429 || error.message?.includes('429')) {
-          retries--;
-          if (retries > 0) {
-            await sleep(2000);
-            continue;
-          }
+        retries--;
+        if (retries > 0) {
+          await sleep(2000);
+          continue;
         }
-        throw error;
       }
     }
     throw lastError || new Error("Max retries exceeded");

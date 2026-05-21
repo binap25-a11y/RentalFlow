@@ -19,20 +19,17 @@ export function getResolvedImageUrl(
   // Priority 0: Official High-Fidelity Fallback (Modern Apartment)
   const officialPlaceholder = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800&auto=format&fit=crop";
 
-  // Server-side resolution
-  if (typeof window === 'undefined') {
-    if (dbImageUrls && dbImageUrls.length > 0 && typeof dbImageUrls[0] === 'string' && dbImageUrls[0].length > 5) return dbImageUrls[0];
-    return (dbImageUrl && dbImageUrl.length > 5) ? dbImageUrl : officialPlaceholder;
-  }
-
   // Tier 1: Local Session Bridge (Zero-latency redirection feedback)
-  const bridge = (window as any).__asset_bridge;
-  const bridgeUrls = bridge?.[propertyId];
-  if (bridgeUrls && Array.isArray(bridgeUrls) && bridgeUrls.length > 0 && typeof bridgeUrls[0] === 'string' && bridgeUrls[0].length > 5) {
-    return bridgeUrls[0];
+  // Only execute on client to prevent hydration mismatch
+  if (typeof window !== 'undefined') {
+    const bridge = (window as any).__asset_bridge;
+    const bridgeUrls = bridge?.[propertyId];
+    if (bridgeUrls && Array.isArray(bridgeUrls) && bridgeUrls.length > 0 && typeof bridgeUrls[0] === 'string' && bridgeUrls[0].length > 5) {
+      return bridgeUrls[0];
+    }
   }
 
-  // Tier 2: Persistent Database URLs (Verified Supabase storage)
+  // Tier 2: Persistent Database URLs (Verified storage)
   if (dbImageUrls && dbImageUrls.length > 0 && typeof dbImageUrls[0] === 'string' && dbImageUrls[0].length > 5) {
     return dbImageUrls[0];
   }
@@ -56,19 +53,13 @@ export function getResolvedGallery(
 ): string[] {
   const officialPlaceholder = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800&auto=format&fit=crop";
 
-  // Server-side resolution
-  if (typeof window === 'undefined') {
-    const cleanDbUrls = (dbImageUrls || []).filter(u => typeof u === 'string' && u.length > 5);
-    if (cleanDbUrls.length > 0) return cleanDbUrls;
-    if (dbImageUrl && dbImageUrl.length > 5) return [dbImageUrl];
-    return [officialPlaceholder];
-  }
-
   // Tier 1: Memory Bridge (Instant updates)
-  const bridge = (window as any).__asset_bridge;
-  const bridgeUrls = bridge?.[propertyId];
-  if (bridgeUrls && Array.isArray(bridgeUrls) && bridgeUrls.length > 0) {
-    return bridgeUrls.filter((u: string) => typeof u === 'string' && u.length > 5);
+  if (typeof window !== 'undefined') {
+    const bridge = (window as any).__asset_bridge;
+    const bridgeUrls = bridge?.[propertyId];
+    if (bridgeUrls && Array.isArray(bridgeUrls) && bridgeUrls.length > 0) {
+      return bridgeUrls.filter((u: string) => typeof u === 'string' && u.length > 5);
+    }
   }
 
   // Tier 2: Persistent Gallery

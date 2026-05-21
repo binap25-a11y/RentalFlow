@@ -1,7 +1,6 @@
 'use server';
 /**
  * @fileOverview An AI agent for triaging tenant maintenance requests.
- * Uses strict classification guidelines to ensure high-fidelity database integrity.
  */
 
 import { ai } from '@/ai/genkit';
@@ -27,6 +26,7 @@ export async function triageMaintenanceRequest(input: MaintenanceRequestTriageIn
 
 const triageMaintenanceRequestPrompt = ai.definePrompt({
   name: 'triageMaintenanceRequestPrompt',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: MaintenanceRequestTriageInputSchema },
   output: { schema: MaintenanceRequestTriageOutputSchema },
   config: { 
@@ -40,7 +40,7 @@ REQUEST: "{{{maintenanceRequest}}}"
 CLASSIFICATION GUIDELINES:
 - PRIORITY:
   * 'critical': Immediate danger, flood, fire risk, or total loss of heating/water.
-  * 'urgent': Significant inconvenience or potential for asset damage (e.g. minor leaks, broken fridge).
+  * 'urgent': Significant inconvenience or potential for asset damage.
   * 'routine': Standard repairs that do not impact safety.
   * 'low': Cosmetic issues.
 
@@ -74,15 +74,11 @@ const maintenanceRequestTriageFlow = ai.defineFlow(
         return output;
       } catch (error: any) {
         lastError = error;
-        // Check for rate limit or transient service errors
-        if (error.status === 429 || error.status === 500 || error.message?.includes('404') || error.message?.includes('INVALID_ARGUMENT')) {
-          retries--;
-          if (retries > 0) {
-            await sleep(2000);
-            continue;
-          }
+        retries--;
+        if (retries > 0) {
+          await sleep(2000);
+          continue;
         }
-        throw error;
       }
     }
     throw lastError || new Error("Asset Intelligence Engine failed to respond.");
