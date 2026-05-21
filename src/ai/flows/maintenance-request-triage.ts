@@ -27,12 +27,10 @@ export async function triageMaintenanceRequest(input: MaintenanceRequestTriageIn
 
 const triageMaintenanceRequestPrompt = ai.definePrompt({
   name: 'triageMaintenanceRequestPrompt',
-  model: 'googleai/gemini-1.5-flash',
   input: { schema: MaintenanceRequestTriageInputSchema },
   output: { schema: MaintenanceRequestTriageOutputSchema },
   config: { 
     temperature: 0,
-    topP: 0.1,
   },
   prompt: `You are an expert Property Operations Manager.
 Triage the following resident maintenance request for professional resolution:
