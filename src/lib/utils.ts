@@ -15,7 +15,13 @@ export function getResolvedImageUrl(
   dbImageUrl: string | undefined, 
   dbImageUrls: string[] | undefined
 ): string {
-  if (typeof window === 'undefined') return dbImageUrl || '';
+  const officialPlaceholder = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
+
+  // Server-side: Prioritize DB URL or fallback
+  if (typeof window === 'undefined') {
+    if (dbImageUrls && dbImageUrls.length > 0 && typeof dbImageUrls[0] === 'string' && dbImageUrls[0].length > 5) return dbImageUrls[0];
+    return (dbImageUrl && dbImageUrl.length > 5) ? dbImageUrl : officialPlaceholder;
+  }
 
   // Tier 1: Local Session Bridge (Zero-latency redirection feedback)
   const bridge = (window as any).__asset_bridge;
@@ -33,7 +39,7 @@ export function getResolvedImageUrl(
   }
 
   // Tier 3: Professional Fallback
-  return PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
+  return officialPlaceholder;
 }
 
 /**
@@ -44,18 +50,30 @@ export function getResolvedGallery(
   dbImageUrls: string[] | undefined,
   dbImageUrl: string | undefined
 ): string[] {
-  if (typeof window === 'undefined') return [];
+  const officialPlaceholder = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`;
 
+  // Server-side resolution
+  if (typeof window === 'undefined') {
+    const cleanDbUrls = (dbImageUrls || []).filter(u => typeof u === 'string' && u.length > 5);
+    if (cleanDbUrls.length > 0) return cleanDbUrls;
+    if (dbImageUrl && dbImageUrl.length > 5) return [dbImageUrl];
+    return [officialPlaceholder];
+  }
+
+  // Tier 1: Memory Bridge
   const bridge = (window as any).__asset_bridge;
   const bridgeUrls = bridge?.[propertyId];
   if (bridgeUrls && Array.isArray(bridgeUrls) && bridgeUrls.length > 0) {
     return bridgeUrls;
   }
 
+  // Tier 2: Persistent Gallery
   const cleanDbUrls = (dbImageUrls || []).filter(u => typeof u === 'string' && u.length > 5);
   if (cleanDbUrls.length > 0) return cleanDbUrls;
   
+  // Tier 3: Persistent Primary
   if (dbImageUrl && dbImageUrl.length > 5) return [dbImageUrl];
 
-  return [PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || `https://picsum.photos/seed/${propertyId}/800/600`];
+  // Tier 4: Professional Fallback
+  return [officialPlaceholder];
 }
