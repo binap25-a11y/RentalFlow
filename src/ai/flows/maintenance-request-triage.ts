@@ -4,7 +4,6 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { gemini15Flash } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
 
 const MaintenanceRequestTriageInputSchema = z.object({
@@ -27,7 +26,7 @@ export async function triageMaintenanceRequest(input: MaintenanceRequestTriageIn
 
 const triageMaintenanceRequestPrompt = ai.definePrompt({
   name: 'triageMaintenanceRequestPrompt',
-  model: gemini15Flash,
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: MaintenanceRequestTriageInputSchema },
   output: { schema: MaintenanceRequestTriageOutputSchema },
   config: { 
