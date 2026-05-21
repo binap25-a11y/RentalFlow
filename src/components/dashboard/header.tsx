@@ -2,7 +2,7 @@
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { LogOut, User, Bell, LayoutDashboard, Search, Settings } from "lucide-react";
+import { LogOut, User, Bell, LayoutDashboard, Search } from "lucide-react";
 import Link from "next/link";
 import { useAuth, useUser } from "@/firebase";
 import { initiateSignOut } from "@/firebase/non-blocking-login";
@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { useState } from "react";
 
 interface HeaderProps {
@@ -82,7 +81,7 @@ export function Header({ role }: HeaderProps) {
                 <p className="font-bold text-xs uppercase tracking-widest font-headline">Intelligence Hub</p>
                 <Badge variant="outline" className="text-[9px] text-white border-white/20">3 New</Badge>
              </div>
-             <div className="p-4 space-y-4">
+             <div className="p-4 space-y-4 text-left">
                 <div className="flex gap-3 items-start">
                    <div className="p-2 bg-emerald-100 text-emerald-700 rounded-lg"><LayoutDashboard className="w-4 h-4" /></div>
                    <div>
@@ -116,7 +115,7 @@ export function Header({ role }: HeaderProps) {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-64 mt-2 rounded-[1.25rem] border-none shadow-2xl p-2 animate-in fade-in zoom-in-95">
-            <DropdownMenuLabel className="font-normal px-4 py-3">
+            <DropdownMenuLabel className="font-normal px-4 py-3 text-left">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-bold leading-none font-headline text-primary">{userName}</p>
                 <p className="text-[10px] leading-none text-muted-foreground truncate opacity-70">

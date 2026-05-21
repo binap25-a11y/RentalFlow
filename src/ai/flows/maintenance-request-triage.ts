@@ -1,11 +1,12 @@
 'use server';
 /**
- * @fileOverview An AI agent for triaging tenant maintenance requests with hardened logic.
- * Ensures strict adherence to classification schemas for database integrity.
+ * @fileOverview An AI agent for triaging tenant maintenance requests.
+ * Uses strict classification guidelines to ensure high-fidelity database integrity.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { gemini15Flash } from '@genkit-ai/google-genai';
 
 const MaintenanceRequestTriageInputSchema = z.object({
   maintenanceRequest: z.string().describe("The tenant's description of the maintenance issue."),
@@ -27,6 +28,7 @@ export async function triageMaintenanceRequest(input: MaintenanceRequestTriageIn
 
 const triageMaintenanceRequestPrompt = ai.definePrompt({
   name: 'triageMaintenanceRequestPrompt',
+  model: gemini15Flash,
   input: { schema: MaintenanceRequestTriageInputSchema },
   output: { schema: MaintenanceRequestTriageOutputSchema },
   config: { 
@@ -47,7 +49,7 @@ CLASSIFICATION GUIDELINES:
 
 - CATEGORIES: plumbing, electrical, HVAC, appliance, structural, pest control, cosmetic, other.
 
-Respond strictly with valid JSON matching the schema. Do not include markdown or preamble.`,
+Output must be valid JSON matching the schema precisely.`,
 });
 
 const maintenanceRequestTriageFlow = ai.defineFlow(
@@ -75,10 +77,11 @@ const maintenanceRequestTriageFlow = ai.defineFlow(
         return output;
       } catch (error: any) {
         lastError = error;
-        if (error.status === 429 || error.message?.includes('429')) {
+        // Check for rate limit or transient service errors
+        if (error.status === 429 || error.status === 500 || error.message?.includes('404')) {
           retries--;
           if (retries > 0) {
-            await sleep(2000);
+            await sleep(1500);
             continue;
           }
         }

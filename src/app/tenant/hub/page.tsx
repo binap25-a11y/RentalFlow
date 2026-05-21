@@ -1,29 +1,21 @@
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
-  MapPin, Phone, FileText, Download, AlertCircle, Wrench, 
+  MapPin, FileText, Download, AlertCircle, Wrench, 
   ShieldAlert, Loader2, Home, Sparkles, Send, Bot, 
-  Calendar as CalendarIcon, User, ChevronRight, ShieldCheck,
+  ChevronRight, ShieldCheck,
   CheckCircle2, Clock
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { format, isValid } from "date-fns";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { tenantConcierge } from "@/ai/flows/tenant-concierge-flow";
-import { cn } from "@/lib/utils";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
-
-const getMemoryAsset = (id: string): string[] | null => {
-  if (typeof window === 'undefined') return null;
-  const bridge = (window as any).__asset_bridge;
-  return bridge?.[id] || null;
-};
+import { cn, getResolvedImageUrl } from "@/lib/utils";
 
 export default function TenantHub() {
   const { user } = useUser();
@@ -93,16 +85,9 @@ export default function TenantHub() {
     }
   };
 
-  // Tiered image resolution logic for residents
   const activeImageUrl = useMemo(() => {
     if (!isClient || !property) return '';
-    const bridgeAssets = getMemoryAsset(property.id);
-    const dbUrl = property.imageUrl;
-    const officialPlaceholder = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || `https://picsum.photos/seed/prop-fallback/800/600`;
-    
-    return (bridgeAssets && bridgeAssets.length > 0) 
-      ? bridgeAssets[0] 
-      : (dbUrl && dbUrl.length > 5 ? dbUrl : officialPlaceholder);
+    return getResolvedImageUrl(property.id, property.imageUrl, property.imageUrls);
   }, [property, isClient]);
 
   if (isPropLoading || isRequestsLoading) {
@@ -156,7 +141,9 @@ export default function TenantHub() {
         <div className="lg:col-span-8 space-y-8">
           <Card className="border-none shadow-sm overflow-hidden rounded-[2.5rem] bg-white group">
             <div className="relative h-[450px] w-full bg-muted overflow-hidden">
-              <Image src={activeImageUrl} alt={property.addressLine1} fill className="object-cover transition-transform duration-1000 group-hover:scale-105" unoptimized={true} />
+              {activeImageUrl && (
+                <Image src={activeImageUrl} alt={property.addressLine1} fill className="object-cover transition-transform duration-1000 group-hover:scale-105" unoptimized={true} />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/20 to-transparent opacity-90" />
               <div className="absolute bottom-10 left-10 text-white text-left space-y-4 max-w-2xl">
                 <div className="flex items-center gap-3">
@@ -198,7 +185,7 @@ export default function TenantHub() {
           </Card>
 
           <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden flex flex-col h-[550px]">
-            <CardHeader className="bg-primary p-8 text-white relative">
+            <CardHeader className="bg-primary p-8 text-white relative text-left">
               <div className="absolute top-0 right-0 p-10 opacity-10 rotate-12">
                 <Bot className="w-24 h-24" />
               </div>
@@ -232,7 +219,7 @@ export default function TenantHub() {
                   ))
                 )}
                 {isChatting && (
-                  <div className="flex gap-2 items-center text-primary/40 animate-pulse">
+                  <div className="flex gap-2 items-center text-primary/40 animate-pulse px-8">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span className="text-[10px] font-bold uppercase tracking-widest">Assistant Thinking...</span>
                   </div>
@@ -264,7 +251,7 @@ export default function TenantHub() {
                  Active Requests
                </CardTitle>
              </CardHeader>
-             <CardContent className="p-8 space-y-4">
+             <CardContent className="p-8 space-y-4 text-left">
                {activeRequests.length > 0 ? (
                  activeRequests.map(req => (
                    <Link key={req.id} href="/tenant/maintenance" className="block group">
@@ -296,7 +283,7 @@ export default function TenantHub() {
                  Property Vault
                </CardTitle>
              </CardHeader>
-             <CardContent className="p-8 space-y-4">
+             <CardContent className="p-8 space-y-4 text-left">
                 {documents && documents.length > 0 ? (
                   documents.slice(0, 3).map(doc => (
                     <div key={doc.id} className="flex items-center justify-between p-3 bg-muted/10 rounded-xl gap-3">
