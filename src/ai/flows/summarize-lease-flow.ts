@@ -5,7 +5,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { gemini15Flash } from '@genkit-ai/google-genai';
 
 const SummarizeLeaseInputSchema = z.object({
   documentText: z.string().describe("The raw text content of the lease agreement."),
@@ -29,7 +28,7 @@ export async function summarizeLease(input: SummarizeLeaseInput): Promise<Summar
 
 const summarizeLeasePrompt = ai.definePrompt({
   name: 'summarizeLeasePrompt',
-  model: gemini15Flash,
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: SummarizeLeaseInputSchema },
   output: { schema: SummarizeLeaseOutputSchema },
   prompt: `You are an expert legal AI specializing in UK residential property law.
@@ -57,11 +56,10 @@ const summarizeLeaseFlow = ai.defineFlow(
         return output;
       } catch (error: any) {
         lastError = error;
-        // Check for rate limit error (429)
         if (error.status === 429 || error.message?.includes('429')) {
           retries--;
           if (retries > 0) {
-            await sleep(2000); // Wait 2 seconds before retry
+            await sleep(2000); 
             continue;
           }
         }
