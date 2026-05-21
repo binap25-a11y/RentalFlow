@@ -8,39 +8,27 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * 🖼️ Hardened Tiered Asset Resolution Engine
+ * 🖼️ Hardened Asset Resolution Engine
  * Ensures 100% consistency for images across all platform views.
- * Strictly prioritizes Memory Bridge -> Database -> Professional Fallback.
- * Built to be Server-Side Safe to prevent random placeholder generation during SSR.
+ * Strictly prioritizes Persistent Database URLs -> Official Placeholder.
  */
 export function getResolvedImageUrl(
   propertyId: string | undefined, 
   dbImageUrl: string | undefined, 
   dbImageUrls: string[] | undefined
 ): string {
-  // 1. Resolve professional fallback (prop-1) for initial server rendering
-  const officialFallback = placeholderData.placeholderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800&auto=format&fit=crop";
+  const officialFallback = placeholderData.placeholderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://picsum.photos/seed/prop1/800/600";
 
   if (!propertyId) return officialFallback;
 
-  // 2. Client-Side Tier: Local Session Bridge (Instant feedback for uploads)
-  if (typeof window !== 'undefined') {
-    const bridge = (window as any).__asset_bridge;
-    const bridgeUrls = bridge?.[propertyId];
-    if (bridgeUrls && Array.isArray(bridgeUrls) && bridgeUrls.length > 0) {
-      const firstValid = bridgeUrls.find((u: any) => typeof u === 'string' && u.length > 5);
-      if (firstValid) return firstValid;
-    }
+  // 1. Prioritize Gallery Array (The robust collection)
+  if (dbImageUrls && Array.isArray(dbImageUrls) && dbImageUrls.length > 0) {
+    const firstValid = dbImageUrls.find(u => typeof u === 'string' && u.length > 10 && u.startsWith('http'));
+    if (firstValid) return firstValid;
   }
 
-  // 3. Persistent Tier: Database URLs (Full Gallery array)
-  if (dbImageUrls && Array.isArray(dbImageUrls)) {
-    const validGalleryUrls = dbImageUrls.filter(u => typeof u === 'string' && u.length > 5);
-    if (validGalleryUrls.length > 0) return validGalleryUrls[0];
-  }
-  
-  // 4. Fallback Tier: Primary Cover Field
-  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.length > 5) {
+  // 2. Fallback to Primary Image field
+  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.length > 10 && dbImageUrl.startsWith('http')) {
     return dbImageUrl;
   }
 
@@ -49,32 +37,32 @@ export function getResolvedImageUrl(
 
 /**
  * 🖼️ Full Gallery Resolver
- * Merges memory bridge states with persistent database records for consistent carousels.
+ * Resolves the complete set of professional images for carousels and ledgers.
  */
 export function getResolvedGallery(
   propertyId: string | undefined,
   dbImageUrls: string[] | undefined,
   dbImageUrl: string | undefined
 ): string[] {
-  const officialFallback = placeholderData.placeholderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800&auto=format&fit=crop";
+  const officialFallback = placeholderData.placeholderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://picsum.photos/seed/prop1/800/600";
 
   if (!propertyId) return [officialFallback];
 
-  // Client-Side Tier
-  if (typeof window !== 'undefined') {
-    const bridge = (window as any).__asset_bridge;
-    const bridgeUrls = bridge?.[propertyId];
-    if (bridgeUrls && Array.isArray(bridgeUrls) && bridgeUrls.length > 0) {
-      const cleanBridge = bridgeUrls.filter((u: any) => typeof u === 'string' && u.length > 5);
-      if (cleanBridge.length > 0) return cleanBridge;
-    }
+  const gallery: string[] = [];
+
+  // Add all valid gallery URLs
+  if (dbImageUrls && Array.isArray(dbImageUrls)) {
+    dbImageUrls.forEach(url => {
+      if (url && typeof url === 'string' && url.startsWith('http')) {
+        gallery.push(url);
+      }
+    });
   }
 
-  // Persistent Tier
-  const cleanDbUrls = (dbImageUrls || []).filter(u => typeof u === 'string' && u.length > 5);
-  if (cleanDbUrls.length > 0) return cleanDbUrls;
-  
-  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.length > 5) return [dbImageUrl];
+  // Ensure primary image is included if not already in gallery
+  if (dbImageUrl && dbImageUrl.startsWith('http') && !gallery.includes(dbImageUrl)) {
+    gallery.unshift(dbImageUrl);
+  }
 
-  return [officialFallback];
+  return gallery.length > 0 ? gallery : [officialFallback];
 }

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A resilient property operations agent for triaging maintenance requests.
@@ -40,6 +41,7 @@ Resident description: {{{maintenanceRequest}}}`,
 
 /**
  * 🛡️ Hardened Deterministic Fallback Logic
+ * Used when API limits are reached to maintain property safety records.
  */
 function getFallbackTriage(desc: string): MaintenanceRequestTriageOutput {
   const text = (desc || "").toLowerCase();
