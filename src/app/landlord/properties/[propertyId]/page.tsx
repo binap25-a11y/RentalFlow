@@ -175,6 +175,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return { score: finalScore, color, message };
   }, [propertyDocuments, maintenanceRequests, inspections]);
 
+  // Reactive Gallery Resolver
   const gallery = useMemo(() => {
     return getResolvedGallery(propertyId, property?.imageUrls, property?.imageUrl);
   }, [property, propertyId]);

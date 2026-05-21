@@ -1,4 +1,3 @@
-
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import placeholderData from "@/app/lib/placeholder-images.json"
@@ -10,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * 🖼️ Hardened Asset Resolution Engine
  * Ensures 100% consistency for images across all platform views.
- * Strictly prioritizes Persistent Database URLs -> Official Placeholder.
+ * Strictly prioritizes: Memory Bridge (Instant) -> Database URLs -> Official Placeholder.
  */
 export function getResolvedImageUrl(
   propertyId: string | undefined, 
@@ -21,13 +20,19 @@ export function getResolvedImageUrl(
 
   if (!propertyId) return officialFallback;
 
-  // 1. Prioritize Gallery Array (The robust collection)
+  // 1. Check Memory Bridge (for zero-latency UI feedback after upload)
+  if (typeof window !== 'undefined' && (window as any).__asset_bridge?.[propertyId]) {
+    const bridgeUrls = (window as any).__asset_bridge[propertyId];
+    if (bridgeUrls.length > 0) return bridgeUrls[0];
+  }
+
+  // 2. Prioritize Gallery Array (The robust collection)
   if (dbImageUrls && Array.isArray(dbImageUrls) && dbImageUrls.length > 0) {
     const firstValid = dbImageUrls.find(u => typeof u === 'string' && u.length > 10 && u.startsWith('http'));
     if (firstValid) return firstValid;
   }
 
-  // 2. Fallback to Primary Image field
+  // 3. Fallback to Primary Image field
   if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.length > 10 && dbImageUrl.startsWith('http')) {
     return dbImageUrl;
   }
@@ -50,7 +55,13 @@ export function getResolvedGallery(
 
   const gallery: string[] = [];
 
-  // Add all valid gallery URLs
+  // 1. Check Memory Bridge First
+  if (typeof window !== 'undefined' && (window as any).__asset_bridge?.[propertyId]) {
+    const bridgeUrls = (window as any).__asset_bridge[propertyId];
+    if (bridgeUrls.length > 0) return bridgeUrls;
+  }
+
+  // 2. Add all valid gallery URLs from DB
   if (dbImageUrls && Array.isArray(dbImageUrls)) {
     dbImageUrls.forEach(url => {
       if (url && typeof url === 'string' && url.startsWith('http')) {
@@ -59,7 +70,7 @@ export function getResolvedGallery(
     });
   }
 
-  // Ensure primary image is included if not already in gallery
+  // 3. Ensure primary image is included if not already in gallery
   if (dbImageUrl && dbImageUrl.startsWith('http') && !gallery.includes(dbImageUrl)) {
     gallery.unshift(dbImageUrl);
   }
