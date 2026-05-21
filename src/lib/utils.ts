@@ -1,6 +1,7 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { PlaceHolderImages } from "./placeholder-images"
+import placeholderData from "@/app/lib/placeholder-images.json"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -18,7 +19,7 @@ export function getResolvedImageUrl(
   dbImageUrls: string[] | undefined
 ): string {
   // 1. Resolve professional fallback (prop-1) for initial server rendering
-  const officialFallback = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800&auto=format&fit=crop";
+  const officialFallback = placeholderData.placeholderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800&auto=format&fit=crop";
 
   if (!propertyId) return officialFallback;
 
@@ -55,7 +56,7 @@ export function getResolvedGallery(
   dbImageUrls: string[] | undefined,
   dbImageUrl: string | undefined
 ): string[] {
-  const officialFallback = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800&auto=format&fit=crop";
+  const officialFallback = placeholderData.placeholderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800&auto=format&fit=crop";
 
   if (!propertyId) return [officialFallback];
 
