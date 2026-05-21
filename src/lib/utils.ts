@@ -9,6 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * 🖼️ Hardened Tiered Asset Resolution Engine
  * Ensures 100% consistency for images across all platform views.
+ * Corrected to prioritize official high-fidelity fallbacks correctly.
  */
 export function getResolvedImageUrl(
   propertyId: string, 
@@ -27,7 +28,7 @@ export function getResolvedImageUrl(
   // Tier 1: Local Session Bridge (Zero-latency redirection feedback)
   const bridge = (window as any).__asset_bridge;
   const bridgeUrls = bridge?.[propertyId];
-  if (bridgeUrls && Array.isArray(bridgeUrls) && bridgeUrls.length > 0) {
+  if (bridgeUrls && Array.isArray(bridgeUrls) && bridgeUrls.length > 0 && bridgeUrls[0].length > 5) {
     return bridgeUrls[0];
   }
 
@@ -66,7 +67,7 @@ export function getResolvedGallery(
   const bridge = (window as any).__asset_bridge;
   const bridgeUrls = bridge?.[propertyId];
   if (bridgeUrls && Array.isArray(bridgeUrls) && bridgeUrls.length > 0) {
-    return bridgeUrls;
+    return bridgeUrls.filter((u: string) => u.length > 5);
   }
 
   // Tier 2: Persistent Gallery

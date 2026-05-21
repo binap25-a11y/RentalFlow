@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview An AI agent for triaging tenant maintenance requests with retry logic.
+ * @fileOverview An AI agent for triaging tenant maintenance requests with hardened logic.
  * Ensures strict adherence to classification schemas for database integrity.
  */
 
@@ -13,9 +13,9 @@ const MaintenanceRequestTriageInputSchema = z.object({
 export type MaintenanceRequestTriageInput = z.infer<typeof MaintenanceRequestTriageInputSchema>;
 
 const MaintenanceRequestTriageOutputSchema = z.object({
-  priority: z.enum(['critical', 'urgent', 'routine', 'low']).describe('The suggested priority level for the maintenance request.'),
-  category: z.enum(['plumbing', 'electrical', 'HVAC', 'appliance', 'structural', 'pest control', 'cosmetic', 'other']).describe('The suggested category for the maintenance issue.'),
-  reasoning: z.string().describe('A brief explanation for the suggested priority and category.'),
+  priority: z.enum(['critical', 'urgent', 'routine', 'low']).describe('The suggested priority level.'),
+  category: z.enum(['plumbing', 'electrical', 'HVAC', 'appliance', 'structural', 'pest control', 'cosmetic', 'other']).describe('The suggested category.'),
+  reasoning: z.string().describe('A brief explanation for the triage result.'),
 });
 export type MaintenanceRequestTriageOutput = z.infer<typeof MaintenanceRequestTriageOutputSchema>;
 
@@ -29,21 +29,25 @@ const triageMaintenanceRequestPrompt = ai.definePrompt({
   name: 'triageMaintenanceRequestPrompt',
   input: { schema: MaintenanceRequestTriageInputSchema },
   output: { schema: MaintenanceRequestTriageOutputSchema },
+  config: { 
+    temperature: 0,
+    topP: 0.1,
+  },
   prompt: `You are an expert Property Operations Manager.
-Your task is to triage a resident maintenance request and categorize it for professional resolution.
-
-GUIDELINES:
-- PRIORITY:
-  * 'critical': Immediate danger, major structural damage, or complete loss of essential services (gas, water, heat in winter).
-  * 'urgent': Significant inconvenience or potential for damage if not addressed soon (e.g., minor leaks, appliance failure).
-  * 'routine': Standard repairs that do not impact safety or habitability.
-  * 'low': Cosmetic issues or non-essential maintenance.
-
-- CATEGORIES: plumbing, electrical, HVAC, appliance, structural, pest control, cosmetic, other.
+Triage the following resident maintenance request for professional resolution:
 
 REQUEST: "{{{maintenanceRequest}}}"
 
-Respond strictly with valid JSON that follows the schema. Do not include markdown formatting or conversational filler.`,
+CLASSIFICATION GUIDELINES:
+- PRIORITY:
+  * 'critical': Immediate danger, flood, fire risk, or total loss of heating/water.
+  * 'urgent': Significant inconvenience or potential for asset damage (e.g. minor leaks, broken fridge).
+  * 'routine': Standard repairs that do not impact safety.
+  * 'low': Cosmetic issues.
+
+- CATEGORIES: plumbing, electrical, HVAC, appliance, structural, pest control, cosmetic, other.
+
+Respond strictly with valid JSON matching the schema. Do not include markdown or preamble.`,
 });
 
 const maintenanceRequestTriageFlow = ai.defineFlow(
@@ -56,22 +60,21 @@ const maintenanceRequestTriageFlow = ai.defineFlow(
     let retries = 3;
     let lastError: any = null;
 
-    if (!input.maintenanceRequest || input.maintenanceRequest.length < 5) {
+    if (!input.maintenanceRequest || input.maintenanceRequest.trim().length < 5) {
       return {
         priority: 'routine',
         category: 'other',
-        reasoning: "Insufficient detail provided for automated triage. Defaulting to routine review."
+        reasoning: "Insufficient detail for automated intelligence triage."
       };
     }
 
     while (retries > 0) {
       try {
         const { output } = await triageMaintenanceRequestPrompt(input);
-        if (!output) throw new Error("AI engine returned null output");
+        if (!output) throw new Error("Intelligence engine returned empty classification.");
         return output;
       } catch (error: any) {
         lastError = error;
-        // Handle rate limits or temporary model instability
         if (error.status === 429 || error.message?.includes('429')) {
           retries--;
           if (retries > 0) {
