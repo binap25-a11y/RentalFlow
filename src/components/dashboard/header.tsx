@@ -2,7 +2,7 @@
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { LogOut, User, Bell, LayoutDashboard } from "lucide-react";
+import { LogOut, User, Bell, LayoutDashboard, Search, Settings } from "lucide-react";
 import Link from "next/link";
 import { useAuth, useUser } from "@/firebase";
 import { initiateSignOut } from "@/firebase/non-blocking-login";
@@ -16,8 +16,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useState } from "react";
 
 interface HeaderProps {
   role: 'landlord' | 'tenant';
@@ -27,6 +34,8 @@ export function Header({ role }: HeaderProps) {
   const { user } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const [search, setSearch] = useState("");
+  
   const dashboardHref = role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub';
   const userName = user?.displayName || user?.email?.split('@')[0] || 'User';
 
@@ -35,32 +44,66 @@ export function Header({ role }: HeaderProps) {
     router.push('/');
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (search.trim()) {
+      router.push(`/${role}/${role === 'landlord' ? 'properties' : 'documents'}?q=${encodeURIComponent(search)}`);
+    }
+  };
+
   const BRAND_LOGO_URL = 'https://picsum.photos/seed/rentalflow-pro-identity/512/512';
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 md:px-8 bg-white/80 backdrop-blur-md sticky top-0 z-40 transition-all">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 flex-1">
         <SidebarTrigger className="-ml-1 text-primary/60 hover:text-primary" />
         <Separator orientation="vertical" className="h-4 bg-primary/10" />
-        <Link href={dashboardHref} className="flex items-center gap-3 group">
-          <div className="relative h-9 w-9 rounded-xl overflow-hidden shadow-sm ring-1 ring-primary/5 transition-transform group-hover:scale-105">
-            <Image 
-              src={BRAND_LOGO_URL} 
-              alt="RentalFlow Logo" 
-              fill 
-              className="object-cover" 
-              unoptimized 
-              data-ai-hint="real estate logo"
-            />
-          </div>
-          <span className="font-headline font-bold text-xl tracking-tight text-primary hidden sm:block">RentalFlow</span>
-        </Link>
+        
+        <form onSubmit={handleSearch} className="hidden md:flex items-center relative max-w-sm w-full ml-4">
+          <Search className="absolute left-3 h-4 w-4 text-primary/30" />
+          <Input 
+            placeholder="Search portfolio..." 
+            className="pl-9 h-10 rounded-xl bg-primary/5 border-none font-medium text-sm focus-visible:ring-primary/20 w-full"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </form>
       </div>
 
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="rounded-full text-primary/40 hover:text-primary hover:bg-primary/5 hidden sm:flex">
-          <Bell className="h-5 w-5" />
-        </Button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-xl text-primary/40 hover:text-primary hover:bg-primary/5 relative">
+              <Bell className="h-5 w-5" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full border-2 border-white" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-0 rounded-2xl border-none shadow-2xl overflow-hidden mt-2" align="end">
+             <div className="p-4 bg-primary text-white flex justify-between items-center">
+                <p className="font-bold text-xs uppercase tracking-widest font-headline">Intelligence Hub</p>
+                <Badge variant="outline" className="text-[9px] text-white border-white/20">3 New</Badge>
+             </div>
+             <div className="p-4 space-y-4">
+                <div className="flex gap-3 items-start">
+                   <div className="p-2 bg-emerald-100 text-emerald-700 rounded-lg"><LayoutDashboard className="w-4 h-4" /></div>
+                   <div>
+                      <p className="text-xs font-bold">Portfolio Grade Updated</p>
+                      <p className="text-[10px] text-muted-foreground">Verification engine complete.</p>
+                   </div>
+                </div>
+                <div className="flex gap-3 items-start">
+                   <div className="p-2 bg-blue-100 text-blue-700 rounded-lg"><Bell className="w-4 h-4" /></div>
+                   <div>
+                      <p className="text-xs font-bold">New Direct Message</p>
+                      <p className="text-[10px] text-muted-foreground">15 mins ago</p>
+                   </div>
+                </div>
+             </div>
+             <div className="p-3 bg-muted/50 border-t text-center">
+                <Button variant="ghost" className="text-[10px] font-bold uppercase tracking-widest text-primary/60 hover:text-primary h-8">Clear Feed</Button>
+             </div>
+          </PopoverContent>
+        </Popover>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

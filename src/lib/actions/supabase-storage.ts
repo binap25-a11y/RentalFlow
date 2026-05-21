@@ -2,16 +2,13 @@
 
 /**
  * @fileOverview Server Actions for Supabase Storage.
- * Handles the secure upload of property images and compliance documents.
+ * Handles the secure upload and deletion of property images and compliance documents.
  */
 
 import { supabase } from '@/lib/supabase';
 
 /**
  * Uploads a file to a specific Supabase bucket.
- * @param formData FormData containing the file.
- * @param bucket The destination bucket ('property-images' or 'property-documents').
- * @param path The specific file path/name within the bucket.
  */
 export async function uploadToSupabase(
   formData: FormData,
@@ -22,7 +19,6 @@ export async function uploadToSupabase(
     const file = formData.get('file') as File;
     if (!file) throw new Error('No file provided');
 
-    // Convert file to buffer for server-side upload
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
@@ -36,14 +32,35 @@ export async function uploadToSupabase(
 
     if (error) throw error;
 
-    // Retrieve the public URL for the newly uploaded file
     const { data: publicUrlData } = supabase.storage
       .from(bucket)
       .getPublicUrl(data.path);
 
     return { success: true, url: publicUrlData.publicUrl };
   } catch (error: any) {
-    console.error('Supabase Storage Error:', error.message);
+    console.error('Supabase Upload Error:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Deletes a file or multiple files from a Supabase bucket.
+ * Note: Path can be a single string or an array of strings.
+ */
+export async function deleteFromSupabase(
+  bucket: 'property-images' | 'property-documents',
+  paths: string | string[]
+) {
+  try {
+    const pathArray = Array.isArray(paths) ? paths : [paths];
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .remove(pathArray);
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error: any) {
+    console.error('Supabase Deletion Error:', error.message);
     return { success: false, error: error.message };
   }
 }

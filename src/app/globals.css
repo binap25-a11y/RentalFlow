@@ -23,7 +23,7 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 218 49% 25%;
-    --radius: 1rem;
+    --radius: 1.25rem;
     --sidebar-background: 218 49% 25%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 199 89% 48%;
@@ -67,6 +67,21 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline font-bold tracking-tight;
   }
+}
+
+/* Premium Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-primary/10 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary/20;
 }
 
 .no-scrollbar::-webkit-scrollbar {

@@ -10,14 +10,7 @@ import { Building2, MapPin, Plus, Bed, Bath, Loader2, Trash2, Edit3 } from "luci
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
-
-const getMemoryAssets = (id: string): string[] | null => {
-  if (typeof window === 'undefined') return null;
-  const bridge = (window as any).__asset_bridge;
-  return bridge?.[id] || null;
-};
+import { cn, getResolvedImageUrl } from "@/lib/utils";
 
 export default function PropertiesPage() {
   const { user } = useUser();
@@ -78,14 +71,7 @@ export default function PropertiesPage() {
           </div>
         ) : (
           properties.map((property) => {
-            // Unified image resolution with strict tiered priority
-            const bridgeAssets = getMemoryAssets(property.id);
-            const dbUrl = property.imageUrl;
-            const officialPlaceholder = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || `https://picsum.photos/seed/prop-fallback/800/600`;
-            
-            const displayImage = (bridgeAssets && bridgeAssets.length > 0) 
-              ? bridgeAssets[0] 
-              : (dbUrl && dbUrl.length > 5 ? dbUrl : officialPlaceholder);
+            const displayImage = getResolvedImageUrl(property.id, property.imageUrl, property.imageUrls);
 
             return (
               <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card border border-transparent hover:border-primary/5">

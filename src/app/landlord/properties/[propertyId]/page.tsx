@@ -31,7 +31,7 @@ import {
   PopoverTrigger 
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
+import { cn, getResolvedGallery } from "@/lib/utils";
 import Image from "next/image";
 import {
   Carousel,
@@ -41,18 +41,11 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { syncDocumentToDb, deleteDocumentFromDb } from "@/lib/actions/db-sync";
-import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { uploadToSupabase, deleteFromSupabase } from '@/lib/actions/supabase-storage';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format, isBefore } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
-
-const getMemoryAssets = (id: string): string[] | null => {
-  if (typeof window === 'undefined') return null;
-  const bridge = (window as any).__asset_bridge;
-  return bridge?.[id] || null;
-};
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -182,30 +175,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return { score: finalScore, color, message };
   }, [propertyDocuments, maintenanceRequests, inspections]);
 
-  // Unified image resolution logic with strict tiered priority
   const gallery = useMemo(() => {
-    if (!isClient) return [];
-    
-    // 1. Session Memory Bridge (Highest priority for instant redirection feedback)
-    const bridgeUrls = getMemoryAssets(propertyId);
-    
-    // 2. Persistent Database URLs
-    let dbUrls: string[] = [];
-    if (property) {
-      dbUrls = property.imageUrls && Array.isArray(property.imageUrls) 
-        ? property.imageUrls 
-        : (property.imageUrl ? [property.imageUrl] : []);
-    }
-
-    const cleanDbUrls = dbUrls.filter(url => url && typeof url === 'string' && url.length > 5);
-
-    if (bridgeUrls && bridgeUrls.length > 0) return bridgeUrls;
-    if (cleanDbUrls.length > 0) return cleanDbUrls;
-
-    // 3. Official Professional Fallback (Consistent placeholder)
-    const officialPlaceholder = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl;
-    return [officialPlaceholder || `https://picsum.photos/seed/prop-fallback/800/600`];
-  }, [property, propertyId, isClient]);
+    return getResolvedGallery(propertyId, property?.imageUrls, property?.imageUrl);
+  }, [property, propertyId]);
 
   const handleUpdateRent = () => {
     if (!propertyRef) return;
@@ -231,15 +203,16 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const path = `vault/${user.uid}/${propertyId}/${Date.now()}_${file.name}`;
+      const storagePath = `vault/${user.uid}/${propertyId}/${Date.now()}_${file.name}`;
       
-      const result = await uploadToSupabase(formData, 'property-documents', path);
+      const result = await uploadToSupabase(formData, 'property-documents', storagePath);
       
       if (result.success && result.url) {
         const serializableDocData = {
           id: docId,
           fileName: file.name,
           fileUrl: result.url,
+          storagePath: storagePath,
           documentType: 'property-asset',
           propertyId: propertyId,
           landlordId: user.uid,
@@ -268,12 +241,24 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     }
   };
 
-  const handleDeleteDocument = async (docId: string) => {
+  const handleDeleteDocument = async (docObj: any) => {
     if (!db) return;
-    const docRef = doc(db, 'documents', docId);
-    deleteDocumentNonBlocking(docRef);
-    deleteDocumentFromDb(docId);
-    toast({ title: "Document Removed" });
+    try {
+      const docRef = doc(db, 'documents', docObj.id);
+      
+      // 1. Purge from Supabase Storage
+      if (docObj.storagePath) {
+        await deleteFromSupabase('property-documents', docObj.storagePath);
+      }
+
+      // 2. Remove from Firestore & SQL
+      deleteDocumentNonBlocking(docRef);
+      deleteDocumentFromDb(docObj.id);
+      
+      toast({ title: "Document Purged", description: "Record and storage physically removed." });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Deletion Failed" });
+    }
   };
 
   const getPriorityColor = (priority: string) => {
@@ -490,7 +475,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                               <Loader2 className="w-4 h-4 animate-spin text-primary/40" />
                             </div>
                           )}
-                          <Button variant="ghost" size="icon" className="rounded-xl hover:bg-destructive/5 text-destructive/40 hover:text-destructive h-11 w-11 transition-all" onClick={() => handleDeleteDocument(doc.id)} title="Remove">
+                          <Button variant="ghost" size="icon" className="rounded-xl hover:bg-destructive/5 text-destructive/40 hover:text-destructive h-11 w-11 transition-all" onClick={() => handleDeleteDocument(doc)} title="Remove">
                             <Trash2 className="w-5 h-5" />
                           </Button>
                         </div>
