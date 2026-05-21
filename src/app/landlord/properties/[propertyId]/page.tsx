@@ -71,8 +71,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   // CRITICAL: Resolve full gallery ensuring primary cover is index 0
   const gallery = useMemo(() => {
-    return getResolvedGallery(propertyId, property?.imageUrls, property?.imageUrl);
-  }, [property, propertyId]);
+    return getResolvedGallery(property?.imageUrl, property?.imageUrls);
+  }, [property]);
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -314,7 +314,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         unoptimized 
                         data-ai-hint="luxury property" 
                       />
-                      {index === 0 && !url.includes('picsum.photos') && (
+                      {index === 0 && (
                         <div className="absolute top-6 left-6 px-4 py-1.5 bg-primary text-white text-[10px] font-bold uppercase rounded-full shadow-2xl font-headline">Cover Asset</div>
                       )}
                     </div>

@@ -86,7 +86,7 @@ export default function TenantHub() {
   };
 
   const activeImageUrl = useMemo(() => {
-    return getResolvedImageUrl(property?.id, property?.imageUrl, property?.imageUrls);
+    return getResolvedImageUrl(property?.imageUrl, property?.imageUrls);
   }, [property]);
 
   if (isPropLoading || isRequestsLoading) {

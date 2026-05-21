@@ -69,7 +69,7 @@ export default function PropertiesPage() {
             <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card border border-transparent hover:border-primary/5">
               <div className="relative h-56 w-full overflow-hidden bg-muted">
                 <Image 
-                  src={getResolvedImageUrl(property.id, property.imageUrl, property.imageUrls)} 
+                  src={getResolvedImageUrl(property.imageUrl, property.imageUrls)} 
                   alt={property.addressLine1} 
                   fill 
                   className="object-cover transition-transform duration-500 group-hover:scale-105" 

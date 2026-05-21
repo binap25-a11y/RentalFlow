@@ -62,20 +62,16 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // LOAD PERSISTENT USER ASSETS: Strictly load non-placeholder user content
-      const gallery = Array.isArray(property.imageUrls) ? [...property.imageUrls] : [];
-      if (property.imageUrl && !gallery.includes(property.imageUrl)) {
-        gallery.unshift(property.imageUrl);
+      // LOAD PERSISTENT USER ASSETS
+      const gallery: string[] = [];
+      if (property.imageUrl) gallery.push(property.imageUrl);
+      if (property.imageUrls && Array.isArray(property.imageUrls)) {
+        property.imageUrls.forEach(url => {
+          if (url && !gallery.includes(url)) gallery.push(url);
+        });
       }
       
-      const persistentUserImages = gallery.filter(url => 
-        url && 
-        typeof url === 'string' && 
-        url.startsWith('http') && 
-        !url.includes('picsum.photos')
-      );
-      
-      setExistingImageUrls(persistentUserImages);
+      setExistingImageUrls(gallery);
     }
   }, [property, isSaving]);
 
@@ -122,7 +118,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const finalGallery = [...existingImageUrls, ...uploadedUrls];
       
       // DETERMINISTIC COVER: Explicitly set Index 0 as the primary cover asset
-      const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : (property?.imageUrl || '');
+      const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
 
       const serializableData = {
         id: propertyId,

@@ -7,77 +7,48 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * 🖼️ Hardened Asset Resolution Engine
- * Ensures user-uploaded Supabase images are strictly prioritized over placeholders.
- * Logic: primary imageUrl (User content) -> first gallery item (User content) -> official fallback.
+ * Ensures user-provided URLs are strictly prioritized over placeholders.
  */
-export function getResolvedImageUrl(
-  propertyId: string | undefined, 
-  dbImageUrl: string | undefined, 
-  dbImageUrls: string[] | undefined
-): string {
-  // Official platform fallback
+export function getResolvedImageUrl(imageUrl: string | undefined, imageUrls: string[] | undefined): string {
   const FALLBACK = "https://picsum.photos/seed/prop1/800/600";
-
-  // 1. Prioritize primary imageUrl if it's a valid user-provided URL
-  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http') && !dbImageUrl.includes('picsum.photos')) {
-    return dbImageUrl;
+  
+  // 1. Primary: The designated cover image
+  if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('http')) {
+    return imageUrl;
   }
-
-  // 2. If no primary user image, pick the first valid image from the gallery array
-  if (dbImageUrls && Array.isArray(dbImageUrls) && dbImageUrls.length > 0) {
-    const firstUserImage = dbImageUrls.find(url => url && typeof url === 'string' && url.startsWith('http') && !url.includes('picsum.photos'));
-    if (firstUserImage) return firstUserImage;
+  
+  // 2. Secondary: The first item in the gallery ledger
+  if (imageUrls && Array.isArray(imageUrls) && imageUrls.length > 0) {
+    const firstUrl = imageUrls[0];
+    if (firstUrl && typeof firstUrl === 'string' && firstUrl.startsWith('http')) {
+      return firstUrl;
+    }
   }
-
-  // 3. Last resort: Return the standard professional fallback (or the placeholder if it was intentionally set)
-  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http')) {
-    return dbImageUrl;
-  }
-
+  
   return FALLBACK;
 }
 
 /**
  * 🖼️ Synchronized Gallery Resolver
- * Deduplicates and orders the gallery with the primary cover image at index 0.
- * Ensures carousels show real user content over fallbacks.
+ * Orders the gallery starting with the primary cover and deduplicates.
  */
-export function getResolvedGallery(
-  propertyId: string | undefined,
-  dbImageUrls: string[] | undefined,
-  dbImageUrl: string | undefined
-): string[] {
+export function getResolvedGallery(imageUrl: string | undefined, imageUrls: string[] | undefined): string[] {
   const FALLBACK = "https://picsum.photos/seed/prop1/800/600";
-  const userImages: string[] = [];
+  const gallery: string[] = [];
 
-  // 1. Add primary image first if it's a valid user upload
-  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http') && !dbImageUrl.includes('picsum.photos')) {
-    userImages.push(dbImageUrl);
+  // 1. Prioritize primary cover
+  if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('http')) {
+    gallery.push(imageUrl);
   }
 
-  // 2. Add other unique gallery URLs from the array
-  if (dbImageUrls && Array.isArray(dbImageUrls)) {
-    dbImageUrls.forEach(url => {
-      if (url && typeof url === 'string' && url.startsWith('http') && !url.includes('picsum.photos') && !userImages.includes(url)) {
-        userImages.push(url);
+  // 2. Add other unique images
+  if (imageUrls && Array.isArray(imageUrls)) {
+    imageUrls.forEach(url => {
+      if (url && typeof url === 'string' && url.startsWith('http') && !gallery.includes(url)) {
+        gallery.push(url);
       }
     });
   }
 
-  // 3. If we have no real user images, but have placeholders, return them
-  if (userImages.length === 0) {
-    if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http')) {
-      userImages.push(dbImageUrl);
-    }
-    if (dbImageUrls && Array.isArray(dbImageUrls)) {
-      dbImageUrls.forEach(url => {
-        if (url && typeof url === 'string' && url.startsWith('http') && !userImages.includes(url)) {
-          userImages.push(url);
-        }
-      });
-    }
-  }
-
-  // 4. Final fallback if record is truly empty
-  return userImages.length > 0 ? userImages : [FALLBACK];
+  return gallery.length > 0 ? gallery : [FALLBACK];
 }
