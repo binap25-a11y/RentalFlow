@@ -19,13 +19,13 @@ export function getResolvedImageUrl(
   const officialFallback = placeholderData.placeholderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://picsum.photos/seed/prop1/800/600";
 
   // 1. Prioritize Primary Cover Image from DB
-  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http')) {
+  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http') && !dbImageUrl.includes('picsum.photos')) {
     return dbImageUrl;
   }
 
-  // 2. Fallback to first valid gallery URL from DB
+  // 2. Fallback to first valid gallery URL from DB (excluding placeholders)
   if (dbImageUrls && Array.isArray(dbImageUrls) && dbImageUrls.length > 0) {
-    const firstValid = dbImageUrls.find(u => u && typeof u === 'string' && u.startsWith('http'));
+    const firstValid = dbImageUrls.find(u => u && typeof u === 'string' && u.startsWith('http') && !u.includes('picsum.photos'));
     if (firstValid) return firstValid;
   }
 
@@ -47,21 +47,21 @@ export function getResolvedGallery(
 
   const gallery: string[] = [];
 
-  // 1. Prioritize Primary Cover Image as index 0
-  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http')) {
+  // 1. Prioritize Primary Cover Image as index 0 (if it's a real user image)
+  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http') && !dbImageUrl.includes('picsum.photos')) {
     gallery.push(dbImageUrl);
   }
 
-  // 2. Add other unique gallery URLs from DB
+  // 2. Add other unique gallery URLs from DB (excluding placeholders)
   if (dbImageUrls && Array.isArray(dbImageUrls)) {
     dbImageUrls.forEach(url => {
-      if (url && typeof url === 'string' && url.startsWith('http') && !gallery.includes(url)) {
+      if (url && typeof url === 'string' && url.startsWith('http') && !url.includes('picsum.photos') && !gallery.includes(url)) {
         gallery.push(url);
       }
     });
   }
 
-  // If we have nothing, return fallback
+  // If we have no user images, return the fallback as the only item
   if (gallery.length === 0) return [officialFallback];
 
   return gallery;

@@ -63,7 +63,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // Use the gallery resolver to correctly identify user images for the ledger
+      // Filter existing gallery to only include actual user images (excluding fallbacks)
       const gallery = getResolvedGallery(propertyId, property.imageUrls, property.imageUrl);
       const userImages = gallery.filter(u => u && !u.includes('picsum.photos'));
       setExistingImageUrls(userImages);
@@ -110,7 +110,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       }
 
       const finalGallery = [...existingImageUrls, ...uploadedUrls];
-      // DESIGNATED COVER: Explicitly set the first valid user image as the primary cover
+      
+      // CRITICAL: Explicitly set the first user image as the definitive cover asset
       const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
 
       const serializableData = {
