@@ -175,7 +175,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return { score: finalScore, color, message };
   }, [propertyDocuments, maintenanceRequests, inspections]);
 
-  // Reactive Gallery Resolver
+  // Use the hardened gallery resolver to ensure cover image is primary
   const gallery = useMemo(() => {
     return getResolvedGallery(propertyId, property?.imageUrls, property?.imageUrl);
   }, [property, propertyId]);
@@ -314,6 +314,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         unoptimized={true} 
                         data-ai-hint="luxury property" 
                       />
+                      {index === 0 && (
+                        <div className="absolute top-6 left-6 px-4 py-1.5 bg-primary text-white text-[10px] font-bold uppercase rounded-full shadow-2xl font-headline">Cover Asset</div>
+                      )}
                     </div>
                   </CarouselItem>
                 ))}

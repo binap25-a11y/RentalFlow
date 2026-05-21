@@ -7,9 +7,9 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * 🖼️ Hardened Asset Resolution Engine
+ * 🖼️ Professional Asset Resolution Engine
  * Ensures 100% consistency for images across all platform views.
- * Strictly prioritizes: Memory Bridge (Instant) -> Database URLs -> Official Placeholder.
+ * Strictly prioritizes: Memory Bridge (Instant) -> Primary imageUrl (Cover) -> Gallery -> Placeholder.
  */
 export function getResolvedImageUrl(
   propertyId: string | undefined, 
@@ -23,18 +23,18 @@ export function getResolvedImageUrl(
   // 1. Check Memory Bridge (for zero-latency UI feedback after upload)
   if (typeof window !== 'undefined' && (window as any).__asset_bridge?.[propertyId]) {
     const bridgeUrls = (window as any).__asset_bridge[propertyId];
-    if (bridgeUrls.length > 0) return bridgeUrls[0];
+    if (bridgeUrls && bridgeUrls.length > 0) return bridgeUrls[0];
   }
 
-  // 2. Prioritize Gallery Array (The robust collection)
+  // 2. Prioritize Primary Cover Image
+  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.length > 10 && dbImageUrl.startsWith('http')) {
+    return dbImageUrl;
+  }
+
+  // 3. Fallback to first valid gallery URL
   if (dbImageUrls && Array.isArray(dbImageUrls) && dbImageUrls.length > 0) {
     const firstValid = dbImageUrls.find(u => typeof u === 'string' && u.length > 10 && u.startsWith('http'));
     if (firstValid) return firstValid;
-  }
-
-  // 3. Fallback to Primary Image field
-  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.length > 10 && dbImageUrl.startsWith('http')) {
-    return dbImageUrl;
   }
 
   return officialFallback;
@@ -43,6 +43,7 @@ export function getResolvedImageUrl(
 /**
  * 🖼️ Full Gallery Resolver
  * Resolves the complete set of professional images for carousels and ledgers.
+ * Ensures the primary cover image is always the first item.
  */
 export function getResolvedGallery(
   propertyId: string | undefined,
@@ -58,21 +59,21 @@ export function getResolvedGallery(
   // 1. Check Memory Bridge First
   if (typeof window !== 'undefined' && (window as any).__asset_bridge?.[propertyId]) {
     const bridgeUrls = (window as any).__asset_bridge[propertyId];
-    if (bridgeUrls.length > 0) return bridgeUrls;
+    if (bridgeUrls && bridgeUrls.length > 0) return bridgeUrls;
   }
 
-  // 2. Add all valid gallery URLs from DB
+  // 2. Prioritize Primary Cover Image as index 0
+  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http')) {
+    gallery.push(dbImageUrl);
+  }
+
+  // 3. Add other unique gallery URLs from DB
   if (dbImageUrls && Array.isArray(dbImageUrls)) {
     dbImageUrls.forEach(url => {
-      if (url && typeof url === 'string' && url.startsWith('http')) {
+      if (url && typeof url === 'string' && url.startsWith('http') && !gallery.includes(url)) {
         gallery.push(url);
       }
     });
-  }
-
-  // 3. Ensure primary image is included if not already in gallery
-  if (dbImageUrl && dbImageUrl.startsWith('http') && !gallery.includes(dbImageUrl)) {
-    gallery.unshift(dbImageUrl);
   }
 
   return gallery.length > 0 ? gallery : [officialFallback];
