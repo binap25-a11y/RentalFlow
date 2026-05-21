@@ -7,9 +7,9 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * 🖼️ Professional Asset Resolution Engine
+ * 🖼️ Bulletproof Asset Resolution Engine
  * Ensures 100% consistency for images across all platform views.
- * Strictly prioritizes: Primary imageUrl (Cover) -> First Gallery Item -> Placeholder.
+ * Strictly prioritizes: Primary dbImageUrl -> First item in dbImageUrls -> Official Fallback.
  */
 export function getResolvedImageUrl(
   propertyId: string | undefined, 
@@ -19,11 +19,11 @@ export function getResolvedImageUrl(
   const officialFallback = placeholderData.placeholderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://picsum.photos/seed/prop1/800/600";
 
   // 1. Prioritize Primary Cover Image from DB
-  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http') && dbImageUrl.length > 10) {
+  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http')) {
     return dbImageUrl;
   }
 
-  // 2. Fallback to first valid gallery URL
+  // 2. Fallback to first valid gallery URL from DB
   if (dbImageUrls && Array.isArray(dbImageUrls) && dbImageUrls.length > 0) {
     const firstValid = dbImageUrls.find(u => u && typeof u === 'string' && u.startsWith('http'));
     if (firstValid) return firstValid;
@@ -48,14 +48,14 @@ export function getResolvedGallery(
   const gallery: string[] = [];
 
   // 1. Prioritize Primary Cover Image as index 0
-  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http') && dbImageUrl.length > 10) {
+  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http')) {
     gallery.push(dbImageUrl);
   }
 
   // 2. Add other unique gallery URLs from DB
   if (dbImageUrls && Array.isArray(dbImageUrls)) {
     dbImageUrls.forEach(url => {
-      if (url && typeof url === 'string' && url.startsWith('http') && url.length > 10 && !gallery.includes(url)) {
+      if (url && typeof url === 'string' && url.startsWith('http') && !gallery.includes(url)) {
         gallery.push(url);
       }
     });

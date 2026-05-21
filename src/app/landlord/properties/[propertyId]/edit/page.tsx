@@ -63,18 +63,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // Extract ONLY user-uploaded images for the ledger, avoiding placeholders
-      const rawGallery = property.imageUrls || [];
-      if (property.imageUrl && !rawGallery.includes(property.imageUrl)) {
-        rawGallery.unshift(property.imageUrl);
-      }
-      
-      const validUrls = rawGallery.filter((u: string) => 
-        u && typeof u === 'string' && u.startsWith('http') && !u.includes('picsum.photos')
-      );
-      setExistingImageUrls(validUrls);
+      // Use the gallery resolver to correctly identify user images for the ledger
+      const gallery = getResolvedGallery(propertyId, property.imageUrls, property.imageUrl);
+      const userImages = gallery.filter(u => u && !u.includes('picsum.photos'));
+      setExistingImageUrls(userImages);
     }
-  }, [property, isSaving]);
+  }, [property, isSaving, propertyId]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -116,7 +110,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       }
 
       const finalGallery = [...existingImageUrls, ...uploadedUrls];
-      // DESIGNATED COVER: Strictly the first image in the final ledger
+      // DESIGNATED COVER: Explicitly set the first valid user image as the primary cover
       const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
 
       const serializableData = {
