@@ -9,18 +9,18 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * 🖼️ Hardened Tiered Asset Resolution Engine
  * Ensures 100% consistency for images across all platform views.
- * Strictly prioritizes official high-fidelity fallbacks and persistent storage.
+ * Strictly prioritizes Memory Bridge -> Database -> Professional Fallback.
+ * Built to be Server-Side Safe to avoid random placeholder flickering.
  */
 export function getResolvedImageUrl(
   propertyId: string, 
   dbImageUrl: string | undefined, 
   dbImageUrls: string[] | undefined
 ): string {
-  // Priority 0: Official High-Fidelity Fallback (Modern Apartment)
-  const officialPlaceholder = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800&auto=format&fit=crop";
+  // Official High-Fidelity Fallback (Modern Apartment)
+  const officialFallback = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800&auto=format&fit=crop";
 
   // Tier 1: Local Session Bridge (Zero-latency redirection feedback)
-  // Only execute on client to prevent hydration mismatch
   if (typeof window !== 'undefined') {
     const bridge = (window as any).__asset_bridge;
     const bridgeUrls = bridge?.[propertyId];
@@ -30,16 +30,17 @@ export function getResolvedImageUrl(
   }
 
   // Tier 2: Persistent Database URLs (Verified storage)
-  if (dbImageUrls && dbImageUrls.length > 0 && typeof dbImageUrls[0] === 'string' && dbImageUrls[0].length > 5) {
-    return dbImageUrls[0];
+  if (dbImageUrls && Array.isArray(dbImageUrls)) {
+    const validGalleryUrls = dbImageUrls.filter(u => u && typeof u === 'string' && u.length > 5);
+    if (validGalleryUrls.length > 0) return validGalleryUrls[0];
   }
   
-  if (dbImageUrl && dbImageUrl.length > 5) {
+  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.length > 5) {
     return dbImageUrl;
   }
 
-  // Tier 3: High-Fidelity Professional Fallback
-  return officialPlaceholder;
+  // Tier 3: High-Fidelity Professional Fallback (Consistent across SSR/CSR)
+  return officialFallback;
 }
 
 /**
@@ -51,9 +52,9 @@ export function getResolvedGallery(
   dbImageUrls: string[] | undefined,
   dbImageUrl: string | undefined
 ): string[] {
-  const officialPlaceholder = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800&auto=format&fit=crop";
+  const officialFallback = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800&auto=format&fit=crop";
 
-  // Tier 1: Memory Bridge (Instant updates)
+  // Tier 1: Memory Bridge (Instant updates during navigation)
   if (typeof window !== 'undefined') {
     const bridge = (window as any).__asset_bridge;
     const bridgeUrls = bridge?.[propertyId];
@@ -62,13 +63,13 @@ export function getResolvedGallery(
     }
   }
 
-  // Tier 2: Persistent Gallery
+  // Tier 2: Persistent Gallery from DB
   const cleanDbUrls = (dbImageUrls || []).filter(u => typeof u === 'string' && u.length > 5);
   if (cleanDbUrls.length > 0) return cleanDbUrls;
   
-  // Tier 3: Persistent Primary
-  if (dbImageUrl && dbImageUrl.length > 5) return [dbImageUrl];
+  // Tier 3: Primary Image from DB
+  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.length > 5) return [dbImageUrl];
 
   // Tier 4: Professional Fallback
-  return [officialPlaceholder];
+  return [officialFallback];
 }

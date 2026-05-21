@@ -52,7 +52,7 @@ export function Header({ role }: HeaderProps) {
   };
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 md:px-8 bg-white/80 backdrop-blur-md sticky top-0 z-40 transition-all">
+    <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 md:px-8 bg-white/80 backdrop-blur-md sticky top-0 z-40 transition-all text-left">
       <div className="flex items-center gap-4 flex-1">
         <SidebarTrigger className="-ml-1 text-primary/60 hover:text-primary" />
         <Separator orientation="vertical" className="h-4 bg-primary/10" />
@@ -79,7 +79,7 @@ export function Header({ role }: HeaderProps) {
           <PopoverContent className="w-80 p-0 rounded-2xl border-none shadow-2xl overflow-hidden mt-2" align="end">
              <div className="p-4 bg-primary text-white flex justify-between items-center">
                 <p className="font-bold text-xs uppercase tracking-widest font-headline">Intelligence Hub</p>
-                <Badge variant="outline" className="text-[9px] text-white border-white/20">3 New</Badge>
+                <Badge variant="outline" className="text-[9px] text-white border-white/20 font-bold">3 New</Badge>
              </div>
              <div className="p-4 space-y-4 text-left">
                 <div className="flex gap-3 items-start">
