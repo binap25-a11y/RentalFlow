@@ -73,7 +73,7 @@ export default function NewPropertyPage() {
         const results = await Promise.all(uploadPromises);
         finalImageUrls = results.filter(r => r.success && r.url).map(r => r.url!);
         
-        // DESIGNATED COVER: Strictly the first image in the final ledger
+        // DESIGNATED COVER: Explicitly set the first uploaded image as the primary visual ID
         if (finalImageUrls.length > 0) {
           finalImageUrl = finalImageUrls[0];
         }
@@ -106,11 +106,11 @@ export default function NewPropertyPage() {
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Asset Registered", description: "Permanent URLs synchronized and stored." });
+      toast({ title: "Asset Registered", description: "Portfolio inventory synchronized." });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Asset registration failed:", err);
-      toast({ variant: "destructive", title: "Registration Failed", description: "The server encountered an issue while saving asset metadata." });
+      toast({ variant: "destructive", title: "Registration Failed", description: "Could not save asset specifications." });
       setIsSaving(false);
     }
   };
@@ -152,7 +152,7 @@ export default function NewPropertyPage() {
                         alt={`Preview ${index}`} 
                         fill 
                         className="object-cover" 
-                        unoptimized={true} 
+                        unoptimized 
                         data-ai-hint="property interior"
                       />
                       <button 

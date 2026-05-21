@@ -7,62 +7,62 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * 🖼️ Bulletproof Asset Resolution Engine
- * Ensures 100% consistency for images across all platform views.
- * Strictly prioritizes: Primary dbImageUrl -> First item in dbImageUrls -> Official Fallback.
+ * 🖼️ Enhanced Asset Resolution Engine
+ * Ensures user-uploaded Supabase images are prioritized over placeholders.
+ * Strictly prioritizes: dbImageUrl (if not placeholder) -> First gallery item -> Standard Fallback.
  */
 export function getResolvedImageUrl(
   propertyId: string | undefined, 
   dbImageUrl: string | undefined, 
   dbImageUrls: string[] | undefined
 ): string {
-  const officialFallback = placeholderData.placeholderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://picsum.photos/seed/prop1/800/600";
+  // Official platform fallback from the centralized registry
+  const FALLBACK = "https://picsum.photos/seed/prop1/800/600";
 
-  // 1. Prioritize Primary Cover Image from DB
-  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http') && !dbImageUrl.includes('picsum.photos')) {
+  // 1. Prioritize dbImageUrl if it's a valid user upload (not a picsum placeholder)
+  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.length > 10 && !dbImageUrl.includes('picsum.photos')) {
     return dbImageUrl;
   }
 
-  // 2. Fallback to first valid gallery URL from DB (excluding placeholders)
+  // 2. If no primary, pick the first valid user upload from the gallery array
   if (dbImageUrls && Array.isArray(dbImageUrls) && dbImageUrls.length > 0) {
-    const firstValid = dbImageUrls.find(u => u && typeof u === 'string' && u.startsWith('http') && !u.includes('picsum.photos'));
-    if (firstValid) return firstValid;
+    const firstUserImage = dbImageUrls.find(url => 
+      url && typeof url === 'string' && url.length > 10 && !url.includes('picsum.photos')
+    );
+    if (firstUserImage) return firstUserImage;
   }
 
-  // 3. Last resort fallback
-  return officialFallback;
+  // 3. Last resort: Return the standard professional fallback
+  return FALLBACK;
 }
 
 /**
- * 🖼️ Full Gallery Resolver
- * Resolves the complete set of professional images for carousels and ledgers.
- * Ensures the primary cover image is always the first item and deduplicated.
+ * 🖼️ Enhanced Gallery Resolver
+ * Deduplicates and orders the gallery with the primary image first.
+ * Ensures carousels and ledgers show real user content over fallbacks.
  */
 export function getResolvedGallery(
   propertyId: string | undefined,
   dbImageUrls: string[] | undefined,
   dbImageUrl: string | undefined
 ): string[] {
-  const officialFallback = placeholderData.placeholderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://picsum.photos/seed/prop1/800/600";
+  const FALLBACK = "https://picsum.photos/seed/prop1/800/600";
+  const userImages: string[] = [];
 
-  const gallery: string[] = [];
-
-  // 1. Prioritize Primary Cover Image as index 0 (if it's a real user image)
-  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http') && !dbImageUrl.includes('picsum.photos')) {
-    gallery.push(dbImageUrl);
+  // 1. Add primary image first if it's a user upload
+  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.length > 10 && !dbImageUrl.includes('picsum.photos')) {
+    userImages.push(dbImageUrl);
   }
 
-  // 2. Add other unique gallery URLs from DB (excluding placeholders)
+  // 2. Add other unique gallery URLs from the array
   if (dbImageUrls && Array.isArray(dbImageUrls)) {
     dbImageUrls.forEach(url => {
-      if (url && typeof url === 'string' && url.startsWith('http') && !url.includes('picsum.photos') && !gallery.includes(url)) {
-        gallery.push(url);
+      if (url && typeof url === 'string' && url.length > 10 && !url.includes('picsum.photos') && !userImages.includes(url)) {
+        userImages.push(url);
       }
     });
   }
 
-  // If we have no user images, return the fallback as the only item
-  if (gallery.length === 0) return [officialFallback];
-
-  return gallery;
+  // 3. If we have no real images, return the fallback as the single item
+  return userImages.length > 0 ? userImages : [FALLBACK];
 }

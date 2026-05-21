@@ -138,7 +138,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Portfolio Updated", description: "Changes synchronized." });
+      toast({ title: "Portfolio Updated", description: "Visual assets synchronized." });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Update failed:", err);

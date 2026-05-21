@@ -69,6 +69,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
+  // CRITICAL: Resolve full gallery ensuring primary cover is index 0
   const gallery = useMemo(() => {
     return getResolvedGallery(propertyId, property?.imageUrls, property?.imageUrl);
   }, [property, propertyId]);
@@ -310,7 +311,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         alt={`Property ${index}`} 
                         fill 
                         className="object-cover" 
-                        unoptimized={true} 
+                        unoptimized 
                         data-ai-hint="luxury property" 
                       />
                       {index === 0 && (
