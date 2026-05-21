@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview An AI agent for generating professional property inspection reports.
@@ -34,7 +33,18 @@ Output a professional summary, a list of priority maintenance items, and an over
 });
 
 export async function generateInspectionReport(input: GenerateInspectionReportInput): Promise<GenerateInspectionReportOutput> {
-  const { output } = await inspectionReportPrompt(input);
-  if (!output) throw new Error("Reporting engine failed.");
-  return output;
+  try {
+    const { output } = await inspectionReportPrompt(input);
+    if (!output) throw new Error("Reporting engine failed.");
+    return output;
+  } catch (error: any) {
+    if (error.message?.includes('429') || error.message?.includes('quota')) {
+      return {
+        summary: "REPORT PENDING: The high-fidelity reporting engine is currently busy. Your notes have been saved.",
+        priorityItems: ["Review manual findings ledger"],
+        healthScore: 50
+      };
+    }
+    throw error;
+  }
 }

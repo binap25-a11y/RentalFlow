@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview An AI agent for troubleshooting issues before reporting.
@@ -34,7 +33,19 @@ If the issue is obviously serious, set canSelfFix to false and provide immediate
 });
 
 export async function maintenanceTroubleshoot(input: MaintenanceTroubleshootInput): Promise<MaintenanceTroubleshootOutput> {
-  const { output } = await troubleshootPrompt(input);
-  if (!output) throw new Error("Troubleshooting engine offline.");
-  return output;
+  try {
+    const { output } = await troubleshootPrompt(input);
+    if (!output) throw new Error("Troubleshooting engine offline.");
+    return output;
+  } catch (error: any) {
+    if (error.message?.includes('429') || error.message?.includes('quota')) {
+      return {
+        canSelfFix: false,
+        troubleshootingSteps: ["Check if neighbors have similar issues", "Look for isolated shut-off valves"],
+        safetyWarning: "AI Assistant is busy. If there is gas or electricity danger, contact management immediately.",
+        encouragement: "Please proceed with caution while our secondary support systems engage."
+      };
+    }
+    throw error;
+  }
 }
