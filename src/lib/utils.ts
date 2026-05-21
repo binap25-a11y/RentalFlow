@@ -62,7 +62,7 @@ export function getResolvedGallery(
   if (typeof window !== 'undefined' && (window as any).__asset_bridge?.[propertyId]) {
     const bridgeUrls = (window as any).__asset_bridge[propertyId];
     if (bridgeUrls && Array.isArray(bridgeUrls)) {
-      bridgeUrls.forEach(url => {
+      bridgeUrls.forEach((url: string) => {
         if (url && typeof url === 'string' && url.startsWith('http')) {
           gallery.push(url);
         }
@@ -85,5 +85,8 @@ export function getResolvedGallery(
     });
   }
 
-  return gallery.length > 0 ? gallery : [officialFallback];
+  // If we have nothing, return fallback
+  if (gallery.length === 0) return [officialFallback];
+
+  return gallery;
 }

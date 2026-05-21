@@ -107,7 +107,6 @@ export default function NewPropertyPage() {
       };
 
       // 3. Sequential Write: Firestore (Persistent Source) -> Postgres (Redundant Analytics)
-      // AWAIT these to ensure data is committed before navigation
       await setDoc(propertyRef, {
         ...serializableData,
         tenantIds: [],
@@ -247,7 +246,7 @@ export default function NewPropertyPage() {
                   </div>
                   <div className="space-y-2">
                     <Label className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Bathrooms</Label>
-                    <Select value={bathrooms} onValueChange={setBathrooms}>
+                    <Select value={bathrooms} onValueChange={setBedrooms}>
                       <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {['1','2','3+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}

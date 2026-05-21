@@ -22,6 +22,12 @@ import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 
+const setMemoryAssets = (id: string, urls: string[]) => {
+  if (typeof window === 'undefined') return;
+  if (!(window as any).__asset_bridge) (window as any).__asset_bridge = {};
+  (window as any).__asset_bridge[id] = urls;
+};
+
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
   const propertyId = resolvedParams.propertyId;
@@ -52,7 +58,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (property && !isSaving) {
+    if (property && !isSaving && existingImageUrls.length === 0) {
       setAddress(property.addressLine1 || '');
       setCity(property.city || '');
       setZipCode(property.zipCode || '');
@@ -65,9 +71,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const urls = property.imageUrls && Array.isArray(property.imageUrls) 
         ? property.imageUrls 
         : (property.imageUrl ? [property.imageUrl] : []);
-      setExistingImageUrls(urls.filter(u => typeof u === 'string' && u.length > 5 && u.startsWith('http')));
+      
+      const validUrls = urls.filter((u: string) => typeof u === 'string' && u.length > 5 && u.startsWith('http'));
+      setExistingImageUrls(validUrls);
     }
-  }, [property, isSaving]);
+  }, [property, isSaving, existingImageUrls.length]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -111,6 +119,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const finalGallery = [...existingImageUrls, ...uploadedUrls];
       const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
       
+      // Update Memory Bridge for zero-latency feedback
+      setMemoryAssets(propertyId, finalGallery);
+
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -188,11 +199,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   <div key={`new-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group border-2 border-dashed border-accent/40 bg-white">
                     <Image src={url} alt={`New ${index}`} fill className="object-cover opacity-80" unoptimized data-ai-hint="modern home" />
                     <button type="button" onClick={() => removeNewImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-red-500"><X className="w-3.5 h-3.5" /></button>
+                    {existingImageUrls.length === 0 && index === 0 && (
+                      <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline">Primary Cover</div>
+                    )}
                   </div>
                 ))}
                 <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 bg-white flex flex-col items-center justify-center gap-2">
                   <Plus className="w-6 h-6 text-primary/20" />
-                  <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest font-headline">Select New</span>
+                  <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest font-headline">Select More</span>
                 </button>
               </div>
               <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
@@ -216,6 +230,22 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                     </Select>
                   </div>
                   <div className="space-y-2"><Label className="font-bold text-xs uppercase text-primary/60 font-headline">Monthly Yield (£)</Label><Input type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold" /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Bedrooms</Label>
+                    <Select value={bedrooms} onValueChange={setBedrooms}>
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold"><SelectValue /></SelectTrigger>
+                      <SelectContent>{['1','2','3','4','5+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Bathrooms</Label>
+                    <Select value={bathrooms} onValueChange={setBathrooms}>
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold"><SelectValue /></SelectTrigger>
+                      <SelectContent>{['1','2','3+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Asset Narrative</Label>
