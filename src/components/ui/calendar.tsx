@@ -12,7 +12,7 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker>
 /**
  * 📅 Professional Portfolio Calendar
  * Re-engineered for React Day Picker v9 compatibility.
- * Removes duplicate month/year headers by utilizing native caption labels.
+ * Removes duplicate month/year headers by utilizing native caption labels and strict class scoping.
  */
 function Calendar({
   className,
@@ -57,8 +57,8 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        Chevron: ({ ...props }) => {
-          if (props.orientation === 'left') {
+        Chevron: ({ orientation }) => {
+          if (orientation === 'left') {
             return <ChevronLeft className="h-4 w-4" />
           }
           return <ChevronRight className="h-4 w-4" />

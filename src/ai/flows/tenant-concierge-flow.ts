@@ -7,7 +7,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { gemini15Flash } from '@genkit-ai/google-genai';
 
 const TenantConciergeInputSchema = z.object({
   query: z.string().describe("The resident's question."),
@@ -29,7 +28,7 @@ export async function tenantConcierge(input: TenantConciergeInput): Promise<Tena
 
 const tenantConciergePrompt = ai.definePrompt({
   name: 'tenantConciergePrompt',
-  model: gemini15Flash,
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: TenantConciergeInputSchema },
   output: { schema: TenantConciergeOutputSchema },
   prompt: `You are 'Flow', the AI Concierge for a modern rental property.
