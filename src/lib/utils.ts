@@ -10,28 +10,30 @@ export function cn(...inputs: ClassValue[]) {
  * 🖼️ Hardened Tiered Asset Resolution Engine
  * Ensures 100% consistency for images across all platform views.
  * Strictly prioritizes Memory Bridge -> Database -> Professional Fallback.
- * Built to be Server-Side Safe to avoid random placeholder flickering.
+ * Built to be Server-Side Safe to avoid flickering during SSR.
  */
 export function getResolvedImageUrl(
-  propertyId: string, 
+  propertyId: string | undefined, 
   dbImageUrl: string | undefined, 
   dbImageUrls: string[] | undefined
 ): string {
-  // Official High-Fidelity Fallback (Modern Apartment)
   const officialFallback = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800&auto=format&fit=crop";
 
-  // Tier 1: Local Session Bridge (Zero-latency redirection feedback)
+  if (!propertyId) return officialFallback;
+
+  // Tier 1: Local Session Bridge (Instant feedback for uploads)
   if (typeof window !== 'undefined') {
     const bridge = (window as any).__asset_bridge;
     const bridgeUrls = bridge?.[propertyId];
-    if (bridgeUrls && Array.isArray(bridgeUrls) && bridgeUrls.length > 0 && typeof bridgeUrls[0] === 'string' && bridgeUrls[0].length > 5) {
-      return bridgeUrls[0];
+    if (bridgeUrls && Array.isArray(bridgeUrls) && bridgeUrls.length > 0) {
+      const firstValid = bridgeUrls.find((u: any) => typeof u === 'string' && u.length > 5);
+      if (firstValid) return firstValid;
     }
   }
 
-  // Tier 2: Persistent Database URLs (Verified storage)
+  // Tier 2: Persistent Database URLs
   if (dbImageUrls && Array.isArray(dbImageUrls)) {
-    const validGalleryUrls = dbImageUrls.filter(u => u && typeof u === 'string' && u.length > 5);
+    const validGalleryUrls = dbImageUrls.filter(u => typeof u === 'string' && u.length > 5);
     if (validGalleryUrls.length > 0) return validGalleryUrls[0];
   }
   
@@ -39,7 +41,6 @@ export function getResolvedImageUrl(
     return dbImageUrl;
   }
 
-  // Tier 3: High-Fidelity Professional Fallback (Consistent across SSR/CSR)
   return officialFallback;
 }
 
@@ -48,28 +49,30 @@ export function getResolvedImageUrl(
  * Merges memory bridge states with persistent database records for consistent carousels.
  */
 export function getResolvedGallery(
-  propertyId: string,
+  propertyId: string | undefined,
   dbImageUrls: string[] | undefined,
   dbImageUrl: string | undefined
 ): string[] {
   const officialFallback = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800&auto=format&fit=crop";
 
-  // Tier 1: Memory Bridge (Instant updates during navigation)
+  if (!propertyId) return [officialFallback];
+
+  // Tier 1: Memory Bridge
   if (typeof window !== 'undefined') {
     const bridge = (window as any).__asset_bridge;
     const bridgeUrls = bridge?.[propertyId];
     if (bridgeUrls && Array.isArray(bridgeUrls) && bridgeUrls.length > 0) {
-      return bridgeUrls.filter((u: string) => typeof u === 'string' && u.length > 5);
+      const cleanBridge = bridgeUrls.filter((u: any) => typeof u === 'string' && u.length > 5);
+      if (cleanBridge.length > 0) return cleanBridge;
     }
   }
 
-  // Tier 2: Persistent Gallery from DB
+  // Tier 2: Persistent Gallery
   const cleanDbUrls = (dbImageUrls || []).filter(u => typeof u === 'string' && u.length > 5);
   if (cleanDbUrls.length > 0) return cleanDbUrls;
   
-  // Tier 3: Primary Image from DB
+  // Tier 3: Primary Image
   if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.length > 5) return [dbImageUrl];
 
-  // Tier 4: Professional Fallback
   return [officialFallback];
 }
