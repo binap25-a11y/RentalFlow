@@ -62,13 +62,20 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // Load only actual user images from the database
-      const gallery = Array.isArray(property.imageUrls) ? property.imageUrls : [];
+      // LOAD PERSISTENT USER ASSETS: Strictly load non-placeholder user content
+      const gallery = Array.isArray(property.imageUrls) ? [...property.imageUrls] : [];
       if (property.imageUrl && !gallery.includes(property.imageUrl)) {
         gallery.unshift(property.imageUrl);
       }
-      // Filter out empty or non-http strings
-      setExistingImageUrls(gallery.filter(url => url && typeof url === 'string' && url.startsWith('http') && !url.includes('picsum.photos')));
+      
+      const persistentUserImages = gallery.filter(url => 
+        url && 
+        typeof url === 'string' && 
+        url.startsWith('http') && 
+        !url.includes('picsum.photos')
+      );
+      
+      setExistingImageUrls(persistentUserImages);
     }
   }, [property, isSaving]);
 
@@ -111,10 +118,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         uploadedUrls = results.filter(r => r.success && r.url).map(r => r.url!);
       }
 
+      // ASSET SYNC: Combine existing and new user content
       const finalGallery = [...existingImageUrls, ...uploadedUrls];
       
-      // CRITICAL: Explicitly set the first user image as the definitive cover asset
-      const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
+      // DETERMINISTIC COVER: Explicitly set Index 0 as the primary cover asset
+      const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : (property?.imageUrl || '');
 
       const serializableData = {
         id: propertyId,
