@@ -39,7 +39,7 @@ export default function PropertiesPage() {
   if (!isClient) return null;
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Portfolio Inventory</h1>
@@ -54,7 +54,7 @@ export default function PropertiesPage() {
         {loading ? (
           <div className="col-span-full py-24 text-center flex flex-col items-center justify-center">
             <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-            <p className="text-muted-foreground font-medium font-body">Syncing portfolio inventory...</p>
+            <p className="text-muted-foreground font-medium font-body uppercase tracking-widest text-xs">Syncing Portfolio Ledger</p>
           </div>
         ) : !properties || properties.length === 0 ? (
           <div className="col-span-full py-24 text-center flex flex-col items-center justify-center bg-muted/10 rounded-[2rem] border-2 border-dashed border-primary/20">
@@ -66,7 +66,7 @@ export default function PropertiesPage() {
           </div>
         ) : (
           properties.map((property) => (
-            <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card">
+            <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card border border-transparent hover:border-primary/5">
               <div className="relative h-56 w-full overflow-hidden bg-muted">
                 <Image 
                   src={getResolvedImageUrl(property.id, property.imageUrl, property.imageUrls)} 
@@ -81,21 +81,21 @@ export default function PropertiesPage() {
                 </Badge>
               </div>
               <CardHeader className="pb-2 text-left space-y-1">
-                <Badge variant="outline" className="text-[10px] uppercase font-bold text-primary/60 border-primary/10 w-fit">{property.propertyType}</Badge>
+                <Badge variant="outline" className="text-[10px] uppercase font-bold text-primary/60 border-primary/10 w-fit tracking-widest">{property.propertyType}</Badge>
                 <CardTitle className="text-lg font-bold font-headline truncate tracking-tight">{property.addressLine1}</CardTitle>
                 <p className="text-sm text-muted-foreground flex items-center font-medium font-body"><MapPin className="w-3 h-3 mr-1 text-primary/30" /> {property.city}, {property.zipCode}</p>
               </CardHeader>
               <CardContent className="pb-4 text-left">
                 <div className="flex gap-4 items-center mb-4">
-                  <span className="flex items-center text-xs font-bold text-primary/60"><Bed className="w-3.5 h-3.5 mr-1" /> {property.numberOfBedrooms} Bed</span>
-                  <span className="flex items-center text-xs font-bold text-primary/60"><Bath className="w-3.5 h-3.5 mr-1" /> {property.numberOfBathrooms} Bath</span>
+                  <span className="flex items-center text-xs font-bold text-primary/60 font-headline uppercase"><Bed className="w-3.5 h-3.5 mr-1" /> {property.numberOfBedrooms} Bed</span>
+                  <span className="flex items-center text-xs font-bold text-primary/60 font-headline uppercase"><Bath className="w-3.5 h-3.5 mr-1" /> {property.numberOfBathrooms} Bath</span>
                 </div>
-                <p className="text-xl font-bold text-primary font-headline">£{property.rentAmount}<span className="text-xs text-muted-foreground font-medium"> / month</span></p>
+                <p className="text-xl font-bold text-primary font-headline tracking-tighter">£{property.rentAmount}<span className="text-xs text-muted-foreground font-medium"> / month</span></p>
               </CardContent>
               <CardFooter className="flex gap-2 pt-4 border-t border-primary/5">
-                <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-10" asChild><Link href={`/landlord/properties/${property.id}`}>Manage</Link></Button>
-                <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-10" asChild><Link href={`/landlord/properties/${property.id}/edit`}>Edit</Link></Button>
-                <Button variant="ghost" size="icon" className="rounded-xl h-10 text-destructive/40 hover:text-destructive hover:bg-destructive/5" onClick={() => handleDeleteProperty(property.id)}><Trash2 className="w-4 h-4" /></Button>
+                <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-10 font-headline" asChild><Link href={`/landlord/properties/${property.id}`}>Manage</Link></Button>
+                <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-10 font-headline" asChild><Link href={`/landlord/properties/${property.id}/edit`}>Edit</Link></Button>
+                <Button variant="ghost" size="icon" className="rounded-xl h-10 text-destructive/40 hover:text-destructive hover:bg-destructive/5 transition-all" onClick={() => handleDeleteProperty(property.id)}><Trash2 className="w-4 h-4" /></Button>
               </CardFooter>
             </Card>
           ))

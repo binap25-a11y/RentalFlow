@@ -21,7 +21,6 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { getResolvedGallery } from "@/lib/utils";
 
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -63,12 +62,15 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // Filter existing gallery to only include actual user images (excluding fallbacks)
-      const gallery = getResolvedGallery(propertyId, property.imageUrls, property.imageUrl);
-      const userImages = gallery.filter(u => u && !u.includes('picsum.photos'));
-      setExistingImageUrls(userImages);
+      // Load only actual user images from the database
+      const gallery = Array.isArray(property.imageUrls) ? property.imageUrls : [];
+      if (property.imageUrl && !gallery.includes(property.imageUrl)) {
+        gallery.unshift(property.imageUrl);
+      }
+      // Filter out empty or non-http strings
+      setExistingImageUrls(gallery.filter(url => url && typeof url === 'string' && url.startsWith('http') && !url.includes('picsum.photos')));
     }
-  }, [property, isSaving, propertyId]);
+  }, [property, isSaving]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -138,11 +140,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Portfolio Updated", description: "Visual assets synchronized." });
+      toast({ title: "Portfolio Updated", description: "Visual assets and metadata synchronized." });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Update failed:", err);
-      toast({ variant: "destructive", title: "Update Failed", description: "The server encountered an issue saving asset metadata." });
+      toast({ variant: "destructive", title: "Update Failed", description: "Could not save asset specifications." });
       setIsSaving(false);
     }
   };
@@ -181,7 +183,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                 {existingImageUrls.map((url, index) => (
                   <div key={`existing-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border border-primary/10 bg-white">
                     <Image src={url} alt={`Existing ${index}`} fill className="object-cover" unoptimized data-ai-hint="property view" />
-                    <button type="button" onClick={() => removeExistingImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-500"><X className="w-3.5 h-3.5" /></button>
+                    <button type="button" onClick={() => removeExistingImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all"><X className="w-3.5 h-3.5" /></button>
                     {index === 0 && (
                       <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline">Primary Cover</div>
                     )}
@@ -190,13 +192,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                 {newPreviewUrls.map((url, index) => (
                   <div key={`new-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group border-2 border-dashed border-accent/40 bg-white">
                     <Image src={url} alt={`New ${index}`} fill className="object-cover opacity-80" unoptimized data-ai-hint="modern home" />
-                    <button type="button" onClick={() => removeNewImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-red-500"><X className="w-3.5 h-3.5" /></button>
+                    <button type="button" onClick={() => removeNewImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-red-500 transition-all"><X className="w-3.5 h-3.5" /></button>
                     {existingImageUrls.length === 0 && index === 0 && (
                       <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline">Primary Cover</div>
                     )}
                   </div>
                 ))}
-                <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 bg-white flex flex-col items-center justify-center gap-2">
+                <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 bg-white flex flex-col items-center justify-center gap-2 transition-all">
                   <Plus className="w-6 h-6 text-primary/20" />
                   <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest font-headline">Select More</span>
                 </button>
@@ -248,8 +250,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </div>
           <CardFooter className="p-8 bg-muted/10 border-t flex justify-end gap-4">
             <Button type="button" variant="ghost" className="rounded-xl h-12 px-8 font-bold" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" disabled={isSaving} className="rounded-xl font-bold bg-primary h-12 px-12 text-white">
-              {isSaving ? "Syncing..." : "Save Specification"}
+            <Button type="submit" disabled={isSaving} className="rounded-xl font-bold bg-primary h-12 px-12 text-white transition-transform active:scale-95 shadow-lg shadow-primary/20">
+              {isSaving ? "Syncing Specification..." : "Save Specification"}
             </Button>
           </CardFooter>
         </form>

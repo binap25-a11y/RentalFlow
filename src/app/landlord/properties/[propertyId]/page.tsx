@@ -314,7 +314,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         unoptimized 
                         data-ai-hint="luxury property" 
                       />
-                      {index === 0 && (
+                      {index === 0 && !url.includes('picsum.photos') && (
                         <div className="absolute top-6 left-6 px-4 py-1.5 bg-primary text-white text-[10px] font-bold uppercase rounded-full shadow-2xl font-headline">Cover Asset</div>
                       )}
                     </div>

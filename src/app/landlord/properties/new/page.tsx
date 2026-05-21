@@ -106,7 +106,7 @@ export default function NewPropertyPage() {
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Asset Registered", description: "Portfolio inventory synchronized." });
+      toast({ title: "Asset Registered", description: "Portfolio inventory and visual records synchronized." });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Asset registration failed:", err);
@@ -124,7 +124,7 @@ export default function NewPropertyPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">Register Asset</h1>
-            <p className="text-muted-foreground font-medium font-body">Add a high-value property with persistent gallery storage.</p>
+            <p className="text-muted-foreground font-medium font-body">Add a high-value property with persistent visual records.</p>
           </div>
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold">

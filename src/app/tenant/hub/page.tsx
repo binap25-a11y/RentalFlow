@@ -127,10 +127,10 @@ export default function TenantHub() {
           <p className="text-muted-foreground font-medium font-body">Welcome home to {property.addressLine1.split(',')[0]}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-           <Button variant="outline" className="rounded-2xl font-bold h-12 border-primary/10 hover:bg-white shadow-sm flex-1 md:flex-none" asChild>
+           <Button variant="outline" className="rounded-2xl font-bold h-12 border-primary/10 hover:bg-white shadow-sm flex-1 md:flex-none font-headline" asChild>
              <Link href="/tenant/messages">Direct Message</Link>
            </Button>
-           <Button className="bg-accent hover:bg-accent/90 rounded-2xl shadow-xl shadow-accent/20 font-bold h-12 flex-1 md:flex-none" asChild>
+           <Button className="bg-accent hover:bg-accent/90 rounded-2xl shadow-xl shadow-accent/20 font-bold h-12 flex-1 md:flex-none font-headline text-white" asChild>
              <Link href="/tenant/maintenance"><AlertCircle className="w-4 h-4 mr-2" /> Report Repair</Link>
            </Button>
         </div>
@@ -144,12 +144,12 @@ export default function TenantHub() {
               <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/20 to-transparent opacity-90" />
               <div className="absolute bottom-10 left-10 text-white text-left space-y-4 max-w-2xl">
                 <div className="flex items-center gap-3">
-                  <Badge className="bg-emerald-500 text-white border-none font-bold uppercase tracking-[0.2em] text-[10px] py-1.5 px-4 rounded-full shadow-lg">Active Tenancy</Badge>
-                  <Badge variant="outline" className="text-white border-white/40 font-bold text-[10px] py-1.5 px-4 rounded-full backdrop-blur-md uppercase tracking-[0.1em]">{property.numberOfBedrooms} BED / {property.numberOfBathrooms} BATH</Badge>
+                  <Badge className="bg-emerald-500 text-white border-none font-bold uppercase tracking-[0.2em] text-[10px] py-1.5 px-4 rounded-full shadow-lg font-headline">Active Tenancy</Badge>
+                  <Badge variant="outline" className="text-white border-white/40 font-bold text-[10px] py-1.5 px-4 rounded-full backdrop-blur-md uppercase tracking-[0.1em] font-headline">{property.numberOfBedrooms} BED / {property.numberOfBathrooms} BATH</Badge>
                 </div>
                 <div className="space-y-1">
-                  <h2 className="text-5xl font-headline font-bold leading-tight">{property.addressLine1}</h2>
-                  <p className="flex items-center text-lg opacity-80 font-medium"><MapPin className="w-5 h-5 mr-2 text-accent" /> {property.city}, {property.zipCode}</p>
+                  <h2 className="text-5xl font-headline font-bold leading-tight tracking-tight">{property.addressLine1}</h2>
+                  <p className="flex items-center text-lg opacity-80 font-medium font-body"><MapPin className="w-5 h-5 mr-2 text-accent" /> {property.city}, {property.zipCode}</p>
                 </div>
               </div>
             </div>
@@ -169,10 +169,10 @@ export default function TenantHub() {
                       <ShieldAlert className="w-12 h-12" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Authorized Support</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1 font-headline">Authorized Support</p>
                       <p className="text-sm font-bold font-headline text-primary">24/7 Professional Line</p>
                     </div>
-                    <Button variant="accent" className="w-full rounded-2xl h-11 font-bold shadow-lg shadow-accent/10" asChild>
+                    <Button variant="accent" className="w-full rounded-2xl h-11 font-bold shadow-lg shadow-accent/10 font-headline" asChild>
                       <Link href="/tenant/emergency-contacts">Access Safety Directory</Link>
                     </Button>
                   </div>
@@ -192,7 +192,7 @@ export default function TenantHub() {
                 </div>
                 <div className="text-left">
                   <CardTitle className="text-2xl font-headline font-bold">Property Assistant</CardTitle>
-                  <CardDescription className="text-white/70 font-medium">Instant guidance on your home and local area.</CardDescription>
+                  <CardDescription className="text-white/70 font-medium font-body">Instant guidance on your home and local area.</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -218,7 +218,7 @@ export default function TenantHub() {
                 {isChatting && (
                   <div className="flex gap-2 items-center text-primary/40 animate-pulse px-8">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Assistant Thinking...</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest font-headline">Assistant Thinking...</span>
                   </div>
                 )}
               </div>
@@ -228,7 +228,7 @@ export default function TenantHub() {
                     value={chatQuery}
                     onChange={(e) => setChatQuery(e.target.value)}
                     placeholder="e.g. How do I reset the thermostat?"
-                    className="h-14 rounded-2xl bg-white border-none shadow-inner px-6 text-base"
+                    className="h-14 rounded-2xl bg-white border-none shadow-inner px-6 text-base font-body font-medium"
                     disabled={isChatting}
                   />
                   <Button type="submit" size="icon" className="h-14 w-14 rounded-2xl shadow-xl shadow-primary/20 bg-primary" disabled={isChatting || !chatQuery.trim()}>
@@ -254,20 +254,20 @@ export default function TenantHub() {
                    <Link key={req.id} href="/tenant/maintenance" className="block group">
                      <div className="p-4 bg-muted/20 rounded-2xl border border-primary/5 hover:bg-white hover:shadow-md transition-all">
                        <div className="flex justify-between items-start mb-2">
-                         <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-widest text-primary border-primary/10">{req.status}</Badge>
+                         <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-widest text-primary border-primary/10 font-headline">{req.status}</Badge>
                          <Clock className="w-3.5 h-3.5 text-muted-foreground opacity-50" />
                        </div>
-                       <p className="text-sm font-bold font-headline text-primary group-hover:text-accent transition-colors">{req.title}</p>
+                       <p className="text-sm font-bold font-headline text-primary group-hover:text-accent transition-colors truncate">{req.title}</p>
                      </div>
                    </Link>
                  ))
                ) : (
                  <div className="text-center py-10 opacity-30">
                    <CheckCircle2 className="w-10 h-10 mx-auto mb-3" />
-                   <p className="text-[10px] font-bold uppercase tracking-widest">No repairs logged</p>
+                   <p className="text-[10px] font-bold uppercase tracking-widest font-headline">No repairs logged</p>
                  </div>
                )}
-               <Button variant="ghost" className="w-full rounded-xl text-xs font-bold text-muted-foreground hover:text-primary transition-all" asChild>
+               <Button variant="ghost" className="w-full rounded-xl text-xs font-bold text-muted-foreground hover:text-primary transition-all font-headline uppercase tracking-widest" asChild>
                  <Link href="/tenant/maintenance">View All History <ChevronRight className="w-3 h-3 ml-2" /></Link>
                </Button>
              </CardContent>
@@ -286,7 +286,7 @@ export default function TenantHub() {
                     <div key={doc.id} className="flex items-center justify-between p-3 bg-muted/10 rounded-xl gap-3">
                        <div className="flex items-center gap-3 min-w-0 flex-1">
                          <FileText className="w-4 h-4 text-primary/40 shrink-0" />
-                         <span className="text-xs font-bold text-primary truncate">{doc.fileName}</span>
+                         <span className="text-xs font-bold text-primary truncate font-body">{doc.fileName}</span>
                        </div>
                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-white shrink-0" asChild>
                          <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer"><Download className="w-3.5 h-3.5" /></a>
@@ -294,9 +294,9 @@ export default function TenantHub() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-muted-foreground text-center py-6">Your shared property documents will appear here.</p>
+                  <p className="text-xs text-muted-foreground text-center py-6 font-medium">Your shared property documents will appear here.</p>
                 )}
-                <Button variant="outline" className="w-full rounded-xl border-primary/10 h-11 font-bold text-primary text-xs" asChild>
+                <Button variant="outline" className="w-full rounded-xl border-primary/10 h-11 font-bold text-primary text-xs font-headline uppercase tracking-widest" asChild>
                   <Link href="/tenant/documents">Full Vault Inventory</Link>
                 </Button>
              </CardContent>

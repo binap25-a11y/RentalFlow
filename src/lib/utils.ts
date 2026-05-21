@@ -15,20 +15,18 @@ export function getResolvedImageUrl(
   dbImageUrl: string | undefined, 
   dbImageUrls: string[] | undefined
 ): string {
-  // Official platform fallback from the centralized registry
+  // Official platform fallback
   const FALLBACK = "https://picsum.photos/seed/prop1/800/600";
 
-  // 1. Prioritize primary imageUrl if it's a valid user upload (not a placeholder)
-  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http') && !dbImageUrl.includes('picsum.photos')) {
+  // 1. Prioritize primary imageUrl if it's a valid external URL
+  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http')) {
     return dbImageUrl;
   }
 
-  // 2. If no primary, pick the first valid user upload from the gallery array
+  // 2. If no primary, pick the first valid image from the gallery array
   if (dbImageUrls && Array.isArray(dbImageUrls) && dbImageUrls.length > 0) {
-    const firstUserImage = dbImageUrls.find(url => 
-      url && typeof url === 'string' && url.startsWith('http') && !url.includes('picsum.photos')
-    );
-    if (firstUserImage) return firstUserImage;
+    const firstImage = dbImageUrls.find(url => url && typeof url === 'string' && url.startsWith('http'));
+    if (firstImage) return firstImage;
   }
 
   // 3. Last resort: Return the standard professional fallback
@@ -48,15 +46,15 @@ export function getResolvedGallery(
   const FALLBACK = "https://picsum.photos/seed/prop1/800/600";
   const userImages: string[] = [];
 
-  // 1. Add primary image first if it's a user upload
-  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http') && !dbImageUrl.includes('picsum.photos')) {
+  // 1. Add primary image first if it's a valid user upload
+  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http')) {
     userImages.push(dbImageUrl);
   }
 
   // 2. Add other unique gallery URLs from the array
   if (dbImageUrls && Array.isArray(dbImageUrls)) {
     dbImageUrls.forEach(url => {
-      if (url && typeof url === 'string' && url.startsWith('http') && !url.includes('picsum.photos') && !userImages.includes(url)) {
+      if (url && typeof url === 'string' && url.startsWith('http') && !userImages.includes(url)) {
         userImages.push(url);
       }
     });
