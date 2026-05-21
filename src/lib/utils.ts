@@ -17,14 +17,12 @@ export function getResolvedImageUrl(
   dbImageUrl: string | undefined, 
   dbImageUrls: string[] | undefined
 ): string {
-  // Always resolve the specific professional fallback first for consistent server/client matching
-  // This prevents random images from flashing during initial hydration.
+  // 1. Resolve professional fallback (prop-1) for initial server rendering
   const officialFallback = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800&auto=format&fit=crop";
 
   if (!propertyId) return officialFallback;
 
-  // Tier 1: Local Session Bridge (Instant feedback for uploads)
-  // Only accessible on client side
+  // 2. Client-Side Tier: Local Session Bridge (Instant feedback for uploads)
   if (typeof window !== 'undefined') {
     const bridge = (window as any).__asset_bridge;
     const bridgeUrls = bridge?.[propertyId];
@@ -34,13 +32,13 @@ export function getResolvedImageUrl(
     }
   }
 
-  // Tier 2: Persistent Database URLs (Full Gallery array)
+  // 3. Persistent Tier: Database URLs (Full Gallery array)
   if (dbImageUrls && Array.isArray(dbImageUrls)) {
     const validGalleryUrls = dbImageUrls.filter(u => typeof u === 'string' && u.length > 5);
     if (validGalleryUrls.length > 0) return validGalleryUrls[0];
   }
   
-  // Tier 3: Primary Cover Field
+  // 4. Fallback Tier: Primary Cover Field
   if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.length > 5) {
     return dbImageUrl;
   }
@@ -61,7 +59,7 @@ export function getResolvedGallery(
 
   if (!propertyId) return [officialFallback];
 
-  // Tier 1: Memory Bridge
+  // Client-Side Tier
   if (typeof window !== 'undefined') {
     const bridge = (window as any).__asset_bridge;
     const bridgeUrls = bridge?.[propertyId];
@@ -71,11 +69,10 @@ export function getResolvedGallery(
     }
   }
 
-  // Tier 2: Persistent Gallery
+  // Persistent Tier
   const cleanDbUrls = (dbImageUrls || []).filter(u => typeof u === 'string' && u.length > 5);
   if (cleanDbUrls.length > 0) return cleanDbUrls;
   
-  // Tier 3: Primary Image
   if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.length > 5) return [dbImageUrl];
 
   return [officialFallback];

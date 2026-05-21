@@ -246,12 +246,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     try {
       const docRef = doc(db, 'documents', docObj.id);
       
-      // 1. Purge from Supabase Storage
       if (docObj.storagePath) {
         await deleteFromSupabase('property-documents', docObj.storagePath);
       }
 
-      // 2. Remove from Firestore & SQL
       deleteDocumentNonBlocking(docRef);
       deleteDocumentFromDb(docObj.id);
       
@@ -418,8 +416,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           )}
                         >
                           <CalendarIcon className="mr-3 h-4 w-4 text-primary shrink-0" />
-                          <span className="flex-1 text-[13px] font-bold whitespace-normal leading-tight">
-                            {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set Deadline (Optional)"}
+                          <span className="flex-1 text-[13px] font-bold whitespace-nowrap overflow-hidden text-ellipsis">
+                            {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set Deadline"}
                           </span>
                         </Button>
                       </PopoverTrigger>
