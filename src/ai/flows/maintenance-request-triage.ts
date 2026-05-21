@@ -6,7 +6,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { gemini15Flash } from '@genkit-ai/google-genai';
 
 const MaintenanceRequestTriageInputSchema = z.object({
   maintenanceRequest: z.string().describe("The tenant's description of the maintenance issue."),
@@ -28,7 +27,7 @@ export async function triageMaintenanceRequest(input: MaintenanceRequestTriageIn
 
 const triageMaintenanceRequestPrompt = ai.definePrompt({
   name: 'triageMaintenanceRequestPrompt',
-  model: gemini15Flash,
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: MaintenanceRequestTriageInputSchema },
   output: { schema: MaintenanceRequestTriageOutputSchema },
   config: { 
@@ -78,10 +77,10 @@ const maintenanceRequestTriageFlow = ai.defineFlow(
       } catch (error: any) {
         lastError = error;
         // Check for rate limit or transient service errors
-        if (error.status === 429 || error.status === 500 || error.message?.includes('404')) {
+        if (error.status === 429 || error.status === 500 || error.message?.includes('404') || error.message?.includes('INVALID_ARGUMENT')) {
           retries--;
           if (retries > 0) {
-            await sleep(1500);
+            await sleep(2000);
             continue;
           }
         }
