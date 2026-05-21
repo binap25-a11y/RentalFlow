@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
+import { getResolvedGallery } from "@/lib/utils";
 
 const setMemoryAssets = (id: string, urls: string[]) => {
   if (typeof window === 'undefined') return;
@@ -68,14 +69,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      const urls = property.imageUrls && Array.isArray(property.imageUrls) 
-        ? property.imageUrls 
-        : (property.imageUrl ? [property.imageUrl] : []);
-      
-      const validUrls = urls.filter((u: string) => typeof u === 'string' && u.length > 5 && u.startsWith('http'));
+      // Use the helper to get the canonical list of stored images
+      const canonicalGallery = getResolvedGallery(propertyId, property.imageUrls, property.imageUrl);
+      // Filter out placeholders for the edit ledger
+      const validUrls = canonicalGallery.filter(u => u && u.startsWith('http') && !u.includes('picsum.photos'));
       setExistingImageUrls(validUrls);
     }
-  }, [property, isSaving]);
+  }, [property, isSaving, propertyId]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);

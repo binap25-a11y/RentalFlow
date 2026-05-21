@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * 🖼️ Professional Asset Resolution Engine
  * Ensures 100% consistency for images across all platform views.
- * Strictly prioritizes: Memory Bridge (Instant) -> Primary imageUrl (Cover) -> Gallery -> Placeholder.
+ * Strictly prioritizes: Memory Bridge (Instant) -> Primary imageUrl (Cover) -> First Gallery Item -> Placeholder.
  */
 export function getResolvedImageUrl(
   propertyId: string | undefined, 
@@ -18,24 +18,22 @@ export function getResolvedImageUrl(
 ): string {
   const officialFallback = placeholderData.placeholderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://picsum.photos/seed/prop1/800/600";
 
-  if (!propertyId) return officialFallback;
-
   // 1. Check Memory Bridge (for zero-latency UI feedback after upload)
-  if (typeof window !== 'undefined' && (window as any).__asset_bridge?.[propertyId]) {
+  if (typeof window !== 'undefined' && propertyId && (window as any).__asset_bridge?.[propertyId]) {
     const bridgeUrls = (window as any).__asset_bridge[propertyId];
     if (bridgeUrls && bridgeUrls.length > 0 && typeof bridgeUrls[0] === 'string' && bridgeUrls[0].startsWith('http')) {
       return bridgeUrls[0];
     }
   }
 
-  // 2. Prioritize Primary Cover Image
-  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.length > 10 && dbImageUrl.startsWith('http')) {
+  // 2. Prioritize Primary Cover Image from DB
+  if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.startsWith('http') && dbImageUrl.length > 10) {
     return dbImageUrl;
   }
 
   // 3. Fallback to first valid gallery URL
   if (dbImageUrls && Array.isArray(dbImageUrls) && dbImageUrls.length > 0) {
-    const firstValid = dbImageUrls.find(u => typeof u === 'string' && u.length > 10 && u.startsWith('http'));
+    const firstValid = dbImageUrls.find(u => u && typeof u === 'string' && u.startsWith('http'));
     if (firstValid) return firstValid;
   }
 
@@ -45,7 +43,7 @@ export function getResolvedImageUrl(
 /**
  * 🖼️ Full Gallery Resolver
  * Resolves the complete set of professional images for carousels and ledgers.
- * Ensures the primary cover image is always the first item.
+ * Ensures the primary cover image is always the first item and deduplicated.
  */
 export function getResolvedGallery(
   propertyId: string | undefined,
@@ -54,12 +52,10 @@ export function getResolvedGallery(
 ): string[] {
   const officialFallback = placeholderData.placeholderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://picsum.photos/seed/prop1/800/600";
 
-  if (!propertyId) return [officialFallback];
-
   const gallery: string[] = [];
 
   // 1. Check Memory Bridge First (For instant upload feedback)
-  if (typeof window !== 'undefined' && (window as any).__asset_bridge?.[propertyId]) {
+  if (typeof window !== 'undefined' && propertyId && (window as any).__asset_bridge?.[propertyId]) {
     const bridgeUrls = (window as any).__asset_bridge[propertyId];
     if (bridgeUrls && Array.isArray(bridgeUrls)) {
       bridgeUrls.forEach((url: string) => {

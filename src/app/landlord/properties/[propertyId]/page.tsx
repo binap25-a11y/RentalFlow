@@ -69,6 +69,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
+  const gallery = useMemo(() => {
+    return getResolvedGallery(propertyId, property?.imageUrls, property?.imageUrl);
+  }, [property, propertyId]);
+
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -174,11 +178,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
     return { score: finalScore, color, message };
   }, [propertyDocuments, maintenanceRequests, inspections]);
-
-  // Use the hardened gallery resolver to ensure cover image is primary
-  const gallery = useMemo(() => {
-    return getResolvedGallery(propertyId, property?.imageUrls, property?.imageUrl);
-  }, [property, propertyId]);
 
   const handleUpdateRent = () => {
     if (!propertyRef) return;
