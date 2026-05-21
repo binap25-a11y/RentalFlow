@@ -29,7 +29,7 @@ export async function maintenanceTroubleshoot(input: MaintenanceTroubleshootInpu
 
 const troubleshootPrompt = ai.definePrompt({
   name: 'maintenanceTroubleshootPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: 'googleai/gemini-2.0-flash',
   input: { schema: MaintenanceTroubleshootInputSchema },
   output: { schema: MaintenanceTroubleshootOutputSchema },
   prompt: `You are 'Flow Support', an expert home maintenance assistant.

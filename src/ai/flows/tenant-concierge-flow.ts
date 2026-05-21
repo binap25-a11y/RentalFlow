@@ -28,7 +28,7 @@ export async function tenantConcierge(input: TenantConciergeInput): Promise<Tena
 
 const tenantConciergePrompt = ai.definePrompt({
   name: 'tenantConciergePrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: 'googleai/gemini-2.0-flash',
   input: { schema: TenantConciergeInputSchema },
   output: { schema: TenantConciergeOutputSchema },
   prompt: `You are 'Flow', the AI Concierge for a modern rental property.

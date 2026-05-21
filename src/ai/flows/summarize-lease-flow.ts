@@ -30,7 +30,7 @@ export async function summarizeLease(input: SummarizeLeaseInput): Promise<Summar
 
 const summarizeLeasePrompt = ai.definePrompt({
   name: 'summarizeLeasePrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: 'googleai/gemini-2.0-flash',
   input: { schema: SummarizeLeaseInputSchema },
   output: { schema: SummarizeLeaseOutputSchema },
   prompt: `You are an expert legal AI specializing in UK residential property law.
