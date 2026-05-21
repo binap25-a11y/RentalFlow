@@ -58,7 +58,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (property && !isSaving && existingImageUrls.length === 0) {
+    if (property && !isSaving) {
       setAddress(property.addressLine1 || '');
       setCity(property.city || '');
       setZipCode(property.zipCode || '');
@@ -75,7 +75,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const validUrls = urls.filter((u: string) => typeof u === 'string' && u.length > 5 && u.startsWith('http'));
       setExistingImageUrls(validUrls);
     }
-  }, [property, isSaving, existingImageUrls.length]);
+  }, [property, isSaving]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -117,7 +117,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       }
 
       const finalGallery = [...existingImageUrls, ...uploadedUrls];
-      const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
+      const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : (property?.imageUrl || '');
       
       // Update Memory Bridge for zero-latency feedback
       setMemoryAssets(propertyId, finalGallery);

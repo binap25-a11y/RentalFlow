@@ -58,7 +58,7 @@ export function getResolvedGallery(
 
   const gallery: string[] = [];
 
-  // 1. Check Memory Bridge First
+  // 1. Check Memory Bridge First (For instant upload feedback)
   if (typeof window !== 'undefined' && (window as any).__asset_bridge?.[propertyId]) {
     const bridgeUrls = (window as any).__asset_bridge[propertyId];
     if (bridgeUrls && Array.isArray(bridgeUrls)) {

@@ -88,7 +88,7 @@ export default function NewPropertyPage() {
       // Sync persistent URLs to bridge for zero-latency redirection feedback
       setMemoryAssets(propertyId, finalImageUrls);
 
-      // 2. Construct Clean Serializable Object (No Timestamps for Server Action)
+      // 2. Construct Clean Serializable Object
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -246,7 +246,7 @@ export default function NewPropertyPage() {
                   </div>
                   <div className="space-y-2">
                     <Label className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Bathrooms</Label>
-                    <Select value={bathrooms} onValueChange={setBedrooms}>
+                    <Select value={bathrooms} onValueChange={setBathrooms}>
                       <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {['1','2','3+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
