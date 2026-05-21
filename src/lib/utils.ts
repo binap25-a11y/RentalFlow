@@ -16,6 +16,7 @@ export function getResolvedImageUrl(
   dbImageUrl: string | undefined, 
   dbImageUrls: string[] | undefined
 ): string {
+  // Always resolve the specific professional fallback first for consistent server/client matching
   const officialFallback = PlaceHolderImages.find(img => img.id === 'prop-1')?.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800&auto=format&fit=crop";
 
   if (!propertyId) return officialFallback;
@@ -30,12 +31,13 @@ export function getResolvedImageUrl(
     }
   }
 
-  // Tier 2: Persistent Database URLs
+  // Tier 2: Persistent Database URLs (Full Gallery array)
   if (dbImageUrls && Array.isArray(dbImageUrls)) {
     const validGalleryUrls = dbImageUrls.filter(u => typeof u === 'string' && u.length > 5);
     if (validGalleryUrls.length > 0) return validGalleryUrls[0];
   }
   
+  // Tier 3: Primary Cover Field
   if (dbImageUrl && typeof dbImageUrl === 'string' && dbImageUrl.length > 5) {
     return dbImageUrl;
   }
