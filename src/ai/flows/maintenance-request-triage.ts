@@ -1,6 +1,7 @@
 'use server';
 /**
  * @fileOverview An AI agent for triaging tenant maintenance requests with retry logic.
+ * Ensures strict adherence to classification schemas for database integrity.
  */
 
 import { ai } from '@/ai/genkit';
@@ -28,16 +29,21 @@ const triageMaintenanceRequestPrompt = ai.definePrompt({
   name: 'triageMaintenanceRequestPrompt',
   input: { schema: MaintenanceRequestTriageInputSchema },
   output: { schema: MaintenanceRequestTriageOutputSchema },
-  prompt: `You are an AI assistant for a landlord, specialized in triaging tenant maintenance requests.
-Your task is to analyze the provided maintenance request from a tenant and suggest an appropriate priority level and category for the issue.
+  prompt: `You are an expert Property Operations Manager.
+Your task is to triage a resident maintenance request and categorize it for professional resolution.
 
-Priority levels can be: 'critical' (immediate danger, major damage), 'urgent' (requires prompt attention, significant inconvenience), 'routine' (standard repair, minor inconvenience), 'low' (cosmetic, non-essential).
+GUIDELINES:
+- PRIORITY:
+  * 'critical': Immediate danger, major structural damage, or complete loss of essential services (gas, water, heat in winter).
+  * 'urgent': Significant inconvenience or potential for damage if not addressed soon (e.g., minor leaks, appliance failure).
+  * 'routine': Standard repairs that do not impact safety or habitability.
+  * 'low': Cosmetic issues or non-essential maintenance.
 
-Categories can be: 'plumbing', 'electrical', 'HVAC', 'appliance', 'structural', 'pest control', 'cosmetic', 'other'.
+- CATEGORIES: plumbing, electrical, HVAC, appliance, structural, pest control, cosmetic, other.
 
-Provide a brief reasoning for your suggested priority and category.
+REQUEST: "{{{maintenanceRequest}}}"
 
-Maintenance Request: {{{maintenanceRequest}}}`,
+Respond strictly with valid JSON that follows the schema. Do not include markdown formatting or conversational filler.`,
 });
 
 const maintenanceRequestTriageFlow = ai.defineFlow(
@@ -50,13 +56,22 @@ const maintenanceRequestTriageFlow = ai.defineFlow(
     let retries = 3;
     let lastError: any = null;
 
+    if (!input.maintenanceRequest || input.maintenanceRequest.length < 5) {
+      return {
+        priority: 'routine',
+        category: 'other',
+        reasoning: "Insufficient detail provided for automated triage. Defaulting to routine review."
+      };
+    }
+
     while (retries > 0) {
       try {
         const { output } = await triageMaintenanceRequestPrompt(input);
-        if (!output) throw new Error("No output generated");
+        if (!output) throw new Error("AI engine returned null output");
         return output;
       } catch (error: any) {
         lastError = error;
+        // Handle rate limits or temporary model instability
         if (error.status === 429 || error.message?.includes('429')) {
           retries--;
           if (retries > 0) {
@@ -67,6 +82,6 @@ const maintenanceRequestTriageFlow = ai.defineFlow(
         throw error;
       }
     }
-    throw lastError || new Error("Max retries exceeded");
+    throw lastError || new Error("Asset Intelligence Engine failed to respond.");
   }
 );

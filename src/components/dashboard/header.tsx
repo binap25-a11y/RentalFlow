@@ -52,8 +52,6 @@ export function Header({ role }: HeaderProps) {
     }
   };
 
-  const BRAND_LOGO_URL = 'https://picsum.photos/seed/rentalflow-pro-identity/512/512';
-
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 md:px-8 bg-white/80 backdrop-blur-md sticky top-0 z-40 transition-all">
       <div className="flex items-center gap-4 flex-1">

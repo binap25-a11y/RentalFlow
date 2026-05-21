@@ -103,9 +103,16 @@ export default function MaintenancePage() {
 
   const handleTriage = async (request: any) => {
     if (!user || !db) return;
+    
+    const desc = request.description || '';
+    if (desc.trim().length < 5) {
+      toast({ variant: "destructive", title: "Triage Denied", description: "Request description is too brief for AI analysis." });
+      return;
+    }
+
     setIsTriaging(request.id);
     try {
-      const result = await triageMaintenanceRequest({ maintenanceRequest: request.description });
+      const result = await triageMaintenanceRequest({ maintenanceRequest: desc });
       const requestRef = doc(db, 'maintenanceRequests', request.id);
       updateDocumentNonBlocking(requestRef, {
         priority: result.priority,
@@ -114,8 +121,9 @@ export default function MaintenancePage() {
         updatedAt: serverTimestamp(),
       });
       toast({ title: "AI Triage Complete", description: `Suggested priority: ${result.priority}` });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Triage failed" });
+    } catch (error: any) {
+      console.error("Triage Error:", error);
+      toast({ variant: "destructive", title: "AI Triage failed", description: "The intelligence engine encountered an error. Please try again." });
     } finally {
       setIsTriaging(null);
     }
