@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, use } from 'react';
@@ -66,7 +65,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const urls = property.imageUrls && Array.isArray(property.imageUrls) 
         ? property.imageUrls 
         : (property.imageUrl ? [property.imageUrl] : []);
-      setExistingImageUrls(urls.filter(u => typeof u === 'string' && u.length > 5));
+      setExistingImageUrls(urls.filter(u => typeof u === 'string' && u.length > 5 && u.startsWith('http')));
     }
   }, [property, isSaving]);
 
@@ -180,6 +179,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   <div key={`existing-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border border-primary/10 bg-white">
                     <Image src={url} alt={`Existing ${index}`} fill className="object-cover" unoptimized data-ai-hint="property view" />
                     <button type="button" onClick={() => removeExistingImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-500"><X className="w-3.5 h-3.5" /></button>
+                    {index === 0 && (
+                      <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline">Primary Cover</div>
+                    )}
                   </div>
                 ))}
                 {newPreviewUrls.map((url, index) => (
