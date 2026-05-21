@@ -1,12 +1,12 @@
 import { genkit } from 'genkit';
-import { googleAI, gemini15Flash } from '@genkit-ai/google-genai';
+import { googleAI } from '@genkit-ai/google-genai';
 
 /**
- * 🤖 Centralized Genkit Engine
+ * 🤖 Hardened Genkit Engine
  * Configured for high-fidelity property management intelligence.
- * Uses explicit model references for maximum cross-bundle stability.
+ * Uses explicit string identifiers for maximum cross-bundle stability.
  */
 export const ai = genkit({
   plugins: [googleAI()],
-  model: gemini15Flash,
+  model: 'googleai/gemini-1.5-flash',
 });
