@@ -4,7 +4,7 @@
  * @fileOverview An AI agent for troubleshooting issues before reporting.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, googleAI } from '@/ai/genkit';
 import { z } from 'zod';
 
 const MaintenanceTroubleshootInputSchema = z.object({
@@ -22,7 +22,7 @@ export type MaintenanceTroubleshootOutput = z.infer<typeof MaintenanceTroublesho
 
 const troubleshootPrompt = ai.definePrompt({
   name: 'maintenanceTroubleshootPrompt',
-  model: 'googleai/gemini-2.0-flash',
+  model: googleAI.model('gemini-2.0-flash'),
   input: { schema: MaintenanceTroubleshootInputSchema },
   output: { schema: MaintenanceTroubleshootOutputSchema },
   prompt: `You are 'Flow Support', an expert home maintenance assistant.

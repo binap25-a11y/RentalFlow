@@ -6,7 +6,7 @@
  * - triageMaintenanceRequest - Analyzes a request and suggests priority/category.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, googleAI } from '@/ai/genkit';
 import { z } from 'zod';
 
 const MaintenanceRequestTriageInputSchema = z.object({
@@ -23,7 +23,7 @@ export type MaintenanceRequestTriageOutput = z.infer<typeof MaintenanceRequestTr
 
 const triagePrompt = ai.definePrompt({
   name: 'maintenanceRequestTriagePrompt',
-  model: 'googleai/gemini-2.0-flash',
+  model: googleAI.model('gemini-2.0-flash'),
   input: { schema: MaintenanceRequestTriageInputSchema },
   output: { schema: MaintenanceRequestTriageOutputSchema },
   config: { temperature: 0 },
