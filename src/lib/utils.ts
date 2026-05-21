@@ -10,7 +10,6 @@ export function cn(...inputs: ClassValue[]) {
  * 🖼️ Hardened Tiered Asset Resolution Engine
  * Ensures 100% consistency for images across all platform views.
  * Strictly prioritizes Memory Bridge -> Database -> Professional Fallback.
- * Built to be Server-Side Safe to avoid flickering during SSR.
  */
 export function getResolvedImageUrl(
   propertyId: string | undefined, 
