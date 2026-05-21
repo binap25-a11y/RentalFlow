@@ -6,7 +6,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { googleAI } from '@genkit-ai/google-genai';
 
 const SummarizeLeaseInputSchema = z.object({
   documentText: z.string().describe("The raw text content of the lease agreement."),
@@ -24,7 +23,7 @@ export type SummarizeLeaseOutput = z.infer<typeof SummarizeLeaseOutputSchema>;
 
 const summarizeLeasePrompt = ai.definePrompt({
   name: 'summarizeLeasePrompt',
-  model: googleAI.model('gemini-2.0-flash'),
+  model: 'googleai/gemini-2.0-flash',
   input: { schema: SummarizeLeaseInputSchema },
   output: { schema: SummarizeLeaseOutputSchema },
   prompt: `You are an expert legal AI specializing in residential property law.

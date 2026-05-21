@@ -6,7 +6,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { googleAI } from '@genkit-ai/google-genai';
 
 const GenerateInspectionReportInputSchema = z.object({
   propertyAddress: z.string(),
@@ -23,7 +22,7 @@ export type GenerateInspectionReportOutput = z.infer<typeof GenerateInspectionRe
 
 const inspectionReportPrompt = ai.definePrompt({
   name: 'generateInspectionReportPrompt',
-  model: googleAI.model('gemini-2.0-flash'),
+  model: 'googleai/gemini-2.0-flash',
   input: { schema: GenerateInspectionReportInputSchema },
   output: { schema: GenerateInspectionReportOutputSchema },
   prompt: `You are an expert property surveyor.
