@@ -314,15 +314,15 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         unoptimized 
                         data-ai-hint="luxury property" 
                       />
-                      {index === 0 && (
+                      {index === 0 && url !== "https://picsum.photos/seed/rentalflow-default/800/600" && (
                         <div className="absolute top-6 left-6 px-4 py-1.5 bg-primary text-white text-[10px] font-bold uppercase rounded-full shadow-2xl font-headline">Cover Asset</div>
                       )}
                     </div>
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="left-4 bg-white/80 border-none shadow-xl h-10 w-10" />
-              <CarouselNext className="right-4 bg-white/80 border-none shadow-xl h-10 w-10" />
+              <CarouselPrevious className="left-4 bg-white/80 border-none shadow-xl h-10 w-10 hover:bg-white" />
+              <CarouselNext className="right-4 bg-white/80 border-none shadow-xl h-10 w-10 hover:bg-white" />
             </Carousel>
             
             <CardContent className="pt-6 text-left p-10 space-y-8">
@@ -358,6 +358,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                   <p className="text-[10px] uppercase font-bold text-muted-foreground font-headline mb-1 tracking-widest">Portfolio Status</p>
                   <p className={cn("font-bold font-headline text-lg uppercase", property.isOccupied ? 'text-emerald-600' : 'text-amber-600')}>{property.isOccupied ? 'Occupied' : 'Vacant'}</p>
                 </div>
+              </div>
+
+              <div className="space-y-4 pt-4">
+                <h3 className="font-bold font-headline text-xl text-primary border-b border-primary/5 pb-3">Property Narrative</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed font-body font-medium whitespace-pre-wrap">{property.description || "A premium managed property under RentalFlow professional guidelines."}</p>
               </div>
             </CardContent>
           </Card>
@@ -477,7 +482,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                               <Loader2 className="w-4 h-4 animate-spin text-primary/40" />
                             </div>
                           )}
-                          <Button variant="ghost" size="icon" className="rounded-xl hover:bg-destructive/5 text-destructive/40 hover:text-destructive h-11 w-11 transition-all" onClick={() => handleDeleteDocument(doc)} title="Remove">
+                          <Button variant="ghost" size="icon" className="rounded-xl hover:bg-destructive/5 text-destructive/40 hover:text-destructive h-11 w-11 transition-all shadow-sm" onClick={() => handleDeleteDocument(doc)} title="Remove">
                             <Trash2 className="w-5 h-5" />
                           </Button>
                         </div>
@@ -568,9 +573,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                    <div className={cn("h-full transition-all duration-1000 ease-out", assetStatus.color)} style={{ width: `${assetStatus.score}%` }}></div>
                  </div>
               </div>
-              <div className="p-5 bg-white/10 rounded-[1.5rem] border border-white/10 backdrop-blur-md">
+              <div className="p-5 bg-white/10 rounded-[1.5rem] border border-white/10 backdrop-blur-md shadow-inner">
                 <div className="flex gap-3 items-start">
-                   <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+                   <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-accent" />
                    <p className="text-sm font-bold font-body leading-relaxed">
                      {assetStatus.message}
                    </p>

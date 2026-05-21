@@ -73,7 +73,7 @@ export default function NewPropertyPage() {
         const results = await Promise.all(uploadPromises);
         finalImageUrls = results.filter(r => r.success && r.url).map(r => r.url!);
         
-        // DESIGNATED COVER: Explicitly set the first uploaded image as the primary visual ID
+        // DESIGNATED COVER: Explicitly set the first successfully uploaded image as the primary visual ID
         if (finalImageUrls.length > 0) {
           finalImageUrl = finalImageUrls[0];
         }
@@ -158,7 +158,7 @@ export default function NewPropertyPage() {
                       <button 
                         type="button" 
                         onClick={() => removeImage(index)}
-                        className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+                        className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 shadow-lg"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -173,7 +173,7 @@ export default function NewPropertyPage() {
                     className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white flex flex-col items-center justify-center gap-2 group"
                   >
                     <Plus className="w-6 h-6 text-primary/20 group-hover:text-primary/40 transition-colors" />
-                    <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest font-headline">Add More</span>
+                    <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest font-headline group-hover:text-primary/60">Add More</span>
                   </button>
                 </div>
               ) : (
@@ -208,7 +208,9 @@ export default function NewPropertyPage() {
                   <div className="space-y-2">
                     <Label className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Asset Class</Label>
                     <Select value={propertyType} onValueChange={setPropertyType}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold">
+                        <SelectValue placeholder="Type" />
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Apartment">Apartment</SelectItem>
                         <SelectItem value="House">House</SelectItem>
@@ -227,7 +229,9 @@ export default function NewPropertyPage() {
                   <div className="space-y-2">
                     <Label className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Bedrooms</Label>
                     <Select value={bedrooms} onValueChange={setBedrooms}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold">
+                        <SelectValue placeholder="Beds" />
+                      </SelectTrigger>
                       <SelectContent>
                         {['1','2','3','4','5+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
                       </SelectContent>
@@ -236,7 +240,9 @@ export default function NewPropertyPage() {
                   <div className="space-y-2">
                     <Label className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Bathrooms</Label>
                     <Select value={bathrooms} onValueChange={setBathrooms}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold">
+                        <SelectValue placeholder="Baths" />
+                      </SelectTrigger>
                       <SelectContent>
                         {['1','2','3+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
                       </SelectContent>

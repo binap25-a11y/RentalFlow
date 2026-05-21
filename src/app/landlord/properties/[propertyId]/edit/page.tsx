@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -62,12 +62,16 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // LOAD PERSISTENT USER ASSETS
+      // Load current assets, ensuring no duplicates and that cover is present
       const gallery: string[] = [];
-      if (property.imageUrl) gallery.push(property.imageUrl);
+      if (property.imageUrl && typeof property.imageUrl === 'string' && property.imageUrl.startsWith('http')) {
+        gallery.push(property.imageUrl);
+      }
       if (property.imageUrls && Array.isArray(property.imageUrls)) {
         property.imageUrls.forEach(url => {
-          if (url && !gallery.includes(url)) gallery.push(url);
+          if (url && typeof url === 'string' && url.startsWith('http') && !gallery.includes(url)) {
+            gallery.push(url);
+          }
         });
       }
       
@@ -114,10 +118,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         uploadedUrls = results.filter(r => r.success && r.url).map(r => r.url!);
       }
 
-      // ASSET SYNC: Combine existing and new user content
+      // Combine existing images (that weren't deleted) and new uploads
       const finalGallery = [...existingImageUrls, ...uploadedUrls];
       
-      // DETERMINISTIC COVER: Explicitly set Index 0 as the primary cover asset
+      // DESIGNATED COVER: The first image in the final ledger is the primary identity
       const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
 
       const serializableData = {
@@ -187,7 +191,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                 {existingImageUrls.map((url, index) => (
                   <div key={`existing-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border border-primary/10 bg-white">
                     <Image src={url} alt={`Existing ${index}`} fill className="object-cover" unoptimized data-ai-hint="property view" />
-                    <button type="button" onClick={() => removeExistingImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all"><X className="w-3.5 h-3.5" /></button>
+                    <button type="button" onClick={() => removeExistingImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all shadow-lg"><X className="w-3.5 h-3.5" /></button>
                     {index === 0 && (
                       <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline">Primary Cover</div>
                     )}
@@ -196,15 +200,15 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                 {newPreviewUrls.map((url, index) => (
                   <div key={`new-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group border-2 border-dashed border-accent/40 bg-white">
                     <Image src={url} alt={`New ${index}`} fill className="object-cover opacity-80" unoptimized data-ai-hint="modern home" />
-                    <button type="button" onClick={() => removeNewImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-red-500 transition-all"><X className="w-3.5 h-3.5" /></button>
+                    <button type="button" onClick={() => removeNewImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-red-500 transition-all shadow-lg"><X className="w-3.5 h-3.5" /></button>
                     {existingImageUrls.length === 0 && index === 0 && (
                       <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline">Primary Cover</div>
                     )}
                   </div>
                 ))}
-                <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 bg-white flex flex-col items-center justify-center gap-2 transition-all">
-                  <Plus className="w-6 h-6 text-primary/20" />
-                  <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest font-headline">Select More</span>
+                <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 bg-white flex flex-col items-center justify-center gap-2 transition-all group">
+                  <Plus className="w-6 h-6 text-primary/20 group-hover:text-primary/40" />
+                  <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest font-headline group-hover:text-primary/60">Select More</span>
                 </button>
               </div>
               <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
@@ -217,31 +221,56 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   <Input value={address} onChange={(e) => setAddress(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2"><Label className="font-bold text-xs uppercase text-primary/60 font-headline">City</Label><Input value={city} onChange={(e) => setCity(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold" /></div>
-                  <div className="space-y-2"><Label className="font-bold text-xs uppercase text-primary/60 font-headline">Postcode</Label><Input value={zipCode} onChange={(e) => setZipCode(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold" /></div>
+                  <div className="space-y-2">
+                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline">City</Label>
+                    <Input value={city} onChange={(e) => setCity(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Postcode</Label>
+                    <Input value={zipCode} onChange={(e) => setZipCode(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2"><Label className="font-bold text-xs uppercase text-primary/60 font-headline">Asset Class</Label>
+                  <div className="space-y-2">
+                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Asset Class</Label>
                     <Select value={propertyType} onValueChange={setPropertyType}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold"><SelectValue /></SelectTrigger>
-                      <SelectContent><SelectItem value="Apartment">Apartment</SelectItem><SelectItem value="House">House</SelectItem></SelectContent>
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Apartment">Apartment</SelectItem>
+                        <SelectItem value="House">House</SelectItem>
+                        <SelectItem value="Condo">Condo</SelectItem>
+                        <SelectItem value="Studio">Studio</SelectItem>
+                      </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2"><Label className="font-bold text-xs uppercase text-primary/60 font-headline">Monthly Yield (£)</Label><Input type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold" /></div>
+                  <div className="space-y-2">
+                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Monthly Yield (£)</Label>
+                    <Input type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Bedrooms</Label>
                     <Select value={bedrooms} onValueChange={setBedrooms}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold"><SelectValue /></SelectTrigger>
-                      <SelectContent>{['1','2','3','4','5+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent>
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold">
+                        <SelectValue placeholder="Bedrooms" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {['1','2','3','4','5+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+                      </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
                     <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Bathrooms</Label>
                     <Select value={bathrooms} onValueChange={setBathrooms}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold"><SelectValue /></SelectTrigger>
-                      <SelectContent>{['1','2','3+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent>
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold">
+                        <SelectValue placeholder="Bathrooms" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {['1','2','3+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+                      </SelectContent>
                     </Select>
                   </div>
                 </div>
