@@ -2,12 +2,10 @@
 'use server';
 /**
  * @fileOverview An AI agent for summarizing lease agreements.
- *
- * - summarizeLease - Extracts key terms from document text.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import { googleAI } from '@genkit-ai/google-genai';
 
 const SummarizeLeaseInputSchema = z.object({
@@ -24,52 +22,21 @@ const SummarizeLeaseOutputSchema = z.object({
 });
 export type SummarizeLeaseOutput = z.infer<typeof SummarizeLeaseOutputSchema>;
 
-const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-
-export async function summarizeLease(input: SummarizeLeaseInput): Promise<SummarizeLeaseOutput> {
-  return summarizeLeaseFlow(input);
-}
-
 const summarizeLeasePrompt = ai.definePrompt({
   name: 'summarizeLeasePrompt',
   model: googleAI.model('gemini-2.0-flash'),
   input: { schema: SummarizeLeaseInputSchema },
   output: { schema: SummarizeLeaseOutputSchema },
-  prompt: `You are an expert legal AI specializing in UK residential property law.
+  prompt: `You are an expert legal AI specializing in residential property law.
 Analyze the provided lease agreement text and extract the key financial and term-based details.
 
 Document Content: {{{documentText}}}
 
-Extract the monthly rent, start/end dates, and top 5 key terms/obligations. Provide a concise professional summary.`,
+Extract the monthly rent, start/end dates (YYYY-MM-DD), and top 5 key terms/obligations. Provide a concise professional summary.`,
 });
 
-const summarizeLeaseFlow = ai.defineFlow(
-  {
-    name: 'summarizeLeaseFlow',
-    inputSchema: SummarizeLeaseInputSchema,
-    outputSchema: SummarizeLeaseOutputSchema,
-  },
-  async (input) => {
-    let retries = 3;
-    let lastError: any = null;
-
-    while (retries > 0) {
-      try {
-        const { output } = await summarizeLeasePrompt(input);
-        if (!output) throw new Error("No output generated");
-        return output;
-      } catch (error: any) {
-        lastError = error;
-        if (error.status === 429 || error.message?.includes('429')) {
-          retries--;
-          if (retries > 0) {
-            await sleep(2000); 
-            continue;
-          }
-        }
-        throw error;
-      }
-    }
-    throw lastError || new Error("Max retries exceeded");
-  }
-);
+export async function summarizeLease(input: SummarizeLeaseInput): Promise<SummarizeLeaseOutput> {
+  const { output } = await summarizeLeasePrompt(input);
+  if (!output) throw new Error("Lease processing failed.");
+  return output;
+}

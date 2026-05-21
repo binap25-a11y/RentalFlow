@@ -2,14 +2,10 @@
 'use server';
 /**
  * @fileOverview An AI agent for generating professional property inspection reports.
- *
- * - generateInspectionReport - Function to generate a report from raw findings.
- * - GenerateInspectionReportInput - Input schema.
- * - GenerateInspectionReportOutput - Output schema.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import { googleAI } from '@genkit-ai/google-genai';
 
 const GenerateInspectionReportInputSchema = z.object({
@@ -25,11 +21,7 @@ const GenerateInspectionReportOutputSchema = z.object({
 });
 export type GenerateInspectionReportOutput = z.infer<typeof GenerateInspectionReportOutputSchema>;
 
-export async function generateInspectionReport(input: GenerateInspectionReportInput): Promise<GenerateInspectionReportOutput> {
-  return generateInspectionReportFlow(input);
-}
-
-const generateInspectionReportPrompt = ai.definePrompt({
+const inspectionReportPrompt = ai.definePrompt({
   name: 'generateInspectionReportPrompt',
   model: googleAI.model('gemini-2.0-flash'),
   input: { schema: GenerateInspectionReportInputSchema },
@@ -42,14 +34,8 @@ Landlord Findings: {{{findings}}}
 Output a professional summary, a list of priority maintenance items, and an overall health score (0-100).`,
 });
 
-const generateInspectionReportFlow = ai.defineFlow(
-  {
-    name: 'generateInspectionReportFlow',
-    inputSchema: GenerateInspectionReportInputSchema,
-    outputSchema: GenerateInspectionReportOutputSchema,
-  },
-  async (input) => {
-    const { output } = await generateInspectionReportPrompt(input);
-    return output!;
-  }
-);
+export async function generateInspectionReport(input: GenerateInspectionReportInput): Promise<GenerateInspectionReportOutput> {
+  const { output } = await inspectionReportPrompt(input);
+  if (!output) throw new Error("Reporting engine failed.");
+  return output;
+}

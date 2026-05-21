@@ -1,18 +1,14 @@
 
 'use server';
 /**
- * @fileOverview A property operations agent powered by Groq (Llama 3.3).
- * 
+ * @fileOverview A property operations agent for triaging maintenance requests.
+ *
  * - triageMaintenanceRequest - Analyzes a request and suggests priority/category.
  */
 
-import OpenAI from "openai";
-import { z } from 'genkit';
-
-const client = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY,
-  baseURL: "https://api.groq.com/openai/v1",
-});
+import { ai } from '@/ai/genkit';
+import { z } from 'zod';
+import { googleAI } from '@genkit-ai/google-genai';
 
 const MaintenanceRequestTriageInputSchema = z.object({
   maintenanceRequest: z.string().describe("The tenant's description of the maintenance issue."),
@@ -26,56 +22,27 @@ const MaintenanceRequestTriageOutputSchema = z.object({
 });
 export type MaintenanceRequestTriageOutput = z.infer<typeof MaintenanceRequestTriageOutputSchema>;
 
-/**
- * 🤖 Groq-Powered Triage Engine
- * Leverages Llama 3.3-70B for high-fidelity property operations analysis.
- */
+const triagePrompt = ai.definePrompt({
+  name: 'maintenanceRequestTriagePrompt',
+  model: googleAI.model('gemini-2.0-flash'),
+  input: { schema: MaintenanceRequestTriageInputSchema },
+  output: { schema: MaintenanceRequestTriageOutputSchema },
+  config: { temperature: 0 },
+  prompt: `You are an expert Property Operations Manager. 
+Triage the resident maintenance request and suggest the appropriate priority and category.
+
+SCHEMA:
+- priority: 'critical' (immediate danger), 'urgent' (damage risk), 'routine' (standard), 'low' (cosmetic).
+- category: plumbing, electrical, HVAC, appliance, structural, pest control, cosmetic, other.
+- reasoning: brief professional justification for the triage result.
+
+Resident description: {{{maintenanceRequest}}}`,
+});
+
 export async function triageMaintenanceRequest(input: MaintenanceRequestTriageInput): Promise<MaintenanceRequestTriageOutput> {
-  try {
-    if (!input.maintenanceRequest || input.maintenanceRequest.trim().length < 5) {
-      return {
-        priority: 'routine',
-        category: 'other',
-        reasoning: "Insufficient detail for automated intelligence triage."
-      };
-    }
-
-    const completion = await client.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        {
-          role: "system",
-          content: `You are an expert Property Operations Manager. 
-          Triage the resident maintenance request and return valid JSON.
-          
-          SCHEMA:
-          - priority: 'critical' (immediate danger), 'urgent' (damage risk), 'routine' (standard), 'low' (cosmetic).
-          - category: plumbing, electrical, HVAC, appliance, structural, pest control, cosmetic, other.
-          - reasoning: brief professional justification.`,
-        },
-        {
-          role: "user",
-          content: input.maintenanceRequest,
-        },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0,
-    });
-
-    const result = JSON.parse(completion.choices[0].message.content || "{}");
-    
-    // Validate output matches required schema for the UI
-    return {
-      priority: result.priority || 'routine',
-      category: result.category || 'other',
-      reasoning: result.reasoning || "Triage complete via Asset Intelligence Engine.",
-    };
-  } catch (error: any) {
-    console.error("Groq AI Triage failure:", error.message);
-    return {
-      priority: 'routine',
-      category: 'other',
-      reasoning: "Asset Intelligence Engine temporarily unavailable. Defaulting to routine status."
-    };
+  const { output } = await triagePrompt(input);
+  if (!output) {
+    throw new Error("Asset Intelligence Engine failed to generate triage classification.");
   }
+  return output;
 }

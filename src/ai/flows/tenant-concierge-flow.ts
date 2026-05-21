@@ -1,13 +1,11 @@
 
 'use server';
 /**
- * @fileOverview A resident AI concierge agent with hardened model configuration.
- * 
- * - tenantConcierge - Answers property-specific questions for residents.
+ * @fileOverview A resident AI concierge agent.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import { googleAI } from '@genkit-ai/google-genai';
 
 const TenantConciergeInputSchema = z.object({
@@ -22,13 +20,7 @@ const TenantConciergeOutputSchema = z.object({
 });
 export type TenantConciergeOutput = z.infer<typeof TenantConciergeOutputSchema>;
 
-const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-
-export async function tenantConcierge(input: TenantConciergeInput): Promise<TenantConciergeOutput> {
-  return tenantConciergeFlow(input);
-}
-
-const tenantConciergePrompt = ai.definePrompt({
+const conciergePrompt = ai.definePrompt({
   name: 'tenantConciergePrompt',
   model: googleAI.model('gemini-2.0-flash'),
   input: { schema: TenantConciergeInputSchema },
@@ -41,30 +33,8 @@ Property Context: {{{propertyContext}}}
 Resident Query: {{{query}}}`,
 });
 
-const tenantConciergeFlow = ai.defineFlow(
-  {
-    name: 'tenantConciergeFlow',
-    inputSchema: TenantConciergeInputSchema,
-    outputSchema: TenantConciergeOutputSchema,
-  },
-  async (input) => {
-    let retries = 3;
-    let lastError: any = null;
-
-    while (retries > 0) {
-      try {
-        const { output } = await tenantConciergePrompt(input);
-        if (!output) throw new Error("No output generated");
-        return output;
-      } catch (error: any) {
-        lastError = error;
-        retries--;
-        if (retries > 0) {
-          await sleep(2000);
-          continue;
-        }
-      }
-    }
-    throw lastError || new Error("Max retries exceeded");
-  }
-);
+export async function tenantConcierge(input: TenantConciergeInput): Promise<TenantConciergeOutput> {
+  const { output } = await conciergePrompt(input);
+  if (!output) throw new Error("Concierge offline.");
+  return output;
+}

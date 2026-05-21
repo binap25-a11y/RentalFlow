@@ -1,13 +1,11 @@
 
 'use server';
 /**
- * @fileOverview An AI agent for troubleshooting issues with hardened model configuration.
- * 
- * - maintenanceTroubleshoot - Provides immediate steps to try before reporting.
+ * @fileOverview An AI agent for troubleshooting issues before reporting.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import { googleAI } from '@genkit-ai/google-genai';
 
 const MaintenanceTroubleshootInputSchema = z.object({
@@ -23,12 +21,6 @@ const MaintenanceTroubleshootOutputSchema = z.object({
 });
 export type MaintenanceTroubleshootOutput = z.infer<typeof MaintenanceTroubleshootOutputSchema>;
 
-const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-
-export async function maintenanceTroubleshoot(input: MaintenanceTroubleshootInput): Promise<MaintenanceTroubleshootOutput> {
-  return maintenanceTroubleshootFlow(input);
-}
-
 const troubleshootPrompt = ai.definePrompt({
   name: 'maintenanceTroubleshootPrompt',
   model: googleAI.model('gemini-2.0-flash'),
@@ -42,30 +34,8 @@ ALWAYS include a clear safety warning if electricity, gas, or heavy water leaks 
 If the issue is obviously serious, set canSelfFix to false and provide immediate safety instructions.`,
 });
 
-const maintenanceTroubleshootFlow = ai.defineFlow(
-  {
-    name: 'maintenanceTroubleshootFlow',
-    inputSchema: MaintenanceTroubleshootInputSchema,
-    outputSchema: MaintenanceTroubleshootOutputSchema,
-  },
-  async (input) => {
-    let retries = 3;
-    let lastError: any = null;
-
-    while (retries > 0) {
-      try {
-        const { output } = await troubleshootPrompt(input);
-        if (!output) throw new Error("No output generated");
-        return output;
-      } catch (error: any) {
-        lastError = error;
-        retries--;
-        if (retries > 0) {
-          await sleep(2000);
-          continue;
-        }
-      }
-    }
-    throw lastError || new Error("Max retries exceeded");
-  }
-);
+export async function maintenanceTroubleshoot(input: MaintenanceTroubleshootInput): Promise<MaintenanceTroubleshootOutput> {
+  const { output } = await troubleshootPrompt(input);
+  if (!output) throw new Error("Troubleshooting engine offline.");
+  return output;
+}
