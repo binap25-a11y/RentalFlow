@@ -25,7 +25,6 @@ export async function generateInspectionReport(input: GenerateInspectionReportIn
 
 const generateInspectionReportPrompt = ai.definePrompt({
   name: 'generateInspectionReportPrompt',
-  model: 'googleai/gemini-1.5-flash',
   input: { schema: GenerateInspectionReportInputSchema },
   output: { schema: GenerateInspectionReportOutputSchema },
   prompt: `You are an expert property surveyor.

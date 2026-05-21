@@ -26,7 +26,6 @@ export async function triageMaintenanceRequest(input: MaintenanceRequestTriageIn
 
 const triageMaintenanceRequestPrompt = ai.definePrompt({
   name: 'triageMaintenanceRequestPrompt',
-  model: 'googleai/gemini-1.5-flash',
   input: { schema: MaintenanceRequestTriageInputSchema },
   output: { schema: MaintenanceRequestTriageOutputSchema },
   config: { 
