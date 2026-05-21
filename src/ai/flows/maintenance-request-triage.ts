@@ -40,9 +40,14 @@ Resident description: {{{maintenanceRequest}}}`,
 });
 
 export async function triageMaintenanceRequest(input: MaintenanceRequestTriageInput): Promise<MaintenanceRequestTriageOutput> {
-  const { output } = await triagePrompt(input);
-  if (!output) {
-    throw new Error("Asset Intelligence Engine failed to generate triage classification.");
+  try {
+    const { output } = await triagePrompt(input);
+    if (!output) {
+      throw new Error("Asset Intelligence Engine failed to generate triage classification.");
+    }
+    return output;
+  } catch (error: any) {
+    console.error("Maintenance Triage Flow Error:", error);
+    throw new Error(`Triage engine offline: ${error.message}`);
   }
-  return output;
 }
