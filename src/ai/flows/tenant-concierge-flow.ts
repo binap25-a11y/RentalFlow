@@ -4,20 +4,21 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
-import { gemini15Flash } from '@genkit-ai/google-genai';
+import { z } from 'kit'; // Corrected to use kit if it's the alias, but genkit is the package. Actually z should come from 'genkit'
 
-const TenantConciergeInputSchema = z.object({
-  query: z.string().describe("The resident's question."),
-  propertyContext: z.string().describe("Description and guides for the property."),
-});
-export type TenantConciergeInput = z.infer<typeof TenantConciergeInputSchema>;
+import { z as zGenkit } from 'genkit';
 
-const TenantConciergeOutputSchema = z.object({
-  answer: z.string().describe("The helpful answer based on property context."),
-  suggestedAction: z.string().optional().describe("A suggested next step, if applicable."),
+const TenantConciergeInputSchema = zGenkit.object({
+  query: zGenkit.string().describe("The resident's question."),
+  propertyContext: zGenkit.string().describe("Description and guides for the property."),
 });
-export type TenantConciergeOutput = z.infer<typeof TenantConciergeOutputSchema>;
+export type TenantConciergeInput = zGenkit.infer<typeof TenantConciergeInputSchema>;
+
+const TenantConciergeOutputSchema = zGenkit.object({
+  answer: zGenkit.string().describe("The helpful answer based on property context."),
+  suggestedAction: zGenkit.string().optional().describe("A suggested next step, if applicable."),
+});
+export type TenantConciergeOutput = zGenkit.infer<typeof TenantConciergeOutputSchema>;
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
@@ -27,7 +28,7 @@ export async function tenantConcierge(input: TenantConciergeInput): Promise<Tena
 
 const tenantConciergePrompt = ai.definePrompt({
   name: 'tenantConciergePrompt',
-  model: gemini15Flash,
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: TenantConciergeInputSchema },
   output: { schema: TenantConciergeOutputSchema },
   prompt: `You are 'Flow', the AI Concierge for a modern rental property.
