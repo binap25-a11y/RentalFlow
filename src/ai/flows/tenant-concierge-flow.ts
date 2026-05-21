@@ -33,7 +33,17 @@ Resident Query: {{{query}}}`,
 });
 
 export async function tenantConcierge(input: TenantConciergeInput): Promise<TenantConciergeOutput> {
-  const { output } = await conciergePrompt(input);
-  if (!output) throw new Error("Concierge offline.");
-  return output;
+  try {
+    const { output } = await conciergePrompt(input);
+    if (!output) throw new Error("Concierge offline.");
+    return output;
+  } catch (error: any) {
+    if (error.message?.includes('429') || error.message?.includes('quota')) {
+      return {
+        answer: "I'm currently assisting many residents. For immediate property questions, please check your shared documents or message management.",
+        suggestedAction: "Contact Management"
+      };
+    }
+    throw error;
+  }
 }

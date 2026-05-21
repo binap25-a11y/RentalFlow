@@ -35,7 +35,20 @@ Extract the monthly rent, start/end dates (YYYY-MM-DD), and top 5 key terms/obli
 });
 
 export async function summarizeLease(input: SummarizeLeaseInput): Promise<SummarizeLeaseOutput> {
-  const { output } = await summarizeLeasePrompt(input);
-  if (!output) throw new Error("Lease processing failed.");
-  return output;
+  try {
+    const { output } = await summarizeLeasePrompt(input);
+    if (!output) throw new Error("Lease processing failed.");
+    return output;
+  } catch (error: any) {
+    if (error.message?.includes('429') || error.message?.includes('quota')) {
+      return {
+        rentAmount: 0,
+        leaseStartDate: "TBC",
+        leaseEndDate: "TBC",
+        keyTerms: ["Manual verification required"],
+        summary: "Lease processing is temporarily queued due to high volume."
+      };
+    }
+    throw error;
+  }
 }
