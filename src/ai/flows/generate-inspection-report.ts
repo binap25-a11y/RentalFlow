@@ -1,10 +1,15 @@
 'use server';
 /**
  * @fileOverview An AI agent for generating professional property inspection reports.
+ *
+ * - generateInspectionReport - Function to generate a report from raw findings.
+ * - GenerateInspectionReportInput - Input schema.
+ * - GenerateInspectionReportOutput - Output schema.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { gemini15Flash } from '@genkit-ai/google-genai';
 
 const GenerateInspectionReportInputSchema = z.object({
   propertyAddress: z.string(),
@@ -25,7 +30,7 @@ export async function generateInspectionReport(input: GenerateInspectionReportIn
 
 const generateInspectionReportPrompt = ai.definePrompt({
   name: 'generateInspectionReportPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: gemini15Flash,
   input: { schema: GenerateInspectionReportInputSchema },
   output: { schema: GenerateInspectionReportOutputSchema },
   prompt: `You are an expert property surveyor.

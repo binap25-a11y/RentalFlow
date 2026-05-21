@@ -1,10 +1,13 @@
 'use server';
 /**
  * @fileOverview An AI agent for troubleshooting issues with hardened model configuration.
+ * 
+ * - maintenanceTroubleshoot - Provides immediate steps to try before reporting.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { gemini15Flash } from '@genkit-ai/google-genai';
 
 const MaintenanceTroubleshootInputSchema = z.object({
   issueDescription: z.string().describe("The resident's description of the maintenance problem."),
@@ -27,7 +30,7 @@ export async function maintenanceTroubleshoot(input: MaintenanceTroubleshootInpu
 
 const troubleshootPrompt = ai.definePrompt({
   name: 'maintenanceTroubleshootPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: gemini15Flash,
   input: { schema: MaintenanceTroubleshootInputSchema },
   output: { schema: MaintenanceTroubleshootOutputSchema },
   prompt: `You are 'Flow Support', an expert home maintenance assistant.
