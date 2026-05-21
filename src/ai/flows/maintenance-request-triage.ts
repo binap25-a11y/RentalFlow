@@ -1,8 +1,7 @@
-
 'use server';
 /**
  * @fileOverview A resilient property operations agent for triaging maintenance requests.
- * Includes deterministic fallback logic and exponential backoff to handle API quota limits.
+ * Includes deterministic fallback logic and actionable suggestions.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -17,6 +16,7 @@ const MaintenanceRequestTriageOutputSchema = z.object({
   priority: z.enum(['critical', 'urgent', 'routine', 'low']).describe('The suggested priority level.'),
   category: z.enum(['plumbing', 'electrical', 'HVAC', 'appliance', 'structural', 'pest control', 'cosmetic', 'other']).describe('The suggested category.'),
   reasoning: z.string().describe('A brief explanation for the triage result.'),
+  suggestions: z.array(z.string()).describe('2-3 specific, professional next steps for the landlord to resolve this issue.'),
 });
 export type MaintenanceRequestTriageOutput = z.infer<typeof MaintenanceRequestTriageOutputSchema>;
 
@@ -27,40 +27,54 @@ const triagePrompt = ai.definePrompt({
   output: { schema: MaintenanceRequestTriageOutputSchema },
   config: { temperature: 0 },
   prompt: `You are an expert Property Operations Manager. 
-Triage the resident maintenance request and suggest the appropriate priority and category.
+Triage the resident maintenance request and suggest the appropriate priority, category, and specific professional suggestions for resolution.
 
 SCHEMA:
 - priority: 'critical' (immediate danger), 'urgent' (damage risk), 'routine' (standard), 'low' (cosmetic).
 - category: plumbing, electrical, HVAC, appliance, structural, pest control, cosmetic, other.
 - reasoning: brief professional justification for the triage result.
+- suggestions: 2-3 professional actions (e.g., "Instruct an NICEIC electrician", "Verify isolation valve location").
 
 Resident description: {{{maintenanceRequest}}}`,
 });
 
 /**
  * 🛡️ Hardened Deterministic Fallback Logic
- * Scanning for high-risk keywords when the AI engine is rate-limited or offline.
  */
 function getFallbackTriage(desc: string): MaintenanceRequestTriageOutput {
   const text = (desc || "").toLowerCase();
   
   if (text.includes('fire') || text.includes('smoke') || text.includes('smell gas') || text.includes('spark') || text.includes('burning')) {
-    return { priority: 'critical', category: 'electrical', reasoning: 'Safety-critical indicators (fire/gas/sparks) detected. Immediate response required (Deterministic Fallback).' };
+    return { 
+      priority: 'critical', 
+      category: 'electrical', 
+      reasoning: 'Safety-critical indicators (fire/gas/sparks) detected. (Deterministic Fallback)',
+      suggestions: ["Contact emergency services immediately", "Isolate power/gas supply", "Instruct emergency contractor"]
+    };
   }
   if (text.includes('flood') || text.includes('leak') || text.includes('burst') || text.includes('pouring') || text.includes('gush')) {
-    return { priority: 'urgent', category: 'plumbing', reasoning: 'Active water damage indicators detected. Urgent intervention required (Deterministic Fallback).' };
-  }
-  if (text.includes('cold') || text.includes('boiler') || text.includes('heating') || text.includes('no hot water')) {
-    return { priority: 'routine', category: 'HVAC', reasoning: 'Climate control or hot water issue detected. Scheduled technician visit required (Deterministic Fallback).' };
+    return { 
+      priority: 'urgent', 
+      category: 'plumbing', 
+      reasoning: 'Active water damage indicators detected. (Deterministic Fallback)',
+      suggestions: ["Locate and close internal stopcock", "Instruct emergency plumber", "Inform downstairs neighbours if applicable"]
+    };
   }
   if (text.includes('lock') || text.includes('door') || text.includes('security') || text.includes('broken window')) {
-    return { priority: 'urgent', category: 'structural', reasoning: 'Property security indicators detected (Deterministic Fallback).' };
-  }
-  if (text.includes('fridge') || text.includes('oven') || text.includes('cooker') || text.includes('washing machine')) {
-    return { priority: 'routine', category: 'appliance', reasoning: 'Essential appliance failure detected (Deterministic Fallback).' };
+    return { 
+      priority: 'urgent', 
+      category: 'structural', 
+      reasoning: 'Property security indicators detected. (Deterministic Fallback)',
+      suggestions: ["Instruct locksmith for immediate secure", "Report to local police for incident number", "Assess for forensic evidence before cleaning"]
+    };
   }
   
-  return { priority: 'routine', category: 'other', reasoning: 'Standard maintenance task classified via fail-safe logic ledger.' };
+  return { 
+    priority: 'routine', 
+    category: 'other', 
+    reasoning: 'Standard maintenance task classified via fail-safe logic ledger.',
+    suggestions: ["Inspect during next property visit", "Obtain quotes from authorized partners", "Update resident on expected timeline"]
+  };
 }
 
 export async function triageMaintenanceRequest(input: MaintenanceRequestTriageInput): Promise<MaintenanceRequestTriageOutput> {
@@ -80,19 +94,15 @@ export async function triageMaintenanceRequest(input: MaintenanceRequestTriageIn
       const isQuotaError = errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('quota');
       
       if (isQuotaError && retries > 0) {
-        console.warn(`AI Engine rate-limited. Retrying... (${retries} left)`);
         await new Promise(resolve => setTimeout(resolve, 2000));
         retries--;
         continue;
       }
       
       if (isQuotaError || errorMsg.includes('500')) {
-        console.warn("AI Engine offline or limited. Activating deterministic fallback.");
         return getFallbackTriage(input.maintenanceRequest);
       }
       
-      console.error("Maintenance Triage Flow Error:", error);
-      // Even for general errors, fallback is better than a crash in a property operations context
       return getFallbackTriage(input.maintenanceRequest);
     }
   }

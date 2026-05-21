@@ -17,7 +17,8 @@ import {
 import { doc, serverTimestamp, collection } from "firebase/firestore";
 import { 
   Wrench, Sparkles, Clock, BrainCircuit, Loader2, 
-  CheckCircle2, PlayCircle, Plus, PoundSterling 
+  CheckCircle2, PlayCircle, Plus, PoundSterling,
+  ChevronRight, Lightbulb
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -118,6 +119,7 @@ export default function MaintenancePage() {
         priority: result.priority,
         category: result.category,
         aiTriageNotes: result.reasoning,
+        aiSuggestions: result.suggestions || [],
         updatedAt: serverTimestamp(),
       });
       toast({ title: "AI Triage Complete", description: `Suggested priority: ${result.priority}` });
@@ -198,12 +200,30 @@ export default function MaintenancePage() {
                 </div>
 
                 {request.aiTriageNotes && (
-                  <div className="bg-primary/5 border border-primary/10 rounded-2xl p-5 mt-6 flex gap-4 text-left">
-                    <BrainCircuit className="w-6 h-6 text-primary shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-[10px] font-bold text-primary uppercase mb-2 tracking-widest font-headline">AI Triage Analysis</p>
-                      <p className="text-sm text-black font-bold font-body leading-relaxed">{request.aiTriageNotes}</p>
+                  <div className="space-y-4 mt-6">
+                    <div className="bg-primary/5 border border-primary/10 rounded-2xl p-5 flex gap-4 text-left">
+                      <BrainCircuit className="w-6 h-6 text-primary shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-[10px] font-bold text-primary uppercase mb-2 tracking-widest font-headline">AI Triage Analysis</p>
+                        <p className="text-sm text-black font-bold font-body leading-relaxed">{request.aiTriageNotes}</p>
+                      </div>
                     </div>
+
+                    {request.aiSuggestions && request.aiSuggestions.length > 0 && (
+                      <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 flex gap-4 text-left animate-in zoom-in-95">
+                        <Lightbulb className="w-6 h-6 text-emerald-600 shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-[10px] font-bold text-emerald-700 uppercase mb-2 tracking-widest font-headline">Recommended Next Steps</p>
+                          <ul className="space-y-2">
+                            {request.aiSuggestions.map((suggestion: string, idx: number) => (
+                              <li key={idx} className="flex gap-2 text-sm font-bold text-emerald-900 leading-tight">
+                                <ChevronRight className="w-4 h-4 shrink-0 text-emerald-600" /> {suggestion}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
