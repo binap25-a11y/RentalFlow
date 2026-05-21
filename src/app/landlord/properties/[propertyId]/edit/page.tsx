@@ -23,12 +23,6 @@ import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 import { getResolvedGallery } from "@/lib/utils";
 
-const setMemoryAssets = (id: string, urls: string[]) => {
-  if (typeof window === 'undefined') return;
-  if (!(window as any).__asset_bridge) (window as any).__asset_bridge = {};
-  (window as any).__asset_bridge[id] = urls;
-};
-
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
   const propertyId = resolvedParams.propertyId;
@@ -69,13 +63,18 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // Use the helper to get the canonical list of stored images
-      const canonicalGallery = getResolvedGallery(propertyId, property.imageUrls, property.imageUrl);
-      // Filter out placeholders for the edit ledger
-      const validUrls = canonicalGallery.filter(u => u && u.startsWith('http') && !u.includes('picsum.photos'));
+      // Extract ONLY user-uploaded images for the ledger, avoiding placeholders
+      const rawGallery = property.imageUrls || [];
+      if (property.imageUrl && !rawGallery.includes(property.imageUrl)) {
+        rawGallery.unshift(property.imageUrl);
+      }
+      
+      const validUrls = rawGallery.filter((u: string) => 
+        u && typeof u === 'string' && u.startsWith('http') && !u.includes('picsum.photos')
+      );
       setExistingImageUrls(validUrls);
     }
-  }, [property, isSaving, propertyId]);
+  }, [property, isSaving]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -117,10 +116,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       }
 
       const finalGallery = [...existingImageUrls, ...uploadedUrls];
-      const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : (property?.imageUrl || '');
-      
-      // Update Memory Bridge for zero-latency feedback
-      setMemoryAssets(propertyId, finalGallery);
+      // DESIGNATED COVER: Strictly the first image in the final ledger
+      const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
 
       const serializableData = {
         id: propertyId,

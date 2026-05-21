@@ -17,12 +17,6 @@ import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 
-const setMemoryAssets = (id: string, urls: string[]) => {
-  if (typeof window === 'undefined') return;
-  if (!(window as any).__asset_bridge) (window as any).__asset_bridge = {};
-  (window as any).__asset_bridge[id] = urls;
-};
-
 export default function NewPropertyPage() {
   const { user } = useUser();
   const db = useFirestore();
@@ -68,7 +62,6 @@ export default function NewPropertyPage() {
       let finalImageUrl = '';
       let finalImageUrls: string[] = [];
 
-      // 1. Atomic Supabase Upload
       if (imageFiles.length > 0) {
         const uploadPromises = imageFiles.map((file, index) => {
           const formData = new FormData();
@@ -80,15 +73,12 @@ export default function NewPropertyPage() {
         const results = await Promise.all(uploadPromises);
         finalImageUrls = results.filter(r => r.success && r.url).map(r => r.url!);
         
+        // DESIGNATED COVER: Strictly the first image in the final ledger
         if (finalImageUrls.length > 0) {
           finalImageUrl = finalImageUrls[0];
         }
       }
 
-      // Sync persistent URLs to bridge for zero-latency redirection feedback
-      setMemoryAssets(propertyId, finalImageUrls);
-
-      // 2. Construct Clean Serializable Object
       const serializableData = {
         id: propertyId,
         landlordId: user.uid,
@@ -106,7 +96,6 @@ export default function NewPropertyPage() {
         memberIds: [user.uid]
       };
 
-      // 3. Sequential Write: Firestore (Persistent Source) -> Postgres (Redundant Analytics)
       await setDoc(propertyRef, {
         ...serializableData,
         tenantIds: [],
