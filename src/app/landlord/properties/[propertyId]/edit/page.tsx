@@ -117,8 +117,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         uploadedUrls = results.filter(r => r.success && r.url).map(r => r.url!);
       }
 
-      // Merge new and existing property-specific assets
-      const uniqueLedger = Array.from(new Set([...uploadedUrls, ...existingImageUrls])).filter(isValidAssetUrl);
+      // Merge new and existing property-specific assets, strictly filtering placeholders
+      const uniqueLedger = Array.from(new Set([...uploadedUrls, ...existingImageUrls]))
+        .filter(isUserUploadedAsset);
       
       /**
        * 🖼️ Deterministic Cover designates the first SPECIFIC property upload
@@ -174,7 +175,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </Button>
           <div>
             <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">Modify Asset</h1>
-            <p className="text-muted-foreground font-medium font-body">Refining specs for {address || 'Property'}.</p>
+            <p className="text-muted-foreground font-medium font-body">Refining unique specs for {address || 'Property'}.</p>
           </div>
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold">

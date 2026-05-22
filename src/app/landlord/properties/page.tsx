@@ -43,7 +43,7 @@ export default function PropertiesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Portfolio Inventory</h1>
-          <p className="text-muted-foreground font-medium font-body">Monitoring and managing your property assets.</p>
+          <p className="text-muted-foreground font-medium font-body">Monitoring and managing your unique property assets.</p>
         </div>
         <Button asChild className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-6 shadow-lg shadow-primary/20 text-white">
           <Link href="/landlord/properties/new"><Plus className="w-4 h-4 mr-2" /> Register New Asset</Link>

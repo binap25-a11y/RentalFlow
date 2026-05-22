@@ -14,7 +14,7 @@ export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-15
 
 /**
  * 🖼️ User Asset Identifier
- * Identifies images uploaded by users (Supabase or external verified links)
+ * Strictly identifies images uploaded by users (Supabase or external verified links)
  * vs generic platform-generated placeholders.
  */
 export function isUserUploadedAsset(url: any): boolean {
@@ -24,7 +24,8 @@ export function isUserUploadedAsset(url: any): boolean {
   const isGenericPlaceholder = 
     url.includes('picsum.photos') ||
     url.includes('placehold.co') ||
-    url.includes('via.placeholder.com');
+    url.includes('via.placeholder.com') ||
+    url.includes('images.unsplash.com/photo-') && url.includes('placeholder'); // Catch explicit placeholders from unsplash if any
                     
   return !isGenericPlaceholder;
 }

@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { isValidAssetUrl } from '@/lib/utils';
+import { isValidAssetUrl, isUserUploadedAsset } from '@/lib/utils';
 
 export default function NewPropertyPage() {
   const { user } = useUser();
@@ -72,7 +72,11 @@ export default function NewPropertyPage() {
         });
 
         const results = await Promise.all(uploadPromises);
-        finalImageUrls = results.filter(r => r.success && r.url).map(r => r.url!).filter(isValidAssetUrl);
+        // ONLY keep successfully uploaded Supabase URLs
+        finalImageUrls = results
+          .filter(r => r.success && r.url)
+          .map(r => r.url!)
+          .filter(isUserUploadedAsset);
       }
 
       /**
@@ -130,7 +134,7 @@ export default function NewPropertyPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">Register Asset</h1>
-            <p className="text-muted-foreground font-medium font-body">Add a high-value property with persistent visuals.</p>
+            <p className="text-muted-foreground font-medium font-body">Add a high-value property with unique visuals.</p>
           </div>
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold">
@@ -142,7 +146,7 @@ export default function NewPropertyPage() {
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-1 lg:grid-cols-2">
             <div className="p-8 lg:p-12 bg-primary/5 border-r border-primary/10">
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex justify-between items-center mb-6 text-left">
                 <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 block font-headline">Gallery Management</Label>
                 <Button type="button" variant="ghost" size="sm" className="h-8 rounded-lg font-bold text-[10px] uppercase font-headline" onClick={() => document.getElementById('image-input')?.click()}>
                   <Plus className="w-3 h-3 mr-1" /> Add Photos
