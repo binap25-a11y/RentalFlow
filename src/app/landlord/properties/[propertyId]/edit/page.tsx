@@ -69,6 +69,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         gallery.unshift(property.imageUrl);
       }
       
+      // 🛡️ Strict Filtering ensures only TRUE user assets populate the ledger
       const validGallery = gallery.filter(isUserUploadedAsset);
       setExistingImageUrls(Array.from(new Set(validGallery)));
       setIsInitialized(true);
@@ -97,7 +98,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const pathMatch = urlToRemove.split('/public/')[1]?.split('?')[0];
       if (pathMatch) {
         const pathSegments = pathMatch.split('/');
-        pathSegments.shift();
+        pathSegments.shift(); // Remove bucket name
         const relativePath = pathSegments.join('/');
         await deleteFromSupabase('property-images', relativePath);
       }
@@ -130,6 +131,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         const uploadPromises = newImageFiles.map((file, index) => {
           const formData = new FormData();
           formData.append('file', file);
+          // 🛡️ Strict Isolation: Assets are nested by unique propertyId and userId
           const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${file.name}`;
           return uploadToSupabase(formData, 'property-images', path);
         });
@@ -138,6 +140,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         uploadedUrls = results.filter(r => r.success && r.url).map(r => r.url!);
       }
 
+      /**
+       * 🖼️ Deterministic Visual Hierarchy
+       * Combine newly uploaded URLs (respecting reorder) with existing ones.
+       * The first valid asset (Index 0) is explicitly set as the Primary Identity.
+       */
       const uniqueLedger = Array.from(new Set([...uploadedUrls, ...existingImageUrls]))
         .filter(isUserUploadedAsset);
       
@@ -169,9 +176,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       toast({ title: "Asset Synchronized", description: "Visual and relational data updated." });
       
+      // Cleanup local blob previews
       newPreviewUrls.forEach(url => URL.revokeObjectURL(url));
+      
+      // Transition to property details to see live updates
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
+      console.error("Asset synchronization failed:", err);
       toast({ variant: "destructive", title: "Sync Failed", description: "Ledger error encountered." });
       setIsSaving(false);
     }
@@ -212,7 +223,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   <div key={`new-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group border-2 border-accent shadow-md bg-white">
                     <Image src={url} alt={`New ${index}`} fill className="object-cover" unoptimized />
                     <div className="absolute top-2 right-2 flex gap-1 z-20">
-                      <button type="button" onClick={() => setAsPrimary(index, true)} className="bg-accent text-white p-1.5 rounded-lg hover:scale-110 transition-transform shadow-lg"><Star className="w-3.5 h-3.5 fill-current" /></button>
+                      <button type="button" onClick={() => setAsPrimary(index, true)} title="Set as Primary" className="bg-accent text-white p-1.5 rounded-lg hover:scale-110 transition-transform shadow-lg"><Star className="w-3.5 h-3.5 fill-current" /></button>
                       <button type="button" onClick={() => removeNewImage(index)} className="bg-black/60 text-white p-1.5 rounded-lg hover:bg-red-500 transition-all shadow-lg"><X className="w-3.5 h-3.5" /></button>
                     </div>
                     {index === 0 && (
@@ -224,7 +235,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   <div key={`existing-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border border-primary/10 bg-white">
                     <Image src={url} alt={`Existing ${index}`} fill className="object-cover" unoptimized />
                     <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                      <button type="button" onClick={() => setAsPrimary(index, false)} className="bg-primary text-white p-1.5 rounded-lg hover:scale-110 transition-transform shadow-lg"><Star className="w-3.5 h-3.5 fill-current" /></button>
+                      <button type="button" onClick={() => setAsPrimary(index, false)} title="Set as Primary" className="bg-primary text-white p-1.5 rounded-lg hover:scale-110 transition-transform shadow-lg"><Star className="w-3.5 h-3.5 fill-current" /></button>
                       <button type="button" onClick={() => removeExistingImage(index)} className="bg-black/60 text-white p-1.5 rounded-lg hover:bg-red-500 transition-all shadow-lg"><X className="w-3.5 h-3.5" /></button>
                     </div>
                     {newPreviewUrls.length === 0 && index === 0 && (
@@ -234,7 +245,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                 ))}
               </div>
               <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
-              <p className="mt-6 text-[10px] font-bold text-muted-foreground uppercase text-center tracking-[0.2em] opacity-40">Physical Deletion synchronized with Supabase</p>
+              <p className="mt-6 text-[10px] font-bold text-muted-foreground uppercase text-center tracking-[0.2em] opacity-40">Storage synchronization active</p>
             </div>
 
             <div className="p-8 lg:p-12 space-y-8">
@@ -279,6 +290,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           <CardFooter className="p-8 bg-muted/10 border-t flex justify-end gap-4">
             <Button type="button" variant="ghost" className="rounded-xl h-12 px-8 font-bold" onClick={() => router.back()}>Cancel</Button>
             <Button type="submit" disabled={isSaving} className="rounded-xl font-bold bg-primary h-12 px-12 text-white shadow-lg shadow-primary/20">
+              {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
               {isSaving ? "Synchronizing Asset..." : "Update Portfolio Records"}
             </Button>
           </CardFooter>

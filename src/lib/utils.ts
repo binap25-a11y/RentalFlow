@@ -14,20 +14,24 @@ export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-15
 
 /**
  * 🖼️ User Asset Identifier
- * Strictly identifies images uploaded by users (Supabase or external verified links)
- * vs generic platform-generated placeholders.
+ * Strictly identifies images uploaded by users (Supabase or Firebase Storage)
+ * vs generic platform-generated placeholders or the professional fallback.
  */
 export function isUserUploadedAsset(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '' || !url.startsWith('http')) return false;
   
-  // Strictly identify and EXCLUDE generic placeholders to ensure a professional look
+  // 🛡️ Strict Professional Filter: ONLY treat verified storage assets as true user content.
+  // This prevents placeholders or the fallback from entering the permanent database ledger.
+  const isStorageAsset = url.includes('.supabase.co') || url.includes('.firebasestorage.app');
+  
+  // Explicitly identify and EXCLUDE generic placeholders
   const isGenericPlaceholder = 
     url.includes('picsum.photos') ||
     url.includes('placehold.co') ||
     url.includes('via.placeholder.com') ||
-    url.includes('images.unsplash.com/photo-') && url.includes('placeholder');
+    (url.includes('images.unsplash.com/photo-') && url.includes('placeholder'));
                     
-  return !isGenericPlaceholder;
+  return isStorageAsset && !isGenericPlaceholder;
 }
 
 /**

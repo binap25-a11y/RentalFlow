@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { isValidAssetUrl, isUserUploadedAsset } from '@/lib/utils';
+import { isUserUploadedAsset } from '@/lib/utils';
 
 export default function NewPropertyPage() {
   const { user } = useUser();
@@ -80,8 +80,8 @@ export default function NewPropertyPage() {
       }
 
       /**
-       * 🖼️ Deterministic Cover designates the first SPECIFIC property upload
-       * as the primary cover.
+       * 🖼️ Deterministic Visual Hierarchy
+       * Designate the first VALID user upload (respecting user reorder) as the Primary Cover.
        */
       const finalImageUrl = finalImageUrls.length > 0 ? finalImageUrls[0] : '';
 
@@ -248,7 +248,7 @@ export default function NewPropertyPage() {
                   </div>
                   <div className="space-y-2">
                     <Label className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Bathrooms</Label>
-                    <Select value={bathrooms} onValueChange={setBathrooms}>
+                    <Select value={bathrooms} onValueChange={setBedrooms}>
                       <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-body font-bold">
                         <SelectValue placeholder="Baths" />
                       </SelectTrigger>
