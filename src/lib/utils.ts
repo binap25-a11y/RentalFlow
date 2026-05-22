@@ -23,22 +23,21 @@ export function isUserUploadedAsset(url: any): boolean {
   const isPlaceholder = 
     url.includes('picsum.photos/seed/rentalflow-default') || 
     url.includes('placehold.co') ||
-    url.includes('placehold.it');
+    url.includes('placehold.it') ||
+    url.includes('picsum.photos/seed/prop');
                     
   return !isPlaceholder;
 }
 
 /**
  * 🖼️ Property Placeholder Identifier
- * Identifies property-specific placeholders (prop1, prop2) vs generic fallbacks.
  */
 export function isPropertyPlaceholder(url: any): boolean {
   return typeof url === 'string' && url.includes('picsum.photos/seed/prop');
 }
 
 /**
- * 🖼️ Asset Validation Engine (General)
- * Returns true if the URL is a valid, renderable image string.
+ * 🖼️ Asset Validation Engine
  */
 export function isValidAssetUrl(url: any): boolean {
   return !!(url && typeof url === 'string' && url.trim() !== '' && url.startsWith('http'));
@@ -46,60 +45,47 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
- * Strictly prioritizes user-uploaded content over placeholders for a specific property.
- * Tier 1: Explicit user-uploaded primary imageUrl
- * Tier 2: First user-uploaded item in the gallery ledger
- * Tier 3: Property-specific placeholder (if exists in DB)
- * Tier 4: Global platform fallback
+ * Tier 1: Explicit primary imageUrl (if user uploaded)
+ * Tier 2: First user uploaded item in gallery ledger
+ * Tier 3: Property placeholder
+ * Tier 4: Global fallback
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
-  // 1. Prioritize user upload in the primary slot
-  if (isUserUploadedAsset(imageUrl) && !isPropertyPlaceholder(imageUrl)) {
-    return imageUrl!;
-  }
+  if (isUserUploadedAsset(imageUrl)) return imageUrl!;
   
-  // 2. Fallback to the first user upload in the gallery
   if (imageUrls && Array.isArray(imageUrls)) {
-    const firstUserUrl = imageUrls.find(u => isUserUploadedAsset(u) && !isPropertyPlaceholder(u));
+    const firstUserUrl = imageUrls.find(u => isUserUploadedAsset(u));
     if (firstUserUrl) return firstUserUrl;
   }
   
-  // 3. Fallback to property-specific placeholder saved in DB
-  if (isValidAssetUrl(imageUrl) && isPropertyPlaceholder(imageUrl)) {
-    return imageUrl!;
-  }
+  if (isValidAssetUrl(imageUrl)) return imageUrl!;
 
-  // 4. Absolute system fallback
   return RENTALFLOW_FALLBACK;
 }
 
 /**
  * 🖼️ Synchronized Gallery Resolver
- * Reconstructs the full visual stack ensuring user assets are always prioritized at the start.
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
-  const userAssets = new Set<string>();
-  const placeholderAssets = new Set<string>();
+  const assets = new Set<string>();
 
-  const processUrl = (url: any) => {
-    if (!isValidAssetUrl(url)) return;
-    if (isUserUploadedAsset(url) && !isPropertyPlaceholder(url)) {
-      userAssets.add(url);
-    } else {
-      placeholderAssets.add(url);
-    }
+  const addIfValid = (url: any) => {
+    if (isValidAssetUrl(url)) assets.add(url);
   };
 
-  processUrl(imageUrl);
+  // Prioritize primary cover
+  addIfValid(imageUrl);
+  
+  // Add gallery items
   if (imageUrls && Array.isArray(imageUrls)) {
-    imageUrls.forEach(processUrl);
+    imageUrls.forEach(addIfValid);
   }
 
-  // If we have user assets, return only those (replacing placeholders)
-  if (userAssets.size > 0) {
-    return Array.from(userAssets);
-  }
+  const result = Array.from(assets);
+  
+  // If we have user uploads, filter out placeholders to clean up the detail view
+  const userUploads = result.filter(isUserUploadedAsset);
+  if (userUploads.length > 0) return userUploads;
 
-  // Otherwise return placeholders or the global fallback
-  return placeholderAssets.size > 0 ? Array.from(placeholderAssets) : [RENTALFLOW_FALLBACK];
+  return result.length > 0 ? result : [RENTALFLOW_FALLBACK];
 }

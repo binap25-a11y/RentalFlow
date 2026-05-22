@@ -64,7 +64,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // Preserve all valid URLs from DB to avoid data loss, but we will prioritize user ones in display
       const currentImages = Array.isArray(property.imageUrls) ? property.imageUrls : [];
       if (isValidAssetUrl(property.imageUrl) && !currentImages.includes(property.imageUrl)) {
         currentImages.unshift(property.imageUrl);
@@ -113,10 +112,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         uploadedUrls = results.filter(r => r.success && r.url).map(r => r.url!);
       }
 
-      // 🔄 Deterministic Gallery Merge: New uploads prepended to become the primary cover
+      // 🔄 Deterministic Hierarchy: New uploads prepended to become the primary cover
       const finalGallery = [...uploadedUrls, ...existingImageUrls];
-      
-      // 🎯 Deterministic Identity: First item is the cover
       const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
 
       const serializableData = {
