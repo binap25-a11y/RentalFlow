@@ -510,7 +510,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                          <span className="text-[10px] text-muted-foreground font-bold flex items-center opacity-60 font-headline uppercase"><Clock className="w-3 h-3 mr-1" /> {req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'PP') : 'Recently'}</span>
                       </div>
                       <h4 className="font-bold text-xl text-primary font-headline mb-2 leading-tight tracking-tight">{req.title}</h4>
-                      <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 font-body font-medium">{req.description}</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed font-body font-medium whitespace-pre-wrap">{req.description}</p>
                       <div className="mt-6 pt-4 border-t border-primary/5 flex justify-end">
                         <Button variant="ghost" className="text-xs font-bold text-primary rounded-xl hover:bg-primary/5 font-headline uppercase tracking-widest" asChild>
                           <Link href="/landlord/maintenance">Open Maintenance Hub <ChevronRight className="w-4 h-4 ml-1" /></Link>

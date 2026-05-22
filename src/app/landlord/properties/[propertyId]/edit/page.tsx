@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { isValidAssetUrl, isUserUploadedAsset } from "@/lib/utils";
+import { isValidAssetUrl } from "@/lib/utils";
 
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);

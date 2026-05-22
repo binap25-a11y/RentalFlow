@@ -21,11 +21,9 @@ export function isUserUploadedAsset(url: any): boolean {
   
   // Platform placeholders that we explicitly want to replace once user content exists
   const isPlaceholder = 
-    url.includes('picsum.photos/seed/rentalflow-pro-identity') ||
-    url.includes('picsum.photos/seed/rentalflow-default') || 
+    url.includes('picsum.photos') ||
     url.includes('placehold.co') ||
-    url.includes('placehold.it') ||
-    url.includes('picsum.photos/seed/prop');
+    url.includes('placehold.it');
                     
   return !isPlaceholder;
 }
