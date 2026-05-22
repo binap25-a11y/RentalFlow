@@ -1,3 +1,4 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -15,18 +16,19 @@ export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-15
 /**
  * 🖼️ Strict User Asset Identifier
  * Strictly identifies images uploaded by users (Supabase or Firebase Storage).
+ * Excludes all generic placeholder domains.
  */
 export function isUserUploadedAsset(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '' || !url.startsWith('http')) return false;
   
-  // 🛡️ Strict Professional Filter: ONLY treat verified storage assets as true user content.
   const isStorageAsset = url.includes('supabase.co') || url.includes('firebasestorage.app');
   
   // Explicitly identify and EXCLUDE generic placeholders
   const isGenericPlaceholder = 
     url.includes('picsum.photos') ||
     url.includes('placehold.co') ||
-    url.includes('via.placeholder.com');
+    url.includes('via.placeholder.com') ||
+    url.includes('images.unsplash.com'); // We treat Unsplash as fallback, not user content.
                     
   return isStorageAsset && !isGenericPlaceholder;
 }
@@ -74,8 +76,10 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
 
   const result = Array.from(assets);
   
+  // Filter for verified user uploads
   const userUploads = result.filter(isUserUploadedAsset);
   if (userUploads.length > 0) return userUploads;
 
+  // Fallback if no real photos provided
   return [RENTALFLOW_NEUTRAL_FALLBACK];
 }

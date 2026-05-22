@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, use } from 'react';
@@ -74,6 +75,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         gallery.unshift(property.imageUrl);
       }
       
+      // Load existing user assets into the ledger
       const initialLedger = gallery
         .filter(url => isUserUploadedAsset(url))
         .map(url => ({ id: Math.random().toString(), url, isNew: false }));
@@ -103,10 +105,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     if (item.isNew && item.url.startsWith('blob:')) {
       URL.revokeObjectURL(item.url);
     } else if (!item.isNew && item.url.includes('supabase.co')) {
+      // Physical purge of storage asset
       const pathMatch = item.url.split('/public/')[1]?.split('?')[0];
       if (pathMatch) {
         const pathSegments = pathMatch.split('/');
-        pathSegments.shift();
+        pathSegments.shift(); // Remove bucket name from path
         const relativePath = pathSegments.join('/');
         await deleteFromSupabase('property-images', relativePath);
       }
@@ -132,6 +135,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         if (item.isNew && item.file) {
           const formData = new FormData();
           formData.append('file', item.file);
+          // Isolated property-specific path
           const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${item.file.name}`;
           const res = await uploadToSupabase(formData, 'property-images', path);
           if (!res.success) throw new Error(res.error);
@@ -169,6 +173,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       toast({ title: "Asset Synchronized", description: "Visual and record data updated." });
       
+      // Cleanup local blob URLs
       ledger.forEach(item => {
         if (item.isNew) URL.revokeObjectURL(item.url);
       });
