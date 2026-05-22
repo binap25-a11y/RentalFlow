@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -40,8 +39,8 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
 
   const landlordItems = [
     { label: 'Overview', icon: LayoutDashboard, href: '/landlord/dashboard' },
-    { label: 'Calendar', icon: CalendarDays, href: '/landlord/calendar' },
     { label: 'Properties', icon: Building2, href: '/landlord/properties' },
+    { label: 'Calendar', icon: CalendarDays, href: '/landlord/calendar' },
     { label: 'Tenants', icon: Users, href: '/landlord/tenants' },
     { label: 'Maintenance', icon: Wrench, href: '/landlord/maintenance' },
     { label: 'Inspections', icon: FileCheck, href: '/landlord/inspections' },
