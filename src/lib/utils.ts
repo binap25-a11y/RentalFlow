@@ -15,24 +15,24 @@ export function cn(...inputs: ClassValue[]) {
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
   const FALLBACK = "https://picsum.photos/seed/rentalflow-default/800/600";
   
-  const isPlaceholder = (url: any) => 
-    !url || 
-    typeof url !== 'string' || 
-    !url.startsWith('http') || 
-    url.includes('picsum.photos/seed/rentalflow-default');
+  const isValidUserUrl = (url: any) => 
+    url && 
+    typeof url === 'string' && 
+    url.startsWith('http') && 
+    !url.includes('picsum.photos/seed/rentalflow-default');
 
   // 1. If we have a valid, non-placeholder cover image, use it.
-  if (!isPlaceholder(imageUrl)) {
+  if (isValidUserUrl(imageUrl)) {
     return imageUrl!;
   }
   
   // 2. If cover is empty/placeholder, check the gallery ledger for a user image.
   if (imageUrls && Array.isArray(imageUrls)) {
-    const firstUserUrl = imageUrls.find(url => !isPlaceholder(url));
+    const firstUserUrl = imageUrls.find(isValidUserUrl);
     if (firstUserUrl) return firstUserUrl;
   }
   
-  // 3. Absolute fallback (The "waves" or "forest" you see when nothing else exists)
+  // 3. Absolute fallback
   return FALLBACK;
 }
 
@@ -45,21 +45,21 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
   const FALLBACK = "https://picsum.photos/seed/rentalflow-default/800/600";
   const gallery = new Set<string>();
 
-  const isPlaceholder = (url: any) => 
-    !url || 
-    typeof url !== 'string' || 
-    !url.startsWith('http') || 
-    url.includes('picsum.photos/seed/rentalflow-default');
+  const isValidUserUrl = (url: any) => 
+    url && 
+    typeof url === 'string' && 
+    url.startsWith('http') && 
+    !url.includes('picsum.photos/seed/rentalflow-default');
 
   // 1. Seed with the primary cover if it's a real user upload
-  if (!isPlaceholder(imageUrl)) {
+  if (isValidUserUrl(imageUrl)) {
     gallery.add(imageUrl!);
   }
 
   // 2. Add unique assets from the ledger
   if (imageUrls && Array.isArray(imageUrls)) {
     imageUrls.forEach(url => {
-      if (!isPlaceholder(url)) {
+      if (isValidUserUrl(url)) {
         gallery.add(url);
       }
     });

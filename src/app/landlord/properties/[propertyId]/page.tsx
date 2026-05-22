@@ -74,10 +74,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return getResolvedGallery(property?.imageUrl, property?.imageUrls);
   }, [property]);
 
-  const primaryCoverUrl = useMemo(() => {
-    return getResolvedImageUrl(property?.imageUrl, property?.imageUrls);
-  }, [property]);
-
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(

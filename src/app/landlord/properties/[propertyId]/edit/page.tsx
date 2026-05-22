@@ -63,8 +63,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // Load current assets using the hardened gallery resolver
-      // Filter out placeholders so the user only sees their own photos to manage
+      // Filter out placeholders to only show real user photos for management
       const gallery = getResolvedGallery(property.imageUrl, property.imageUrls);
       const userPhotos = gallery.filter(url => !url.includes('picsum.photos/seed/rentalflow-default'));
       setExistingImageUrls(userPhotos);
@@ -113,7 +112,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       // Combine existing images and new uploads
       const finalGallery = [...existingImageUrls, ...uploadedUrls];
       
-      // DETERMINISTIC COVER: The first image in the final ledger is explicitly the primary identity
+      // DETERMINISTIC COVER: Explicitly set the first image in the gallery as the primary imageUrl
       const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
 
       const serializableData = {
