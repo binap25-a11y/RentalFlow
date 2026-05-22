@@ -6,8 +6,9 @@ import {
   useFirestore, 
   useDoc, 
   useMemoFirebase,
+  setDocumentNonBlocking,
 } from '@/firebase';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,7 +75,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         gallery.unshift(property.imageUrl);
       }
       
-      // Load existing user assets into the ledger
       const initialLedger = gallery
         .filter(url => isUserUploadedAsset(url))
         .map(url => ({ id: Math.random().toString(), url, isNew: false }));
@@ -104,12 +104,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     if (item.isNew && item.url.startsWith('blob:')) {
       URL.revokeObjectURL(item.url);
     } else if (!item.isNew && item.url.includes('supabase.co')) {
-      // Physical purge of storage asset.
-      // Accurate path resolution handles both /public/ and /signed/ paths for private buckets.
       const pathMatch = item.url.split('/signed/')[1]?.split('?')[0] || item.url.split('/public/')[1]?.split('?')[0];
       if (pathMatch) {
         const pathSegments = pathMatch.split('/');
-        pathSegments.shift(); // Remove bucket name from path
+        pathSegments.shift(); 
         const relativePath = pathSegments.join('/');
         await deleteFromSupabase('property-images', relativePath);
       }
@@ -135,10 +133,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         if (item.isNew && item.file) {
           const formData = new FormData();
           formData.append('file', item.file);
-          // Isolated property-specific path
           const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${item.file.name}`;
           const res = await uploadToSupabase(formData, 'property-images', path);
-          if (!res.success) throw new Error(res.error);
+          if (!res.success) throw new Error(res.error || "Image upload failed");
           return res.url || '';
         }
         return item.url;
@@ -164,16 +161,18 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         memberIds: property?.memberIds || [user.uid]
       };
 
-      await setDoc(propertyRef, {
+      setDocumentNonBlocking(propertyRef, {
         ...serializableData,
         updatedAt: serverTimestamp(),
       }, { merge: true });
 
-      await syncPropertyToDb(serializableData);
+      const syncResult = await syncPropertyToDb(serializableData);
+      if (!syncResult.success) {
+        console.warn("Relational sync failed but Firestore was updated.");
+      }
 
       toast({ title: "Asset Synchronized", description: "Visual and record data updated." });
       
-      // Cleanup local blob URLs
       ledger.forEach(item => {
         if (item.isNew) URL.revokeObjectURL(item.url);
       });
@@ -181,13 +180,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Asset synchronization failed:", err);
-      const isRlsError = err.message?.includes('security policy');
+      const isRlsError = err.message?.toLowerCase().includes('security policy');
       toast({ 
         variant: "destructive", 
         title: isRlsError ? "Security Policy Error" : "Sync Failed", 
         description: isRlsError 
           ? "Upload denied by Supabase. Please check your storage policies." 
-          : "Could not update property records. Check connection and try again." 
+          : err.message || "Could not update property records. Check connection and try again." 
       });
       setIsSaving(false);
     }

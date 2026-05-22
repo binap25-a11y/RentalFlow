@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useState } from 'react';
-import { useUser, useFirestore } from '@/firebase';
-import { doc, serverTimestamp, collection, setDoc } from 'firebase/firestore';
+import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
+import { doc, serverTimestamp, collection } from 'firebase/firestore';
 import { Card, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,7 +81,7 @@ export default function NewPropertyPage() {
         formData.append('file', item.file);
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${item.file.name}`;
         const res = await uploadToSupabase(formData, 'property-images', path);
-        if (!res.success) throw new Error(res.error);
+        if (!res.success) throw new Error(res.error || "Image upload failed");
         return res.url || '';
       }));
 
@@ -106,7 +105,7 @@ export default function NewPropertyPage() {
         memberIds: [user.uid]
       };
 
-      await setDoc(propertyRef, {
+      setDocumentNonBlocking(propertyRef, {
         ...serializableData,
         tenantIds: [],
         isActive: true,
@@ -114,20 +113,23 @@ export default function NewPropertyPage() {
         updatedAt: serverTimestamp(),
       }, { merge: true });
 
-      await syncPropertyToDb(serializableData);
+      const syncResult = await syncPropertyToDb(serializableData);
+      if (!syncResult.success) {
+        console.warn("Relational sync failed but Firestore was updated.");
+      }
 
       toast({ title: "Asset Registered", description: "Visual and record data synchronized." });
       ledger.forEach(item => URL.revokeObjectURL(item.url));
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Asset registration failed:", err);
-      const isRlsError = err.message?.includes('security policy');
+      const isRlsError = err.message?.toLowerCase().includes('security policy');
       toast({ 
         variant: "destructive", 
         title: isRlsError ? "Security Policy Error" : "Registration Failed", 
         description: isRlsError 
           ? "Upload denied by Supabase. Please see src/lib/supabase-usage-guide.md to fix." 
-          : "Check storage availability and try again." 
+          : err.message || "Check storage availability and try again." 
       });
       setIsSaving(false);
     }
