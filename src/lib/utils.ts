@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * 🖼️ Constants for Visual Fallbacks
- * Used ONLY when no user photos and no property photos exist.
+ * Used ONLY when no user photos exist.
  */
 export const RENTALFLOW_FALLBACK = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1000&auto=format&fit=crop";
 
@@ -19,7 +19,7 @@ export const RENTALFLOW_FALLBACK = "https://images.unsplash.com/photo-1560518883
 export function isUserUploadedAsset(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '' || !url.startsWith('http')) return false;
   
-  // Explicitly identify generic placeholders that should be replaced by user content
+  // Explicitly identify and EXCLUDE generic placeholders
   const isPlaceholder = 
     url.includes('picsum.photos') ||
     url.includes('placehold.co');
@@ -36,9 +36,7 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
- * Tier 1: Explicit primary imageUrl (if user uploaded)
- * Tier 2: First user uploaded item in gallery ledger
- * Tier 3: Global fallback (Professional Unsplash Image)
+ * Strictly prioritizes User Uploads over placeholders.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
   // Priority 1: Primary cover is a verified user upload
@@ -50,19 +48,17 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
     if (firstUserUrl) return firstUserUrl;
   }
   
-  // Priority 3: Fallback to a high-quality professional default (not a random picsum)
+  // Priority 3: Global fallback (Professional Unsplash Image)
   return RENTALFLOW_FALLBACK;
 }
 
 /**
  * 🖼️ Synchronized Gallery Resolver
- * Ensures that if any user images exist, generic platform placeholders are hidden 
- * to maintain a professional portfolio look.
+ * Filters out placeholders if real photos exist.
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
 
-  // Add all provided URLs
   if (imageUrl && isValidAssetUrl(imageUrl)) assets.add(imageUrl);
   
   if (imageUrls && Array.isArray(imageUrls)) {
@@ -73,7 +69,7 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
 
   const result = Array.from(assets);
   
-  // Logic: If the landlord has provided ANY professional photos, filter out the generic placeholders
+  // If landlord has provided ANY professional photos, filter out the generic placeholders
   const userUploads = result.filter(isUserUploadedAsset);
   if (userUploads.length > 0) return userUploads;
 

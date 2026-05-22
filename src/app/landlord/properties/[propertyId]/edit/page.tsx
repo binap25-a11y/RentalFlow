@@ -54,6 +54,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
+    // Only initialize once to prevent background data refreshes from wiping out local changes
     if (property && !isInitialized) {
       setAddress(property.addressLine1 || '');
       setCity(property.city || '');
@@ -69,8 +70,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         gallery.unshift(property.imageUrl);
       }
       
-      // Only keep user uploads or high-fidelity links (hide picsum placeholders)
-      const validGallery = gallery.filter(isValidAssetUrl);
+      // Filter out placeholders to maintain professional look
+      const validGallery = gallery.filter(isUserUploadedAsset);
       setExistingImageUrls(validGallery);
       setIsInitialized(true);
     }
@@ -115,13 +116,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         uploadedUrls = results.filter(r => r.success && r.url).map(r => r.url!);
       }
 
-      /**
-       * 🖼️ Hardened Gallery Sync
-       * Combine new uploads with remaining existing images.
-       * New uploads take priority at the front of the ledger.
-       */
-      const fullLedger = [...uploadedUrls, ...existingImageUrls].filter(isValidAssetUrl);
-      const uniqueLedger = Array.from(new Set(fullLedger));
+      // Merge new and existing user-uploaded assets
+      const uniqueLedger = Array.from(new Set([...uploadedUrls, ...existingImageUrls])).filter(isValidAssetUrl);
       
       // Deterministic Identity: Index 0 is ALWAYS the primary cover
       const primaryUrl = uniqueLedger.length > 0 ? uniqueLedger[0] : '';
@@ -150,7 +146,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Asset Updated", description: "Visual specs synchronized." });
+      toast({ title: "Asset Updated", description: "Real-time records synchronized." });
+      
+      // Clear local states before redirecting to avoid flickering
+      setNewImageFiles([]);
+      setNewPreviewUrls([]);
+      
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Update failed:", err);
@@ -182,7 +183,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-1 lg:grid-cols-2">
             <div className="p-8 lg:p-12 bg-primary/5 border-r border-primary/10">
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex justify-between items-center mb-6 text-left">
                 <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 font-headline">Gallery Ledger</Label>
                 <Button type="button" variant="ghost" size="sm" className="h-8 rounded-lg font-bold text-[10px] uppercase font-headline" onClick={() => document.getElementById('image-input')?.click()}>
                   <Plus className="w-3 h-3 mr-1" /> Add Photos
@@ -218,11 +219,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
             <div className="p-8 lg:p-12 space-y-8">
               <div className="space-y-6">
-                <div className="space-y-2">
+                <div className="space-y-2 text-left">
                   <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Street Address</Label>
                   <Input value={address} onChange={(e) => setAddress(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 text-left">
                   <div className="space-y-2">
                     <Label className="font-bold text-xs uppercase text-primary/60 font-headline">City</Label>
                     <Input value={city} onChange={(e) => setCity(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
@@ -232,7 +233,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                     <Input value={zipCode} onChange={(e) => setZipCode(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 text-left">
                   <div className="space-y-2">
                     <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Asset Class</Label>
                     <Select value={propertyType} onValueChange={setPropertyType}>
@@ -252,7 +253,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                     <Input type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
                   </div>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 text-left">
                   <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Asset Narrative</Label>
                   <Textarea value={description} onChange={(e) => setDescription(e.target.value)} className="rounded-xl min-h-[120px] bg-muted/20 border-none font-medium" />
                 </div>
