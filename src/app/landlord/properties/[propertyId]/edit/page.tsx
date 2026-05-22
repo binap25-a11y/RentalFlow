@@ -54,8 +54,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // 🛡️ Guard: Only initialize from Firestore data once to prevent 
-    // real-time background refreshes from wiping local edits.
+    // 🛡️ Guard: Only initialize from Firestore once to prevent background 
+    // real-time refreshes from wiping local edits.
     if (property && !isInitialized) {
       setAddress(property.addressLine1 || '');
       setCity(property.city || '');
@@ -202,7 +202,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                 ))}
                 {existingImageUrls.map((url, index) => (
                   <div key={`existing-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border border-primary/10 bg-white">
-                    <Image src={url} alt={`Existing ${index}`} fill className="object-cover" unoptimized data-ai-hint="property view" />
+                    <Image src={url} alt={`Existing ${index}`} fill className="object-cover" unoptimized data-ai-hint="property interior" />
                     <button type="button" onClick={() => removeExistingImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all shadow-lg z-20"><X className="w-3.5 h-3.5" /></button>
                     {newPreviewUrls.length === 0 && index === 0 && (
                       <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline z-10">Current Cover</div>

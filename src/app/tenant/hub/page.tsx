@@ -85,7 +85,7 @@ export default function TenantHub() {
     }
   };
 
-  // 🛡️ Robust Resolver: Ensures Supabase images are prioritized for the resident
+  // 🛡️ Robust Resolver: Ensures user photography is explicitly prioritized for residents
   const activeImageUrl = useMemo(() => {
     return getResolvedImageUrl(property?.imageUrl, property?.imageUrls);
   }, [property]);

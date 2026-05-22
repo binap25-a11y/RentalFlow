@@ -19,7 +19,7 @@ export const RENTALFLOW_FALLBACK = "https://picsum.photos/seed/rentalflow-defaul
 export function isUserUploadedAsset(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '' || !url.startsWith('http')) return false;
   
-  // Identify platform placeholder signatures
+  // Platform placeholders that we explicitly want to replace once user content exists
   const isPlaceholder = 
     url.includes('picsum.photos/seed/rentalflow-default') || 
     url.includes('placehold.co') ||
@@ -40,29 +40,30 @@ export function isValidAssetUrl(url: any): boolean {
  * 🖼️ Robust Asset Resolution Engine
  * Tier 1: Explicit primary imageUrl (if user uploaded)
  * Tier 2: First user uploaded item in gallery ledger
- * Tier 3: Valid placeholder link
+ * Tier 3: Valid placeholder link from DB
  * Tier 4: Global fallback
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
-  // Priority 1: Primary cover is a user upload
+  // Priority 1: Primary cover is a verified user upload
   if (isUserUploadedAsset(imageUrl)) return imageUrl!;
   
-  // Priority 2: Any user upload in the broader gallery
+  // Priority 2: Any verified user upload in the broader gallery ledger
   if (imageUrls && Array.isArray(imageUrls)) {
     const firstUserUrl = imageUrls.find(u => isUserUploadedAsset(u));
     if (firstUserUrl) return firstUserUrl;
   }
   
-  // Priority 3: Fallback to existing valid URL (placeholder)
+  // Priority 3: Fallback to existing valid URL (might be a property-specific placeholder)
   if (isValidAssetUrl(imageUrl)) return imageUrl!;
 
-  // Priority 4: Absolute fallback
+  // Priority 4: Absolute platform fallback
   return RENTALFLOW_FALLBACK;
 }
 
 /**
  * 🖼️ Synchronized Gallery Resolver
- * Ensures that if any user images exist, placeholders are hidden to maintain a professional look.
+ * Ensures that if any user images exist, generic platform placeholders are hidden 
+ * to maintain a professional portfolio look.
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
@@ -71,20 +72,20 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
     if (isValidAssetUrl(url)) assets.add(url);
   };
 
-  // Prioritize primary cover
-  addIfValid(imageUrl);
+  // Prioritize primary cover to ensure it's at Index 0
+  if (imageUrl) addIfValid(imageUrl);
   
-  // Add gallery items
+  // Add all other gallery items
   if (imageUrls && Array.isArray(imageUrls)) {
     imageUrls.forEach(addIfValid);
   }
 
   const result = Array.from(assets);
   
-  // Logic: If the landlord has uploaded ANY professional photos, hide the generic forest/waves placeholders.
+  // Logic: If the landlord has provided ANY professional photos, filter out the generic seeds.
   const userUploads = result.filter(isUserUploadedAsset);
   if (userUploads.length > 0) return userUploads;
 
-  // Fallback to placeholders if no professional photos exist
+  // Fallback to the full set (placeholders) if no professional photos exist yet
   return result.length > 0 ? result : [RENTALFLOW_FALLBACK];
 }

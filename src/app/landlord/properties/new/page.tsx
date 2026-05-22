@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
+import { isValidAssetUrl } from '@/lib/utils';
 
 export default function NewPropertyPage() {
   const { user } = useUser();
@@ -59,7 +60,6 @@ export default function NewPropertyPage() {
     const propertyRef = doc(db, 'properties', propertyId);
 
     try {
-      let finalImageUrl = '';
       let finalImageUrls: string[] = [];
 
       if (imageFiles.length > 0) {
@@ -71,13 +71,11 @@ export default function NewPropertyPage() {
         });
 
         const results = await Promise.all(uploadPromises);
-        finalImageUrls = results.filter(r => r.success && r.url).map(r => r.url!);
-        
-        // DETERMINISTIC COVER: Explicitly set the first successfully uploaded image as the primary identity
-        if (finalImageUrls.length > 0) {
-          finalImageUrl = finalImageUrls[0];
-        }
+        finalImageUrls = results.filter(r => r.success && r.url).map(r => r.url!).filter(isValidAssetUrl);
       }
+
+      // DETERMINISTIC COVER: Explicitly set the first successfully uploaded image as the primary identity
+      const finalImageUrl = finalImageUrls.length > 0 ? finalImageUrls[0] : '';
 
       const serializableData = {
         id: propertyId,
