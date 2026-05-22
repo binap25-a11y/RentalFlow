@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -611,14 +610,6 @@ export default function LandlordDashboard() {
           <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden p-8 text-left">
             <h3 className="font-bold font-headline text-lg mb-4">Tax Season Readiness</h3>
             <div className="space-y-4">
-              <div className="flex items-center gap-4 p-4 bg-primary/5 rounded-2xl">
-                 <div className="p-2 bg-white rounded-xl shadow-sm"><FileText className="w-4 h-4 text-primary" /></div>
-                 <div>
-                    <p className="text-xs font-bold">Relational Ledger Sync</p>
-                    <p className="text-[10px] text-muted-foreground">PostgreSQL Audit Trail: Enabled</p>
-                 </div>
-              </div>
-              
               <div className="grid grid-cols-1 gap-3">
                 <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
                   <DialogTrigger asChild>
