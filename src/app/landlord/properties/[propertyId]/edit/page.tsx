@@ -15,13 +15,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { isValidAssetUrl, isUserUploadedAsset } from "@/lib/utils";
+import { isValidAssetUrl } from "@/lib/utils";
 
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -55,7 +55,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
   useEffect(() => {
     // 🛡️ Guard: Only initialize from Firestore once to prevent background 
-    // real-time refreshes from wiping local edits.
+    // real-time refreshes from wiping local edits while in-progress.
     if (property && !isInitialized) {
       setAddress(property.addressLine1 || '');
       setCity(property.city || '');
@@ -118,13 +118,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       /**
        * 🖼️ DETERMINISTIC VISUAL HIERARCHY
        * We prepend new uploads so they become the primary cover immediately.
-       * We deduplicate and filter out common system placeholders to ensure 
-       * only high-fidelity user photos are persisted if available.
+       * We deduplicate and ensure that only valid visual records are persisted.
        */
       const fullLedger = [...uploadedUrls, ...existingImageUrls];
       const uniqueLedger = Array.from(new Set(fullLedger)).filter(isValidAssetUrl);
       
-      // Select the primary cover from the start of the list
+      // Select the primary cover from the start of the list (Index 0)
       const primaryUrl = uniqueLedger.length > 0 ? uniqueLedger[0] : (property?.imageUrl || '');
 
       const serializableData = {
@@ -151,7 +150,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Asset Updated", description: "Portfolio inventory and visual records synchronized." });
+      toast({ title: "Asset Updated", description: "Portfolio visual records synchronized." });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Update failed:", err);

@@ -14,13 +14,14 @@ export const RENTALFLOW_FALLBACK = "https://picsum.photos/seed/rentalflow-defaul
 /**
  * 🖼️ User Asset Identifier
  * Strictly identifies images uploaded by users (Supabase or external links)
- * vs system-generated placeholders.
+ * vs generic system-generated placeholders.
  */
 export function isUserUploadedAsset(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '' || !url.startsWith('http')) return false;
   
   // Platform placeholders that we explicitly want to replace once user content exists
   const isPlaceholder = 
+    url.includes('picsum.photos/seed/rentalflow-pro-identity') ||
     url.includes('picsum.photos/seed/rentalflow-default') || 
     url.includes('placehold.co') ||
     url.includes('placehold.it') ||
@@ -68,21 +69,20 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
 
-  const addIfValid = (url: any) => {
-    if (isValidAssetUrl(url)) assets.add(url);
-  };
-
   // Prioritize primary cover to ensure it's at Index 0
-  if (imageUrl) addIfValid(imageUrl);
+  if (imageUrl && isValidAssetUrl(imageUrl)) assets.add(imageUrl);
   
   // Add all other gallery items
   if (imageUrls && Array.isArray(imageUrls)) {
-    imageUrls.forEach(addIfValid);
+    imageUrls.forEach(u => {
+      if (isValidAssetUrl(u)) assets.add(u);
+    });
   }
 
   const result = Array.from(assets);
   
-  // Logic: If the landlord has provided ANY professional photos, filter out the generic seeds.
+  // Logic: If the landlord has provided ANY professional photos, filter out the generic seeds
+  // to ensure a high-fidelity experience.
   const userUploads = result.filter(isUserUploadedAsset);
   if (userUploads.length > 0) return userUploads;
 
