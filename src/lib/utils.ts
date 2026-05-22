@@ -14,7 +14,7 @@ export const RENTALFLOW_FALLBACK = "https://picsum.photos/seed/rentalflow-defaul
 /**
  * 🖼️ User Asset Identifier
  * Strictly identifies images uploaded by users (Supabase or external links)
- * vs generic system-generated placeholders.
+ * vs generic platform-generated placeholders.
  */
 export function isUserUploadedAsset(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '' || !url.startsWith('http')) return false;

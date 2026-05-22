@@ -69,7 +69,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
-  // 🖼️ Hardened Gallery Resolution: Ensures the Primary Cover is at Index 0
+  /**
+   * 🖼️ Hardened Gallery Resolution
+   * Ensures that user photography is explicitly prioritized over placeholders
+   * and that the designated 'imageUrl' is always at Index 0 in the carousel.
+   */
   const gallery = useMemo(() => {
     return getResolvedGallery(property?.imageUrl, property?.imageUrls);
   }, [property]);
