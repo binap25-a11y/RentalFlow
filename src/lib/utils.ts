@@ -21,7 +21,7 @@ export function isUserUploadedAsset(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '' || !url.startsWith('http')) return false;
   
   // 🛡️ Strict Professional Filter: ONLY treat verified storage assets as true user content.
-  const isStorageAsset = url.includes('.supabase.co') || url.includes('.firebasestorage.app');
+  const isStorageAsset = url.includes('supabase.co') || url.includes('firebasestorage.app');
   
   // Explicitly identify and EXCLUDE generic placeholders
   const isGenericPlaceholder = 
