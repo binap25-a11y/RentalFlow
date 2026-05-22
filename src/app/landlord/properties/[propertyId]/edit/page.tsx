@@ -54,6 +54,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
+    // 🛡️ Guard: Only initialize from Firestore data once to prevent 
+    // real-time background refreshes from wiping local edits.
     if (property && !isInitialized) {
       setAddress(property.addressLine1 || '');
       setCity(property.city || '');
@@ -64,12 +66,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // Load all valid images from the existing record
-      const currentImages = Array.isArray(property.imageUrls) ? [...property.imageUrls] : [];
-      if (isValidAssetUrl(property.imageUrl) && !currentImages.includes(property.imageUrl)) {
-        currentImages.unshift(property.imageUrl);
+      const gallerySet = new Set<string>();
+      if (isValidAssetUrl(property.imageUrl)) gallerySet.add(property.imageUrl);
+      if (Array.isArray(property.imageUrls)) {
+        property.imageUrls.forEach(u => { if (isValidAssetUrl(u)) gallerySet.add(u); });
       }
-      setExistingImageUrls(currentImages.filter(isValidAssetUrl));
+      setExistingImageUrls(Array.from(gallerySet));
       setIsInitialized(true);
     }
   }, [property, isInitialized]);
@@ -113,13 +115,17 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         uploadedUrls = results.filter(r => r.success && r.url).map(r => r.url!);
       }
 
-      // DETERMINISTIC HIERARCHY: New uploads prepended to become the primary cover immediately
-      const finalGallery = [...uploadedUrls, ...existingImageUrls];
+      /**
+       * 🖼️ DETERMINISTIC VISUAL HIERARCHY
+       * We prepend new uploads so they become the primary cover immediately.
+       * We deduplicate and filter out common system placeholders to ensure 
+       * only high-fidelity user photos are persisted if available.
+       */
+      const fullLedger = [...uploadedUrls, ...existingImageUrls];
+      const uniqueLedger = Array.from(new Set(fullLedger)).filter(isValidAssetUrl);
       
-      // Only keep unique URLs and filter out generic platform fallbacks if real user photos exist
-      const userUploads = finalGallery.filter(isUserUploadedAsset);
-      const galleryToPersist = userUploads.length > 0 ? userUploads : finalGallery;
-      const primaryUrl = galleryToPersist.length > 0 ? galleryToPersist[0] : (property?.imageUrl || '');
+      // Select the primary cover from the start of the list
+      const primaryUrl = uniqueLedger.length > 0 ? uniqueLedger[0] : (property?.imageUrl || '');
 
       const serializableData = {
         id: propertyId,
@@ -129,7 +135,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         zipCode,
         rentAmount: parseFloat(rentAmount) || 0,
         imageUrl: primaryUrl,
-        imageUrls: galleryToPersist,
+        imageUrls: uniqueLedger,
         propertyType,
         numberOfBedrooms: parseInt(bedrooms, 10) || 1,
         numberOfBathrooms: parseInt(bathrooms, 10) || 1,
@@ -145,7 +151,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Asset Updated", description: "Visual specs and data synchronized." });
+      toast({ title: "Asset Updated", description: "Portfolio inventory and visual records synchronized." });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Update failed:", err);

@@ -13,7 +13,7 @@ export const RENTALFLOW_FALLBACK = "https://picsum.photos/seed/rentalflow-defaul
 
 /**
  * 🖼️ User Asset Identifier
- * Strictly identifies images uploaded by users (typically Supabase or external professional links)
+ * Strictly identifies images uploaded by users (Supabase or external links)
  * vs system-generated placeholders.
  */
 export function isUserUploadedAsset(url: any): boolean {
@@ -30,13 +30,6 @@ export function isUserUploadedAsset(url: any): boolean {
 }
 
 /**
- * 🖼️ Property Placeholder Identifier
- */
-export function isPropertyPlaceholder(url: any): boolean {
-  return typeof url === 'string' && url.includes('picsum.photos/seed/prop');
-}
-
-/**
  * 🖼️ Asset Validation Engine
  */
 export function isValidAssetUrl(url: any): boolean {
@@ -47,23 +40,23 @@ export function isValidAssetUrl(url: any): boolean {
  * 🖼️ Robust Asset Resolution Engine
  * Tier 1: Explicit primary imageUrl (if user uploaded)
  * Tier 2: First user uploaded item in gallery ledger
- * Tier 3: Property placeholder
+ * Tier 3: Valid placeholder link
  * Tier 4: Global fallback
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
-  // If the primary cover is already a user upload, stick with it
+  // Priority 1: Primary cover is a user upload
   if (isUserUploadedAsset(imageUrl)) return imageUrl!;
   
-  // If not, look for any user upload in the broader gallery
+  // Priority 2: Any user upload in the broader gallery
   if (imageUrls && Array.isArray(imageUrls)) {
     const firstUserUrl = imageUrls.find(u => isUserUploadedAsset(u));
     if (firstUserUrl) return firstUserUrl;
   }
   
-  // If no user uploads exist, but we have a valid placeholder link, use that
+  // Priority 3: Fallback to existing valid URL (placeholder)
   if (isValidAssetUrl(imageUrl)) return imageUrl!;
 
-  // Absolute fallback
+  // Priority 4: Absolute fallback
   return RENTALFLOW_FALLBACK;
 }
 
