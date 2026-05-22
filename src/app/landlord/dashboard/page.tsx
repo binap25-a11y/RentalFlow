@@ -6,7 +6,7 @@ import {
   ShieldAlert, Loader2, CheckCircle2,
   Calendar as CalendarIcon, Zap, ClipboardList, AlertTriangle,
   PoundSterling, PieChart as PieChartIcon, ArrowUpRight, ArrowDownRight,
-  Target, Download, Plus, Save
+  Target, Download, Plus, Save, Users
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
@@ -75,6 +75,13 @@ export default function LandlordDashboard() {
   }, [db, user]);
 
   const { data: inspections } = useCollection(inspectionsQuery);
+
+  const tenantsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return getLandlordCollectionQuery(db, "tenantProfiles", user.uid);
+  }, [db, user]);
+
+  const { data: tenants } = useCollection(tenantsQuery);
 
   // Manual Expense State
   const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
@@ -172,6 +179,22 @@ export default function LandlordDashboard() {
         urgent: isBefore(parseFlexDate(i.scheduledDate)!, addDays(today, 14))
       }));
 
+    const leaseItems = (tenants || [])
+      .filter(t => {
+        const expiry = parseFlexDate(t.leaseEndDate);
+        return expiry && isValid(expiry) && isBefore(expiry, addDays(today, 90));
+      })
+      .map(t => ({
+        id: t.id,
+        title: `${t.firstName} ${t.lastName}`,
+        subtitle: 'Lease Expiry',
+        date: t.leaseEndDate,
+        type: 'Lease',
+        icon: Users,
+        propertyId: t.propertyId,
+        urgent: isBefore(parseFlexDate(t.leaseEndDate)!, addDays(today, 30))
+      }));
+
     const propertyStatusItems = properties.map(p => {
       const allPropDocs = (documents || []).filter(d => d.propertyId === p.id);
       const docCount = allPropDocs.length;
@@ -189,7 +212,7 @@ export default function LandlordDashboard() {
         };
       }
 
-      const isAlreadyListed = [...docItems, ...inspectionItems].some(item => item.propertyId === p.id);
+      const isAlreadyListed = [...docItems, ...inspectionItems, ...leaseItems].some(item => item.propertyId === p.id);
       if (isAlreadyListed) return null;
 
       return {
@@ -204,14 +227,14 @@ export default function LandlordDashboard() {
       };
     }).filter(Boolean) as any[];
 
-    return [...docItems, ...inspectionItems, ...propertyStatusItems].sort((a, b) => {
+    return [...docItems, ...inspectionItems, ...leaseItems, ...propertyStatusItems].sort((a, b) => {
       if (a.type === 'Missing' && b.type !== 'Missing') return -1;
       if (b.type === 'Missing' && a.type !== 'Missing') return 1;
       if (a.urgent && !b.urgent) return -1;
       if (!a.urgent && b.urgent) return 1;
       return 0;
     });
-  }, [documents, inspections, properties, isClient]);
+  }, [documents, inspections, properties, tenants, isClient]);
 
   const healthScore = useMemo(() => {
     if (!isClient) return { grade: 'A+', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-200' };
@@ -570,7 +593,8 @@ export default function LandlordDashboard() {
                           "p-3 rounded-2xl shadow-sm transition-transform group-hover:rotate-6", 
                           item.type === 'Missing' ? "bg-red-100 text-red-600" :
                           item.urgent ? "bg-amber-100 text-amber-600" : 
-                          item.type === 'Status' ? "bg-emerald-100 text-emerald-600" : "bg-primary/5 text-primary"
+                          item.type === 'Status' ? "bg-emerald-100 text-emerald-600" : 
+                          item.type === 'Lease' ? "bg-purple-100 text-purple-600" : "bg-primary/5 text-primary"
                         )}>
                           <item.icon className="w-5 h-5" />
                         </div>
@@ -580,7 +604,8 @@ export default function LandlordDashboard() {
                             <p className={cn(
                               "text-[9px] font-bold uppercase tracking-[0.1em] px-2 py-0.5 rounded-full",
                               item.type === 'Status' ? "bg-emerald-100 text-emerald-700" : 
-                              item.type === 'Missing' ? "bg-red-100 text-red-700" : "bg-primary/5 text-muted-foreground"
+                              item.type === 'Missing' ? "bg-red-100 text-red-700" : 
+                              item.type === 'Lease' ? "bg-purple-100 text-purple-700" : "bg-primary/5 text-muted-foreground"
                             )}>{item.subtitle}</p>
                             {item.date && (
                               <p className={cn("text-[10px] font-bold flex items-center opacity-60", item.urgent ? "text-amber-700" : "text-primary/60")}>

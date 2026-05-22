@@ -322,6 +322,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         <div>
                           <p className="font-bold font-headline text-xl text-primary tracking-tight">{tenant.firstName} {tenant.lastName}</p>
                           <p className="text-sm text-muted-foreground font-medium font-body">{tenant.email}</p>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Lease Expiry: {tenant.leaseEndDate || 'N/A'}</p>
                         </div>
                       </div>
                       <Button variant="ghost" size="icon" asChild className="rounded-xl text-primary">
