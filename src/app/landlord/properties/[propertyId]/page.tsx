@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/tabs";
 import { 
   MapPin, Users, Wrench, FileCheck, 
   Trash2, Edit3, Loader2, Save, ArrowLeft,
@@ -31,7 +31,7 @@ import {
   PopoverTrigger 
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { cn, getResolvedGallery, getResolvedImageUrl, isValidAssetUrl } from "@/lib/utils";
+import { cn, getResolvedGallery, getResolvedImageUrl, isUserUploadedAsset } from "@/lib/utils";
 import Image from "next/image";
 import {
   Carousel,
@@ -69,7 +69,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
-  // 🛡️ Bulletproof Resolution: Ensures user images replace placeholders permanently
+  // 🛡️ Bulletproof Resolution: Ensures user images replace placeholders permanently in all detail views
   const gallery = useMemo(() => {
     return getResolvedGallery(property?.imageUrl, property?.imageUrls);
   }, [property]);
@@ -289,7 +289,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         <div className="flex gap-2">
            <Button variant="outline" className="rounded-xl font-bold h-11 border-primary/20 bg-white shadow-sm font-headline" asChild>
              <Link href={`/landlord/properties/${propertyId}/edit`}>
-               <Edit3 className="w-4 h-4 mr-2" /> Specification
+               <Edit3 className="w-4 h-4 mr-2" /> Modify Specification
              </Link>
            </Button>
            <Button className="rounded-xl font-bold h-11 shadow-lg shadow-primary/20 bg-primary text-white font-headline" asChild>
@@ -315,7 +315,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         priority={index === 0}
                         data-ai-hint="luxury property" 
                       />
-                      {index === 0 && isValidAssetUrl(url) && (
+                      {index === 0 && isUserUploadedAsset(url) && (
                         <div className="absolute top-6 left-6 px-4 py-1.5 bg-primary text-white text-[10px] font-bold uppercase rounded-full shadow-2xl font-headline">Cover Asset</div>
                       )}
                     </div>

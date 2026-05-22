@@ -12,66 +12,94 @@ export function cn(...inputs: ClassValue[]) {
 export const RENTALFLOW_FALLBACK = "https://picsum.photos/seed/rentalflow-default/800/600";
 
 /**
- * 🖼️ Asset Validation Engine
- * Strictly distinguishes between professional user uploads and platform placeholders.
+ * 🖼️ User Asset Identifier
+ * Strictly identifies images uploaded by users (typically Supabase or external professional links)
+ * vs system-generated placeholders.
  */
-export function isValidAssetUrl(url: any): boolean {
+export function isUserUploadedAsset(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '' || !url.startsWith('http')) return false;
   
-  // Explicitly identify if the URL is one of our system placeholders
-  const isPlatformPlaceholder = 
+  // Identify platform placeholder signatures
+  const isPlaceholder = 
     url.includes('picsum.photos/seed/rentalflow-default') || 
     url.includes('placehold.co') ||
-    url.includes('picsum.photos/seed/prop');
+    url.includes('placehold.it');
                     
-  return !isPlatformPlaceholder;
+  return !isPlaceholder;
+}
+
+/**
+ * 🖼️ Property Placeholder Identifier
+ * Identifies property-specific placeholders (prop1, prop2) vs generic fallbacks.
+ */
+export function isPropertyPlaceholder(url: any): boolean {
+  return typeof url === 'string' && url.includes('picsum.photos/seed/prop');
+}
+
+/**
+ * 🖼️ Asset Validation Engine (General)
+ * Returns true if the URL is a valid, renderable image string.
+ */
+export function isValidAssetUrl(url: any): boolean {
+  return !!(url && typeof url === 'string' && url.trim() !== '' && url.startsWith('http'));
 }
 
 /**
  * 🖼️ Robust Asset Resolution Engine
  * Strictly prioritizes user-uploaded content over placeholders for a specific property.
- * Tier 1: Explicit primary imageUrl (Designated User Cover)
- * Tier 2: First valid item in the gallery ledger (imageUrls[0])
- * Tier 3: Professional platform fallback
+ * Tier 1: Explicit user-uploaded primary imageUrl
+ * Tier 2: First user-uploaded item in the gallery ledger
+ * Tier 3: Property-specific placeholder (if exists in DB)
+ * Tier 4: Global platform fallback
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
-  // 1. Prioritize explicit cover if it's a valid user upload
-  if (isValidAssetUrl(imageUrl)) {
+  // 1. Prioritize user upload in the primary slot
+  if (isUserUploadedAsset(imageUrl) && !isPropertyPlaceholder(imageUrl)) {
     return imageUrl!;
   }
   
-  // 2. Fallback to the first valid item in the gallery ledger
+  // 2. Fallback to the first user upload in the gallery
   if (imageUrls && Array.isArray(imageUrls)) {
-    const firstUserUrl = imageUrls.find(isValidAssetUrl);
+    const firstUserUrl = imageUrls.find(u => isUserUploadedAsset(u) && !isPropertyPlaceholder(u));
     if (firstUserUrl) return firstUserUrl;
   }
   
-  // 3. Absolute system fallback
+  // 3. Fallback to property-specific placeholder saved in DB
+  if (isValidAssetUrl(imageUrl) && isPropertyPlaceholder(imageUrl)) {
+    return imageUrl!;
+  }
+
+  // 4. Absolute system fallback
   return RENTALFLOW_FALLBACK;
 }
 
 /**
  * 🖼️ Synchronized Gallery Resolver
- * Reconstructs the full visual stack ensuring the cover is always at Index 0.
- * Deduplicates and filters for valid, non-empty URLs.
+ * Reconstructs the full visual stack ensuring user assets are always prioritized at the start.
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
-  const gallery = new Set<string>();
+  const userAssets = new Set<string>();
+  const placeholderAssets = new Set<string>();
 
-  // 1. Seed with the primary cover if it's a real user upload
-  if (isValidAssetUrl(imageUrl)) {
-    gallery.add(imageUrl!);
-  }
+  const processUrl = (url: any) => {
+    if (!isValidAssetUrl(url)) return;
+    if (isUserUploadedAsset(url) && !isPropertyPlaceholder(url)) {
+      userAssets.add(url);
+    } else {
+      placeholderAssets.add(url);
+    }
+  };
 
-  // 2. Add unique assets from the ledger
+  processUrl(imageUrl);
   if (imageUrls && Array.isArray(imageUrls)) {
-    imageUrls.forEach(url => {
-      if (isValidAssetUrl(url)) {
-        gallery.add(url);
-      }
-    });
+    imageUrls.forEach(processUrl);
   }
 
-  // 3. Return user gallery if valid, otherwise return a single platform fallback
-  return gallery.size > 0 ? Array.from(gallery) : [RENTALFLOW_FALLBACK];
+  // If we have user assets, return only those (replacing placeholders)
+  if (userAssets.size > 0) {
+    return Array.from(userAssets);
+  }
+
+  // Otherwise return placeholders or the global fallback
+  return placeholderAssets.size > 0 ? Array.from(placeholderAssets) : [RENTALFLOW_FALLBACK];
 }

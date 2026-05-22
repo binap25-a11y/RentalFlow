@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { getResolvedGallery, isValidAssetUrl } from "@/lib/utils";
+import { isValidAssetUrl, isUserUploadedAsset } from "@/lib/utils";
 
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -53,7 +53,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isSaving, setIsSaving] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // 🛡️ Guarded Initialization: Ensures persistent data only sets state once
   useEffect(() => {
     if (property && !isInitialized) {
       setAddress(property.addressLine1 || '');
@@ -65,10 +64,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      const gallery = getResolvedGallery(property.imageUrl, property.imageUrls);
-      // Filter for real user uploads to populate the editable ledger
-      const userPhotos = gallery.filter(isValidAssetUrl);
-      setExistingImageUrls(userPhotos);
+      // Preserve all valid URLs from DB to avoid data loss, but we will prioritize user ones in display
+      const currentImages = Array.isArray(property.imageUrls) ? property.imageUrls : [];
+      if (isValidAssetUrl(property.imageUrl) && !currentImages.includes(property.imageUrl)) {
+        currentImages.unshift(property.imageUrl);
+      }
+      setExistingImageUrls(currentImages.filter(isValidAssetUrl));
       setIsInitialized(true);
     }
   }, [property, isInitialized]);
@@ -112,10 +113,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         uploadedUrls = results.filter(r => r.success && r.url).map(r => r.url!);
       }
 
-      // 🔄 Deterministic Gallery Merge: Existing assets preserved, new assets appended
-      const finalGallery = [...existingImageUrls, ...uploadedUrls];
+      // 🔄 Deterministic Gallery Merge: New uploads prepended to become the primary cover
+      const finalGallery = [...uploadedUrls, ...existingImageUrls];
       
-      // 🎯 Deterministic Cover: Explicitly set the first image as the primary identity
+      // 🎯 Deterministic Identity: First item is the cover
       const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
 
       const serializableData = {
@@ -142,7 +143,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Asset Updated", description: "Portfolio specs and visuals synchronized." });
+      toast({ title: "Asset Updated", description: "Visual specs and data synchronized." });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Update failed:", err);
@@ -182,27 +183,27 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                {existingImageUrls.map((url, index) => (
-                  <div key={`existing-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border border-primary/10 bg-white">
-                    <Image src={url} alt={`Existing ${index}`} fill className="object-cover" unoptimized data-ai-hint="property view" />
-                    <button type="button" onClick={() => removeExistingImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all shadow-lg"><X className="w-3.5 h-3.5" /></button>
+                {newPreviewUrls.map((url, index) => (
+                  <div key={`new-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group border-2 border-accent shadow-md bg-white">
+                    <Image src={url} alt={`New ${index}`} fill className="object-cover" unoptimized data-ai-hint="property interior" />
+                    <button type="button" onClick={() => removeNewImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-red-500 transition-all shadow-lg z-20"><X className="w-3.5 h-3.5" /></button>
                     {index === 0 && (
-                      <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline">Primary Cover</div>
+                      <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-accent text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline z-10">New Primary Cover</div>
                     )}
                   </div>
                 ))}
-                {newPreviewUrls.map((url, index) => (
-                  <div key={`new-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group border-2 border-dashed border-accent/40 bg-white">
-                    <Image src={url} alt={`New ${index}`} fill className="object-cover opacity-80" unoptimized data-ai-hint="modern home" />
-                    <button type="button" onClick={() => removeNewImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-red-500 transition-all shadow-lg"><X className="w-3.5 h-3.5" /></button>
-                    {existingImageUrls.length === 0 && index === 0 && (
-                      <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline">Primary Cover</div>
+                {existingImageUrls.map((url, index) => (
+                  <div key={`existing-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border border-primary/10 bg-white">
+                    <Image src={url} alt={`Existing ${index}`} fill className="object-cover" unoptimized data-ai-hint="property view" />
+                    <button type="button" onClick={() => removeExistingImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all shadow-lg z-20"><X className="w-3.5 h-3.5" /></button>
+                    {newPreviewUrls.length === 0 && index === 0 && (
+                      <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline z-10">Current Cover</div>
                     )}
                   </div>
                 ))}
                 <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 bg-white flex flex-col items-center justify-center gap-2 transition-all group">
                   <Plus className="w-6 h-6 text-primary/20 group-hover:text-primary/40" />
-                  <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest font-headline group-hover:text-primary/60">Select More</span>
+                  <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest font-headline group-hover:text-primary/60">Upload More</span>
                 </button>
               </div>
               <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
@@ -242,30 +243,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   <div className="space-y-2">
                     <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Monthly Yield (£)</Label>
                     <Input type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Bedrooms</Label>
-                    <Select value={bedrooms} onValueChange={setBedrooms}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold">
-                        <SelectValue placeholder="Bedrooms" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {['1','2','3','4','5+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Bathrooms</Label>
-                    <Select value={bathrooms} onValueChange={setBathrooms}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold">
-                        <SelectValue placeholder="Bathrooms" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {['1','2','3+'].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
                   </div>
                 </div>
                 <div className="space-y-2">
