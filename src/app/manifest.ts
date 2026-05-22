@@ -1,23 +1,29 @@
 import { MetadataRoute } from 'next'
 
+/**
+ * 📱 Web App Manifest Configuration
+ * Optimized for high-fidelity Android and iOS "Add to Home Screen" experiences.
+ */
 export default function manifest(): MetadataRoute.Manifest {
+  const LOGO_URL = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=512&h=512&auto=format&fit=crop";
+
   return {
-    name: 'RentalFlow',
+    name: 'RentalFlow | Premium Portfolio Management',
     short_name: 'RentalFlow',
-    description: 'Professional Rental Management & Maintenance',
+    description: 'Professional Rental Management & AI-Driven Maintenance',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
     theme_color: '#1e3a8a',
     icons: [
       {
-        src: 'https://images.unsplash.com/photo-1448630360428-65ff265eb4e2?q=80&w=192&h=192&auto=format&fit=crop',
+        src: LOGO_URL,
         sizes: '192x192',
         type: 'image/png',
         purpose: 'maskable',
       },
       {
-        src: 'https://images.unsplash.com/photo-1448630360428-65ff265eb4e2?q=80&w=512&h=512&auto=format&fit=crop',
+        src: LOGO_URL,
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',
