@@ -9,6 +9,7 @@ import { doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Image from "next/image";
+import { RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
 
 export default function LandlordLayout({
   children,
@@ -34,7 +35,7 @@ export default function LandlordLayout({
     }
   }, [user, isUserLoading, profile, isProfileLoading, router]);
 
-  const BRAND_LOGO_URL = `https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=512&auto=format&fit=crop`;
+  const BRAND_LOGO_URL = RENTALFLOW_NEUTRAL_FALLBACK;
 
   if (isUserLoading || isProfileLoading) {
     return (

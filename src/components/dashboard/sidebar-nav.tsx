@@ -14,7 +14,7 @@ import {
   MessageSquare,
   PhoneCall
 } from 'lucide-react';
-import { cn } from "@/lib/utils";
+import { cn, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/firebase";
@@ -66,8 +66,8 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
     }
   };
 
-  // Professional static logo fallback
-  const LOGO_URL = 'https://images.unsplash.com/photo-1448630360428-65ff265eb4e2?q=80&w=256&h=256&auto=format&fit=crop';
+  // Consistent high-fidelity brand logo
+  const LOGO_URL = RENTALFLOW_NEUTRAL_FALLBACK;
 
   return (
     <Sidebar className="border-r border-sidebar-border shadow-2xl">
