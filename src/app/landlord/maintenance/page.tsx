@@ -20,7 +20,7 @@ import {
   Wrench, Sparkles, Clock, BrainCircuit, Loader2, 
   CheckCircle2, PlayCircle, Plus, PoundSterling,
   ChevronRight, Lightbulb, UserCheck, HardHat, Phone, Mail,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon, Building2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
