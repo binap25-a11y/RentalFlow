@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase, deleteFromSupabase } from '@/lib/actions/supabase-storage';
-import { isUserUploadedAsset } from "@/lib/utils";
+import { cn, isUserUploadedAsset } from "@/lib/utils";
 
 type LedgerItem = {
   id: string;
@@ -128,11 +128,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     setIsSaving(true);
 
     try {
-      /**
-       * 🚀 Unified Asset Synchronization
-       * Map the ledger items to a final set of storage URLs.
-       * New files are uploaded; existing items are kept in their defined order.
-       */
       const finalUrls = await Promise.all(ledger.map(async (item, index) => {
         if (item.isNew && item.file) {
           const formData = new FormData();

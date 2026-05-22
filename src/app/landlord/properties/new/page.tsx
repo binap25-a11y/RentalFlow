@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { isUserUploadedAsset } from '@/lib/utils';
+import { cn, isUserUploadedAsset } from '@/lib/utils';
 
 type LedgerItem = {
   id: string;
@@ -76,10 +76,6 @@ export default function NewPropertyPage() {
     const propertyRef = doc(db, 'properties', propertyId);
 
     try {
-      /**
-       * 🚀 Deterministic Asset Persistence
-       * Upload the items in the order defined by the user ledger.
-       */
       const uploadResults = await Promise.all(ledger.map(async (item, index) => {
         const formData = new FormData();
         formData.append('file', item.file);
