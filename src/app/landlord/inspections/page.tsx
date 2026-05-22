@@ -27,12 +27,14 @@ import { format } from "date-fns";
 import { 
   Calendar as CalendarIcon, Loader2, Download, 
   CheckCircle2, ClipboardList, ShieldAlert, Home, Wrench, 
-  Check, X, AlertTriangle, Info, Trash2, Edit3, PlayCircle
+  Check, X, AlertTriangle, Info, Trash2, Edit3, PlayCircle, Camera, Image as ImageIcon
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { generateInspectionReport } from "@/ai/flows/generate-inspection-report";
 import { jsPDF } from "jspdf";
+import { uploadToSupabase } from '@/lib/actions/supabase-storage';
+import Image from 'next/image';
 
 const INSPECTION_SECTIONS = [
   {
@@ -106,7 +108,7 @@ export default function InspectionsPage() {
   const [date, setDate] = useState<Date>();
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
   const [activeInspection, setActiveInspection] = useState<any>(null);
-  const [structuredFindings, setStructuredFindings] = useState<Record<string, { status: 'pass' | 'fail', notes: string }>>({});
+  const [structuredFindings, setStructuredFindings] = useState<Record<string, { status: 'pass' | 'fail', notes: string, imageUrl?: string, localFile?: File }>>({});
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleOpenAudit = (inspection: any) => {
@@ -125,6 +127,14 @@ export default function InspectionsPage() {
     setStructuredFindings(prev => ({
       ...prev,
       [itemId]: { ...prev[itemId], notes }
+    }));
+  };
+
+  const handleImageUpload = (itemId: string, file: File | null) => {
+    if (!file) return;
+    setStructuredFindings(prev => ({
+      ...prev,
+      [itemId]: { ...prev[itemId], localFile: file, imageUrl: URL.createObjectURL(file) }
     }));
   };
 
@@ -158,7 +168,22 @@ export default function InspectionsPage() {
     toast({ title: "Audit Record Removed", description: "The compliance entry has been decommissioned." });
   };
 
-  const downloadPDF = (inspection: any) => {
+  const getBase64FromUrl = async (url: string): Promise<string> => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (e) {
+      return "";
+    }
+  };
+
+  const downloadPDF = async (inspection: any) => {
     const property = properties?.find(p => p.id === inspection.propertyId);
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -215,8 +240,8 @@ export default function InspectionsPage() {
     pdf.text("Status", pageWidth - 60, y + 6);
     y += 12;
 
-    Object.entries(findings).forEach(([item, data]: [string, any]) => {
-      if (y > 270) {
+    for (const [item, data] of Object.entries(findings) as [string, any][]) {
+      if (y > 250) {
         pdf.addPage();
         y = 20;
       }
@@ -236,16 +261,29 @@ export default function InspectionsPage() {
       
       pdf.setTextColor(107, 114, 128);
       pdf.setFontSize(8);
+      let contentY = y + 5;
       if (data.notes) {
         const splitNotes = pdf.splitTextToSize(`Note: ${data.notes}`, pageWidth - 80);
-        pdf.text(splitNotes, 25, y + 5);
-        y += (splitNotes.length * 4);
+        pdf.text(splitNotes, 25, contentY);
+        contentY += (splitNotes.length * 4);
       }
       
+      if (data.imageUrl) {
+        try {
+          const b64 = await getBase64FromUrl(data.imageUrl);
+          if (b64) {
+            pdf.addImage(b64, 'JPEG', 25, contentY, 40, 30);
+            contentY += 35;
+          }
+        } catch (e) {
+          console.error("Failed to add image to PDF", e);
+        }
+      }
+      
+      y = contentY + 5;
       pdf.setTextColor(0, 0, 0);
       pdf.setFontSize(10);
-      y += 8;
-    });
+    }
 
     const totalPages = pdf.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
@@ -263,21 +301,47 @@ export default function InspectionsPage() {
     setIsGenerating(true);
     const property = properties?.find(p => p.id === activeInspection.propertyId);
 
-    const flatFindings = Object.entries(structuredFindings).map(([item, data]) => {
-      return `${item}: ${data.status?.toUpperCase() || 'UNCHECKED'} ${data.notes ? `(Notes: ${data.notes})` : ''}`;
-    }).join('\n');
-
     try {
+      // 1. Upload Images to Supabase
+      const finalStructuredFindings: any = {};
+      const findingsList = Object.entries(structuredFindings);
+
+      for (const [item, data] of findingsList) {
+        let uploadedUrl = data.imageUrl || "";
+        
+        if (data.localFile) {
+          const formData = new FormData();
+          formData.append('file', data.localFile);
+          const path = `audits/${user.uid}/${activeInspection.id}/${item.replace(/\s+/g, '_')}_${Date.now()}`;
+          const uploadRes = await uploadToSupabase(formData, 'property-images', path);
+          if (uploadRes.success) {
+            uploadedUrl = uploadRes.url || "";
+          }
+        }
+
+        finalStructuredFindings[item] = {
+          status: data.status,
+          notes: data.notes,
+          imageUrl: uploadedUrl
+        };
+      }
+
+      // 2. Generate AI Report
+      const flatFindingsString = Object.entries(finalStructuredFindings).map(([item, data]: [string, any]) => {
+        return `${item}: ${data.status?.toUpperCase() || 'UNCHECKED'} ${data.notes ? `(Notes: ${data.notes})` : ''}`;
+      }).join('\n');
+
       const aiReport = await generateInspectionReport({
         propertyAddress: property?.addressLine1 || 'Property',
-        findings: flatFindings
+        findings: flatFindingsString
       });
 
+      // 3. Persist to Firestore
       const inspectionRef = doc(db, 'inspections', activeInspection.id);
       const completedData = {
         ...activeInspection,
         status: 'completed',
-        structuredFindings: structuredFindings,
+        structuredFindings: finalStructuredFindings,
         summary: aiReport.summary,
         priorityItems: aiReport.priorityItems,
         healthScore: aiReport.healthScore,
@@ -286,11 +350,15 @@ export default function InspectionsPage() {
       };
 
       updateDocumentNonBlocking(inspectionRef, completedData);
-      downloadPDF(completedData);
+      
+      // 4. Download PDF (Asynchronously)
+      await downloadPDF(completedData);
+
       toast({ title: "Audit Finalized", description: "Official record updated and report downloaded." });
       setActiveInspection(null);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Reporting Failed", description: "AI could not generate summary at this time." });
+      console.error(error);
+      toast({ variant: "destructive", title: "Reporting Failed", description: "The audit engine encountered a synchronization error." });
     } finally {
       setIsGenerating(false);
     }
@@ -377,10 +445,10 @@ export default function InspectionsPage() {
                               {inspection.status === 'completed' ? <><Edit3 className="w-4 h-4 mr-2" /> Edit Audit</> : <><PlayCircle className="w-4 h-4 mr-2" /> Start Audit</>}
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="sm:max-w-[700px] p-0 rounded-2xl border-none shadow-2xl flex flex-col h-[85vh] overflow-hidden">
+                          <DialogContent className="sm:max-w-[750px] p-0 rounded-2xl border-none shadow-2xl flex flex-col h-[85vh] overflow-hidden">
                             <div className="p-6 bg-primary/5 border-b text-left">
                               <DialogTitle className="text-2xl font-headline font-bold">Comprehensive Audit</DialogTitle>
-                              <DialogDescription className="font-medium text-muted-foreground font-body">{inspection.status === 'completed' ? "Updating previous findings." : "Conducting full safety audit."}</DialogDescription>
+                              <DialogDescription className="font-medium text-muted-foreground font-body">{inspection.status === 'completed' ? "Updating previous findings and evidence." : "Conducting full safety audit with photographic evidence."}</DialogDescription>
                             </div>
                             <ScrollArea className="flex-1 text-left">
                               <div className="p-6 space-y-8">
@@ -399,7 +467,7 @@ export default function InspectionsPage() {
                                     <TabsContent key={section.id} value={section.id} className="mt-6 space-y-6">
                                       <div className="flex items-center gap-2 mb-4"><section.icon className="w-5 h-5 text-primary" /><h3 className="text-lg font-bold font-headline">{section.title}</h3></div>
                                       {section.items.map(item => (
-                                        <div key={item} className="p-4 bg-muted/20 rounded-2xl space-y-4 border border-primary/5">
+                                        <div key={item} className="p-5 bg-muted/20 rounded-2xl space-y-5 border border-primary/5">
                                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                             <Label className="font-bold text-sm text-left font-body">{item}</Label>
                                             <div className="flex gap-2">
@@ -407,7 +475,41 @@ export default function InspectionsPage() {
                                               <Button size="sm" variant={structuredFindings[item]?.status === 'fail' ? 'destructive' : 'outline'} className="rounded-lg font-bold h-8 px-4 font-headline" onClick={() => handleStatusChange(item, 'fail')}><X className="w-3 h-3 mr-2" /> FAIL</Button>
                                             </div>
                                           </div>
-                                          <Textarea placeholder="Auditor notes..." className="rounded-xl min-h-[60px] bg-white text-sm font-body" value={structuredFindings[item]?.notes || ''} onChange={(e) => handleNotesChange(item, e.target.value)} />
+                                          
+                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                              <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Audit Notes</Label>
+                                              <Textarea placeholder="Auditor notes..." className="rounded-xl min-h-[100px] bg-white text-sm font-body" value={structuredFindings[item]?.notes || ''} onChange={(e) => handleNotesChange(item, e.target.value)} />
+                                            </div>
+                                            <div className="space-y-2">
+                                              <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Evidence Photo</Label>
+                                              <div className="relative group">
+                                                {structuredFindings[item]?.imageUrl ? (
+                                                  <div className="relative aspect-video rounded-xl overflow-hidden bg-white border border-primary/10 shadow-sm">
+                                                    <Image src={structuredFindings[item]?.imageUrl || ''} alt="Evidence" fill className="object-cover" unoptimized />
+                                                    <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-lg shadow-lg" onClick={() => setStructuredFindings(prev => ({...prev, [item]: {...prev[item], imageUrl: undefined, localFile: undefined}}))}>
+                                                      <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                  </div>
+                                                ) : (
+                                                  <button 
+                                                    onClick={() => document.getElementById(`upload-${item}`)?.click()}
+                                                    className="w-full aspect-video rounded-xl border-2 border-dashed border-primary/10 hover:border-primary/30 transition-all bg-white flex flex-col items-center justify-center gap-2 group"
+                                                  >
+                                                    <Camera className="w-8 h-8 text-primary/20 group-hover:text-primary/40 transition-colors" />
+                                                    <span className="text-[10px] font-bold uppercase text-primary/40 group-hover:text-primary/60">Capture Evidence</span>
+                                                  </button>
+                                                )}
+                                                <input 
+                                                  id={`upload-${item}`} 
+                                                  type="file" 
+                                                  accept="image/*" 
+                                                  className="hidden" 
+                                                  onChange={(e) => handleImageUpload(item, e.target.files?.[0] || null)} 
+                                                />
+                                              </div>
+                                            </div>
+                                          </div>
                                         </div>
                                       ))}
                                     </TabsContent>
@@ -417,7 +519,7 @@ export default function InspectionsPage() {
                             </ScrollArea>
                             <DialogFooter className="p-6 bg-muted/10 border-t">
                               <Button className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 font-headline text-white hover:bg-primary/90" onClick={handleConduct} disabled={isGenerating}>
-                                {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Finalizing...</> : <><CheckCircle2 className="w-4 h-4 mr-2" /> Sign & Update Record</>}
+                                {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Finalizing Audit...</> : <><CheckCircle2 className="w-4 h-4 mr-2" /> Sign & Update Record</>}
                               </Button>
                             </DialogFooter>
                           </DialogContent>
