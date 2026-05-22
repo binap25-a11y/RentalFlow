@@ -263,16 +263,17 @@ export default function LandlordEmergencyContactsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto text-left pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Emergency Hub</h1>
-          <p className="text-muted-foreground font-medium font-body">
+          <p className="text-muted-foreground font-medium font-body max-w-2xl">
             {selectedProperty 
               ? `Managing safety records and partners for ${selectedProperty.addressLine1}` 
               : "Manage UK standard services and property-specific professional partners."}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        
+        <div className="flex flex-wrap items-center gap-3 pt-2">
           <div className="flex items-center gap-2 bg-white rounded-xl border border-primary/10 px-3 h-11 shadow-sm">
              <Filter className="w-4 h-4 text-primary/60" />
              <Label className="text-[10px] font-bold uppercase text-muted-foreground">Context:</Label>
@@ -403,7 +404,7 @@ export default function LandlordEmergencyContactsPage() {
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-primary/40 hover:text-primary" onClick={() => handleEdit(contact)}>
                           <Edit3 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-destructive/40 hover:text-destructive" onClick={() => handleDelete(contact.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-destructive/40 hover:text-destructive hover:bg-destructive/5" onClick={() => handleDelete(contact.id)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
