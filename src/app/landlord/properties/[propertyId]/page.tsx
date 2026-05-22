@@ -31,7 +31,7 @@ import {
   PopoverTrigger 
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { cn, getResolvedGallery } from "@/lib/utils";
+import { cn, getResolvedGallery, getResolvedImageUrl } from "@/lib/utils";
 import Image from "next/image";
 import {
   Carousel,
@@ -69,9 +69,13 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
-  // DETERMINISTIC GALLERY RESOLUTION: Ensures cover is always Index 0
+  // DETERMINISTIC GALLERY RESOLUTION: Ensures cover is always Index 0 and placeholders are swapped
   const gallery = useMemo(() => {
     return getResolvedGallery(property?.imageUrl, property?.imageUrls);
+  }, [property]);
+
+  const primaryCoverUrl = useMemo(() => {
+    return getResolvedImageUrl(property?.imageUrl, property?.imageUrls);
   }, [property]);
 
   const tenantsQuery = useMemoFirebase(() => {
@@ -312,6 +316,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         fill 
                         className="object-cover" 
                         unoptimized 
+                        priority={index === 0}
                         data-ai-hint="luxury property" 
                       />
                       {index === 0 && !url.includes('picsum.photos/seed/rentalflow-default') && (

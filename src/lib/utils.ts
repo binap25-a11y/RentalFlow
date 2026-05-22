@@ -8,25 +8,31 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * 🖼️ Robust Asset Resolution Engine
  * Strictly prioritizes user-uploaded content over placeholders.
- * Tier 1: Explicit primary imageUrl (Designated Cover)
+ * Tier 1: Explicit primary imageUrl (Designated User Cover)
  * Tier 2: First valid item in the gallery ledger (imageUrls[0])
  * Tier 3: Professional platform fallback
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
   const FALLBACK = "https://picsum.photos/seed/rentalflow-default/800/600";
   
-  // 1. Check designated cover image
-  if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('http')) {
-    return imageUrl;
+  const isPlaceholder = (url: any) => 
+    !url || 
+    typeof url !== 'string' || 
+    !url.startsWith('http') || 
+    url.includes('picsum.photos/seed/rentalflow-default');
+
+  // 1. If we have a valid, non-placeholder cover image, use it.
+  if (!isPlaceholder(imageUrl)) {
+    return imageUrl!;
   }
   
-  // 2. Fallback to the first valid item in the gallery ledger
-  if (imageUrls && Array.isArray(imageUrls) && imageUrls.length > 0) {
-    const firstUrl = imageUrls.find(url => url && typeof url === 'string' && url.startsWith('http'));
-    if (firstUrl) return firstUrl;
+  // 2. If cover is empty/placeholder, check the gallery ledger for a user image.
+  if (imageUrls && Array.isArray(imageUrls)) {
+    const firstUserUrl = imageUrls.find(url => !isPlaceholder(url));
+    if (firstUserUrl) return firstUserUrl;
   }
   
-  // 3. Absolute fallback
+  // 3. Absolute fallback (The "waves" or "forest" you see when nothing else exists)
   return FALLBACK;
 }
 
@@ -39,19 +45,26 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
   const FALLBACK = "https://picsum.photos/seed/rentalflow-default/800/600";
   const gallery = new Set<string>();
 
-  // 1. Seed with the primary cover
-  if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('http')) {
-    gallery.add(imageUrl);
+  const isPlaceholder = (url: any) => 
+    !url || 
+    typeof url !== 'string' || 
+    !url.startsWith('http') || 
+    url.includes('picsum.photos/seed/rentalflow-default');
+
+  // 1. Seed with the primary cover if it's a real user upload
+  if (!isPlaceholder(imageUrl)) {
+    gallery.add(imageUrl!);
   }
 
-  // 2. Add remaining unique assets from the ledger
+  // 2. Add unique assets from the ledger
   if (imageUrls && Array.isArray(imageUrls)) {
     imageUrls.forEach(url => {
-      if (url && typeof url === 'string' && url.startsWith('http')) {
+      if (!isPlaceholder(url)) {
         gallery.add(url);
       }
     });
   }
 
+  // 3. Return the user gallery if it exists, otherwise return a single placeholder
   return gallery.size > 0 ? Array.from(gallery) : [FALLBACK];
 }
