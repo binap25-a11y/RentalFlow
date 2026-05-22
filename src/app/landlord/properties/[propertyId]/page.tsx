@@ -174,7 +174,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     let message = "Fully verified and compliant.";
 
     if (finalScore < 60) {
-      color = "bg-red-500";
+      color = "bg-red-50";
       message = reasons[0] || "Immediate attention required.";
     } else if (finalScore < 90) {
       color = "bg-amber-500";
