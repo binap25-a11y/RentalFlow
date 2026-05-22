@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
+import { getResolvedGallery } from "@/lib/utils";
 
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -62,20 +63,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // Load current assets, ensuring no duplicates and that cover is present
-      const gallery: string[] = [];
-      if (property.imageUrl && typeof property.imageUrl === 'string' && property.imageUrl.startsWith('http')) {
-        gallery.push(property.imageUrl);
-      }
-      if (property.imageUrls && Array.isArray(property.imageUrls)) {
-        property.imageUrls.forEach(url => {
-          if (url && typeof url === 'string' && url.startsWith('http') && !gallery.includes(url)) {
-            gallery.push(url);
-          }
-        });
-      }
-      
-      setExistingImageUrls(gallery);
+      // Load current assets using the hardened gallery resolver
+      const gallery = getResolvedGallery(property.imageUrl, property.imageUrls);
+      // Filter out placeholders so the user only sees their own photos to manage
+      const userPhotos = gallery.filter(url => !url.includes('picsum.photos/seed/rentalflow-default'));
+      setExistingImageUrls(userPhotos);
     }
   }, [property, isSaving]);
 
@@ -121,7 +113,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       // Combine existing images (that weren't deleted) and new uploads
       const finalGallery = [...existingImageUrls, ...uploadedUrls];
       
-      // DESIGNATED COVER: The first image in the final ledger is the primary identity
+      // DETERMINISTIC COVER: The first image in the final ledger is explicitly the primary visual identity
       const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
 
       const serializableData = {
@@ -148,7 +140,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Portfolio Updated", description: "Visual assets and metadata synchronized." });
+      toast({ title: "Portfolio Updated", description: "Visual assets and specifications synchronized." });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Update failed:", err);

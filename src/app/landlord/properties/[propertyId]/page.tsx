@@ -69,7 +69,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
-  // CRITICAL: Resolve full gallery ensuring primary cover is index 0
+  // DETERMINISTIC GALLERY RESOLUTION: Ensures cover is always Index 0
   const gallery = useMemo(() => {
     return getResolvedGallery(property?.imageUrl, property?.imageUrls);
   }, [property]);
@@ -314,7 +314,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         unoptimized 
                         data-ai-hint="luxury property" 
                       />
-                      {index === 0 && url !== "https://picsum.photos/seed/rentalflow-default/800/600" && (
+                      {index === 0 && !url.includes('picsum.photos/seed/rentalflow-default') && (
                         <div className="absolute top-6 left-6 px-4 py-1.5 bg-primary text-white text-[10px] font-bold uppercase rounded-full shadow-2xl font-headline">Cover Asset</div>
                       )}
                     </div>

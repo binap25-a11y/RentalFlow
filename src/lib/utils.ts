@@ -6,29 +6,24 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * 🖼️ Hardened Asset Resolution Engine
+ * 🖼️ Robust Asset Resolution Engine
  * Strictly prioritizes user-uploaded content over placeholders.
  * Tier 1: Explicit primary imageUrl (Designated Cover)
- * Tier 2: First item in the gallery ledger (imageUrls[0])
+ * Tier 2: First valid item in the gallery ledger (imageUrls[0])
  * Tier 3: Professional platform fallback
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
   const FALLBACK = "https://picsum.photos/seed/rentalflow-default/800/600";
   
   // 1. Check designated cover image
-  if (imageUrl && typeof imageUrl === 'string' && imageUrl.trim() !== "" && imageUrl.startsWith('http')) {
-    // Only return if it's not a generic picsum placeholder that might have been saved
-    if (!imageUrl.includes('picsum.photos/seed/prop')) {
-      return imageUrl;
-    }
+  if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('http')) {
+    return imageUrl;
   }
   
-  // 2. Fallback to the first item in the gallery ledger
+  // 2. Fallback to the first valid item in the gallery ledger
   if (imageUrls && Array.isArray(imageUrls) && imageUrls.length > 0) {
-    const firstUrl = imageUrls[0];
-    if (firstUrl && typeof firstUrl === 'string' && firstUrl.trim() !== "" && firstUrl.startsWith('http')) {
-      return firstUrl;
-    }
+    const firstUrl = imageUrls.find(url => url && typeof url === 'string' && url.startsWith('http'));
+    if (firstUrl) return firstUrl;
   }
   
   // 3. Absolute fallback
@@ -42,21 +37,21 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const FALLBACK = "https://picsum.photos/seed/rentalflow-default/800/600";
-  const gallery: string[] = [];
+  const gallery = new Set<string>();
 
   // 1. Seed with the primary cover
-  if (imageUrl && typeof imageUrl === 'string' && imageUrl.trim() !== "" && imageUrl.startsWith('http')) {
-    gallery.push(imageUrl);
+  if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('http')) {
+    gallery.add(imageUrl);
   }
 
   // 2. Add remaining unique assets from the ledger
   if (imageUrls && Array.isArray(imageUrls)) {
     imageUrls.forEach(url => {
-      if (url && typeof url === 'string' && url.trim() !== "" && url.startsWith('http') && !gallery.includes(url)) {
-        gallery.push(url);
+      if (url && typeof url === 'string' && url.startsWith('http')) {
+        gallery.add(url);
       }
     });
   }
 
-  return gallery.length > 0 ? gallery : [FALLBACK];
+  return gallery.size > 0 ? Array.from(gallery) : [FALLBACK];
 }

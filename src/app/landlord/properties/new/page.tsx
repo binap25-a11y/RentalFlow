@@ -73,7 +73,7 @@ export default function NewPropertyPage() {
         const results = await Promise.all(uploadPromises);
         finalImageUrls = results.filter(r => r.success && r.url).map(r => r.url!);
         
-        // DESIGNATED COVER: Explicitly set the first successfully uploaded image as the primary visual ID
+        // DETERMINISTIC COVER: Explicitly set the first successfully uploaded image as the primary identity
         if (finalImageUrls.length > 0) {
           finalImageUrl = finalImageUrls[0];
         }
