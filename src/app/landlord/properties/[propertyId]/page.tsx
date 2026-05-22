@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useMemo, useEffect } from 'react';
@@ -494,10 +493,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 <div className="p-4 bg-white/10 rounded-2xl border border-white/10">
                    <p className="text-[10px] font-bold uppercase opacity-60 tracking-widest mb-1">Asset Isolation</p>
                    <p className="text-sm font-medium">This asset is strictly isolated. Only designated residents and management can access the vault.</p>
-                </div>
-                <div className="p-4 bg-white/10 rounded-2xl border border-white/10">
-                   <p className="text-[10px] font-bold uppercase opacity-60 tracking-widest mb-1">Portfolio ID</p>
-                   <code className="text-xs font-mono opacity-80 break-all">{propertyId}</code>
                 </div>
              </CardContent>
            </Card>
