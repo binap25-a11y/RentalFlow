@@ -262,22 +262,27 @@ export default function LandlordCalendarPage() {
                {upcomingEvents.length === 0 ? (
                   <p className="col-span-full text-center py-10 text-muted-foreground italic text-sm">No operational milestones detected in the next 12 months.</p>
                ) : (
-                 upcomingEvents.map(event => (
-                   <div key={event.id} className="flex gap-4 p-5 bg-white rounded-2xl border border-primary/5 shadow-sm items-center group hover:border-primary/20 transition-all">
-                      <div className={cn(
-                        "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
-                        event.type === 'inspection' ? "bg-primary/10 text-primary" :
-                        event.type === 'lease' ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"
-                      )}>
-                        {event.type === 'inspection' ? <ShieldCheck className="w-5 h-5" /> : 
-                         event.type === 'lease' ? <Users className="w-5 h-5" /> : <Wrench className="w-5 h-5" />}
-                      </div>
-                      <div className="min-w-0">
-                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{format(event.date, 'MMM dd, yyyy')}</p>
-                         <p className="font-bold text-sm text-primary truncate">{event.title}</p>
-                      </div>
-                   </div>
-                 ))
+                 upcomingEvents.map(event => {
+                   const linkHref = event.type === 'inspection' ? `/landlord/inspections` :
+                                   event.type === 'lease' ? `/landlord/tenants` : `/landlord/maintenance`;
+                   
+                   return (
+                     <Link key={event.id} href={linkHref} className="flex gap-4 p-5 bg-white rounded-2xl border border-primary/5 shadow-sm items-center group hover:border-primary/20 hover:shadow-md hover:scale-[1.02] transition-all">
+                        <div className={cn(
+                          "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:rotate-6",
+                          event.type === 'inspection' ? "bg-primary/10 text-primary" :
+                          event.type === 'lease' ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"
+                        )}>
+                          {event.type === 'inspection' ? <ShieldCheck className="w-5 h-5" /> : 
+                           event.type === 'lease' ? <Users className="w-5 h-5" /> : <Wrench className="w-5 h-5" />}
+                        </div>
+                        <div className="min-w-0">
+                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{format(event.date, 'MMM dd, yyyy')}</p>
+                           <p className="font-bold text-sm text-primary truncate">{event.title}</p>
+                        </div>
+                     </Link>
+                   );
+                 })
                )}
             </div>
           </div>
