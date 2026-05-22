@@ -34,7 +34,7 @@ export default function TenantLayout({
     }
   }, [user, isUserLoading, profile, isProfileLoading, router]);
 
-  const BRAND_LOGO_URL = `https://picsum.photos/seed/rentalflow-pro-identity/512/512`;
+  const BRAND_LOGO_URL = `https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=512&auto=format&fit=crop`;
 
   if (isUserLoading || isProfileLoading) {
     return (
@@ -48,7 +48,6 @@ export default function TenantLayout({
               fill 
               className="object-cover rounded-3xl relative z-10" 
               unoptimized 
-              data-ai-hint="real estate logo"
             />
           </div>
           <div className="flex items-center gap-2">

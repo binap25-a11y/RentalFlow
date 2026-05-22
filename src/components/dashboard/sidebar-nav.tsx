@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -67,7 +66,8 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
     }
   };
 
-  const LOGO_URL = 'https://picsum.photos/seed/rentalflow-pro-identity/512/512';
+  // Professional static logo fallback
+  const LOGO_URL = 'https://images.unsplash.com/photo-1448630360428-65ff265eb4e2?q=80&w=256&h=256&auto=format&fit=crop';
 
   return (
     <Sidebar className="border-r border-sidebar-border shadow-2xl">
@@ -80,11 +80,10 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
           <div className="relative h-10 w-10 rounded-xl overflow-hidden shadow-lg transition-transform group-hover:scale-110">
             <Image 
               src={LOGO_URL} 
-              alt="RentalFlow Professional Brand" 
+              alt="RentalFlow" 
               fill 
               className="object-cover" 
               unoptimized 
-              data-ai-hint="real estate logo"
             />
           </div>
           <span className="font-headline font-bold text-xl tracking-tight text-sidebar-foreground">RentalFlow</span>

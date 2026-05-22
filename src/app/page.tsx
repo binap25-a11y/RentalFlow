@@ -37,7 +37,8 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  const BRAND_LOGO_URL = `https://picsum.photos/seed/rentalflow-pro-identity/512/512`;
+  // Professional static brand visual
+  const BRAND_LOGO_URL = `https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=512&auto=format&fit=crop`;
 
   useEffect(() => {
     setMounted(true);
@@ -166,11 +167,10 @@ export default function LoginPage() {
             <div className="absolute inset-0 bg-primary/10 rounded-[2.5rem] blur-3xl animate-pulse" />
             <Image 
               src={BRAND_LOGO_URL} 
-              alt="RentalFlow Professional Brand" 
+              alt="RentalFlow" 
               fill 
-              className="object-cover rounded-[2.5rem] shadow-[0_20px_50px_-12px_rgba(30,58,138,0.3)] ring-4 ring-white relative z-10" 
+              className="object-cover rounded-[2.5rem] shadow-2xl ring-4 ring-white relative z-10" 
               unoptimized 
-              data-ai-hint="real estate logo"
             />
           </div>
           
@@ -205,7 +205,6 @@ export default function LoginPage() {
                 height={80} 
                 className="rounded-2xl object-cover" 
                 unoptimized 
-                data-ai-hint="real estate logo"
               />
             </div>
             <CardTitle className="text-3xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
@@ -264,12 +263,11 @@ export default function LoginPage() {
         <div className="inline-flex items-center justify-center p-1.5 bg-white rounded-[2.75rem] mb-8 shadow-2xl ring-1 ring-primary/5 overflow-hidden">
            <Image 
             src={BRAND_LOGO_URL} 
-            alt="RentalFlow Professional Brand" 
+            alt="RentalFlow" 
             width={110} 
             height={110} 
             className="rounded-[2.5rem] object-cover" 
             unoptimized 
-            data-ai-hint="real estate logo"
           />
         </div>
         <h1 className="text-6xl font-headline font-bold text-primary mb-3 tracking-tighter">RentalFlow</h1>

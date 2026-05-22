@@ -109,6 +109,10 @@ export default function NewPropertyPage() {
       await syncPropertyToDb(serializableData);
 
       toast({ title: "Asset Registered", description: "Portfolio records synchronized." });
+      
+      // Cleanup preview state
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+      
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Asset registration failed:", err);
@@ -155,7 +159,6 @@ export default function NewPropertyPage() {
                         fill 
                         className="object-cover" 
                         unoptimized 
-                        data-ai-hint="property interior"
                       />
                       <button 
                         type="button" 

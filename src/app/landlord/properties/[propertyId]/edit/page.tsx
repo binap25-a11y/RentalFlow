@@ -65,14 +65,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      const gallery = Array.isArray(property.imageUrls) ? property.imageUrls : [];
+      const gallery = Array.isArray(property.imageUrls) ? [...property.imageUrls] : [];
       if (property.imageUrl && !gallery.includes(property.imageUrl)) {
         gallery.unshift(property.imageUrl);
       }
       
-      // Filter out placeholders to maintain professional, isolated look
+      // Clear generic placeholders from existing set
       const validGallery = gallery.filter(isUserUploadedAsset);
-      setExistingImageUrls(validGallery);
+      setExistingImageUrls(Array.from(new Set(validGallery)));
       setIsInitialized(true);
     }
   }, [property, isInitialized]);
@@ -121,8 +121,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const uniqueLedger = Array.from(new Set([...uploadedUrls, ...existingImageUrls])).filter(isValidAssetUrl);
       
       /**
-       * 🖼️ Deterministic Cover designating logic
-       * The first item in the SPECIFIC property's ledger (Index 0) is the Primary Identity.
+       * 🖼️ Deterministic Cover designates the first SPECIFIC property upload
+       * as the primary cover.
        */
       const primaryUrl = uniqueLedger.length > 0 ? uniqueLedger[0] : '';
 
@@ -152,9 +152,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       toast({ title: "Asset Updated", description: "Real-time records synchronized." });
       
-      // Clear local states before redirecting to avoid flickering
-      setNewImageFiles([]);
-      setNewPreviewUrls([]);
+      // Cleanup preview state before navigation
+      newPreviewUrls.forEach(url => URL.revokeObjectURL(url));
       
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
