@@ -64,7 +64,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // Seed initialization with deduplicated existing images
+      // Load all valid images from the existing record
       const currentImages = Array.isArray(property.imageUrls) ? [...property.imageUrls] : [];
       if (isValidAssetUrl(property.imageUrl) && !currentImages.includes(property.imageUrl)) {
         currentImages.unshift(property.imageUrl);
@@ -113,9 +113,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         uploadedUrls = results.filter(r => r.success && r.url).map(r => r.url!);
       }
 
-      // 🔄 Deterministic Hierarchy: New uploads prepended to become the primary cover immediately
+      // DETERMINISTIC HIERARCHY: New uploads prepended to become the primary cover immediately
       const finalGallery = [...uploadedUrls, ...existingImageUrls];
-      const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
+      
+      // Only keep unique URLs and filter out generic platform fallbacks if real user photos exist
+      const userUploads = finalGallery.filter(isUserUploadedAsset);
+      const galleryToPersist = userUploads.length > 0 ? userUploads : finalGallery;
+      const primaryUrl = galleryToPersist.length > 0 ? galleryToPersist[0] : (property?.imageUrl || '');
 
       const serializableData = {
         id: propertyId,
@@ -125,7 +129,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         zipCode,
         rentAmount: parseFloat(rentAmount) || 0,
         imageUrl: primaryUrl,
-        imageUrls: finalGallery,
+        imageUrls: galleryToPersist,
         propertyType,
         numberOfBedrooms: parseInt(bedrooms, 10) || 1,
         numberOfBathrooms: parseInt(bathrooms, 10) || 1,
