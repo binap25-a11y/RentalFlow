@@ -14,6 +14,7 @@ import { doc, getDoc, serverTimestamp, setDoc, collection, query, where, getDocs
 import { updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { RENTALFLOW_NEUTRAL_FALLBACK } from '@/lib/utils';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,8 +38,8 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  // Professional static brand visual
-  const BRAND_LOGO_URL = `https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=512&auto=format&fit=crop`;
+  // High-fidelity brand visual
+  const BRAND_LOGO_URL = RENTALFLOW_NEUTRAL_FALLBACK;
 
   useEffect(() => {
     setMounted(true);

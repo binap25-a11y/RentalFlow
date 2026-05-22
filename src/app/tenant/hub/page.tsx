@@ -151,6 +151,7 @@ export default function TenantHub() {
                 className="object-cover transition-transform duration-1000 group-hover:scale-105" 
                 unoptimized 
                 priority
+                data-ai-hint="property architecture"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/20 to-transparent opacity-90" />
               <div className="absolute bottom-10 left-10 text-white text-left space-y-4 max-w-2xl">

@@ -312,7 +312,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         className="object-cover" 
                         unoptimized 
                         priority={index === 0}
-                        data-ai-hint="property interior" 
+                        data-ai-hint="property architecture" 
                       />
                       {index === 0 && (
                         <div className="absolute top-6 left-6 px-4 py-1.5 bg-primary text-white text-[10px] font-bold uppercase rounded-full shadow-2xl font-headline">Cover Asset</div>

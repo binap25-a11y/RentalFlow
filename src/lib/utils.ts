@@ -23,7 +23,8 @@ export function isUserUploadedAsset(url: any): boolean {
   // Strictly identify and EXCLUDE generic placeholders to ensure a professional look
   const isGenericPlaceholder = 
     url.includes('picsum.photos') ||
-    url.includes('placehold.co');
+    url.includes('placehold.co') ||
+    url.includes('via.placeholder.com');
                     
   return !isGenericPlaceholder;
 }
