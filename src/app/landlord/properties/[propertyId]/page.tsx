@@ -72,7 +72,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   /**
    * 🖼️ Hardened Gallery Resolution
    * Ensures that user photography is explicitly prioritized over placeholders
-   * and that the designated 'imageUrl' is always at Index 0 in the carousel.
    */
   const gallery = useMemo(() => {
     return getResolvedGallery(property?.imageUrl, property?.imageUrls);
@@ -174,7 +173,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     let message = "Fully verified and compliant.";
 
     if (finalScore < 60) {
-      color = "bg-red-50";
+      color = "bg-red-500";
       message = reasons[0] || "Immediate attention required.";
     } else if (finalScore < 90) {
       color = "bg-amber-500";

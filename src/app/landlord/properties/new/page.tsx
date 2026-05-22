@@ -75,9 +75,8 @@ export default function NewPropertyPage() {
       }
 
       /**
-       * 🖼️ DETERMINISTIC COVER: 
-       * Explicitly set the first successfully uploaded image as the primary identity (imageUrl).
-       * This ensures consistency between Portfolio Cards and the Detail Gallery.
+       * 🖼️ Hardened Cover Sync
+       * Explicitly set the first uploaded image as the primary cover.
        */
       const finalImageUrl = finalImageUrls.length > 0 ? finalImageUrls[0] : '';
 
@@ -108,7 +107,7 @@ export default function NewPropertyPage() {
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Asset Registered", description: "Portfolio inventory and visual records synchronized." });
+      toast({ title: "Asset Registered", description: "Portfolio records synchronized." });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Asset registration failed:", err);
@@ -126,7 +125,7 @@ export default function NewPropertyPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">Register Asset</h1>
-            <p className="text-muted-foreground font-medium font-body">Add a high-value property with persistent visual records.</p>
+            <p className="text-muted-foreground font-medium font-body">Add a high-value property with persistent visuals.</p>
           </div>
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold">
@@ -254,7 +253,7 @@ export default function NewPropertyPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="description" className="font-bold text-xs uppercase text-primary/60 font-headline tracking-widest">Property Description</Label>
-                  <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Detail key asset features and high-value specifications..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-body font-medium" />
+                  <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Detail key asset features..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-body font-medium" />
                 </div>
               </div>
             </div>

@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { isValidAssetUrl } from "@/lib/utils";
+import { isValidAssetUrl, isUserUploadedAsset } from "@/lib/utils";
 
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -54,10 +54,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    /**
-     * 🛡️ Guard: Only initialize from Firestore once.
-     * Prevents background real-time updates from wiping out your local unsaved edits.
-     */
     if (property && !isInitialized) {
       setAddress(property.addressLine1 || '');
       setCity(property.city || '');
@@ -118,12 +114,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       }
 
       /**
-       * 🖼️ HARDENED VISUAL HIERARCHY
-       * We prepend new uploads so they become the primary cover immediately (Index 0).
-       * We deduplicate and ensure that all visual records are persisted as final URLs.
+       * 🖼️ Hardened Gallery Sync
+       * Prepend new uploads so they take priority as the Cover Asset (Index 0).
        */
-      const fullLedger = [...uploadedUrls, ...existingImageUrls];
-      const uniqueLedger = Array.from(new Set(fullLedger)).filter(isValidAssetUrl);
+      const fullLedger = [...uploadedUrls, ...existingImageUrls].filter(isValidAssetUrl);
+      const uniqueLedger = Array.from(new Set(fullLedger));
       
       // Select the primary cover from the start of the list (Index 0)
       const primaryUrl = uniqueLedger.length > 0 ? uniqueLedger[0] : '';
@@ -152,7 +147,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Asset Updated", description: "Portfolio visual records synchronized." });
+      toast({ title: "Asset Updated", description: "Visual records synchronized." });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Update failed:", err);

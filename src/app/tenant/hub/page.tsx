@@ -85,7 +85,10 @@ export default function TenantHub() {
     }
   };
 
-  // 🛡️ Robust Resolver: Ensures user photography is explicitly prioritized for residents
+  /**
+   * 🛡️ Hardened Resolver
+   * Prioritizes professional photography for the resident experience.
+   */
   const activeImageUrl = useMemo(() => {
     return getResolvedImageUrl(property?.imageUrl, property?.imageUrls);
   }, [property]);
@@ -111,7 +114,7 @@ export default function TenantHub() {
         </div>
         <div className="space-y-3">
           <h2 className="text-3xl font-bold font-headline text-primary">Lease Registration Pending</h2>
-          <p className="text-muted-foreground max-w-sm mx-auto font-medium font-body leading-relaxed">Your professional resident account is active. Please contact your landlord to link your current tenancy.</p>
+          <p className="text-muted-foreground max-w-sm mx-auto font-medium font-body leading-relaxed">Your professional resident account is active. Please contact your landlord to link your tenancy.</p>
         </div>
         <Button variant="outline" className="rounded-2xl h-12 px-10 font-bold border-primary/20" asChild>
           <Link href="/tenant/messages">Contact Management</Link>
@@ -200,7 +203,7 @@ export default function TenantHub() {
                 </div>
                 <div className="text-left">
                   <CardTitle className="text-2xl font-headline font-bold">Property Assistant</CardTitle>
-                  <CardDescription className="text-white/70 font-medium font-body">Instant guidance on your home and local area.</CardDescription>
+                  <CardDescription className="text-white/70 font-medium font-body">Instant guidance on your home.</CardDescription>
                 </div>
               </div>
             </CardHeader>

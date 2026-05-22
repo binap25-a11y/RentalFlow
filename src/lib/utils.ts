@@ -7,7 +7,6 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * 🖼️ Constants for Visual Fallbacks
- * Using a professional architecture placeholder as the base identity.
  */
 export const RENTALFLOW_FALLBACK = "https://picsum.photos/seed/rentalflow-default/800/600";
 
@@ -19,11 +18,12 @@ export const RENTALFLOW_FALLBACK = "https://picsum.photos/seed/rentalflow-defaul
 export function isUserUploadedAsset(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '' || !url.startsWith('http')) return false;
   
-  // Platform placeholders that we explicitly want to replace once user content exists
+  // Explicitly identify generic placeholders that should be replaced by user content
   const isPlaceholder = 
-    url.includes('picsum.photos') ||
-    url.includes('placehold.co') ||
-    url.includes('placehold.it');
+    url.includes('picsum.photos/seed/rentalflow-pro-identity') ||
+    url.includes('picsum.photos/seed/prop1') ||
+    url.includes('picsum.photos/seed/prop2') ||
+    url.includes('placehold.co');
                     
   return !isPlaceholder;
 }
@@ -79,7 +79,7 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
 
   const result = Array.from(assets);
   
-  // Logic: If the landlord has provided ANY professional photos, filter out the generic seeds
+  // Logic: If the landlord has provided ANY professional photos, filter out the generic placeholders
   // to ensure a high-fidelity experience.
   const userUploads = result.filter(isUserUploadedAsset);
   if (userUploads.length > 0) return userUploads;
