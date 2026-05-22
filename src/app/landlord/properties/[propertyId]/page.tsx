@@ -23,13 +23,14 @@ import {
   Download, FileText, Upload, 
   Calendar as CalendarIcon, 
   Bed, Bath, ChevronRight, AlertTriangle, CheckCircle2,
-  Clock, ShieldCheck
+  Clock, ShieldCheck, Maximize2
 } from "lucide-react";
 import { 
   Popover, 
   PopoverContent, 
   PopoverTrigger 
 } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { cn, getResolvedGallery, getResolvedImageUrl } from "@/lib/utils";
 import Image from "next/image";
@@ -121,6 +122,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const [rentAmount, setRentAmount] = useState('');
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
   const [uploadExpiryDate, setUploadExpiryDate] = useState<Date>();
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const assetStatus = useMemo(() => {
     let score = 100;
@@ -143,24 +145,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
     if (maintenanceRequests) {
       const active = maintenanceRequests.filter(r => r.status !== 'completed');
-      const critical = active.filter(r => r.priority === 'critical');
-      if (critical.length > 0) {
+      if (active.some(r => r.priority === 'critical')) {
         score -= 40;
         reasons.push("Pending critical repairs");
-      } else if (active.length > 0) {
-        score -= 15;
-        reasons.push(`${active.length} active repair(s)`);
-      }
-    }
-
-    if (inspections) {
-      const overdue = inspections.filter(i => {
-        if (i.status === 'completed' || !i.scheduledDate) return false;
-        return isBefore(new Date(i.scheduledDate), today);
-      });
-      if (overdue.length > 0) {
-        score -= 20;
-        reasons.push("Compliance audit overdue");
       }
     }
 
@@ -204,7 +191,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       const formData = new FormData();
       formData.append('file', file);
       const storagePath = `vault/${user.uid}/${propertyId}/${Date.now()}_${file.name}`;
-      
       const result = await uploadToSupabase(formData, 'property-documents', storagePath);
       
       if (result.success && result.url) {
@@ -229,11 +215,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
         await syncDocumentToDb(serializableDocData);
         toast({ title: "Vault Updated" });
-      } else {
-        throw new Error(result.error);
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Upload Failed", description: error.message });
+      toast({ variant: "destructive", title: "Upload Failed" });
     } finally {
       setIsUploadingDoc(false);
       setUploadExpiryDate(undefined);
@@ -245,15 +229,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     if (!db) return;
     try {
       const docRef = doc(db, 'documents', docObj.id);
-      
-      if (docObj.storagePath) {
-        await deleteFromSupabase('property-documents', docObj.storagePath);
-      }
-
+      if (docObj.storagePath) await deleteFromSupabase('property-documents', docObj.storagePath);
       deleteDocumentNonBlocking(docRef);
       deleteDocumentFromDb(docObj.id);
-      
-      toast({ title: "Document Purged", description: "Record and storage physically removed." });
+      toast({ title: "Document Purged" });
     } catch (error) {
       toast({ variant: "destructive", title: "Deletion Failed" });
     }
@@ -269,7 +248,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   };
 
   if (!isClient || isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
-  if (!property) return <div className="p-20 text-center font-bold font-headline text-primary opacity-40">Asset record not found in ledger.</div>;
+  if (!property) return <div className="p-20 text-center font-bold font-headline text-primary opacity-40">Asset record not found.</div>;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-12">
@@ -288,11 +267,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         <div className="flex gap-2">
            <Button variant="outline" className="rounded-xl font-bold h-11 border-primary/20 bg-white shadow-sm font-headline" asChild>
              <Link href={`/landlord/properties/${propertyId}/edit`}>
-               <Edit3 className="w-4 h-4 mr-2" /> Modify Specification
+               <Edit3 className="w-4 h-4 mr-2" /> Modify Specs
              </Link>
-           </Button>
-           <Button className="rounded-xl font-bold h-11 shadow-lg shadow-primary/20 bg-primary text-white font-headline" asChild>
-             <Link href={`/landlord/messages?prop=${propertyId}`}>Contact Residents</Link>
            </Button>
         </div>
       </div>
@@ -304,16 +280,18 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               <CarouselContent>
                 {gallery.map((url: string, index: number) => (
                   <CarouselItem key={`${url}-${index}`}>
-                    <div className="relative h-[450px] w-full bg-muted">
+                    <div className="relative h-[450px] w-full bg-muted cursor-zoom-in group" onClick={() => setLightboxUrl(url)}>
                       <Image 
                         src={url} 
                         alt={`Property ${index}`} 
                         fill 
-                        className="object-cover" 
+                        className="object-cover transition-transform duration-700 group-hover:scale-105" 
                         unoptimized 
                         priority={index === 0}
-                        data-ai-hint="property architecture" 
                       />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                        <Maximize2 className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
                       {index === 0 && (
                         <div className="absolute top-6 left-6 px-4 py-1.5 bg-primary text-white text-[10px] font-bold uppercase rounded-full shadow-2xl font-headline">Cover Asset</div>
                       )}
@@ -359,34 +337,20 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                   <p className={cn("font-bold font-headline text-lg uppercase", property.isOccupied ? 'text-emerald-600' : 'text-amber-600')}>{property.isOccupied ? 'Occupied' : 'Vacant'}</p>
                 </div>
               </div>
-
-              <div className="space-y-4 pt-4">
-                <h3 className="font-bold font-headline text-xl text-primary border-b border-primary/5 pb-3">Property Narrative</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed font-body font-medium whitespace-pre-wrap">{property.description || "A premium managed property under RentalFlow professional guidelines."}</p>
-              </div>
             </CardContent>
           </Card>
 
           <Tabs defaultValue="tenants" className="w-full">
             <TabsList className="grid grid-cols-4 w-full bg-muted/30 p-1.5 rounded-[1.25rem] h-auto gap-2 border border-primary/5">
-              <TabsTrigger value="tenants" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all font-headline text-xs">
-                <Users className="w-4 h-4 mr-2" /> Residents
-              </TabsTrigger>
-              <TabsTrigger value="docs" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all font-headline text-xs">
-                <FileText className="w-4 h-4 mr-2" /> Vault
-              </TabsTrigger>
-              <TabsTrigger value="maintenance" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all font-headline text-xs">
-                <Wrench className="w-4 h-4 mr-2" /> Repairs
-              </TabsTrigger>
-              <TabsTrigger value="inspections" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all font-headline text-xs">
-                <FileCheck className="w-4 h-4 mr-2" /> Audits
-              </TabsTrigger>
+              <TabsTrigger value="tenants" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all font-headline text-xs">Residents</TabsTrigger>
+              <TabsTrigger value="docs" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all font-headline text-xs">Vault</TabsTrigger>
+              <TabsTrigger value="maintenance" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all font-headline text-xs">Repairs</TabsTrigger>
+              <TabsTrigger value="inspections" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all font-headline text-xs">Audits</TabsTrigger>
             </TabsList>
-
             <TabsContent value="tenants" className="mt-8 space-y-4">
                {tenants && tenants.length > 0 ? (
                  tenants.map(tenant => (
-                    <div key={tenant.id} className="flex items-center justify-between p-6 bg-white rounded-[1.75rem] border border-primary/5 shadow-sm hover:shadow-md transition-all">
+                    <div key={tenant.id} className="flex items-center justify-between p-6 bg-white rounded-[1.75rem] border border-primary/5 shadow-sm">
                       <div className="flex items-center gap-5 text-left">
                         <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold text-xl font-headline">
                           {tenant.firstName?.[0]}{tenant.lastName?.[0]}
@@ -396,196 +360,42 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           <p className="text-sm text-muted-foreground font-medium font-body">{tenant.email}</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <Badge variant="outline" className="font-bold border-emerald-200 text-emerald-700 bg-emerald-50 mb-1 uppercase text-[10px]">Active Lease</Badge>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest font-headline">Expires: {tenant.leaseEndDate}</p>
-                      </div>
                     </div>
                  ))
                ) : (
                  <div className="p-20 text-center bg-muted/10 rounded-[2.5rem] border-2 border-dashed border-primary/10">
-                    <p className="text-sm text-muted-foreground font-bold font-headline mb-4 opacity-50">No residents assigned to this asset.</p>
-                    <Button asChild className="rounded-xl font-bold bg-primary text-white px-8 font-headline"><Link href="/landlord/tenants">Assign Resident</Link></Button>
+                    <p className="text-sm text-muted-foreground font-bold font-headline mb-4 opacity-50">No residents assigned.</p>
                  </div>
                )}
-            </TabsContent>
-
-            <TabsContent value="docs" className="mt-8 space-y-6">
-              <Card className="border-none shadow-sm bg-primary/5 rounded-[1.75rem] border border-primary/5 overflow-hidden">
-                <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2 text-left min-w-0">
-                    <Label className="text-[10px] font-bold font-headline uppercase tracking-[0.2em] text-primary/60">Compliance Expiry</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          className={cn(
-                            "w-full justify-start text-left h-12 rounded-xl bg-white border-none shadow-sm font-body px-4 transition-all hover:scale-[1.01] overflow-hidden", 
-                            !uploadExpiryDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-3 h-4 w-4 text-primary shrink-0" />
-                          <span className="flex-1 text-[13px] font-bold whitespace-nowrap overflow-hidden text-ellipsis">
-                            {uploadExpiryDate ? format(uploadExpiryDate, "PPP") : "Set Deadline"}
-                          </span>
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 rounded-2xl border-none shadow-2xl overflow-hidden" align="start">
-                        <Calendar mode="single" selected={uploadExpiryDate} onSelect={setUploadExpiryDate} initialFocus />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <div className="flex items-end">
-                    <input type="file" ref={fileInputRef} className="hidden" onChange={handleUploadDocument} />
-                    <Button onClick={() => fileInputRef.current?.click()} className="w-full rounded-xl h-12 font-bold shadow-lg shadow-primary/20 bg-primary text-white transition-transform active:scale-95 font-headline" disabled={isUploadingDoc}>
-                      {isUploadingDoc ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-                      <span className="truncate">Push to Vault</span>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div className="grid gap-4">
-                {!propertyDocuments || propertyDocuments.length === 0 ? (
-                  <div className="py-20 text-center bg-muted/5 rounded-[2rem] border-2 border-dashed border-primary/5">
-                    <FileText className="w-12 h-12 text-primary/10 mx-auto mb-4" />
-                    <p className="text-muted-foreground font-bold font-headline opacity-50 uppercase tracking-widest">Vault is empty.</p>
-                  </div>
-                ) : (
-                  propertyDocuments.map(doc => {
-                    const downloadUrl = doc.fileUrl;
-                    return (
-                      <div key={doc.id} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-all gap-4">
-                        <div className="flex items-center gap-4 text-left min-w-0 flex-1">
-                          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
-                            <FileText className="w-6 h-6" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-bold truncate text-primary leading-tight font-body">{doc.fileName}</p>
-                            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                              <p className="text-[9px] text-muted-foreground font-bold uppercase whitespace-nowrap bg-muted/30 px-2 py-0.5 rounded-full font-headline">Uploaded: {doc.uploadDate ? format(new Date(doc.uploadDate), 'PP') : 'Recently'}</p>
-                              {doc.expiryDate && (
-                                <Badge variant="outline" className="text-[9px] h-5 px-2 border-amber-200 text-amber-700 bg-amber-50 whitespace-nowrap font-bold uppercase">Expires {format(new Date(doc.expiryDate), 'PP')}</Badge>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex gap-2 shrink-0">
-                          {downloadUrl && downloadUrl !== 'pending' && !downloadUrl.startsWith('blob:') ? (
-                            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-primary/5 text-primary h-11 w-11 shadow-sm border border-transparent hover:border-primary/10 transition-all" asChild title="Download">
-                              <a href={downloadUrl} target="_blank" rel="noopener noreferrer" download={doc.fileName}>
-                                <Download className="w-5 h-5" />
-                              </a>
-                            </Button>
-                          ) : (
-                            <div className="px-4 py-2 flex items-center gap-3 bg-muted/50 rounded-xl">
-                              <Loader2 className="w-4 h-4 animate-spin text-primary/40" />
-                            </div>
-                          )}
-                          <Button variant="ghost" size="icon" className="rounded-xl hover:bg-destructive/5 text-destructive/40 hover:text-destructive h-11 w-11 transition-all shadow-sm" onClick={() => handleDeleteDocument(doc)} title="Remove">
-                            <Trash2 className="w-5 h-5" />
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="maintenance" className="mt-8 space-y-4">
-               {maintenanceRequests && maintenanceRequests.length > 0 ? (
-                 maintenanceRequests.map(req => (
-                    <div key={req.id} className="p-6 bg-white rounded-[1.75rem] border border-primary/5 text-left group hover:shadow-md transition-all">
-                      <div className="flex justify-between items-start mb-4">
-                         <div className="flex items-center gap-3">
-                           <Badge className={cn("text-[10px] font-bold uppercase px-3 py-1 shadow-sm", getPriorityColor(req.priority))}>{req.priority}</Badge>
-                           <Badge variant="outline" className="text-[10px] font-bold uppercase border-primary/10 bg-primary/[0.02] tracking-widest">{req.status}</Badge>
-                         </div>
-                         <span className="text-[10px] text-muted-foreground font-bold flex items-center opacity-60 font-headline uppercase"><Clock className="w-3 h-3 mr-1" /> {req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'PP') : 'Recently'}</span>
-                      </div>
-                      <h4 className="font-bold text-xl text-primary font-headline mb-2 leading-tight tracking-tight">{req.title}</h4>
-                      <p className="text-sm text-muted-foreground leading-relaxed font-body font-medium whitespace-pre-wrap">{req.description}</p>
-                      <div className="mt-6 pt-4 border-t border-primary/5 flex justify-end">
-                        <Button variant="ghost" className="text-xs font-bold text-primary rounded-xl hover:bg-primary/5 font-headline uppercase tracking-widest" asChild>
-                          <Link href="/landlord/maintenance">Open Maintenance Hub <ChevronRight className="w-4 h-4 ml-1" /></Link>
-                        </Button>
-                      </div>
-                    </div>
-                 ))
-               ) : (
-                 <div className="py-20 text-center bg-muted/10 rounded-[2.5rem] border-2 border-dashed border-primary/10">
-                   <Wrench className="w-12 h-12 text-primary/10 mx-auto mb-4" />
-                   <p className="text-muted-foreground font-bold font-headline opacity-50 uppercase tracking-widest">No repairs logged.</p>
-                 </div>
-               )}
-            </TabsContent>
-
-            <TabsContent value="inspections" className="mt-8 space-y-4">
-              {inspections && inspections.length > 0 ? (
-                inspections.map(insp => (
-                   <div key={insp.id} className="p-6 bg-white rounded-[1.75rem] border border-primary/5 text-left flex justify-between items-center group hover:shadow-md transition-all gap-4">
-                     <div className="flex items-center gap-5 min-w-0">
-                       <div className={cn("p-4 rounded-2xl flex flex-col items-center justify-center min-w-[70px] shrink-0 shadow-inner", insp.status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700')}>
-                         <span className="text-[10px] font-bold uppercase opacity-60 tracking-wider font-headline">{insp.scheduledDate ? format(new Date(insp.scheduledDate), 'MMM') : 'TBC'}</span>
-                         <span className="text-2xl font-bold font-headline">{insp.scheduledDate ? format(new Date(insp.scheduledDate), 'dd') : '??'}</span>
-                       </div>
-                       <div className="min-w-0">
-                         <h4 className="text-lg font-bold text-primary font-headline truncate tracking-tight">Safety & Compliance Audit</h4>
-                         <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                           <Badge variant={insp.status === 'completed' ? 'secondary' : 'default'} className="uppercase text-[9px] font-bold shadow-sm">{insp.status}</Badge>
-                           {insp.healthScore && (
-                             <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center border border-emerald-100 font-headline uppercase"><CheckCircle2 className="w-3 h-3 mr-1" /> Score: {insp.healthScore}/100</span>
-                           )}
-                         </div>
-                       </div>
-                     </div>
-                     <Button variant="outline" className="rounded-xl font-bold h-11 border-primary/20 hover:bg-primary hover:text-white transition-all shrink-0 shadow-sm font-headline" asChild>
-                       <Link href="/landlord/inspections">Audit Details <ChevronRight className="w-4 h-4 ml-1" /></Link>
-                     </Button>
-                   </div>
-                ))
-              ) : (
-                <div className="py-20 text-center bg-muted/10 rounded-[2.5rem] border-2 border-dashed border-primary/10">
-                  <ShieldCheck className="w-12 h-12 text-primary/10 mx-auto mb-4" />
-                  <p className="text-muted-foreground font-bold font-headline opacity-50 uppercase tracking-widest">No audits recorded.</p>
-                </div>
-              )}
             </TabsContent>
           </Tabs>
         </div>
-
-        <div className="space-y-8">
-          <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-primary text-white sticky top-24 border border-white/5">
-            <CardHeader className="text-left p-8 bg-white/5">
-              <CardTitle className="text-xl font-headline flex items-center tracking-tight">
-                <AlertTriangle className="w-6 h-6 mr-3 text-accent" />
-                Asset Health Score
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6 text-left p-8">
-              <div className="space-y-3">
-                 <div className="flex justify-between items-center text-xs font-bold uppercase tracking-[0.2em] opacity-60 font-headline">
-                   <span>Composite Grade</span>
-                   <span>{assetStatus.score}%</span>
-                 </div>
-                 <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                   <div className={cn("h-full transition-all duration-1000 ease-out", assetStatus.color)} style={{ width: `${assetStatus.score}%` }}></div>
-                 </div>
-              </div>
-              <div className="p-5 bg-white/10 rounded-[1.5rem] border border-white/10 backdrop-blur-md shadow-inner">
-                <div className="flex gap-3 items-start">
-                   <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-accent" />
-                   <p className="text-sm font-bold font-body leading-relaxed">
-                     {assetStatus.message}
-                   </p>
-                </div>
-              </div>
-              <p className="text-[10px] font-bold uppercase opacity-30 tracking-[0.4em] text-center mt-4 font-headline">Real-Time Audit Engine</p>
-            </CardContent>
-          </Card>
-        </div>
       </div>
+
+      <Dialog open={!!lightboxUrl} onOpenChange={() => setLightboxUrl(null)}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-none bg-transparent shadow-none flex items-center justify-center overflow-hidden">
+          <DialogTitle className="sr-only">Visual Asset Preview</DialogTitle>
+          {lightboxUrl && (
+            <div className="relative w-full h-full flex items-center justify-center">
+              <Image 
+                src={lightboxUrl} 
+                alt="High resolution property asset" 
+                width={1600} 
+                height={1200} 
+                className="object-contain max-w-full max-h-[90vh] rounded-2xl" 
+                unoptimized 
+              />
+              <button 
+                onClick={() => setLightboxUrl(null)}
+                className="absolute top-4 right-4 bg-black/60 text-white p-2 rounded-full hover:bg-black transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+

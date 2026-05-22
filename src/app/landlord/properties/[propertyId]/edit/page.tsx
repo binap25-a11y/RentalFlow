@@ -15,13 +15,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
-import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { isValidAssetUrl, isUserUploadedAsset } from "@/lib/utils";
+import { uploadToSupabase, deleteFromSupabase } from '@/lib/actions/supabase-storage';
+import { isUserUploadedAsset } from "@/lib/utils";
 
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -54,7 +54,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // 🛡️ Strict Property Context Initialization
     if (property && !isInitialized) {
       setAddress(property.addressLine1 || '');
       setCity(property.city || '');
@@ -70,7 +69,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         gallery.unshift(property.imageUrl);
       }
       
-      // Clear generic placeholders from existing set
       const validGallery = gallery.filter(isUserUploadedAsset);
       setExistingImageUrls(Array.from(new Set(validGallery)));
       setIsInitialized(true);
@@ -91,8 +89,34 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     setNewPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  const removeExistingImage = (index: number) => {
+  const removeExistingImage = async (index: number) => {
+    const urlToRemove = existingImageUrls[index];
     setExistingImageUrls(prev => prev.filter((_, i) => i !== index));
+    
+    // 🛡️ Physical Purge: Remove from Supabase if it's an internal link
+    if (urlToRemove.includes('supabase.co')) {
+      const pathMatch = urlToRemove.split('/public/')[1]?.split('?')[0];
+      if (pathMatch) {
+        const pathSegments = pathMatch.split('/');
+        pathSegments.shift(); // Remove bucket name from path
+        const relativePath = pathSegments.join('/');
+        await deleteFromSupabase('property-images', relativePath);
+      }
+    }
+  };
+
+  const setAsPrimary = (index: number, isNew: boolean) => {
+    if (isNew) {
+      const file = newImageFiles[index];
+      const preview = newPreviewUrls[index];
+      setNewImageFiles(prev => [file, ...prev.filter((_, i) => i !== index)]);
+      setNewPreviewUrls(prev => [preview, ...prev.filter((_, i) => i !== index)]);
+    } else {
+      const url = existingImageUrls[index];
+      setExistingImageUrls(prev => [url, ...prev.filter((_, i) => i !== index)]);
+      // When an existing one is set to primary, it should ideally come before new ones in the final save
+    }
+    toast({ title: "Cover Asset Updated", description: "This image will be used as the primary identity." });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -108,7 +132,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         const uploadPromises = newImageFiles.map((file, index) => {
           const formData = new FormData();
           formData.append('file', file);
-          // 🛡️ Explicit Property Isolation in Storage
           const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${file.name}`;
           return uploadToSupabase(formData, 'property-images', path);
         });
@@ -117,14 +140,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         uploadedUrls = results.filter(r => r.success && r.url).map(r => r.url!);
       }
 
-      // Merge new and existing property-specific assets, strictly filtering placeholders
+      // Merge new and existing. If new ones exist, they take priority based on order in UI.
       const uniqueLedger = Array.from(new Set([...uploadedUrls, ...existingImageUrls]))
         .filter(isUserUploadedAsset);
       
-      /**
-       * 🖼️ Deterministic Cover designates the first SPECIFIC property upload
-       * as the primary cover.
-       */
       const primaryUrl = uniqueLedger.length > 0 ? uniqueLedger[0] : '';
 
       const serializableData = {
@@ -151,15 +170,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Asset Updated", description: "Real-time records synchronized." });
+      toast({ title: "Asset Synchronized", description: "Visual and relational data updated." });
       
-      // Cleanup preview state before navigation
       newPreviewUrls.forEach(url => URL.revokeObjectURL(url));
-      
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
-      console.error("Update failed:", err);
-      toast({ variant: "destructive", title: "Update Failed", description: "Sync error in ledger." });
+      toast({ variant: "destructive", title: "Sync Failed", description: "Ledger error encountered." });
       setIsSaving(false);
     }
   };
@@ -175,11 +191,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </Button>
           <div>
             <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">Modify Asset</h1>
-            <p className="text-muted-foreground font-medium font-body">Refining unique specs for {address || 'Property'}.</p>
+            <p className="text-muted-foreground font-medium font-body">Refining visual identity for {address || 'Property'}.</p>
           </div>
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold">
-          <Sparkles className="w-3 h-3 mr-2" /> Specification Engine
+          <Sparkles className="w-3 h-3 mr-2" /> Asset Orchestration
         </Badge>
       </div>
 
@@ -198,27 +214,30 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                 {newPreviewUrls.map((url, index) => (
                   <div key={`new-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group border-2 border-accent shadow-md bg-white">
                     <Image src={url} alt={`New ${index}`} fill className="object-cover" unoptimized />
-                    <button type="button" onClick={() => removeNewImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-red-500 transition-all shadow-lg z-20"><X className="w-3.5 h-3.5" /></button>
+                    <div className="absolute top-2 right-2 flex gap-1 z-20">
+                      <button type="button" onClick={() => setAsPrimary(index, true)} className="bg-accent text-white p-1.5 rounded-lg hover:scale-110 transition-transform shadow-lg"><Star className="w-3.5 h-3.5 fill-current" /></button>
+                      <button type="button" onClick={() => removeNewImage(index)} className="bg-black/60 text-white p-1.5 rounded-lg hover:bg-red-500 transition-all shadow-lg"><X className="w-3.5 h-3.5" /></button>
+                    </div>
                     {index === 0 && (
-                      <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-accent text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline z-10">New Primary Cover</div>
+                      <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-accent text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline z-10">New Cover Target</div>
                     )}
                   </div>
                 ))}
                 {existingImageUrls.map((url, index) => (
                   <div key={`existing-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border border-primary/10 bg-white">
                     <Image src={url} alt={`Existing ${index}`} fill className="object-cover" unoptimized />
-                    <button type="button" onClick={() => removeExistingImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all shadow-lg z-20"><X className="w-3.5 h-3.5" /></button>
+                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                      <button type="button" onClick={() => setAsPrimary(index, false)} className="bg-primary text-white p-1.5 rounded-lg hover:scale-110 transition-transform shadow-lg"><Star className="w-3.5 h-3.5 fill-current" /></button>
+                      <button type="button" onClick={() => removeExistingImage(index)} className="bg-black/60 text-white p-1.5 rounded-lg hover:bg-red-500 transition-all shadow-lg"><X className="w-3.5 h-3.5" /></button>
+                    </div>
                     {newPreviewUrls.length === 0 && index === 0 && (
-                      <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline z-10">Current Cover</div>
+                      <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline z-10">Active Cover</div>
                     )}
                   </div>
                 ))}
-                <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 bg-white flex flex-col items-center justify-center gap-2 transition-all group">
-                  <Plus className="w-6 h-6 text-primary/20 group-hover:text-primary/40" />
-                  <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest font-headline group-hover:text-primary/60">Upload More</span>
-                </button>
               </div>
               <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
+              <p className="mt-6 text-[10px] font-bold text-muted-foreground uppercase text-center tracking-[0.2em] opacity-40">Physical Deletion synchronized with Supabase</p>
             </div>
 
             <div className="p-8 lg:p-12 space-y-8">
@@ -257,17 +276,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                     <Input type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
                   </div>
                 </div>
-                <div className="space-y-2 text-left">
-                  <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Asset Narrative</Label>
-                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} className="rounded-xl min-h-[120px] bg-muted/20 border-none font-medium" />
-                </div>
               </div>
             </div>
           </div>
           <CardFooter className="p-8 bg-muted/10 border-t flex justify-end gap-4">
             <Button type="button" variant="ghost" className="rounded-xl h-12 px-8 font-bold" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" disabled={isSaving} className="rounded-xl font-bold bg-primary h-12 px-12 text-white transition-transform active:scale-95 shadow-lg shadow-primary/20">
-              {isSaving ? "Syncing Specification..." : "Save Specification"}
+            <Button type="submit" disabled={isSaving} className="rounded-xl font-bold bg-primary h-12 px-12 text-white shadow-lg shadow-primary/20">
+              {isSaving ? "Synchronizing Asset..." : "Update Portfolio Records"}
             </Button>
           </CardFooter>
         </form>
@@ -275,3 +290,4 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     </div>
   );
 }
+
