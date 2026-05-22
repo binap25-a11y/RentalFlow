@@ -27,7 +27,7 @@ import {
   DialogTitle, 
   DialogTrigger 
 } from "@/components/ui/dialog";
-import { Users, Plus, Mail, Phone, Trash2, Search, Loader2, UserX, Edit3 } from "lucide-react";
+import { Users, Plus, Mail, Phone, Trash2, Search, Loader2, UserX, Edit3, CalendarDays } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -58,6 +58,7 @@ export default function TenantsPage() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [leaseEndDate, setLeaseEndDate] = useState('');
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
 
   const resetForm = () => {
@@ -65,6 +66,7 @@ export default function TenantsPage() {
     setLastName('');
     setEmail('');
     setPhone('');
+    setLeaseEndDate('');
     setSelectedPropertyId('');
     setEditingTenant(null);
   };
@@ -75,6 +77,7 @@ export default function TenantsPage() {
     setLastName(tenant.lastName);
     setEmail(tenant.email);
     setPhone(tenant.phoneNumber);
+    setLeaseEndDate(tenant.leaseEndDate || '');
     setSelectedPropertyId(tenant.propertyId);
     setIsDialogOpen(true);
   };
@@ -83,16 +86,19 @@ export default function TenantsPage() {
     e.preventDefault();
     if (!user || !db || !selectedPropertyId) return;
 
+    const tenantPayload = {
+      firstName,
+      lastName,
+      email: email.toLowerCase().trim(),
+      phoneNumber: phone,
+      leaseEndDate: leaseEndDate || null, // Optional: only tracked if provided
+      propertyId: selectedPropertyId,
+      updatedAt: serverTimestamp(),
+    };
+
     if (editingTenant) {
       const tenantRef = doc(db, 'tenantProfiles', editingTenant.id);
-      updateDocumentNonBlocking(tenantRef, {
-        firstName,
-        lastName,
-        email: email.toLowerCase().trim(),
-        phoneNumber: phone,
-        propertyId: selectedPropertyId,
-        updatedAt: serverTimestamp(),
-      });
+      updateDocumentNonBlocking(tenantRef, tenantPayload);
       toast({ title: "Resident Updated", description: "Changes have been saved to the portfolio." });
     } else {
       const tenantId = doc(collection(db, 'tenantProfiles')).id;
@@ -102,19 +108,13 @@ export default function TenantsPage() {
 
       setDocumentNonBlocking(tenantRef, {
         id: tenantId,
-        firstName,
-        lastName,
-        email: email.toLowerCase().trim(),
-        phoneNumber: phone,
+        ...tenantPayload,
         userId: placeholderUserId,
         tenantId: placeholderUserId,
-        propertyId: selectedPropertyId,
         landlordId: user.uid,
         memberIds: [user.uid, placeholderUserId],
         leaseStartDate: new Date().toISOString().split('T')[0],
-        leaseEndDate: new Date(Date.now() + 31536000000).toISOString().split('T')[0],
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
       }, { merge: true });
 
       updateDocumentNonBlocking(propertyRef, {
@@ -124,7 +124,7 @@ export default function TenantsPage() {
         updatedAt: serverTimestamp(),
       });
 
-      toast({ title: "Resident Assigned", description: "The resident can now join using their email." });
+      toast({ title: "Resident Assigned", description: "Resident profile synchronized with asset." });
     }
 
     setIsDialogOpen(false);
@@ -168,7 +168,7 @@ export default function TenantsPage() {
                   {editingTenant ? "Update Resident" : "Assign Resident"}
                 </DialogTitle>
                 <DialogDescription className="font-medium text-muted-foreground mt-2">
-                  {editingTenant ? "Modify the resident's contact or assignment information." : "Enter the resident's details to link them to your property asset."}
+                  {editingTenant ? "Modify resident contact or assignment info." : "Link a resident profile to your property asset."}
                 </DialogDescription>
               </DialogHeader>
               
@@ -189,9 +189,15 @@ export default function TenantsPage() {
                   <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-12 font-body bg-muted/20 border-none focus:ring-2 focus:ring-primary" placeholder="resident@example.com" />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Phone Number</Label>
-                  <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required className="rounded-xl h-12 font-body bg-muted/20 border-none focus:ring-2 focus:ring-primary" placeholder="07700 900000" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Phone Number</Label>
+                    <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required className="rounded-xl h-12 font-body bg-muted/20 border-none focus:ring-2 focus:ring-primary" placeholder="07700 900000" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="leaseEnd" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Lease End Date</Label>
+                    <Input id="leaseEnd" type="date" value={leaseEndDate} onChange={(e) => setLeaseEndDate(e.target.value)} className="rounded-xl h-12 font-body bg-muted/20 border-none focus:ring-2 focus:ring-primary" />
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
@@ -265,7 +271,9 @@ export default function TenantsPage() {
                           </div>
                           <div className="text-left">
                             <p className="font-bold text-base font-headline text-primary leading-tight">{tenant.firstName} {tenant.lastName}</p>
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1 font-headline">Lease expires: {tenant.leaseEndDate}</p>
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1 font-headline flex items-center">
+                              <CalendarDays className="w-3 h-3 mr-1" /> {tenant.leaseEndDate ? `Renewal: ${tenant.leaseEndDate}` : 'No end date set'}
+                            </p>
                           </div>
                         </div>
                       </td>

@@ -18,7 +18,7 @@ import {
   Users, ChevronRight, Clock, MapPin, 
   AlertTriangle, CheckCircle2, LayoutDashboard
 } from "lucide-react";
-import { format, isSameDay, isAfter, isBefore, addDays, startOfDay, parseISO } from "date-fns";
+import { format, isSameDay, isAfter, isBefore, addDays, startOfDay, parseISO, addYears } from "date-fns";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -108,8 +108,10 @@ export default function LandlordCalendarPage() {
 
     // 3. Lease Expiries (Renewals)
     tenants?.forEach(t => {
-      const date = t.leaseEndDate ? new Date(t.leaseEndDate) : null;
-      if (date) {
+      // Strictly only show if a lease end date is explicitly set
+      if (!t.leaseEndDate) return;
+      const date = new Date(t.leaseEndDate);
+      if (!isNaN(date.getTime())) {
         events.push({
           id: t.id,
           type: 'lease',
@@ -130,10 +132,15 @@ export default function LandlordCalendarPage() {
 
   const upcomingEvents = useMemo(() => {
     const today = startOfDay(new Date());
-    return allEvents.filter(e => isAfter(e.date, today)).slice(0, 10);
+    const oneYearFromNow = addYears(today, 1);
+    
+    // Filter to only show relevant operational roadmap items within the next year
+    return allEvents
+      .filter(e => isAfter(e.date, today) && isBefore(e.date, oneYearFromNow))
+      .slice(0, 10);
   }, [allEvents]);
 
-  // Calendar Modifiers
+  // Calendar Modifiers (Dynamic Legend)
   const modifiers = useMemo(() => {
     const dates: Record<string, Date[]> = {
       inspection: [],
@@ -187,18 +194,24 @@ export default function LandlordCalendarPage() {
               />
               
               <div className="mt-8 pt-6 border-t border-primary/5 space-y-3">
-                 <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-primary" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Property Audits</span>
-                 </div>
-                 <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Lease Expiries</span>
-                 </div>
-                 <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-amber-500" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Scheduled Repairs</span>
-                 </div>
+                 {modifiers.inspection.length > 0 && (
+                   <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 rounded-full bg-primary" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Property Audits</span>
+                   </div>
+                 )}
+                 {modifiers.lease.length > 0 && (
+                   <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Lease Expiries</span>
+                   </div>
+                 )}
+                 {modifiers.repair.length > 0 && (
+                   <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 rounded-full bg-amber-500" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Scheduled Repairs</span>
+                   </div>
+                 )}
               </div>
             </CardContent>
           </Card>
@@ -207,7 +220,7 @@ export default function LandlordCalendarPage() {
             <h3 className="text-lg font-bold font-headline mb-4 flex items-center gap-2">
                <Clock className="w-5 h-5 text-accent" /> Operational View
             </h3>
-            <p className="text-sm opacity-80 leading-relaxed font-body">This calendar reflects the current operational state of your relational ledger. All dates are synchronized in real-time.</p>
+            <p className="text-sm opacity-80 leading-relaxed font-body">This calendar reflects the current operational state of your portfolio. Legend items appear only when verified events exist in your ledger.</p>
           </Card>
         </div>
 
@@ -247,7 +260,7 @@ export default function LandlordCalendarPage() {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                {upcomingEvents.length === 0 ? (
-                  <p className="col-span-full text-center py-10 text-muted-foreground italic text-sm">No upcoming events detected in the roadmap.</p>
+                  <p className="col-span-full text-center py-10 text-muted-foreground italic text-sm">No operational milestones detected in the next 12 months.</p>
                ) : (
                  upcomingEvents.map(event => (
                    <div key={event.id} className="flex gap-4 p-5 bg-white rounded-2xl border border-primary/5 shadow-sm items-center group hover:border-primary/20 transition-all">
