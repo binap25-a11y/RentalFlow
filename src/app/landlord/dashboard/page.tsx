@@ -6,20 +6,21 @@ import {
   ShieldAlert, Loader2, CheckCircle2,
   Calendar as CalendarIcon, Zap, ClipboardList, AlertTriangle,
   PoundSterling, PieChart as PieChartIcon, ArrowUpRight, ArrowDownRight,
-  Target
+  Target, Download
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { isBefore, addDays, isValid, parseISO, format, startOfYear, endOfYear } from "date-fns";
+import { isBefore, addDays, isValid, parseISO, format } from "date-fns";
 import { useMemo, useState, useEffect } from "react";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, 
-  ResponsiveContainer, Cell, PieChart, Pie, Sector 
+  ResponsiveContainer, Cell, PieChart, Pie 
 } from 'recharts';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { jsPDF } from "jspdf";
 
 const COLORS = ['hsl(var(--primary))', '#10b981', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6'];
 
@@ -208,6 +209,92 @@ export default function LandlordDashboard() {
       rent: p.rentAmount || 0,
     })).slice(0, 6);
   }, [properties, isClient]);
+
+  const downloadExpenseLedger = () => {
+    if (!maintenance || !isClient) return;
+
+    const pdf = new jsPDF();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const today = format(new Date(), 'PPP');
+
+    // Branding Header
+    pdf.setFillColor(31, 41, 55);
+    pdf.rect(0, 0, pageWidth, 50, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(22);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("OFFICIAL EXPENSE LEDGER", 20, 25);
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`RentalFlow Executive Portfolio | Generated: ${today}`, 20, 35);
+
+    // Summary Section
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(14);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Portfolio Expenditure Summary", 20, 70);
+    
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    const totalExp = financialStats?.totalExpenses || 0;
+    pdf.text(`Total Year-to-Date Maintenance Expenditure: £${totalExp.toLocaleString()}`, 20, 80);
+
+    pdf.setDrawColor(229, 231, 235);
+    pdf.line(20, 90, pageWidth - 20, 90);
+
+    // Expense Table
+    let y = 105;
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Date", 20, y);
+    pdf.text("Property Asset", 50, y);
+    pdf.text("Category", 130, y);
+    pdf.text("Amount", pageWidth - 20, y, { align: 'right' });
+    
+    y += 8;
+    pdf.line(20, y, pageWidth - 20, y);
+    y += 10;
+
+    const validExpenses = maintenance
+      .filter(m => Number(m.cost) > 0)
+      .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+
+    validExpenses.forEach(exp => {
+      if (y > 270) {
+        pdf.addPage();
+        y = 20;
+      }
+
+      const date = exp.createdAt ? format(new Date(exp.createdAt.seconds * 1000), 'dd/MM/yyyy') : 'N/A';
+      const property = properties?.find(p => p.id === exp.propertyId)?.addressLine1 || 'Unknown Asset';
+      const category = exp.category || 'General';
+      const cost = Number(exp.cost).toLocaleString();
+
+      pdf.text(date, 20, y);
+      
+      const propLines = pdf.splitTextToSize(property, 75);
+      pdf.text(propLines, 50, y);
+      
+      pdf.text(category.toUpperCase(), 130, y);
+      pdf.text(`£${cost}`, pageWidth - 20, y, { align: 'right' });
+
+      y += (propLines.length * 5) + 5;
+      pdf.setDrawColor(243, 244, 246);
+      pdf.line(20, y - 4, pageWidth - 20, y - 4);
+    });
+
+    const totalPages = pdf.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(8);
+      pdf.setTextColor(156, 163, 175);
+      pdf.text(`Page ${i} of ${totalPages} | Confidential Relational Ledger`, pageWidth / 2, 290, { align: "center" });
+    }
+
+    pdf.save(`Expense_Ledger_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+  };
 
   if (!isClient || propLoading || docsLoading) {
     return (
@@ -474,7 +561,11 @@ export default function LandlordDashboard() {
                     <p className="text-[10px] text-muted-foreground">PostgreSQL Audit Trail: Enabled</p>
                  </div>
               </div>
-              <Button className="w-full rounded-xl bg-muted hover:bg-muted/80 text-foreground font-bold h-11" variant="ghost">
+              <Button 
+                className="w-full rounded-xl bg-primary text-white font-bold h-12 shadow-lg shadow-primary/10" 
+                onClick={downloadExpenseLedger}
+              >
+                <Download className="w-4 h-4 mr-2" />
                 Download Expense Ledger
               </Button>
             </div>
@@ -484,4 +575,3 @@ export default function LandlordDashboard() {
     </div>
   );
 }
-
