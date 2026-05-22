@@ -4,16 +4,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Building2, Wallet, TrendingUp, FileText, ArrowRight, 
   ShieldAlert, Loader2, CheckCircle2,
-  Calendar as CalendarIcon, Zap, ClipboardList, AlertTriangle
+  Calendar as CalendarIcon, Zap, ClipboardList, AlertTriangle,
+  PoundSterling, PieChart as PieChartIcon, ArrowUpRight, ArrowDownRight,
+  Target
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { isBefore, addDays, isValid, parseISO, format } from "date-fns";
+import { isBefore, addDays, isValid, parseISO, format, startOfYear, endOfYear } from "date-fns";
 import { useMemo, useState, useEffect } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, 
+  ResponsiveContainer, Cell, PieChart, Pie, Sector 
+} from 'recharts';
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+
+const COLORS = ['hsl(var(--primary))', '#10b981', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6'];
 
 export default function LandlordDashboard() {
   const { user } = useUser();
@@ -64,6 +72,44 @@ export default function LandlordDashboard() {
     const d = parseFlexDate(dateVal);
     return d && isValid(d) ? format(d, 'PP') : 'TBC';
   };
+
+  // --- Financial Logic ---
+  const financialStats = useMemo(() => {
+    if (!isClient || !properties || !maintenance) return null;
+
+    const monthlyGross = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
+    const annualGross = monthlyGross * 12;
+    
+    const occupiedMonthly = properties
+      .filter(p => p.isOccupied)
+      .reduce((acc, p) => acc + (p.rentAmount || 0), 0);
+    
+    const totalExpenses = maintenance.reduce((acc, r) => acc + (Number(r.cost) || 0), 0);
+    const netAnnualForecast = annualGross - totalExpenses;
+    const collectionRate = monthlyGross > 0 ? (occupiedMonthly / monthlyGross) * 100 : 0;
+
+    return {
+      annualGross,
+      totalExpenses,
+      netAnnualForecast,
+      collectionRate,
+      monthlyGross,
+      occupiedMonthly
+    };
+  }, [properties, maintenance, isClient]);
+
+  const expenseBreakdown = useMemo(() => {
+    if (!isClient || !maintenance) return [];
+    const categories: Record<string, number> = {};
+    maintenance.forEach(req => {
+      const cat = req.category || 'other';
+      const cost = Number(req.cost) || 0;
+      if (cost > 0) {
+        categories[cat] = (categories[cat] || 0) + cost;
+      }
+    });
+    return Object.entries(categories).map(([name, value]) => ({ name, value }));
+  }, [maintenance, isClient]);
 
   const complianceItems = useMemo(() => {
     if (!isClient || !properties) return [];
@@ -155,22 +201,6 @@ export default function LandlordDashboard() {
     return { grade: 'A+', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-200' };
   }, [complianceItems, isClient]);
 
-  const stats = useMemo(() => {
-    if (!isClient || !properties || !maintenance) return null;
-    const total = properties.length || 0;
-    const occupied = properties.filter(p => p.isOccupied).length || 0;
-    const grossRent = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
-    const totalExpenses = maintenance.reduce((acc, r) => acc + (r.cost || 0), 0);
-    const netRevenue = Math.ceil(grossRent - (totalExpenses / 12)); 
-    const occupancyRate = total > 0 ? (occupied / total) * 100 : 0;
-
-    return [
-      { label: 'Portfolio Assets', value: total.toString(), icon: Building2, color: 'text-primary', bg: 'bg-primary/5' },
-      { label: 'Est. Net Monthly', value: `£${netRevenue.toLocaleString()}`, icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-      { label: 'Occupancy Rate', value: `${occupancyRate.toFixed(0)}%`, icon: TrendingUp, color: 'text-accent', bg: 'bg-accent/5' },
-    ];
-  }, [properties, maintenance, isClient]);
-
   const chartData = useMemo(() => {
     if (!isClient || !properties) return [];
     return properties.map(p => ({
@@ -208,55 +238,170 @@ export default function LandlordDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {stats?.map((stat) => (
-          <Card key={stat.label} className="border-none shadow-sm hover:shadow-xl transition-all rounded-[2rem] overflow-hidden group bg-white border border-transparent hover:border-primary/5">
-            <CardContent className="pt-8 text-left px-8">
-              <div className="flex items-center justify-between mb-6">
-                <div className={`${stat.bg} ${stat.color} p-4 rounded-2xl shadow-inner transition-transform group-hover:scale-110`}>
-                  <stat.icon className="w-6 h-6" />
-                </div>
+      {/* Financial Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden group">
+          <CardContent className="pt-8 text-left px-8">
+            <div className="flex items-center justify-between mb-6">
+              <div className="bg-emerald-50 text-emerald-600 p-4 rounded-2xl shadow-inner">
+                <PoundSterling className="w-6 h-6" />
               </div>
-              <div className="space-y-1">
-                <p className="text-3xl font-bold font-headline tracking-tighter text-primary">
-                  {stat.value}
-                </p>
-                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest font-headline opacity-60 group-hover:opacity-100 transition-opacity">{stat.label}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <Card className="lg:col-span-8 border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
-          <CardHeader className="text-left px-10 pt-10 pb-4 border-b border-primary/5">
-            <CardTitle className="text-2xl font-headline flex items-center text-primary">
-              <TrendingUp className="w-6 h-6 mr-3 text-accent" />
-              Yield Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="h-[400px] p-10">
-             <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 700, fill: '#64748b'}} dy={15} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#94a3b8'}} />
-                  <Tooltip 
-                    cursor={{fill: '#f8fafc', radius: 12}}
-                    contentStyle={{borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.15)', padding: '16px'}}
-                    itemStyle={{fontWeight: 800, color: 'hsl(var(--primary))'}}
-                  />
-                  <Bar dataKey="rent" radius={[12, 12, 0, 0]} barSize={50}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={index === 0 ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.4)'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-             </ResponsiveContainer>
+              <ArrowUpRight className="w-5 h-5 text-emerald-500 opacity-40" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-3xl font-bold font-headline tracking-tighter text-primary">
+                £{financialStats?.annualGross.toLocaleString()}
+              </p>
+              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest font-headline opacity-60">Gross Annual Income</p>
+            </div>
           </CardContent>
         </Card>
 
+        <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden group">
+          <CardContent className="pt-8 text-left px-8">
+            <div className="flex items-center justify-between mb-6">
+              <div className="bg-red-50 text-red-600 p-4 rounded-2xl shadow-inner">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <ArrowDownRight className="w-5 h-5 text-red-500 opacity-40" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-3xl font-bold font-headline tracking-tighter text-primary">
+                £{financialStats?.totalExpenses.toLocaleString()}
+              </p>
+              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest font-headline opacity-60">Total Expenses (YTD)</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-sm rounded-[2rem] bg-primary text-white overflow-hidden group">
+          <CardContent className="pt-8 text-left px-8">
+            <div className="flex items-center justify-between mb-6">
+              <div className="bg-white/10 text-white p-4 rounded-2xl">
+                <TrendingUp className="w-6 h-6" />
+              </div>
+              <Target className="w-5 h-5 text-white/40" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-3xl font-bold font-headline tracking-tighter">
+                £{financialStats?.netAnnualForecast.toLocaleString()}
+              </p>
+              <p className="text-[10px] text-white/60 font-bold uppercase tracking-widest font-headline">Annual Net Forecast</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden group">
+          <CardContent className="pt-8 text-left px-8">
+            <div className="flex items-center justify-between mb-6">
+              <div className="bg-blue-50 text-blue-600 p-4 rounded-2xl shadow-inner">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <p className="text-xs font-bold text-blue-600">{financialStats?.collectionRate.toFixed(0)}%</p>
+            </div>
+            <div className="space-y-3">
+              <p className="text-3xl font-bold font-headline tracking-tighter text-primary">
+                £{financialStats?.occupiedMonthly.toLocaleString()}
+              </p>
+              <Progress value={financialStats?.collectionRate} className="h-2 bg-blue-50" />
+              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest font-headline opacity-60">Rent Collection Progress</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Main Charts Area */}
+        <div className="lg:col-span-8 space-y-8">
+          <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
+            <CardHeader className="text-left px-10 pt-10 pb-4 border-b border-primary/5">
+              <CardTitle className="text-2xl font-headline flex items-center text-primary">
+                <TrendingUp className="w-6 h-6 mr-3 text-accent" />
+                Portfolio Yield Distribution
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="h-[400px] p-10">
+               <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 700, fill: '#64748b'}} dy={15} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#94a3b8'}} />
+                    <Tooltip 
+                      cursor={{fill: '#f8fafc', radius: 12}}
+                      contentStyle={{borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.15)', padding: '16px'}}
+                      itemStyle={{fontWeight: 800, color: 'hsl(var(--primary))'}}
+                    />
+                    <Bar dataKey="rent" radius={[12, 12, 0, 0]} barSize={50}>
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={index === 0 ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.4)'} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+               </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
+              <CardHeader className="text-left px-10 pt-8 pb-4">
+                <CardTitle className="text-lg font-headline flex items-center text-primary">
+                  <PieChartIcon className="w-5 h-5 mr-3 text-accent" />
+                  Tax Categorized Expenses
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="h-[300px]">
+                {expenseBreakdown.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={expenseBreakdown}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {expenseBreakdown.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 20px rgba(0,0,0,0.1)'}}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full opacity-20">
+                    <p className="font-bold text-xs uppercase tracking-widest">No Expenses Logged</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
+              <CardHeader className="text-left px-10 pt-8 pb-4">
+                <CardTitle className="text-lg font-headline flex items-center text-primary">
+                  <PoundSterling className="w-5 h-5 mr-3 text-accent" />
+                  Yield Breakdown
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 px-10">
+                {expenseBreakdown.map((item, index) => (
+                  <div key={item.name} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                      <span className="text-xs font-bold capitalize text-muted-foreground">{item.name}</span>
+                    </div>
+                    <span className="text-xs font-bold">£{item.value.toLocaleString()}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Portfolio Roadmap Sidebar */}
         <div className="lg:col-span-4 space-y-8">
           <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden">
             <CardHeader className="text-left px-8 pt-8 pb-4 border-b border-primary/5 bg-primary/[0.02]">
@@ -318,8 +463,25 @@ export default function LandlordDashboard() {
               )}
             </CardContent>
           </Card>
+
+          <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden p-8 text-left">
+            <h3 className="font-bold font-headline text-lg mb-4">Tax Season Readiness</h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 p-4 bg-primary/5 rounded-2xl">
+                 <div className="p-2 bg-white rounded-xl shadow-sm"><FileText className="w-4 h-4 text-primary" /></div>
+                 <div>
+                    <p className="text-xs font-bold">Relational Ledger Sync</p>
+                    <p className="text-[10px] text-muted-foreground">PostgreSQL Audit Trail: Enabled</p>
+                 </div>
+              </div>
+              <Button className="w-full rounded-xl bg-muted hover:bg-muted/80 text-foreground font-bold h-11" variant="ghost">
+                Download Expense Ledger
+              </Button>
+            </div>
+          </Card>
         </div>
       </div>
     </div>
   );
 }
+
