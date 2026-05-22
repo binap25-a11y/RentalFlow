@@ -19,11 +19,11 @@ export function isUserUploadedAsset(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '' || !url.startsWith('http')) return false;
   
   // Explicitly identify generic placeholders that should be replaced by user content
-  // We specifically look for picsum seeds used in our placeholder-images.json
   const isPlaceholder = 
     url.includes('picsum.photos/seed/rentalflow-pro-identity') ||
     url.includes('picsum.photos/seed/prop1') ||
     url.includes('picsum.photos/seed/prop2') ||
+    url.includes('picsum.photos/seed/rentalflow-default') ||
     url.includes('placehold.co');
                     
   return !isPlaceholder;
