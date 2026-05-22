@@ -75,7 +75,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       }
       
       const initialLedger = gallery
-        .filter(isUserUploadedAsset)
+        .filter(url => typeof url === 'string' && url.length > 0)
         .map(url => ({ id: Math.random().toString(), url, isNew: false }));
         
       setLedger(initialLedger);
@@ -106,7 +106,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const pathMatch = item.url.split('/public/')[1]?.split('?')[0];
       if (pathMatch) {
         const pathSegments = pathMatch.split('/');
-        pathSegments.shift();
+        pathSegments.shift(); // remove bucket
         const relativePath = pathSegments.join('/');
         await deleteFromSupabase('property-images', relativePath);
       }
@@ -134,12 +134,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           formData.append('file', item.file);
           const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${item.file.name}`;
           const res = await uploadToSupabase(formData, 'property-images', path);
+          if (!res.success) throw new Error(res.error);
           return res.url || '';
         }
         return item.url;
       }));
 
-      const uniqueLedger = Array.from(new Set(finalUrls)).filter(isUserUploadedAsset);
+      // Filter to only keep true user uploads and designated primary
+      const uniqueLedger = Array.from(new Set(finalUrls)).filter(url => url.length > 0);
       const primaryUrl = uniqueLedger.length > 0 ? uniqueLedger[0] : '';
 
       const serializableData = {

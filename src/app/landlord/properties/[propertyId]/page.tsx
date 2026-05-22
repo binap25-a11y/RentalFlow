@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use, useRef, useMemo, useEffect } from 'react';
+import { useState, use, useMemo, useEffect } from 'react';
 import { 
   useUser, 
   useFirestore, 
@@ -8,9 +8,8 @@ import {
   useCollection, 
   useMemoFirebase, 
   updateDocumentNonBlocking, 
-  deleteDocumentNonBlocking,
 } from '@/firebase';
-import { collection, doc, serverTimestamp, query, where, setDoc } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  MapPin, Wrench, FileCheck, 
+  MapPin, 
   Edit3, Loader2, Save, ArrowLeft,
   Bed, Bath, X, Maximize2
 } from "lucide-react";

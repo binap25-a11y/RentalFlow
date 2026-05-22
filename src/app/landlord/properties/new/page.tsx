@@ -81,10 +81,11 @@ export default function NewPropertyPage() {
         formData.append('file', item.file);
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${item.file.name}`;
         const res = await uploadToSupabase(formData, 'property-images', path);
+        if (!res.success) throw new Error(res.error);
         return res.url || '';
       }));
 
-      const finalImageUrls = uploadResults.filter(isUserUploadedAsset);
+      const finalImageUrls = uploadResults.filter(url => url.length > 0);
       const finalImageUrl = finalImageUrls.length > 0 ? finalImageUrls[0] : '';
 
       const serializableData = {
@@ -119,7 +120,7 @@ export default function NewPropertyPage() {
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Asset registration failed:", err);
-      toast({ variant: "destructive", title: "Registration Failed", description: "Check storage availability and try again." });
+      toast({ variant: "destructive", title: "Registration Failed", description: err.message || "Check storage availability and try again." });
       setIsSaving(false);
     }
   };

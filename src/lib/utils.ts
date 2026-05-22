@@ -15,7 +15,6 @@ export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-15
 /**
  * 🖼️ Strict User Asset Identifier
  * Strictly identifies images uploaded by users (Supabase or Firebase Storage).
- * Blocks platform-generated placeholders from entering the permanent ledger.
  */
 export function isUserUploadedAsset(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '' || !url.startsWith('http')) return false;
@@ -27,8 +26,7 @@ export function isUserUploadedAsset(url: any): boolean {
   const isGenericPlaceholder = 
     url.includes('picsum.photos') ||
     url.includes('placehold.co') ||
-    url.includes('via.placeholder.com') ||
-    (url.includes('images.unsplash.com/photo-') && url.includes('placeholder'));
+    url.includes('via.placeholder.com');
                     
   return isStorageAsset && !isGenericPlaceholder;
 }

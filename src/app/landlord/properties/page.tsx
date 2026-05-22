@@ -75,7 +75,6 @@ export default function PropertiesPage() {
                   className="object-cover transition-transform duration-500 group-hover:scale-105" 
                   unoptimized 
                   priority
-                  data-ai-hint="property architecture"
                 />
                 <Badge className={cn("absolute top-4 right-4 font-bold shadow-lg py-1 px-3 text-[10px] uppercase", property.isOccupied ? 'bg-emerald-500' : 'bg-amber-500')}>
                   {property.isOccupied ? 'Occupied' : 'Vacant'}
