@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { isValidAssetUrl } from "@/lib/utils";
+import { isValidAssetUrl, isUserUploadedAsset } from "@/lib/utils";
 
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -64,12 +64,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      const gallerySet = new Set<string>();
-      if (isValidAssetUrl(property.imageUrl)) gallerySet.add(property.imageUrl);
-      if (Array.isArray(property.imageUrls)) {
-        property.imageUrls.forEach(u => { if (isValidAssetUrl(u)) gallerySet.add(u); });
+      const gallery = Array.isArray(property.imageUrls) ? property.imageUrls : [];
+      if (property.imageUrl && !gallery.includes(property.imageUrl)) {
+        gallery.unshift(property.imageUrl);
       }
-      setExistingImageUrls(Array.from(gallerySet));
+      
+      // Only keep user uploads or high-fidelity links (hide picsum placeholders)
+      const validGallery = gallery.filter(isValidAssetUrl);
+      setExistingImageUrls(validGallery);
       setIsInitialized(true);
     }
   }, [property, isInitialized]);
@@ -115,12 +117,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       /**
        * 🖼️ Hardened Gallery Sync
-       * Prepend new uploads so they take priority as the Cover Asset (Index 0).
+       * Combine new uploads with remaining existing images.
+       * New uploads take priority at the front of the ledger.
        */
       const fullLedger = [...uploadedUrls, ...existingImageUrls].filter(isValidAssetUrl);
       const uniqueLedger = Array.from(new Set(fullLedger));
       
-      // Select the primary cover from the start of the list (Index 0)
+      // Deterministic Identity: Index 0 is ALWAYS the primary cover
       const primaryUrl = uniqueLedger.length > 0 ? uniqueLedger[0] : '';
 
       const serializableData = {
@@ -147,11 +150,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Asset Updated", description: "Visual records synchronized." });
+      toast({ title: "Asset Updated", description: "Visual specs synchronized." });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Update failed:", err);
-      toast({ variant: "destructive", title: "Update Failed", description: "Could not save asset specifications." });
+      toast({ variant: "destructive", title: "Update Failed", description: "Sync error in ledger." });
       setIsSaving(false);
     }
   };
@@ -189,7 +192,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
               <div className="grid grid-cols-2 gap-4">
                 {newPreviewUrls.map((url, index) => (
                   <div key={`new-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group border-2 border-accent shadow-md bg-white">
-                    <Image src={url} alt={`New ${index}`} fill className="object-cover" unoptimized data-ai-hint="property interior" />
+                    <Image src={url} alt={`New ${index}`} fill className="object-cover" unoptimized />
                     <button type="button" onClick={() => removeNewImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-red-500 transition-all shadow-lg z-20"><X className="w-3.5 h-3.5" /></button>
                     {index === 0 && (
                       <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-accent text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline z-10">New Primary Cover</div>
@@ -198,7 +201,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                 ))}
                 {existingImageUrls.map((url, index) => (
                   <div key={`existing-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border border-primary/10 bg-white">
-                    <Image src={url} alt={`Existing ${index}`} fill className="object-cover" unoptimized data-ai-hint="property interior" />
+                    <Image src={url} alt={`Existing ${index}`} fill className="object-cover" unoptimized />
                     <button type="button" onClick={() => removeExistingImage(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all shadow-lg z-20"><X className="w-3.5 h-3.5" /></button>
                     {newPreviewUrls.length === 0 && index === 0 && (
                       <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline z-10">Current Cover</div>
