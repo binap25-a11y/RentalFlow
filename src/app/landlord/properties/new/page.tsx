@@ -66,6 +66,7 @@ export default function NewPropertyPage() {
         const uploadPromises = imageFiles.map((file, index) => {
           const formData = new FormData();
           formData.append('file', file);
+          // 🛡️ Strict Isolation: Assets are nested by unique propertyId
           const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${file.name}`;
           return uploadToSupabase(formData, 'property-images', path);
         });
@@ -75,8 +76,8 @@ export default function NewPropertyPage() {
       }
 
       /**
-       * 🖼️ Hardened Cover Sync
-       * Explicitly set the first uploaded image as the primary cover.
+       * 🖼️ Deterministic Cover designates the first SPECIFIC property upload
+       * as the primary cover.
        */
       const finalImageUrl = finalImageUrls.length > 0 ? finalImageUrls[0] : '';
 

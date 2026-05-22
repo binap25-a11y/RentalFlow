@@ -86,8 +86,8 @@ export default function TenantHub() {
   };
 
   /**
-   * 🛡️ Hardened Resolver
-   * Prioritizes professional photography for the resident experience.
+   * 🛡️ Isolated Visual Context
+   * Synchronized with the high-fidelity resolution logic used by the landlord.
    */
   const activeImageUrl = useMemo(() => {
     return getResolvedImageUrl(property?.imageUrl, property?.imageUrls);

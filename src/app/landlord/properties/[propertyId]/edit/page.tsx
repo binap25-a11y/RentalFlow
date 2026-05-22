@@ -54,7 +54,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Only initialize once to prevent background data refreshes from wiping out local changes
+    // 🛡️ Strict Property Context Initialization
     if (property && !isInitialized) {
       setAddress(property.addressLine1 || '');
       setCity(property.city || '');
@@ -70,7 +70,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         gallery.unshift(property.imageUrl);
       }
       
-      // Filter out placeholders to maintain professional look
+      // Filter out placeholders to maintain professional, isolated look
       const validGallery = gallery.filter(isUserUploadedAsset);
       setExistingImageUrls(validGallery);
       setIsInitialized(true);
@@ -108,6 +108,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         const uploadPromises = newImageFiles.map((file, index) => {
           const formData = new FormData();
           formData.append('file', file);
+          // 🛡️ Explicit Property Isolation in Storage
           const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${file.name}`;
           return uploadToSupabase(formData, 'property-images', path);
         });
@@ -116,10 +117,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         uploadedUrls = results.filter(r => r.success && r.url).map(r => r.url!);
       }
 
-      // Merge new and existing user-uploaded assets
+      // Merge new and existing property-specific assets
       const uniqueLedger = Array.from(new Set([...uploadedUrls, ...existingImageUrls])).filter(isValidAssetUrl);
       
-      // Deterministic Identity: Index 0 is ALWAYS the primary cover
+      /**
+       * 🖼️ Deterministic Cover designating logic
+       * The first item in the SPECIFIC property's ledger (Index 0) is the Primary Identity.
+       */
       const primaryUrl = uniqueLedger.length > 0 ? uniqueLedger[0] : '';
 
       const serializableData = {
