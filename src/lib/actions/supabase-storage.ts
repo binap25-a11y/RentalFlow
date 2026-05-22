@@ -1,14 +1,15 @@
 'use server';
 
 /**
- * @fileOverview Server Actions for Supabase Storage.
+ * @fileOverview Server Actions for Supabase Storage (Private Bucket Compatible).
  * Handles the secure upload and deletion of property images and compliance documents.
+ * Generates long-lived signed URLs to work with private storage settings.
  */
 
 import { supabase } from '@/lib/supabase';
 
 /**
- * Uploads a file to a specific Supabase bucket.
+ * Uploads a file to a specific Supabase bucket and returns a signed URL.
  */
 export async function uploadToSupabase(
   formData: FormData,
@@ -22,7 +23,8 @@ export async function uploadToSupabase(
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const { data, error } = await supabase.storage
+    // 1. Physical Upload to Private/Public Bucket
+    const { data: uploadData, error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(path, buffer, {
         contentType: file.type,
@@ -30,15 +32,19 @@ export async function uploadToSupabase(
         upsert: true,
       });
 
-    if (error) throw error;
+    if (uploadError) throw uploadError;
 
-    const { data: publicUrlData } = supabase.storage
+    // 2. Generate Long-Lived Signed URL (315360000s = 10 Years)
+    // This ensures the link persisted in Firestore works even if the bucket is PRIVATE.
+    const { data: signedData, error: signedError } = await supabase.storage
       .from(bucket)
-      .getPublicUrl(data.path);
+      .createSignedUrl(path, 315360000);
 
-    return { success: true, url: publicUrlData.publicUrl };
+    if (signedError) throw signedError;
+
+    return { success: true, url: signedData.signedUrl };
   } catch (error: any) {
-    console.error('Supabase Upload Error:', error.message);
+    console.error('Supabase Orchestration Error:', error.message);
     return { success: false, error: error.message };
   }
 }

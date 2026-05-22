@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, use } from 'react';
@@ -105,8 +104,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     if (item.isNew && item.url.startsWith('blob:')) {
       URL.revokeObjectURL(item.url);
     } else if (!item.isNew && item.url.includes('supabase.co')) {
-      // Physical purge of storage asset
-      const pathMatch = item.url.split('/public/')[1]?.split('?')[0];
+      // Physical purge of storage asset.
+      // Accurate path resolution handles both /public/ and /signed/ paths for private buckets.
+      const pathMatch = item.url.split('/signed/')[1]?.split('?')[0] || item.url.split('/public/')[1]?.split('?')[0];
       if (pathMatch) {
         const pathSegments = pathMatch.split('/');
         pathSegments.shift(); // Remove bucket name from path
@@ -186,7 +186,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         variant: "destructive", 
         title: isRlsError ? "Security Policy Error" : "Sync Failed", 
         description: isRlsError 
-          ? "Upload denied by Supabase. Please see src/lib/supabase-usage-guide.md to fix." 
+          ? "Upload denied by Supabase. Please check your storage policies." 
           : "Could not update property records. Check connection and try again." 
       });
       setIsSaving(false);

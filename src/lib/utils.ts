@@ -1,4 +1,3 @@
-
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -16,7 +15,7 @@ export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-15
 /**
  * 🖼️ Strict User Asset Identifier
  * Strictly identifies images uploaded by users (Supabase or Firebase Storage).
- * Excludes all generic placeholder domains.
+ * Handles both public and signed URLs for private buckets.
  */
 export function isUserUploadedAsset(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '' || !url.startsWith('http')) return false;
