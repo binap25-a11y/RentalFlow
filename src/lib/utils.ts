@@ -51,20 +51,25 @@ export function isValidAssetUrl(url: any): boolean {
  * Tier 4: Global fallback
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
+  // If the primary cover is already a user upload, stick with it
   if (isUserUploadedAsset(imageUrl)) return imageUrl!;
   
+  // If not, look for any user upload in the broader gallery
   if (imageUrls && Array.isArray(imageUrls)) {
     const firstUserUrl = imageUrls.find(u => isUserUploadedAsset(u));
     if (firstUserUrl) return firstUserUrl;
   }
   
+  // If no user uploads exist, but we have a valid placeholder link, use that
   if (isValidAssetUrl(imageUrl)) return imageUrl!;
 
+  // Absolute fallback
   return RENTALFLOW_FALLBACK;
 }
 
 /**
  * 🖼️ Synchronized Gallery Resolver
+ * Ensures that if any user images exist, placeholders are hidden to maintain a professional look.
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
@@ -83,9 +88,10 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
 
   const result = Array.from(assets);
   
-  // If we have user uploads, filter out placeholders to clean up the detail view
+  // Logic: If the landlord has uploaded ANY professional photos, hide the generic forest/waves placeholders.
   const userUploads = result.filter(isUserUploadedAsset);
   if (userUploads.length > 0) return userUploads;
 
+  // Fallback to placeholders if no professional photos exist
   return result.length > 0 ? result : [RENTALFLOW_FALLBACK];
 }

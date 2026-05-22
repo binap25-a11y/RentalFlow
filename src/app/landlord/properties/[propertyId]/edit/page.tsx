@@ -64,7 +64,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      const currentImages = Array.isArray(property.imageUrls) ? property.imageUrls : [];
+      // Seed initialization with deduplicated existing images
+      const currentImages = Array.isArray(property.imageUrls) ? [...property.imageUrls] : [];
       if (isValidAssetUrl(property.imageUrl) && !currentImages.includes(property.imageUrl)) {
         currentImages.unshift(property.imageUrl);
       }
@@ -112,7 +113,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         uploadedUrls = results.filter(r => r.success && r.url).map(r => r.url!);
       }
 
-      // 🔄 Deterministic Hierarchy: New uploads prepended to become the primary cover
+      // 🔄 Deterministic Hierarchy: New uploads prepended to become the primary cover immediately
       const finalGallery = [...uploadedUrls, ...existingImageUrls];
       const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
 

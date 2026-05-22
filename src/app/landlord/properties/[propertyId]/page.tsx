@@ -69,7 +69,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
-  // 🛡️ Bulletproof Resolution: Ensures user images replace placeholders permanently
   const gallery = useMemo(() => {
     return getResolvedGallery(property?.imageUrl, property?.imageUrls);
   }, [property]);
