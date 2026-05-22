@@ -9,35 +9,28 @@ NEXT_PUBLIC_SUPABASE_URL=https://vucefokfhdrbgldrimgl.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_fbyGbXPyWG1GepobX4Jeyw_sjbXTTCL
 ```
 
+## 🛠️ Critical Step: Fix RLS Policy Errors
+If you see a "row-level security policy" error during upload, you must run the following SQL in your **Supabase Dashboard -> SQL Editor**:
+
+```sql
+-- 1. Allow anyone to see images (Public Access)
+CREATE POLICY "Allow Public Select" ON storage.objects FOR SELECT USING (bucket_id = 'property-images');
+
+-- 2. Allow uploads (Firebase users appear as 'anon' to Supabase)
+CREATE POLICY "Allow Public Insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'property-images');
+
+-- 3. Allow updates and deletions
+CREATE POLICY "Allow Public Update" ON storage.objects FOR UPDATE WITH CHECK (bucket_id = 'property-images');
+CREATE POLICY "Allow Public Delete" ON storage.objects FOR DELETE USING (bucket_id = 'property-images');
+
+-- Repeat for documents bucket if needed
+CREATE POLICY "Allow Docs Select" ON storage.objects FOR SELECT USING (bucket_id = 'property-documents');
+CREATE POLICY "Allow Docs Insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'property-documents');
+```
+
 ## Setup Steps
 1. **Create Buckets**: Log in to your [Supabase Dashboard](https://vucefokfhdrbgldrimgl.supabase.co) and go to **Storage**.
 2. **Bucket Names**: Create the following buckets:
    - `property-images` (Public: **Yes**)
-   - `property-documents` (Public: **Yes** or set appropriate policies)
-3. **Policies**: Add a "Public access" policy to `property-images` so residents can see listings.
-
-## Using the Storage Action in Code
-You can use the server action in your components like this:
-
-```tsx
-import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-
-const handleUpload = async (file: File) => {
-  const formData = new FormData();
-  formData.append('file', file);
-  
-  // Upload to 'property-images'
-  const result = await uploadToSupabase(
-    formData, 
-    'property-images', 
-    `assets/${propertyId}/${Date.now()}_${file.name}`
-  );
-  
-  if (result.success) {
-    console.log("Uploaded URL:", result.url);
-    // Now save result.url to your Firestore document
-  }
-};
-```
-
-Note: `DATABASE_URL` is separate and only needed if you are performing server-side PostgreSQL operations, not for Storage uploads.
+   - `property-documents` (Public: **Yes**)
+3. **Policies**: Ensure the SQL above is executed to allow the app to communicate with Storage.

@@ -69,13 +69,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
+      // Build visual ledger strictly from user uploads
       const gallery = Array.isArray(property.imageUrls) ? [...property.imageUrls] : [];
       if (property.imageUrl && !gallery.includes(property.imageUrl)) {
         gallery.unshift(property.imageUrl);
       }
       
       const initialLedger = gallery
-        .filter(url => typeof url === 'string' && url.length > 0)
+        .filter(url => isUserUploadedAsset(url))
         .map(url => ({ id: Math.random().toString(), url, isNew: false }));
         
       setLedger(initialLedger);
@@ -118,7 +119,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const item = ledger.find(i => i.id === id);
     if (!item) return;
     setLedger(prev => [item, ...prev.filter(i => i.id !== id)]);
-    toast({ title: "Cover Asset Updated", description: "Identity updated locally. Click Save to synchronize." });
+    toast({ title: "Cover Asset Updated", description: "Designated as primary visual." });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -132,6 +133,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         if (item.isNew && item.file) {
           const formData = new FormData();
           formData.append('file', item.file);
+          // Deterministic path based on property ID
           const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${item.file.name}`;
           const res = await uploadToSupabase(formData, 'property-images', path);
           if (!res.success) throw new Error(res.error);
@@ -140,9 +142,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         return item.url;
       }));
 
-      // Filter to only keep true user uploads and designated primary
-      const uniqueLedger = Array.from(new Set(finalUrls)).filter(url => url.length > 0);
-      const primaryUrl = uniqueLedger.length > 0 ? uniqueLedger[0] : '';
+      // Filter and designate primary
+      const uniqueLedger = Array.from(new Set(finalUrls)).filter(url => isUserUploadedAsset(url));
+      const primaryUrl = uniqueLedger.length > 0 ? uniqueLedger[0] : (property?.imageUrl || '');
 
       const serializableData = {
         id: propertyId,
@@ -168,7 +170,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Asset Synchronized", description: "Visual identity and specifications updated." });
+      toast({ title: "Asset Synchronized", description: "Visual and record data updated." });
       
       ledger.forEach(item => {
         if (item.isNew) URL.revokeObjectURL(item.url);
@@ -177,7 +179,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Asset synchronization failed:", err);
-      toast({ variant: "destructive", title: "Sync Failed", description: "Could not update property records." });
+      toast({ 
+        variant: "destructive", 
+        title: "Sync Failed", 
+        description: err.message?.includes('security policy') 
+          ? "Storage security policy violation. Check guide for fix." 
+          : "Could not update property records." 
+      });
       setIsSaving(false);
     }
   };
@@ -275,6 +283,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                     <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Monthly Yield (£)</Label>
                     <Input type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
                   </div>
+                </div>
+                <div className="space-y-2 text-left">
+                  <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Property Description</Label>
+                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Narrative for this asset..." className="rounded-xl min-h-[120px] bg-muted/20 border-none" />
                 </div>
               </div>
             </div>

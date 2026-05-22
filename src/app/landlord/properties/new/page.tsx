@@ -64,7 +64,7 @@ export default function NewPropertyPage() {
     const item = ledger.find(i => i.id === id);
     if (!item) return;
     setLedger(prev => [item, ...prev.filter(i => i.id !== id)]);
-    toast({ title: "Primary Target Set", description: "This asset will be designated as the cover visual." });
+    toast({ title: "Primary Target Set", description: "Designated as the cover visual." });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -85,7 +85,7 @@ export default function NewPropertyPage() {
         return res.url || '';
       }));
 
-      const finalImageUrls = uploadResults.filter(url => url.length > 0);
+      const finalImageUrls = uploadResults.filter(url => isUserUploadedAsset(url));
       const finalImageUrl = finalImageUrls.length > 0 ? finalImageUrls[0] : '';
 
       const serializableData = {
@@ -115,12 +115,18 @@ export default function NewPropertyPage() {
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Asset Registered", description: "Visual and relational data synchronized." });
+      toast({ title: "Asset Registered", description: "Visual and record data synchronized." });
       ledger.forEach(item => URL.revokeObjectURL(item.url));
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Asset registration failed:", err);
-      toast({ variant: "destructive", title: "Registration Failed", description: err.message || "Check storage availability and try again." });
+      toast({ 
+        variant: "destructive", 
+        title: "Registration Failed", 
+        description: err.message?.includes('security policy') 
+          ? "Storage security policy violation. Check guide for fix." 
+          : "Check storage availability and try again." 
+      });
       setIsSaving(false);
     }
   };
