@@ -23,7 +23,8 @@ import {
   Edit3, Loader2, Save, ArrowLeft,
   Bed, Bath, X, Maximize2, FileText, Wrench, 
   ClipboardList, Plus, Download, Trash2, Calendar,
-  ShieldCheck, AlertCircle, Clock
+  ShieldCheck, AlertCircle, Clock, Zap, ShieldAlert,
+  ChevronRight, CheckCircle2
 } from "lucide-react";
 import { 
   Dialog, 
@@ -122,6 +123,14 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   }, [db, propertyId, user]);
 
   const { data: inspections } = useCollection(inspectionsQuery);
+
+  // Derived Audit Stats
+  const latestAudit = useMemo(() => {
+    if (!inspections || inspections.length === 0) return null;
+    return inspections
+      .filter(i => i.status === 'completed')
+      .sort((a, b) => new Date(b.conductedDate).getTime() - new Date(a.conductedDate).getTime())[0];
+  }, [inspections]);
 
   // State Management
   const [isEditingRent, setIsEditingRent] = useState(false);
@@ -442,37 +451,91 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             </TabsContent>
 
             {/* Audits Content */}
-            <TabsContent value="inspections" className="mt-8 space-y-4">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="font-bold font-headline text-lg text-primary">Compliance Audits</h3>
+            <TabsContent value="inspections" className="mt-8 space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="font-bold font-headline text-lg text-primary">Safety Audits</h3>
                 <Button variant="outline" asChild className="rounded-xl font-bold h-10 border-primary/20">
                   <Link href="/landlord/inspections">Schedule Audit</Link>
                 </Button>
               </div>
+
+              {latestAudit && (
+                <Card className="border-none shadow-sm bg-primary/5 rounded-2xl overflow-hidden border border-primary/10">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col md:flex-row gap-8 items-start">
+                      <div className="text-center md:text-left space-y-2">
+                         <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest font-headline">Property Health</p>
+                         <div className="relative inline-flex items-center justify-center">
+                            <div className="absolute inset-0 bg-white rounded-full blur-xl opacity-50" />
+                            <div className={cn(
+                              "relative w-24 h-24 rounded-full border-4 flex flex-col items-center justify-center shadow-lg bg-white",
+                              latestAudit.healthScore >= 80 ? "border-emerald-500 text-emerald-600" :
+                              latestAudit.healthScore >= 50 ? "border-amber-500 text-amber-600" : "border-red-500 text-red-600"
+                            )}>
+                              <span className="text-3xl font-bold font-headline">{latestAudit.healthScore}</span>
+                              <span className="text-[8px] font-bold uppercase tracking-widest">Grade</span>
+                            </div>
+                         </div>
+                      </div>
+                      <div className="flex-1 space-y-4 text-left">
+                        <div>
+                          <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest font-headline mb-2">Executive Summary</p>
+                          <p className="text-sm text-primary font-medium italic font-body">"{latestAudit.summary}"</p>
+                        </div>
+                        {latestAudit.priorityItems && latestAudit.priorityItems.length > 0 && (
+                          <div>
+                            <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest font-headline mb-2">Priority Remediation</p>
+                            <div className="flex flex-wrap gap-2">
+                              {latestAudit.priorityItems.map((item: string, idx: number) => (
+                                <Badge key={idx} variant="destructive" className="bg-red-50 text-red-700 border-red-100 rounded-lg py-1 px-3 text-[10px] font-bold">
+                                  <ShieldAlert className="w-3 h-3 mr-1" /> {item}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               <div className="grid gap-4">
                 {!inspections || inspections.length === 0 ? (
                   <div className="p-16 text-center bg-muted/10 rounded-[2rem] border-2 border-dashed border-primary/10">
                     <ClipboardList className="w-12 h-12 mx-auto text-primary/20 mb-4" />
-                    <p className="text-sm text-muted-foreground font-bold font-headline">No audit history</p>
+                    <p className="text-sm text-muted-foreground font-bold font-headline">No audit history recorded</p>
                   </div>
                 ) : (
                   inspections.sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime()).map(insp => (
-                    <div key={insp.id} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-primary/5 shadow-sm">
+                    <div key={insp.id} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-primary/5 shadow-sm group hover:border-primary/20 transition-all">
                       <div className="flex items-center gap-4 text-left">
-                        <div className="bg-primary/5 p-3 rounded-xl flex flex-col items-center justify-center text-primary font-headline min-w-[70px]">
-                           <span className="text-[9px] font-bold uppercase">{format(new Date(insp.scheduledDate), 'MMM')}</span>
+                        <div className="bg-primary/5 p-3 rounded-xl flex flex-col items-center justify-center text-primary font-headline min-w-[70px] shadow-inner">
+                           <span className="text-[9px] font-bold uppercase tracking-widest">{format(new Date(insp.scheduledDate), 'MMM')}</span>
                            <span className="text-xl font-bold">{format(new Date(insp.scheduledDate), 'dd')}</span>
                         </div>
                         <div>
                           <p className="font-bold text-base text-primary leading-tight">Property Safety Audit</p>
-                          <Badge variant="secondary" className="mt-1.5 uppercase text-[9px] font-bold">{insp.status}</Badge>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <Badge variant="secondary" className="uppercase text-[8px] font-bold tracking-widest">{insp.status}</Badge>
+                            {insp.healthScore && (
+                              <span className={cn(
+                                "text-[9px] font-bold px-2 py-0.5 rounded-md",
+                                insp.healthScore >= 80 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+                              )}>
+                                Score: {insp.healthScore}/100
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm" asChild className="rounded-xl font-bold text-xs text-primary">
-                        <Link href="/landlord/inspections">
-                          {insp.status === 'completed' ? 'View Record' : 'Start Audit'}
-                        </Link>
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" asChild className="rounded-xl font-bold text-xs text-primary hover:bg-primary/5">
+                          <Link href="/landlord/inspections">
+                            {insp.status === 'completed' ? 'View Full Record' : 'Resume Audit'}
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
                   ))
                 )}
@@ -491,7 +554,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
              </CardHeader>
              <CardContent className="space-y-4">
                 <div className="p-4 bg-white/10 rounded-2xl border border-white/10">
-                   <p className="text-[10px] font-bold uppercase opacity-60 tracking-widest mb-1">Asset Isolation</p>
+                   <p className="text-[10px] font-bold uppercase opacity-60 tracking-widest mb-1 font-headline">Asset Isolation</p>
                    <p className="text-sm font-medium">This asset is strictly isolated. Only designated residents and management can access the vault.</p>
                 </div>
              </CardContent>
@@ -505,18 +568,20 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
              </CardHeader>
              <CardContent className="pt-6 space-y-4">
                 <div className="flex items-center justify-between">
-                   <span className="text-xs font-bold text-muted-foreground uppercase">Certificates</span>
+                   <span className="text-xs font-bold text-muted-foreground uppercase font-headline tracking-widest">Certificates</span>
                    <Badge className="bg-emerald-100 text-emerald-700 border-none font-bold uppercase text-[9px]">{documents?.length || 0} Records</Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                   <span className="text-xs font-bold text-muted-foreground uppercase">Open Repairs</span>
+                   <span className="text-xs font-bold text-muted-foreground uppercase font-headline tracking-widest">Open Repairs</span>
                    <Badge className={cn("border-none font-bold uppercase text-[9px]", (maintenance?.filter(m => m.status !== 'completed').length || 0) > 0 ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700")}>
                       {maintenance?.filter(m => m.status !== 'completed').length || 0} Pending
                    </Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                   <span className="text-xs font-bold text-muted-foreground uppercase">Audit Status</span>
-                   <Badge className="bg-blue-100 text-blue-700 border-none font-bold uppercase text-[9px]">Verified</Badge>
+                   <span className="text-xs font-bold text-muted-foreground uppercase font-headline tracking-widest">Safety Audit</span>
+                   <Badge className={cn("border-none font-bold uppercase text-[9px]", latestAudit ? "bg-blue-100 text-blue-700" : "bg-muted text-muted-foreground")}>
+                      {latestAudit ? 'Verified' : 'Pending'}
+                   </Badge>
                 </div>
              </CardContent>
            </Card>
