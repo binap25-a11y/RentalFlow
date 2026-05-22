@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +7,7 @@ import {
   ShieldAlert, Loader2, CheckCircle2,
   Calendar as CalendarIcon, Zap, ClipboardList, AlertTriangle,
   PoundSterling, PieChart as PieChartIcon, ArrowUpRight, ArrowDownRight,
-  Target, Download, Plus, Save, Users
+  Target, Download, Plus, Save, Users, Wrench
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
@@ -179,6 +180,22 @@ export default function LandlordDashboard() {
         urgent: isBefore(parseFlexDate(i.scheduledDate)!, addDays(today, 14))
       }));
 
+    const maintenanceItems = (maintenance || [])
+      .filter(m => {
+        const scheduled = parseFlexDate(m.scheduledDate);
+        return scheduled && isValid(scheduled) && m.status !== 'completed';
+      })
+      .map(m => ({
+        id: m.id,
+        title: m.title,
+        subtitle: 'Scheduled Repair',
+        date: m.scheduledDate,
+        type: 'Repair',
+        icon: Wrench,
+        propertyId: m.propertyId,
+        urgent: isBefore(parseFlexDate(m.scheduledDate)!, addDays(today, 7))
+      }));
+
     const leaseItems = (tenants || [])
       .filter(t => {
         const expiry = parseFlexDate(t.leaseEndDate);
@@ -212,7 +229,7 @@ export default function LandlordDashboard() {
         };
       }
 
-      const isAlreadyListed = [...docItems, ...inspectionItems, ...leaseItems].some(item => item.propertyId === p.id);
+      const isAlreadyListed = [...docItems, ...inspectionItems, ...leaseItems, ...maintenanceItems].some(item => item.propertyId === p.id);
       if (isAlreadyListed) return null;
 
       return {
@@ -227,14 +244,14 @@ export default function LandlordDashboard() {
       };
     }).filter(Boolean) as any[];
 
-    return [...docItems, ...inspectionItems, ...leaseItems, ...propertyStatusItems].sort((a, b) => {
+    return [...docItems, ...inspectionItems, ...leaseItems, ...maintenanceItems, ...propertyStatusItems].sort((a, b) => {
       if (a.type === 'Missing' && b.type !== 'Missing') return -1;
       if (b.type === 'Missing' && a.type !== 'Missing') return 1;
       if (a.urgent && !b.urgent) return -1;
       if (!a.urgent && b.urgent) return 1;
       return 0;
     });
-  }, [documents, inspections, properties, tenants, isClient]);
+  }, [documents, inspections, properties, tenants, maintenance, isClient]);
 
   const healthScore = useMemo(() => {
     if (!isClient) return { grade: 'A+', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-200' };
@@ -392,7 +409,7 @@ export default function LandlordDashboard() {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div className="text-left">
           <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">Executive Dashboard</h1>
-          <p className="text-muted-foreground font-medium font-body max-w-lg">Redundant compliance monitoring and high-yield portfolio analytics.</p>
+          <p className="text-muted-foreground font-medium font-body max-w-lg">Real-time portfolio command and high-yield operational analytics.</p>
         </div>
         <div className="flex items-center gap-4">
           <Badge className={cn("font-bold py-2 px-6 rounded-2xl border shadow-sm transition-all text-xs", healthScore.bg, healthScore.color, healthScore.border)}>
@@ -594,7 +611,8 @@ export default function LandlordDashboard() {
                           item.type === 'Missing' ? "bg-red-100 text-red-600" :
                           item.urgent ? "bg-amber-100 text-amber-600" : 
                           item.type === 'Status' ? "bg-emerald-100 text-emerald-600" : 
-                          item.type === 'Lease' ? "bg-purple-100 text-purple-600" : "bg-primary/5 text-primary"
+                          item.type === 'Lease' ? "bg-purple-100 text-purple-600" : 
+                          item.type === 'Repair' ? "bg-sky-100 text-sky-600" : "bg-primary/5 text-primary"
                         )}>
                           <item.icon className="w-5 h-5" />
                         </div>
@@ -605,7 +623,8 @@ export default function LandlordDashboard() {
                               "text-[9px] font-bold uppercase tracking-[0.1em] px-2 py-0.5 rounded-full",
                               item.type === 'Status' ? "bg-emerald-100 text-emerald-700" : 
                               item.type === 'Missing' ? "bg-red-100 text-red-700" : 
-                              item.type === 'Lease' ? "bg-purple-100 text-purple-700" : "bg-primary/5 text-muted-foreground"
+                              item.type === 'Lease' ? "bg-purple-100 text-purple-700" : 
+                              item.type === 'Repair' ? "bg-sky-100 text-sky-700" : "bg-primary/5 text-muted-foreground"
                             )}>{item.subtitle}</p>
                             {item.date && (
                               <p className={cn("text-[10px] font-bold flex items-center opacity-60", item.urgent ? "text-amber-700" : "text-primary/60")}>
@@ -616,7 +635,7 @@ export default function LandlordDashboard() {
                         </div>
                       </div>
                       <Button variant="ghost" size="icon" asChild className="h-9 w-9 rounded-2xl shrink-0 bg-primary/5 text-primary opacity-0 group-hover:opacity-100 transition-all">
-                        <Link href={`/landlord/properties/${item.propertyId}`}>
+                        <Link href={item.type === 'Repair' ? '/landlord/maintenance' : `/landlord/properties/${item.propertyId}`}>
                           <ArrowRight className="w-4 h-4" />
                         </Link>
                       </Button>
