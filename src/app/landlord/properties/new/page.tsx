@@ -74,7 +74,11 @@ export default function NewPropertyPage() {
         finalImageUrls = results.filter(r => r.success && r.url).map(r => r.url!).filter(isValidAssetUrl);
       }
 
-      // DETERMINISTIC COVER: Explicitly set the first successfully uploaded image as the primary identity
+      /**
+       * 🖼️ DETERMINISTIC COVER: 
+       * Explicitly set the first successfully uploaded image as the primary identity (imageUrl).
+       * This ensures consistency between Portfolio Cards and the Detail Gallery.
+       */
       const finalImageUrl = finalImageUrls.length > 0 ? finalImageUrls[0] : '';
 
       const serializableData = {

@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { isValidAssetUrl } from "@/lib/utils";
+import { isValidAssetUrl, isUserUploadedAsset } from "@/lib/utils";
 
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -54,8 +54,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // 🛡️ Guard: Only initialize from Firestore once to prevent background 
-    // real-time refreshes from wiping local edits while in-progress.
+    /**
+     * 🛡️ Guard: Only initialize from Firestore once.
+     * Prevents background real-time updates from wiping out your local unsaved edits.
+     */
     if (property && !isInitialized) {
       setAddress(property.addressLine1 || '');
       setCity(property.city || '');
@@ -116,15 +118,15 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       }
 
       /**
-       * 🖼️ DETERMINISTIC VISUAL HIERARCHY
-       * We prepend new uploads so they become the primary cover immediately.
-       * We deduplicate and ensure that only valid visual records are persisted.
+       * 🖼️ HARDENED VISUAL HIERARCHY
+       * We prepend new uploads so they become the primary cover immediately (Index 0).
+       * We deduplicate and ensure that all visual records are persisted as final URLs.
        */
       const fullLedger = [...uploadedUrls, ...existingImageUrls];
       const uniqueLedger = Array.from(new Set(fullLedger)).filter(isValidAssetUrl);
       
       // Select the primary cover from the start of the list (Index 0)
-      const primaryUrl = uniqueLedger.length > 0 ? uniqueLedger[0] : (property?.imageUrl || '');
+      const primaryUrl = uniqueLedger.length > 0 ? uniqueLedger[0] : '';
 
       const serializableData = {
         id: propertyId,
