@@ -85,6 +85,7 @@ export default function TenantHub() {
     }
   };
 
+  // 🛡️ Robust Resolver: Ensures Supabase images are prioritized for the resident
   const activeImageUrl = useMemo(() => {
     return getResolvedImageUrl(property?.imageUrl, property?.imageUrls);
   }, [property]);
@@ -140,7 +141,14 @@ export default function TenantHub() {
         <div className="lg:col-span-8 space-y-8">
           <Card className="border-none shadow-sm overflow-hidden rounded-[2.5rem] bg-white group">
             <div className="relative h-[450px] w-full bg-muted overflow-hidden">
-              <Image src={activeImageUrl} alt={property.addressLine1} fill className="object-cover transition-transform duration-1000 group-hover:scale-105" unoptimized={true} />
+              <Image 
+                src={activeImageUrl} 
+                alt={property.addressLine1} 
+                fill 
+                className="object-cover transition-transform duration-1000 group-hover:scale-105" 
+                unoptimized 
+                priority
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/20 to-transparent opacity-90" />
               <div className="absolute bottom-10 left-10 text-white text-left space-y-4 max-w-2xl">
                 <div className="flex items-center gap-3">

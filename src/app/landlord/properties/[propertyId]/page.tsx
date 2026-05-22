@@ -31,7 +31,7 @@ import {
   PopoverTrigger 
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { cn, getResolvedGallery, getResolvedImageUrl } from "@/lib/utils";
+import { cn, getResolvedGallery, getResolvedImageUrl, isValidAssetUrl } from "@/lib/utils";
 import Image from "next/image";
 import {
   Carousel,
@@ -315,7 +315,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         priority={index === 0}
                         data-ai-hint="luxury property" 
                       />
-                      {index === 0 && !url.includes('picsum.photos/seed/rentalflow-default') && (
+                      {index === 0 && isValidAssetUrl(url) && (
                         <div className="absolute top-6 left-6 px-4 py-1.5 bg-primary text-white text-[10px] font-bold uppercase rounded-full shadow-2xl font-headline">Cover Asset</div>
                       )}
                     </div>

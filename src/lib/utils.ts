@@ -7,26 +7,29 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * 🖼️ Constants for Visual Fallbacks
+ * Using a professional architecture placeholder as the base identity.
  */
 export const RENTALFLOW_FALLBACK = "https://picsum.photos/seed/rentalflow-default/800/600";
 
 /**
  * 🖼️ Asset Validation Engine
- * Distinguishes between professional user uploads and platform placeholders.
+ * Strictly distinguishes between professional user uploads and platform placeholders.
  */
 export function isValidAssetUrl(url: any): boolean {
-  if (!url || typeof url !== 'string' || !url.startsWith('http')) return false;
+  if (!url || typeof url !== 'string' || url.trim() === '' || !url.startsWith('http')) return false;
   
-  // Exclude specific platform fallbacks to ensure they don't block user content
-  const isFallback = url.includes('picsum.photos/seed/rentalflow-default') || 
-                    url.includes('placehold.co');
+  // Explicitly identify if the URL is one of our system placeholders
+  const isPlatformPlaceholder = 
+    url.includes('picsum.photos/seed/rentalflow-default') || 
+    url.includes('placehold.co') ||
+    url.includes('picsum.photos/seed/prop');
                     
-  return !isFallback;
+  return !isPlatformPlaceholder;
 }
 
 /**
  * 🖼️ Robust Asset Resolution Engine
- * Strictly prioritizes user-uploaded content over placeholders.
+ * Strictly prioritizes user-uploaded content over placeholders for a specific property.
  * Tier 1: Explicit primary imageUrl (Designated User Cover)
  * Tier 2: First valid item in the gallery ledger (imageUrls[0])
  * Tier 3: Professional platform fallback

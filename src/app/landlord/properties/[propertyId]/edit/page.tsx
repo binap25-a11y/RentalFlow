@@ -53,8 +53,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isSaving, setIsSaving] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // 🛡️ Guarded Initialization
-  // Only sets initial state once to prevent background Firestore updates from wiping user changes
+  // 🛡️ Guarded Initialization: Ensures persistent data only sets state once
   useEffect(() => {
     if (property && !isInitialized) {
       setAddress(property.addressLine1 || '');
@@ -67,6 +66,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
       const gallery = getResolvedGallery(property.imageUrl, property.imageUrls);
+      // Filter for real user uploads to populate the editable ledger
       const userPhotos = gallery.filter(isValidAssetUrl);
       setExistingImageUrls(userPhotos);
       setIsInitialized(true);
@@ -112,10 +112,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         uploadedUrls = results.filter(r => r.success && r.url).map(r => r.url!);
       }
 
-      // Combine existing images and new uploads
+      // 🔄 Deterministic Gallery Merge: Existing assets preserved, new assets appended
       const finalGallery = [...existingImageUrls, ...uploadedUrls];
       
-      // DETERMINISTIC COVER: The first image in the ledger is the definitive identity
+      // 🎯 Deterministic Cover: Explicitly set the first image as the primary identity
       const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
 
       const serializableData = {
