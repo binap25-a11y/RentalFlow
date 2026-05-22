@@ -13,15 +13,14 @@ export function cn(...inputs: ClassValue[]) {
 export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop";
 
 /**
- * 🖼️ User Asset Identifier
- * Strictly identifies images uploaded by users (Supabase or Firebase Storage)
- * vs generic platform-generated placeholders or the professional fallback.
+ * 🖼️ Strict User Asset Identifier
+ * Strictly identifies images uploaded by users (Supabase or Firebase Storage).
+ * Blocks platform-generated placeholders from entering the permanent ledger.
  */
 export function isUserUploadedAsset(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '' || !url.startsWith('http')) return false;
   
   // 🛡️ Strict Professional Filter: ONLY treat verified storage assets as true user content.
-  // This prevents placeholders or the fallback from entering the permanent database ledger.
   const isStorageAsset = url.includes('.supabase.co') || url.includes('.firebasestorage.app');
   
   // Explicitly identify and EXCLUDE generic placeholders
@@ -46,13 +45,16 @@ export function isValidAssetUrl(url: any): boolean {
  * Strictly prioritizes User Uploads over placeholders for a specific property context.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
+  // 1. If explicit imageUrl is a verified user asset, use it immediately.
   if (isUserUploadedAsset(imageUrl)) return imageUrl!;
   
+  // 2. Otherwise, look for the first verified user asset in the gallery array.
   if (imageUrls && Array.isArray(imageUrls)) {
     const firstUserUrl = imageUrls.find(u => isUserUploadedAsset(u));
     if (firstUserUrl) return firstUserUrl;
   }
   
+  // 3. Last resort: high-fidelity professional fallback.
   return RENTALFLOW_NEUTRAL_FALLBACK;
 }
 

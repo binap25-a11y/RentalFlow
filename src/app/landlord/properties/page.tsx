@@ -88,8 +88,8 @@ export default function PropertiesPage() {
               </CardHeader>
               <CardContent className="pb-4 text-left">
                 <div className="flex gap-4 items-center mb-4">
-                  <span className="flex items-center text-xs font-bold text-primary/60 font-headline uppercase"><Bed className="w-3.5 h-3.5 mr-1" /> {property.numberOfBedrooms} Bed</span>
-                  <span className="flex items-center text-xs font-bold text-primary/60 font-headline uppercase"><Bath className="w-3.5 h-3.5 mr-1" /> {property.numberOfBathrooms} Bath</span>
+                  <span className="flex items-center text-xs font-bold text-primary/60 font-headline uppercase"><Bed className="w-3.5 h-3.5 mr-1" /> {property.numberOfBedrooms || 1} Bed</span>
+                  <span className="flex items-center text-xs font-bold text-primary/60 font-headline uppercase"><Bath className="w-3.5 h-3.5 mr-1" /> {property.numberOfBathrooms || 1} Bath</span>
                 </div>
                 <p className="text-xl font-bold text-primary font-headline tracking-tighter">£{property.rentAmount}<span className="text-xs text-muted-foreground font-medium"> / month</span></p>
               </CardContent>

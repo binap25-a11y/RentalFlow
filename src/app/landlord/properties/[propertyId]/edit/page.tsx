@@ -23,6 +23,13 @@ import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase, deleteFromSupabase } from '@/lib/actions/supabase-storage';
 import { isUserUploadedAsset } from "@/lib/utils";
 
+type LedgerItem = {
+  id: string;
+  url: string;
+  file?: File;
+  isNew: boolean;
+};
+
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
   const propertyId = resolvedParams.propertyId;
@@ -47,9 +54,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [bedrooms, setBedrooms] = useState('1');
   const [bathrooms, setBathrooms] = useState('1');
   
-  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
-  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
-  const [newPreviewUrls, setNewPreviewUrls] = useState<string[]>([]);
+  const [ledger, setLedger] = useState<LedgerItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -69,9 +74,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         gallery.unshift(property.imageUrl);
       }
       
-      // 🛡️ Strict Filtering ensures only TRUE user assets populate the ledger
-      const validGallery = gallery.filter(isUserUploadedAsset);
-      setExistingImageUrls(Array.from(new Set(validGallery)));
+      const initialLedger = gallery
+        .filter(isUserUploadedAsset)
+        .map(url => ({ id: Math.random().toString(), url, isNew: false }));
+        
+      setLedger(initialLedger);
       setIsInitialized(true);
     }
   }, [property, isInitialized]);
@@ -79,43 +86,39 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
-      setNewImageFiles(prev => [...prev, ...files]);
-      const newPreviews = files.map(file => URL.createObjectURL(file));
-      setNewPreviewUrls(prev => [...prev, ...newPreviews]);
+      const newItems = files.map(file => ({
+        id: Math.random().toString(),
+        url: URL.createObjectURL(file),
+        file,
+        isNew: true
+      }));
+      setLedger(prev => [...prev, ...newItems]);
     }
   };
 
-  const removeNewImage = (index: number) => {
-    setNewImageFiles(prev => prev.filter((_, i) => i !== index));
-    setNewPreviewUrls(prev => prev.filter((_, i) => i !== index));
-  };
+  const removeFromLedger = async (id: string) => {
+    const item = ledger.find(i => i.id === id);
+    if (!item) return;
 
-  const removeExistingImage = async (index: number) => {
-    const urlToRemove = existingImageUrls[index];
-    setExistingImageUrls(prev => prev.filter((_, i) => i !== index));
-    
-    if (urlToRemove.includes('supabase.co')) {
-      const pathMatch = urlToRemove.split('/public/')[1]?.split('?')[0];
+    if (item.isNew && item.url.startsWith('blob:')) {
+      URL.revokeObjectURL(item.url);
+    } else if (!item.isNew && item.url.includes('supabase.co')) {
+      const pathMatch = item.url.split('/public/')[1]?.split('?')[0];
       if (pathMatch) {
         const pathSegments = pathMatch.split('/');
-        pathSegments.shift(); // Remove bucket name
+        pathSegments.shift();
         const relativePath = pathSegments.join('/');
         await deleteFromSupabase('property-images', relativePath);
       }
     }
+    setLedger(prev => prev.filter(i => i.id !== id));
   };
 
-  const setAsPrimary = (index: number, isNew: boolean) => {
-    if (isNew) {
-      const file = newImageFiles[index];
-      const preview = newPreviewUrls[index];
-      setNewImageFiles(prev => [file, ...prev.filter((_, i) => i !== index)]);
-      setNewPreviewUrls(prev => [preview, ...prev.filter((_, i) => i !== index)]);
-    } else {
-      const url = existingImageUrls[index];
-      setExistingImageUrls(prev => [url, ...prev.filter((_, i) => i !== index)]);
-    }
-    toast({ title: "Cover Asset Updated", description: "This image will be used as the primary identity." });
+  const setAsPrimary = (id: string) => {
+    const item = ledger.find(i => i.id === id);
+    if (!item) return;
+    setLedger(prev => [item, ...prev.filter(i => i.id !== id)]);
+    toast({ title: "Cover Asset Updated", description: "Identity updated locally. Click Save to synchronize." });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -125,29 +128,23 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     setIsSaving(true);
 
     try {
-      let uploadedUrls: string[] = [];
-      
-      if (newImageFiles.length > 0) {
-        const uploadPromises = newImageFiles.map((file, index) => {
-          const formData = new FormData();
-          formData.append('file', file);
-          // 🛡️ Strict Isolation: Assets are nested by unique propertyId and userId
-          const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${file.name}`;
-          return uploadToSupabase(formData, 'property-images', path);
-        });
-
-        const results = await Promise.all(uploadPromises);
-        uploadedUrls = results.filter(r => r.success && r.url).map(r => r.url!);
-      }
-
       /**
-       * 🖼️ Deterministic Visual Hierarchy
-       * Combine newly uploaded URLs (respecting reorder) with existing ones.
-       * The first valid asset (Index 0) is explicitly set as the Primary Identity.
+       * 🚀 Unified Asset Synchronization
+       * Map the ledger items to a final set of storage URLs.
+       * New files are uploaded; existing items are kept in their defined order.
        */
-      const uniqueLedger = Array.from(new Set([...uploadedUrls, ...existingImageUrls]))
-        .filter(isUserUploadedAsset);
-      
+      const finalUrls = await Promise.all(ledger.map(async (item, index) => {
+        if (item.isNew && item.file) {
+          const formData = new FormData();
+          formData.append('file', item.file);
+          const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${item.file.name}`;
+          const res = await uploadToSupabase(formData, 'property-images', path);
+          return res.url || '';
+        }
+        return item.url;
+      }));
+
+      const uniqueLedger = Array.from(new Set(finalUrls)).filter(isUserUploadedAsset);
       const primaryUrl = uniqueLedger.length > 0 ? uniqueLedger[0] : '';
 
       const serializableData = {
@@ -174,16 +171,16 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Asset Synchronized", description: "Visual and relational data updated." });
+      toast({ title: "Asset Synchronized", description: "Visual identity and specifications updated." });
       
-      // Cleanup local blob previews
-      newPreviewUrls.forEach(url => URL.revokeObjectURL(url));
+      ledger.forEach(item => {
+        if (item.isNew) URL.revokeObjectURL(item.url);
+      });
       
-      // Transition to property details to see live updates
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Asset synchronization failed:", err);
-      toast({ variant: "destructive", title: "Sync Failed", description: "Ledger error encountered." });
+      toast({ variant: "destructive", title: "Sync Failed", description: "Could not update property records." });
       setIsSaving(false);
     }
   };
@@ -199,7 +196,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </Button>
           <div>
             <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">Modify Asset</h1>
-            <p className="text-muted-foreground font-medium font-body">Refining visual identity for {address || 'Property'}.</p>
+            <p className="text-muted-foreground font-medium font-body">Refining specs and identity for {address || 'Property'}.</p>
           </div>
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold">
@@ -219,33 +216,31 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                {newPreviewUrls.map((url, index) => (
-                  <div key={`new-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group border-2 border-accent shadow-md bg-white">
-                    <Image src={url} alt={`New ${index}`} fill className="object-cover" unoptimized />
+                {ledger.map((item, index) => (
+                  <div key={item.id} className={cn(
+                    "relative aspect-video rounded-2xl overflow-hidden group shadow-md bg-white border-2 transition-all",
+                    index === 0 ? "border-primary" : "border-transparent"
+                  )}>
+                    <Image src={item.url} alt={`Asset ${index}`} fill className="object-cover" unoptimized />
                     <div className="absolute top-2 right-2 flex gap-1 z-20">
-                      <button type="button" onClick={() => setAsPrimary(index, true)} title="Set as Primary" className="bg-accent text-white p-1.5 rounded-lg hover:scale-110 transition-transform shadow-lg"><Star className="w-3.5 h-3.5 fill-current" /></button>
-                      <button type="button" onClick={() => removeNewImage(index)} className="bg-black/60 text-white p-1.5 rounded-lg hover:bg-red-500 transition-all shadow-lg"><X className="w-3.5 h-3.5" /></button>
+                      <button type="button" onClick={() => setAsPrimary(item.id)} title="Set as Primary" className="bg-white/90 text-primary p-1.5 rounded-lg hover:scale-110 transition-transform shadow-lg"><Star className={cn("w-3.5 h-3.5", index === 0 && "fill-primary")} /></button>
+                      <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-black/60 text-white p-1.5 rounded-lg hover:bg-red-500 transition-all shadow-lg"><X className="w-3.5 h-3.5" /></button>
                     </div>
                     {index === 0 && (
-                      <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-accent text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline z-10">New Cover Target</div>
-                    )}
-                  </div>
-                ))}
-                {existingImageUrls.map((url, index) => (
-                  <div key={`existing-${index}`} className="relative aspect-video rounded-2xl overflow-hidden group shadow-sm border border-primary/10 bg-white">
-                    <Image src={url} alt={`Existing ${index}`} fill className="object-cover" unoptimized />
-                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                      <button type="button" onClick={() => setAsPrimary(index, false)} title="Set as Primary" className="bg-primary text-white p-1.5 rounded-lg hover:scale-110 transition-transform shadow-lg"><Star className="w-3.5 h-3.5 fill-current" /></button>
-                      <button type="button" onClick={() => removeExistingImage(index)} className="bg-black/60 text-white p-1.5 rounded-lg hover:bg-red-500 transition-all shadow-lg"><X className="w-3.5 h-3.5" /></button>
-                    </div>
-                    {newPreviewUrls.length === 0 && index === 0 && (
                       <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary text-white text-[8px] font-bold uppercase rounded-md shadow-lg font-headline z-10">Active Cover</div>
                     )}
                   </div>
                 ))}
+                <button 
+                  type="button" 
+                  onClick={() => document.getElementById('image-input')?.click()}
+                  className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white flex flex-col items-center justify-center gap-2 group"
+                >
+                  <Plus className="w-6 h-6 text-primary/20 group-hover:text-primary/40" />
+                </button>
               </div>
               <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
-              <p className="mt-6 text-[10px] font-bold text-muted-foreground uppercase text-center tracking-[0.2em] opacity-40">Storage synchronization active</p>
+              <p className="mt-6 text-[10px] font-bold text-muted-foreground uppercase text-center tracking-[0.2em] opacity-40">Physical storage purge active</p>
             </div>
 
             <div className="p-8 lg:p-12 space-y-8">
