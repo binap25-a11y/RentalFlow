@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,9 +7,9 @@ import {
   ShieldAlert, Loader2, CheckCircle2,
   Calendar as CalendarIcon, Zap, ClipboardList, AlertTriangle,
   PoundSterling, PieChart as PieChartIcon, ArrowUpRight, ArrowDownRight,
-  Target, Download
+  Target, Download, Plus, Save
 } from "lucide-react";
-import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery } from "@/firebase";
+import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { isBefore, addDays, isValid, parseISO, format } from "date-fns";
@@ -21,12 +22,27 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { jsPDF } from "jspdf";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { collection, doc, serverTimestamp } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 const COLORS = ['hsl(var(--primary))', '#10b981', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6'];
 
 export default function LandlordDashboard() {
   const { user } = useUser();
   const db = useFirestore();
+  const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -61,6 +77,14 @@ export default function LandlordDashboard() {
 
   const { data: inspections } = useCollection(inspectionsQuery);
 
+  // Manual Expense State
+  const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
+  const [isSavingExpense, setIsSavingExpense] = useState(false);
+  const [expAmount, setExpAmount] = useState('');
+  const [expCategory, setExpCategory] = useState('other');
+  const [expPropertyId, setExpPropertyId] = useState('');
+  const [expTitle, setExpTitle] = useState('');
+
   const parseFlexDate = (dateVal: any) => {
     if (!dateVal) return null;
     if (typeof dateVal === 'string') return parseISO(dateVal);
@@ -74,7 +98,6 @@ export default function LandlordDashboard() {
     return d && isValid(d) ? format(d, 'PP') : 'TBC';
   };
 
-  // --- Financial Logic ---
   const financialStats = useMemo(() => {
     if (!isClient || !properties || !maintenance) return null;
 
@@ -209,6 +232,40 @@ export default function LandlordDashboard() {
       rent: p.rentAmount || 0,
     })).slice(0, 6);
   }, [properties, isClient]);
+
+  const handleLogManualExpense = () => {
+    if (!user || !db || !expAmount || !expPropertyId || !expTitle) return;
+    setIsSavingExpense(true);
+
+    const requestId = doc(collection(db, 'maintenanceRequests')).id;
+    const requestRef = doc(db, 'maintenanceRequests', requestId);
+    const property = properties?.find(p => p.id === expPropertyId);
+
+    const payload = {
+      id: requestId,
+      propertyId: expPropertyId,
+      landlordId: user.uid,
+      tenantId: 'landlord-direct',
+      memberIds: property?.memberIds || [user.uid],
+      title: expTitle,
+      description: `Manual Expense Entry: ${expTitle}`,
+      status: 'completed',
+      priority: 'routine',
+      category: expCategory,
+      cost: Number(expAmount),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+
+    setDocumentNonBlocking(requestRef, payload, { merge: true });
+    
+    toast({ title: "Expense Recorded", description: "Ledger updated successfully." });
+    setIsExpenseDialogOpen(false);
+    setIsSavingExpense(false);
+    setExpAmount('');
+    setExpTitle('');
+    setExpPropertyId('');
+  };
 
   const downloadExpenseLedger = () => {
     if (!maintenance || !isClient) return;
@@ -561,13 +618,67 @@ export default function LandlordDashboard() {
                     <p className="text-[10px] text-muted-foreground">PostgreSQL Audit Trail: Enabled</p>
                  </div>
               </div>
-              <Button 
-                className="w-full rounded-xl bg-primary text-white font-bold h-12 shadow-lg shadow-primary/10" 
-                onClick={downloadExpenseLedger}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download Expense Ledger
-              </Button>
+              
+              <div className="grid grid-cols-1 gap-3">
+                <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full rounded-xl border-primary/20 font-bold h-12">
+                      <Plus className="w-4 h-4 mr-2" /> Log Portfolio Expense
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-3xl border-none shadow-2xl p-0 overflow-hidden">
+                    <div className="p-8 bg-primary/5 border-b text-left">
+                      <DialogTitle className="text-xl font-bold font-headline text-primary">Log Manual Expense</DialogTitle>
+                      <DialogDescription className="font-medium text-muted-foreground">Record insurance, fees, or one-off costs for your tax ledger.</DialogDescription>
+                    </div>
+                    <div className="p-8 space-y-6 text-left bg-white">
+                      <div className="space-y-2">
+                        <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Expense Title</Label>
+                        <Input value={expTitle} onChange={(e) => setExpTitle(e.target.value)} placeholder="e.g. Landlord Insurance 2025" className="rounded-xl h-11 bg-muted/20 border-none font-bold" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Amount (£)</Label>
+                          <Input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="0.00" className="rounded-xl h-11 bg-muted/20 border-none font-bold" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Category</Label>
+                          <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-body" value={expCategory} onChange={(e) => setExpCategory(e.target.value)}>
+                            <option value="insurance">Insurance</option>
+                            <option value="legal">Legal/Professional</option>
+                            <option value="management">Management Fees</option>
+                            <option value="plumbing">Plumbing</option>
+                            <option value="electrical">Electrical</option>
+                            <option value="structural">Structural</option>
+                            <option value="other">General Maintenance</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Assign to Asset</Label>
+                        <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-body" value={expPropertyId} onChange={(e) => setExpPropertyId(e.target.value)}>
+                          <option value="">Choose a property...</option>
+                          {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <DialogFooter className="p-8 bg-muted/5 border-t">
+                      <Button className="w-full rounded-xl h-12 font-bold bg-primary text-white shadow-lg" onClick={handleLogManualExpense} disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
+                        {isSavingExpense ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                        Commit to Ledger
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
+                <Button 
+                  className="w-full rounded-xl bg-primary text-white font-bold h-12 shadow-lg shadow-primary/10" 
+                  onClick={downloadExpenseLedger}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Expense Ledger
+                </Button>
+              </div>
             </div>
           </Card>
         </div>
