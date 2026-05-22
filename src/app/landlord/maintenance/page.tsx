@@ -19,7 +19,8 @@ import { doc, serverTimestamp, collection } from "firebase/firestore";
 import { 
   Wrench, Sparkles, Clock, BrainCircuit, Loader2, 
   CheckCircle2, PlayCircle, Plus, PoundSterling,
-  ChevronRight, Lightbulb, UserCheck, HardHat, Phone, Mail
+  ChevronRight, Lightbulb, UserCheck, HardHat, Phone, Mail,
+  Calendar as CalendarIcon
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -41,6 +42,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export default function MaintenancePage() {
   const { user } = useUser();
@@ -52,7 +55,9 @@ export default function MaintenancePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoggingCost, setIsLoggingCost] = useState<string | null>(null);
   const [isAssigningPro, setIsAssigningPro] = useState<string | null>(null);
+  const [isScheduling, setIsScheduling] = useState<string | null>(null);
   const [costAmount, setCostAmount] = useState('');
+  const [scheduledDate, setScheduledDate] = useState<Date>();
 
   const [newRequestTitle, setNewRequestTitle] = useState('');
   const [newRequestDesc, setNewRequestDesc] = useState('');
@@ -168,6 +173,18 @@ export default function MaintenancePage() {
     setCostAmount('');
   };
 
+  const handleSetSchedule = (requestId: string) => {
+    if (!db || !scheduledDate) return;
+    const requestRef = doc(db, 'maintenanceRequests', requestId);
+    updateDocumentNonBlocking(requestRef, { 
+      scheduledDate: scheduledDate.toISOString(),
+      updatedAt: serverTimestamp() 
+    });
+    toast({ title: "Repair Scheduled", description: `Task set for ${format(scheduledDate, 'PPP')}` });
+    setIsScheduling(null);
+    setScheduledDate(undefined);
+  };
+
   const getPriorityColor = (priority: string) => {
     switch(priority?.toLowerCase()) {
       case 'critical': return 'bg-red-600 text-white';
@@ -214,7 +231,7 @@ export default function MaintenancePage() {
                     </Badge>
                     {request.cost > 0 && <Badge variant="secondary" className="bg-amber-100 text-amber-800 font-bold border-amber-200 text-[10px] px-3 py-1">£{request.cost} Spent</Badge>}
                     <span className="text-[10px] text-muted-foreground font-bold uppercase ml-auto flex items-center">
-                      <Clock className="w-3 h-3 mr-1" /> {request.createdAt ? format(new Date(request.createdAt.seconds * 1000), 'PPp') : 'Just now'}
+                      <Clock className="w-3 h-3 mr-1" /> Reported: {request.createdAt ? format(new Date(request.createdAt.seconds * 1000), 'PPp') : 'Just now'}
                     </span>
                   </div>
                   
@@ -222,9 +239,17 @@ export default function MaintenancePage() {
                     <h3 className="text-xl font-bold font-headline group-hover:text-primary transition-colors leading-tight">{request.title}</h3>
                     <p className="text-muted-foreground font-body leading-relaxed break-words">{request.description}</p>
                     
-                    <div className="flex items-center gap-2 text-xs font-bold text-primary/40 uppercase tracking-widest pt-2">
-                       <Building2 className="w-3.5 h-3.5" />
-                       {properties?.find(p => p.id === request.propertyId)?.addressLine1 || "Asset Identification Pending"}
+                    <div className="flex flex-wrap items-center gap-6">
+                      <div className="flex items-center gap-2 text-xs font-bold text-primary/40 uppercase tracking-widest">
+                         <Building2 className="w-3.5 h-3.5" />
+                         {properties?.find(p => p.id === request.propertyId)?.addressLine1 || "Asset identification pending"}
+                      </div>
+                      {request.scheduledDate && (
+                        <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 uppercase tracking-widest">
+                           <CalendarIcon className="w-3.5 h-3.5" />
+                           Scheduled: {format(new Date(request.scheduledDate), 'PP')}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -281,11 +306,13 @@ export default function MaintenancePage() {
                     AI Triage
                   </Button>
                   
-                  {!assignedPro && (
-                    <Button variant="outline" className="flex-1 min-w-[120px] rounded-xl font-bold h-12 border-primary/20 bg-white shadow-sm" onClick={() => setIsAssigningPro(request.id)}>
-                      <UserCheck className="w-4 h-4 mr-2" /> Assign Pro
-                    </Button>
-                  )}
+                  <Button variant="outline" className="flex-1 min-w-[120px] rounded-xl font-bold h-12 border-primary/20 bg-white shadow-sm" onClick={() => setIsScheduling(request.id)}>
+                    <CalendarIcon className="w-4 h-4 mr-2" /> Schedule
+                  </Button>
+
+                  <Button variant="outline" className="flex-1 min-w-[120px] rounded-xl font-bold h-12 border-primary/20 bg-white shadow-sm" onClick={() => setIsAssigningPro(request.id)}>
+                    <UserCheck className="w-4 h-4 mr-2" /> {assignedPro ? 'Reassign' : 'Assign Pro'}
+                  </Button>
 
                   <Dialog open={isLoggingCost === request.id} onOpenChange={(open) => !open && setIsLoggingCost(null)}>
                     <Button variant="outline" className="flex-1 min-w-[120px] rounded-xl font-bold h-12 border-primary/20 bg-white shadow-sm" onClick={() => setIsLoggingCost(request.id)}>
@@ -358,6 +385,27 @@ export default function MaintenancePage() {
                     <div className="p-6 bg-muted/5 border-t">
                        <Button variant="ghost" className="w-full font-bold text-muted-foreground" onClick={() => setIsAssigningPro(null)}>Cancel</Button>
                     </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Scheduling Dialog */}
+                <Dialog open={isScheduling === request.id} onOpenChange={(open) => !open && setIsScheduling(null)}>
+                  <DialogContent className="rounded-3xl border-none shadow-2xl p-0 overflow-hidden max-w-[400px]">
+                    <div className="p-8 bg-primary/5 border-b text-left">
+                      <DialogTitle className="text-xl font-bold font-headline text-primary">Schedule Repair</DialogTitle>
+                      <DialogDescription className="font-medium">Set a target date for this maintenance task.</DialogDescription>
+                    </div>
+                    <div className="p-8 bg-white flex justify-center">
+                      <Calendar
+                        mode="single"
+                        selected={scheduledDate}
+                        onSelect={setScheduledDate}
+                        className="rounded-xl border shadow-sm"
+                      />
+                    </div>
+                    <DialogFooter className="p-8 bg-muted/5 border-t">
+                       <Button className="w-full rounded-xl h-12 font-bold bg-primary text-white" disabled={!scheduledDate} onClick={() => handleSetSchedule(request.id)}>Confirm Schedule</Button>
+                    </DialogFooter>
                   </DialogContent>
                 </Dialog>
               </Card>

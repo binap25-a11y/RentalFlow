@@ -62,7 +62,8 @@
         "priority": { "type": "string" },
         "memberIds": { "type": "array", "items": { "type": "string" } },
         "cost": { "type": "number" },
-        "assignedContractorId": { "type": "string" }
+        "assignedContractorId": { "type": "string" },
+        "scheduledDate": { "type": "string", "format": "date-time" }
       }
     },
     "Inspection": {

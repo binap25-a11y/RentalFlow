@@ -14,7 +14,8 @@ import {
   FileText,
   MessageSquare,
   PhoneCall,
-  HardHat
+  HardHat,
+  CalendarDays
 } from 'lucide-react';
 import { cn, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
@@ -39,6 +40,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
 
   const landlordItems = [
     { label: 'Overview', icon: LayoutDashboard, href: '/landlord/dashboard' },
+    { label: 'Calendar', icon: CalendarDays, href: '/landlord/calendar' },
     { label: 'Properties', icon: Building2, href: '/landlord/properties' },
     { label: 'Tenants', icon: Users, href: '/landlord/tenants' },
     { label: 'Maintenance', icon: Wrench, href: '/landlord/maintenance' },
