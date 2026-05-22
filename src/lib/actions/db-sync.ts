@@ -1,7 +1,6 @@
-
 'use server';
 
-import pool from '@/lib/db';
+import { getPool } from '@/lib/db';
 
 /**
  * @fileOverview Server Actions for synchronizing Firebase metadata to PostgreSQL.
@@ -23,8 +22,9 @@ export async function syncPropertyToDb(propertyData: {
   numberOfBathrooms: number;
   description?: string;
 }) {
-  if (!process.env.DATABASE_URL) {
-    console.warn('Relational Sync Skipped: DATABASE_URL not configured.');
+  const pool = getPool();
+  if (!pool) {
+    console.warn('Relational Sync Skipped: Database pool not available.');
     return { success: true, message: 'Sync skipped' };
   }
 
@@ -81,9 +81,8 @@ export async function syncDocumentToDb(docData: {
   documentType: string;
   expiryDate?: string | null;
 }) {
-  if (!process.env.DATABASE_URL) {
-    return { success: true, message: 'Sync skipped' };
-  }
+  const pool = getPool();
+  if (!pool) return { success: true, message: 'Sync skipped' };
 
   const { id, propertyId, landlordId, fileName, fileUrl, documentType, expiryDate } = docData;
   
@@ -112,7 +111,8 @@ export async function syncDocumentToDb(docData: {
 }
 
 export async function deleteDocumentFromDb(docId: string) {
-  if (!process.env.DATABASE_URL) return { success: true };
+  const pool = getPool();
+  if (!pool) return { success: true };
 
   try {
     const client = await pool.connect();

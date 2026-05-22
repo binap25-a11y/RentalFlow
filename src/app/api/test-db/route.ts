@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { getPool } from '@/lib/db';
 
 /**
  * @fileOverview Database connectivity diagnostic endpoint.
@@ -7,6 +7,15 @@ import pool from '@/lib/db';
  */
 
 export async function GET() {
+  const pool = getPool();
+
+  if (!pool) {
+    return NextResponse.json({
+      status: "skipped",
+      message: "Database environment variable not configured"
+    }, { status: 200 });
+  }
+
   try {
     const result = await pool.query('SELECT NOW()');
     return NextResponse.json({

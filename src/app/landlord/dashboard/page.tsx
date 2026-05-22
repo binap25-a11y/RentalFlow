@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +20,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { jsPDF } from "jspdf";
 import { 
   Dialog, 
   DialogContent, 
@@ -33,7 +31,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
@@ -306,9 +303,11 @@ export default function LandlordDashboard() {
     setExpPropertyId('');
   };
 
-  const downloadExpenseLedger = () => {
+  const downloadExpenseLedger = async () => {
     if (!maintenance || !isClient) return;
 
+    // Dynamically import jsPDF to prevent server-side initialization issues
+    const { jsPDF } = await import("jspdf");
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
     const today = format(new Date(), 'PPP');

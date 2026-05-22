@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -32,7 +31,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { generateInspectionReport } from "@/ai/flows/generate-inspection-report";
-import { jsPDF } from "jspdf";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 import Image from 'next/image';
 
@@ -185,6 +183,7 @@ export default function InspectionsPage() {
 
   const downloadPDF = async (inspection: any) => {
     const property = properties?.find(p => p.id === inspection.propertyId);
+    const { jsPDF } = await import("jspdf");
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
     const today = format(new Date(), 'PPp');
