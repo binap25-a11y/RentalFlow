@@ -93,12 +93,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const urlToRemove = existingImageUrls[index];
     setExistingImageUrls(prev => prev.filter((_, i) => i !== index));
     
-    // 🛡️ Physical Purge: Remove from Supabase if it's an internal link
     if (urlToRemove.includes('supabase.co')) {
       const pathMatch = urlToRemove.split('/public/')[1]?.split('?')[0];
       if (pathMatch) {
         const pathSegments = pathMatch.split('/');
-        pathSegments.shift(); // Remove bucket name from path
+        pathSegments.shift();
         const relativePath = pathSegments.join('/');
         await deleteFromSupabase('property-images', relativePath);
       }
@@ -114,7 +113,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     } else {
       const url = existingImageUrls[index];
       setExistingImageUrls(prev => [url, ...prev.filter((_, i) => i !== index)]);
-      // When an existing one is set to primary, it should ideally come before new ones in the final save
     }
     toast({ title: "Cover Asset Updated", description: "This image will be used as the primary identity." });
   };
@@ -140,7 +138,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         uploadedUrls = results.filter(r => r.success && r.url).map(r => r.url!);
       }
 
-      // Merge new and existing. If new ones exist, they take priority based on order in UI.
       const uniqueLedger = Array.from(new Set([...uploadedUrls, ...existingImageUrls]))
         .filter(isUserUploadedAsset);
       
@@ -290,4 +287,3 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     </div>
   );
 }
-

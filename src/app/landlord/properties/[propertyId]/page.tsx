@@ -11,28 +11,19 @@ import {
   deleteDocumentNonBlocking,
 } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where, setDoc } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  MapPin, Users, Wrench, FileCheck, 
-  Trash2, Edit3, Loader2, Save, ArrowLeft,
-  Download, FileText, Upload, 
-  Calendar as CalendarIcon, 
-  Bed, Bath, ChevronRight, AlertTriangle, CheckCircle2,
-  Clock, ShieldCheck, Maximize2
+  MapPin, Wrench, FileCheck, 
+  Edit3, Loader2, Save, ArrowLeft,
+  Bed, Bath, X, Maximize2
 } from "lucide-react";
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Calendar } from "@/components/ui/calendar";
-import { cn, getResolvedGallery, getResolvedImageUrl } from "@/lib/utils";
+import { cn, getResolvedGallery } from "@/lib/utils";
 import Image from "next/image";
 import {
   Carousel,
@@ -41,11 +32,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { syncDocumentToDb, deleteDocumentFromDb } from "@/lib/actions/db-sync";
-import { uploadToSupabase, deleteFromSupabase } from '@/lib/actions/supabase-storage';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { format, isBefore } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
@@ -57,8 +45,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
   
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -85,86 +71,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: tenants } = useCollection(tenantsQuery);
 
-  const docsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return query(
-      collection(db, 'documents'),
-      where('propertyId', '==', propertyId),
-      where('landlordId', '==', user.uid)
-    );
-  }, [db, propertyId, user]);
-
-  const { data: propertyDocuments } = useCollection(docsQuery);
-
-  const maintenanceRequestsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return query(
-      collection(db, 'maintenanceRequests'),
-      where('propertyId', '==', propertyId),
-      where('landlordId', '==', user.uid)
-    );
-  }, [db, propertyId, user]);
-
-  const { data: maintenanceRequests } = useCollection(maintenanceRequestsQuery);
-
-  const inspectionsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return query(
-      collection(db, 'inspections'),
-      where('propertyId', '==', propertyId),
-      where('landlordId', '==', user.uid)
-    );
-  }, [db, propertyId, user]);
-
-  const { data: inspections } = useCollection(inspectionsQuery);
-
   const [isEditingRent, setIsEditingRent] = useState(false);
   const [rentAmount, setRentAmount] = useState('');
-  const [isUploadingDoc, setIsUploadingDoc] = useState(false);
-  const [uploadExpiryDate, setUploadExpiryDate] = useState<Date>();
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
-
-  const assetStatus = useMemo(() => {
-    let score = 100;
-    const reasons: string[] = [];
-    const today = new Date();
-
-    if (!propertyDocuments || propertyDocuments.length === 0) {
-      score -= 30;
-      reasons.push("Missing property records");
-    } else {
-      const expiredDocs = propertyDocuments.filter(d => {
-        if (!d.expiryDate) return false;
-        return isBefore(new Date(d.expiryDate), today);
-      });
-      if (expiredDocs.length > 0) {
-        score -= Math.min(40, expiredDocs.length * 20);
-        reasons.push(`${expiredDocs.length} expired certificate(s)`);
-      }
-    }
-
-    if (maintenanceRequests) {
-      const active = maintenanceRequests.filter(r => r.status !== 'completed');
-      if (active.some(r => r.priority === 'critical')) {
-        score -= 40;
-        reasons.push("Pending critical repairs");
-      }
-    }
-
-    const finalScore = Math.max(0, score);
-    let color = "bg-emerald-400";
-    let message = "Fully verified and compliant.";
-
-    if (finalScore < 60) {
-      color = "bg-red-500";
-      message = reasons[0] || "Immediate attention required.";
-    } else if (finalScore < 90) {
-      color = "bg-amber-500";
-      message = reasons[0] || "Minor compliance updates required.";
-    }
-
-    return { score: finalScore, color, message };
-  }, [propertyDocuments, maintenanceRequests, inspections]);
 
   const handleUpdateRent = () => {
     if (!propertyRef) return;
@@ -174,77 +83,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     });
     setIsEditingRent(false);
     toast({ title: "Yield Adjusted" });
-  };
-
-  const handleUploadDocument = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user || !db || !property) return;
-
-    setIsUploadingDoc(true); 
-    const docId = doc(collection(db, 'documents')).id;
-    const docRef = doc(db, 'documents', docId);
-    
-    const residentIds = tenants?.map(t => t.userId).filter(Boolean) || [];
-    const memberIds = Array.from(new Set([user.uid, ...(property.memberIds || []), ...residentIds]));
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const storagePath = `vault/${user.uid}/${propertyId}/${Date.now()}_${file.name}`;
-      const result = await uploadToSupabase(formData, 'property-documents', storagePath);
-      
-      if (result.success && result.url) {
-        const serializableDocData = {
-          id: docId,
-          fileName: file.name,
-          fileUrl: result.url,
-          storagePath: storagePath,
-          documentType: 'property-asset',
-          propertyId: propertyId,
-          landlordId: user.uid,
-          expiryDate: uploadExpiryDate ? uploadExpiryDate.toISOString() : null,
-        };
-
-        await setDoc(docRef, { 
-          ...serializableDocData, 
-          status: 'active',
-          memberIds: memberIds,
-          uploadDate: new Date().toISOString(),
-          createdAt: serverTimestamp() 
-        }, { merge: true });
-
-        await syncDocumentToDb(serializableDocData);
-        toast({ title: "Vault Updated" });
-      }
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Upload Failed" });
-    } finally {
-      setIsUploadingDoc(false);
-      setUploadExpiryDate(undefined);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  const handleDeleteDocument = async (docObj: any) => {
-    if (!db) return;
-    try {
-      const docRef = doc(db, 'documents', docObj.id);
-      if (docObj.storagePath) await deleteFromSupabase('property-documents', docObj.storagePath);
-      deleteDocumentNonBlocking(docRef);
-      deleteDocumentFromDb(docObj.id);
-      toast({ title: "Document Purged" });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Deletion Failed" });
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch(priority?.toLowerCase()) {
-      case 'critical': return 'bg-red-500 text-white';
-      case 'urgent': return 'bg-orange-500 text-white';
-      case 'routine': return 'bg-blue-500 text-white';
-      default: return 'bg-muted text-muted-foreground';
-    }
   };
 
   if (!isClient || isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
@@ -264,13 +102,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
-           <Button variant="outline" className="rounded-xl font-bold h-11 border-primary/20 bg-white shadow-sm font-headline" asChild>
-             <Link href={`/landlord/properties/${propertyId}/edit`}>
-               <Edit3 className="w-4 h-4 mr-2" /> Modify Specs
-             </Link>
-           </Button>
-        </div>
+        <Button variant="outline" className="rounded-xl font-bold h-11 border-primary/20 bg-white shadow-sm font-headline" asChild>
+          <Link href={`/landlord/properties/${propertyId}/edit`}>
+            <Edit3 className="w-4 h-4 mr-2" /> Modify Specs
+          </Link>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -398,4 +234,3 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     </div>
   );
 }
-

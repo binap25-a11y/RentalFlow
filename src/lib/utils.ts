@@ -25,7 +25,7 @@ export function isUserUploadedAsset(url: any): boolean {
     url.includes('picsum.photos') ||
     url.includes('placehold.co') ||
     url.includes('via.placeholder.com') ||
-    url.includes('images.unsplash.com/photo-') && url.includes('placeholder'); // Catch explicit placeholders from unsplash if any
+    url.includes('images.unsplash.com/photo-') && url.includes('placeholder');
                     
   return !isGenericPlaceholder;
 }
@@ -42,16 +42,13 @@ export function isValidAssetUrl(url: any): boolean {
  * Strictly prioritizes User Uploads over placeholders for a specific property context.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
-  // Priority 1: Primary cover is a verified user upload
   if (isUserUploadedAsset(imageUrl)) return imageUrl!;
   
-  // Priority 2: Search specific property's gallery ledger for any verified upload
   if (imageUrls && Array.isArray(imageUrls)) {
     const firstUserUrl = imageUrls.find(u => isUserUploadedAsset(u));
     if (firstUserUrl) return firstUserUrl;
   }
   
-  // Priority 3: Neutral architectural fallback (Professionally sourced)
   return RENTALFLOW_NEUTRAL_FALLBACK;
 }
 
@@ -72,10 +69,8 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
 
   const result = Array.from(assets);
   
-  // Filter out the generic placeholders if the landlord has provided ANY professional photos
   const userUploads = result.filter(isUserUploadedAsset);
   if (userUploads.length > 0) return userUploads;
 
-  // Fallback to the architectural default if no photos exist
   return [RENTALFLOW_NEUTRAL_FALLBACK];
 }
