@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -12,7 +13,8 @@ import {
   Home,
   FileText,
   MessageSquare,
-  PhoneCall
+  PhoneCall,
+  HardHat
 } from 'lucide-react';
 import { cn, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
@@ -41,7 +43,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
     { label: 'Tenants', icon: Users, href: '/landlord/tenants' },
     { label: 'Maintenance', icon: Wrench, href: '/landlord/maintenance' },
     { label: 'Inspections', icon: FileCheck, href: '/landlord/inspections' },
-    { label: 'Emergency Contacts', icon: PhoneCall, href: '/landlord/emergency-contacts' },
+    { label: 'Contractors & SOS', icon: HardHat, href: '/landlord/emergency-contacts' },
     { label: 'Messages', icon: MessageSquare, href: '/landlord/messages' },
   ];
 
