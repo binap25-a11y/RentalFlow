@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star, ShieldAlert } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -69,7 +69,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // Build visual ledger strictly from user uploads
       const gallery = Array.isArray(property.imageUrls) ? [...property.imageUrls] : [];
       if (property.imageUrl && !gallery.includes(property.imageUrl)) {
         gallery.unshift(property.imageUrl);
@@ -107,7 +106,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const pathMatch = item.url.split('/public/')[1]?.split('?')[0];
       if (pathMatch) {
         const pathSegments = pathMatch.split('/');
-        pathSegments.shift(); // remove bucket
+        pathSegments.shift();
         const relativePath = pathSegments.join('/');
         await deleteFromSupabase('property-images', relativePath);
       }
@@ -119,7 +118,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const item = ledger.find(i => i.id === id);
     if (!item) return;
     setLedger(prev => [item, ...prev.filter(i => i.id !== id)]);
-    toast({ title: "Cover Asset Updated", description: "Designated as primary visual." });
+    toast({ title: "Cover Asset Updated", description: "Designated as primary identity." });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -133,7 +132,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         if (item.isNew && item.file) {
           const formData = new FormData();
           formData.append('file', item.file);
-          // Deterministic path based on property ID
           const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${index}_${item.file.name}`;
           const res = await uploadToSupabase(formData, 'property-images', path);
           if (!res.success) throw new Error(res.error);
@@ -142,7 +140,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         return item.url;
       }));
 
-      // Filter and designate primary
       const uniqueLedger = Array.from(new Set(finalUrls)).filter(url => isUserUploadedAsset(url));
       const primaryUrl = uniqueLedger.length > 0 ? uniqueLedger[0] : (property?.imageUrl || '');
 
@@ -179,12 +176,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Asset synchronization failed:", err);
+      const isRlsError = err.message?.includes('security policy');
       toast({ 
         variant: "destructive", 
-        title: "Sync Failed", 
-        description: err.message?.includes('security policy') 
-          ? "Storage security policy violation. Check guide for fix." 
-          : "Could not update property records." 
+        title: isRlsError ? "Security Policy Error" : "Sync Failed", 
+        description: isRlsError 
+          ? "Upload denied by Supabase. Please see src/lib/supabase-usage-guide.md to fix." 
+          : "Could not update property records. Check connection and try again." 
       });
       setIsSaving(false);
     }
@@ -274,7 +272,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       <SelectContent>
                         <SelectItem value="Apartment">Apartment</SelectItem>
                         <SelectItem value="House">House</SelectItem>
-                        <SelectItem value="Condo">Condo</SelectItem>
                         <SelectItem value="Studio">Studio</SelectItem>
                       </SelectContent>
                     </Select>

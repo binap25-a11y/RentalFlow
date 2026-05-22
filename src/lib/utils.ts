@@ -41,6 +41,7 @@ export function isValidAssetUrl(url: any): boolean {
 /**
  * 🖼️ Robust Asset Resolution Engine
  * Strictly prioritizes User Uploads over placeholders for a specific property context.
+ * This ensures photography is UNIQUE to each property.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
   // 1. If explicit imageUrl is a verified user asset, use it immediately.

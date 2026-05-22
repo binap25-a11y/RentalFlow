@@ -64,7 +64,7 @@ export default function NewPropertyPage() {
     const item = ledger.find(i => i.id === id);
     if (!item) return;
     setLedger(prev => [item, ...prev.filter(i => i.id !== id)]);
-    toast({ title: "Primary Target Set", description: "Designated as the cover visual." });
+    toast({ title: "Primary Identity Set", description: "Designated as the cover visual." });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -120,11 +120,12 @@ export default function NewPropertyPage() {
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Asset registration failed:", err);
+      const isRlsError = err.message?.includes('security policy');
       toast({ 
         variant: "destructive", 
-        title: "Registration Failed", 
-        description: err.message?.includes('security policy') 
-          ? "Storage security policy violation. Check guide for fix." 
+        title: isRlsError ? "Security Policy Error" : "Registration Failed", 
+        description: isRlsError 
+          ? "Upload denied by Supabase. Please see src/lib/supabase-usage-guide.md to fix." 
           : "Check storage availability and try again." 
       });
       setIsSaving(false);
