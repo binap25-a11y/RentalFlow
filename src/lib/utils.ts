@@ -6,6 +6,25 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * 🖼️ Constants for Visual Fallbacks
+ */
+export const RENTALFLOW_FALLBACK = "https://picsum.photos/seed/rentalflow-default/800/600";
+
+/**
+ * 🖼️ Asset Validation Engine
+ * Distinguishes between professional user uploads and platform placeholders.
+ */
+export function isValidAssetUrl(url: any): boolean {
+  if (!url || typeof url !== 'string' || !url.startsWith('http')) return false;
+  
+  // Exclude specific platform fallbacks to ensure they don't block user content
+  const isFallback = url.includes('picsum.photos/seed/rentalflow-default') || 
+                    url.includes('placehold.co');
+                    
+  return !isFallback;
+}
+
+/**
  * 🖼️ Robust Asset Resolution Engine
  * Strictly prioritizes user-uploaded content over placeholders.
  * Tier 1: Explicit primary imageUrl (Designated User Cover)
@@ -13,27 +32,19 @@ export function cn(...inputs: ClassValue[]) {
  * Tier 3: Professional platform fallback
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
-  const FALLBACK = "https://picsum.photos/seed/rentalflow-default/800/600";
-  
-  const isValidUserUrl = (url: any) => 
-    url && 
-    typeof url === 'string' && 
-    url.startsWith('http') && 
-    !url.includes('picsum.photos/seed/rentalflow-default');
-
-  // 1. If we have a valid, non-placeholder cover image, use it.
-  if (isValidUserUrl(imageUrl)) {
+  // 1. Prioritize explicit cover if it's a valid user upload
+  if (isValidAssetUrl(imageUrl)) {
     return imageUrl!;
   }
   
-  // 2. If cover is empty/placeholder, check the gallery ledger for a user image.
+  // 2. Fallback to the first valid item in the gallery ledger
   if (imageUrls && Array.isArray(imageUrls)) {
-    const firstUserUrl = imageUrls.find(isValidUserUrl);
+    const firstUserUrl = imageUrls.find(isValidAssetUrl);
     if (firstUserUrl) return firstUserUrl;
   }
   
-  // 3. Absolute fallback
-  return FALLBACK;
+  // 3. Absolute system fallback
+  return RENTALFLOW_FALLBACK;
 }
 
 /**
@@ -42,29 +53,22 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
  * Deduplicates and filters for valid, non-empty URLs.
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
-  const FALLBACK = "https://picsum.photos/seed/rentalflow-default/800/600";
   const gallery = new Set<string>();
 
-  const isValidUserUrl = (url: any) => 
-    url && 
-    typeof url === 'string' && 
-    url.startsWith('http') && 
-    !url.includes('picsum.photos/seed/rentalflow-default');
-
   // 1. Seed with the primary cover if it's a real user upload
-  if (isValidUserUrl(imageUrl)) {
+  if (isValidAssetUrl(imageUrl)) {
     gallery.add(imageUrl!);
   }
 
   // 2. Add unique assets from the ledger
   if (imageUrls && Array.isArray(imageUrls)) {
     imageUrls.forEach(url => {
-      if (isValidUserUrl(url)) {
+      if (isValidAssetUrl(url)) {
         gallery.add(url);
       }
     });
   }
 
-  // 3. Return the user gallery if it exists, otherwise return a single placeholder
-  return gallery.size > 0 ? Array.from(gallery) : [FALLBACK];
+  // 3. Return user gallery if valid, otherwise return a single platform fallback
+  return gallery.size > 0 ? Array.from(gallery) : [RENTALFLOW_FALLBACK];
 }

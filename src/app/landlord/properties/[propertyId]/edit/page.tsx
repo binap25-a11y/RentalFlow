@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { getResolvedGallery } from "@/lib/utils";
+import { getResolvedGallery, isValidAssetUrl } from "@/lib/utils";
 
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -51,9 +51,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
   const [newPreviewUrls, setNewPreviewUrls] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // 🛡️ Guarded Initialization
+  // Only sets initial state once to prevent background Firestore updates from wiping user changes
   useEffect(() => {
-    if (property && !isSaving) {
+    if (property && !isInitialized) {
       setAddress(property.addressLine1 || '');
       setCity(property.city || '');
       setZipCode(property.zipCode || '');
@@ -63,12 +66,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // Filter out placeholders to only show real user photos for management
       const gallery = getResolvedGallery(property.imageUrl, property.imageUrls);
-      const userPhotos = gallery.filter(url => !url.includes('picsum.photos/seed/rentalflow-default'));
+      const userPhotos = gallery.filter(isValidAssetUrl);
       setExistingImageUrls(userPhotos);
+      setIsInitialized(true);
     }
-  }, [property, isSaving]);
+  }, [property, isInitialized]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -112,7 +115,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       // Combine existing images and new uploads
       const finalGallery = [...existingImageUrls, ...uploadedUrls];
       
-      // DETERMINISTIC COVER: Explicitly set the first image in the gallery as the primary imageUrl
+      // DETERMINISTIC COVER: The first image in the ledger is the definitive identity
       const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : '';
 
       const serializableData = {
@@ -139,7 +142,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Portfolio Updated", description: "Visual assets and specifications synchronized." });
+      toast({ title: "Asset Updated", description: "Portfolio specs and visuals synchronized." });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       console.error("Update failed:", err);
@@ -148,7 +151,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
   };
 
-  if (isLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+  if (isLoading || !isInitialized) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left">

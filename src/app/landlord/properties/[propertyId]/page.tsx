@@ -69,7 +69,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
-  // DETERMINISTIC GALLERY RESOLUTION: Ensures cover is always Index 0 and placeholders are swapped
+  // 🛡️ Bulletproof Resolution: Ensures user images replace placeholders permanently
   const gallery = useMemo(() => {
     return getResolvedGallery(property?.imageUrl, property?.imageUrls);
   }, [property]);
