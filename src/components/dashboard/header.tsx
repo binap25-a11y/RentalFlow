@@ -206,10 +206,10 @@ export function Header({ role }: HeaderProps) {
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 hover:bg-primary/5 dark:hover:bg-slate-900 p-1 rounded-full transition-all outline-none group border border-transparent hover:border-primary/10">
-              <Avatar className="h-9 w-9 border-2 border-primary dark:border-primary shadow-lg ring-2 ring-primary/20 dark:ring-primary/40 transition-transform group-hover:scale-105">
+            <button className="flex items-center gap-2 hover:bg-white/10 p-1 rounded-full transition-all outline-none group border border-transparent hover:border-accent/30">
+              <Avatar className="h-9 w-9 border-2 border-accent shadow-xl ring-2 ring-accent/20 transition-transform group-hover:scale-105">
                 <AvatarImage src={user?.photoURL || undefined} />
-                <AvatarFallback className="bg-primary text-white text-xs font-bold font-headline">
+                <AvatarFallback className="bg-accent text-white text-xs font-bold font-headline">
                   {userName[0].toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -220,12 +220,12 @@ export function Header({ role }: HeaderProps) {
               <div className="flex flex-col space-y-3">
                 <div className="space-y-0.5">
                   <p className="text-sm font-bold leading-none font-headline text-primary dark:text-slate-100">{userName}</p>
-                  <p className="text-[10px] leading-none text-muted-foreground truncate opacity-70 mt-1">
+                  <p className="text-[10px] leading-none text-accent font-bold truncate opacity-80 mt-1">
                     {user?.email}
                   </p>
                 </div>
                 <div>
-                  <Badge className="bg-primary text-white border-none text-[9px] font-bold uppercase tracking-[0.1em] px-3 py-1 rounded-full shadow-sm">
+                  <Badge className="bg-accent text-white border-none text-[9px] font-bold uppercase tracking-[0.1em] px-3 py-1 rounded-full shadow-md">
                     {role} account
                   </Badge>
                 </div>
