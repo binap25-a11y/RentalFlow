@@ -37,6 +37,7 @@ export async function syncPropertyToDb(propertyData: {
   try {
     const client = await pool.connect();
     try {
+      // Use the array directly ($8). The pg driver handles JS arrays by converting them to Postgres array format.
       await client.query(
         `INSERT INTO properties (
           id, landlord_id, address, city, zip_code, 
@@ -58,7 +59,7 @@ export async function syncPropertyToDb(propertyData: {
            synced_at = CURRENT_TIMESTAMP`,
         [
           id, landlordId, addressLine1, city, zipCode, 
-          rentAmount, imageUrl, JSON.stringify(imageUrls || []), propertyType, 
+          rentAmount, imageUrl, imageUrls || [], propertyType, 
           numberOfBedrooms, numberOfBathrooms, description
         ]
       );
@@ -66,9 +67,10 @@ export async function syncPropertyToDb(propertyData: {
     } finally {
       client.release();
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Relational Sync Error (Property):', error);
-    return { success: false, error: 'Database connection failed' };
+    // Return a plain object to avoid Next.js masking the error
+    return { success: false, error: error.message || 'Database synchronization failed' };
   }
 }
 
@@ -104,9 +106,9 @@ export async function syncDocumentToDb(docData: {
     } finally {
       client.release();
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Relational Sync Error (Document):', error);
-    return { success: false, error: 'Database connection failed' };
+    return { success: false, error: error.message || 'Document synchronization failed' };
   }
 }
 
@@ -122,8 +124,8 @@ export async function deleteDocumentFromDb(docId: string) {
     } finally {
       client.release();
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Relational Deletion Error (Document):', error);
-    return { success: false, error };
+    return { success: false, error: error.message || 'Deletion failed' };
   }
 }

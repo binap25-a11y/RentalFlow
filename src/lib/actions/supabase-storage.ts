@@ -17,41 +17,61 @@ export async function uploadToSupabase(
   path: string
 ) {
   try {
-    const file = formData.get('file') as File;
-    if (!file) throw new Error('No file provided');
+    const file = formData.get('file');
+    
+    // Check if file exists and is a valid File object
+    if (!file || typeof file === 'string') {
+      throw new Error('No valid file provided for upload.');
+    }
 
-    const arrayBuffer = await file.arrayBuffer();
+    const typedFile = file as unknown as File;
+    
+    // Verify arrayBuffer availability (standard in modern environments)
+    if (typeof typedFile.arrayBuffer !== 'function') {
+      throw new Error('Binary processing is not supported for this file type.');
+    }
+
+    const arrayBuffer = await typedFile.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
     // 1. Physical Upload to Private/Public Bucket
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(path, buffer, {
-        contentType: file.type,
+        contentType: typedFile.type,
         cacheControl: '3600',
         upsert: true,
       });
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error('Supabase Physical Upload Error:', uploadError);
+      throw new Error(uploadError.message);
+    }
 
     // 2. Generate Long-Lived Signed URL (315360000s = 10 Years)
-    // This ensures the link persisted in Firestore works even if the bucket is PRIVATE.
     const { data: signedData, error: signedError } = await supabase.storage
       .from(bucket)
       .createSignedUrl(path, 315360000);
 
-    if (signedError) throw signedError;
+    if (signedError) {
+      console.error('Supabase Signature Error:', signedError);
+      throw new Error(signedError.message);
+    }
+
+    if (!signedData?.signedUrl) {
+      throw new Error('Storage engine failed to return a valid access URL.');
+    }
 
     return { success: true, url: signedData.signedUrl };
   } catch (error: any) {
-    console.error('Supabase Orchestration Error:', error.message);
-    return { success: false, error: error.message };
+    const errorMessage = error?.message || 'Unknown orchestration error in cloud storage.';
+    console.error('Supabase Action Critical Failure:', errorMessage);
+    return { success: false, error: errorMessage };
   }
 }
 
 /**
  * Deletes a file or multiple files from a Supabase bucket.
- * Note: Path can be a single string or an array of strings.
  */
 export async function deleteFromSupabase(
   bucket: 'property-images' | 'property-documents',
