@@ -120,23 +120,34 @@ export default function LandlordDashboard() {
     };
   }, [properties, maintenance, currentMonthPayments, isClient]);
 
-  const handleUpgrade = async () => {
+  const upgradeToPro = async () => {
     if (!user) return;
     setIsUpgrading(true);
     try {
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.uid, email: user.email }),
+      const res = await fetch("/api/create-checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.uid,
+          email: user.email,
+        }),
       });
-      const data = await response.json();
+
+      const data = await res.json();
+      
       if (data.url) {
         window.location.href = data.url;
       } else {
-        throw new Error(data.error || "Session failed");
+        throw new Error(data.error || "Session failed to initialize.");
       }
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Checkout Error", description: e.message });
+      toast({ 
+        variant: "destructive", 
+        title: "Checkout Error", 
+        description: e.message || "Please check your connection and try again." 
+      });
       setIsUpgrading(false);
     }
   };
@@ -334,7 +345,7 @@ export default function LandlordDashboard() {
           <p className="text-muted-foreground font-medium font-body max-w-lg">Real-time portfolio command and high-yield operational analytics.</p>
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="outline" className="rounded-2xl h-11 px-6 font-bold border-accent/20 text-accent bg-accent/5 hover:bg-accent/10 transition-all" onClick={handleUpgrade} disabled={isUpgrading}>
+          <Button variant="outline" className="rounded-2xl h-11 px-6 font-bold border-accent/20 text-accent bg-accent/5 hover:bg-accent/10 transition-all" onClick={upgradeToPro} disabled={isUpgrading}>
             {isUpgrading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Crown className="w-4 h-4 mr-2" />}
             Upgrade to Premium
           </Button>
@@ -556,7 +567,7 @@ export default function LandlordDashboard() {
                  <Sparkles className="w-5 h-5 text-accent" /> Premium Management
                </h3>
                <p className="text-sm opacity-80 leading-relaxed font-body">Unlock high-fidelity AI triage, unlimited asset history, and custom professional branding.</p>
-               <Button className="w-full rounded-xl bg-white text-primary hover:bg-white/90 font-bold h-12 shadow-xl shadow-black/20" onClick={handleUpgrade} disabled={isUpgrading}>
+               <Button className="w-full rounded-xl bg-white text-primary hover:bg-white/90 font-bold h-12 shadow-xl shadow-black/20" onClick={upgradeToPro} disabled={isUpgrading}>
                   {isUpgrading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Unlock Premium Suite"}
                </Button>
             </div>
