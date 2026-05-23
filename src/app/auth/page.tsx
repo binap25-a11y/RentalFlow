@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -176,18 +175,20 @@ export default function AuthPage() {
 
   if (!mounted || isUserLoading || (user && !needsProfile && !isRedirecting.current)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 overflow-hidden px-4">
+      <div className="min-h-screen flex items-center justify-center bg-background overflow-hidden px-4">
         <div className="relative flex flex-col items-center">
           <div className="relative w-32 h-32 mb-10 animate-in fade-in zoom-in-95 duration-1000 slide-in-from-bottom-12">
             <div className="absolute inset-0 bg-primary/10 rounded-[2.5rem] blur-3xl animate-pulse" />
-            <Image 
-              src={BRAND_LOGO_URL} 
-              alt="RentalFlow" 
-              fill 
-              className="object-cover rounded-[2.5rem] shadow-2xl ring-4 ring-white relative z-10" 
-              unoptimized 
-              priority
-            />
+            <div className="relative z-10 w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl ring-4 ring-background">
+               <Image 
+                src={BRAND_LOGO_URL} 
+                alt="RentalFlow" 
+                fill 
+                className="object-cover" 
+                unoptimized 
+                priority
+              />
+            </div>
           </div>
           
           <div className="flex flex-col items-center gap-5 animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-300">
@@ -197,9 +198,9 @@ export default function AuthPage() {
                 <Loader2 className="w-5 h-5 animate-spin text-primary opacity-60" />
                 <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Secure Ledger Sync</p>
               </div>
-              <div className="flex items-center gap-2 px-6 py-2.5 bg-white rounded-full border border-primary/5 shadow-xl transition-all">
+              <div className="flex items-center gap-2 px-6 py-2.5 bg-card rounded-full border border-primary/5 shadow-xl transition-all">
                 <Lock className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest font-headline">Enterprise Grade Security Active</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest font-headline">Enterprise Grade Security Active</span>
               </div>
             </div>
           </div>
@@ -210,10 +211,10 @@ export default function AuthPage() {
 
   if (needsProfile && user) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 sm:p-12">
-        <Card className="w-full max-w-xl border-none shadow-2xl bg-white overflow-hidden animate-in zoom-in-95 duration-500 rounded-[3rem]">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 sm:p-12">
+        <Card className="w-full max-w-xl border-none shadow-2xl bg-card overflow-hidden animate-in zoom-in-95 duration-500 rounded-[3rem]">
           <CardHeader className="text-center bg-primary/5 pb-10 pt-12">
-            <div className="mx-auto p-1 bg-white rounded-2xl w-fit mb-6 shadow-xl overflow-hidden ring-4 ring-white">
+            <div className="mx-auto p-1 bg-background rounded-2xl w-fit mb-6 shadow-xl overflow-hidden ring-4 ring-background">
                <Image 
                 src={BRAND_LOGO_URL} 
                 alt="RentalFlow" 
@@ -270,20 +271,20 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 sm:p-12 overflow-hidden relative">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 sm:p-12 overflow-hidden relative">
       <div className="absolute top-8 left-8 z-20">
-         <Button variant="ghost" asChild className="rounded-xl font-bold text-primary">
+         <Button variant="ghost" asChild className="rounded-xl font-bold text-foreground">
             <Link href="/"><ArrowLeft className="w-4 h-4 mr-2" /> Back to Home</Link>
          </Button>
       </div>
 
-      <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
+      <div className="absolute top-0 left-0 w-full h-full opacity-10 dark:opacity-20 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent rounded-full blur-[120px]" />
       </div>
 
       <div className="mb-12 text-center animate-in fade-in slide-in-from-top-12 duration-1000 relative z-10">
-        <div className="inline-flex items-center justify-center p-1.5 bg-white rounded-[2.75rem] mb-8 shadow-2xl ring-1 ring-primary/5 overflow-hidden">
+        <div className="inline-flex items-center justify-center p-1.5 bg-card rounded-[2.75rem] mb-8 shadow-2xl ring-1 ring-primary/5 overflow-hidden">
            <Image 
             src={BRAND_LOGO_URL} 
             alt="RentalFlow" 
@@ -294,17 +295,17 @@ export default function AuthPage() {
             priority
           />
         </div>
-        <h1 className="text-6xl font-headline font-bold text-primary mb-3 tracking-tighter">RentalFlow</h1>
+        <h1 className="text-6xl font-headline font-bold text-foreground mb-3 tracking-tighter">RentalFlow</h1>
         <p className="text-muted-foreground font-medium text-xl font-body opacity-80 uppercase tracking-[0.2em] text-sm">Premium Portfolio Ledger</p>
       </div>
 
       <div className="max-w-xl w-full relative z-10">
-        <Card className="w-full border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] bg-white overflow-hidden rounded-[3.5rem] p-2">
+        <Card className="w-full border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] bg-card overflow-hidden rounded-[3.5rem] p-2">
           <CardHeader className="space-y-2 pb-6 text-center bg-primary/[0.02] pt-12 rounded-[3rem]">
-            <CardTitle className="text-3xl font-headline font-bold text-primary">
+            <CardTitle className="text-3xl font-headline font-bold text-foreground">
               {authMode === 'login' ? 'Authentication' : 'Registration'}
             </CardTitle>
-            <CardDescription className="font-medium text-primary/40">
+            <CardDescription className="font-medium text-muted-foreground">
               {authMode === 'login' ? 'Secure access to your management vault' : 'Establish your professional presence'}
             </CardDescription>
           </CardHeader>
@@ -312,7 +313,7 @@ export default function AuthPage() {
             <div className="space-y-6">
               <Button 
                 variant="outline" 
-                className="w-full h-16 rounded-[1.75rem] font-bold border-primary/10 hover:bg-primary/5 font-headline text-primary shadow-sm text-lg" 
+                className="w-full h-16 rounded-[1.75rem] font-bold border-primary/10 hover:bg-primary/5 font-headline text-foreground shadow-sm text-lg" 
                 onClick={handleGoogleSignIn} 
                 disabled={isLoading}
               >
@@ -342,28 +343,28 @@ export default function AuthPage() {
                   <span className="w-full border-t border-primary/5"></span>
                 </div>
                 <div className="relative flex justify-center text-[10px] uppercase">
-                  <span className="bg-white px-6 text-primary/30 font-bold tracking-[0.4em] font-headline">or use electronic mail</span>
+                  <span className="bg-card px-6 text-primary/40 font-bold tracking-[0.4em] font-headline">or use electronic mail</span>
                 </div>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2 text-left">
-                  <Label htmlFor="email" className="font-bold text-xs uppercase text-primary/30 tracking-widest font-headline">Email Address</Label>
+                  <Label htmlFor="email" className="font-bold text-xs uppercase text-primary/40 tracking-widest font-headline">Email Address</Label>
                   <Input id="email" type="email" placeholder="name@domain.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-2xl h-14 border-none bg-primary/5 font-body font-bold text-lg px-6" />
                 </div>
                 <div className="space-y-2 text-left">
                   <div className="flex justify-between items-center">
-                    <Label htmlFor="password" title="Password" className="font-bold text-xs uppercase text-primary/30 tracking-widest font-headline">Secure Key</Label>
+                    <Label htmlFor="password" title="Password" className="font-bold text-xs uppercase text-primary/40 tracking-widest font-headline">Secure Key</Label>
                     <button type="button" className="text-[10px] font-bold text-accent uppercase tracking-widest hover:underline">Reset</button>
                   </div>
                   <div className="relative">
                     <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="rounded-2xl h-14 border-none bg-primary/5 font-body font-bold text-lg px-6 pr-12" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-4.5 text-primary/20 hover:text-primary transition-colors">
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-4 text-primary/30 hover:text-primary transition-colors">
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
                 </div>
-                <Button type="submit" className="w-full h-16 rounded-[1.75rem] font-bold bg-primary text-xl shadow-2xl shadow-primary/20 font-headline hover:scale-[1.01] active:scale-95 transition-all" disabled={isLoading}>
+                <Button type="submit" className="w-full h-16 rounded-[1.75rem] font-bold bg-primary text-xl shadow-2xl shadow-primary/20 font-headline hover:scale-[1.01] active:scale-95 transition-all text-white" disabled={isLoading}>
                   {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-white" /> : (authMode === 'login' ? 'Access Vault' : 'Create Credentials')}
                 </Button>
               </form>
@@ -378,12 +379,12 @@ export default function AuthPage() {
 
       <div className="mt-16 flex flex-wrap justify-center items-center gap-10 opacity-30 grayscale hover:grayscale-0 transition-all duration-700">
          <div className="flex items-center gap-3">
-            <ShieldCheck className="w-5 h-5" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline">UK Compliant Architecture</span>
+            <ShieldCheck className="w-5 h-5 text-foreground" />
+            <span className="text-[10px] font-bold text-foreground uppercase tracking-[0.3em] font-headline">UK Compliant Architecture</span>
          </div>
          <div className="flex items-center gap-3">
-            <Sparkles className="w-5 h-5" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline">AI-Driven Management</span>
+            <Sparkles className="w-5 h-5 text-foreground" />
+            <span className="text-[10px] font-bold text-foreground uppercase tracking-[0.3em] font-headline">AI-Driven Management</span>
          </div>
       </div>
     </div>
