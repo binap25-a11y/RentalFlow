@@ -10,13 +10,15 @@ import {
   MapPin, FileText, Download, AlertCircle, Wrench, 
   ShieldAlert, Loader2, Home, Sparkles, Send, Bot, 
   ChevronRight, ShieldCheck,
-  CheckCircle2, Clock
+  CheckCircle2, Clock, ReceiptText
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { tenantConcierge } from "@/ai/flows/tenant-concierge-flow";
 import { cn, getResolvedImageUrl } from "@/lib/utils";
+import { format } from "date-fns";
+import { query, collection, where } from "firebase/firestore";
 
 export default function TenantHub() {
   const { user } = useUser();
@@ -35,28 +37,32 @@ export default function TenantHub() {
     if (!db || !user) return null;
     return getTenantCollectionQuery({ db, collectionName: "properties", userId: user.uid });
   }, [db, user]);
-
   const { data: properties, isLoading: isPropLoading } = useCollection(propertyQuery);
   const property = properties?.[0];
+
+  const paymentsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    const now = new Date();
+    return query(
+      collection(db, 'rentPayments'),
+      where('tenantId', '==', user.uid),
+      where('month', '==', now.getMonth() + 1),
+      where('year', '==', now.getFullYear())
+    );
+  }, [db, user]);
+  const { data: payments } = useCollection(paymentsQuery);
+  const currentPayment = payments?.[0];
 
   const requestsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return getTenantCollectionQuery({ db, collectionName: "maintenanceRequests", userId: user.uid });
   }, [db, user]);
-
   const { data: requests, isLoading: isRequestsLoading } = useCollection(requestsQuery);
   
   const activeRequests = useMemo(() => {
     if (!requests) return [];
     return requests.filter(r => r.status !== 'completed').slice(0, 3);
   }, [requests]);
-
-  const documentsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return getTenantCollectionQuery({ db, collectionName: "documents", userId: user.uid });
-  }, [db, user]);
-
-  const { data: documents } = useCollection(documentsQuery);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -86,15 +92,11 @@ export default function TenantHub() {
     }
   };
 
-  /**
-   * 🛡️ Isolated Visual Context
-   * Synchronized with the high-fidelity resolution logic used by the landlord.
-   */
   const activeImageUrl = useMemo(() => {
     return getResolvedImageUrl(property?.imageUrl, property?.imageUrls);
   }, [property]);
 
-  if (isPropLoading || isRequestsLoading) {
+  if (!isClient || isPropLoading || isRequestsLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] space-y-6">
         <div className="relative">
@@ -108,18 +110,10 @@ export default function TenantHub() {
 
   if (!property) {
     return (
-      <div className="flex flex-col items-center justify-center h-[70vh] text-center space-y-8 animate-in fade-in zoom-in duration-700">
-        <div className="p-10 bg-primary/5 rounded-[3rem] shadow-inner relative">
-          <div className="absolute inset-0 bg-primary/5 rounded-[3rem] blur-2xl animate-pulse" />
-          <Home className="w-20 h-20 text-primary/20 relative z-10" />
-        </div>
-        <div className="space-y-3">
-          <h2 className="text-3xl font-bold font-headline text-primary">Lease Registration Pending</h2>
-          <p className="text-muted-foreground max-w-sm mx-auto font-medium font-body leading-relaxed">Your professional resident account is active. Please contact your landlord to link your tenancy.</p>
-        </div>
-        <Button variant="outline" className="rounded-2xl h-12 px-10 font-bold border-primary/20" asChild>
-          <Link href="/tenant/messages">Contact Management</Link>
-        </Button>
+      <div className="flex flex-col items-center justify-center h-[70vh] text-center space-y-8">
+        <Home className="w-20 h-20 text-primary/20" />
+        <h2 className="text-3xl font-bold font-headline text-primary">Lease Registration Pending</h2>
+        <Button asChild className="rounded-2xl h-12 px-10 font-bold"><Link href="/tenant/messages">Contact Management</Link></Button>
       </div>
     );
   }
@@ -132,9 +126,6 @@ export default function TenantHub() {
           <p className="text-muted-foreground font-medium font-body">Welcome home to {property.addressLine1.split(',')[0]}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-           <Button variant="outline" className="rounded-2xl font-bold h-12 border-primary/10 hover:bg-white shadow-sm flex-1 md:flex-none font-headline" asChild>
-             <Link href="/tenant/messages">Direct Message</Link>
-           </Button>
            <Button className="bg-accent hover:bg-accent/90 rounded-2xl shadow-xl shadow-accent/20 font-bold h-12 flex-1 md:flex-none font-headline text-white" asChild>
              <Link href="/tenant/maintenance"><AlertCircle className="w-4 h-4 mr-2" /> Report Repair</Link>
            </Button>
@@ -173,20 +164,21 @@ export default function TenantHub() {
                 </div>
                 <div className="space-y-4">
                   <h3 className="font-bold font-headline text-xl text-primary flex items-center border-b border-primary/5 pb-3">
-                    <ShieldCheck className="w-5 h-5 mr-3 text-accent" /> 
-                    Resident Safety
+                    <ReceiptText className="w-5 h-5 mr-3 text-accent" /> 
+                    Tenancy Status
                   </h3>
                   <div className="p-6 bg-primary/[0.02] rounded-[1.75rem] border border-primary/5 space-y-4 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 transition-opacity group-hover:opacity-20">
-                      <ShieldAlert className="w-12 h-12" />
-                    </div>
                     <div>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1 font-headline">Authorized Support</p>
-                      <p className="text-sm font-bold font-headline text-primary">24/7 Professional Line</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1 font-headline">{format(new Date(), 'MMMM yyyy')} Rent</p>
+                      <p className="text-2xl font-bold font-headline text-primary">£{property.rentAmount?.toLocaleString()}</p>
                     </div>
-                    <Button variant="accent" className="w-full rounded-2xl h-11 font-bold shadow-lg shadow-accent/10 font-headline" asChild>
-                      <Link href="/tenant/emergency-contacts">Access Safety Directory</Link>
-                    </Button>
+                    <Badge className={cn(
+                      "w-full h-11 flex items-center justify-center font-bold text-xs rounded-2xl shadow-sm",
+                      currentPayment?.status === 'paid' ? "bg-emerald-500 text-white" : "bg-amber-100 text-amber-700"
+                    )}>
+                      {currentPayment?.status === 'paid' ? "Verified & Collected" : "Payment Pending Receipt"}
+                    </Badge>
+                    <p className="text-[10px] text-center text-muted-foreground font-medium">Statuses update in real-time once verified by management.</p>
                   </div>
                 </div>
               </div>
@@ -195,9 +187,6 @@ export default function TenantHub() {
 
           <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden flex flex-col h-[550px]">
             <CardHeader className="bg-primary p-8 text-white relative text-left">
-              <div className="absolute top-0 right-0 p-10 opacity-10 rotate-12">
-                <Bot className="w-24 h-24" />
-              </div>
               <div className="relative z-10 flex items-center gap-4">
                 <div className="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
                   <Sparkles className="w-6 h-6 text-white" />
@@ -279,38 +268,6 @@ export default function TenantHub() {
                    <p className="text-[10px] font-bold uppercase tracking-widest font-headline">No repairs logged</p>
                  </div>
                )}
-               <Button variant="ghost" className="w-full rounded-xl text-xs font-bold text-muted-foreground hover:text-primary transition-all font-headline uppercase tracking-widest" asChild>
-                 <Link href="/tenant/maintenance">View All History <ChevronRight className="w-3 h-3 ml-2" /></Link>
-               </Button>
-             </CardContent>
-           </Card>
-
-           <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden">
-             <CardHeader className="p-8 pb-4 border-b border-primary/5 text-left">
-               <CardTitle className="text-lg font-headline flex items-center text-primary">
-                 <FileText className="w-5 h-5 mr-3 text-accent" />
-                 Property Vault
-               </CardTitle>
-             </CardHeader>
-             <CardContent className="p-8 space-y-4 text-left">
-                {documents && documents.length > 0 ? (
-                  documents.slice(0, 3).map(doc => (
-                    <div key={doc.id} className="flex items-center justify-between p-3 bg-muted/10 rounded-xl gap-3">
-                       <div className="flex items-center gap-3 min-w-0 flex-1">
-                         <FileText className="w-4 h-4 text-primary/40 shrink-0" />
-                         <span className="text-xs font-bold text-primary truncate font-body">{doc.fileName}</span>
-                       </div>
-                       <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-white shrink-0" asChild>
-                         <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer"><Download className="w-3.5 h-3.5" /></a>
-                       </Button>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-xs text-muted-foreground text-center py-6 font-medium">Your shared property documents will appear here.</p>
-                )}
-                <Button variant="outline" className="w-full rounded-xl border-primary/10 h-11 font-bold text-primary text-xs font-headline uppercase tracking-widest" asChild>
-                  <Link href="/tenant/documents">Full Vault Inventory</Link>
-                </Button>
              </CardContent>
            </Card>
         </div>

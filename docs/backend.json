@@ -96,6 +96,23 @@
         "propertyId": { "type": "string" },
         "memberIds": { "type": "array", "items": { "type": "string" } }
       }
+    },
+    "RentPayment": {
+      "title": "RentPayment",
+      "description": "Real-time monthly rent record.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "propertyId": { "type": "string" },
+        "landlordId": { "type": "string" },
+        "tenantId": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["paid", "pending", "overdue"] },
+        "month": { "type": "number" },
+        "year": { "type": "number" },
+        "memberIds": { "type": "array", "items": { "type": "string" } },
+        "paidAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -133,6 +150,10 @@
     "/messages/{messageId}": {
       "schema": { "type": "object" },
       "description": "Secure direct messages."
+    },
+    "/rentPayments/{paymentId}": {
+      "schema": { "$ref": "#/backend/entities/RentPayment" },
+      "description": "Real-time monthly rent collection ledger."
     }
   }
 }

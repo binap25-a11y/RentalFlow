@@ -57,5 +57,15 @@ service cloud.firestore {
       allow read: if isSignedIn() && (request.auth.uid in resource.data.memberIds);
       allow write, create: if isSignedIn();
     }
+
+    match /rentPayments/{id} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.landlordId || 
+        request.auth.uid == resource.data.tenantId ||
+        request.auth.uid in resource.data.memberIds
+      );
+      allow write: if isSignedIn() && request.auth.uid == resource.data.landlordId;
+      allow create: if isSignedIn();
+    }
   }
 }
