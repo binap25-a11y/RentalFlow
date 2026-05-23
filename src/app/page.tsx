@@ -286,44 +286,51 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-10 px-10 pb-12">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2 text-left">
-                <Label htmlFor="email" className="font-bold text-xs uppercase text-primary/30 tracking-widest font-headline">Electronic Mail</Label>
-                <Input id="email" type="email" placeholder="name@domain.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-2xl h-14 border-none bg-primary/5 font-body font-bold text-lg px-6" />
-              </div>
-              <div className="space-y-2 text-left">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="password" title="Password" className="font-bold text-xs uppercase text-primary/30 tracking-widest font-headline">Secure Key</Label>
-                  <button type="button" className="text-[10px] font-bold text-accent uppercase tracking-widest hover:underline">Reset</button>
-                </div>
-                <div className="relative">
-                  <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="rounded-2xl h-14 border-none bg-primary/5 font-body font-bold text-lg px-6 pr-12" />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-4.5 text-primary/20 hover:text-primary transition-colors">
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-              </div>
-              <Button type="submit" className="w-full h-16 rounded-[1.75rem] font-bold bg-primary text-xl shadow-2xl shadow-primary/20 font-headline hover:scale-[1.01] active:scale-95 transition-all" disabled={isLoading}>
-                {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-white" /> : (authMode === 'login' ? 'Access Vault' : 'Create Credentials')}
+            <div className="space-y-6">
+              <Button 
+                variant="outline" 
+                className="w-full h-16 rounded-[1.75rem] font-bold border-primary/10 hover:bg-primary/5 font-headline text-primary shadow-sm text-lg" 
+                onClick={handleGoogleSignIn} 
+                disabled={isLoading}
+              >
+                <Chrome className="w-6 h-6 mr-4 text-red-500" />
+                Continue with Google
               </Button>
-            </form>
 
-            <div className="relative my-10">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-primary/5"></span>
+              <div className="relative my-8">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-primary/5"></span>
+                </div>
+                <div className="relative flex justify-center text-[10px] uppercase">
+                  <span className="bg-white px-6 text-primary/30 font-bold tracking-[0.4em] font-headline">or use electronic mail</span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-[10px] uppercase">
-                <span className="bg-white px-6 text-primary/30 font-bold tracking-[0.4em] font-headline">Unified Gateway</span>
-              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2 text-left">
+                  <Label htmlFor="email" className="font-bold text-xs uppercase text-primary/30 tracking-widest font-headline">Email Address</Label>
+                  <Input id="email" type="email" placeholder="name@domain.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-2xl h-14 border-none bg-primary/5 font-body font-bold text-lg px-6" />
+                </div>
+                <div className="space-y-2 text-left">
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="password" title="Password" className="font-bold text-xs uppercase text-primary/30 tracking-widest font-headline">Secure Key</Label>
+                    <button type="button" className="text-[10px] font-bold text-accent uppercase tracking-widest hover:underline">Reset</button>
+                  </div>
+                  <div className="relative">
+                    <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="rounded-2xl h-14 border-none bg-primary/5 font-body font-bold text-lg px-6 pr-12" />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-4.5 text-primary/20 hover:text-primary transition-colors">
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                </div>
+                <Button type="submit" className="w-full h-16 rounded-[1.75rem] font-bold bg-primary text-xl shadow-2xl shadow-primary/20 font-headline hover:scale-[1.01] active:scale-95 transition-all" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-white" /> : (authMode === 'login' ? 'Access Vault' : 'Create Credentials')}
+                </Button>
+              </form>
             </div>
 
-            <Button variant="outline" className="w-full h-14 rounded-2xl mb-8 font-bold border-primary/10 hover:bg-primary/5 font-headline text-primary shadow-sm" onClick={handleGoogleSignIn} disabled={isLoading}>
-              <Chrome className="w-5 h-5 mr-4 text-red-500" />
-              Identity via Google
-            </Button>
-
-            <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full text-xs font-bold text-primary/40 hover:text-primary transition-all font-headline uppercase tracking-widest">
-              {authMode === 'login' ? "New to the platform? Register account" : "Return to authentication screen"}
+            <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full mt-10 text-xs font-bold text-primary/40 hover:text-primary transition-all font-headline uppercase tracking-widest">
+              {authMode === 'login' ? "New to the platform? Create account" : "Return to authentication screen"}
             </button>
           </CardContent>
         </Card>
