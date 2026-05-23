@@ -39,7 +39,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
 
   const landlordItems = [
     { label: 'Properties', icon: Building2, href: '/landlord/properties' },
-    { label: 'Overview', icon: LayoutDashboard, href: '/landlord/dashboard' },
+    { label: 'Financial Overview', icon: LayoutDashboard, href: '/landlord/dashboard' },
     { label: 'Calendar', icon: CalendarDays, href: '/landlord/calendar' },
     { label: 'Tenants', icon: Users, href: '/landlord/tenants' },
     { label: 'Maintenance', icon: Wrench, href: '/landlord/maintenance' },
