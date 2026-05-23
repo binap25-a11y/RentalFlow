@@ -38,7 +38,6 @@ export default function LoginPage() {
   
   const isRedirecting = useRef(false);
 
-  // High-fidelity brand visual
   const BRAND_LOGO_URL = RENTALFLOW_NEUTRAL_FALLBACK;
 
   useEffect(() => {
@@ -99,11 +98,6 @@ export default function LoginPage() {
         updatedAt: serverTimestamp(),
       }, { merge: true });
 
-      /**
-       * 🏠 Resident Data Linking Engine
-       * If the user registers as a tenant, we scan for pre-existing invitations
-       * issued by landlords using their email address.
-       */
       if (role === 'tenant' && user.email) {
         const emailLower = user.email.toLowerCase().trim();
         const tenantProfilesRef = collection(db, 'tenantProfiles');
@@ -113,14 +107,12 @@ export default function LoginPage() {
         for (const profileDoc of querySnapshot.docs) {
           const profileData = profileDoc.data();
           
-          // Update placeholder profile with official UID
           await updateDoc(profileDoc.ref, { 
             userId: user.uid,
             tenantId: user.uid,
             memberIds: arrayUnion(user.uid)
           });
           
-          // Synchronize access with the property asset
           if (profileData.propertyId) {
             const propertyRef = doc(db, 'properties', profileData.propertyId);
             await updateDoc(propertyRef, {
@@ -191,6 +183,7 @@ export default function LoginPage() {
               fill 
               className="object-cover rounded-[2.5rem] shadow-2xl ring-4 ring-white relative z-10" 
               unoptimized 
+              priority
             />
           </div>
           
@@ -225,6 +218,7 @@ export default function LoginPage() {
                 height={80} 
                 className="rounded-2xl object-cover" 
                 unoptimized 
+                priority
               />
             </div>
             <CardTitle className="text-3xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
@@ -288,6 +282,7 @@ export default function LoginPage() {
             height={110} 
             className="rounded-[2.5rem] object-cover" 
             unoptimized 
+            priority
           />
         </div>
         <h1 className="text-6xl font-headline font-bold text-primary mb-3 tracking-tighter">RentalFlow</h1>

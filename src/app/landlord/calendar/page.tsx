@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -43,7 +42,6 @@ export default function LandlordCalendarPage() {
     setIsClient(true);
   }, []);
 
-  // Fetch Data
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return getLandlordCollectionQuery(db, "properties", user.uid);
@@ -68,13 +66,11 @@ export default function LandlordCalendarPage() {
   }, [db, user]);
   const { data: tenants, loading: isTenantsLoading } = useCollection(tenantsQuery);
 
-  // Event Normalization Engine
   const allEvents = useMemo(() => {
     if (!isClient || !properties) return [];
     
     const events: PortfolioEvent[] = [];
 
-    // 1. Inspections
     inspections?.forEach(i => {
       const date = i.scheduledDate ? new Date(i.scheduledDate) : null;
       if (date) {
@@ -90,7 +86,6 @@ export default function LandlordCalendarPage() {
       }
     });
 
-    // 2. Repairs (Scheduled)
     maintenance?.forEach(m => {
       const date = m.scheduledDate ? new Date(m.scheduledDate) : null;
       if (date && m.status !== 'completed') {
@@ -106,9 +101,7 @@ export default function LandlordCalendarPage() {
       }
     });
 
-    // 3. Lease Expiries (Renewals)
     tenants?.forEach(t => {
-      // Strictly only show if a lease end date is explicitly set
       if (!t.leaseEndDate) return;
       const date = new Date(t.leaseEndDate);
       if (!isNaN(date.getTime())) {
@@ -134,13 +127,11 @@ export default function LandlordCalendarPage() {
     const today = startOfDay(new Date());
     const oneYearFromNow = addYears(today, 1);
     
-    // Filter to only show relevant operational roadmap items within the next year
     return allEvents
       .filter(e => isAfter(e.date, today) && isBefore(e.date, oneYearFromNow))
       .slice(0, 10);
   }, [allEvents]);
 
-  // Calendar Modifiers (Dynamic Legend)
   const modifiers = useMemo(() => {
     const dates: Record<string, Date[]> = {
       inspection: [],
@@ -180,7 +171,6 @@ export default function LandlordCalendarPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Calendar Selection Side */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
             <CardContent className="p-8">
@@ -224,7 +214,6 @@ export default function LandlordCalendarPage() {
           </Card>
         </div>
 
-        {/* Daily Ledger & Upcoming Events */}
         <div className="lg:col-span-8 space-y-8">
           <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden min-h-[400px]">
             <CardHeader className="bg-primary/[0.02] border-b border-primary/5 p-8">

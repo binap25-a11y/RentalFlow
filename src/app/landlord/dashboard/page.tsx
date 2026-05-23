@@ -81,7 +81,6 @@ export default function LandlordDashboard() {
 
   const { data: tenants } = useCollection(tenantsQuery);
 
-  // Manual Expense State
   const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
   const [isSavingExpense, setIsSavingExpense] = useState(false);
   const [expAmount, setExpAmount] = useState('');
@@ -306,13 +305,11 @@ export default function LandlordDashboard() {
   const downloadExpenseLedger = async () => {
     if (!maintenance || !isClient) return;
 
-    // Dynamically import jsPDF to prevent server-side initialization issues
     const { jsPDF } = await import("jspdf");
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
     const today = format(new Date(), 'PPP');
 
-    // Branding Header
     pdf.setFillColor(31, 41, 55);
     pdf.rect(0, 0, pageWidth, 50, 'F');
     pdf.setTextColor(255, 255, 255);
@@ -323,7 +320,6 @@ export default function LandlordDashboard() {
     pdf.setFont("helvetica", "normal");
     pdf.text(`RentalFlow Executive Portfolio | Generated: ${today}`, 20, 35);
 
-    // Summary Section
     pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(14);
     pdf.setFont("helvetica", "bold");
@@ -337,7 +333,6 @@ export default function LandlordDashboard() {
     pdf.setDrawColor(229, 231, 235);
     pdf.line(20, 90, pageWidth - 20, 90);
 
-    // Expense Table
     let y = 105;
     pdf.setFont("helvetica", "bold");
     pdf.text("Date", 20, y);
@@ -420,7 +415,6 @@ export default function LandlordDashboard() {
         </div>
       </div>
 
-      {/* Financial Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden group">
           <CardContent className="pt-8 text-left px-8">
@@ -493,7 +487,6 @@ export default function LandlordDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Main Charts Area */}
         <div className="lg:col-span-8 space-y-8">
           <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
             <CardHeader className="text-left px-10 pt-10 pb-4 border-b border-primary/5">
@@ -583,7 +576,6 @@ export default function LandlordDashboard() {
           </div>
         </div>
 
-        {/* Portfolio Roadmap Sidebar */}
         <div className="lg:col-span-4 space-y-8">
           <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden">
             <CardHeader className="text-left px-8 pt-8 pb-4 border-b border-primary/5 bg-primary/[0.02]">

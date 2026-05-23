@@ -1,8 +1,7 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
-import { useUser, useFirestore, useCollection, getLandlordCollectionQuery, deleteDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery, deleteDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +22,7 @@ export default function PropertiesPage() {
     setIsClient(true);
   }, []);
 
-  const propertiesQuery = useMemo(() => {
+  const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return getLandlordCollectionQuery(db, "properties", user.uid);
   }, [db, user]);
