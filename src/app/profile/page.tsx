@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -81,15 +82,20 @@ export default function ProfilePage() {
       });
       const data = await response.json();
       if (data.success) {
-        toast({ title: "Email Dispatched", description: `Check ${user.email} for the verification code.` });
+        toast({ title: "Email Dispatched", description: `Check ${user.email} for the verification email.` });
       } else {
-        throw new Error(data.error);
+        // Show specific error from API if available
+        toast({ 
+          variant: "destructive", 
+          title: "Connection Failed", 
+          description: data.error || "Resend API key missing or invalid. Check system environment." 
+        });
       }
     } catch (err: any) {
       toast({ 
         variant: "destructive", 
         title: "Connection Failed", 
-        description: "Resend API key missing or invalid. Check system environment." 
+        description: "Network error or server-side failure. Ensure API routes are active." 
       });
     } finally {
       setIsTestingEmail(false);
