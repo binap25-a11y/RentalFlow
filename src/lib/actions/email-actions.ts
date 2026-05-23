@@ -1,3 +1,4 @@
+
 'use server';
 
 import { sendPropertyEmail } from '@/lib/email';
@@ -5,6 +6,7 @@ import { sendPropertyEmail } from '@/lib/email';
 /**
  * @fileOverview Server Actions for professional email communications.
  * Provides a secure entry point for client components to trigger notifications.
+ * These actions are designed to fail silently (gracefully) so UI workflows aren't blocked by unverified domains.
  */
 
 export async function notifyLandlordOfRequest(data: {
@@ -13,7 +15,7 @@ export async function notifyLandlordOfRequest(data: {
   title: string;
   description: string;
 }) {
-  return sendPropertyEmail({
+  const result = await sendPropertyEmail({
     to: data.landlordEmail,
     subject: `New Maintenance: ${data.propertyAddress}`,
     text: `A new maintenance request has been logged for ${data.propertyAddress}.\n\nSubject: ${data.title}\nDescription: ${data.description}`,
@@ -29,6 +31,12 @@ export async function notifyLandlordOfRequest(data: {
       </div>
     `
   });
+
+  if (!result.success) {
+    console.warn(`Email notification to ${data.landlordEmail} skipped: ${result.error}`);
+  }
+  
+  return result;
 }
 
 export async function notifyTenantOfUpdate(data: {
@@ -37,7 +45,7 @@ export async function notifyTenantOfUpdate(data: {
   status: string;
   title: string;
 }) {
-  return sendPropertyEmail({
+  const result = await sendPropertyEmail({
     to: data.tenantEmail,
     subject: `Update on Repair: ${data.title}`,
     text: `The status of your repair request for ${data.propertyAddress} has been updated to: ${data.status}.`,
@@ -54,4 +62,10 @@ export async function notifyTenantOfUpdate(data: {
       </div>
     `
   });
+
+  if (!result.success) {
+    console.warn(`Email notification to ${data.tenantEmail} skipped: ${result.error}`);
+  }
+
+  return result;
 }

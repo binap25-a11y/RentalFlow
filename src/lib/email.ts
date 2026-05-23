@@ -19,7 +19,7 @@ export async function sendPropertyEmail(options: {
   }
 
   try {
-    const data = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       // Use onboarding@resend.dev for trial accounts or unverified domains
       from: 'RentalFlow <onboarding@resend.dev>',
       to: options.to,
@@ -28,10 +28,23 @@ export async function sendPropertyEmail(options: {
       html: options.html || `<p>${options.text}</p>`,
     });
 
+    if (error) {
+      console.warn('Resend API returned a validation error:', error);
+      // Handle the common "Unverified Domain" 403 error gracefully
+      if ((error as any).statusCode === 403 || error.name === 'validation_error') {
+        return { 
+          success: false, 
+          error: 'Resend Trial Restriction: You can only send to your account email (binap25@googlemail.com) until you verify a domain.',
+          details: error 
+        };
+      }
+      return { success: false, error: error.message };
+    }
+
     return { success: true, data };
   } catch (error: any) {
-    console.error('Email Dispatch Error:', error);
-    return { success: false, error: error.message };
+    console.error('Email Dispatch Critical Failure:', error);
+    return { success: false, error: error.message || 'Unknown network error' };
   }
 }
 

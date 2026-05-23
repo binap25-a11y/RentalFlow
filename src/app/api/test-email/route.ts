@@ -1,7 +1,5 @@
 
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendPropertyEmail } from "@/lib/email";
 
 /**
  * @fileOverview Email connectivity diagnostic endpoint.
@@ -19,10 +17,10 @@ export async function POST(req: Request) {
       }, { status: 500 });
     }
 
-    const { data, error } = await resend.emails.send({
-      from: "RentalFlow <onboarding@resend.dev>",
+    const result = await sendPropertyEmail({
       to: to,
       subject: "RentalFlow: System Connectivity Test",
+      text: "The communication engine is active.",
       html: `
         <div style="font-family: sans-serif; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; max-width: 500px; margin: auto;">
           <div style="text-align: center; margin-bottom: 20px;">
@@ -39,9 +37,15 @@ export async function POST(req: Request) {
       `,
     });
 
-    if (error) throw error;
+    if (!result.success) {
+      return Response.json({ 
+        success: false, 
+        error: result.error,
+        isTrialRestriction: result.error?.includes('Trial Restriction') 
+      }, { status: 403 });
+    }
 
-    return Response.json({ success: true, data });
+    return Response.json({ success: true, data: result.data });
   } catch (error: any) {
     console.error('Diagnostic Email Failed:', error);
     return Response.json({ success: false, error: error.message || error }, { status: 500 });
