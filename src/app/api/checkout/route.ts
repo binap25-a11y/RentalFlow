@@ -1,22 +1,20 @@
-
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
 /**
- * @fileOverview Stripe Checkout Session Engine.
- * Generates secure hosted payment pages for Landlord subscriptions.
+ * @fileOverview Resilient Stripe Checkout Session Engine (Legacy Route).
+ * Handles missing environment variables gracefully to prevent build-time failures.
  */
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 
 export async function POST(req: Request) {
   try {
     const { userId, email } = await req.json();
 
     if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRICE_ID) {
-      return NextResponse.json({ error: "Stripe is not configured in the environment." }, { status: 500 });
+      return NextResponse.json({ error: "Stripe configuration is missing in the environment." }, { status: 500 });
     }
 
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const origin = req.headers.get('origin') || 'http://localhost:9002';
 
     const session = await stripe.checkout.sessions.create({
