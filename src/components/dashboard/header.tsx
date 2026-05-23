@@ -1,8 +1,9 @@
+
 "use client";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { LogOut, User, Bell, LayoutDashboard, Search } from "lucide-react";
+import { LogOut, User, Bell, LayoutDashboard, Search, X, MessageSquare, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { useAuth, useUser } from "@/firebase";
 import { initiateSignOut } from "@/firebase/non-blocking-login";
@@ -25,16 +26,32 @@ import {
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface HeaderProps {
   role: 'landlord' | 'tenant';
 }
+
+type Notification = {
+  id: string;
+  title: string;
+  description: string;
+  time: string;
+  type: 'grade' | 'message' | 'alert';
+};
+
+const INITIAL_NOTIFICATIONS: Notification[] = [
+  { id: '1', title: 'Portfolio Grade Updated', description: 'Verification engine complete.', time: '15 mins ago', type: 'grade' },
+  { id: '2', title: 'New Direct Message', description: 'Tenant has a question about rent.', time: '1 hour ago', type: 'message' },
+  { id: '3', title: 'Inspection Reminder', description: 'Property Audit scheduled for tomorrow.', time: '2 hours ago', type: 'alert' }
+];
 
 export function Header({ role }: HeaderProps) {
   const { user } = useUser();
   const auth = useAuth();
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [notifications, setNotifications] = useState<Notification[]>(INITIAL_NOTIFICATIONS);
   
   const dashboardHref = role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub';
   const userName = user?.displayName || user?.email?.split('@')[0] || 'User';
@@ -49,6 +66,14 @@ export function Header({ role }: HeaderProps) {
     if (search.trim()) {
       router.push(`/${role}/${role === 'landlord' ? 'properties' : 'documents'}?q=${encodeURIComponent(search)}`);
     }
+  };
+
+  const deleteNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const clearAll = () => {
+    setNotifications([]);
   };
 
   return (
@@ -73,33 +98,66 @@ export function Header({ role }: HeaderProps) {
           <PopoverTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-xl text-primary/40 hover:text-primary hover:bg-primary/5 relative">
               <Bell className="h-5 w-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full border-2 border-white" />
+              {notifications.length > 0 && (
+                <span className="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full border-2 border-white animate-in zoom-in" />
+              )}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-0 rounded-2xl border-none shadow-2xl overflow-hidden mt-2" align="end">
              <div className="p-4 bg-primary text-white flex justify-between items-center">
                 <p className="font-bold text-xs uppercase tracking-widest font-headline">Intelligence Hub</p>
-                <Badge variant="outline" className="text-[9px] text-white border-white/20 font-bold">3 New</Badge>
+                <Badge variant="outline" className="text-[9px] text-white border-white/20 font-bold">{notifications.length} New</Badge>
              </div>
-             <div className="p-4 space-y-4 text-left">
-                <div className="flex gap-3 items-start">
-                   <div className="p-2 bg-emerald-100 text-emerald-700 rounded-lg"><LayoutDashboard className="w-4 h-4" /></div>
-                   <div>
-                      <p className="text-xs font-bold">Portfolio Grade Updated</p>
-                      <p className="text-[10px] text-muted-foreground">Verification engine complete.</p>
-                   </div>
-                </div>
-                <div className="flex gap-3 items-start">
-                   <div className="p-2 bg-blue-100 text-blue-700 rounded-lg"><Bell className="w-4 h-4" /></div>
-                   <div>
-                      <p className="text-xs font-bold">New Direct Message</p>
-                      <p className="text-[10px] text-muted-foreground">15 mins ago</p>
-                   </div>
-                </div>
+             <div className="max-h-[400px] overflow-y-auto no-scrollbar">
+               {notifications.length > 0 ? (
+                 <div className="p-4 space-y-4 text-left">
+                    {notifications.map((n) => (
+                      <div key={n.id} className="flex gap-3 items-start group relative">
+                         <div className={cn(
+                           "p-2 rounded-lg shrink-0",
+                           n.type === 'grade' ? "bg-emerald-100 text-emerald-700" :
+                           n.type === 'message' ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
+                         )}>
+                            {n.type === 'grade' ? <LayoutDashboard className="w-4 h-4" /> :
+                             n.type === 'message' ? <MessageSquare className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+                         </div>
+                         <div className="flex-1 min-w-0 pr-6">
+                            <p className="text-xs font-bold truncate text-primary">{n.title}</p>
+                            <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">{n.description}</p>
+                            <p className="text-[9px] text-muted-foreground mt-1 opacity-60 font-bold uppercase tracking-tight">{n.time}</p>
+                         </div>
+                         <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity absolute top-0 right-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteNotification(n.id);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                         </Button>
+                      </div>
+                    ))}
+                 </div>
+               ) : (
+                 <div className="p-12 text-center flex flex-col items-center justify-center opacity-30">
+                    <Bell className="w-8 h-8 mb-2 text-primary" />
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Clear Ledger</p>
+                 </div>
+               )}
              </div>
-             <div className="p-3 bg-muted/50 border-t text-center">
-                <Button variant="ghost" className="text-[10px] font-bold uppercase tracking-widest text-primary/60 hover:text-primary h-8">Clear Feed</Button>
-             </div>
+             {notifications.length > 0 && (
+               <div className="p-3 bg-muted/50 border-t text-center">
+                  <Button 
+                    variant="ghost" 
+                    className="text-[10px] font-bold uppercase tracking-widest text-primary/60 hover:text-primary h-8 w-full"
+                    onClick={clearAll}
+                  >
+                    Clear Feed
+                  </Button>
+               </div>
+             )}
           </PopoverContent>
         </Popover>
         
