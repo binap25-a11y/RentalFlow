@@ -1,3 +1,4 @@
+
 import { Resend } from 'resend';
 
 /**
@@ -9,8 +10,8 @@ let resendInstance: Resend | null = null;
 
 function getResend() {
   const key = process.env.RESEND_API_KEY;
-  if (!key) {
-    console.warn('SYSTEM ALERT: RESEND_API_KEY is missing from environment. Email dispatch bypassed.');
+  if (!key || key.startsWith('re_your_key')) {
+    console.warn('SYSTEM ALERT: RESEND_API_KEY is missing or using placeholder in environment. Email dispatch bypassed.');
     return null;
   }
   
@@ -31,7 +32,7 @@ export async function sendPropertyEmail(options: {
   if (!resend) {
     return { 
       success: false, 
-      error: 'Engine Offline: No API key configured. Please update your environment variables.' 
+      error: 'Engine Offline: No valid API key configured. Please update your .env file with a key starting with "re_".' 
     };
   }
 
@@ -56,7 +57,7 @@ export async function sendPropertyEmail(options: {
       if (isTrialRestriction) {
         return { 
           success: false, 
-          error: 'Resend Trial Restriction: You can only send to your own registered email address until a domain is verified at resend.com.',
+          error: 'Resend Trial Restriction: You can only send to your own registered email address (e.g., your Resend account owner) until a domain is verified at resend.com.',
           details: error 
         };
       }
