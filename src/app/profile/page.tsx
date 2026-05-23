@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   User, Mail, Phone, ShieldCheck, 
   Loader2, Save, Camera, CheckCircle2,
-  Building2, Home
+  Building2, Home, Zap
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -38,6 +38,7 @@ export default function ProfilePage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isTestingEmail, setIsTestingEmail] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -66,6 +67,32 @@ export default function ProfilePage() {
       toast({ variant: "destructive", title: "Upload Failed" });
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleTestEmail = async () => {
+    if (!user?.email) return;
+    setIsTestingEmail(true);
+    try {
+      const response = await fetch('/api/test-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: user.email })
+      });
+      const data = await response.json();
+      if (data.success) {
+        toast({ title: "Email Dispatched", description: `Check ${user.email} for the verification code.` });
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (err: any) {
+      toast({ 
+        variant: "destructive", 
+        title: "Connection Failed", 
+        description: "Resend API key missing or invalid. Check system environment." 
+      });
+    } finally {
+      setIsTestingEmail(false);
     }
   };
 
@@ -108,9 +135,20 @@ export default function ProfilePage() {
           <Header role={profile.role} />
           <main className="flex-1 overflow-y-auto p-8">
             <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <div className="text-left">
-                <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">Account Specs</h1>
-                <p className="text-muted-foreground font-medium font-body">Manage your identity and authentication credentials.</p>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
+                <div>
+                  <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">Account Specs</h1>
+                  <p className="text-muted-foreground font-medium font-body">Manage your identity and authentication credentials.</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={handleTestEmail} 
+                  disabled={isTestingEmail}
+                  className="rounded-xl border-primary/20 bg-white font-bold h-11"
+                >
+                  {isTestingEmail ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Zap className="w-4 h-4 mr-2 text-amber-500" />}
+                  Test Email Engine
+                </Button>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
