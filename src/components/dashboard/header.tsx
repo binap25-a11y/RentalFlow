@@ -67,7 +67,6 @@ export function Header({ role }: HeaderProps) {
   const [sessionTime, setSessionTime] = useState("60");
   const [mounted, setMounted] = useState(false);
   
-  const dashboardHref = role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub';
   const userName = user?.displayName || user?.email?.split('@')[0] || 'User';
 
   useEffect(() => {
@@ -234,12 +233,6 @@ export function Header({ role }: HeaderProps) {
             <DropdownMenuSeparator className="mx-2 bg-border" />
             
             <div className="p-1 space-y-1">
-              <DropdownMenuItem className="cursor-pointer py-2.5 rounded-xl font-bold font-headline focus:bg-accent focus:text-accent-foreground text-muted-foreground" asChild>
-                 <Link href={dashboardHref}>
-                  <LayoutDashboard className="mr-3 h-4 w-4" />
-                  <span>Financial Overview</span>
-                 </Link>
-              </DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer py-2.5 rounded-xl font-bold font-headline focus:bg-accent focus:text-accent-foreground text-muted-foreground" asChild>
                  <Link href="/profile">
                   <User className="mr-3 h-4 w-4" />
