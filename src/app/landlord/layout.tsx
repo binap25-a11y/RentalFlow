@@ -7,7 +7,7 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { Loader2 } from "lucide-react";
 import { doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
 
@@ -19,6 +19,11 @@ export default function LandlordLayout({
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const userDocRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -28,16 +33,16 @@ export default function LandlordLayout({
   const { data: profile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
   useEffect(() => {
-    if (!isUserLoading && !user) {
+    if (!isUserLoading && !user && isClient) {
       router.replace('/');
-    } else if (!isProfileLoading && profile && profile.role !== 'landlord') {
+    } else if (!isProfileLoading && profile && profile.role !== 'landlord' && isClient) {
       router.replace(profile.role === 'tenant' ? '/tenant/hub' : '/');
     }
-  }, [user, isUserLoading, profile, isProfileLoading, router]);
+  }, [user, isUserLoading, profile, isProfileLoading, router, isClient]);
 
   const BRAND_LOGO_URL = RENTALFLOW_NEUTRAL_FALLBACK;
 
-  if (isUserLoading || isProfileLoading) {
+  if (!isClient || isUserLoading || isProfileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="relative flex flex-col items-center">
@@ -53,7 +58,7 @@ export default function LandlordLayout({
           </div>
           <div className="flex items-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin text-primary" />
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Resolving Profile</p>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Resolving Portfolio Access</p>
           </div>
         </div>
       </div>

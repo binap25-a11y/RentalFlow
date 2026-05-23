@@ -137,7 +137,6 @@ export default function LandlordDashboard() {
 
     setDocumentNonBlocking(paymentRef, paymentData, { merge: true });
 
-    // Send Digital Receipt
     const tenant = tenants?.find(t => property.tenantIds?.includes(t.userId));
     if (tenant?.email) {
       await sendRentReceiptEmail({
