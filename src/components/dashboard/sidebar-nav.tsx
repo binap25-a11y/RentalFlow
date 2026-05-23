@@ -38,8 +38,8 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
   const dashboardHref = role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub';
 
   const landlordItems = [
-    { label: 'Overview', icon: LayoutDashboard, href: '/landlord/dashboard' },
     { label: 'Properties', icon: Building2, href: '/landlord/properties' },
+    { label: 'Overview', icon: LayoutDashboard, href: '/landlord/dashboard' },
     { label: 'Calendar', icon: CalendarDays, href: '/landlord/calendar' },
     { label: 'Tenants', icon: Users, href: '/landlord/tenants' },
     { label: 'Maintenance', icon: Wrench, href: '/landlord/maintenance' },
@@ -87,6 +87,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
               fill 
               className="object-cover" 
               unoptimized 
+              priority
             />
           </div>
           <span className="font-headline font-bold text-xl tracking-tight text-sidebar-foreground">RentalFlow</span>

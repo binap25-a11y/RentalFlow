@@ -402,7 +402,7 @@ export default function LandlordDashboard() {
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-12">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div className="text-left">
-          <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">Executive Dashboard</h1>
+          <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">Financial Overview</h1>
           <p className="text-muted-foreground font-medium font-body max-w-lg">Real-time portfolio command and high-yield operational analytics.</p>
         </div>
         <div className="flex items-center gap-4">
