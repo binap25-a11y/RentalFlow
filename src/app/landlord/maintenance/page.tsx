@@ -43,7 +43,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { sendPropertyEmail } from "@/lib/email";
+import { notifyTenantOfUpdate } from "@/lib/actions/email-actions";
 
 export default function MaintenancePage() {
   const { user } = useUser();
@@ -81,6 +81,12 @@ export default function MaintenancePage() {
   }, [db, user]);
 
   const { data: requests, loading } = useCollection(maintenanceQuery);
+
+  const tenantsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return getLandlordCollectionQuery(db, "tenantProfiles", user.uid);
+  }, [db, user]);
+  const { data: tenants } = useCollection(tenantsQuery);
 
   const contractorsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -162,10 +168,27 @@ export default function MaintenancePage() {
     setIsAssigningPro(null);
   };
 
-  const updateStatus = (request: any, newStatus: string) => {
+  const updateStatus = async (request: any, newStatus: string) => {
     if (!user || !db) return;
     const requestRef = doc(db, 'maintenanceRequests', request.id);
     updateDocumentNonBlocking(requestRef, { status: newStatus, updatedAt: serverTimestamp() });
+    
+    // Notify Tenant via Email
+    try {
+      const tenant = tenants?.find(t => t.userId === request.tenantId);
+      if (tenant?.email) {
+        const prop = properties?.find(p => p.id === request.propertyId);
+        await notifyTenantOfUpdate({
+          tenantEmail: tenant.email,
+          propertyAddress: prop?.addressLine1 || 'Your Home',
+          status: newStatus,
+          title: request.title
+        });
+      }
+    } catch (e) {
+      console.warn('Email notification for status update skipped.');
+    }
+
     toast({ title: "Status Updated", description: `Task marked as ${newStatus}.` });
   };
 
