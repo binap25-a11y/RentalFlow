@@ -53,7 +53,7 @@ type Notification = {
 
 const INITIAL_NOTIFICATIONS: Notification[] = [
   { id: '1', title: 'Portfolio Grade Updated', description: 'Verification engine complete.', time: '15 mins ago', type: 'grade' },
-  { id: '2', title: 'New Direct Message', description: 'Tenant has a question about rent.', time: '1 hour ago', type: 'message' },
+  { id: '2', title: 'New Direct Message', description: 'Resident has a question about rent.', time: '1 hour ago', type: 'message' },
   { id: '3', title: 'Inspection Reminder', description: 'Property Audit scheduled for tomorrow.', time: '2 hours ago', type: 'alert' }
 ];
 
@@ -72,19 +72,17 @@ export function Header({ role }: HeaderProps) {
 
   useEffect(() => {
     setMounted(true);
-    const theme = localStorage.getItem('theme');
-    if (theme === 'dark') {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
-    }
+    // Sync UI with existing document state (set by layout script)
+    const isDark = document.documentElement.classList.contains('dark');
+    setIsDarkMode(isDark);
+    
     const savedSession = localStorage.getItem('session_duration');
     if (savedSession) setSessionTime(savedSession);
   }, []);
 
-  const toggleDarkMode = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    if (newMode) {
+  const toggleDarkMode = (checked: boolean) => {
+    setIsDarkMode(checked);
+    if (checked) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
     } else {
@@ -186,8 +184,8 @@ export function Header({ role }: HeaderProps) {
                  </div>
                ) : (
                  <div className="p-12 text-center flex flex-col items-center justify-center opacity-30">
-                    <Bell className="w-8 h-8 mb-2" />
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Clear Ledger</p>
+                    <Bell className="w-8 h-8 mb-2 text-foreground" />
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground">Clear Ledger</p>
                  </div>
                )}
              </div>
