@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,16 +7,17 @@ import {
   ShieldAlert, Loader2, CheckCircle2,
   Calendar as CalendarIcon, Zap, ClipboardList, AlertTriangle,
   PoundSterling, PieChart as PieChartIcon, ArrowUpRight, ArrowDownRight,
-  Target, Download, Plus, Save, Users, Wrench, Clock, ReceiptText, BellRing
+  Target, Download, Plus, Save, Users, Wrench, Clock, ReceiptText, BellRing,
+  Crown, Sparkles
 } from "lucide-react";
-import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
+import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { isBefore, addDays, isValid, parseISO, format, startOfMonth, endOfMonth } from "date-fns";
+import { format } from "date-fns";
 import { useMemo, useState, useEffect } from "react";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, 
-  ResponsiveContainer, Cell, PieChart, Pie 
+  ResponsiveContainer, Cell
 } from 'recharts';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -35,17 +37,20 @@ import { collection, doc, serverTimestamp, query, where } from "firebase/firesto
 import { useToast } from "@/hooks/use-toast";
 import { sendRentReminderEmail, sendRentReceiptEmail } from "@/lib/actions/email-actions";
 
-const COLORS = ['hsl(var(--accent))', '#10b981', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6'];
-
 export default function LandlordDashboard() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
+  const [isUpgrading, setIsUpgrading] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('payment') === 'success') {
+      toast({ title: "Premium Activated", description: "Your high-yield management tools are now live." });
+    }
+  }, [toast]);
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -114,6 +119,27 @@ export default function LandlordDashboard() {
       actualCollectedThisMonth
     };
   }, [properties, maintenance, currentMonthPayments, isClient]);
+
+  const handleUpgrade = async () => {
+    if (!user) return;
+    setIsUpgrading(true);
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.uid, email: user.email }),
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || "Session failed");
+      }
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Checkout Error", description: e.message });
+      setIsUpgrading(false);
+    }
+  };
 
   const handleMarkAsPaid = async (property: any) => {
     if (!user || !db) return;
@@ -308,6 +334,10 @@ export default function LandlordDashboard() {
           <p className="text-muted-foreground font-medium font-body max-w-lg">Real-time portfolio command and high-yield operational analytics.</p>
         </div>
         <div className="flex items-center gap-4">
+          <Button variant="outline" className="rounded-2xl h-11 px-6 font-bold border-accent/20 text-accent bg-accent/5 hover:bg-accent/10 transition-all" onClick={handleUpgrade} disabled={isUpgrading}>
+            {isUpgrading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Crown className="w-4 h-4 mr-2" />}
+            Upgrade to Premium
+          </Button>
           <Button className="rounded-2xl h-11 px-6 font-bold bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all text-white" asChild>
             <Link href="/landlord/properties/new">Register New Asset</Link>
           </Button>
@@ -515,6 +545,21 @@ export default function LandlordDashboard() {
                   ))}
                </div>
             </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-sm rounded-[2.5rem] bg-primary text-white overflow-hidden p-8 text-left relative">
+            <div className="absolute top-0 right-0 p-4 opacity-20">
+              <Crown className="w-12 h-12" />
+            </div>
+            <div className="relative z-10 space-y-4">
+               <h3 className="font-bold font-headline text-lg flex items-center gap-2">
+                 <Sparkles className="w-5 h-5 text-accent" /> Premium Management
+               </h3>
+               <p className="text-sm opacity-80 leading-relaxed font-body">Unlock high-fidelity AI triage, unlimited asset history, and custom professional branding.</p>
+               <Button className="w-full rounded-xl bg-white text-primary hover:bg-white/90 font-bold h-12 shadow-xl shadow-black/20" onClick={handleUpgrade} disabled={isUpgrading}>
+                  {isUpgrading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Unlock Premium Suite"}
+               </Button>
+            </div>
           </Card>
 
           <Card className="border-none shadow-sm rounded-[2.5rem] bg-card overflow-hidden p-8 text-left">
