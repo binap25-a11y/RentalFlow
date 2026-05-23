@@ -261,8 +261,8 @@ export default function AuthPage() {
               </Tabs>
             </div>
 
-            <Button className="w-full h-15 rounded-2xl font-bold bg-primary text-white text-lg shadow-2xl shadow-primary/20 font-headline hover:scale-[1.02] active:scale-95 transition-all" onClick={handleCreateProfile} disabled={isLoading || !firstName || !lastName || !phoneNumber}>
-              {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <><CheckCircle2 className="w-6 h-6 mr-3" /> Complete Registration</>}
+            <Button className="w-full h-15 rounded-2xl font-bold bg-primary text-primary-foreground text-lg shadow-2xl shadow-primary/20 font-headline hover:scale-[1.02] active:scale-95 transition-all" onClick={handleCreateProfile} disabled={isLoading || !firstName || !lastName || !phoneNumber}>
+              {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-primary-foreground" /> : <><CheckCircle2 className="w-6 h-6 mr-3" /> Complete Registration</>}
             </Button>
           </CardContent>
         </Card>
@@ -364,8 +364,8 @@ export default function AuthPage() {
                     </button>
                   </div>
                 </div>
-                <Button type="submit" className="w-full h-16 rounded-[1.75rem] font-bold bg-primary text-white text-xl shadow-2xl shadow-primary/20 font-headline hover:scale-[1.01] active:scale-95 transition-all" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-white" /> : (authMode === 'login' ? 'Access Vault' : 'Create Credentials')}
+                <Button type="submit" className="w-full h-16 rounded-[1.75rem] font-bold bg-primary text-primary-foreground text-xl shadow-2xl shadow-primary/20 font-headline hover:scale-[1.01] active:scale-95 transition-all" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-primary-foreground" /> : (authMode === 'login' ? 'Access Vault' : 'Create Credentials')}
                 </Button>
               </form>
             </div>
