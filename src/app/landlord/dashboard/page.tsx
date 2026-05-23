@@ -113,7 +113,6 @@ export default function LandlordDashboard() {
     const totalExpenses = maintenance.reduce((acc, r) => acc + (Number(r.cost) || 0), 0);
     const netAnnualForecast = annualGross - totalExpenses;
     
-    // Real-time collection rate based on current month's paid vs potential from occupied
     const collectionRate = occupiedMonthly > 0 ? (actualCollectedThisMonth / occupiedMonthly) * 100 : 0;
 
     return {
@@ -148,6 +147,80 @@ export default function LandlordDashboard() {
     }, { merge: true });
 
     toast({ title: "Rent Verified", description: `Payment recorded for ${property.addressLine1}` });
+  };
+
+  const downloadStatement = async () => {
+    if (!properties || !financialStats) return;
+    
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const today = format(new Date(), 'PPP');
+    const period = format(new Date(), 'MMMM yyyy');
+
+    doc.setFillColor(30, 58, 138);
+    doc.rect(0, 0, pageWidth, 50, 'F');
+    doc.setTextColor(255, 255, 255);
+    
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("RENTAL LEDGER STATEMENT", 20, 25);
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Portfolio Period: ${period} | Generated: ${today}`, 20, 35);
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Portfolio Summary", 20, 70);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Total Monthly Yield Potential: £${financialStats.monthlyGrossPotential.toLocaleString()}`, 20, 80);
+    doc.text(`Current Month Collection: £${financialStats.actualCollectedThisMonth.toLocaleString()} (${financialStats.collectionRate.toFixed(1)}%)`, 20, 86);
+    doc.text(`Annual Net Forecast: £${financialStats.netAnnualForecast.toLocaleString()}`, 20, 92);
+
+    doc.setDrawColor(229, 231, 235);
+    doc.line(20, 100, pageWidth - 20, 100);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Asset Collection Breakdown", 20, 115);
+
+    let y = 125;
+    doc.setFillColor(243, 244, 246);
+    doc.rect(20, y - 5, pageWidth - 40, 8, 'F');
+    doc.setFontSize(9);
+    doc.text("Property Asset", 25, y);
+    doc.text("Amount", 110, y);
+    doc.text("Status", 160, y);
+    y += 10;
+
+    properties.filter(p => p.isOccupied).forEach(prop => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      
+      const payment = currentMonthPayments?.find(pm => pm.propertyId === prop.id);
+      const isPaid = payment?.status === 'paid';
+
+      doc.setFont("helvetica", "normal");
+      doc.text(prop.addressLine1, 25, y);
+      doc.text(`£${prop.rentAmount?.toLocaleString()}`, 110, y);
+      
+      if (isPaid) doc.setTextColor(16, 185, 129);
+      else doc.setTextColor(245, 158, 11);
+      
+      doc.setFont("helvetica", "bold");
+      doc.text(isPaid ? "COLLECTED" : "PENDING", 160, y);
+      doc.setTextColor(0, 0, 0);
+      
+      y += 8;
+    });
+
+    doc.save(`Statement_${period.replace(/\s+/g, '_')}.pdf`);
+    toast({ title: "Statement Generated", description: "Your rental ledger has been downloaded." });
   };
 
   const expenseBreakdown = useMemo(() => {
@@ -325,11 +398,14 @@ export default function LandlordDashboard() {
           </Card>
 
           <Card className="border-none shadow-sm rounded-[2.5rem] bg-card overflow-hidden">
-            <CardHeader className="text-left px-10 pt-10 pb-4 border-b border-border">
+            <CardHeader className="text-left px-10 pt-10 pb-4 border-b border-border flex flex-row items-center justify-between">
               <CardTitle className="text-2xl font-headline flex items-center text-foreground">
                 <ReceiptText className="w-6 h-6 mr-3 text-accent" />
                 Real-Time Collection Suite
               </CardTitle>
+              <Button variant="outline" size="sm" onClick={downloadStatement} className="rounded-xl border-accent/20 text-accent font-bold h-10 px-6">
+                <Download className="w-4 h-4 mr-2" /> Download Ledger Statement
+              </Button>
             </CardHeader>
             <CardContent className="p-0">
                <div className="overflow-x-auto">
@@ -471,3 +547,4 @@ export default function LandlordDashboard() {
     </div>
   );
 }
+

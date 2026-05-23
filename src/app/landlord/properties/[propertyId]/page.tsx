@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, use, useMemo, useEffect } from 'react';
@@ -124,6 +125,19 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: inspections } = useCollection(inspectionsQuery);
 
+  // 6. Current Payments
+  const paymentsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    const now = new Date();
+    return query(
+      collection(db, 'rentPayments'),
+      where('propertyId', '==', propertyId),
+      where('month', '==', now.getMonth() + 1),
+      where('year', '==', now.getFullYear())
+    );
+  }, [db, propertyId, user]);
+  const { data: currentMonthPayments } = useCollection(paymentsQuery);
+
   // Derived Audit Stats
   const latestAudit = useMemo(() => {
     if (!inspections || inspections.length === 0) return null;
@@ -199,6 +213,60 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     }
   };
 
+  const downloadRentStatement = async () => {
+    if (!property) return;
+    
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const today = format(new Date(), 'PPP');
+    const period = format(new Date(), 'MMMM yyyy');
+
+    doc.setFillColor(30, 58, 138);
+    doc.rect(0, 0, pageWidth, 50, 'F');
+    doc.setTextColor(255, 255, 255);
+    
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("RENTAL STATEMENT", 20, 25);
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Asset ID: ${property.id.substring(0, 8)} | Generated: ${today}`, 20, 35);
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Property Subject", 20, 70);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(property.addressLine1, 20, 80);
+    doc.text(`${property.city}, ${property.zipCode}`, 20, 86);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Tenancy Financials", 20, 105);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Monthly Yield: £${property.rentAmount?.toLocaleString()}`, 20, 115);
+    doc.text(`Status: ${property.isOccupied ? 'Occupied' : 'Vacant'}`, 20, 121);
+    
+    const payment = currentMonthPayments?.[0];
+    const isPaid = payment?.status === 'paid';
+    doc.text(`Current Month (${period}) Standing: `, 20, 127);
+    
+    if (isPaid) doc.setTextColor(16, 185, 129);
+    else doc.setTextColor(245, 158, 11);
+    doc.setFont("helvetica", "bold");
+    doc.text(isPaid ? "COLLECTED & VERIFIED" : "PENDING RECEIPT", 75, 127);
+    doc.setTextColor(0, 0, 0);
+
+    doc.setDrawColor(229, 231, 235);
+    doc.line(20, 140, pageWidth - 20, 140);
+
+    doc.save(`Statement_${property.addressLine1.replace(/\s+/g, '_')}_${period.replace(/\s+/g, '_')}.pdf`);
+    toast({ title: "Rent Statement Ready", description: "The document has been exported to your device." });
+  };
+
   const handleDeleteDocument = (id: string) => {
     if (!db) return;
     const docRef = doc(db, 'documents', id);
@@ -225,6 +293,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           </div>
         </div>
         <div className="flex gap-3">
+          <Button variant="outline" onClick={downloadRentStatement} className="rounded-xl font-bold h-11 border-primary/20 bg-white shadow-sm font-headline">
+            <Download className="w-4 h-4 mr-2" /> Generate Rent Statement
+          </Button>
           <Button variant="outline" className="rounded-xl font-bold h-11 border-primary/20 bg-white shadow-sm font-headline" asChild>
             <Link href={`/landlord/properties/${propertyId}/edit`}>
               <Edit3 className="w-4 h-4 mr-2" /> Modify Specs
@@ -616,3 +687,4 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     </div>
   );
 }
+
