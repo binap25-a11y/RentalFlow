@@ -115,8 +115,6 @@ export function Header({ role }: HeaderProps) {
     setNotifications([]);
   };
 
-  if (!mounted) return null;
-
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 md:px-8 bg-background/80 backdrop-blur-md sticky top-0 z-40 transition-all text-left">
       <div className="flex items-center gap-4 flex-1">
@@ -202,92 +200,96 @@ export function Header({ role }: HeaderProps) {
           </PopoverContent>
         </Popover>
         
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 hover:bg-muted p-1 rounded-full transition-all outline-none group border-2 border-accent/20">
-              <Avatar className="h-9 w-9 border-2 border-accent shadow-xl transition-transform group-hover:scale-105">
-                <AvatarImage src={user?.photoURL || undefined} />
-                <AvatarFallback className="bg-accent text-accent-foreground text-xs font-bold font-headline">
-                  {userName[0].toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-72 mt-2 rounded-[1.5rem] border-border shadow-2xl p-2 bg-card animate-in fade-in zoom-in-95">
-            <DropdownMenuLabel className="font-normal px-4 py-4 text-left">
-              <div className="flex flex-col space-y-3">
-                <div className="space-y-0.5">
-                  <p className="text-sm font-bold leading-none font-headline text-foreground">{userName}</p>
-                  <p className="text-[10px] leading-none text-muted-foreground font-bold truncate mt-1">
-                    {user?.email}
-                  </p>
+        {mounted ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 hover:bg-muted p-1 rounded-full transition-all outline-none group border-2 border-accent/20">
+                <Avatar className="h-9 w-9 border-2 border-accent shadow-xl transition-transform group-hover:scale-105">
+                  <AvatarImage src={user?.photoURL || undefined} />
+                  <AvatarFallback className="bg-accent text-accent-foreground text-xs font-bold font-headline">
+                    {userName[0].toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-72 mt-2 rounded-[1.5rem] border-border shadow-2xl p-2 bg-card animate-in fade-in zoom-in-95">
+              <DropdownMenuLabel className="font-normal px-4 py-4 text-left">
+                <div className="flex flex-col space-y-3">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-bold leading-none font-headline text-foreground">{userName}</p>
+                    <p className="text-[10px] leading-none text-muted-foreground font-bold truncate mt-1">
+                      {user?.email}
+                    </p>
+                  </div>
+                  <div>
+                    <Badge className="bg-accent text-accent-foreground border-none text-[9px] font-bold uppercase tracking-[0.1em] px-3 py-1 rounded-full shadow-md">
+                      {role} account
+                    </Badge>
+                  </div>
                 </div>
-                <div>
-                  <Badge className="bg-accent text-accent-foreground border-none text-[9px] font-bold uppercase tracking-[0.1em] px-3 py-1 rounded-full shadow-md">
-                    {role} account
-                  </Badge>
-                </div>
-              </div>
-            </DropdownMenuLabel>
-            
-            <DropdownMenuSeparator className="mx-2 bg-border" />
-            
-            <div className="p-1 space-y-1">
-              <DropdownMenuItem className="cursor-pointer py-2.5 rounded-xl font-bold font-headline focus:bg-accent focus:text-accent-foreground text-muted-foreground" asChild>
-                 <Link href="/profile">
-                  <User className="mr-3 h-4 w-4" />
-                  <span>Account Specs</span>
-                 </Link>
-              </DropdownMenuItem>
-            </div>
-
-            <DropdownMenuSeparator className="mx-2 bg-border" />
-
-            <div className="p-2 space-y-3">
-              <div className="flex items-center justify-between px-2">
-                <div className="flex items-center gap-2">
-                  {isDarkMode ? <Moon className="h-4 w-4 text-accent" /> : <Sun className="h-4 w-4 text-amber-500" />}
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Dark Mode</span>
-                </div>
-                <Switch 
-                  checked={isDarkMode} 
-                  onCheckedChange={toggleDarkMode}
-                  className="data-[state=checked]:bg-accent"
-                />
+              </DropdownMenuLabel>
+              
+              <DropdownMenuSeparator className="mx-2 bg-border" />
+              
+              <div className="p-1 space-y-1">
+                <DropdownMenuItem className="cursor-pointer py-2.5 rounded-xl font-bold font-headline focus:bg-accent focus:text-accent-foreground text-muted-foreground" asChild>
+                  <Link href="/profile">
+                    <User className="mr-3 h-4 w-4" />
+                    <span>Account Specs</span>
+                  </Link>
+                </DropdownMenuItem>
               </div>
 
-              <div className="px-2 space-y-2">
-                <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                  <Clock className="h-4 w-4 text-accent" />
-                  <span>Session Security</span>
+              <DropdownMenuSeparator className="mx-2 bg-border" />
+
+              <div className="p-2 space-y-3">
+                <div className="flex items-center justify-between px-2">
+                  <div className="flex items-center gap-2">
+                    {isDarkMode ? <Moon className="h-4 w-4 text-accent" /> : <Sun className="h-4 w-4 text-amber-500" />}
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Dark Mode</span>
+                  </div>
+                  <Switch 
+                    checked={isDarkMode} 
+                    onCheckedChange={toggleDarkMode}
+                    className="data-[state=checked]:bg-accent"
+                  />
                 </div>
-                <Select value={sessionTime} onValueChange={handleSessionChange}>
-                  <SelectTrigger className="h-9 w-full bg-muted border-none rounded-lg text-[10px] font-bold font-headline">
-                    <SelectValue placeholder="Session limit" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl border-border shadow-xl">
-                    <SelectItem value="15" className="text-[10px] font-bold">15 Minutes</SelectItem>
-                    <SelectItem value="30" className="text-[10px] font-bold">30 Minutes</SelectItem>
-                    <SelectItem value="60" className="text-[10px] font-bold">60 Minutes</SelectItem>
-                    <SelectItem value="720" className="text-[10px] font-bold">12 Hours</SelectItem>
-                  </SelectContent>
-                </Select>
+
+                <div className="px-2 space-y-2">
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                    <Clock className="h-4 w-4 text-accent" />
+                    <span>Session Security</span>
+                  </div>
+                  <Select value={sessionTime} onValueChange={handleSessionChange}>
+                    <SelectTrigger className="h-9 w-full bg-muted border-none rounded-lg text-[10px] font-bold font-headline">
+                      <SelectValue placeholder="Session limit" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-border shadow-xl">
+                      <SelectItem value="15" className="text-[10px] font-bold">15 Minutes</SelectItem>
+                      <SelectItem value="30" className="text-[10px] font-bold">30 Minutes</SelectItem>
+                      <SelectItem value="60" className="text-[10px] font-bold">60 Minutes</SelectItem>
+                      <SelectItem value="720" className="text-[10px] font-bold">12 Hours</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
-            
-            <DropdownMenuSeparator className="mx-2 bg-border" />
-            
-            <div className="p-1">
-              <DropdownMenuItem 
-                className="cursor-pointer py-2.5 rounded-xl text-destructive font-bold font-headline focus:bg-destructive/10 focus:text-destructive"
-                onClick={handleLogout}
-              >
-                <LogOut className="mr-3 h-4 w-4" />
-                <span>Deactivate Session</span>
-              </DropdownMenuItem>
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              
+              <DropdownMenuSeparator className="mx-2 bg-border" />
+              
+              <div className="p-1">
+                <DropdownMenuItem 
+                  className="cursor-pointer py-2.5 rounded-xl text-destructive font-bold font-headline focus:bg-destructive/10 focus:text-destructive"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="mr-3 h-4 w-4" />
+                  <span>Deactivate Session</span>
+                </DropdownMenuItem>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
+        )}
       </div>
     </header>
   );

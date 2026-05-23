@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -13,16 +13,47 @@ import Image from "next/image";
 import Link from "next/link";
 import { RENTALFLOW_NEUTRAL_FALLBACK } from '@/lib/utils';
 import { useEffect, useState } from 'react';
+import { doc } from 'firebase/firestore';
 
 export default function LandingPage() {
   const { user, isUserLoading } = useUser();
+  const db = useFirestore();
   const [mounted, setMounted] = useState(false);
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, 'users', user.uid);
+  }, [db, user]);
+
+  const { data: profile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted) return null;
+  // Stabilize the loading experience to prevent flickering when user is already logged in
+  if (!mounted || isUserLoading || (user && isProfileLoading)) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100]">
+        <div className="relative flex flex-col items-center">
+          <div className="relative w-24 h-24 mb-10 animate-in fade-in zoom-in duration-1000">
+            <div className="absolute inset-0 bg-primary/10 rounded-[2.5rem] blur-3xl animate-pulse" />
+            <div className="relative z-10 w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-primary/5">
+              <Image 
+                src={RENTALFLOW_NEUTRAL_FALLBACK} 
+                alt="RentalFlow" 
+                fill 
+                className="object-cover" 
+                unoptimized 
+                priority
+              />
+            </div>
+          </div>
+          <Loader2 className="w-5 h-5 animate-spin text-primary/40" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background font-body selection:bg-primary selection:text-primary-foreground">
@@ -40,11 +71,9 @@ export default function LandingPage() {
              <Link href="#compliance" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">Compliance</Link>
           </div>
           <div className="flex items-center gap-4">
-             {isUserLoading ? (
-               <Loader2 className="w-5 h-5 animate-spin text-primary/40" />
-             ) : user ? (
+             {user ? (
                <Button variant="ghost" asChild className="rounded-xl font-bold text-primary">
-                 <Link href={user.email?.includes('landlord') ? '/landlord/properties' : '/tenant/hub'}>
+                 <Link href={profile?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
                     Portal Access <ChevronRight className="w-4 h-4 ml-1" />
                  </Link>
                </Button>
@@ -78,11 +107,9 @@ export default function LandingPage() {
               Accelerate your rental operations with automated maintenance triage, professional ledger tracking, and an AI-driven resident concierge.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
-               {isUserLoading ? (
-                 <div className="h-16 w-48 bg-muted animate-pulse rounded-2xl" />
-               ) : user ? (
+               {user ? (
                  <Button size="lg" asChild className="w-full sm:w-auto h-16 px-10 rounded-2xl bg-primary text-lg font-bold shadow-2xl shadow-primary/20 text-primary-foreground hover:scale-[1.02] transition-transform">
-                   <Link href={user.email?.includes('landlord') ? '/landlord/properties' : '/tenant/hub'}>
+                   <Link href={profile?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
                       Return to Portfolio <ArrowRight className="w-5 h-5 ml-3" />
                    </Link>
                  </Button>
@@ -219,7 +246,7 @@ export default function LandingPage() {
            <p className="text-lg text-muted-foreground font-medium">Join professional landlords across the UK using AI to scale their operations.</p>
            {user ? (
              <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-primary text-xl font-bold shadow-2xl shadow-primary/20 text-primary-foreground">
-               <Link href={user.email?.includes('landlord') ? '/landlord/properties' : '/tenant/hub'}>Go to My Portfolio</Link>
+               <Link href={profile?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>Go to My Portfolio</Link>
              </Button>
            ) : (
              <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-primary text-xl font-bold shadow-2xl shadow-primary/20 text-primary-foreground">
