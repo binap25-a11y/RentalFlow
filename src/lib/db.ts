@@ -10,14 +10,16 @@ let pool: Pool | null = null;
 export function getPool(): Pool | null {
   if (pool) return pool;
 
-  if (!process.env.DATABASE_URL) {
-    console.warn('DATABASE_URL is missing. Relational sync operations will be bypassed.');
+  const connectionString = process.env.DATABASE_URL;
+
+  if (!connectionString || connectionString.includes('YOUR_POSTGRES_URL')) {
+    console.warn('DATABASE_URL is missing or placeholder. Relational sync operations will be bypassed.');
     return null;
   }
 
   try {
     pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString: connectionString,
       ssl: {
         rejectUnauthorized: false
       },
@@ -38,4 +40,5 @@ export function getPool(): Pool | null {
   }
 }
 
-export default pool; // Keeping default export for backward compatibility where used directly as a fallback
+// Named export for the instance itself if needed
+export const dbPool = pool;

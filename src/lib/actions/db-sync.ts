@@ -37,7 +37,6 @@ export async function syncPropertyToDb(propertyData: {
   try {
     const client = await pool.connect();
     try {
-      // Use the array directly ($8). The pg driver handles JS arrays by converting them to Postgres array format.
       await client.query(
         `INSERT INTO properties (
           id, landlord_id, address, city, zip_code, 
@@ -69,7 +68,6 @@ export async function syncPropertyToDb(propertyData: {
     }
   } catch (error: any) {
     console.error('Relational Sync Error (Property):', error);
-    // Return a plain object to avoid Next.js masking the error
     return { success: false, error: error.message || 'Database synchronization failed' };
   }
 }
