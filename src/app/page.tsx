@@ -67,6 +67,7 @@ export default function LoginPage() {
             setNeedsProfile(true);
           }
         } catch (e) {
+          console.error("Profile check failed:", e);
           setNeedsProfile(true);
         }
       };
@@ -98,23 +99,35 @@ export default function LoginPage() {
         updatedAt: serverTimestamp(),
       }, { merge: true });
 
+      /**
+       * 🏠 Resident Data Linking Engine
+       * If the user registers as a tenant, we scan for pre-existing invitations
+       * issued by landlords using their email address.
+       */
       if (role === 'tenant' && user.email) {
+        const emailLower = user.email.toLowerCase().trim();
         const tenantProfilesRef = collection(db, 'tenantProfiles');
-        const q = query(tenantProfilesRef, where('email', '==', user.email.toLowerCase().trim()));
+        const q = query(tenantProfilesRef, where('email', '==', emailLower));
         const querySnapshot = await getDocs(q);
         
         for (const profileDoc of querySnapshot.docs) {
           const profileData = profileDoc.data();
+          
+          // Update placeholder profile with official UID
           await updateDoc(profileDoc.ref, { 
             userId: user.uid,
             tenantId: user.uid,
             memberIds: arrayUnion(user.uid)
           });
-          const propertyRef = doc(db, 'properties', profileData.propertyId);
-          await updateDoc(propertyRef, {
-            tenantIds: arrayUnion(user.uid),
-            memberIds: arrayUnion(user.uid)
-          });
+          
+          // Synchronize access with the property asset
+          if (profileData.propertyId) {
+            const propertyRef = doc(db, 'properties', profileData.propertyId);
+            await updateDoc(propertyRef, {
+              tenantIds: arrayUnion(user.uid),
+              memberIds: arrayUnion(user.uid)
+            });
+          }
         }
       }
       
@@ -124,6 +137,7 @@ export default function LoginPage() {
       isRedirecting.current = true;
       router.replace(role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub');
     } catch (e: any) {
+      console.error("Profile synchronization failed:", e);
       toast({ variant: "destructive", title: "Setup Failed", description: e.message });
       setIsLoading(false);
     }
@@ -155,7 +169,12 @@ export default function LoginPage() {
     try {
       await initiateGoogleSignIn(auth);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Google Session Failed" });
+      console.error("Google Auth Session Failed:", error);
+      toast({ 
+        variant: "destructive", 
+        title: "Google Session Failed", 
+        description: error.message || "Ensure popups are enabled and try again."
+      });
       setIsLoading(false);
     }
   };
