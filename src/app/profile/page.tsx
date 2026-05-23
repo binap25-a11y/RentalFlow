@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -12,23 +11,16 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   User, Mail, Phone, ShieldCheck, 
-  Loader2, Save, Camera, CheckCircle2,
-  Building2, Home, Zap, Info
+  Loader2, Save, Camera
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 import { Header } from "@/components/dashboard/header";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
-  const auth = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
 
@@ -44,17 +36,14 @@ export default function ProfilePage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [isTestingEmail, setIsTestingEmail] = useState(false);
-  const [testEmailRecipient, setTestEmailRecipient] = useState('');
 
   useEffect(() => {
     if (profile) {
       setFirstName(profile.firstName || '');
       setLastName(profile.lastName || '');
       setPhoneNumber(profile.phoneNumber || '');
-      setTestEmailRecipient(user?.email || '');
     }
-  }, [profile, user]);
+  }, [profile]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -75,38 +64,6 @@ export default function ProfilePage() {
       toast({ variant: "destructive", title: "Upload Failed" });
     } finally {
       setIsUploading(false);
-    }
-  };
-
-  const handleTestEmail = async () => {
-    const target = testEmailRecipient || user?.email;
-    if (!target) return;
-
-    setIsTestingEmail(true);
-    try {
-      const response = await fetch('/api/test-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: target })
-      });
-      const data = await response.json();
-      if (data.success) {
-        toast({ title: "Email Dispatched", description: `Check ${target} for the verification email.` });
-      } else {
-        toast({ 
-          variant: "destructive", 
-          title: "Connection Failed", 
-          description: data.error || "Resend API key missing or invalid. Check system environment." 
-        });
-      }
-    } catch (err: any) {
-      toast({ 
-        variant: "destructive", 
-        title: "Connection Failed", 
-        description: "Network error or server-side failure. Ensure API routes are active." 
-      });
-    } finally {
-      setIsTestingEmail(false);
     }
   };
 
@@ -154,45 +111,6 @@ export default function ProfilePage() {
                   <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">Account Specs</h1>
                   <p className="text-muted-foreground font-medium font-body">Manage your identity and authentication credentials.</p>
                 </div>
-                
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      className="rounded-xl border-primary/20 bg-white font-bold h-11 shadow-sm"
-                    >
-                      <Zap className="w-4 h-4 mr-2 text-amber-500" />
-                      Test Email Engine
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80 rounded-2xl border-none shadow-2xl p-6" align="end">
-                    <div className="space-y-4">
-                      <div className="space-y-1">
-                        <h4 className="font-bold font-headline text-primary">Diagnostic Tool</h4>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          Verify your Resend connection. If using a trial account, enter your <strong>Resend registered email</strong> below.
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Test Recipient</Label>
-                        <Input 
-                          value={testEmailRecipient} 
-                          onChange={(e) => setTestEmailRecipient(e.target.value)}
-                          placeholder="your@verified-email.com"
-                          className="h-10 rounded-xl bg-muted/20 border-none font-bold"
-                        />
-                      </div>
-                      <Button 
-                        onClick={handleTestEmail} 
-                        disabled={isTestingEmail || !testEmailRecipient}
-                        className="w-full rounded-xl font-bold h-11 bg-primary text-white shadow-lg shadow-primary/20"
-                      >
-                        {isTestingEmail ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Zap className="w-4 h-4 mr-2" />}
-                        Dispatch Test Email
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
