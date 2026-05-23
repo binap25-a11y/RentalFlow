@@ -34,7 +34,7 @@ import { Label } from "@/components/ui/label";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
-const COLORS = ['hsl(var(--primary))', '#10b981', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6'];
+const COLORS = ['hsl(var(--accent))', '#10b981', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6'];
 
 export default function LandlordDashboard() {
   const { user } = useUser();
@@ -254,10 +254,10 @@ export default function LandlordDashboard() {
     const missingCount = complianceItems.filter(i => i.type === 'Missing').length;
     const urgentCount = complianceItems.filter(i => i.urgent && i.type !== 'Missing').length;
 
-    if (missingCount > 0) return { grade: 'D', color: 'text-red-700', bg: 'bg-red-100', border: 'border-red-200' };
-    if (urgentCount > 3) return { grade: 'C', color: 'text-orange-700', bg: 'bg-orange-100', border: 'border-orange-200' };
-    if (urgentCount > 0) return { grade: 'B', color: 'text-amber-700', bg: 'bg-amber-100', border: 'border-amber-200' };
-    return { grade: 'A+', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-200' };
+    if (missingCount > 0) return { grade: 'D', color: 'text-red-700', bg: 'bg-red-100 dark:bg-red-900/30', border: 'border-red-200 dark:border-red-900/50' };
+    if (urgentCount > 3) return { grade: 'C', color: 'text-orange-700', bg: 'bg-orange-100 dark:bg-orange-900/30', border: 'border-orange-200 dark:border-orange-900/50' };
+    if (urgentCount > 0) return { grade: 'B', color: 'text-amber-700', bg: 'bg-amber-100 dark:bg-amber-900/30', border: 'border-amber-200 dark:border-amber-900/50' };
+    return { grade: 'A+', color: 'text-emerald-700 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30', border: 'border-emerald-200 dark:border-emerald-900/50' };
   }, [complianceItems, isClient]);
 
   const chartData = useMemo(() => {
@@ -416,16 +416,16 @@ export default function LandlordDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden group">
+        <Card className="border-none shadow-sm rounded-[2rem] bg-card overflow-hidden group">
           <CardContent className="pt-8 text-left px-8">
             <div className="flex items-center justify-between mb-6">
-              <div className="bg-emerald-50 text-emerald-600 p-4 rounded-2xl shadow-inner">
+              <div className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 p-4 rounded-2xl shadow-inner">
                 <PoundSterling className="w-6 h-6" />
               </div>
               <ArrowUpRight className="w-5 h-5 text-emerald-500 opacity-40" />
             </div>
             <div className="space-y-1">
-              <p className="text-3xl font-bold font-headline tracking-tighter text-primary">
+              <p className="text-3xl font-bold font-headline tracking-tighter text-foreground">
                 £{financialStats?.annualGross.toLocaleString()}
               </p>
               <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest font-headline opacity-60">Gross Annual Income</p>
@@ -433,16 +433,16 @@ export default function LandlordDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden group">
+        <Card className="border-none shadow-sm rounded-[2rem] bg-card overflow-hidden group">
           <CardContent className="pt-8 text-left px-8">
             <div className="flex items-center justify-between mb-6">
-              <div className="bg-red-50 text-red-600 p-4 rounded-2xl shadow-inner">
+              <div className="bg-red-50 dark:bg-red-900/30 text-red-600 p-4 rounded-2xl shadow-inner">
                 <ShieldAlert className="w-6 h-6" />
               </div>
               <ArrowDownRight className="w-5 h-5 text-red-500 opacity-40" />
             </div>
             <div className="space-y-1">
-              <p className="text-3xl font-bold font-headline tracking-tighter text-primary">
+              <p className="text-3xl font-bold font-headline tracking-tighter text-foreground">
                 £{financialStats?.totalExpenses.toLocaleString()}
               </p>
               <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest font-headline opacity-60">Total Expenses (YTD)</p>
@@ -450,36 +450,36 @@ export default function LandlordDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm rounded-[2rem] bg-primary text-white overflow-hidden group">
+        <Card className="border-none shadow-sm rounded-[2rem] bg-primary text-primary-foreground overflow-hidden group">
           <CardContent className="pt-8 text-left px-8">
             <div className="flex items-center justify-between mb-6">
-              <div className="bg-white/10 text-white p-4 rounded-2xl">
+              <div className="bg-white/10 text-primary-foreground p-4 rounded-2xl">
                 <TrendingUp className="w-6 h-6" />
               </div>
-              <Target className="w-5 h-5 text-white/40" />
+              <Target className="w-5 h-5 text-primary-foreground/40" />
             </div>
             <div className="space-y-1">
               <p className="text-3xl font-bold font-headline tracking-tighter">
                 £{financialStats?.netAnnualForecast.toLocaleString()}
               </p>
-              <p className="text-[10px] text-white/60 font-bold uppercase tracking-widest font-headline">Annual Net Forecast</p>
+              <p className="text-[10px] text-primary-foreground/60 font-bold uppercase tracking-widest font-headline">Annual Net Forecast</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden group">
+        <Card className="border-none shadow-sm rounded-[2rem] bg-card overflow-hidden group">
           <CardContent className="pt-8 text-left px-8">
             <div className="flex items-center justify-between mb-6">
-              <div className="bg-blue-50 text-blue-600 p-4 rounded-2xl shadow-inner">
+              <div className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 p-4 rounded-2xl shadow-inner">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <p className="text-xs font-bold text-blue-600">{financialStats?.collectionRate.toFixed(0)}%</p>
             </div>
             <div className="space-y-3">
-              <p className="text-3xl font-bold font-headline tracking-tighter text-primary">
+              <p className="text-3xl font-bold font-headline tracking-tighter text-foreground">
                 £{financialStats?.occupiedMonthly.toLocaleString()}
               </p>
-              <Progress value={financialStats?.collectionRate} className="h-2 bg-blue-50" />
+              <Progress value={financialStats?.collectionRate} className="h-2 bg-blue-50 dark:bg-blue-900/10" />
               <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest font-headline opacity-60">Rent Collection Progress</p>
             </div>
           </CardContent>
@@ -488,9 +488,9 @@ export default function LandlordDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-8">
-          <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
-            <CardHeader className="text-left px-10 pt-10 pb-4 border-b border-primary/5">
-              <CardTitle className="text-2xl font-headline flex items-center text-primary">
+          <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-card">
+            <CardHeader className="text-left px-10 pt-10 pb-4 border-b border-border">
+              <CardTitle className="text-2xl font-headline flex items-center text-foreground">
                 <TrendingUp className="w-6 h-6 mr-3 text-accent" />
                 Portfolio Yield Distribution
               </CardTitle>
@@ -498,17 +498,17 @@ export default function LandlordDashboard() {
             <CardContent className="h-[400px] p-10">
                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 700, fill: '#64748b'}} dy={15} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#94a3b8'}} />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 700, fill: 'hsl(var(--muted-foreground))'}} dy={15} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: 'hsl(var(--muted-foreground))'}} />
                     <Tooltip 
-                      cursor={{fill: '#f8fafc', radius: 12}}
-                      contentStyle={{borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.15)', padding: '16px'}}
-                      itemStyle={{fontWeight: 800, color: 'hsl(var(--primary))'}}
+                      cursor={{fill: 'hsl(var(--muted)/0.1)', radius: 12}}
+                      contentStyle={{borderRadius: '24px', border: 'none', backgroundColor: 'hsl(var(--card))', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.15)', padding: '16px'}}
+                      itemStyle={{fontWeight: 800, color: 'hsl(var(--accent))'}}
                     />
                     <Bar dataKey="rent" radius={[12, 12, 0, 0]} barSize={50}>
                       {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={index === 0 ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.4)'} />
+                        <Cell key={`cell-${index}`} fill={index === 0 ? 'hsl(var(--accent))' : 'hsl(var(--accent) / 0.4)'} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -517,9 +517,9 @@ export default function LandlordDashboard() {
           </Card>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
+            <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-card">
               <CardHeader className="text-left px-10 pt-8 pb-4">
-                <CardTitle className="text-lg font-headline flex items-center text-primary">
+                <CardTitle className="text-lg font-headline flex items-center text-foreground">
                   <PieChartIcon className="w-5 h-5 mr-3 text-accent" />
                   Tax Categorized Expenses
                 </CardTitle>
@@ -542,7 +542,7 @@ export default function LandlordDashboard() {
                         ))}
                       </Pie>
                       <Tooltip 
-                        contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 20px rgba(0,0,0,0.1)'}}
+                        contentStyle={{borderRadius: '16px', border: 'none', backgroundColor: 'hsl(var(--card))', boxShadow: '0 10px 20px rgba(0,0,0,0.1)'}}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -554,9 +554,9 @@ export default function LandlordDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
+            <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-card">
               <CardHeader className="text-left px-10 pt-8 pb-4">
-                <CardTitle className="text-lg font-headline flex items-center text-primary">
+                <CardTitle className="text-lg font-headline flex items-center text-foreground">
                   <PoundSterling className="w-5 h-5 mr-3 text-accent" />
                   Yield Breakdown
                 </CardTitle>
@@ -568,7 +568,7 @@ export default function LandlordDashboard() {
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
                       <span className="text-xs font-bold capitalize text-muted-foreground">{item.name}</span>
                     </div>
-                    <span className="text-xs font-bold">£{item.value.toLocaleString()}</span>
+                    <span className="text-xs font-bold text-foreground">£{item.value.toLocaleString()}</span>
                   </div>
                 ))}
               </CardContent>
@@ -577,9 +577,9 @@ export default function LandlordDashboard() {
         </div>
 
         <div className="lg:col-span-4 space-y-8">
-          <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden">
-            <CardHeader className="text-left px-8 pt-8 pb-4 border-b border-primary/5 bg-primary/[0.02]">
-              <CardTitle className="text-lg font-headline flex items-center text-primary">
+          <Card className="border-none shadow-sm rounded-[2.5rem] bg-card overflow-hidden">
+            <CardHeader className="text-left px-8 pt-8 pb-4 border-b border-border bg-muted/20">
+              <CardTitle className="text-lg font-headline flex items-center text-foreground">
                 <ShieldAlert className="w-5 h-5 mr-3 text-accent" />
                 Portfolio Roadmap
               </CardTitle>
@@ -592,40 +592,40 @@ export default function LandlordDashboard() {
                       key={`${item.type}-${item.id}`} 
                       className={cn(
                         "group flex items-center justify-between p-4 rounded-3xl border transition-all hover:scale-[1.03] shadow-sm hover:shadow-md",
-                        item.type === 'Missing' ? "bg-red-50/50 border-red-100" :
-                        item.urgent ? "bg-amber-50/50 border-amber-100" : "bg-white border-primary/5"
+                        item.type === 'Missing' ? "bg-red-50/50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30" :
+                        item.urgent ? "bg-amber-50/50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/30" : "bg-card border-border"
                       )}
                     >
                       <div className="text-left min-w-0 flex gap-4 items-center">
                         <div className={cn(
                           "p-3 rounded-2xl shadow-sm transition-transform group-hover:rotate-6", 
-                          item.type === 'Missing' ? "bg-red-100 text-red-600" :
-                          item.urgent ? "bg-amber-100 text-amber-600" : 
-                          item.type === 'Status' ? "bg-emerald-100 text-emerald-600" : 
-                          item.type === 'Lease' ? "bg-purple-100 text-purple-600" : 
-                          item.type === 'Repair' ? "bg-sky-100 text-sky-600" : "bg-primary/5 text-primary"
+                          item.type === 'Missing' ? "bg-red-100 dark:bg-red-900/30 text-red-600" :
+                          item.urgent ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600" : 
+                          item.type === 'Status' ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600" : 
+                          item.type === 'Lease' ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600" : 
+                          item.type === 'Repair' ? "bg-sky-100 dark:bg-sky-900/30 text-sky-600" : "bg-muted text-muted-foreground"
                         )}>
                           <item.icon className="w-5 h-5" />
                         </div>
                         <div className="min-w-0">
-                          <h4 className="font-bold text-[13px] font-headline text-primary leading-tight truncate pr-4">{item.title}</h4>
+                          <h4 className="font-bold text-[13px] font-headline text-foreground leading-tight truncate pr-4">{item.title}</h4>
                           <div className="flex items-center gap-3 mt-1.5">
                             <p className={cn(
                               "text-[9px] font-bold uppercase tracking-[0.1em] px-2 py-0.5 rounded-full",
-                              item.type === 'Status' ? "bg-emerald-100 text-emerald-700" : 
-                              item.type === 'Missing' ? "bg-red-100 text-red-700" : 
-                              item.type === 'Lease' ? "bg-purple-100 text-purple-700" : 
-                              item.type === 'Repair' ? "bg-sky-100 text-sky-700" : "bg-primary/5 text-muted-foreground"
+                              item.type === 'Status' ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" : 
+                              item.type === 'Missing' ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400" : 
+                              item.type === 'Lease' ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400" : 
+                              item.type === 'Repair' ? "bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400" : "bg-muted text-muted-foreground"
                             )}>{item.subtitle}</p>
                             {item.date && (
-                              <p className={cn("text-[10px] font-bold flex items-center opacity-60", item.urgent ? "text-amber-700" : "text-primary/60")}>
+                              <p className={cn("text-[10px] font-bold flex items-center opacity-60", item.urgent ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground")}>
                                 <CalendarIcon className="w-3 h-3 mr-1" /> {formatSafeDate(item.date)}
                               </p>
                             )}
                           </div>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" asChild className="h-9 w-9 rounded-2xl shrink-0 bg-primary/5 text-primary opacity-0 group-hover:opacity-100 transition-all">
+                      <Button variant="ghost" size="icon" asChild className="h-9 w-9 rounded-2xl shrink-0 bg-muted text-foreground opacity-0 group-hover:opacity-100 transition-all">
                         <Link href={item.type === 'Repair' ? '/landlord/maintenance' : `/landlord/properties/${item.propertyId}`}>
                           <ArrowRight className="w-4 h-4" />
                         </Link>
@@ -634,42 +634,42 @@ export default function LandlordDashboard() {
                   ))}
                 </div>
               ) : (
-                <div className="py-12 text-center bg-emerald-50/30 rounded-[2rem] border-2 border-dashed border-emerald-100">
+                <div className="py-12 text-center bg-emerald-50/30 dark:bg-emerald-900/10 rounded-[2rem] border-2 border-dashed border-emerald-100 dark:border-emerald-900/30">
                   <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-400 mb-4 animate-bounce" />
-                  <p className="text-[10px] text-emerald-700 font-bold uppercase tracking-[0.3em]">All Specs Verified</p>
+                  <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-[0.3em]">All Specs Verified</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden p-8 text-left">
-            <h3 className="font-bold font-headline text-lg mb-4">Tax Season Readiness</h3>
+          <Card className="border-none shadow-sm rounded-[2.5rem] bg-card overflow-hidden p-8 text-left">
+            <h3 className="font-bold font-headline text-lg mb-4 text-foreground">Tax Season Readiness</h3>
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-3">
                 <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" className="w-full rounded-xl border-primary/20 font-bold h-12">
+                    <Button variant="outline" className="w-full rounded-xl border-border font-bold h-12">
                       <Plus className="w-4 h-4 mr-2" /> Log Portfolio Expense
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="rounded-3xl border-none shadow-2xl p-0 overflow-hidden">
-                    <div className="p-8 bg-primary/5 border-b text-left">
-                      <DialogTitle className="text-xl font-bold font-headline text-primary">Log Manual Expense</DialogTitle>
+                  <DialogContent className="rounded-3xl border-none shadow-2xl p-0 overflow-hidden bg-card">
+                    <div className="p-8 bg-muted/20 border-b text-left">
+                      <DialogTitle className="text-xl font-bold font-headline text-foreground">Log Manual Expense</DialogTitle>
                       <DialogDescription className="font-medium text-muted-foreground">Record insurance, fees, or one-off costs for your tax ledger.</DialogDescription>
                     </div>
-                    <div className="p-8 space-y-6 text-left bg-white">
+                    <div className="p-8 space-y-6 text-left bg-card">
                       <div className="space-y-2">
-                        <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Expense Title</Label>
-                        <Input value={expTitle} onChange={(e) => setExpTitle(e.target.value)} placeholder="e.g. Landlord Insurance 2025" className="rounded-xl h-11 bg-muted/20 border-none font-bold" />
+                        <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Expense Title</Label>
+                        <Input value={expTitle} onChange={(e) => setExpTitle(e.target.value)} placeholder="e.g. Landlord Insurance 2025" className="rounded-xl h-11 bg-muted/20 border-none font-bold text-foreground" />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Amount (£)</Label>
-                          <Input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="0.00" className="rounded-xl h-11 bg-muted/20 border-none font-bold" />
+                          <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Amount (£)</Label>
+                          <Input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="0.00" className="rounded-xl h-11 bg-muted/20 border-none font-bold text-foreground" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Category</Label>
-                          <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-body" value={expCategory} onChange={(e) => setExpCategory(e.target.value)}>
+                          <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Category</Label>
+                          <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-body text-foreground" value={expCategory} onChange={(e) => setExpCategory(e.target.value)}>
                             <option value="insurance">Insurance</option>
                             <option value="legal">Legal/Professional</option>
                             <option value="management">Management Fees</option>
@@ -681,15 +681,15 @@ export default function LandlordDashboard() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label className="font-bold text-xs uppercase text-primary/60 font-headline">Assign to Asset</Label>
-                        <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-body" value={expPropertyId} onChange={(e) => setExpPropertyId(e.target.value)}>
+                        <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Assign to Asset</Label>
+                        <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-body text-foreground" value={expPropertyId} onChange={(e) => setExpPropertyId(e.target.value)}>
                           <option value="">Choose a property...</option>
                           {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
                         </select>
                       </div>
                     </div>
-                    <DialogFooter className="p-8 bg-muted/5 border-t">
-                      <Button className="w-full rounded-xl h-12 font-bold bg-primary text-white shadow-lg" onClick={handleLogManualExpense} disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
+                    <DialogFooter className="p-8 bg-muted/20 border-t">
+                      <Button className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-lg" onClick={handleLogManualExpense} disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
                         {isSavingExpense ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                         Commit to Ledger
                       </Button>
@@ -698,7 +698,7 @@ export default function LandlordDashboard() {
                 </Dialog>
 
                 <Button 
-                  className="w-full rounded-xl bg-primary text-white font-bold h-12 shadow-lg shadow-primary/10" 
+                  className="w-full rounded-xl bg-primary text-primary-foreground font-bold h-12 shadow-lg shadow-primary/10" 
                   onClick={downloadExpenseLedger}
                 >
                   <Download className="w-4 h-4 mr-2" />

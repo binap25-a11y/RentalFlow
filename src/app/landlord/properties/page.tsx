@@ -45,7 +45,7 @@ export default function PropertiesPage() {
           <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Portfolio Inventory</h1>
           <p className="text-muted-foreground font-medium font-body">Monitoring and managing your unique property assets.</p>
         </div>
-        <Button asChild className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-6 shadow-lg shadow-primary/20 text-white">
+        <Button asChild className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-6 shadow-lg shadow-primary/20 text-primary-foreground">
           <Link href="/landlord/properties/new"><Plus className="w-4 h-4 mr-2" /> Register New Asset</Link>
         </Button>
       </div>
@@ -57,16 +57,16 @@ export default function PropertiesPage() {
             <p className="text-muted-foreground font-medium font-body uppercase tracking-widest text-xs">Syncing Portfolio Ledger</p>
           </div>
         ) : !properties || properties.length === 0 ? (
-          <div className="col-span-full py-24 text-center flex flex-col items-center justify-center bg-muted/10 rounded-[2rem] border-2 border-dashed border-primary/20">
-            <Building2 className="w-16 h-16 text-primary/20 mb-6" />
-            <h3 className="text-xl font-headline font-bold text-primary/40 mb-2">No Assets Found</h3>
-            <Button variant="outline" asChild className="rounded-xl font-bold border-primary/20 text-primary mt-6">
+          <div className="col-span-full py-24 text-center flex flex-col items-center justify-center bg-card rounded-[2rem] border-2 border-dashed border-border">
+            <Building2 className="w-16 h-16 text-muted-foreground/20 mb-6" />
+            <h3 className="text-xl font-headline font-bold text-muted-foreground/40 mb-2">No Assets Found</h3>
+            <Button variant="outline" asChild className="rounded-xl font-bold border-border text-foreground mt-6">
               <Link href="/landlord/properties/new">Add First Asset</Link>
             </Button>
           </div>
         ) : (
           properties.map((property) => (
-            <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card border border-transparent hover:border-primary/5">
+            <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card border border-transparent hover:border-accent/10">
               <div className="relative aspect-video w-full overflow-hidden bg-muted">
                 <Image 
                   src={getResolvedImageUrl(property.imageUrl, property.imageUrls)} 
@@ -81,21 +81,21 @@ export default function PropertiesPage() {
                 </Badge>
               </div>
               <CardHeader className="pb-2 text-left space-y-1">
-                <Badge variant="outline" className="text-[10px] uppercase font-bold text-primary/60 border-primary/10 w-fit tracking-widest">{property.propertyType}</Badge>
-                <CardTitle className="text-lg font-bold font-headline truncate tracking-tight">{property.addressLine1}</CardTitle>
-                <p className="text-sm text-muted-foreground flex items-center font-medium font-body"><MapPin className="w-3 h-3 mr-1 text-primary/30" /> {property.city}, {property.zipCode}</p>
+                <Badge variant="outline" className="text-[10px] uppercase font-bold text-accent border-accent/20 w-fit tracking-widest">{property.propertyType}</Badge>
+                <CardTitle className="text-lg font-bold font-headline truncate tracking-tight text-foreground">{property.addressLine1}</CardTitle>
+                <p className="text-sm text-muted-foreground flex items-center font-medium font-body"><MapPin className="w-3 h-3 mr-1 text-muted-foreground/30" /> {property.city}, {property.zipCode}</p>
               </CardHeader>
               <CardContent className="pb-4 text-left">
                 <div className="flex gap-4 items-center mb-4">
-                  <span className="flex items-center text-xs font-bold text-primary/60 font-headline uppercase"><Bed className="w-3.5 h-3.5 mr-1" /> {property.numberOfBedrooms || 1} Bed</span>
-                  <span className="flex items-center text-xs font-bold text-primary/60 font-headline uppercase"><Bath className="w-3.5 h-3.5 mr-1" /> {property.numberOfBathrooms || 1} Bath</span>
+                  <span className="flex items-center text-xs font-bold text-muted-foreground font-headline uppercase"><Bed className="w-3.5 h-3.5 mr-1" /> {property.numberOfBedrooms || 1} Bed</span>
+                  <span className="flex items-center text-xs font-bold text-muted-foreground font-headline uppercase"><Bath className="w-3.5 h-3.5 mr-1" /> {property.numberOfBathrooms || 1} Bath</span>
                 </div>
-                <p className="text-xl font-bold text-primary font-headline tracking-tighter">£{property.rentAmount}<span className="text-xs text-muted-foreground font-medium"> / month</span></p>
+                <p className="text-xl font-bold text-foreground font-headline tracking-tighter">£{property.rentAmount}<span className="text-xs text-muted-foreground font-medium"> / month</span></p>
               </CardContent>
-              <CardFooter className="flex gap-2 pt-4 border-t border-primary/5">
+              <CardFooter className="flex gap-2 pt-4 border-t border-border">
                 <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-10 font-headline" asChild><Link href={`/landlord/properties/${property.id}`}>Manage</Link></Button>
                 <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-10 font-headline" asChild><Link href={`/landlord/properties/${property.id}/edit`}>Edit</Link></Button>
-                <Button variant="ghost" size="icon" className="rounded-xl h-10 text-destructive/40 hover:text-destructive hover:bg-destructive/5 transition-all" onClick={() => handleDeleteProperty(property.id)}><Trash2 className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" className="rounded-xl h-10 text-destructive/40 hover:text-destructive hover:bg-destructive/10 transition-all" onClick={() => handleDeleteProperty(property.id)}><Trash2 className="w-4 h-4" /></Button>
               </CardFooter>
             </Card>
           ))
