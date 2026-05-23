@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +6,7 @@ import {
   ShieldAlert, Loader2, CheckCircle2,
   Calendar as CalendarIcon, Zap, ClipboardList, AlertTriangle,
   PoundSterling, PieChart as PieChartIcon, ArrowUpRight, ArrowDownRight,
-  Target, Download, Plus, Save, Users, Wrench, Clock, ReceiptText
+  Target, Download, Plus, Save, Users, Wrench, Clock, ReceiptText, BellRing
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
@@ -34,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { collection, doc, serverTimestamp, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { sendRentReminderEmail, sendRentReceiptEmail } from "@/lib/actions/email-actions";
 
 const COLORS = ['hsl(var(--accent))', '#10b981', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6'];
 
@@ -59,18 +59,6 @@ export default function LandlordDashboard() {
   }, [db, user]);
   const { data: maintenance } = useCollection(maintenanceQuery);
 
-  const documentsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return getLandlordCollectionQuery(db, "documents", user.uid);
-  }, [db, user]);
-  const { data: documents } = useCollection(documentsQuery);
-
-  const inspectionsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return getLandlordCollectionQuery(db, "inspections", user.uid);
-  }, [db, user]);
-  const { data: inspections } = useCollection(inspectionsQuery);
-
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return getLandlordCollectionQuery(db, "tenantProfiles", user.uid);
@@ -95,6 +83,7 @@ export default function LandlordDashboard() {
   const [expCategory, setExpCategory] = useState('other');
   const [expPropertyId, setExpPropertyId] = useState('');
   const [expTitle, setExpTitle] = useState('');
+  const [isReminding, setIsReminding] = useState<string | null>(null);
 
   const financialStats = useMemo(() => {
     if (!isClient || !properties || !maintenance) return null;
@@ -126,13 +115,13 @@ export default function LandlordDashboard() {
     };
   }, [properties, maintenance, currentMonthPayments, isClient]);
 
-  const handleMarkAsPaid = (property: any) => {
+  const handleMarkAsPaid = async (property: any) => {
     if (!user || !db) return;
     const now = new Date();
     const paymentId = `${property.id}_${now.getFullYear()}_${now.getMonth() + 1}`;
     const paymentRef = doc(db, 'rentPayments', paymentId);
 
-    setDocumentNonBlocking(paymentRef, {
+    const paymentData = {
       id: paymentId,
       propertyId: property.id,
       landlordId: user.uid,
@@ -144,9 +133,52 @@ export default function LandlordDashboard() {
       memberIds: property.memberIds || [user.uid],
       paidAt: now.toISOString(),
       updatedAt: serverTimestamp(),
-    }, { merge: true });
+    };
 
-    toast({ title: "Rent Verified", description: `Payment recorded for ${property.addressLine1}` });
+    setDocumentNonBlocking(paymentRef, paymentData, { merge: true });
+
+    // Send Digital Receipt
+    const tenant = tenants?.find(t => property.tenantIds?.includes(t.userId));
+    if (tenant?.email) {
+      await sendRentReceiptEmail({
+        tenantEmail: tenant.email,
+        tenantName: `${tenant.firstName} ${tenant.lastName}`,
+        propertyAddress: property.addressLine1,
+        amount: property.rentAmount || 0,
+        month: format(now, 'MMMM yyyy'),
+        paymentDate: format(now, 'PPp')
+      });
+    }
+
+    toast({ title: "Rent Verified", description: `Receipt dispatched for ${property.addressLine1}` });
+  };
+
+  const handleSendReminder = async (property: any) => {
+    if (!user || !db) return;
+    const tenant = tenants?.find(t => property.tenantIds?.includes(t.userId));
+    
+    if (!tenant?.email) {
+      toast({ variant: "destructive", title: "Missing Contact", description: "No email on file for this asset's resident." });
+      return;
+    }
+
+    setIsReminding(property.id);
+    const now = new Date();
+
+    try {
+      await sendRentReminderEmail({
+        tenantEmail: tenant.email,
+        tenantName: `${tenant.firstName} ${tenant.lastName}`,
+        propertyAddress: property.addressLine1,
+        amount: property.rentAmount || 0,
+        month: format(now, 'MMMM yyyy')
+      });
+      toast({ title: "Reminder Dispatched", description: `Professional notice sent to ${tenant.firstName}.` });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Reminder Failed" });
+    } finally {
+      setIsReminding(null);
+    }
   };
 
   const downloadStatement = async () => {
@@ -223,19 +255,6 @@ export default function LandlordDashboard() {
     toast({ title: "Statement Generated", description: "Your rental ledger has been downloaded." });
   };
 
-  const expenseBreakdown = useMemo(() => {
-    if (!isClient || !maintenance) return [];
-    const categories: Record<string, number> = {};
-    maintenance.forEach(req => {
-      const cat = req.category || 'other';
-      const cost = Number(req.cost) || 0;
-      if (cost > 0) {
-        categories[cat] = (categories[cat] || 0) + cost;
-      }
-    });
-    return Object.entries(categories).map(([name, value]) => ({ name, value }));
-  }, [maintenance, isClient]);
-
   const chartData = useMemo(() => {
     if (!isClient || !properties) return [];
     return properties.map(p => ({
@@ -290,7 +309,7 @@ export default function LandlordDashboard() {
           <p className="text-muted-foreground font-medium font-body max-w-lg">Real-time portfolio command and high-yield operational analytics.</p>
         </div>
         <div className="flex items-center gap-4">
-          <Button className="rounded-2xl h-11 px-6 font-bold bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all" asChild>
+          <Button className="rounded-2xl h-11 px-6 font-bold bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all text-white" asChild>
             <Link href="/landlord/properties/new">Register New Asset</Link>
           </Button>
         </div>
@@ -398,13 +417,13 @@ export default function LandlordDashboard() {
           </Card>
 
           <Card className="border-none shadow-sm rounded-[2.5rem] bg-card overflow-hidden">
-            <CardHeader className="text-left px-10 pt-10 pb-4 border-b border-border flex flex-row items-center justify-between">
+            <CardHeader className="text-left px-10 pt-10 pb-4 border-b border-border flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <CardTitle className="text-2xl font-headline flex items-center text-foreground">
                 <ReceiptText className="w-6 h-6 mr-3 text-accent" />
                 Real-Time Collection Suite
               </CardTitle>
               <Button variant="outline" size="sm" onClick={downloadStatement} className="rounded-xl border-accent/20 text-accent font-bold h-10 px-6">
-                <Download className="w-4 h-4 mr-2" /> Download Ledger Statement
+                <Download className="w-4 h-4 mr-2" /> Export Portfolio Ledger
               </Button>
             </CardHeader>
             <CardContent className="p-0">
@@ -443,12 +462,26 @@ export default function LandlordDashboard() {
                              </Badge>
                            </td>
                            <td className="px-10 py-6 text-right">
-                              {!isPaid && (
-                                <Button size="sm" className="rounded-xl h-9 font-bold bg-primary text-white" onClick={() => handleMarkAsPaid(prop)}>
-                                  Confirm Receipt
-                                </Button>
-                              )}
-                              {isPaid && <CheckCircle2 className="w-5 h-5 text-emerald-500 ml-auto" />}
+                              <div className="flex items-center justify-end gap-2">
+                                {!isPaid && (
+                                  <>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="rounded-xl h-9 font-bold text-muted-foreground" 
+                                      onClick={() => handleSendReminder(prop)}
+                                      disabled={isReminding === prop.id}
+                                    >
+                                      {isReminding === prop.id ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <BellRing className="w-3.5 h-3.5 mr-2" />}
+                                      Remind
+                                    </Button>
+                                    <Button size="sm" className="rounded-xl h-9 font-bold bg-primary text-white" onClick={() => handleMarkAsPaid(prop)}>
+                                      Confirm Receipt
+                                    </Button>
+                                  </>
+                                )}
+                                {isPaid && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
+                              </div>
                            </td>
                          </tr>
                        );
@@ -525,13 +558,13 @@ export default function LandlordDashboard() {
                       </div>
                       <div className="space-y-2">
                         <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Assign to Asset</Label>
-                        <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-body text-foreground" value={expPropertyId} onChange={(e) => setExpPropertyId(e.target.value)}>
+                        <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-body text-foreground" value={expPropertyId} onChange={(e) => setExpPropertyId(e.target.value)}>
                           <option value="">Choose a property...</option>
                           {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
                         </select>
                       </div>
                     </div>
-                    <DialogFooter className="p-8 bg-muted/20 border-t">
+                    <DialogFooter className="p-8 bg-muted/10 border-t">
                       <Button className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-lg" onClick={handleLogManualExpense} disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
                         {isSavingExpense ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                         Commit to Ledger
@@ -547,4 +580,3 @@ export default function LandlordDashboard() {
     </div>
   );
 }
-

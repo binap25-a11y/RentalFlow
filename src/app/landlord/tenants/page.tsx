@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -30,6 +29,7 @@ import {
 import { Users, Plus, Mail, Phone, Trash2, Search, Loader2, UserX, Edit3, CalendarDays } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { sendTenantWelcomeEmail } from '@/lib/actions/email-actions';
 
 export default function TenantsPage() {
   const { user } = useUser();
@@ -124,7 +124,15 @@ export default function TenantsPage() {
         updatedAt: serverTimestamp(),
       });
 
-      toast({ title: "Resident Assigned", description: "Resident profile synchronized with asset." });
+      // Send Welcome Email
+      const property = properties?.find(p => p.id === selectedPropertyId);
+      await sendTenantWelcomeEmail({
+        tenantEmail: email.toLowerCase().trim(),
+        tenantName: firstName,
+        propertyAddress: property?.addressLine1 || 'Property Asset'
+      });
+
+      toast({ title: "Resident Assigned", description: "Welcome email dispatched to resident." });
     }
 
     setIsDialogOpen(false);
@@ -172,7 +180,7 @@ export default function TenantsPage() {
                 </DialogDescription>
               </DialogHeader>
               
-              <div className="flex-1 overflow-y-auto p-8 space-y-6 text-left">
+              <div className="flex-1 overflow-y-auto p-8 space-y-6 text-left bg-card">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="firstName" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">First Name</Label>
@@ -237,7 +245,7 @@ export default function TenantsPage() {
         />
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden rounded-[2rem] bg-white">
+      <Card className="border-none shadow-sm overflow-hidden rounded-[2rem] bg-card">
         <CardContent className="p-0">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4">
