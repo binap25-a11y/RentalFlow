@@ -96,6 +96,7 @@ export default function AuthPage() {
         lastName: lastName.trim(),
         phoneNumber: phoneNumber.trim(),
         role: role,
+        plan: "free", // Initialize with basic access
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       }, { merge: true });

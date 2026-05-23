@@ -10,7 +10,7 @@ import {
   Target, Download, Plus, Save, Users, Wrench, Clock, ReceiptText, BellRing,
   Crown, Sparkles
 } from "lucide-react";
-import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking } from "@/firebase";
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -51,6 +51,13 @@ export default function LandlordDashboard() {
       toast({ title: "Premium Activated", description: "Your high-yield management tools are now live." });
     }
   }, [toast]);
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, 'users', user.uid);
+  }, [db, user]);
+  const { data: profile } = useDoc(userDocRef);
+  const isPro = profile?.plan === 'pro';
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -218,6 +225,11 @@ export default function LandlordDashboard() {
   };
 
   const downloadStatement = async () => {
+    if (!isPro) {
+      toast({ title: "Pro Feature", description: "Upgrade to Pro to export professional PDF ledgers." });
+      return;
+    }
+
     if (!properties || !financialStats) return;
     
     const { jsPDF } = await import("jspdf");
@@ -345,10 +357,17 @@ export default function LandlordDashboard() {
           <p className="text-muted-foreground font-medium font-body max-w-lg">Real-time portfolio command and high-yield operational analytics.</p>
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="outline" className="rounded-2xl h-11 px-6 font-bold border-accent/20 text-accent bg-accent/5 hover:bg-accent/10 transition-all" onClick={upgradeToPro} disabled={isUpgrading}>
-            {isUpgrading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Crown className="w-4 h-4 mr-2" />}
-            Upgrade to Premium
-          </Button>
+          {!isPro ? (
+            <Button variant="outline" className="rounded-2xl h-11 px-6 font-bold border-accent/20 text-accent bg-accent/5 hover:bg-accent/10 transition-all" onClick={upgradeToPro} disabled={isUpgrading}>
+              {isUpgrading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Crown className="w-4 h-4 mr-2" />}
+              Upgrade to Premium – £10/month
+            </Button>
+          ) : (
+            <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100">
+               <ShieldCheck className="w-4 h-4" />
+               <span className="text-[10px] font-bold uppercase tracking-widest font-headline">Premium Plan Active</span>
+            </div>
+          )}
           <Button className="rounded-2xl h-11 px-6 font-bold bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all text-white" asChild>
             <Link href="/landlord/properties/new">Register New Asset</Link>
           </Button>
@@ -451,7 +470,7 @@ export default function LandlordDashboard() {
                         <Cell key={`cell-${index}`} fill={index === 0 ? 'hsl(var(--accent))' : 'hsl(var(--accent) / 0.4)'} />
                       ))}
                     </Bar>
-                  </BarChart>
+                  </Chart>
                </ResponsiveContainer>
             </CardContent>
           </Card>
@@ -462,7 +481,7 @@ export default function LandlordDashboard() {
                 <ReceiptText className="w-6 h-6 mr-3 text-accent" />
                 Real-Time Collection Suite
               </CardTitle>
-              <Button variant="outline" size="sm" onClick={downloadStatement} className="rounded-xl border-accent/20 text-accent font-bold h-10 px-6">
+              <Button variant="outline" size="sm" onClick={downloadStatement} className={cn("rounded-xl border-accent/20 text-accent font-bold h-10 px-6", !isPro && "opacity-50 cursor-not-allowed")}>
                 <Download className="w-4 h-4 mr-2" /> Export Portfolio Ledger
               </Button>
             </CardHeader>
@@ -558,20 +577,22 @@ export default function LandlordDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm rounded-[2.5rem] bg-primary text-white overflow-hidden p-8 text-left relative">
-            <div className="absolute top-0 right-0 p-4 opacity-20">
-              <Crown className="w-12 h-12" />
-            </div>
-            <div className="relative z-10 space-y-4">
-               <h3 className="font-bold font-headline text-lg flex items-center gap-2">
-                 <Sparkles className="w-5 h-5 text-accent" /> Premium Management
-               </h3>
-               <p className="text-sm opacity-80 leading-relaxed font-body">Unlock high-fidelity AI triage, unlimited asset history, and custom professional branding.</p>
-               <Button className="w-full rounded-xl bg-white text-primary hover:bg-white/90 font-bold h-12 shadow-xl shadow-black/20" onClick={upgradeToPro} disabled={isUpgrading}>
-                  {isUpgrading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Unlock Premium Suite"}
-               </Button>
-            </div>
-          </Card>
+          {!isPro && (
+            <Card className="border-none shadow-sm rounded-[2.5rem] bg-primary text-white overflow-hidden p-8 text-left relative">
+              <div className="absolute top-0 right-0 p-4 opacity-20">
+                <Crown className="w-12 h-12" />
+              </div>
+              <div className="relative z-10 space-y-4">
+                 <h3 className="font-bold font-headline text-lg flex items-center gap-2">
+                   <Sparkles className="w-5 h-5 text-accent" /> Premium Management
+                 </h3>
+                 <p className="text-sm opacity-80 leading-relaxed font-body">Unlock high-fidelity AI triage, unlimited asset history, and custom professional branding.</p>
+                 <Button className="w-full rounded-xl bg-white text-primary hover:bg-white/90 font-bold h-12 shadow-xl shadow-black/20" onClick={upgradeToPro} disabled={isUpgrading}>
+                    {isUpgrading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Unlock Premium Suite"}
+                 </Button>
+              </div>
+            </Card>
+          )}
 
           <Card className="border-none shadow-sm rounded-[2.5rem] bg-card overflow-hidden p-8 text-left">
             <h3 className="font-bold font-headline text-lg mb-4 text-foreground">Tax Season Readiness</h3>
