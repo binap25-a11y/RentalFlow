@@ -207,7 +207,7 @@ export function Header({ role }: HeaderProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 hover:bg-primary/5 dark:hover:bg-slate-900 p-1 rounded-full transition-all outline-none group border border-transparent hover:border-primary/10">
-              <Avatar className="h-9 w-9 border-2 border-primary/20 dark:border-slate-800 shadow-md ring-2 ring-white dark:ring-slate-950 transition-transform group-hover:scale-105">
+              <Avatar className="h-9 w-9 border-2 border-primary dark:border-primary shadow-lg ring-2 ring-primary/20 dark:ring-primary/40 transition-transform group-hover:scale-105">
                 <AvatarImage src={user?.photoURL || undefined} />
                 <AvatarFallback className="bg-primary text-white text-xs font-bold font-headline">
                   {userName[0].toUpperCase()}
