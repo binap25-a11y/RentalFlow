@@ -470,7 +470,7 @@ export default function LandlordDashboard() {
                         <Cell key={`cell-${index}`} fill={index === 0 ? 'hsl(var(--accent))' : 'hsl(var(--accent) / 0.4)'} />
                       ))}
                     </Bar>
-                  </Chart>
+                  </BarChart>
                </ResponsiveContainer>
             </CardContent>
           </Card>
