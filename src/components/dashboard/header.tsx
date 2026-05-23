@@ -206,8 +206,8 @@ export function Header({ role }: HeaderProps) {
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 hover:bg-primary/5 dark:hover:bg-slate-900 p-1 rounded-full transition-all outline-none border border-transparent hover:border-primary/10">
-              <Avatar className="h-9 w-9 border-2 border-white dark:border-slate-800 shadow-sm ring-1 ring-primary/5">
+            <button className="flex items-center gap-2 hover:bg-primary/5 dark:hover:bg-slate-900 p-1 rounded-full transition-all outline-none group border border-transparent hover:border-primary/10">
+              <Avatar className="h-9 w-9 border-2 border-primary/20 dark:border-slate-800 shadow-md ring-2 ring-white dark:ring-slate-950 transition-transform group-hover:scale-105">
                 <AvatarImage src={user?.photoURL || undefined} />
                 <AvatarFallback className="bg-primary text-white text-xs font-bold font-headline">
                   {userName[0].toUpperCase()}
@@ -217,15 +217,15 @@ export function Header({ role }: HeaderProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-72 mt-2 rounded-[1.5rem] border-none shadow-2xl p-2 bg-white dark:bg-slate-950 animate-in fade-in zoom-in-95">
             <DropdownMenuLabel className="font-normal px-4 py-4 text-left">
-              <div className="flex flex-col space-y-2">
+              <div className="flex flex-col space-y-3">
                 <div className="space-y-0.5">
                   <p className="text-sm font-bold leading-none font-headline text-primary dark:text-slate-100">{userName}</p>
-                  <p className="text-[10px] leading-none text-muted-foreground truncate opacity-70">
+                  <p className="text-[10px] leading-none text-muted-foreground truncate opacity-70 mt-1">
                     {user?.email}
                   </p>
                 </div>
-                <div className="pt-1">
-                  <Badge className="bg-primary/10 text-primary border-primary/20 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full">
+                <div>
+                  <Badge className="bg-primary text-white border-none text-[9px] font-bold uppercase tracking-[0.1em] px-3 py-1 rounded-full shadow-sm">
                     {role} account
                   </Badge>
                 </div>
@@ -238,7 +238,7 @@ export function Header({ role }: HeaderProps) {
               <DropdownMenuItem className="cursor-pointer py-2.5 rounded-xl font-bold font-headline focus:bg-primary/5 dark:focus:bg-slate-900 text-primary/70 dark:text-slate-400 focus:text-primary dark:focus:text-slate-100" asChild>
                  <Link href={dashboardHref}>
                   <LayoutDashboard className="mr-3 h-4 w-4" />
-                  <span>My Hub</span>
+                  <span>Financial Overview</span>
                  </Link>
               </DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer py-2.5 rounded-xl font-bold font-headline focus:bg-primary/5 dark:focus:bg-slate-900 text-primary/70 dark:text-slate-400 focus:text-primary dark:focus:text-slate-100" asChild>
@@ -255,7 +255,7 @@ export function Header({ role }: HeaderProps) {
               <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-2">
                   {isDarkMode ? <Moon className="h-4 w-4 text-slate-400" /> : <Sun className="h-4 w-4 text-amber-500" />}
-                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Dark Mode</span>
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Dark Mode</span>
                 </div>
                 <Switch 
                   checked={isDarkMode} 
@@ -265,19 +265,19 @@ export function Header({ role }: HeaderProps) {
               </div>
 
               <div className="px-2 space-y-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                   <Clock className="h-4 w-4" />
                   <span>Session Security</span>
                 </div>
                 <Select value={sessionTime} onValueChange={handleSessionChange}>
-                  <SelectTrigger className="h-9 w-full bg-slate-50 dark:bg-slate-900 border-none rounded-lg text-xs font-bold font-headline">
+                  <SelectTrigger className="h-9 w-full bg-slate-50 dark:bg-slate-900 border-none rounded-lg text-[10px] font-bold font-headline">
                     <SelectValue placeholder="Session limit" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-none shadow-xl">
-                    <SelectItem value="15" className="text-xs font-bold">15 Minutes</SelectItem>
-                    <SelectItem value="30" className="text-xs font-bold">30 Minutes</SelectItem>
-                    <SelectItem value="60" className="text-xs font-bold">60 Minutes</SelectItem>
-                    <SelectItem value="720" className="text-xs font-bold">12 Hours</SelectItem>
+                    <SelectItem value="15" className="text-[10px] font-bold">15 Minutes</SelectItem>
+                    <SelectItem value="30" className="text-[10px] font-bold">30 Minutes</SelectItem>
+                    <SelectItem value="60" className="text-[10px] font-bold">60 Minutes</SelectItem>
+                    <SelectItem value="720" className="text-[10px] font-bold">12 Hours</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
