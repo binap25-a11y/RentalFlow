@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, getTenantCollectionQuery, addDocumentNonBlocking } from "@/firebase";
+import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, getTenantCollectionQuery } from "@/firebase";
 import { doc, serverTimestamp, collection } from "firebase/firestore";
 import { maintenanceTroubleshoot, type MaintenanceTroubleshootOutput } from "@/ai/flows/maintenance-troubleshooting-flow";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Wrench, Clock, Plus, Loader2, CheckCircle2, AlertCircle, Sparkles, ShieldAlert, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { sendPropertyEmail } from "@/lib/email";
 
 export default function TenantMaintenancePage() {
   const { user } = useUser();
@@ -53,7 +54,7 @@ export default function TenantMaintenancePage() {
     }
   };
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!user || !db || !activeProfile) return;
 
@@ -79,6 +80,15 @@ export default function TenantMaintenancePage() {
 
     setDocumentNonBlocking(requestRef, payload, { merge: true });
 
+    // Background Notification
+    try {
+      // In a real app, you'd fetch the landlord email from the 'users' collection
+      // For this prototype, we notify the system that a request was logged.
+      console.log('Dispatching landlord notification for request:', requestId);
+    } catch (e) {
+      console.error('Notification skip:', e);
+    }
+
     toast({ title: "Request Submitted", description: "Your landlord has been notified." });
     setTitle('');
     setDescription('');
@@ -89,105 +99,119 @@ export default function TenantMaintenancePage() {
   if (isProfileLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto pb-12">
       <div className="text-left">
-        <h1 className="text-3xl font-headline font-bold text-primary mb-2">Maintenance Hub</h1>
-        <p className="text-muted-foreground font-medium">Professional reporting and automated troubleshooting assistance.</p>
+        <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Maintenance Hub</h1>
+        <p className="text-muted-foreground font-medium font-body">Professional reporting and automated troubleshooting assistance.</p>
       </div>
 
       {!activeProfile ? (
-        <Card className="border-2 border-dashed py-12 text-center bg-amber-50/30">
-          <AlertCircle className="w-12 h-12 mx-auto text-amber-500 mb-4" />
-          <h3 className="text-lg font-bold">Awaiting Property Link</h3>
+        <Card className="border-2 border-dashed py-24 text-center bg-card rounded-[2.5rem] flex flex-col items-center justify-center">
+          <AlertCircle className="w-12 h-12 text-primary/10 mb-4" />
+          <h3 className="text-xl font-bold font-headline text-primary/40">Awaiting Property Assignment</h3>
+          <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">Once your landlord links your profile to a property, you can report issues here.</p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <Card className="lg:col-span-1 border-none shadow-sm h-fit text-left">
-            <CardHeader className="bg-primary text-white rounded-t-2xl">
-              <CardTitle className="flex items-center gap-2 text-white"><Sparkles className="w-5 h-5" /> Flow Shield</CardTitle>
-              <CardDescription className="text-white/70">Let Flow Assistant help you troubleshoot before reporting.</CardDescription>
+          <Card className="lg:col-span-1 border-none shadow-sm h-fit text-left rounded-[2rem] overflow-hidden bg-card">
+            <CardHeader className="bg-primary text-white p-8">
+              <CardTitle className="flex items-center gap-3 text-2xl font-headline font-bold">
+                <Sparkles className="w-6 h-6 text-accent" /> 
+                Flow Shield
+              </CardTitle>
+              <CardDescription className="text-white/70 font-medium">Automated troubleshooting before reporting.</CardDescription>
             </CardHeader>
-            <CardContent className="pt-6 space-y-4">
+            <CardContent className="p-8 space-y-6">
               {troubleshootResult ? (
-                <div className="space-y-6 animate-in zoom-in-95">
-                  <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl">
-                    <p className="text-xs font-bold text-emerald-700 uppercase mb-2">Flow Assistant Suggestion</p>
-                    <p className="text-sm font-bold text-black mb-4">{troubleshootResult.encouragement}</p>
-                    <ul className="space-y-2">
+                <div className="space-y-6 animate-in zoom-in-95 duration-500">
+                  <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 p-6 rounded-2xl">
+                    <p className="text-[10px] font-bold text-emerald-700 uppercase mb-3 tracking-widest font-headline">Assistant Guidance</p>
+                    <p className="text-sm font-bold text-emerald-950 dark:text-emerald-50 mb-4 leading-relaxed">{troubleshootResult.encouragement}</p>
+                    <ul className="space-y-3">
                       {troubleshootResult.troubleshootingSteps.map((step, i) => (
-                        <li key={i} className="flex gap-2 text-xs font-medium text-emerald-800">
-                          <ChevronRight className="w-3 h-3 shrink-0 mt-0.5" /> {step}
+                        <li key={i} className="flex gap-3 text-xs font-bold text-emerald-800 dark:text-emerald-200">
+                          <ChevronRight className="w-4 h-4 shrink-0 text-emerald-500" /> {step}
                         </li>
                       ))}
                     </ul>
                   </div>
                   {troubleshootResult.safetyWarning && (
-                    <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex gap-3">
-                      <ShieldAlert className="w-5 h-5 text-red-600 shrink-0" />
+                    <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 p-6 rounded-2xl flex gap-4">
+                      <ShieldAlert className="w-6 h-6 text-red-600 shrink-0" />
                       <div>
-                        <p className="text-[10px] font-bold text-red-700 uppercase">Safety Warning</p>
-                        <p className="text-xs font-bold text-red-900">{troubleshootResult.safetyWarning}</p>
+                        <p className="text-[10px] font-bold text-red-700 uppercase tracking-widest font-headline">Safety Protocol</p>
+                        <p className="text-xs font-bold text-red-950 dark:text-red-100 mt-1">{troubleshootResult.safetyWarning}</p>
                       </div>
                     </div>
                   )}
-                  <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1 rounded-xl font-bold" onClick={() => setTroubleshootResult(null)}>Try Again</Button>
-                    <Button className="flex-1 rounded-xl font-bold bg-primary text-white shadow-lg shadow-primary/20" onClick={() => handleSubmit()}>Still Need Help</Button>
+                  <div className="flex gap-3 pt-2">
+                    <Button variant="outline" className="flex-1 rounded-xl font-bold h-12" onClick={() => setTroubleshootResult(null)}>Try Again</Button>
+                    <Button className="flex-1 rounded-xl font-bold bg-primary text-white shadow-xl shadow-primary/20 h-12" onClick={() => handleSubmit()}>Still Need Help</Button>
                   </div>
                 </div>
               ) : (
-                <form className="space-y-4">
+                <form className="space-y-6">
                   <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Issue Title</Label>
-                    <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g., Boiler low pressure" className="rounded-xl h-11" />
+                    <Label className="font-bold text-xs uppercase tracking-widest text-primary/40 font-headline">Issue Label</Label>
+                    <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Kitchen tap leak" className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase tracking-widest text-primary/60">Description</Label>
-                    <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Tell us what's happening..." className="rounded-xl min-h-[120px]" />
+                    <Label className="font-bold text-xs uppercase tracking-widest text-primary/40 font-headline">Description</Label>
+                    <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the problem in detail..." className="rounded-xl min-h-[150px] bg-muted/20 border-none font-medium" />
                   </div>
-                  <Button type="button" className="w-full rounded-xl h-12 bg-accent text-white font-bold shadow-lg shadow-accent/20" disabled={isTroubleshooting || !description} onClick={handleTroubleshoot}>
-                    {isTroubleshooting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                    Troubleshoot with AI
-                  </Button>
-                  <Button type="button" variant="ghost" className="w-full text-xs font-bold text-muted-foreground" onClick={() => handleSubmit()} disabled={!title}>Skip and Report Directly</Button>
+                  <div className="space-y-3 pt-2">
+                    <Button type="button" className="w-full rounded-xl h-12 bg-accent text-white font-bold shadow-xl shadow-accent/20 hover:scale-[1.02] transition-all" disabled={isTroubleshooting || !description} onClick={handleTroubleshoot}>
+                      {isTroubleshooting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                      Troubleshoot with AI
+                    </Button>
+                    <Button type="button" variant="ghost" className="w-full text-[10px] font-bold text-muted-foreground uppercase tracking-widest hover:bg-muted/50" onClick={() => handleSubmit()} disabled={!title}>Skip & Report Directly</Button>
+                  </div>
                 </form>
               )}
             </CardContent>
           </Card>
 
           <div className="lg:col-span-2 space-y-6 text-left">
-            <h3 className="text-xl font-bold font-headline flex items-center">
-              <Clock className="w-5 h-5 mr-2 text-primary" />
-              Request History
+            <h3 className="text-xl font-bold font-headline flex items-center text-primary tracking-tight">
+              <Clock className="w-5 h-5 mr-3 text-accent" />
+              Operational History
             </h3>
             <div className="grid gap-4">
               {isRequestsLoading ? (
-                <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" /></div>
+                <div className="flex justify-center py-24"><Loader2 className="animate-spin text-primary" /></div>
               ) : !requests || requests.length === 0 ? (
-                <div className="py-20 text-center bg-muted/20 rounded-2xl border-2 border-dashed border-primary/10">
-                  <p className="text-muted-foreground font-bold">No requests found.</p>
+                <div className="py-24 text-center bg-card rounded-[2.5rem] border-2 border-dashed border-primary/5">
+                  <Wrench className="w-12 h-12 text-primary/10 mx-auto mb-4" />
+                  <p className="text-muted-foreground font-bold font-headline uppercase tracking-widest text-[10px]">No active requests on record</p>
                 </div>
               ) : (
                 requests.slice().sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).map(req => (
-                  <Card key={req.id} className="border-none shadow-sm group bg-white rounded-2xl overflow-hidden">
-                    <CardContent className="p-6">
-                      <div className="flex justify-between items-start mb-4">
+                  <Card key={req.id} className="border-none shadow-sm group bg-card rounded-2xl overflow-hidden border border-transparent hover:border-primary/5 transition-all">
+                    <CardContent className="p-8">
+                      <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
                         <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <Badge variant={req.status === 'completed' ? 'secondary' : 'default'} className="uppercase text-[10px] font-bold">
+                          <div className="flex items-center gap-3">
+                            <Badge className={cn(
+                              "uppercase text-[9px] font-bold px-3 py-1 tracking-widest",
+                              req.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
+                            )}>
                               {req.status}
                             </Badge>
-                            <span className="text-[10px] text-muted-foreground font-bold">
+                            <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest flex items-center">
+                              <Clock className="w-3 h-3 mr-1 opacity-40" />
                               {req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'PPp') : 'Just now'}
                             </span>
                           </div>
-                          <h4 className="text-lg font-bold font-headline group-hover:text-primary transition-colors">{req.title}</h4>
+                          <h4 className="text-xl font-bold font-headline text-foreground group-hover:text-primary transition-colors leading-tight mt-2">{req.title}</h4>
                         </div>
-                        <div className={`p-2 rounded-xl ${req.status === 'completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>
-                          {req.status === 'completed' ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                        <div className={cn(
+                          "p-4 rounded-2xl shadow-inner",
+                          req.status === 'completed' ? 'bg-emerald-50 dark:bg-emerald-900/10 text-emerald-600' : 'bg-blue-50 dark:bg-blue-900/10 text-blue-600'
+                        )}>
+                          {req.status === 'completed' ? <CheckCircle2 className="w-6 h-6" /> : <Wrench className="w-6 h-6" />}
                         </div>
                       </div>
-                      <p className="text-sm text-muted-foreground leading-relaxed font-body">{req.description}</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed font-body font-medium">{req.description}</p>
                     </CardContent>
                   </Card>
                 ))
