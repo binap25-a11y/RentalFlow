@@ -40,14 +40,16 @@ export default function PropertiesPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
+      <div className="flex flex-col gap-6 text-left">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Portfolio Inventory</h1>
           <p className="text-muted-foreground font-medium font-body">Monitoring and managing your unique property assets.</p>
         </div>
-        <Button asChild className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-6 shadow-lg shadow-primary/20 text-primary-foreground">
-          <Link href="/landlord/properties/new"><Plus className="w-4 h-4 mr-2" /> Register New Asset</Link>
-        </Button>
+        <div className="flex">
+          <Button asChild className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-6 shadow-lg shadow-primary/20 text-primary-foreground">
+            <Link href="/landlord/properties/new"><Plus className="w-4 h-4 mr-2" /> Register New Asset</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
