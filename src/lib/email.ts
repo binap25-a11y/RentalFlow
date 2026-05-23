@@ -1,3 +1,4 @@
+
 import { Resend } from 'resend';
 
 /**
@@ -19,7 +20,8 @@ export async function sendPropertyEmail(options: {
 
   try {
     const data = await resend.emails.send({
-      from: 'RentalFlow <notifications@resend.dev>', // Replace with verified domain in production
+      // Use onboarding@resend.dev for trial accounts or unverified domains
+      from: 'RentalFlow <onboarding@resend.dev>',
       to: options.to,
       subject: options.subject,
       text: options.text,
