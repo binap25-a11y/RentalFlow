@@ -1,5 +1,7 @@
 /**
- * This file is deprecated in favor of src/lib/db.ts to prevent naming collisions
- * and ensure type safety within the RentalFlow relational ledger.
+ * @fileOverview This file is intentionally left inert to resolve filename collisions
+ * during the Next.js build process. Use src/lib/database.ts for connection logic.
  */
-module.exports = {};
+module.exports = {
+  getPool: () => null
+};

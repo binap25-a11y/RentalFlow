@@ -1,6 +1,6 @@
 'use server';
 
-import { getPool } from '@/lib/db';
+import { getPool } from '@/lib/database';
 
 /**
  * @fileOverview Server Actions for synchronizing Firebase metadata to PostgreSQL.
