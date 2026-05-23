@@ -62,7 +62,8 @@ export default function AuthPage() {
             if (isRedirecting.current) return;
             isRedirecting.current = true;
             
-            router.replace(userData?.role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub');
+            // Landlords go to Properties directly
+            router.replace(userData?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
           } else {
             setNeedsProfile(true);
           }
@@ -95,7 +96,7 @@ export default function AuthPage() {
         lastName: lastName.trim(),
         phoneNumber: phoneNumber.trim(),
         role: role,
-        plan: "free", // Initialize with basic access
+        plan: "free",
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       }, { merge: true });
@@ -129,7 +130,7 @@ export default function AuthPage() {
       toast({ title: "Profile Ready", description: `Welcome to RentalFlow.` });
       
       isRedirecting.current = true;
-      router.replace(role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub');
+      router.replace(role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
     } catch (e: any) {
       console.error("Profile synchronization failed:", e);
       toast({ variant: "destructive", title: "Setup Failed", description: e.message });
@@ -255,8 +256,8 @@ export default function AuthPage() {
               <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground font-headline">Define Role</Label>
               <Tabs value={role} onValueChange={(v) => setRole(v as any)} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 bg-muted/20 p-1.5 rounded-2xl h-14">
-                  <TabsTrigger value="landlord" className="rounded-xl font-bold font-headline text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Portfolio Manager</TabsTrigger>
-                  <TabsTrigger value="tenant" className="rounded-xl font-bold font-headline text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Property Resident</TabsTrigger>
+                  <TabsTrigger value="landlord" className="rounded-xl font-bold font-headline text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Portfolio Manager</TabsTrigger>
+                  <TabsTrigger value="tenant" className="rounded-xl font-bold font-headline text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Property Resident</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>

@@ -35,7 +35,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
   const router = useRouter();
   const { setOpenMobile, isMobile } = useSidebar();
 
-  const dashboardHref = role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub';
+  const dashboardHref = role === 'landlord' ? '/landlord/properties' : '/tenant/hub';
 
   const landlordItems = [
     { label: 'Properties', icon: Building2, href: '/landlord/properties' },
@@ -69,7 +69,6 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
     }
   };
 
-  // Consistent high-fidelity brand logo
   const LOGO_URL = RENTALFLOW_NEUTRAL_FALLBACK;
 
   return (

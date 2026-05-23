@@ -1,4 +1,3 @@
-
 "use client";
 
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
@@ -34,32 +33,38 @@ export default function LandlordLayout({
   const { data: profile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
   useEffect(() => {
-    if (!isUserLoading && !user && isClient) {
+    if (isClient && !isUserLoading && !user) {
       router.replace('/auth');
-    } else if (!isProfileLoading && profile && profile.role !== 'landlord' && isClient) {
+    } else if (isClient && !isProfileLoading && profile && profile.role !== 'landlord') {
       router.replace(profile.role === 'tenant' ? '/tenant/hub' : '/auth');
     }
   }, [user, isUserLoading, profile, isProfileLoading, router, isClient]);
 
   const BRAND_LOGO_URL = RENTALFLOW_NEUTRAL_FALLBACK;
 
-  if (!isClient || isUserLoading || isProfileLoading) {
+  // Consistent full-screen loader to prevent flicker
+  if (!isClient || isUserLoading || isProfileLoading || (user && !profile)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="relative flex flex-col items-center">
-          <div className="relative w-24 h-24 mb-6">
-            <div className="absolute inset-0 bg-primary/10 rounded-3xl blur-xl animate-pulse" />
-            <Image 
-              src={BRAND_LOGO_URL} 
-              alt="Loading" 
-              fill 
-              className="object-cover rounded-3xl relative z-10" 
-              unoptimized 
-            />
+          <div className="relative w-24 h-24 mb-10 animate-in fade-in zoom-in duration-700">
+            <div className="absolute inset-0 bg-primary/10 rounded-[2rem] blur-2xl animate-pulse" />
+            <div className="relative z-10 w-full h-full rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5">
+              <Image 
+                src={BRAND_LOGO_URL} 
+                alt="Loading" 
+                fill 
+                className="object-cover" 
+                unoptimized 
+                priority
+              />
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin text-primary" />
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Resolving Portfolio Access</p>
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex items-center gap-3">
+              <Loader2 className="w-4 h-4 animate-spin text-primary opacity-60" />
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Synchronizing Ledger</p>
+            </div>
           </div>
         </div>
       </div>

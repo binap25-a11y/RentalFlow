@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser } from '@/firebase';
@@ -8,14 +7,22 @@ import { Card } from "@/components/ui/card";
 import { 
   ArrowRight, Building2, ShieldCheck, Sparkles, 
   Wrench, Wallet, MessageSquare, ChevronRight,
-  Globe, Zap, LayoutDashboard, Star, CheckCircle2
+  Globe, Zap, LayoutDashboard, Star, CheckCircle2, Loader2
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { RENTALFLOW_NEUTRAL_FALLBACK } from '@/lib/utils';
+import { useEffect, useState } from 'react';
 
 export default function LandingPage() {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <div className="min-h-screen bg-background font-body selection:bg-primary selection:text-primary-foreground">
@@ -33,10 +40,12 @@ export default function LandingPage() {
              <Link href="#compliance" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">Compliance</Link>
           </div>
           <div className="flex items-center gap-4">
-             {user ? (
-               <Button asChild className="rounded-xl font-bold bg-primary shadow-xl shadow-primary/20 text-primary-foreground">
-                 <Link href={user.email?.includes('landlord') ? '/landlord/dashboard' : '/tenant/hub'}>
-                    Return to Dashboard <ArrowRight className="w-4 h-4 ml-2" />
+             {isUserLoading ? (
+               <Loader2 className="w-5 h-5 animate-spin text-primary/40" />
+             ) : user ? (
+               <Button variant="ghost" asChild className="rounded-xl font-bold text-primary">
+                 <Link href={user.email?.includes('landlord') ? '/landlord/properties' : '/tenant/hub'}>
+                    Portal Access <ChevronRight className="w-4 h-4 ml-1" />
                  </Link>
                </Button>
              ) : (
@@ -69,9 +78,20 @@ export default function LandingPage() {
               Accelerate your rental operations with automated maintenance triage, professional ledger tracking, and an AI-driven resident concierge.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
-               <Button size="lg" asChild className="w-full sm:w-auto h-16 px-10 rounded-2xl bg-primary text-lg font-bold shadow-2xl shadow-primary/20 text-primary-foreground hover:scale-[1.02] transition-transform">
-                 <Link href="/auth">Launch Your Portfolio</Link>
-               </Button>
+               {isUserLoading ? (
+                 <div className="h-16 w-48 bg-muted animate-pulse rounded-2xl" />
+               ) : user ? (
+                 <Button size="lg" asChild className="w-full sm:w-auto h-16 px-10 rounded-2xl bg-primary text-lg font-bold shadow-2xl shadow-primary/20 text-primary-foreground hover:scale-[1.02] transition-transform">
+                   <Link href={user.email?.includes('landlord') ? '/landlord/properties' : '/tenant/hub'}>
+                      Return to Portfolio <ArrowRight className="w-5 h-5 ml-3" />
+                   </Link>
+                 </Button>
+               ) : (
+                 <Button size="lg" asChild className="w-full sm:w-auto h-16 px-10 rounded-2xl bg-primary text-lg font-bold shadow-2xl shadow-primary/20 text-primary-foreground hover:scale-[1.02] transition-transform">
+                   <Link href="/auth">Launch Your Portfolio</Link>
+                 </Button>
+               )}
+               
                <div className="flex items-center gap-3 px-6 h-16 rounded-2xl border border-border bg-card shadow-sm">
                   <div className="flex -space-x-2">
                     {[1,2,3].map(i => (
@@ -197,9 +217,15 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto px-6 text-center bg-muted/30 rounded-[4rem] p-10 md:p-20 space-y-10 border border-border">
            <h2 className="text-4xl md:text-5xl font-headline font-bold text-foreground tracking-tight">Ready to modernize your portfolio?</h2>
            <p className="text-lg text-muted-foreground font-medium">Join professional landlords across the UK using AI to scale their operations.</p>
-           <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-primary text-xl font-bold shadow-2xl shadow-primary/20 text-primary-foreground">
-             <Link href="/auth">Start Your Free Trial</Link>
-           </Button>
+           {user ? (
+             <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-primary text-xl font-bold shadow-2xl shadow-primary/20 text-primary-foreground">
+               <Link href={user.email?.includes('landlord') ? '/landlord/properties' : '/tenant/hub'}>Go to My Portfolio</Link>
+             </Button>
+           ) : (
+             <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-primary text-xl font-bold shadow-2xl shadow-primary/20 text-primary-foreground">
+               <Link href="/auth">Start Your Free Trial</Link>
+             </Button>
+           )}
            <div className="flex flex-wrap justify-center gap-8 pt-6 opacity-40 grayscale">
               <span className="text-sm font-bold uppercase tracking-widest text-foreground">Enterprise Encrypted</span>
               <span className="text-sm font-bold uppercase tracking-widest text-foreground">UK GDPR Compliant</span>
