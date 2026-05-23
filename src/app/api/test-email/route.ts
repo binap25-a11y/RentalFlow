@@ -41,8 +41,8 @@ export async function POST(req: Request) {
       return Response.json({ 
         success: false, 
         error: result.error,
-        isTrialRestriction: result.error?.includes('Trial Restriction') 
-      }, { status: 403 });
+        isTrialRestriction: !!result.error?.includes('Trial Restriction') 
+      }, { status: result.error?.includes('Trial Restriction') ? 403 : 500 });
     }
 
     return Response.json({ success: true, data: result.data });

@@ -3,9 +3,22 @@ import { Resend } from 'resend';
 
 /**
  * 📧 Premium Email Engine
- * Centralized configuration for Resend to handle portfolio-wide notifications.
+ * Refactored for lazy initialization to prevent "Missing API Key" errors during server boot.
  */
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resendInstance: Resend | null = null;
+
+function getResend() {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) {
+    console.warn('RESEND_API_KEY is missing. Email dispatch will be bypassed.');
+    return null;
+  }
+  
+  if (!resendInstance) {
+    resendInstance = new Resend(key);
+  }
+  return resendInstance;
+}
 
 export async function sendPropertyEmail(options: {
   to: string;
@@ -13,8 +26,9 @@ export async function sendPropertyEmail(options: {
   text: string;
   html?: string;
 }) {
-  if (!process.env.RESEND_API_KEY) {
-    console.warn('RESEND_API_KEY is missing. Email dispatch skipped.');
+  const resend = getResend();
+  
+  if (!resend) {
     return { success: false, error: 'Configuration missing' };
   }
 
@@ -34,7 +48,7 @@ export async function sendPropertyEmail(options: {
       if ((error as any).statusCode === 403 || error.name === 'validation_error') {
         return { 
           success: false, 
-          error: 'Resend Trial Restriction: You can only send to your account email (binap25@googlemail.com) until you verify a domain.',
+          error: 'Resend Trial Restriction: You can only send to your own email address until you verify a domain.',
           details: error 
         };
       }
@@ -47,5 +61,3 @@ export async function sendPropertyEmail(options: {
     return { success: false, error: error.message || 'Unknown network error' };
   }
 }
-
-export default resend;
