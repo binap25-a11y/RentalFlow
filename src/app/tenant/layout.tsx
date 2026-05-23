@@ -1,3 +1,4 @@
+
 "use client";
 
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
@@ -7,7 +8,7 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { Loader2 } from "lucide-react";
 import { doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
 
@@ -19,6 +20,11 @@ export default function TenantLayout({
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const userDocRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -28,16 +34,16 @@ export default function TenantLayout({
   const { data: profile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
   useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.replace('/');
-    } else if (!isProfileLoading && profile && profile.role !== 'tenant') {
-      router.replace(profile.role === 'landlord' ? '/landlord/dashboard' : '/');
+    if (!isUserLoading && !user && isClient) {
+      router.replace('/auth');
+    } else if (!isProfileLoading && profile && profile.role !== 'tenant' && isClient) {
+      router.replace(profile.role === 'landlord' ? '/landlord/dashboard' : '/auth');
     }
-  }, [user, isUserLoading, profile, isProfileLoading, router]);
+  }, [user, isUserLoading, profile, isProfileLoading, router, isClient]);
 
   const BRAND_LOGO_URL = RENTALFLOW_NEUTRAL_FALLBACK;
 
-  if (isUserLoading || isProfileLoading) {
+  if (!isClient || isUserLoading || isProfileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="relative flex flex-col items-center">

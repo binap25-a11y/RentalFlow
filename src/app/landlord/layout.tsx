@@ -1,3 +1,4 @@
+
 "use client";
 
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
@@ -34,9 +35,9 @@ export default function LandlordLayout({
 
   useEffect(() => {
     if (!isUserLoading && !user && isClient) {
-      router.replace('/');
+      router.replace('/auth');
     } else if (!isProfileLoading && profile && profile.role !== 'landlord' && isClient) {
-      router.replace(profile.role === 'tenant' ? '/tenant/hub' : '/');
+      router.replace(profile.role === 'tenant' ? '/tenant/hub' : '/auth');
     }
   }, [user, isUserLoading, profile, isProfileLoading, router, isClient]);
 

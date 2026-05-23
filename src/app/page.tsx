@@ -1,382 +1,222 @@
+
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useUser } from '@/firebase';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Eye, EyeOff, User as UserIcon, Phone, CheckCircle2, Lock, Sparkles, ShieldCheck } from "lucide-react";
-import { useAuth, useFirestore, useUser } from '@/firebase';
-import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
-import { doc, getDoc, serverTimestamp, setDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
-import { updateProfile } from 'firebase/auth';
-import { useToast } from '@/hooks/use-toast';
-import Image from 'next/image';
+import { Badge } from "@/components/ui/badge";
+import { 
+  ArrowRight, Building2, ShieldCheck, Sparkles, 
+  Wrench, Wallet, MessageSquare, ChevronRight,
+  Globe, Zap, LayoutDashboard, Star, CheckCircle2
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import { RENTALFLOW_NEUTRAL_FALLBACK } from '@/lib/utils';
 
-export default function LoginPage() {
-  const router = useRouter();
-  const auth = useAuth();
-  const db = useFirestore();
-  const { user, isUserLoading } = useUser();
-  const { toast } = useToast();
-
-  const [isLoading, setIsLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  
-  const [role, setRole] = useState<'landlord' | 'tenant'>('landlord');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [needsProfile, setNeedsProfile] = useState(false);
-  
-  const isRedirecting = useRef(false);
-
-  const BRAND_LOGO_URL = RENTALFLOW_NEUTRAL_FALLBACK;
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (user && db && mounted && !isLoading && !isRedirecting.current) {
-      const checkAndRedirect = async () => {
-        try {
-          const userDocRef = doc(db, 'users', user.uid);
-          const userDoc = await getDoc(userDocRef);
-
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            if (!userData.firstName || !userData.lastName || !userData.role || !userData.phoneNumber) {
-              setNeedsProfile(true);
-              return;
-            }
-
-            if (isRedirecting.current) return;
-            isRedirecting.current = true;
-            
-            router.replace(userData?.role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub');
-          } else {
-            setNeedsProfile(true);
-          }
-        } catch (e) {
-          console.error("Profile check failed:", e);
-          setNeedsProfile(true);
-        }
-      };
-      checkAndRedirect();
-    }
-  }, [user, db, router, mounted, isLoading]);
-
-  const handleCreateProfile = async () => {
-    if (!user || !db) return;
-    if (!firstName.trim() || !lastName.trim() || !phoneNumber.trim()) {
-      toast({ variant: "destructive", title: "Missing Information", description: "Please fill in all details." });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const displayName = `${firstName.trim()} ${lastName.trim()}`;
-      await updateProfile(user, { displayName });
-
-      const userDocRef = doc(db, 'users', user.uid);
-      await setDoc(userDocRef, {
-        id: user.uid,
-        email: user.email,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        phoneNumber: phoneNumber.trim(),
-        role: role,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      }, { merge: true });
-
-      if (role === 'tenant' && user.email) {
-        const emailLower = user.email.toLowerCase().trim();
-        const tenantProfilesRef = collection(db, 'tenantProfiles');
-        const q = query(tenantProfilesRef, where('email', '==', emailLower));
-        const querySnapshot = await getDocs(q);
-        
-        for (const profileDoc of querySnapshot.docs) {
-          const profileData = profileDoc.data();
-          
-          await updateDoc(profileDoc.ref, { 
-            userId: user.uid,
-            tenantId: user.uid,
-            memberIds: arrayUnion(user.uid)
-          });
-          
-          if (profileData.propertyId) {
-            const propertyRef = doc(db, 'properties', profileData.propertyId);
-            await updateDoc(propertyRef, {
-              tenantIds: arrayUnion(user.uid),
-              memberIds: arrayUnion(user.uid)
-            });
-          }
-        }
-      }
-      
-      await user.getIdToken(true);
-      toast({ title: "Profile Ready", description: `Welcome to RentalFlow.` });
-      
-      isRedirecting.current = true;
-      router.replace(role === 'landlord' ? '/landlord/dashboard' : '/tenant/hub');
-    } catch (e: any) {
-      console.error("Profile synchronization failed:", e);
-      toast({ variant: "destructive", title: "Setup Failed", description: e.message });
-      setIsLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      if (authMode === 'signup') {
-        await initiateEmailSignUp(auth, email, password);
-        toast({ title: "Account Created", description: "Please complete your profile details." });
-      } else {
-        await initiateEmailSignIn(auth, email, password);
-      }
-    } catch (error: any) {
-      setIsLoading(false);
-      let message = "An error occurred during authentication.";
-      if (error.code === 'auth/invalid-credential') message = "The credentials provided are invalid.";
-      else if (error.code === 'auth/email-already-in-use') message = "This email is already registered.";
-      
-      toast({ variant: "destructive", title: "Authentication Failed", description: message });
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    try {
-      await initiateGoogleSignIn(auth);
-    } catch (error: any) {
-      console.error("Google Auth Session Failed:", error);
-      toast({ 
-        variant: "destructive", 
-        title: "Google Session Failed", 
-        description: error.message || "Ensure popups are enabled and try again."
-      });
-      setIsLoading(false);
-    }
-  };
-
-  if (!mounted || isUserLoading || (user && !needsProfile && !isRedirecting.current)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 overflow-hidden px-4">
-        <div className="relative flex flex-col items-center">
-          <div className="relative w-32 h-32 mb-10 animate-in fade-in zoom-in-95 duration-1000 slide-in-from-bottom-12">
-            <div className="absolute inset-0 bg-primary/10 rounded-[2.5rem] blur-3xl animate-pulse" />
-            <Image 
-              src={BRAND_LOGO_URL} 
-              alt="RentalFlow" 
-              fill 
-              className="object-cover rounded-[2.5rem] shadow-2xl ring-4 ring-white relative z-10" 
-              unoptimized 
-              priority
-            />
-          </div>
-          
-          <div className="flex flex-col items-center gap-5 animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-300">
-            <h1 className="text-5xl font-headline font-bold text-primary tracking-tighter">RentalFlow</h1>
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center gap-3">
-                <Loader2 className="w-5 h-5 animate-spin text-primary opacity-60" />
-                <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Secure Ledger Sync</p>
-              </div>
-              <div className="flex items-center gap-2 px-6 py-2.5 bg-white rounded-full border border-primary/5 shadow-xl transition-all">
-                <Lock className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest font-headline">Enterprise Grade Security Active</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (needsProfile && user) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 sm:p-12">
-        <Card className="w-full max-w-xl border-none shadow-2xl bg-white overflow-hidden animate-in zoom-in-95 duration-500 rounded-[3rem]">
-          <CardHeader className="text-center bg-primary/5 pb-10 pt-12">
-            <div className="mx-auto p-1 bg-white rounded-2xl w-fit mb-6 shadow-xl overflow-hidden ring-4 ring-white">
-               <Image 
-                src={BRAND_LOGO_URL} 
-                alt="RentalFlow" 
-                width={80} 
-                height={80} 
-                className="rounded-2xl object-cover" 
-                unoptimized 
-                priority
-              />
-            </div>
-            <CardTitle className="text-3xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
-            <CardDescription className="font-medium text-lg text-primary/60">Define your management or residency profile.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-8 pt-10 px-12 pb-14 text-left">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-primary/40 font-headline">First Name</Label>
-                <div className="relative">
-                  <UserIcon className="absolute left-4 top-3.5 h-4.5 w-4.5 text-primary/20" />
-                  <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jane" className="pl-12 h-13 rounded-2xl border-none bg-primary/5 font-body font-bold" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-primary/40 font-headline">Last Name</Label>
-                <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" className="h-13 rounded-2xl border-none bg-primary/5 font-body font-bold" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-primary/40 font-headline">Phone Number</Label>
-              <div className="relative">
-                <Phone className="absolute left-4 top-3.5 h-4.5 w-4.5 text-primary/20" />
-                <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+44 7700 900000" className="pl-12 h-13 rounded-2xl border-none bg-primary/5 font-body font-bold" />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <Label className="text-xs font-bold uppercase tracking-widest text-primary/40 font-headline">Define Role</Label>
-              <Tabs value={role} onValueChange={(v) => setRole(v as any)} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-primary/5 p-1.5 rounded-2xl h-14">
-                  <TabsTrigger value="landlord" className="rounded-xl font-bold font-headline text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Portfolio Manager</TabsTrigger>
-                  <TabsTrigger value="tenant" className="rounded-xl font-bold font-headline text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Property Resident</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-
-            <Button className="w-full h-15 rounded-2xl font-bold bg-primary text-lg shadow-2xl shadow-primary/20 font-headline hover:scale-[1.02] active:scale-95 transition-all" onClick={handleCreateProfile} disabled={isLoading || !firstName || !lastName || !phoneNumber}>
-              {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <><CheckCircle2 className="w-6 h-6 mr-3" /> Complete Registration</>}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+export default function LandingPage() {
+  const { user } = useUser();
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 sm:p-12 overflow-hidden relative">
-      <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent rounded-full blur-[120px]" />
-      </div>
-
-      <div className="mb-12 text-center animate-in fade-in slide-in-from-top-12 duration-1000 relative z-10">
-        <div className="inline-flex items-center justify-center p-1.5 bg-white rounded-[2.75rem] mb-8 shadow-2xl ring-1 ring-primary/5 overflow-hidden">
-           <Image 
-            src={BRAND_LOGO_URL} 
-            alt="RentalFlow" 
-            width={110} 
-            height={110} 
-            className="rounded-[2.5rem] object-cover" 
-            unoptimized 
-            priority
-          />
+    <div className="min-h-screen bg-white font-body selection:bg-primary selection:text-white">
+      {/* Navigation Header */}
+      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-primary/5 h-20">
+        <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+             <div className="relative h-10 w-10 rounded-xl overflow-hidden shadow-lg">
+                <Image src={RENTALFLOW_NEUTRAL_FALLBACK} alt="Logo" fill className="object-cover" unoptimized />
+             </div>
+             <span className="font-headline font-bold text-2xl tracking-tight text-primary">RentalFlow</span>
+          </div>
+          <div className="hidden md:flex items-center gap-8">
+             <Link href="#features" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">Features</Link>
+             <Link href="#compliance" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">Compliance</Link>
+          </div>
+          <div className="flex items-center gap-4">
+             {user ? (
+               <Button asChild className="rounded-xl font-bold bg-primary shadow-xl shadow-primary/20 text-white">
+                 <Link href={user.email?.includes('landlord') ? '/landlord/dashboard' : '/tenant/hub'}>
+                    Return to Dashboard <ArrowRight className="w-4 h-4 ml-2" />
+                 </Link>
+               </Button>
+             ) : (
+               <>
+                 <Button variant="ghost" asChild className="rounded-xl font-bold text-primary hidden sm:inline-flex">
+                   <Link href="/auth">Sign In</Link>
+                 </Button>
+                 <Button asChild className="rounded-xl font-bold bg-primary shadow-xl shadow-primary/20 text-white px-6">
+                   <Link href="/auth">Get Started</Link>
+                 </Button>
+               </>
+             )}
+          </div>
         </div>
-        <h1 className="text-6xl font-headline font-bold text-primary mb-3 tracking-tighter">RentalFlow</h1>
-        <p className="text-muted-foreground font-medium text-xl font-body opacity-80 uppercase tracking-[0.2em] text-sm">Premium Portfolio Ledger</p>
-      </div>
+      </nav>
 
-      <div className="max-w-xl w-full relative z-10">
-        <Card className="w-full border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] bg-white overflow-hidden rounded-[3.5rem] p-2">
-          <CardHeader className="space-y-2 pb-6 text-center bg-primary/[0.02] pt-12 rounded-[3rem]">
-            <CardTitle className="text-3xl font-headline font-bold text-primary">
-              {authMode === 'login' ? 'Authentication' : 'Registration'}
-            </CardTitle>
-            <CardDescription className="font-medium text-primary/40">
-              {authMode === 'login' ? 'Secure access to your management vault' : 'Establish your professional presence'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-10 px-10 pb-12">
-            <div className="space-y-6">
-              <Button 
-                variant="outline" 
-                className="w-full h-16 rounded-[1.75rem] font-bold border-primary/10 hover:bg-primary/5 font-headline text-primary shadow-sm text-lg" 
-                onClick={handleGoogleSignIn} 
-                disabled={isLoading}
-              >
-                <svg className="w-6 h-6 mr-4" viewBox="0 0 24 24">
-                  <path
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-3.3 3.28-8.19 3.28-8.09z"
-                    fill="#4285F4"
-                  />
-                  <path
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    fill="#34A853"
-                  />
-                  <path
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.16H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.84l3.66-2.75z"
-                    fill="#FBBC05"
-                  />
-                  <path
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.16l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    fill="#EA4335"
-                  />
-                </svg>
-                Continue with Google
-              </Button>
-
-              <div className="relative my-8">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-primary/5"></span>
-                </div>
-                <div className="relative flex justify-center text-[10px] uppercase">
-                  <span className="bg-white px-6 text-primary/30 font-bold tracking-[0.4em] font-headline">or use electronic mail</span>
-                </div>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2 text-left">
-                  <Label htmlFor="email" className="font-bold text-xs uppercase text-primary/30 tracking-widest font-headline">Email Address</Label>
-                  <Input id="email" type="email" placeholder="name@domain.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-2xl h-14 border-none bg-primary/5 font-body font-bold text-lg px-6" />
-                </div>
-                <div className="space-y-2 text-left">
-                  <div className="flex justify-between items-center">
-                    <Label htmlFor="password" title="Password" className="font-bold text-xs uppercase text-primary/30 tracking-widest font-headline">Secure Key</Label>
-                    <button type="button" className="text-[10px] font-bold text-accent uppercase tracking-widest hover:underline">Reset</button>
+      {/* Hero Section */}
+      <section className="relative pt-40 pb-32 overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[800px] bg-gradient-to-b from-primary/[0.03] to-transparent pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+          <div className="text-left space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <Badge variant="outline" className="py-2 px-4 rounded-full border-primary/10 bg-primary/5 text-primary font-bold uppercase tracking-[0.2em] text-[10px]">
+              <Sparkles className="w-3 h-3 mr-2 text-accent" /> AI-Powered Portfolio Orchestration
+            </Badge>
+            <h1 className="text-6xl md:text-8xl font-headline font-bold text-primary tracking-tighter leading-[0.9]">
+              Premium Property <br/>
+              <span className="text-accent">Management.</span>
+            </h1>
+            <p className="text-xl text-muted-foreground font-medium max-w-xl leading-relaxed">
+              Accelerate your rental operations with automated maintenance triage, professional ledger tracking, and an AI-driven resident concierge.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+               <Button size="lg" asChild className="w-full sm:w-auto h-16 px-10 rounded-2xl bg-primary text-lg font-bold shadow-2xl shadow-primary/20 text-white hover:scale-[1.02] transition-transform">
+                 <Link href="/auth">Launch Your Portfolio</Link>
+               </Button>
+               <div className="flex items-center gap-3 px-6 h-16 rounded-2xl border border-primary/5 bg-white shadow-sm">
+                  <div className="flex -space-x-2">
+                    {[1,2,3].map(i => (
+                      <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-muted overflow-hidden">
+                        <Image src={`https://picsum.photos/seed/user-${i}/100/100`} alt="User" width={32} height={32} />
+                      </div>
+                    ))}
                   </div>
-                  <div className="relative">
-                    <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="rounded-2xl h-14 border-none bg-primary/5 font-body font-bold text-lg px-6 pr-12" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-4.5 text-primary/20 hover:text-primary transition-colors">
-                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                    </button>
-                  </div>
-                </div>
-                <Button type="submit" className="w-full h-16 rounded-[1.75rem] font-bold bg-primary text-xl shadow-2xl shadow-primary/20 font-headline hover:scale-[1.01] active:scale-95 transition-all" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-white" /> : (authMode === 'login' ? 'Access Vault' : 'Create Credentials')}
-                </Button>
-              </form>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Trusted by UK Landlords</span>
+               </div>
             </div>
+          </div>
+          <div className="relative h-[600px] rounded-[3rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 animate-in fade-in zoom-in duration-1000">
+            <Image 
+              src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop" 
+              alt="Luxury Property" 
+              fill 
+              className="object-cover" 
+              unoptimized 
+              priority
+              data-ai-hint="modern architecture"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent" />
+            <div className="absolute bottom-10 left-10 right-10 bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-3xl">
+               <div className="flex justify-between items-center text-white">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Active Tenancy Hub</p>
+                    <p className="text-2xl font-bold font-headline">88 Berkeley Square, London</p>
+                  </div>
+                  <Badge className="bg-emerald-500 text-white border-none font-bold">VERIFIED</Badge>
+               </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-            <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full mt-10 text-xs font-bold text-primary/40 hover:text-primary transition-all font-headline uppercase tracking-widest">
-              {authMode === 'login' ? "New to the platform? Create account" : "Return to authentication screen"}
-            </button>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Features Grid */}
+      <section id="features" className="py-32 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-6 text-center space-y-20">
+          <div className="max-w-3xl mx-auto space-y-4">
+             <h2 className="text-4xl md:text-5xl font-headline font-bold text-primary tracking-tight">Engineered for Operational Excellence</h2>
+             <p className="text-lg text-muted-foreground font-medium">Three core systems designed to remove the friction from property management.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="border-none shadow-sm rounded-[2.5rem] p-10 bg-white hover:shadow-2xl transition-all group text-left">
+              <div className="p-5 bg-accent/10 text-accent rounded-3xl w-fit mb-8 group-hover:scale-110 transition-transform">
+                <Sparkles className="w-8 h-8" />
+              </div>
+              <h3 className="text-2xl font-bold font-headline mb-4 text-primary">AI Maintenance Triage</h3>
+              <p className="text-muted-foreground font-medium leading-relaxed">Let Gemini triage resident reports instantly. Prioritize critical repairs and receive automated suggestions before contacting a contractor.</p>
+            </Card>
+            <Card className="border-none shadow-sm rounded-[2.5rem] p-10 bg-white hover:shadow-2xl transition-all group text-left">
+              <div className="p-5 bg-primary/5 text-primary rounded-3xl w-fit mb-8 group-hover:scale-110 transition-transform">
+                <Wallet className="w-8 h-8" />
+              </div>
+              <h3 className="text-2xl font-bold font-headline mb-4 text-primary">Financial Command</h3>
+              <p className="text-muted-foreground font-medium leading-relaxed">Unified rental ledgers with real-time status tracking. Generate digital receipts, dispatch reminders, and export tax-ready statements.</p>
+            </Card>
+            <Card className="border-none shadow-sm rounded-[2.5rem] p-10 bg-white hover:shadow-2xl transition-all group text-left">
+              <div className="p-5 bg-emerald-50 text-emerald-600 rounded-3xl w-fit mb-8 group-hover:scale-110 transition-transform">
+                <MessageSquare className="w-8 h-8" />
+              </div>
+              <h3 className="text-2xl font-bold font-headline mb-4 text-primary">Resident Concierge</h3>
+              <p className="text-muted-foreground font-medium leading-relaxed">A dedicated AI assistant for your residents. Answer property-specific questions about appliances, utilities, and protocols 24/7.</p>
+            </Card>
+          </div>
+        </div>
+      </section>
 
-      <div className="mt-16 flex flex-wrap justify-center items-center gap-10 opacity-30 grayscale hover:grayscale-0 transition-all duration-700">
-         <div className="flex items-center gap-3">
-            <ShieldCheck className="w-5 h-5" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline">UK Compliant Architecture</span>
-         </div>
-         <div className="flex items-center gap-3">
-            <Sparkles className="w-5 h-5" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline">AI-Driven Management</span>
-         </div>
-      </div>
+      {/* Compliance Section */}
+      <section id="compliance" className="py-32 bg-primary text-white overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-accent/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center gap-20">
+          <div className="flex-1 text-left space-y-10">
+             <div className="space-y-4">
+                <h2 className="text-4xl md:text-6xl font-headline font-bold tracking-tight">Secure. Compliant. <br/>Redundant.</h2>
+                <p className="text-xl text-white/70 font-medium leading-relaxed">RentalFlow combines Firebase's secure real-time architecture with PostgreSQL redundancy to protect your portfolio data.</p>
+             </div>
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {[
+                  { icon: ShieldCheck, title: "UK SOS Protocols", desc: "Built-in emergency service directory for residents." },
+                  { icon: Globe, title: "Vaulted Storage", desc: "Private encrypted storage for all property certificates." },
+                  { icon: Zap, title: "Instant Verifications", desc: "Digital verification for every rental transaction." },
+                  { icon: CheckCircle2, title: "Audit Trail", desc: "Comprehensive history for every maintenance event." }
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-4 p-6 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                    <item.icon className="w-6 h-6 text-accent shrink-0" />
+                    <div>
+                      <p className="font-bold font-headline">{item.title}</p>
+                      <p className="text-xs text-white/60 font-medium mt-1">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+             </div>
+          </div>
+          <div className="flex-1 w-full max-w-md">
+             <div className="bg-white rounded-[3rem] p-8 shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-2 bg-accent" />
+                <div className="flex items-center justify-between mb-8">
+                   <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Portfolio Pulse</p>
+                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                </div>
+                <div className="space-y-6">
+                   <div className="h-4 w-3/4 bg-slate-100 rounded-full" />
+                   <div className="h-4 w-1/2 bg-slate-100 rounded-full" />
+                   <div className="pt-4 border-t border-slate-100 space-y-4">
+                      <div className="flex justify-between items-center">
+                         <span className="text-xs font-bold text-primary">Yield Potential</span>
+                         <span className="text-xs font-bold text-emerald-600">£12,450 /mo</span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                         <div className="w-[85%] h-full bg-primary" />
+                      </div>
+                   </div>
+                </div>
+             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Footer */}
+      <section className="py-32">
+        <div className="max-w-4xl mx-auto px-6 text-center bg-slate-50 rounded-[4rem] p-20 space-y-10 border border-primary/5">
+           <h2 className="text-4xl md:text-5xl font-headline font-bold text-primary tracking-tight">Ready to modernize your portfolio?</h2>
+           <p className="text-lg text-muted-foreground font-medium">Join professional landlords across the UK using AI to scale their operations.</p>
+           <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-primary text-xl font-bold shadow-2xl shadow-primary/20 text-white">
+             <Link href="/auth">Start Your Free Trial</Link>
+           </Button>
+           <div className="flex justify-center gap-8 pt-6 opacity-40 grayscale">
+              <span className="text-sm font-bold uppercase tracking-widest">Enterprise Encrypted</span>
+              <span className="text-sm font-bold uppercase tracking-widest">UK GDPR Compliant</span>
+           </div>
+        </div>
+      </section>
+
+      <footer className="py-12 border-t border-primary/5">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-3">
+             <div className="relative h-8 w-8 rounded-lg overflow-hidden grayscale">
+                <Image src={RENTALFLOW_NEUTRAL_FALLBACK} alt="Logo" fill className="object-cover" unoptimized />
+             </div>
+             <span className="font-headline font-bold text-lg tracking-tight text-primary/40">RentalFlow</span>
+          </div>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">© 2026 RENTALFLOW OPERATIONS. ALL RIGHTS RESERVED.</p>
+        </div>
+      </footer>
     </div>
   );
 }
