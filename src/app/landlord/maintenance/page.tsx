@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -258,13 +259,13 @@ export default function MaintenancePage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto pb-12 text-left">
-      <div className="flex flex-col gap-4">
+      <div className="space-y-6">
         <div className="text-left space-y-2">
           <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-3 py-1 rounded-full font-bold uppercase tracking-[0.15em] text-[9px]">
              <Activity className="w-3 h-3 mr-2" /> Maintenance Roadmap
           </Badge>
           <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">Maintenance Hub</h1>
-          <p className="text-muted-foreground font-medium font-body max-w-xl text-sm leading-relaxed">Orchestrating professional site upkeep and AI-driven repair triage.</p>
+          <p className="text-sm text-muted-foreground font-medium font-body max-w-xl leading-relaxed">Orchestrating professional site upkeep and AI-driven repair triage.</p>
         </div>
         <Button 
           onClick={() => setIsCreateDialogOpen(true)} 
@@ -364,7 +365,7 @@ export default function MaintenancePage() {
                       <div className="bg-primary/[0.02] border border-primary/5 rounded-[1.75rem] p-8 flex gap-6 text-left shadow-inner">
                         <BrainCircuit className="w-10 h-10 text-primary shrink-0 opacity-40" />
                         <div className="flex-1">
-                          <p className="text-[8px] font-bold text-primary uppercase mb-3 tracking-[0.2em] font-headline opacity-40">Intelligence Triage</p>
+                          <p className="text-[8px] font-bold text-primary uppercase mb-3 tracking-[0.2em] font-headline opacity-40">Fix Strategy & Reasoning</p>
                           <p className="text-sm text-primary font-bold font-body leading-relaxed">{request.aiTriageNotes}</p>
                         </div>
                       </div>
@@ -375,12 +376,12 @@ export default function MaintenancePage() {
                             <div className="p-3 bg-white rounded-xl shadow-sm text-emerald-600 h-fit border border-emerald-100 w-fit">
                                <Lightbulb className="w-6 h-6" />
                             </div>
-                            <p className="text-[8px] font-bold text-emerald-700/60 uppercase tracking-[0.2em] font-headline">Recommendations</p>
+                            <p className="text-[8px] font-bold text-emerald-700/60 uppercase tracking-[0.2em] font-headline">Actionable Recommendations</p>
                           </div>
                           
                           <div className="flex flex-col gap-4">
                             {request.aiSuggestions.map((suggestion: string, idx: number) => (
-                              <div key={idx} className="flex gap-3 p-5 bg-white/60 rounded-2xl border border-emerald-100 text-[11px] font-bold text-emerald-900 shadow-sm transition-all hover:bg-white text-left">
+                              <div key={idx} className="flex gap-3 p-5 bg-white/60 rounded-2xl border border-emerald-100 text-[11px] font-bold text-emerald-900 shadow-sm transition-all hover:bg-white text-left w-fit">
                                 <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" /> {suggestion}
                               </div>
                             ))}

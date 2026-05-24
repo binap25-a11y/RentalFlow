@@ -58,12 +58,16 @@
         "id": { "type": "string" },
         "propertyId": { "type": "string" },
         "title": { "type": "string" },
+        "description": { "type": "string" },
         "status": { "type": "string" },
         "priority": { "type": "string" },
+        "category": { "type": "string" },
         "memberIds": { "type": "array", "items": { "type": "string" } },
         "cost": { "type": "number" },
         "assignedContractorId": { "type": "string" },
-        "scheduledDate": { "type": "string", "format": "date-time" }
+        "scheduledDate": { "type": "string", "format": "date-time" },
+        "aiTriageNotes": { "type": "string" },
+        "aiSuggestions": { "type": "array", "items": { "type": "string" } }
       }
     },
     "Inspection": {

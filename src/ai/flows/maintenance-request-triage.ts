@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A resilient property operations agent for triaging maintenance requests.
@@ -32,7 +33,7 @@ Triage the resident maintenance request and suggest the appropriate priority, ca
 SCHEMA:
 - priority: 'critical' (immediate danger), 'urgent' (damage risk), 'routine' (standard), 'low' (cosmetic).
 - category: plumbing, electrical, HVAC, appliance, structural, pest control, cosmetic, other.
-- reasoning: brief professional justification for the triage result.
+- reasoning: A professional fix strategy and justification for the triage result.
 - suggestions: 2-3 professional actions (e.g., "Instruct an NICEIC electrician", "Verify isolation valve location").
 
 Resident description: {{{maintenanceRequest}}}`,
@@ -49,7 +50,7 @@ function getFallbackTriage(desc: string): MaintenanceRequestTriageOutput {
     return { 
       priority: 'critical', 
       category: 'electrical', 
-      reasoning: 'Critical safety indicators (fire/gas/sparks) identified. Primary emergency response required.',
+      reasoning: 'CRITICAL SAFETY ALERT: Evacuate the property immediately and contact emergency services. Once safe, isolate the power/gas supply at the main consumer unit to prevent ignition.',
       suggestions: ["Instruct the resident to evacuate immediately", "Contact emergency services (999)", "Instruct emergency contractor for immediate attendance"]
     };
   }
@@ -57,7 +58,7 @@ function getFallbackTriage(desc: string): MaintenanceRequestTriageOutput {
     return { 
       priority: 'urgent', 
       category: 'plumbing', 
-      reasoning: 'Active water damage indicators identified. Immediate containment necessary.',
+      reasoning: 'URGENT WATER DAMAGE: Instruct the resident to immediately locate and close the main stopcock. Identify if the leak is above electrical points and isolate power if necessary.',
       suggestions: ["Instruct resident to locate and close main stopcock", "Instruct emergency plumber for same-day repair", "Assess for impact on internal structural integrity"]
     };
   }
@@ -65,7 +66,7 @@ function getFallbackTriage(desc: string): MaintenanceRequestTriageOutput {
     return { 
       priority: 'urgent', 
       category: 'structural', 
-      reasoning: 'Property security indicators identified. Immediate safety protocols initiated.',
+      reasoning: 'PROPERTY SECURITY ALERT: The structural integrity or security of the entry points is compromised. Instruct an emergency locksmith to secure the property and obtain a police incident number for insurance.',
       suggestions: ["Instruct emergency locksmith to secure property entry points", "Obtain police incident number for insurance records", "Assess for forensic evidence before cleaning or restoration"]
     };
   }
@@ -73,7 +74,7 @@ function getFallbackTriage(desc: string): MaintenanceRequestTriageOutput {
   return { 
     priority: 'routine', 
     category: 'other', 
-    reasoning: 'Standard maintenance task identified via operational safety records.',
+    reasoning: 'STANDARD MAINTENANCE: This issue is categorized as routine. Schedule an inspection during standard working hours to assess the repair scope and obtain trade quotes.',
     suggestions: ["Schedule inspection during standard working hours", "Obtain quotes from authorized trade partners", "Update resident on expected resolution timeline"]
   };
 }
