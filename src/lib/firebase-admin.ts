@@ -24,13 +24,14 @@ if (!admin.apps.length) {
     }
   } else {
     try {
+      // Local development fallback
       const serviceAccount = require("./serviceAccountKey.json");
       
       // Only attempt cert initialization if the key isn't the redacted placeholder
       if (serviceAccount.private_key && !serviceAccount.private_key.includes('REDACTED')) {
         admin.initializeApp({
           credential: admin.credential.cert(serviceAccount),
-          projectId: serviceAccount.project_id || "studio-3118242301-8f4fd",
+          projectId: serviceAccount.project_id,
         });
         console.log('✅ Firebase Admin: Initialized with Local Key');
       } else {

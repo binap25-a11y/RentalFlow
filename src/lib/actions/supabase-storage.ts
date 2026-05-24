@@ -4,6 +4,7 @@
  * @fileOverview Server Actions for Supabase Storage (Private Bucket Compatible).
  * Handles the secure upload and deletion of property images and compliance documents.
  * Generates long-lived signed URLs to work with private storage settings.
+ * Optimized for mobile uploads with robust binary processing.
  */
 
 import { supabase } from '@/lib/supabase';
@@ -26,13 +27,10 @@ export async function uploadToSupabase(
 
     const typedFile = file as unknown as File;
     
-    // Verify arrayBuffer availability (standard in modern environments)
-    if (typeof typedFile.arrayBuffer !== 'function') {
-      throw new Error('Binary processing is not supported for this file type.');
-    }
-
+    // Process binary data into a Buffer for Node.js environment
+    // Use Uint8Array for maximum compatibility with server action streams
     const arrayBuffer = await typedFile.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const buffer = Buffer.from(new Uint8Array(arrayBuffer));
 
     // 1. Physical Upload to Private/Public Bucket
     const { data: uploadData, error: uploadError } = await supabase.storage

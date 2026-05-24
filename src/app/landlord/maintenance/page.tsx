@@ -369,7 +369,7 @@ export default function MaintenancePage() {
                 <CardFooter className="bg-muted/5 p-6 flex flex-wrap gap-4 border-t border-primary/5">
                   <Button 
                     variant="outline" 
-                    className="flex-1 min-w-[180px] bg-white text-primary rounded-xl font-bold h-12 border border-primary/10 shadow-sm transition-all text-xs font-headline hover:bg-accent/10 hover:text-accent" 
+                    className="flex-1 min-w-[180px] bg-white text-primary rounded-xl font-bold h-12 border border-primary/10 shadow-sm transition-all text-xs font-headline hover:bg-primary/5 hover:text-primary" 
                     onClick={() => handleTriage(request)} 
                     disabled={isTriaging === request.id}
                   >
