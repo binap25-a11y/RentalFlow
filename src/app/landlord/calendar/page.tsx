@@ -221,15 +221,15 @@ export default function LandlordCalendarPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* Left Column: Calendar Control & Interactive Zone */}
+        {/* Left Column: Calendar Control */}
         <div className="lg:col-span-4 space-y-8">
           <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white ring-1 ring-primary/5">
-            <CardContent className="p-10">
+            <CardContent className="p-8">
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={(d) => d && setSelectedDate(d)}
-                className="w-full"
+                className="w-full border-none shadow-none ring-0 p-0"
                 modifiers={modifiers}
                 modifiersStyles={modifierStyles}
               />
@@ -266,16 +266,16 @@ export default function LandlordCalendarPage() {
           </Card>
         </div>
 
-        {/* Right Column: Daily Ledger & Redirection Hub */}
+        {/* Right Column: Daily Ledger */}
         <div className="lg:col-span-8 space-y-10">
           <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden min-h-[550px] ring-1 ring-primary/5">
             <CardHeader className="bg-primary/[0.02] border-b border-primary/5 p-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="text-left">
-                 <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/40 mb-2 font-headline">Selected Daily Ledger</p>
+                 <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/40 mb-2 font-headline">Daily Operational Ledger</p>
                  <CardTitle className="text-4xl font-headline text-primary tracking-tighter">{format(selectedDate, 'PPPP')}</CardTitle>
               </div>
               <div className="flex items-center gap-4">
-                <Badge className="rounded-full py-2 px-6 font-bold bg-primary text-white uppercase text-[10px] tracking-widest shadow-xl shadow-primary/10">
+                <Badge className="rounded-full py-2.5 px-6 font-bold bg-primary text-white uppercase text-[10px] tracking-widest shadow-xl shadow-primary/10">
                   {selectedDayEvents.length} Active Tasks
                 </Badge>
               </div>
