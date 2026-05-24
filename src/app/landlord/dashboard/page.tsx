@@ -5,7 +5,8 @@ import {
   Building2, Wallet, TrendingUp, ArrowRight, 
   ShieldAlert, Loader2, CheckCircle2,
   Zap, Target, Download, Plus, Save, ReceiptText, BellRing,
-  Crown, Sparkles, ShieldCheck, PoundSterling, ArrowUpRight, ArrowDownRight
+  Crown, Sparkles, ShieldCheck, PoundSterling, ArrowUpRight, ArrowDownRight,
+  CalendarDays
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
@@ -576,7 +577,14 @@ export default function LandlordDashboard() {
                     <div key={req.id} className="p-4 bg-muted/20 rounded-2xl border border-primary/5 flex items-center justify-between text-left">
                        <div className="min-w-0">
                           <p className="font-bold text-sm text-primary truncate">{req.title}</p>
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{req.priority}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                             <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-widest text-primary/40 border-primary/5">{req.priority}</Badge>
+                             {req.scheduledDate && (
+                               <span className="text-[9px] font-bold text-emerald-600 flex items-center uppercase">
+                                 <CalendarDays className="w-3 h-3 mr-1" /> {format(new Date(req.scheduledDate), 'MMM dd')}
+                               </span>
+                             )}
+                          </div>
                        </div>
                        <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9" asChild>
                          <Link href="/landlord/maintenance"><ArrowRight className="w-4 h-4" /></Link>
