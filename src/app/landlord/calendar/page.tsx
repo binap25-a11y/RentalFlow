@@ -6,20 +6,36 @@ import {
   useFirestore, 
   useCollection, 
   useMemoFirebase, 
-  getLandlordCollectionQuery 
+  getLandlordCollectionQuery,
+  setDocumentNonBlocking
 } from '@/firebase';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   CalendarDays, Loader2, Wrench, ShieldCheck, 
   ChevronRight, Clock, MapPin, 
-  LayoutDashboard, ArrowUpRight
+  LayoutDashboard, ArrowUpRight, Plus,
+  Building2, Save, X
 } from "lucide-react";
 import { format, isSameDay, isAfter, startOfDay, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 type PortfolioEvent = {
   id: string;
@@ -35,8 +51,16 @@ type PortfolioEvent = {
 export default function LandlordCalendarPage() {
   const { user } = useUser();
   const db = useFirestore();
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isClient, setIsClient] = useState(false);
+  const [isAddRepairOpen, setIsAddRepairOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // New Repair Form State
+  const [repairTitle, setRepairTitle] = useState('');
+  const [repairDesc, setRepairDesc] = useState('');
+  const [selectedPropertyId, setSelectedPropertyId] = useState('');
 
   useEffect(() => {
     setIsClient(true);
@@ -65,7 +89,7 @@ export default function LandlordCalendarPage() {
     
     const events: PortfolioEvent[] = [];
 
-    // 1. Map Inspections (Filter out if no date)
+    // 1. Map Inspections
     inspections?.forEach(i => {
       const date = i.scheduledDate ? new Date(i.scheduledDate) : null;
       if (date && isValid(date)) {
@@ -125,8 +149,43 @@ export default function LandlordCalendarPage() {
   }, [allEvents]);
 
   const modifierStyles = {
-    inspection: { borderBottom: '2px solid hsl(var(--primary))' },
-    repair: { borderBottom: '2px solid #f59e0b' }
+    inspection: { borderBottom: '3px solid hsl(var(--primary))' },
+    repair: { borderBottom: '3px solid #f59e0b' }
+  };
+
+  const handleAddRepair = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !db || !selectedPropertyId || !repairTitle) return;
+
+    setIsSaving(true);
+    const requestId = doc(collection(db, 'maintenanceRequests')).id;
+    const requestRef = doc(db, 'maintenanceRequests', requestId);
+    const property = properties?.find(p => p.id === selectedPropertyId);
+
+    const payload = {
+      id: requestId,
+      propertyId: selectedPropertyId,
+      landlordId: user.uid,
+      tenantId: property?.tenantIds?.[0] || 'landlord-direct',
+      memberIds: property?.memberIds || [user.uid],
+      title: repairTitle,
+      description: repairDesc,
+      status: 'pending',
+      priority: 'routine',
+      category: 'other',
+      scheduledDate: selectedDate.toISOString(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+
+    setDocumentNonBlocking(requestRef, payload, { merge: true });
+    
+    toast({ title: "Repair Scheduled", description: `Task logged for ${format(selectedDate, 'PPP')}` });
+    setIsAddRepairOpen(false);
+    setIsSaving(false);
+    setRepairTitle('');
+    setRepairDesc('');
+    setSelectedPropertyId('');
   };
 
   if (!isClient || isInspLoading || isMaintLoading) {
@@ -143,12 +202,12 @@ export default function LandlordCalendarPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">Portfolio Calendar</h1>
-          <p className="text-muted-foreground font-medium font-body max-w-lg">Centralized timeline for audits and coordinated repairs.</p>
+          <p className="text-muted-foreground font-medium font-body max-w-lg">High-fidelity timeline for site audits and coordinated repairs.</p>
         </div>
         <div className="flex gap-2">
            <Button variant="outline" className="rounded-xl font-bold h-11 border-primary/10 bg-white" asChild>
               <Link href="/landlord/dashboard">
-                <LayoutDashboard className="w-4 h-4 mr-2" /> View Dashboard
+                <LayoutDashboard className="w-4 h-4 mr-2" /> Portfolio Command
               </Link>
            </Button>
         </div>
@@ -157,7 +216,7 @@ export default function LandlordCalendarPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Calendar Control */}
         <div className="lg:col-span-4 space-y-6">
-          <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
+          <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white ring-1 ring-primary/5">
             <CardContent className="p-8">
               <Calendar
                 mode="single"
@@ -172,48 +231,89 @@ export default function LandlordCalendarPage() {
                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/40 font-headline">Timeline Legend</p>
                  <div className="grid grid-cols-2 gap-4">
                     <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-primary" />
-                        <span className="text-[10px] font-bold uppercase text-primary/60 font-headline">Audit</span>
+                        <div className="w-3 h-3 rounded-md bg-primary" />
+                        <span className="text-[10px] font-bold uppercase text-primary/60 font-headline">Asset Audit</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-amber-500" />
-                        <span className="text-[10px] font-bold uppercase text-primary/60 font-headline">Repair</span>
+                        <div className="w-3 h-3 rounded-md bg-amber-500" />
+                        <span className="text-[10px] font-bold uppercase text-primary/60 font-headline">Repair Target</span>
                     </div>
                  </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm rounded-[2rem] bg-primary text-white overflow-hidden p-8">
+          <Card className="border-none shadow-sm rounded-[2rem] bg-primary text-white overflow-hidden p-8 relative">
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+               <Clock className="w-20 h-20" />
+            </div>
             <h3 className="text-lg font-bold font-headline mb-4 flex items-center gap-2 text-accent">
                <Clock className="w-5 h-5" /> Operational Readiness
             </h3>
-            <p className="text-sm opacity-80 leading-relaxed font-body font-medium">Use this view to coordinate site visits with contractors. Clicking a task in the Daily Ledger will redirect you to its specific management view.</p>
+            <p className="text-sm opacity-80 leading-relaxed font-body font-medium relative z-10">Use this view to coordinate site visits. Select a date on the calendar to view scheduled operations or log a new repair directly to the timeline.</p>
           </Card>
         </div>
 
-        {/* Right Column: Daily Ledger & Roadmap */}
+        {/* Right Column: Daily Ledger & Add Repair */}
         <div className="lg:col-span-8 space-y-8">
-          <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden min-h-[450px]">
-            <CardHeader className="bg-primary/[0.02] border-b border-primary/5 p-8">
-              <div className="flex justify-between items-center">
-                 <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/40 mb-1 font-headline">Daily Operational Ledger</p>
-                    <CardTitle className="text-3xl font-headline text-primary tracking-tight">{format(selectedDate, 'PPPP')}</CardTitle>
-                 </div>
-                 <Badge className="rounded-xl py-1.5 px-4 font-bold bg-primary text-white uppercase text-[10px]">
-                   {selectedDayEvents.length} Events
-                 </Badge>
+          <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden min-h-[450px] ring-1 ring-primary/5">
+            <CardHeader className="bg-primary/[0.02] border-b border-primary/5 p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="text-left">
+                 <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/40 mb-1 font-headline">Daily Operational Ledger</p>
+                 <CardTitle className="text-3xl font-headline text-primary tracking-tight">{format(selectedDate, 'PPPP')}</CardTitle>
+              </div>
+              <div className="flex items-center gap-3">
+                <Dialog open={isAddRepairOpen} onOpenChange={setIsAddRepairOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="rounded-xl font-bold bg-primary text-white shadow-lg shadow-primary/20 h-11 px-6">
+                      <Plus className="w-4 h-4 mr-2" /> Schedule Repair
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-[550px]">
+                    <form onSubmit={handleAddRepair}>
+                      <div className="p-8 bg-primary/5 border-b text-left">
+                        <DialogTitle className="text-2xl font-bold font-headline text-primary">Schedule Timeline Task</DialogTitle>
+                        <DialogDescription className="font-medium">Logging an operation for {format(selectedDate, 'PPP')}</DialogDescription>
+                      </div>
+                      <div className="p-8 space-y-6 text-left bg-card">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase text-primary/40 font-headline tracking-widest">Select Portfolio Asset</Label>
+                          <select className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
+                            <option value="">Choose a property...</option>
+                            {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase text-primary/40 font-headline tracking-widest">Task Subject</Label>
+                          <Input value={repairTitle} onChange={(e) => setRepairTitle(e.target.value)} required placeholder="e.g. Boiler service or Electrical fix" className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase text-primary/40 font-headline tracking-widest">Detailed Context</Label>
+                          <Textarea value={repairDesc} onChange={(e) => setRepairDesc(e.target.value)} placeholder="Notes for the visit..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-medium" />
+                        </div>
+                      </div>
+                      <DialogFooter className="p-8 bg-muted/10 border-t">
+                        <Button type="submit" disabled={isSaving || !selectedPropertyId || !repairTitle} className="w-full rounded-xl h-14 font-bold bg-primary text-white shadow-xl shadow-primary/20 font-headline text-lg">
+                          {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
+                          Commit to Portfolio Timeline
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+                <Badge className="rounded-xl py-1.5 px-4 font-bold bg-primary text-white uppercase text-[10px]">
+                  {selectedDayEvents.length} Tasks
+                </Badge>
               </div>
             </CardHeader>
             <CardContent className="p-8">
               {selectedDayEvents.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-24 opacity-30 text-center">
-                   <div className="p-6 bg-muted/50 rounded-full mb-6">
-                      <CalendarDays className="w-12 h-12 text-primary" />
+                   <div className="p-8 bg-muted/30 rounded-full mb-6">
+                      <CalendarDays className="w-16 h-16 text-primary" />
                    </div>
-                   <h3 className="text-xl font-bold font-headline text-primary uppercase tracking-widest">Day Clear</h3>
-                   <p className="text-sm font-medium mt-2">No audits or repairs scheduled for this date.</p>
+                   <h3 className="text-xl font-bold font-headline text-primary uppercase tracking-widest">Clear Timeline</h3>
+                   <p className="text-sm font-medium mt-2">No site visits recorded for this period.</p>
                 </div>
               ) : (
                 <div className="grid gap-4">
@@ -231,7 +331,7 @@ export default function LandlordCalendarPage() {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                {upcomingEvents.length === 0 ? (
-                  <p className="col-span-full text-center py-12 text-muted-foreground italic text-sm font-medium bg-muted/20 rounded-[2rem] border-2 border-dashed border-primary/5">No upcoming operations detected.</p>
+                  <p className="col-span-full text-center py-12 text-muted-foreground italic text-sm font-medium bg-muted/10 rounded-[2rem] border-2 border-dashed border-primary/5">No upcoming operations detected.</p>
                ) : (
                  upcomingEvents.map(event => {
                    const linkHref = event.type === 'inspection' ? `/landlord/inspections` : `/landlord/maintenance`;
@@ -244,7 +344,7 @@ export default function LandlordCalendarPage() {
                         )}>
                           {event.type === 'inspection' ? <ShieldCheck className="w-6 h-6" /> : <Wrench className="w-6 h-6" />}
                         </div>
-                        <div className="min-w-0 flex-1">
+                        <div className="min-w-0 flex-1 text-left">
                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1 font-headline">{format(event.date, 'MMM dd, yyyy')}</p>
                            <p className="font-bold text-base text-primary truncate leading-tight">{event.title}</p>
                         </div>
@@ -276,7 +376,7 @@ function EventCard({ event }: { event: PortfolioEvent }) {
           <div>
             <div className="flex items-center gap-3 mb-2">
                <Badge variant="outline" className="uppercase text-[9px] font-bold tracking-[0.2em] opacity-60 border-primary/10 font-headline">
-                {event.type}
+                {event.type === 'inspection' ? 'AUDIT' : 'REPAIR'}
                </Badge>
                {event.priority && (
                  <Badge className="text-[9px] uppercase font-bold bg-red-100 text-red-700 border-none px-3 font-headline">{event.priority}</Badge>
@@ -289,7 +389,7 @@ function EventCard({ event }: { event: PortfolioEvent }) {
           </div>
         </div>
         <div className="flex items-center gap-3 text-primary/20 group-hover:text-primary transition-all">
-           <span className="text-[10px] font-bold uppercase tracking-widest hidden md:inline">Manage Task</span>
+           <span className="text-[10px] font-bold uppercase tracking-widest hidden md:inline">Inspect Task</span>
            <ChevronRight className="w-6 h-6" />
         </div>
       </div>
