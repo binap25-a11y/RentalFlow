@@ -8,7 +8,7 @@
 
 import { supabase } from '@/lib/supabase';
 
-export const maxDuration = 60; // Extend server action timeout for large mobile uploads
+export const maxDuration = 120; // 2 Minutes for large mobile binary syncs
 
 export async function uploadToSupabase(
   formData: FormData,
@@ -19,8 +19,7 @@ export async function uploadToSupabase(
     const file = formData.get('file') as File;
     if (!file) throw new Error('No valid binary payload detected.');
 
-    // Robust binary processing: 
-    // Converting to ArrayBuffer then Buffer is more stable for Next.js 15 Server Actions
+    // Robust binary processing for Next.js 15 Server Actions
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 

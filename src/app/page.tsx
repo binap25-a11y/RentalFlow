@@ -105,7 +105,7 @@ export default function LandingPage() {
             <div className="absolute bottom-10 left-10 right-10 bg-background/40 backdrop-blur-xl border border-white/10 p-8 rounded-3xl">
                <div className="flex justify-between items-center text-white">
                   <div className="text-left"><p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Active Ledger Hub</p><p className="text-2xl font-bold font-headline">Portfolio Command</p></div>
-                  <Badge className="bg-emerald-500 text-white border-none font-bold uppercase text-[9px] tracking-widest px-4 py-1.5 rounded-full shadow-lg">Verified</Badge>
+                  <Badge className="bg-emerald-50 text-white border-none font-bold uppercase text-[9px] tracking-widest px-4 py-1.5 rounded-full shadow-lg">Verified</Badge>
                </div>
             </div>
           </div>

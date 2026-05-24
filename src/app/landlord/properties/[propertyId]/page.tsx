@@ -120,18 +120,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: inspections } = useCollection(inspectionsQuery);
 
-  const paymentsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    const now = new Date();
-    return query(
-      collection(db, 'rentPayments'),
-      where('propertyId', '==', propertyId),
-      where('month', '==', now.getMonth() + 1),
-      where('year', '==', now.getFullYear())
-    );
-  }, [db, propertyId, user]);
-  const { data: currentMonthPayments } = useCollection(paymentsQuery);
-
   const latestAudit = useMemo(() => {
     if (!inspections || inspections.length === 0) return null;
     return inspections
@@ -146,7 +134,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
   const [newDocName, setNewDocName] = useState('');
   const [newDocType, setNewDocType] = useState('Certificate');
-  const [newDocFile, setNewDocFile] = useState<File | null>(null);
+  const [uploadedDocUrl, setUploadedDocUrl] = useState<string | null>(null);
   const [isDocDialogOpen, setIsDocDialogOpen] = useState(false);
 
   const handleUpdateRent = () => {
@@ -159,50 +147,63 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     toast({ title: "Yield Adjusted" });
   };
 
-  const handleUploadDocument = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !db || !newDocFile || !property) return;
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || !property) return;
 
     setIsUploadingDoc(true);
-    const docId = doc(collection(db, 'documents')).id;
-    const docRef = doc(db, 'documents', docId);
+    setUploadedDocUrl(null);
 
+    const formData = new FormData();
+    formData.append('file', file);
+    const path = `vault/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+    
     try {
-      const formData = new FormData();
-      formData.append('file', newDocFile);
-      const path = `vault/${user.uid}/${propertyId}/${Date.now()}_${newDocFile.name}`;
-      
       const res = await uploadToSupabase(formData, 'property-documents', path);
-      if (!res.success) throw new Error(res.error);
-
-      const docData = {
-        id: docId,
-        propertyId: propertyId,
-        landlordId: user.uid,
-        memberIds: property.memberIds || [user.uid],
-        fileName: newDocName || newDocFile.name,
-        fileUrl: res.url || '',
-        documentType: newDocType,
-        uploadDate: new Date().toISOString(),
-      };
-
-      setDocumentNonBlocking(docRef, {
-        ...docData,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      }, { merge: true });
-
-      await syncDocumentToDb(docData);
-
-      toast({ title: "Vault Item Synchronized", description: "Mobile document registered successfully." });
-      setIsDocDialogOpen(false);
-      setNewDocName('');
-      setNewDocFile(null);
+      if (res.success && res.url) {
+        setUploadedDocUrl(res.url);
+        if (!newDocName) setNewDocName(file.name.split('.')[0]);
+        toast({ title: "Mobile Sync Ready", description: "File synchronized to cloud." });
+      } else {
+        throw new Error(res.error || "Binary delivery failure.");
+      }
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Mobile Sync Failed", description: err.message });
+      toast({ variant: "destructive", title: "Sync Failed", description: err.message });
     } finally {
       setIsUploadingDoc(false);
     }
+  };
+
+  const handleFinalizeDocument = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !db || !uploadedDocUrl || !property) return;
+
+    const docId = doc(collection(db, 'documents')).id;
+    const docRef = doc(db, 'documents', docId);
+
+    const docData = {
+      id: docId,
+      propertyId: propertyId,
+      landlordId: user.uid,
+      memberIds: property.memberIds || [user.uid],
+      fileName: newDocName,
+      fileUrl: uploadedDocUrl,
+      documentType: newDocType,
+      uploadDate: new Date().toISOString(),
+    };
+
+    setDocumentNonBlocking(docRef, {
+      ...docData,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+
+    await syncDocumentToDb(docData);
+
+    toast({ title: "Vault Item Registered" });
+    setIsDocDialogOpen(false);
+    setNewDocName('');
+    setUploadedDocUrl(null);
   };
 
   const downloadRentStatement = async () => {
@@ -355,14 +356,14 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             <TabsContent value="docs" className="mt-8 space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="font-bold font-headline text-lg text-foreground">Property Vault</h3>
-                <Dialog open={isDocDialogOpen} onOpenChange={setIsDocDialogOpen}>
+                <Dialog open={isDocDialogOpen} onOpenChange={(o) => { setIsDocDialogOpen(o); if(!o) setUploadedDocUrl(null); }}>
                   <DialogTrigger asChild>
                     <Button className="rounded-xl font-bold bg-primary text-primary-foreground h-10 shadow-lg px-6 text-xs uppercase tracking-widest">
                       <Plus className="w-4 h-4 mr-2" /> Upload Record
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh] max-w-[500px]">
-                    <form onSubmit={handleUploadDocument} className="flex flex-col h-full overflow-hidden">
+                    <form onSubmit={handleFinalizeDocument} className="flex flex-col h-full overflow-hidden">
                       <div className="p-8 bg-primary/5 border-b text-left shrink-0">
                         <DialogTitle className="text-xl font-bold font-headline text-foreground">Vault Orchestration</DialogTitle>
                         <DialogDescription className="text-xs font-medium text-muted-foreground mt-1">Register a compliance document or property guide.</DialogDescription>
@@ -370,9 +371,35 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                       <ScrollArea className="flex-1">
                         <div className="p-8 space-y-6 text-left">
                           <div className="space-y-2">
+                            <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.2em] opacity-60">Mobile File Selection</Label>
+                            <div className="relative group">
+                               <label htmlFor="vault-file" className="w-full h-40 rounded-3xl border-2 border-dashed border-border hover:border-primary/30 transition-all flex flex-col items-center justify-center gap-3 cursor-pointer bg-muted/10 shadow-inner overflow-hidden">
+                                  {isUploadingDoc ? (
+                                    <div className="flex flex-col items-center gap-2">
+                                      <Loader2 className="w-10 h-10 animate-spin text-primary opacity-40" />
+                                      <span className="text-[10px] font-bold text-primary uppercase tracking-[0.3em]">Synchronizing...</span>
+                                    </div>
+                                  ) : uploadedDocUrl ? (
+                                    <div className="flex flex-col items-center gap-2 animate-in zoom-in duration-300">
+                                      <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+                                      <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest px-4 text-center">Binary Sync Complete</span>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <div className="p-4 bg-primary/5 rounded-full"><FileUp className="w-8 h-8 text-muted-foreground opacity-40" /></div>
+                                      <span className="text-[10px] font-bold text-muted-foreground opacity-40 uppercase tracking-widest">Select Binary Asset</span>
+                                    </>
+                                  )}
+                               </label>
+                               <input id="vault-file" type="file" onChange={handleFileSelect} required className="hidden" disabled={isUploadingDoc} />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2 animate-in slide-in-from-top-2 duration-500">
                             <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.2em] opacity-60">Record Label</Label>
                             <Input value={newDocName} onChange={(e) => setNewDocName(e.target.value)} placeholder="e.g. Gas Safety 2025" required className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
                           </div>
+                          
                           <div className="space-y-2">
                             <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.2em] opacity-60">Asset Category</Label>
                             <select className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-foreground" value={newDocType} onChange={(e) => setNewDocType(e.target.value)}>
@@ -381,31 +408,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                               <option value="Manual">Property Guide/Manual</option>
                             </select>
                           </div>
-                          <div className="space-y-2">
-                            <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.2em] opacity-60">Mobile File Selection</Label>
-                            <div className="relative group">
-                               <label htmlFor="vault-file" className="w-full h-32 rounded-2xl border-2 border-dashed border-border hover:border-primary/30 transition-all flex flex-col items-center justify-center gap-3 cursor-pointer bg-muted/10 shadow-inner">
-                                  {newDocFile ? (
-                                    <>
-                                      <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-                                      <span className="text-[10px] font-bold text-foreground uppercase tracking-widest">{newDocFile.name}</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <div className="p-3 bg-primary/5 rounded-full"><FileUp className="w-6 h-6 text-muted-foreground opacity-40" /></div>
-                                      <span className="text-[10px] font-bold text-muted-foreground opacity-40 uppercase tracking-widest">Pick Document</span>
-                                    </>
-                                  )}
-                               </label>
-                               <input id="vault-file" type="file" onChange={(e) => setNewDocFile(e.target.files?.[0] || null)} required className="hidden" />
-                            </div>
-                          </div>
                         </div>
                       </ScrollArea>
                       <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
-                        <Button type="submit" disabled={isUploadingDoc || !newDocFile} className="w-full rounded-xl h-14 font-bold bg-primary shadow-xl text-primary-foreground font-headline text-xs uppercase tracking-widest">
-                          {isUploadingDoc ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ShieldCheck className="w-4 h-4 mr-2" />}
-                          Synchronize with Vault
+                        <Button type="submit" disabled={isUploadingDoc || !uploadedDocUrl || !newDocName} className="w-full rounded-xl h-14 font-bold bg-primary shadow-xl text-primary-foreground font-headline text-xs uppercase tracking-widest hover:scale-[1.01] transition-transform">
+                          <ShieldCheck className="w-4 h-4 mr-2" />
+                          Finalize Ledger Entry
                         </Button>
                       </DialogFooter>
                     </form>
