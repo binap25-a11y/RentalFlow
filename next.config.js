@@ -17,7 +17,8 @@ const nextConfig = {
         "*.firebasestorage.app",
         "*.ngrok-free.app",
         "*.loca.lt",
-        "*.supabase.co"
+        "*.supabase.co",
+        "*.branch.io"
       ]
     }
   },
