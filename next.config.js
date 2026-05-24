@@ -13,7 +13,8 @@ const nextConfig = {
       allowedOrigins: [
         "*.cloudworkstations.dev",
         "localhost:3000",
-        "localhost:9002"
+        "localhost:9002",
+        "*.firebasestorage.app"
       ]
     }
   },
@@ -25,7 +26,9 @@ const nextConfig = {
     '@genkit-ai/google-genai', 
     '@genkit-ai/core', 
     '@genkit-ai/dotprompt', 
-    '@genkit-ai/flow'
+    '@genkit-ai/flow',
+    '@opentelemetry/sdk-node',
+    '@opentelemetry/instrumentation'
   ],
 
   images: {

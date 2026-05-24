@@ -3,7 +3,7 @@
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { 
   ArrowRight, Building2, ShieldCheck, Sparkles, 
   Wrench, Wallet, MessageSquare, ChevronRight,
@@ -56,7 +56,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-4">
              {user ? (
-               <Button asChild className="rounded-xl font-bold bg-accent hover:bg-accent/90 text-primary-foreground px-6 h-11 shadow-lg shadow-accent/20">
+               <Button asChild className="rounded-xl font-bold bg-accent hover:bg-accent/90 text-white px-6 h-11 shadow-lg shadow-accent/20">
                  <Link href={profile?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
                     Portfolio Access <ChevronRight className="w-4 h-4 ml-1" />
                  </Link>
@@ -64,7 +64,7 @@ export default function LandingPage() {
              ) : (
                <>
                  <Button variant="ghost" asChild className="rounded-xl font-bold hidden sm:inline-flex text-foreground hover:bg-primary/5"><Link href="/auth">Sign In</Link></Button>
-                 <Button asChild className="rounded-xl font-bold bg-accent hover:bg-accent/90 text-primary-foreground px-6 h-11 shadow-lg shadow-accent/20"><Link href="/auth">Get Started</Link></Button>
+                 <Button asChild className="rounded-xl font-bold bg-accent hover:bg-accent/90 text-white px-6 h-11 shadow-lg shadow-accent/20"><Link href="/auth">Get Started</Link></Button>
                </>
              )}
           </div>
@@ -83,13 +83,13 @@ export default function LandingPage() {
             
             <div className="pt-4">
               {user && profile ? (
-                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-accent hover:bg-accent/90 text-primary-foreground text-lg font-bold shadow-2xl hover:scale-[1.02] transition-transform">
+                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-accent hover:bg-accent/90 text-white text-lg font-bold shadow-2xl hover:scale-[1.02] transition-transform">
                   <Link href={profile.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
                       Return to Portfolio <ArrowRight className="w-5 h-5 ml-3" />
                   </Link>
                 </Button>
               ) : (
-                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-accent hover:bg-accent/90 text-primary-foreground text-lg font-bold shadow-2xl hover:scale-[1.02] transition-transform">
+                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-accent hover:bg-accent/90 text-white text-lg font-bold shadow-2xl hover:scale-[1.02] transition-transform">
                   <Link href="/auth">Launch Your Portfolio <ArrowRight className="w-5 h-5 ml-3" /></Link>
                 </Button>
               )}
@@ -102,7 +102,7 @@ export default function LandingPage() {
           <div className="relative h-[550px] rounded-[3rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 animate-in fade-in zoom-in duration-1000">
             <Image src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop" alt="Luxury Property" fill className="object-cover" unoptimized priority />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
-            <div className="absolute bottom-10 left-10 right-10 bg-background/40 backdrop-blur-xl border border-white/20 p-8 rounded-3xl">
+            <div className="absolute bottom-10 left-10 right-10 bg-background/40 backdrop-blur-xl border border-white/10 p-8 rounded-3xl">
                <div className="flex justify-between items-center text-white">
                   <div className="text-left"><p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Active Ledger Hub</p><p className="text-2xl font-bold font-headline">Portfolio Command</p></div>
                   <Badge className="bg-emerald-500 text-white border-none font-bold uppercase text-[9px] tracking-widest px-4 py-1.5 rounded-full shadow-lg">Verified</Badge>
@@ -143,11 +143,11 @@ export default function LandingPage() {
            <h2 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-foreground">Scale your portfolio with AI.</h2>
            <p className="text-lg text-muted-foreground font-medium">Join professional landlords using automated triage to protect their assets.</p>
            {user ? (
-             <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-accent hover:bg-accent/90 text-primary-foreground text-xl font-bold shadow-2xl">
+             <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-accent hover:bg-accent/90 text-white text-xl font-bold shadow-2xl">
                <Link href={profile?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>Enter Dashboard</Link>
              </Button>
            ) : (
-             <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-accent hover:bg-accent/90 text-primary-foreground text-xl font-bold shadow-2xl">
+             <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-accent hover:bg-accent/90 text-white text-xl font-bold shadow-2xl">
                <Link href="/auth">Start Your Journey</Link>
              </Button>
            )}

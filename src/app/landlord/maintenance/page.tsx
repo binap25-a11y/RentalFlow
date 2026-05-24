@@ -19,7 +19,7 @@ import {
   Wrench, Sparkles, Clock, BrainCircuit, Loader2, 
   CheckCircle2, PlayCircle, Plus,
   Calendar as CalendarIcon, Building2,
-  Activity, Save, Edit3, ChevronRight, Lightbulb
+  Activity, Save, Edit3, ChevronRight, Lightbulb, Settings
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -43,6 +43,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Link from 'next/link';
 
 export default function MaintenancePage() {
   const { user } = useUser();
@@ -168,8 +169,8 @@ export default function MaintenancePage() {
   }
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto pb-12 text-left">
-      <div className="space-y-4">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto pb-12 text-left">
+      <div className="space-y-6">
         <div className="space-y-2">
           <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-3 py-1 rounded-full font-bold uppercase tracking-[0.15em] text-[9px]">
              <Activity className="w-3 h-3 mr-2" /> Maintenance Roadmap
@@ -193,9 +194,9 @@ export default function MaintenancePage() {
           </Card>
         ) : (
           requests.slice().sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).map((request) => (
-            <Card key={request.id} className="border-none shadow-sm overflow-hidden bg-card rounded-[2.5rem] group ring-1 ring-border transition-all hover:shadow-md">
+            <Card key={request.id} className="border-none shadow-sm overflow-hidden bg-card rounded-[2.5rem] group ring-1 ring-border transition-all hover:shadow-md relative">
               <CardContent className="p-8">
-                <div className="flex justify-between items-start mb-6">
+                <div className="flex justify-between items-start mb-6 pr-10">
                   <div className="flex flex-wrap items-center gap-3">
                     <Badge className={cn("uppercase text-[8px] font-bold px-3 py-1 tracking-[0.1em] rounded-full", request.status === 'completed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-primary/10 text-primary')}>
                       {request.status}
@@ -207,6 +208,12 @@ export default function MaintenancePage() {
                       <Clock className="w-3.5 h-3.5 mr-1.5" /> {request.createdAt ? format(new Date(request.createdAt.seconds * 1000), 'p') : 'Just now'}
                     </span>
                   </div>
+                </div>
+
+                <div className="absolute top-8 right-8">
+                  <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 text-muted-foreground hover:bg-primary/5 hover:text-foreground" asChild>
+                    <Link href={`/landlord/properties/${request.propertyId}`}><Settings className="w-4 h-4" /></Link>
+                  </Button>
                 </div>
                 
                 <div className="space-y-4">
@@ -251,7 +258,7 @@ export default function MaintenancePage() {
                         </div>
                         <div className="flex flex-col gap-3">
                           {request.aiSuggestions.map((s: string, idx: number) => (
-                            <div key={idx} className="flex gap-3 p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 text-[11px] font-bold text-foreground shadow-sm w-fit min-w-[300px]">
+                            <div key={idx} className="flex gap-3 p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 text-[11px] font-bold text-foreground shadow-sm w-full md:w-fit min-w-[300px]">
                               <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" /> {s}
                             </div>
                           ))}
@@ -285,11 +292,11 @@ export default function MaintenancePage() {
                     <Button variant="outline" className="flex-1 min-w-[180px] rounded-xl font-bold h-12 border-border bg-card shadow-sm hover:bg-primary/5 text-foreground text-xs font-headline">Update Status</Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="rounded-xl border-border shadow-xl min-w-[220px] p-2 bg-card" align="end">
-                    <DropdownMenuItem className="py-3 px-4 font-bold text-xs cursor-pointer rounded-lg focus:bg-accent focus:text-accent-foreground" onClick={() => updateStatus(request, 'in-progress')}>
-                      <PlayCircle className="w-4 h-4 mr-3 text-sky-600" /> In Progress
+                    <DropdownMenuItem className="py-3 px-4 font-bold text-xs cursor-pointer rounded-lg focus:bg-accent focus:text-accent-foreground group" onClick={() => updateStatus(request, 'in-progress')}>
+                      <PlayCircle className="w-4 h-4 mr-3 text-sky-600 group-focus:text-white" /> In Progress
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="py-3 px-4 font-bold text-xs cursor-pointer rounded-lg focus:bg-accent focus:text-accent-foreground" onClick={() => updateStatus(request, 'completed')}>
-                      <CheckCircle2 className="w-4 h-4 mr-3 text-emerald-600" /> Completed
+                    <DropdownMenuItem className="py-3 px-4 font-bold text-xs cursor-pointer rounded-lg focus:bg-accent focus:text-accent-foreground group" onClick={() => updateStatus(request, 'completed')}>
+                      <CheckCircle2 className="w-4 h-4 mr-3 text-emerald-600 group-focus:text-white" /> Completed
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

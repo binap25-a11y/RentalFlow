@@ -16,7 +16,7 @@ export async function uploadToSupabase(
     const file = formData.get('file') as File;
     if (!file) throw new Error('No valid file provided.');
 
-    // Robust binary processing for mobile compatibility
+    // Robust binary processing for mobile compatibility: Ensure Uint8Array conversion
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
@@ -25,9 +25,13 @@ export async function uploadToSupabase(
       .upload(path, buffer, {
         contentType: file.type,
         upsert: true,
+        cacheControl: '3600',
       });
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error('Supabase Upload Error:', uploadError);
+      throw uploadError;
+    }
 
     const { data: signedData, error: signedError } = await supabase.storage
       .from(bucket)
