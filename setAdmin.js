@@ -5,9 +5,8 @@ const serviceAccount = require("./src/lib/serviceAccountKey.json");
  * 🛠️ Permanent Admin/Premium Escalation Script
  * 
  * INSTRUCTIONS:
- * 1. Replace "REPLACE_WITH_YOUR_FIREBASE_UID" with your actual UID from the Firebase Console.
- * 2. Run in terminal: node setAdmin.js
- * 3. Log out and back in to the app to refresh your token.
+ * 1. Run in terminal: node setAdmin.js
+ * 2. Log out and back in to the app to refresh your token.
  */
 
 if (!admin.apps.length) {
@@ -16,8 +15,8 @@ if (!admin.apps.length) {
   });
 }
 
-// REPLACE WITH YOUR UID (Get from Firebase Console -> Authentication -> Users)
-const uid = "REPLACE_WITH_YOUR_FIREBASE_UID";
+// YOUR SPECIFIC UID
+const uid = "E9WTQfSqRNf64HzOlCoYXuAsBuH2";
 
 admin.auth().setCustomUserClaims(uid, {
   admin: true,
