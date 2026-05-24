@@ -32,6 +32,7 @@ export default function LandlordLayout({
 
   const { data: profile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
+  // Accelerated Redirection Logic
   useEffect(() => {
     if (isClient && !isUserLoading && !user) {
       router.replace('/auth');
@@ -42,7 +43,7 @@ export default function LandlordLayout({
 
   const BRAND_LOGO_URL = RENTALFLOW_NEUTRAL_FALLBACK;
 
-  // Render a stable, high-fidelity loader to prevent flickering during auth/profile resolution
+  // Render a stable, high-fidelity brand loader to prevent flickering on mobile
   if (!isClient || isUserLoading || isProfileLoading || (user && !profile)) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-500">

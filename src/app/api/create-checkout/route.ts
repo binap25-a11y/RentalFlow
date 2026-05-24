@@ -3,7 +3,7 @@ import Stripe from "stripe";
 
 /**
  * @fileOverview Resilient Stripe Checkout Session Engine.
- * Handles configuration errors (like Price vs Product IDs) and full API paths gracefully.
+ * Robust sanitization: Handles configuration strings, full API paths, and Product ID errors.
  */
 
 export async function POST(req: Request) {
@@ -19,11 +19,15 @@ export async function POST(req: Request) {
       }, { status: 503 });
     }
 
-    // Sanitization: Extract the ID if the user provided the full API path (/v1/prices/price_...)
-    let priceId = rawPriceId.includes('/') ? rawPriceId.split('/').pop() || '' : rawPriceId;
+    // SANITIZATION: Robust extraction of price_ ID from full paths or dirty strings
+    // Format handled: /v1/prices/price_... OR price_... OR whitespace strings
+    let priceId = rawPriceId.toString().trim();
+    if (priceId.includes('/')) {
+      priceId = priceId.split('/').pop() || priceId;
+    }
     priceId = priceId.trim();
 
-    // Validation: Product IDs (prod_...) cannot be used as prices in checkout line items.
+    // VALIDATION: Product IDs (prod_...) cannot be used as prices.
     if (priceId.startsWith('prod_')) {
       return NextResponse.json({ 
         error: `Configuration Mismatch: You are using a Product ID (${priceId}). Please use a Price ID (starting with 'price_') from your Stripe Dashboard.` 

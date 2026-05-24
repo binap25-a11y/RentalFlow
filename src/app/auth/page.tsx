@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Eye, EyeOff, User as UserIcon, Phone, CheckCircle2, Lock, Sparkles, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Loader2, Eye, EyeOff, User as UserIcon, Phone, CheckCircle2, ShieldCheck, ArrowLeft } from "lucide-react";
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp, setDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -45,6 +45,7 @@ export default function AuthPage() {
     setMounted(true);
   }, []);
 
+  // Optimized Redirect Logic: Accelerated for immediate entry
   useEffect(() => {
     if (user && db && mounted && !isLoading && !isRedirecting.current) {
       const checkAndRedirect = async () => {
@@ -54,7 +55,10 @@ export default function AuthPage() {
 
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            if (!userData.firstName || !userData.lastName || !userData.role || !userData.phoneNumber) {
+            // Faster check for profile completeness
+            const isProfileComplete = !!(userData.firstName && userData.lastName && userData.role && userData.phoneNumber);
+            
+            if (!isProfileComplete) {
               setNeedsProfile(true);
               return;
             }
@@ -62,16 +66,13 @@ export default function AuthPage() {
             if (isRedirecting.current) return;
             isRedirecting.current = true;
             
-            // Sync claims before redirecting
-            await user.getIdToken(true);
-            
             // Redirect landlords directly to properties for immediate operational context
-            router.replace(userData?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
+            router.replace(userData.role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
           } else {
             setNeedsProfile(true);
           }
         } catch (e) {
-          console.error("Profile check failed:", e);
+          console.error("Session verification failed:", e);
           setNeedsProfile(true);
         }
       };
@@ -82,7 +83,7 @@ export default function AuthPage() {
   const handleCreateProfile = async () => {
     if (!user || !db) return;
     if (!firstName.trim() || !lastName.trim() || !phoneNumber.trim()) {
-      toast({ variant: "destructive", title: "Missing Information", description: "Please fill in all details." });
+      toast({ variant: "destructive", title: "Missing Information", description: "All fields are required." });
       return;
     }
 
@@ -111,14 +112,13 @@ export default function AuthPage() {
         const querySnapshot = await getDocs(q);
         
         for (const profileDoc of querySnapshot.docs) {
-          const profileData = profileDoc.data();
-          
           await updateDoc(profileDoc.ref, { 
             userId: user.uid,
             tenantId: user.uid,
             memberIds: arrayUnion(user.uid)
           });
           
+          const profileData = profileDoc.data();
           if (profileData.propertyId) {
             const propertyRef = doc(db, 'properties', profileData.propertyId);
             await updateDoc(propertyRef, {
@@ -129,8 +129,8 @@ export default function AuthPage() {
         }
       }
       
+      // Force token refresh to sync custom claims if present
       await user.getIdToken(true);
-      toast({ title: "Profile Ready", description: `Welcome to RentalFlow.` });
       
       isRedirecting.current = true;
       router.replace(role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
@@ -148,7 +148,6 @@ export default function AuthPage() {
     try {
       if (authMode === 'signup') {
         await initiateEmailSignUp(auth, email, password);
-        toast({ title: "Account Created", description: "Please complete your profile details." });
       } else {
         await initiateEmailSignIn(auth, email, password);
       }
@@ -171,13 +170,12 @@ export default function AuthPage() {
       toast({ 
         variant: "destructive", 
         title: "Google Session Failed", 
-        description: error.message || "Ensure popups are enabled and try again."
+        description: "Ensure popups are enabled and try again."
       });
       setIsLoading(false);
     }
   };
 
-  // High-fidelity full-screen loader to prevent UI flickering during initial mount and auth checks
   if (!mounted || isUserLoading || (user && !needsProfile && !isRedirecting.current)) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-500">
@@ -200,7 +198,7 @@ export default function AuthPage() {
             <div className="flex flex-col items-center gap-4">
               <div className="flex items-center gap-3">
                 <Loader2 className="w-5 h-5 animate-spin text-primary opacity-60" />
-                <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Authorizing Session</p>
+                <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Authorizing Access</p>
               </div>
             </div>
           </div>
@@ -295,8 +293,8 @@ export default function AuthPage() {
             priority
           />
         </div>
-        <h1 className="text-6xl font-headline font-bold text-foreground mb-3 tracking-tighter">RentalFlow</h1>
-        <p className="text-muted-foreground font-medium font-body opacity-80 uppercase tracking-[0.2em] text-sm">Premium Portfolio Ledger</p>
+        <h1 className="text-6xl font-headline font-bold text-foreground mb-3 tracking-tighter text-center">RentalFlow</h1>
+        <p className="text-muted-foreground font-medium font-body opacity-80 uppercase tracking-[0.2em] text-sm text-center">Premium Portfolio Ledger</p>
       </div>
 
       <div className="max-w-xl w-full relative z-10">
@@ -318,22 +316,10 @@ export default function AuthPage() {
                 disabled={isLoading}
               >
                 <svg className="w-6 h-6 mr-4" viewBox="0 0 24 24">
-                  <path
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-3.3 3.28-8.19 3.28-8.09z"
-                    fill="#4285F4"
-                  />
-                  <path
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    fill="#34A853"
-                  />
-                  <path
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.16H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.84l3.66-2.75z"
-                    fill="#FBBC05"
-                  />
-                  <path
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.16l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    fill="#EA4335"
-                  />
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-3.3 3.28-8.19 3.28-8.09z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.16H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.84l3.66-2.75z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.16l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                 </svg>
                 Continue with Google
               </Button>
@@ -364,13 +350,14 @@ export default function AuthPage() {
                     </button>
                   </div>
                 </div>
+                {/* Contrast Hardened: strictly primary-foreground and extra bold for visual modes */}
                 <Button type="submit" className="w-full h-16 rounded-[1.75rem] font-bold bg-primary text-primary-foreground text-xl shadow-2xl shadow-primary/20 font-headline hover:scale-[1.01] active:scale-95 transition-all" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-primary-foreground" /> : <span className="text-primary-foreground">{(authMode === 'login' ? 'Access Vault' : 'Create Credentials')}</span>}
+                  {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-primary-foreground" /> : <span className="text-primary-foreground font-extrabold">{(authMode === 'login' ? 'Access Vault' : 'Create Credentials')}</span>}
                 </Button>
               </form>
             </div>
 
-            <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full mt-10 text-xs font-bold text-muted-foreground hover:text-primary transition-all font-headline uppercase tracking-widest">
+            <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full mt-10 text-xs font-bold text-muted-foreground hover:text-primary transition-all font-headline uppercase tracking-widest text-center">
               {authMode === 'login' ? "New to the platform? Create account" : "Return to authentication screen"}
             </button>
           </CardContent>
@@ -381,10 +368,6 @@ export default function AuthPage() {
          <div className="flex items-center gap-3">
             <ShieldCheck className="w-5 h-5 text-foreground" />
             <span className="text-[10px] font-bold text-foreground uppercase tracking-[0.3em] font-headline">UK Compliant Architecture</span>
-         </div>
-         <div className="flex items-center gap-3">
-            <Sparkles className="w-5 h-5 text-foreground" />
-            <span className="text-[10px] font-bold text-foreground uppercase tracking-[0.3em] font-headline">AI-Driven Management</span>
          </div>
       </div>
     </div>

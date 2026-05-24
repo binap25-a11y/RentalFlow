@@ -2,12 +2,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
-  Building2, Wallet, TrendingUp, FileText, ArrowRight, 
+  Building2, Wallet, TrendingUp, ArrowRight, 
   ShieldAlert, Loader2, CheckCircle2,
-  Calendar as CalendarIcon, Zap, ClipboardList, AlertTriangle,
-  PoundSterling, PieChart as PieChartIcon, ArrowUpRight, ArrowDownRight,
-  Target, Download, Plus, Save, Users, Wrench, Clock, ReceiptText, BellRing,
-  Crown, Sparkles, ShieldCheck
+  Zap, Target, Download, Plus, Save, ReceiptText, BellRing,
+  Crown, Sparkles, ShieldCheck, PoundSterling, ArrowUpRight, ArrowDownRight
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";

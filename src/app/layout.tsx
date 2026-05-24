@@ -45,6 +45,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        {/* Zero-Flicker Theme Engine: Blocking script to apply colors before initial paint */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -52,7 +53,8 @@ export default function RootLayout({
                 try {
                   var theme = localStorage.getItem('theme');
                   var supportDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  if (theme === 'dark' || (!theme && supportDark)) {
+                  var isDark = theme === 'dark' || (!theme && supportDark);
+                  if (isDark) {
                     document.documentElement.classList.add('dark');
                     document.documentElement.style.backgroundColor = '#020617';
                   } else {
