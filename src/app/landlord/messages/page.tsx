@@ -89,7 +89,7 @@ export default function LandlordMessagingPage() {
                     : "bg-muted/50 hover:bg-muted"
                 )}
               >
-                <Avatar className="h-10 w-10 border-2 border-white/20">
+                <Avatar className="h-10 w-10 border-2 border-background/20">
                   <AvatarFallback className={cn("text-xs font-bold", selectedTenantId === tenant.userId ? "bg-white/20 text-white" : "bg-primary/10 text-primary")}>
                     {tenant.firstName[0]}{tenant.lastName[0]}
                   </AvatarFallback>

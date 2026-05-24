@@ -114,10 +114,10 @@ export default function ProfilePage() {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <Card className="lg:col-span-1 border-none shadow-sm rounded-[2rem] overflow-hidden bg-white text-center">
+                <Card className="lg:col-span-1 border-none shadow-sm rounded-[2rem] overflow-hidden bg-card text-center">
                   <div className="p-10 space-y-6">
                     <div className="relative inline-block group">
-                      <Avatar className="h-32 w-32 border-4 border-white shadow-2xl ring-1 ring-primary/5">
+                      <Avatar className="h-32 w-32 border-4 border-background shadow-2xl ring-1 ring-primary/5">
                         <AvatarImage src={user?.photoURL || undefined} />
                         <AvatarFallback className="bg-primary text-white text-4xl font-bold font-headline">
                           {firstName?.[0]}{lastName?.[0]}
@@ -145,7 +145,7 @@ export default function ProfilePage() {
                   </div>
                 </Card>
 
-                <Card className="lg:col-span-2 border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden">
+                <Card className="lg:col-span-2 border-none shadow-sm rounded-[2.5rem] bg-card overflow-hidden">
                   <form onSubmit={handleSave}>
                     <CardHeader className="p-8 pb-4 border-b border-primary/5 bg-primary/[0.02] text-left">
                       <CardTitle className="text-xl font-headline flex items-center text-primary">

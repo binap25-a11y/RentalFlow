@@ -211,10 +211,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         </Badge>
       </div>
 
-      <Card className="border-none shadow-xl overflow-hidden rounded-[2rem] bg-white">
+      <Card className="border-none shadow-xl overflow-hidden rounded-[2rem] bg-card">
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-1 lg:grid-cols-2">
-            <div className="p-8 lg:p-12 bg-primary/5 border-r border-primary/10">
+            <div className="p-8 lg:p-12 bg-primary/5 border-r border-border">
               <div className="flex justify-between items-center mb-6 text-left">
                 <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 font-headline">Gallery Ledger</Label>
                 <Button type="button" variant="ghost" size="sm" className="h-8 rounded-lg font-bold text-[10px] uppercase font-headline" onClick={() => document.getElementById('image-input')?.click()}>
@@ -225,12 +225,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
               <div className="grid grid-cols-2 gap-4">
                 {ledger.map((item, index) => (
                   <div key={item.id} className={cn(
-                    "relative aspect-video rounded-2xl overflow-hidden group shadow-md bg-white border-2 transition-all",
+                    "relative aspect-video rounded-2xl overflow-hidden group shadow-md bg-background border-2 transition-all",
                     index === 0 ? "border-primary" : "border-transparent"
                   )}>
                     <Image src={item.url} alt={`Asset ${index}`} fill className="object-cover" unoptimized />
                     <div className="absolute top-2 right-2 flex gap-1 z-20">
-                      <button type="button" onClick={() => setAsPrimary(item.id)} title="Set as Primary" className="bg-white/90 text-primary p-1.5 rounded-lg hover:scale-110 transition-transform shadow-lg"><Star className={cn("w-3.5 h-3.5", index === 0 && "fill-primary")} /></button>
+                      <button type="button" onClick={() => setAsPrimary(item.id)} title="Set as Primary" className="bg-background/90 text-primary p-1.5 rounded-lg hover:scale-110 transition-transform shadow-lg"><Star className={cn("w-3.5 h-3.5", index === 0 && "fill-primary")} /></button>
                       <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-black/60 text-white p-1.5 rounded-lg hover:bg-red-500 transition-all shadow-lg"><X className="w-3.5 h-3.5" /></button>
                     </div>
                     {index === 0 && (
@@ -241,7 +241,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                 <button 
                   type="button" 
                   onClick={() => document.getElementById('image-input')?.click()}
-                  className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white flex flex-col items-center justify-center gap-2 group"
+                  className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-background flex flex-col items-center justify-center gap-2 group"
                 >
                   <Plus className="w-6 h-6 text-primary/20 group-hover:text-primary/40" />
                 </button>
@@ -294,7 +294,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </div>
           <CardFooter className="p-8 bg-muted/10 border-t flex justify-end gap-4">
             <Button type="button" variant="ghost" className="rounded-xl h-12 px-8 font-bold" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" disabled={isSaving} className="rounded-xl font-bold bg-primary h-12 px-12 text-white shadow-lg shadow-primary/20">
+            <Button type="submit" disabled={isSaving} className="rounded-xl font-bold bg-primary h-12 px-12 text-primary-foreground shadow-lg shadow-primary/20">
               {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
               {isSaving ? "Synchronizing Asset..." : "Update Portfolio Records"}
             </Button>

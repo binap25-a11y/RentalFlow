@@ -180,7 +180,7 @@ export default function NewPropertyPage() {
                          </button>
                       </div>
                       {item.status === 'uploading' && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-black/60">
+                        <div className="absolute inset-0 flex items-center justify-center bg-background/60">
                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
                         </div>
                       )}
