@@ -12,14 +12,15 @@ const nextConfig = {
       bodySizeLimit: '50mb',
       allowedOrigins: [
         "*.cloudworkstations.dev",
-        "localhost:3000",
-        "localhost:9002",
+        "localhost:*",
+        "127.0.0.1:*",
         "*.firebasestorage.app",
         "*.ngrok-free.app",
         "*.loca.lt",
         "*.supabase.co",
         "*.branch.io",
-        "*.vercel.app"
+        "*.vercel.app",
+        "*.google.com"
       ]
     }
   },
