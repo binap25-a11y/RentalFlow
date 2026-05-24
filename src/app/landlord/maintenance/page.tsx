@@ -340,19 +340,20 @@ export default function MaintenancePage() {
                       </div>
 
                       {request.aiSuggestions && request.aiSuggestions.length > 0 && (
-                        <div className="bg-emerald-50/40 border border-emerald-100/50 rounded-[1.5rem] p-6 flex gap-6 text-left">
-                          <div className="p-3 bg-white rounded-xl shadow-sm text-emerald-600 h-fit border border-emerald-100">
-                             <Lightbulb className="w-6 h-6" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-[8px] font-bold text-emerald-700/60 uppercase mb-3 tracking-[0.2em] font-headline">Recommendations</p>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {request.aiSuggestions.map((suggestion: string, idx: number) => (
-                                <div key={idx} className="flex gap-3 p-4 bg-white/60 rounded-xl border border-emerald-100 text-[11px] font-bold text-emerald-900 shadow-sm transition-all hover:bg-white">
-                                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" /> {suggestion}
-                                </div>
-                              ))}
+                        <div className="bg-emerald-50/40 border border-emerald-100/50 rounded-[1.5rem] p-8 flex flex-col gap-6 text-left">
+                          <div className="flex items-center gap-4">
+                            <div className="p-3 bg-white rounded-xl shadow-sm text-emerald-600 h-fit border border-emerald-100">
+                               <Lightbulb className="w-6 h-6" />
                             </div>
+                            <p className="text-[8px] font-bold text-emerald-700/60 uppercase tracking-[0.2em] font-headline">Recommendations</p>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {request.aiSuggestions.map((suggestion: string, idx: number) => (
+                              <div key={idx} className="flex gap-3 p-5 bg-white/60 rounded-2xl border border-emerald-100 text-[11px] font-bold text-emerald-900 shadow-sm transition-all hover:bg-white">
+                                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" /> {suggestion}
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}
