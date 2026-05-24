@@ -238,7 +238,7 @@ export default function MaintenancePage() {
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-7xl mx-auto pb-12 text-left">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="space-y-6">
         <div>
           <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1.5 rounded-full font-bold mb-4 uppercase tracking-[0.2em] text-[10px]">
              <Activity className="w-3 h-3 mr-2" /> Maintenance Roadmap
@@ -257,8 +257,8 @@ export default function MaintenancePage() {
             <div className="p-10 bg-primary/5 rounded-[3rem] mb-8">
                <Wrench className="w-20 h-20 text-primary opacity-20" />
             </div>
-            <h3 className="text-2xl font-bold font-headline text-primary opacity-40 uppercase tracking-widest">Empty Ledger</h3>
-            <p className="text-muted-foreground font-medium mt-3">No active maintenance tasks registered in the roadmap.</p>
+            <h3 className="text-2xl font-bold font-headline text-primary opacity-40 uppercase tracking-widest text-center">Empty Ledger</h3>
+            <p className="text-muted-foreground font-medium mt-3 text-center">No active maintenance tasks registered in the roadmap.</p>
             <Button variant="ghost" className="mt-8 font-bold text-primary" onClick={() => setIsCreateDialogOpen(true)}>Initialize First Task</Button>
           </Card>
         ) : (
