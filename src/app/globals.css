@@ -11,7 +11,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 218 49% 12%;
     --primary: 218 49% 25%;
-    --primary-foreground: 210 40% 98%;
+    --primary-foreground: 210 40% 99%; /* Hardened white for contrast */
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 218 49% 25%;
     --muted: 210 40% 96.1%;
@@ -42,7 +42,7 @@
     --popover: 222 47% 7%;
     --popover-foreground: 210 40% 98%;
     --primary: 210 40% 98%;
-    --primary-foreground: 222 47% 12%;
+    --primary-foreground: 222 47% 10%; /* High-contrast dark on light */
     --secondary: 222 47% 12%;
     --secondary-foreground: 210 40% 98%;
     --muted: 222 47% 12%;

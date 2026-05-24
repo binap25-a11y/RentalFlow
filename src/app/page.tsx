@@ -99,27 +99,32 @@ export default function LandingPage() {
             <Badge variant="outline" className="py-2 px-4 rounded-full border-primary/20 bg-primary/5 text-primary font-bold uppercase tracking-[0.2em] text-[10px]">
               <Sparkles className="w-3 h-3 mr-2 text-accent" /> AI-Powered Portfolio Orchestration
             </Badge>
-            <h1 className="text-6xl md:text-8xl font-headline font-bold text-foreground tracking-tighter leading-[0.9]">
-              Premium Property <br/>
-              <span className="text-accent">Management.</span>
-            </h1>
+            <div className="space-y-4">
+              <h1 className="text-6xl md:text-8xl font-headline font-bold text-foreground tracking-tighter leading-[0.9]">
+                Premium Property <br/>
+                <span className="text-accent">Management.</span>
+              </h1>
+              {user && (
+                <div className="pt-4">
+                  <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-primary text-lg font-bold shadow-2xl shadow-primary/20 text-primary-foreground hover:scale-[1.02] transition-transform">
+                    <Link href={profile?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
+                        Return to Portfolio <ArrowRight className="w-5 h-5 ml-3" />
+                    </Link>
+                  </Button>
+                </div>
+              )}
+            </div>
+            
             <p className="text-xl text-muted-foreground font-medium max-w-xl leading-relaxed">
               Accelerate your rental operations with automated maintenance triage, professional ledger tracking, and an AI-driven resident concierge.
             </p>
-            <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
-               {user ? (
-                 <Button size="lg" asChild className="w-full sm:w-auto h-16 px-10 rounded-2xl bg-primary text-lg font-bold shadow-2xl shadow-primary/20 text-primary-foreground hover:scale-[1.02] transition-transform">
-                   <Link href={profile?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
-                      Return to Portfolio <ArrowRight className="w-5 h-5 ml-3" />
-                   </Link>
-                 </Button>
-               ) : (
-                 <Button size="lg" asChild className="w-full sm:w-auto h-16 px-10 rounded-2xl bg-primary text-lg font-bold shadow-2xl shadow-primary/20 text-primary-foreground hover:scale-[1.02] transition-transform">
-                   <Link href="/auth">Launch Your Portfolio</Link>
-                 </Button>
-               )}
-               
-               <div className="flex items-center gap-3 px-6 h-16 rounded-2xl border border-border bg-card shadow-sm">
+
+            {!user && (
+              <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+                <Button size="lg" asChild className="w-full sm:w-auto h-16 px-10 rounded-2xl bg-primary text-lg font-bold shadow-2xl shadow-primary/20 text-primary-foreground hover:scale-[1.02] transition-transform">
+                  <Link href="/auth">Launch Your Portfolio</Link>
+                </Button>
+                <div className="flex items-center gap-3 px-6 h-16 rounded-2xl border border-border bg-card shadow-sm">
                   <div className="flex -space-x-2">
                     {[1,2,3].map(i => (
                       <div key={i} className="w-8 h-8 rounded-full border-2 border-card bg-muted overflow-hidden relative">
@@ -128,8 +133,9 @@ export default function LandingPage() {
                     ))}
                   </div>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Trusted by UK Landlords</span>
-               </div>
-            </div>
+                </div>
+              </div>
+            )}
           </div>
           <div className="relative h-[600px] rounded-[3rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 animate-in fade-in zoom-in duration-1000">
             <Image 
