@@ -203,13 +203,6 @@ export default function LandlordCalendarPage() {
           <h1 className="text-5xl font-headline font-bold text-primary tracking-tighter">Portfolio Calendar</h1>
           <p className="text-muted-foreground font-medium font-body max-w-lg mt-2">Managing site audits and high-fidelity repair timelines.</p>
         </div>
-        <div className="flex gap-3">
-           <Button variant="outline" className="rounded-2xl font-bold h-12 border-primary/10 bg-white hover:bg-primary/5 transition-all shadow-sm" asChild>
-              <Link href="/landlord/dashboard">
-                <LayoutDashboard className="w-4 h-4 mr-2" /> Portfolio Command
-              </Link>
-           </Button>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
