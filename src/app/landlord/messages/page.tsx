@@ -70,10 +70,10 @@ export default function LandlordMessagingPage() {
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 max-w-5xl mx-auto pb-12">
-      <Card className="w-full border-none shadow-sm flex flex-col rounded-3xl overflow-hidden bg-white">
+      <Card className="w-full border-none shadow-sm flex flex-col rounded-3xl overflow-hidden bg-card ring-1 ring-border">
         <CardHeader className="bg-primary/5 p-6 border-b">
-          <CardTitle className="text-xl font-headline flex items-center gap-2 text-left text-primary">
-            <MessageSquare className="w-5 h-5" /> Resident Conversations
+          <CardTitle className="text-xl font-headline flex items-center gap-2 text-left text-foreground">
+            <MessageSquare className="w-5 h-5 text-accent" /> Resident Conversations
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4">
@@ -85,7 +85,7 @@ export default function LandlordMessagingPage() {
                 className={cn(
                   "flex items-center gap-3 p-4 rounded-2xl transition-all text-left border border-transparent min-w-[220px] flex-1 md:flex-none",
                   selectedTenantId === tenant.userId 
-                    ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]" 
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.02]" 
                     : "bg-muted/50 hover:bg-muted"
                 )}
               >
@@ -96,7 +96,7 @@ export default function LandlordMessagingPage() {
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm truncate">{tenant.firstName} {tenant.lastName}</p>
-                  <p className={cn("text-[10px] truncate font-medium", selectedTenantId === tenant.userId ? "text-white/70" : "text-muted-foreground")}>
+                  <p className={cn("text-[10px] truncate font-medium", selectedTenantId === tenant.userId ? "opacity-70" : "text-muted-foreground")}>
                     {tenant.email}
                   </p>
                 </div>
@@ -106,7 +106,7 @@ export default function LandlordMessagingPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-none shadow-sm flex flex-col rounded-3xl overflow-hidden min-h-[550px] bg-white">
+      <Card className="border-none shadow-sm flex flex-col rounded-3xl overflow-hidden min-h-[550px] bg-card ring-1 ring-border">
         {selectedTenantId ? (
           <>
             <CardHeader className="p-5 border-b bg-muted/10 flex flex-row items-center gap-4">
@@ -116,7 +116,7 @@ export default function LandlordMessagingPage() {
                 </AvatarFallback>
               </Avatar>
               <div className="text-left">
-                <p className="font-bold text-base font-headline text-primary">
+                <p className="font-bold text-base font-headline text-foreground">
                   {tenants?.find(t => t.userId === selectedTenantId)?.firstName} {tenants?.find(t => t.userId === selectedTenantId)?.lastName}
                 </p>
                 <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Direct Line</p>
@@ -127,7 +127,7 @@ export default function LandlordMessagingPage() {
                 <div key={i} className={cn("flex flex-col max-w-[75%]", msg.senderId === user?.uid ? "ml-auto items-end" : "items-start")}>
                   <div className={cn(
                     "p-5 rounded-2xl text-sm font-medium shadow-sm leading-relaxed",
-                    msg.senderId === user?.uid ? "bg-primary text-white rounded-tr-none" : "bg-muted text-foreground rounded-tl-none"
+                    msg.senderId === user?.uid ? "bg-primary text-primary-foreground rounded-tr-none" : "bg-muted text-foreground rounded-tl-none"
                   )}>
                     {msg.text}
                   </div>
@@ -143,9 +143,9 @@ export default function LandlordMessagingPage() {
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
                   placeholder="Type a professional message..."
-                  className="rounded-2xl h-14 bg-white border-none shadow-inner px-6 text-base"
+                  className="rounded-2xl h-14 bg-background border-none shadow-inner px-6 text-base"
                 />
-                <Button type="submit" size="icon" className="h-14 w-14 rounded-2xl shadow-xl shadow-primary/20 bg-primary text-white" disabled={!messageText.trim()}>
+                <Button type="submit" size="icon" className="h-14 w-14 rounded-2xl shadow-xl shadow-primary/20 bg-primary text-primary-foreground" disabled={!messageText.trim()}>
                   <Send className="w-6 h-6" />
                 </Button>
               </form>
@@ -153,9 +153,9 @@ export default function LandlordMessagingPage() {
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-16 opacity-30">
-            <MessageSquare className="w-20 h-20 mb-6 text-primary" />
-            <h3 className="text-2xl font-bold font-headline text-primary">Communication Hub</h3>
-            <p className="text-sm font-medium max-w-sm">Select a resident conversation above to manage communications securely.</p>
+            <MessageSquare className="w-20 h-20 mb-6 text-foreground" />
+            <h3 className="text-2xl font-bold font-headline text-foreground">Communication Hub</h3>
+            <p className="text-sm font-medium max-w-sm text-foreground">Select a resident conversation above to manage communications securely.</p>
           </div>
         )}
       </Card>

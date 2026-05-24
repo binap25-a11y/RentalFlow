@@ -67,38 +67,38 @@ export default function TenantMessagingPage() {
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col gap-6 animate-in fade-in duration-500 max-w-4xl mx-auto">
-      <Card className="w-full border-none shadow-xl flex flex-col rounded-3xl overflow-hidden bg-white">
-        <CardHeader className="p-6 bg-primary text-white flex flex-row items-center gap-4">
+      <Card className="w-full border-none shadow-xl flex flex-col rounded-3xl overflow-hidden bg-card ring-1 ring-border">
+        <CardHeader className="p-6 bg-primary text-primary-foreground flex flex-row items-center gap-4">
           <div className="p-3 bg-white/20 rounded-2xl">
-            <ShieldCheck className="w-6 h-6 text-white" />
+            <ShieldCheck className="w-6 h-6" />
           </div>
           <div className="text-left flex-1">
             <CardTitle className="text-2xl font-headline font-bold">Property Management</CardTitle>
-            <p className="text-xs text-white/70 font-bold uppercase tracking-widest">Secure Direct Line</p>
+            <p className="text-xs opacity-70 font-bold uppercase tracking-widest font-headline">Secure Direct Line</p>
           </div>
         </CardHeader>
       </Card>
       
-      <Card className="flex-1 border-none shadow-xl flex flex-col rounded-3xl overflow-hidden bg-white">
+      <Card className="flex-1 border-none shadow-xl flex flex-col rounded-3xl overflow-hidden bg-card ring-1 ring-border">
         <div className="flex-1 overflow-y-auto p-6 space-y-6" ref={scrollRef}>
           {!landlordId ? (
             <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
-              <MessageSquare className="w-16 h-16 mb-4" />
-              <p className="font-bold font-headline">Account Connection Required</p>
-              <p className="text-sm">Link your property to start messaging your landlord.</p>
+              <MessageSquare className="w-16 h-16 mb-4 text-foreground" />
+              <p className="font-bold font-headline text-foreground">Account Connection Required</p>
+              <p className="text-sm text-foreground">Link your property to start messaging your landlord.</p>
             </div>
           ) : activeMessages?.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
-              <MessageSquare className="w-16 h-16 mb-4" />
-              <p className="font-bold font-headline">No messages yet</p>
-              <p className="text-sm">Send a message to your landlord to get started.</p>
+              <MessageSquare className="w-16 h-16 mb-4 text-foreground" />
+              <p className="font-bold font-headline text-foreground">No messages yet</p>
+              <p className="text-sm text-foreground">Send a message to your landlord to get started.</p>
             </div>
           ) : (
             activeMessages?.map((msg, i) => (
               <div key={i} className={cn("flex flex-col max-w-[80%]", msg.senderId === user?.uid ? "ml-auto items-end" : "items-start")}>
                 <div className={cn(
                   "p-5 rounded-2xl text-sm font-bold leading-relaxed shadow-sm",
-                  msg.senderId === user?.uid ? "bg-primary text-white rounded-tr-none" : "bg-muted text-foreground rounded-tl-none"
+                  msg.senderId === user?.uid ? "bg-primary text-primary-foreground rounded-tr-none" : "bg-muted text-foreground rounded-tl-none"
                 )}>
                   {msg.text}
                 </div>
@@ -116,10 +116,10 @@ export default function TenantMessagingPage() {
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
               placeholder="Ask management something..."
-              className="rounded-2xl h-14 bg-white border-none shadow-inner px-6 text-base focus-visible:ring-primary"
+              className="rounded-2xl h-14 bg-background border-none shadow-inner px-6 text-base focus-visible:ring-primary"
               disabled={!landlordId}
             />
-            <Button type="submit" size="icon" className="h-14 w-14 rounded-2xl shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90" disabled={!messageText.trim() || !landlordId}>
+            <Button type="submit" size="icon" className="h-14 w-14 rounded-2xl shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90" disabled={!messageText.trim() || !landlordId}>
               <Send className="w-6 h-6" />
             </Button>
           </form>

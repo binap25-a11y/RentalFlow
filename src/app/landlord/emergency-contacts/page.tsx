@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -275,11 +274,11 @@ export default function LandlordEmergencyContactsPage() {
         </div>
         
         <div className="flex flex-wrap items-center gap-3 pt-2">
-          <div className="flex items-center gap-2 bg-white rounded-xl border border-primary/10 px-3 h-11 shadow-sm">
+          <div className="flex items-center gap-2 bg-card rounded-xl border border-border px-3 h-11 shadow-sm">
              <Filter className="w-4 h-4 text-primary/60" />
              <Label className="text-[10px] font-bold uppercase text-muted-foreground">Context:</Label>
              <select 
-               className="bg-transparent text-sm font-bold outline-none cursor-pointer"
+               className="bg-transparent text-sm font-bold outline-none cursor-pointer text-foreground"
                value={selectedPropertyId}
                onChange={(e) => setSelectedPropertyId(e.target.value)}
              >
@@ -287,56 +286,56 @@ export default function LandlordEmergencyContactsPage() {
                {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
              </select>
           </div>
-          <Button variant="outline" onClick={downloadPDF} className="rounded-xl font-bold h-11 border-primary/20 bg-white shadow-sm">
+          <Button variant="outline" onClick={downloadPDF} className="rounded-xl font-bold h-11 border-border bg-card shadow-sm">
             <Download className="w-4 h-4 mr-2" /> Export PDF
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20 text-white px-6">
+              <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20 text-primary-foreground px-6">
                 <Plus className="w-4 h-4 mr-2" /> Add Partner
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] rounded-2xl border-none shadow-2xl p-0 overflow-hidden flex flex-col h-[700px] max-h-[90vh]">
+            <DialogContent className="sm:max-w-[500px] rounded-2xl border-none shadow-2xl p-0 overflow-hidden flex flex-col h-[700px] max-h-[90vh] bg-card">
               <form onSubmit={handleSave} className="flex flex-col h-full overflow-hidden">
                 <DialogHeader className="p-8 text-left bg-primary/5 border-b shrink-0">
-                  <DialogTitle className="text-xl font-bold font-headline text-primary">{editingContact ? "Modify Partner" : "New Trade Partner"}</DialogTitle>
+                  <DialogTitle className="text-xl font-bold font-headline text-foreground">{editingContact ? "Modify Partner" : "New Trade Partner"}</DialogTitle>
                   <DialogDescription className="font-medium text-muted-foreground">Register a professional contractor or emergency contact.</DialogDescription>
                 </DialogHeader>
-                <div className="flex-1 overflow-y-auto min-h-0 bg-white">
+                <div className="flex-1 overflow-y-auto min-h-0">
                   <div className="grid gap-6 p-8">
                     <div className="space-y-2">
-                      <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Classification</Label>
+                      <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Classification</Label>
                       <div className="flex gap-2">
                         <Button type="button" variant={category === 'standard' ? 'default' : 'outline'} className="flex-1 rounded-xl h-10 font-bold" onClick={() => setCategory('standard')}>UK SOS</Button>
                         <Button type="button" variant={category === 'professional' ? 'default' : 'outline'} className="flex-1 rounded-xl h-10 font-bold" onClick={() => setCategory('professional')}>Professional Pro</Button>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Business Name</Label>
-                      <Input value={name} onChange={(e) => setName(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none" />
+                      <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Business Name</Label>
+                      <Input value={name} onChange={(e) => setName(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none font-bold" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Primary Trade / Role</Label>
-                      <Input value={role} onChange={(e) => setRole(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none" placeholder="e.g. Electrician" />
+                      <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Primary Trade / Role</Label>
+                      <Input value={role} onChange={(e) => setRole(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none font-bold" placeholder="e.g. Electrician" />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Mobile</Label>
-                        <Input value={phone} onChange={(e) => setPhone(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none" />
+                        <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Mobile</Label>
+                        <Input value={phone} onChange={(e) => setPhone(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none font-bold" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Email</Label>
-                        <Input value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none" />
+                        <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Email</Label>
+                        <Input value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none font-bold" />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Website / Portal</Label>
-                      <Input value={website} onChange={(e) => setWebsite(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none" placeholder="https://..." />
+                      <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Website / Portal</Label>
+                      <Input value={website} onChange={(e) => setWebsite(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none font-bold" placeholder="https://..." />
                     </div>
                     {category === 'professional' && (
                       <div className="space-y-2">
-                        <Label className="font-bold text-xs uppercase text-primary/60 tracking-wider">Preferred Asset Assignment</Label>
-                        <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-body" value={assignToPropertyId} onChange={(e) => setAssignToPropertyId(e.target.value)}>
+                        <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Preferred Asset Assignment</Label>
+                        <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-foreground" value={assignToPropertyId} onChange={(e) => setAssignToPropertyId(e.target.value)}>
                           <option value="">General Portfolio Pro</option>
                           {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
                         </select>
@@ -344,8 +343,8 @@ export default function LandlordEmergencyContactsPage() {
                     )}
                   </div>
                 </div>
-                <DialogFooter className="p-8 bg-muted/10 border-t shrink-0">
-                  <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 text-white font-headline">
+                <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
+                  <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 text-primary-foreground font-headline">
                     <Save className="w-4 h-4 mr-2" />
                     {editingContact ? "Update Database" : "Register Trade Partner"}
                   </Button>
@@ -358,10 +357,10 @@ export default function LandlordEmergencyContactsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-1">
-          <Card className="border-none shadow-sm bg-primary text-white rounded-2xl overflow-hidden">
+          <Card className="border-none shadow-sm bg-primary text-primary-foreground rounded-2xl overflow-hidden">
             <CardHeader className="pb-4 border-b border-white/10">
               <CardTitle className="text-lg font-headline flex items-center gap-2 text-left">
-                <ShieldAlert className="w-5 h-5" /> UK SOS Protocols
+                <ShieldAlert className="w-5 h-5 text-accent" /> UK SOS Protocols
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6 space-y-6 text-left">
@@ -396,14 +395,14 @@ export default function LandlordEmergencyContactsPage() {
               </Card>
             ) : (
               professionalPartners.map((contact) => (
-                <Card key={contact.id} className="border-none shadow-sm hover:shadow-md transition-all rounded-2xl group overflow-hidden bg-white border border-transparent hover:border-primary/10">
-                  <CardHeader className="pb-4 bg-primary/5 text-left">
+                <Card key={contact.id} className="border-none shadow-sm hover:shadow-md transition-all rounded-2xl group overflow-hidden bg-card border border-transparent hover:border-accent/10">
+                  <CardHeader className="pb-4 bg-muted/5 text-left">
                     <div className="flex justify-between items-start">
-                      <div className="p-3 bg-white rounded-xl shadow-sm text-primary">
+                      <div className="p-3 bg-card rounded-xl shadow-sm text-primary ring-1 ring-border">
                         <Wrench className="w-5 h-5" />
                       </div>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-primary/40 hover:text-primary" onClick={() => handleEdit(contact)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary" onClick={() => handleEdit(contact)}>
                           <Edit3 className="w-4 h-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-destructive/40 hover:text-destructive hover:bg-destructive/5" onClick={() => handleDelete(contact.id)}>
@@ -411,32 +410,32 @@ export default function LandlordEmergencyContactsPage() {
                         </Button>
                       </div>
                     </div>
-                    <CardTitle className="text-lg font-bold font-headline mt-4">{contact.name}</CardTitle>
-                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none uppercase text-[10px] font-bold mt-1">
+                    <CardTitle className="text-lg font-bold font-headline mt-4 text-foreground">{contact.name}</CardTitle>
+                    <Badge variant="secondary" className="bg-accent/10 text-accent border-none uppercase text-[10px] font-bold mt-1 tracking-widest font-headline">
                       {contact.role}
                     </Badge>
                   </CardHeader>
                   <CardContent className="pt-6 space-y-3 text-left">
-                    <div className="flex items-center gap-3 text-xl font-bold text-primary">
-                      <Phone className="w-5 h-5 text-primary/40" />
+                    <div className="flex items-center gap-3 text-xl font-bold text-foreground">
+                      <Phone className="w-5 h-5 text-accent" />
                       {contact.phone}
                     </div>
                     {contact.email && (
                       <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
-                        <Mail className="w-4 h-4 text-primary/40" />
+                        <Mail className="w-4 h-4 text-muted-foreground/40" />
                         {contact.email}
                       </div>
                     )}
                     {contact.website && (
                       <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
-                        <Globe className="w-4 h-4 text-primary/40" />
+                        <Globe className="w-4 h-4 text-muted-foreground/40" />
                         <a href={contact.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary hover:underline truncate">
                           {contact.website.replace(/^https?:\/\//, '')}
                         </a>
                       </div>
                     )}
-                    <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground pt-4 border-t border-muted/50">
-                      <Building2 className="w-4 h-4 text-primary/40" />
+                    <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground pt-4 border-t border-border">
+                      <Building2 className="w-4 h-4 text-muted-foreground/40" />
                       {properties?.find(p => p.id === contact.propertyId)?.addressLine1 || "Full Portfolio Trusted"}
                     </div>
                   </CardContent>

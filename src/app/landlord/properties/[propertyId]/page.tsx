@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useMemo, useEffect } from 'react';
@@ -65,7 +64,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     setIsClient(true);
   }, []);
 
-  // 1. Property Core Data
   const propertyRef = useMemoFirebase(() => {
     if (!db) return null;
     return doc(db, 'properties', propertyId);
@@ -77,7 +75,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     return getResolvedGallery(property?.imageUrl, property?.imageUrls);
   }, [property]);
 
-  // 2. Tenants for this property
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -89,7 +86,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: tenants } = useCollection(tenantsQuery);
 
-  // 3. Vault Documents
   const docsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -101,7 +97,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: documents } = useCollection(docsQuery);
 
-  // 4. Maintenance Requests
   const maintenanceQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -113,7 +108,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: maintenance } = useCollection(maintenanceQuery);
 
-  // 5. Inspections/Audits
   const inspectionsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -125,7 +119,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: inspections } = useCollection(inspectionsQuery);
 
-  // 6. Current Payments
   const paymentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     const now = new Date();
@@ -138,7 +131,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   }, [db, propertyId, user]);
   const { data: currentMonthPayments } = useCollection(paymentsQuery);
 
-  // Derived Audit Stats
   const latestAudit = useMemo(() => {
     if (!inspections || inspections.length === 0) return null;
     return inspections
@@ -146,7 +138,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       .sort((a, b) => new Date(b.conductedDate).getTime() - new Date(a.conductedDate).getTime())[0];
   }, [inspections]);
 
-  // State Management
   const [isEditingRent, setIsEditingRent] = useState(false);
   const [rentAmount, setRentAmount] = useState('');
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
@@ -275,28 +266,27 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   };
 
   if (!isClient || isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
-  if (!property) return <div className="p-20 text-center font-bold font-headline text-primary opacity-40">Asset record not found.</div>;
+  if (!property) return <div className="p-20 text-center font-bold font-headline text-foreground opacity-40">Asset record not found.</div>;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-12">
-      {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">{property.addressLine1}</h1>
+            <h1 className="text-3xl font-headline font-bold text-foreground tracking-tight">{property.addressLine1}</h1>
             <p className="text-muted-foreground flex items-center font-medium font-body text-sm mt-1">
-              <MapPin className="w-4 h-4 mr-1 text-primary/60" /> {property.city}, {property.zipCode}
+              <MapPin className="w-4 h-4 mr-1 text-accent" /> {property.city}, {property.zipCode}
             </p>
           </div>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={downloadRentStatement} className="rounded-xl font-bold h-11 border-primary/20 bg-white shadow-sm font-headline">
+          <Button variant="outline" onClick={downloadRentStatement} className="rounded-xl font-bold h-11 border-border bg-card shadow-sm font-headline">
             <Download className="w-4 h-4 mr-2" /> Generate Rent Statement
           </Button>
-          <Button variant="outline" className="rounded-xl font-bold h-11 border-primary/20 bg-white shadow-sm font-headline" asChild>
+          <Button variant="outline" className="rounded-xl font-bold h-11 border-border bg-card shadow-sm font-headline" asChild>
             <Link href={`/landlord/properties/${propertyId}/edit`}>
               <Edit3 className="w-4 h-4 mr-2" /> Modify Specs
             </Link>
@@ -306,8 +296,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          {/* Visual Showcase */}
-          <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2.5rem] border border-primary/5">
+          <Card className="border-none shadow-sm overflow-hidden bg-card rounded-[2.5rem] ring-1 ring-border">
             <Carousel className="w-full">
               <CarouselContent>
                 {gallery.map((url: string, index: number) => (
@@ -325,46 +314,46 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         <Maximize2 className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                       {index === 0 && (
-                        <div className="absolute top-6 left-6 px-4 py-1.5 bg-primary text-white text-[10px] font-bold uppercase rounded-full shadow-2xl font-headline">Cover Asset</div>
+                        <div className="absolute top-6 left-6 px-4 py-1.5 bg-primary text-primary-foreground text-[10px] font-bold uppercase rounded-full shadow-2xl font-headline">Cover Asset</div>
                       )}
                     </div>
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="left-4 bg-white/80 border-none shadow-xl h-10 w-10 hover:bg-white" />
-              <CarouselNext className="right-4 bg-white/80 border-none shadow-xl h-10 w-10 hover:bg-white" />
+              <CarouselPrevious className="left-4 bg-white/80 dark:bg-black/40 border-none shadow-xl h-10 w-10 hover:bg-white dark:hover:bg-black/60" />
+              <CarouselNext className="right-4 bg-white/80 dark:bg-black/40 border-none shadow-xl h-10 w-10 hover:bg-white dark:hover:bg-black/60" />
             </Carousel>
             
             <CardContent className="pt-6 text-left p-10 space-y-8">
               <div className="flex flex-wrap gap-4 items-center">
-                <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl border border-primary/10">
-                  <Bed className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-bold text-primary font-headline uppercase">{property.numberOfBedrooms || 1} Bed</span>
+                <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl border border-border">
+                  <Bed className="w-4 h-4 text-accent" />
+                  <span className="text-sm font-bold text-foreground font-headline uppercase">{property.numberOfBedrooms || 1} Bed</span>
                 </div>
-                <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl border border-primary/10">
-                  <Bath className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-bold text-primary font-headline uppercase">{property.numberOfBathrooms || 1} Bath</span>
+                <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl border border-border">
+                  <Bath className="w-4 h-4 text-accent" />
+                  <span className="text-sm font-bold text-foreground font-headline uppercase">{property.numberOfBathrooms || 1} Bath</span>
                 </div>
-                <Badge variant="outline" className="h-10 px-4 rounded-xl border-primary/10 font-bold text-primary bg-primary/[0.02] uppercase text-[10px] tracking-widest">
+                <Badge variant="outline" className="h-10 px-4 rounded-xl border-border font-bold text-foreground bg-primary/[0.02] uppercase text-[10px] tracking-widest font-headline">
                   {property.propertyType}
                 </Badge>
               </div>
 
-              <div className="flex flex-wrap gap-12 items-end border-t pt-8 border-primary/5">
+              <div className="flex flex-wrap gap-12 items-end border-t pt-8 border-border">
                 <div className="space-y-1">
                   <Label className="text-muted-foreground font-bold text-[10px] uppercase tracking-[0.2em] font-headline">Monthly Yield</Label>
                   <div className="flex items-center gap-4">
                     {isEditingRent ? (
                       <Input type="number" value={rentAmount || property.rentAmount} onChange={(e) => setRentAmount(e.target.value)} className="rounded-xl h-12 w-32 bg-muted/20 border-none font-bold text-lg" />
                     ) : (
-                      <p className="text-4xl font-bold text-primary font-headline tracking-tighter">£{property.rentAmount}</p>
+                      <p className="text-4xl font-bold text-foreground font-headline tracking-tighter">£{property.rentAmount}</p>
                     )}
                     <Button variant="ghost" size="icon" onClick={isEditingRent ? handleUpdateRent : () => setIsEditingRent(true)} className="rounded-full hover:bg-primary/5 transition-colors">
                       {isEditingRent ? <Save className="w-5 h-5 text-emerald-600" /> : <Edit3 className="w-5 h-5 text-muted-foreground" />}
                     </Button>
                   </div>
                 </div>
-                <div className="p-4 px-8 bg-primary/5 rounded-2xl border border-primary/5">
+                <div className="p-4 px-8 bg-primary/5 rounded-2xl border border-border">
                   <p className="text-[10px] uppercase font-bold text-muted-foreground font-headline mb-1 tracking-widest">Portfolio Status</p>
                   <p className={cn("font-bold font-headline text-lg uppercase", property.isOccupied ? 'text-emerald-600' : 'text-amber-600')}>{property.isOccupied ? 'Occupied' : 'Vacant'}</p>
                 </div>
@@ -372,31 +361,29 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             </CardContent>
           </Card>
 
-          {/* Operational Tabs */}
           <Tabs defaultValue="tenants" className="w-full">
-            <TabsList className="grid grid-cols-4 w-full bg-muted/30 p-1.5 rounded-[1.25rem] h-auto gap-2 border border-primary/5">
-              <TabsTrigger value="tenants" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all font-headline text-xs">Residents</TabsTrigger>
-              <TabsTrigger value="docs" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all font-headline text-xs">Vault</TabsTrigger>
-              <TabsTrigger value="maintenance" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all font-headline text-xs">Repairs</TabsTrigger>
-              <TabsTrigger value="inspections" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all font-headline text-xs">Audits</TabsTrigger>
+            <TabsList className="grid grid-cols-4 w-full bg-muted/30 p-1.5 rounded-[1.25rem] h-auto gap-2 border border-border">
+              <TabsTrigger value="tenants" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all font-headline text-xs">Residents</TabsTrigger>
+              <TabsTrigger value="docs" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all font-headline text-xs">Vault</TabsTrigger>
+              <TabsTrigger value="maintenance" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all font-headline text-xs">Repairs</TabsTrigger>
+              <TabsTrigger value="inspections" className="rounded-xl py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all font-headline text-xs">Audits</TabsTrigger>
             </TabsList>
 
-            {/* Residents Content */}
             <TabsContent value="tenants" className="mt-8 space-y-4">
                {tenants && tenants.length > 0 ? (
                  tenants.map(tenant => (
-                    <div key={tenant.id} className="flex items-center justify-between p-6 bg-white rounded-[1.75rem] border border-primary/5 shadow-sm">
+                    <div key={tenant.id} className="flex items-center justify-between p-6 bg-card rounded-[1.75rem] border border-border shadow-sm">
                       <div className="flex items-center gap-5 text-left">
                         <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold text-xl font-headline">
                           {tenant.firstName?.[0]}{tenant.lastName?.[0]}
                         </div>
                         <div>
-                          <p className="font-bold font-headline text-xl text-primary tracking-tight">{tenant.firstName} {tenant.lastName}</p>
+                          <p className="font-bold font-headline text-xl text-foreground tracking-tight">{tenant.firstName} {tenant.lastName}</p>
                           <p className="text-sm text-muted-foreground font-medium font-body">{tenant.email}</p>
                           <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Lease Expiry: {tenant.leaseEndDate || 'N/A'}</p>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" asChild className="rounded-xl text-primary">
+                      <Button variant="ghost" size="icon" asChild className="rounded-xl text-muted-foreground hover:text-foreground">
                         <Link href="/landlord/messages">
                           <Clock className="w-5 h-5" />
                         </Link>
@@ -404,49 +391,48 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     </div>
                  ))
                ) : (
-                 <div className="p-20 text-center bg-muted/10 rounded-[2.5rem] border-2 border-dashed border-primary/10">
+                 <div className="p-20 text-center bg-muted/10 rounded-[2.5rem] border-2 border-dashed border-border">
                     <p className="text-sm text-muted-foreground font-bold font-headline mb-4 opacity-50">No residents assigned.</p>
-                    <Button asChild className="rounded-xl font-bold bg-primary text-white">
+                    <Button asChild className="rounded-xl font-bold bg-primary text-primary-foreground shadow-lg">
                       <Link href="/landlord/tenants">Assign Resident</Link>
                     </Button>
                  </div>
                )}
             </TabsContent>
 
-            {/* Vault Content */}
             <TabsContent value="docs" className="mt-8 space-y-4">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="font-bold font-headline text-lg text-primary">Property Vault</h3>
+                <h3 className="font-bold font-headline text-lg text-foreground">Property Vault</h3>
                 <Dialog open={isDocDialogOpen} onOpenChange={setIsDocDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="rounded-xl font-bold bg-primary text-white h-10">
+                    <Button className="rounded-xl font-bold bg-primary text-primary-foreground h-10 shadow-lg">
                       <Plus className="w-4 h-4 mr-2" /> Upload Certificate
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="rounded-3xl border-none shadow-2xl">
+                  <DialogContent className="rounded-3xl border-none shadow-2xl bg-card">
                     <DialogHeader className="text-left">
                       <DialogTitle className="text-xl font-bold font-headline">Vault Orchestration</DialogTitle>
                       <DialogDescription>Add a compliance document or property guide to the records.</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleUploadDocument} className="space-y-6 pt-4">
                       <div className="space-y-2 text-left">
-                        <Label className="font-bold text-xs uppercase text-primary/60">Document Label</Label>
-                        <Input value={newDocName} onChange={(e) => setNewDocName(e.target.value)} placeholder="e.g. Gas Safety 2025" required className="rounded-xl h-12" />
+                        <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Document Label</Label>
+                        <Input value={newDocName} onChange={(e) => setNewDocName(e.target.value)} placeholder="e.g. Gas Safety 2025" required className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
                       </div>
                       <div className="space-y-2 text-left">
-                        <Label className="font-bold text-xs uppercase text-primary/60">Asset Category</Label>
-                        <select className="flex h-12 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" value={newDocType} onChange={(e) => setNewDocType(e.target.value)}>
+                        <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Asset Category</Label>
+                        <select className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-foreground" value={newDocType} onChange={(e) => setNewDocType(e.target.value)}>
                           <option value="Certificate">Compliance Certificate</option>
                           <option value="Lease">Lease Agreement</option>
                           <option value="Manual">Property Guide/Manual</option>
                         </select>
                       </div>
                       <div className="space-y-2 text-left">
-                        <Label className="font-bold text-xs uppercase text-primary/60">File Attachment</Label>
-                        <Input type="file" onChange={(e) => setNewDocFile(e.target.files?.[0] || null)} required className="rounded-xl h-12 py-3" />
+                        <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">File Attachment</Label>
+                        <Input type="file" onChange={(e) => setNewDocFile(e.target.files?.[0] || null)} required className="rounded-xl h-12 py-3 bg-muted/20 border-none font-bold" />
                       </div>
                       <DialogFooter>
-                        <Button type="submit" disabled={isUploadingDoc} className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg text-white">
+                        <Button type="submit" disabled={isUploadingDoc} className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg text-primary-foreground font-headline">
                           {isUploadingDoc ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ShieldCheck className="w-4 h-4 mr-2" />}
                           Synchronize with Vault
                         </Button>
@@ -458,24 +444,24 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
               <div className="grid gap-4">
                 {!documents || documents.length === 0 ? (
-                  <div className="p-16 text-center bg-muted/10 rounded-[2rem] border-2 border-dashed border-primary/10">
-                    <FileText className="w-12 h-12 mx-auto text-primary/20 mb-4" />
+                  <div className="p-16 text-center bg-muted/10 rounded-[2rem] border-2 border-dashed border-border">
+                    <FileText className="w-12 h-12 mx-auto text-muted-foreground opacity-20 mb-4" />
                     <p className="text-sm text-muted-foreground font-bold font-headline">Vault Empty</p>
                   </div>
                 ) : (
                   documents.map(doc => (
-                    <div key={doc.id} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-primary/5 shadow-sm group hover:border-primary/20 transition-all">
+                    <div key={doc.id} className="flex items-center justify-between p-5 bg-card rounded-2xl border border-border shadow-sm group hover:border-accent/20 transition-all">
                       <div className="flex items-center gap-4 text-left">
-                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                        <div className="p-3 bg-accent/10 text-accent rounded-xl">
                           <FileText className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="font-bold text-base text-primary leading-tight">{doc.fileName}</p>
+                          <p className="font-bold text-base text-foreground leading-tight">{doc.fileName}</p>
                           <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{doc.documentType} • Shared {doc.uploadDate ? format(new Date(doc.uploadDate), 'PP') : 'Recently'}</p>
                         </div>
                       </div>
                       <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" asChild className="h-9 w-9 rounded-lg text-primary hover:bg-primary/5">
+                        <Button variant="ghost" size="icon" asChild className="h-9 w-9 rounded-lg text-muted-foreground hover:text-accent">
                           <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer"><Download className="w-4 h-4" /></a>
                         </Button>
                         <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-destructive/40 hover:text-destructive hover:bg-destructive/5" onClick={() => handleDeleteDocument(doc.id)}>
@@ -488,78 +474,76 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               </div>
             </TabsContent>
 
-            {/* Repairs Content */}
             <TabsContent value="maintenance" className="mt-8 space-y-4">
                <div className="flex justify-between items-center mb-6">
-                <h3 className="font-bold font-headline text-lg text-primary">Repair Ledger</h3>
-                <Button variant="outline" asChild className="rounded-xl font-bold h-10 border-primary/20">
+                <h3 className="font-bold font-headline text-lg text-foreground">Repair Ledger</h3>
+                <Button variant="outline" asChild className="rounded-xl font-bold h-10 border-border bg-card">
                   <Link href="/landlord/maintenance">Open Maintenance Hub</Link>
                 </Button>
               </div>
               <div className="grid gap-4">
                 {!maintenance || maintenance.length === 0 ? (
-                  <div className="p-16 text-center bg-muted/10 rounded-[2rem] border-2 border-dashed border-primary/10">
-                    <Wrench className="w-12 h-12 mx-auto text-primary/20 mb-4" />
+                  <div className="p-16 text-center bg-muted/10 rounded-[2rem] border-2 border-dashed border-border">
+                    <Wrench className="w-12 h-12 mx-auto text-muted-foreground opacity-20 mb-4" />
                     <p className="text-sm text-muted-foreground font-bold font-headline">No active repairs</p>
                   </div>
                 ) : (
                   maintenance.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).map(req => (
-                    <div key={req.id} className="p-6 bg-white rounded-[1.75rem] border border-primary/5 shadow-sm text-left">
+                    <div key={req.id} className="p-6 bg-card rounded-[1.75rem] border border-border shadow-sm text-left">
                        <div className="flex justify-between items-start mb-3">
                           <div className="flex gap-2">
-                             <Badge className={cn("uppercase text-[9px] font-bold", req.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-sky-100 text-sky-700')}>{req.status}</Badge>
-                             <Badge variant="outline" className="uppercase text-[9px] font-bold border-primary/10">{req.priority}</Badge>
+                             <Badge className={cn("uppercase text-[9px] font-bold font-headline tracking-widest", req.status === 'completed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-accent/10 text-accent')}>{req.status}</Badge>
+                             <Badge variant="outline" className="uppercase text-[9px] font-bold border-border font-headline tracking-widest">{req.priority}</Badge>
                           </div>
                           <span className="text-[9px] font-bold text-muted-foreground uppercase flex items-center">
                              <Clock className="w-3 h-3 mr-1" /> {req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'p') : 'Just now'}
                           </span>
                        </div>
-                       <h4 className="font-bold text-base font-headline mb-1">{req.title}</h4>
-                       <p className="text-sm text-muted-foreground line-clamp-2 font-body">{req.description}</p>
+                       <h4 className="font-bold text-base font-headline mb-1 text-foreground">{req.title}</h4>
+                       <p className="text-sm text-muted-foreground line-clamp-2 font-body font-medium">{req.description}</p>
                     </div>
                   ))
                 )}
               </div>
             </TabsContent>
 
-            {/* Audits Content */}
             <TabsContent value="inspections" className="mt-8 space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="font-bold font-headline text-lg text-primary">Safety Audits</h3>
-                <Button variant="outline" asChild className="rounded-xl font-bold h-10 border-primary/20">
+                <h3 className="font-bold font-headline text-lg text-foreground">Safety Audits</h3>
+                <Button variant="outline" asChild className="rounded-xl font-bold h-10 border-border bg-card">
                   <Link href="/landlord/inspections">Schedule Audit</Link>
                 </Button>
               </div>
 
               {latestAudit && (
-                <Card className="border-none shadow-sm bg-primary/5 rounded-2xl overflow-hidden border border-primary/10">
+                <Card className="border-none shadow-sm bg-primary/5 rounded-2xl overflow-hidden ring-1 ring-border">
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row gap-8 items-start">
                       <div className="text-center md:text-left space-y-2">
-                         <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest font-headline">Property Health</p>
+                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest font-headline">Property Health</p>
                          <div className="relative inline-flex items-center justify-center">
-                            <div className="absolute inset-0 bg-white rounded-full blur-xl opacity-50" />
+                            <div className="absolute inset-0 bg-background rounded-full blur-xl opacity-50" />
                             <div className={cn(
-                              "relative w-24 h-24 rounded-full border-4 flex flex-col items-center justify-center shadow-lg bg-white",
-                              latestAudit.healthScore >= 80 ? "border-emerald-500 text-emerald-600" :
-                              latestAudit.healthScore >= 50 ? "border-amber-500 text-amber-600" : "border-red-500 text-red-600"
+                              "relative w-24 h-24 rounded-full border-4 flex flex-col items-center justify-center shadow-lg bg-card",
+                              latestAudit.healthScore >= 80 ? "border-emerald-500 text-emerald-500" :
+                              latestAudit.healthScore >= 50 ? "border-amber-500 text-amber-500" : "border-red-500 text-red-500"
                             )}>
                               <span className="text-3xl font-bold font-headline">{latestAudit.healthScore}</span>
-                              <span className="text-[8px] font-bold uppercase tracking-widest">Grade</span>
+                              <span className="text-[8px] font-bold uppercase tracking-widest font-headline">Grade</span>
                             </div>
                          </div>
                       </div>
                       <div className="flex-1 space-y-4 text-left">
                         <div>
-                          <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest font-headline mb-2">Executive Summary</p>
-                          <p className="text-sm text-primary font-medium italic font-body">"{latestAudit.summary}"</p>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest font-headline mb-2">Executive Summary</p>
+                          <p className="text-sm text-foreground font-medium italic font-body">"{latestAudit.summary}"</p>
                         </div>
                         {latestAudit.priorityItems && latestAudit.priorityItems.length > 0 && (
                           <div>
-                            <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest font-headline mb-2">Priority Remediation</p>
+                            <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest font-headline mb-2">Priority Remediation</p>
                             <div className="flex flex-wrap gap-2">
                               {latestAudit.priorityItems.map((item: string, idx: number) => (
-                                <Badge key={idx} variant="destructive" className="bg-red-50 text-red-700 border-red-100 rounded-lg py-1 px-3 text-[10px] font-bold">
+                                <Badge key={idx} variant="destructive" className="bg-red-500/10 text-red-500 border-red-500/20 rounded-lg py-1 px-3 text-[10px] font-bold font-headline tracking-widest">
                                   <ShieldAlert className="w-3 h-3 mr-1" /> {item}
                                 </Badge>
                               ))}
@@ -574,26 +558,26 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
               <div className="grid gap-4">
                 {!inspections || inspections.length === 0 ? (
-                  <div className="p-16 text-center bg-muted/10 rounded-[2rem] border-2 border-dashed border-primary/10">
-                    <ClipboardList className="w-12 h-12 mx-auto text-primary/20 mb-4" />
+                  <div className="p-16 text-center bg-muted/10 rounded-[2rem] border-2 border-dashed border-border">
+                    <ClipboardList className="w-12 h-12 mx-auto text-muted-foreground opacity-20 mb-4" />
                     <p className="text-sm text-muted-foreground font-bold font-headline">No audit history recorded</p>
                   </div>
                 ) : (
                   inspections.sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime()).map(insp => (
-                    <div key={insp.id} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-primary/5 shadow-sm group hover:border-primary/20 transition-all">
+                    <div key={insp.id} className="flex items-center justify-between p-5 bg-card rounded-2xl border border-border shadow-sm group hover:border-accent/20 transition-all">
                       <div className="flex items-center gap-4 text-left">
-                        <div className="bg-primary/5 p-3 rounded-xl flex flex-col items-center justify-center text-primary font-headline min-w-[70px] shadow-inner">
+                        <div className="bg-primary/5 p-3 rounded-xl flex flex-col items-center justify-center text-foreground font-headline min-w-[70px] ring-1 ring-border shadow-inner">
                            <span className="text-[9px] font-bold uppercase tracking-widest">{format(new Date(insp.scheduledDate), 'MMM')}</span>
                            <span className="text-xl font-bold">{format(new Date(insp.scheduledDate), 'dd')}</span>
                         </div>
                         <div>
-                          <p className="font-bold text-base text-primary leading-tight">Property Safety Audit</p>
+                          <p className="font-bold text-base text-foreground leading-tight">Property Safety Audit</p>
                           <div className="flex items-center gap-2 mt-1.5">
-                            <Badge variant="secondary" className="uppercase text-[8px] font-bold tracking-widest">{insp.status}</Badge>
+                            <Badge variant="secondary" className="uppercase text-[8px] font-bold tracking-widest font-headline">{insp.status}</Badge>
                             {insp.healthScore && (
                               <span className={cn(
                                 "text-[9px] font-bold px-2 py-0.5 rounded-md",
-                                insp.healthScore >= 80 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+                                insp.healthScore >= 80 ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"
                               )}>
                                 Score: {insp.healthScore}/100
                               </span>
@@ -602,7 +586,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" asChild className="rounded-xl font-bold text-xs text-primary hover:bg-primary/5">
+                        <Button variant="ghost" size="sm" asChild className="rounded-xl font-bold text-xs text-foreground hover:bg-primary/5">
                           <Link href="/landlord/inspections">
                             {insp.status === 'completed' ? 'View Full Record' : 'Resume Audit'}
                           </Link>
@@ -616,9 +600,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           </Tabs>
         </div>
 
-        {/* Sidebar Info / Quick Stats */}
         <div className="space-y-8">
-           <Card className="border-none shadow-sm rounded-[2rem] bg-primary text-white overflow-hidden text-left">
+           <Card className="border-none shadow-sm rounded-[2rem] bg-primary text-primary-foreground overflow-hidden text-left">
              <CardHeader className="pb-4">
                 <CardTitle className="text-xl font-bold font-headline flex items-center gap-2">
                    <ShieldCheck className="w-5 h-5 text-accent" /> Security Context
@@ -632,26 +615,26 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
              </CardContent>
            </Card>
 
-           <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden text-left">
-             <CardHeader className="pb-4 border-b border-primary/5">
-                <CardTitle className="text-lg font-bold font-headline flex items-center gap-2 text-primary">
+           <Card className="border-none shadow-sm rounded-[2rem] bg-card overflow-hidden text-left ring-1 ring-border">
+             <CardHeader className="pb-4 border-b border-border bg-muted/10">
+                <CardTitle className="text-lg font-bold font-headline flex items-center gap-2 text-foreground">
                    <AlertCircle className="w-5 h-5 text-accent" /> Compliance Health
                 </CardTitle>
              </CardHeader>
              <CardContent className="pt-6 space-y-4">
                 <div className="flex items-center justify-between">
                    <span className="text-xs font-bold text-muted-foreground uppercase font-headline tracking-widest">Certificates</span>
-                   <Badge className="bg-emerald-100 text-emerald-700 border-none font-bold uppercase text-[9px]">{documents?.length || 0} Records</Badge>
+                   <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-bold uppercase text-[9px] font-headline tracking-widest">{documents?.length || 0} Records</Badge>
                 </div>
                 <div className="flex items-center justify-between">
                    <span className="text-xs font-bold text-muted-foreground uppercase font-headline tracking-widest">Open Repairs</span>
-                   <Badge className={cn("border-none font-bold uppercase text-[9px]", (maintenance?.filter(m => m.status !== 'completed').length || 0) > 0 ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700")}>
+                   <Badge className={cn("border-none font-bold uppercase text-[9px] font-headline tracking-widest", (maintenance?.filter(m => m.status !== 'completed').length || 0) > 0 ? "bg-amber-500/10 text-amber-500" : "bg-emerald-500/10 text-emerald-500")}>
                       {maintenance?.filter(m => m.status !== 'completed').length || 0} Pending
                    </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                    <span className="text-xs font-bold text-muted-foreground uppercase font-headline tracking-widest">Safety Audit</span>
-                   <Badge className={cn("border-none font-bold uppercase text-[9px]", latestAudit ? "bg-blue-100 text-blue-700" : "bg-muted text-muted-foreground")}>
+                   <Badge className={cn("border-none font-bold uppercase text-[9px] font-headline tracking-widest", latestAudit ? "bg-blue-500/10 text-blue-500" : "bg-muted text-muted-foreground")}>
                       {latestAudit ? 'Verified' : 'Pending'}
                    </Badge>
                 </div>
@@ -660,7 +643,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         </div>
       </div>
 
-      {/* High-Fidelity Modal Viewer */}
       <Dialog open={!!lightboxUrl} onOpenChange={() => setLightboxUrl(null)}>
         <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-none bg-transparent shadow-none flex items-center justify-center overflow-hidden">
           <DialogTitle className="sr-only">Visual Asset Preview</DialogTitle>
@@ -687,4 +669,3 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     </div>
   );
 }
-

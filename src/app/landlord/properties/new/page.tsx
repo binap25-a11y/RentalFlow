@@ -56,7 +56,6 @@ export default function NewPropertyPage() {
     
     setLedger(prev => [...prev, ...newItems]);
 
-    // Background Auto-Upload for instant "Synchronize" button
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const itemId = newItems[i].id;
@@ -146,7 +145,7 @@ export default function NewPropertyPage() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">Register Asset</h1>
+            <h1 className="text-3xl font-headline font-bold text-foreground tracking-tight">Register Asset</h1>
             <p className="text-muted-foreground font-medium font-body text-sm">Adding a high-value property with professional visuals.</p>
           </div>
         </div>
@@ -155,13 +154,13 @@ export default function NewPropertyPage() {
         </Badge>
       </div>
 
-      <Card className="border-none shadow-xl overflow-hidden rounded-[2.5rem] bg-white ring-1 ring-primary/5">
+      <Card className="border-none shadow-xl overflow-hidden rounded-[2.5rem] bg-card ring-1 ring-border">
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-1 lg:grid-cols-2">
-            <div className="p-10 bg-primary/5 border-r border-primary/10">
+            <div className="p-10 bg-primary/5 border-r border-border">
               <div className="flex justify-between items-center mb-6">
-                <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 font-headline">Visual Orchestration</Label>
-                <label htmlFor="image-input" className="h-9 rounded-lg font-bold text-[10px] uppercase font-headline cursor-pointer px-4 bg-white shadow-sm flex items-center hover:bg-muted transition-colors">
+                <Label className="font-bold text-xs uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Visual Orchestration</Label>
+                <label htmlFor="image-input" className="h-9 rounded-lg font-bold text-[10px] uppercase font-headline cursor-pointer px-4 bg-background border border-border shadow-sm flex items-center hover:bg-muted transition-colors text-foreground">
                   <Plus className="w-3 h-3 mr-2" /> Add Photos
                 </label>
               </div>
@@ -170,7 +169,7 @@ export default function NewPropertyPage() {
                 <div className="grid grid-cols-2 gap-4">
                   {ledger.map((item, index) => (
                     <div key={item.id} className={cn(
-                      "relative aspect-video rounded-2xl overflow-hidden group shadow-sm bg-white border-2 transition-all",
+                      "relative aspect-video rounded-2xl overflow-hidden group shadow-sm bg-background border-2 transition-all",
                       item.status === 'uploading' ? 'opacity-50 grayscale' : 'opacity-100',
                       index === 0 ? "border-primary" : "border-transparent"
                     )}>
@@ -181,7 +180,7 @@ export default function NewPropertyPage() {
                          </button>
                       </div>
                       {item.status === 'uploading' && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-white/60">
+                        <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-black/60">
                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
                         </div>
                       )}
@@ -194,10 +193,10 @@ export default function NewPropertyPage() {
                   ))}
                 </div>
               ) : (
-                <label htmlFor="image-input" className="relative group overflow-hidden rounded-[2rem] border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white aspect-video w-full flex items-center justify-center shadow-inner cursor-pointer">
+                <label htmlFor="image-input" className="relative group overflow-hidden rounded-[2rem] border-2 border-dashed border-border hover:border-primary/40 transition-all bg-background aspect-video w-full flex items-center justify-center shadow-inner cursor-pointer">
                   <div className="flex flex-col items-center gap-3">
-                    <div className="p-5 bg-primary/5 rounded-full"><ImageIcon className="w-8 h-8 text-primary/40" /></div>
-                    <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest font-headline">Capture Property Assets</span>
+                    <div className="p-5 bg-primary/5 rounded-full"><ImageIcon className="w-8 h-8 text-muted-foreground opacity-40 group-hover:opacity-60" /></div>
+                    <span className="text-[10px] font-bold text-muted-foreground opacity-40 group-hover:opacity-60 uppercase tracking-widest font-headline">Capture Property Assets</span>
                   </div>
                 </label>
               )}
@@ -207,22 +206,22 @@ export default function NewPropertyPage() {
             <div className="p-10 space-y-8">
               <div className="grid grid-cols-1 gap-6">
                 <div className="space-y-2">
-                  <Label className="font-bold text-[10px] uppercase text-primary/40 tracking-widest font-headline">Street Address</Label>
+                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Street Address</Label>
                   <Input value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="123 Street" className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="font-bold text-[10px] uppercase text-primary/40 tracking-widest font-headline">City</Label>
+                    <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">City</Label>
                     <Input value={city} onChange={(e) => setCity(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="font-bold text-[10px] uppercase text-primary/40 tracking-widest font-headline">Postcode</Label>
+                    <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Postcode</Label>
                     <Input value={zipCode} onChange={(e) => setZipCode(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="font-bold text-[10px] uppercase text-primary/40 tracking-widest font-headline">Asset Class</Label>
+                    <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Asset Class</Label>
                     <Select value={propertyType} onValueChange={setPropertyType}>
                       <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold">
                         <SelectValue />
@@ -235,20 +234,20 @@ export default function NewPropertyPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="font-bold text-[10px] uppercase text-primary/40 tracking-widest font-headline">Monthly Yield (£)</Label>
+                    <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Monthly Yield (£)</Label>
                     <Input type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="font-bold text-[10px] uppercase text-primary/40 tracking-widest font-headline">Description</Label>
-                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Narrative for this asset..." className="rounded-xl min-h-[120px] bg-muted/20 border-none" />
+                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Description</Label>
+                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Narrative for this asset..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-medium" />
                 </div>
               </div>
             </div>
           </div>
           <CardFooter className="p-10 bg-muted/5 border-t flex justify-end gap-4">
             <Button type="button" variant="ghost" className="rounded-xl h-12 px-8 font-bold font-headline" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" disabled={isSaving || ledger.some(i => i.status === 'uploading')} className="rounded-xl font-bold bg-primary h-12 px-12 shadow-lg shadow-primary/20 font-headline text-white transition-all hover:scale-[1.02]">
+            <Button type="submit" disabled={isSaving || ledger.some(i => i.status === 'uploading')} className="rounded-xl font-bold bg-primary h-12 px-12 shadow-lg shadow-primary/20 font-headline text-primary-foreground transition-all hover:scale-[1.02]">
               {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
               Synchronize Asset
             </Button>
