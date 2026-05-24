@@ -20,7 +20,7 @@ import {
   CheckCircle2, PlayCircle, Plus, PoundSterling,
   ChevronRight, Lightbulb, UserCheck, HardHat, Phone, Mail,
   Calendar as CalendarIcon, Building2, ShieldAlert,
-  Activity, Save, ArrowRight
+  Activity, Save, ArrowRight, Edit3
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -61,12 +61,16 @@ export default function MaintenancePage() {
   const [isLoggingCost, setIsLoggingCost] = useState<string | null>(null);
   const [isAssigningPro, setIsAssigningPro] = useState<string | null>(null);
   const [isScheduling, setIsScheduling] = useState<string | null>(null);
+  const [isEditingTask, setIsEditingTask] = useState<string | null>(null);
   const [costAmount, setCostAmount] = useState('');
   const [scheduledDate, setScheduledDate] = useState<Date>();
 
   const [newRequestTitle, setNewRequestTitle] = useState('');
   const [newRequestDesc, setNewRequestDesc] = useState('');
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
+
+  const [editTitle, setEditTitle] = useState('');
+  const [editDesc, setEditDesc] = useState('');
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -128,6 +132,25 @@ export default function MaintenancePage() {
     setNewRequestTitle('');
     setNewRequestDesc('');
     setSelectedPropertyId('');
+  };
+
+  const handleOpenEdit = (request: any) => {
+    setIsEditingTask(request.id);
+    setEditTitle(request.title);
+    setEditDesc(request.description);
+  };
+
+  const handleUpdateTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || !isEditingTask) return;
+    const requestRef = doc(db, 'maintenanceRequests', isEditingTask);
+    updateDocumentNonBlocking(requestRef, {
+      title: editTitle,
+      description: editDesc,
+      updatedAt: serverTimestamp()
+    });
+    toast({ title: "Record Updated", description: "The task specifications have been refined." });
+    setIsEditingTask(null);
   };
 
   const handleTriage = async (request: any) => {
@@ -235,17 +258,17 @@ export default function MaintenancePage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto pb-12 text-left">
-      <div className="space-y-4">
+      <div className="flex flex-col gap-6">
         <div className="text-left">
           <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-3 py-1 rounded-full font-bold mb-3 uppercase tracking-[0.15em] text-[9px]">
              <Activity className="w-3 h-3 mr-2" /> Maintenance Roadmap
           </Badge>
           <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">Maintenance Hub</h1>
-          <p className="text-muted-foreground font-medium font-body max-w-xl mt-1 text-sm">Orchestrating professional site upkeep and AI-driven repair triage.</p>
+          <p className="text-muted-foreground font-medium font-body max-w-xl mt-1 text-sm leading-relaxed">Orchestrating professional site upkeep and AI-driven repair triage.</p>
         </div>
         <Button 
           onClick={() => setIsCreateDialogOpen(true)} 
-          className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-8 shadow-lg shadow-primary/20 text-white text-sm transition-all hover:scale-[1.02] hover:shadow-primary/30"
+          className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-8 shadow-lg shadow-primary/20 text-white text-sm transition-all hover:scale-[1.02] hover:shadow-primary/30 w-fit"
         >
           <Plus className="w-4 h-4 mr-2" /> Log New Request
         </Button>
@@ -259,7 +282,7 @@ export default function MaintenancePage() {
             </div>
             <h3 className="text-lg font-bold font-headline text-primary opacity-40 uppercase tracking-widest text-center">Empty Ledger</h3>
             <p className="text-muted-foreground font-medium mt-2 text-sm text-center">No active maintenance tasks registered.</p>
-            <Button variant="ghost" className="mt-6 font-bold text-primary text-xs hover:bg-primary/5" onClick={() => setIsCreateDialogOpen(true)}>Initialize First Task</Button>
+            <Button variant="ghost" className="mt-6 font-bold text-primary text-xs hover:bg-primary/5 rounded-xl h-10 px-6" onClick={() => setIsCreateDialogOpen(true)}>Initialize First Task</Button>
           </Card>
         ) : (
           requests.slice().sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).map((request) => {
@@ -268,45 +291,50 @@ export default function MaintenancePage() {
             return (
               <Card key={request.id} className="border-none shadow-sm overflow-hidden bg-white rounded-[2.5rem] group ring-1 ring-primary/5 transition-all hover:shadow-md">
                 <CardContent className="p-8">
-                  <div className="flex flex-wrap items-center gap-3 mb-6">
-                    <Badge className={cn("uppercase text-[8px] font-bold px-3 py-1 tracking-[0.1em] rounded-full", request.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-primary/10 text-primary')}>
-                      {request.status}
-                    </Badge>
-                    <Badge className={cn("capitalize font-bold text-[8px] px-3 py-1 tracking-[0.1em] rounded-full", getPriorityColor(request.priority))}>
-                      {request.priority}
-                    </Badge>
-                    {request.cost > 0 && (
-                      <Badge className="bg-amber-50 text-amber-700 font-bold border border-amber-100 text-[8px] px-3 py-1 uppercase tracking-[0.1em] rounded-full">
-                        £{request.cost} cost
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Badge className={cn("uppercase text-[8px] font-bold px-3 py-1 tracking-[0.1em] rounded-full", request.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-primary/10 text-primary')}>
+                        {request.status}
                       </Badge>
-                    )}
-                    <span className="text-[9px] text-muted-foreground font-bold uppercase ml-auto flex items-center tracking-widest opacity-60 font-headline">
-                      <Clock className="w-3.5 h-3.5 mr-1.5" /> {request.createdAt ? format(new Date(request.createdAt.seconds * 1000), 'PPp') : 'Just now'}
-                    </span>
+                      <Badge className={cn("capitalize font-bold text-[8px] px-3 py-1 tracking-[0.1em] rounded-full", getPriorityColor(request.priority))}>
+                        {request.priority}
+                      </Badge>
+                      {request.cost > 0 && (
+                        <Badge className="bg-amber-50 text-amber-700 font-bold border border-amber-100 text-[8px] px-3 py-1 uppercase tracking-[0.1em] rounded-full">
+                          £{request.cost} cost
+                        </Badge>
+                      )}
+                      <span className="text-[9px] text-muted-foreground font-bold uppercase flex items-center tracking-widest opacity-60 font-headline">
+                        <Clock className="w-3.5 h-3.5 mr-1.5" /> {request.createdAt ? format(new Date(request.createdAt.seconds * 1000), 'PPp') : 'Just now'}
+                      </span>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-primary/40 hover:text-primary hover:bg-primary/5 transition-all" onClick={() => handleOpenEdit(request)}>
+                      <Edit3 className="w-4 h-4" />
+                    </Button>
                   </div>
                   
                   <div className="space-y-4 text-left">
-                    <h3 className="text-xl font-bold font-headline group-hover:text-primary transition-colors tracking-tight">{request.title}</h3>
+                    <h3 className="text-xl font-bold font-headline group-hover:text-primary transition-colors tracking-tight leading-tight">{request.title}</h3>
                     <p className="text-sm text-muted-foreground font-body leading-relaxed font-medium max-w-4xl">{request.description}</p>
                     
                     <div className="flex flex-wrap items-center gap-8 pt-6 border-t border-primary/5">
                       <div className="flex items-center gap-3">
-                         <div className="p-2.5 bg-primary/5 rounded-xl border border-primary/5 shadow-inner">
+                         <div className="p-2 bg-primary/5 rounded-xl border border-primary/5 shadow-inner">
                             <Building2 className="w-4 h-4 text-accent" />
                          </div>
                          <div className="text-left">
                             <p className="text-[8px] font-bold text-primary/40 uppercase tracking-widest font-headline">Asset</p>
-                            <p className="text-sm font-bold text-primary font-headline">{properties?.find(p => p.id === request.propertyId)?.addressLine1 || "Record Pending"}</p>
+                            <p className="text-xs font-bold text-primary font-headline">{properties?.find(p => p.id === request.propertyId)?.addressLine1 || "Record Pending"}</p>
                          </div>
                       </div>
                       {request.scheduledDate && (
                         <div className="flex items-center gap-3">
-                           <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100 shadow-inner">
+                           <div className="p-2 bg-emerald-50 rounded-xl border border-emerald-100 shadow-inner">
                               <CalendarIcon className="w-4 h-4 text-emerald-600" />
                            </div>
                            <div className="text-left">
                               <p className="text-[8px] font-bold text-emerald-600/40 uppercase tracking-widest font-headline">Target</p>
-                              <p className="text-sm font-bold text-emerald-700 font-headline">{format(new Date(request.scheduledDate), 'PPP')}</p>
+                              <p className="text-xs font-bold text-emerald-700 font-headline">{format(new Date(request.scheduledDate), 'PPP')}</p>
                            </div>
                         </div>
                       )}
@@ -328,7 +356,6 @@ export default function MaintenancePage() {
                              </div>
                           </div>
                        </div>
-                       <Button variant="ghost" size="sm" className="text-[9px] font-bold text-primary hover:bg-primary/5 rounded-lg uppercase tracking-widest h-9 px-4 border border-primary/10 font-headline" onClick={() => setIsAssigningPro(request.id)}>Modify</Button>
                     </div>
                   )}
 
@@ -395,13 +422,13 @@ export default function MaintenancePage() {
                       <Button variant="outline" className="flex-1 min-w-[180px] rounded-xl font-bold h-12 border-primary/10 bg-white shadow-sm hover:bg-primary/5 hover:text-primary text-xs font-headline">Update Status</Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="rounded-xl border-primary/10 shadow-xl min-w-[220px] p-2" align="end">
-                      <DropdownMenuItem className="py-3 px-4 font-bold text-xs font-headline cursor-pointer rounded-lg focus:bg-primary/5" onClick={() => updateStatus(request, 'in-progress')}>
+                      <DropdownMenuItem className="py-3 px-4 font-bold text-xs font-headline cursor-pointer rounded-lg focus:bg-primary/5 text-primary" onClick={() => updateStatus(request, 'in-progress')}>
                         <PlayCircle className="w-4 h-4 mr-3 text-sky-600" /> In Progress
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="py-3 px-4 font-bold text-xs font-headline cursor-pointer rounded-lg focus:bg-primary/5" onClick={() => updateStatus(request, 'completed')}>
+                      <DropdownMenuItem className="py-3 px-4 font-bold text-xs font-headline cursor-pointer rounded-lg focus:bg-primary/5 text-primary" onClick={() => updateStatus(request, 'completed')}>
                         <CheckCircle2 className="w-4 h-4 mr-3 text-emerald-600" /> Completed
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="py-3 px-4 font-bold text-xs font-headline cursor-pointer rounded-lg focus:bg-primary/5" onClick={() => setIsLoggingCost(request.id)}>
+                      <DropdownMenuItem className="py-3 px-4 font-bold text-xs font-headline cursor-pointer rounded-lg focus:bg-primary/5 text-primary" onClick={() => setIsLoggingCost(request.id)}>
                         <PoundSterling className="w-4 h-4 mr-3 text-amber-600" /> Log Final Cost
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -462,7 +489,7 @@ export default function MaintenancePage() {
                       />
                     </div>
                     <DialogFooter className="p-6 bg-muted/5 border-t">
-                       <Button className="w-full rounded-xl h-12 font-bold bg-primary text-white shadow-lg shadow-primary/20 font-headline text-sm hover:bg-primary/90 hover:shadow-primary/30" disabled={!scheduledDate} onClick={() => handleSetSchedule(request.id)}>
+                       <Button className="w-full rounded-xl h-12 font-bold bg-primary text-white shadow-lg shadow-primary/20 font-headline text-sm hover:bg-primary/90" disabled={!scheduledDate} onClick={() => handleSetSchedule(request.id)}>
                           <Save className="w-4 h-4 mr-2" /> Synchronize Timeline
                        </Button>
                     </DialogFooter>
@@ -516,9 +543,35 @@ export default function MaintenancePage() {
               </div>
             </div>
             <DialogFooter className="p-8 bg-muted/5 border-t">
-              <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 text-white font-headline text-sm transition-transform hover:scale-[1.01] hover:bg-primary/90 hover:shadow-primary/30" disabled={isSubmitting}>
+              <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 text-white font-headline text-sm transition-transform hover:scale-[1.01] hover:bg-primary/90" disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                 Register in Roadmap
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!isEditingTask} onOpenChange={(open) => !open && setIsEditingTask(null)}>
+        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-white max-w-[650px]">
+          <form onSubmit={handleUpdateTask}>
+            <div className="p-10 bg-primary/5 border-b text-left">
+              <DialogTitle className="font-headline text-2xl font-bold text-primary tracking-tight">Modify Record</DialogTitle>
+              <DialogDescription className="font-medium text-muted-foreground mt-1 text-sm">Refine the specifications of this maintenance task.</DialogDescription>
+            </div>
+            <div className="grid gap-6 p-10 text-left bg-white">
+              <div className="space-y-2">
+                <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Repair Identifier</Label>
+                <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none font-bold text-sm px-4 focus:ring-2 focus:ring-primary font-headline" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Operational Context</Label>
+                <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} required className="rounded-xl min-h-[140px] bg-muted/20 border-none font-medium px-4 py-4 text-sm leading-relaxed focus:ring-2 focus:ring-primary" />
+              </div>
+            </div>
+            <DialogFooter className="p-8 bg-muted/5 border-t">
+              <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg text-white font-headline text-sm hover:bg-primary/90">
+                <Save className="w-4 h-4 mr-2" /> Update Portfolio Records
               </Button>
             </DialogFooter>
           </form>
