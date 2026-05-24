@@ -240,12 +240,12 @@ export default function MaintenancePage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1.5 rounded-full font-bold mb-4 uppercase tracking-[0.2em] text-[10px]">
-             <Wrench className="w-3 h-3 mr-2" /> Asset Maintenance
+             <Activity className="w-3 h-3 mr-2" /> Maintenance Ledger
           </Badge>
           <h1 className="text-5xl font-headline font-bold text-primary tracking-tighter">Maintenance Hub</h1>
           <p className="text-muted-foreground font-medium font-body max-w-lg mt-2">Orchestrating high-fidelity repairs and professional site upkeep.</p>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)} className="rounded-2xl bg-primary hover:bg-primary/90 font-bold h-14 px-10 shadow-2xl shadow-primary/20 text-white text-lg">
+        <Button onClick={() => setIsCreateDialogOpen(true)} className="rounded-2xl bg-primary hover:bg-primary/90 font-bold h-14 px-10 shadow-2xl shadow-primary/20 text-white text-lg transition-transform hover:scale-[1.02]">
           <Plus className="w-5 h-5 mr-2" /> Log New Request
         </Button>
       </div>
@@ -268,18 +268,18 @@ export default function MaintenancePage() {
               <Card key={request.id} className="border-none shadow-xl overflow-hidden bg-white rounded-[2.5rem] group ring-1 ring-primary/5 transition-all hover:shadow-2xl">
                 <CardContent className="p-10">
                   <div className="flex flex-wrap items-center gap-4 mb-8">
-                    <Badge className={cn("uppercase text-[9px] font-bold px-5 py-1.5 tracking-[0.2em] rounded-full", request.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-primary/10 text-primary')}>
+                    <Badge className={cn("uppercase text-[9px] font-bold px-5 py-1.5 tracking-[0.2em] rounded-full shadow-sm", request.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-primary/10 text-primary')}>
                       {request.status}
                     </Badge>
                     <Badge className={cn("capitalize font-bold text-[9px] px-5 py-1.5 tracking-[0.2em] rounded-full shadow-lg", getPriorityColor(request.priority))}>
                       {request.priority}
                     </Badge>
                     {request.cost > 0 && (
-                      <Badge className="bg-amber-50 text-amber-700 font-bold border border-amber-100 text-[9px] px-5 py-1.5 uppercase tracking-[0.2em] rounded-full">
+                      <Badge className="bg-amber-50 text-amber-700 font-bold border border-amber-100 text-[9px] px-5 py-1.5 uppercase tracking-[0.2em] rounded-full shadow-sm">
                         £{request.cost} Invoiced
                       </Badge>
                     )}
-                    <span className="text-[10px] text-muted-foreground font-bold uppercase ml-auto flex items-center tracking-widest opacity-60">
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase ml-auto flex items-center tracking-widest opacity-60 font-headline">
                       <Clock className="w-4 h-4 mr-2" /> Reported: {request.createdAt ? format(new Date(request.createdAt.seconds * 1000), 'PPp') : 'Just now'}
                     </span>
                   </div>
@@ -290,22 +290,22 @@ export default function MaintenancePage() {
                     
                     <div className="flex flex-wrap items-center gap-10 pt-4 border-t border-primary/5">
                       <div className="flex items-center gap-3">
-                         <div className="p-3 bg-primary/5 rounded-xl">
+                         <div className="p-3 bg-primary/5 rounded-xl border border-primary/5 shadow-inner">
                             <Building2 className="w-5 h-5 text-accent" />
                          </div>
                          <div className="text-left">
                             <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest font-headline">Asset Assignment</p>
-                            <p className="text-sm font-bold text-primary">{properties?.find(p => p.id === request.propertyId)?.addressLine1 || "Asset ID Pending"}</p>
+                            <p className="text-sm font-bold text-primary font-headline">{properties?.find(p => p.id === request.propertyId)?.addressLine1 || "Asset ID Pending"}</p>
                          </div>
                       </div>
                       {request.scheduledDate && (
                         <div className="flex items-center gap-3">
-                           <div className="p-3 bg-emerald-50 rounded-xl">
+                           <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 shadow-inner">
                               <CalendarIcon className="w-5 h-5 text-emerald-600" />
                            </div>
                            <div className="text-left">
                               <p className="text-[10px] font-bold text-emerald-600/40 uppercase tracking-widest font-headline">Repair Target</p>
-                              <p className="text-sm font-bold text-emerald-700">{format(new Date(request.scheduledDate), 'PPP')}</p>
+                              <p className="text-sm font-bold text-emerald-700 font-headline">{format(new Date(request.scheduledDate), 'PPP')}</p>
                            </div>
                         </div>
                       )}
@@ -315,26 +315,26 @@ export default function MaintenancePage() {
                   {assignedPro && (
                     <div className="mt-10 p-8 bg-primary/[0.02] border border-primary/10 rounded-[2rem] flex flex-col md:flex-row md:items-center justify-between gap-8 animate-in slide-in-from-left-4">
                        <div className="flex items-center gap-8 text-left">
-                          <div className="p-6 bg-white dark:bg-primary/20 rounded-[1.5rem] text-primary shadow-xl ring-1 ring-primary/5 transform -rotate-3">
+                          <div className="p-6 bg-white dark:bg-primary/20 rounded-[1.5rem] text-primary shadow-xl ring-1 ring-primary/5 transform -rotate-3 transition-transform group-hover:rotate-0">
                              <HardHat className="w-10 h-10" />
                           </div>
                           <div>
                              <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest mb-2 font-headline">Operational Partner</p>
-                             <p className="font-bold text-2xl text-primary leading-none tracking-tight">{assignedPro.name}</p>
+                             <p className="font-bold text-2xl text-primary leading-none tracking-tight font-headline">{assignedPro.name}</p>
                              <div className="flex gap-6 mt-4">
                                 <span className="text-xs font-bold text-muted-foreground flex items-center uppercase tracking-widest"><Phone className="w-4 h-4 mr-2 text-accent" /> {assignedPro.phone}</span>
                                 {assignedPro.email && <span className="text-xs font-bold text-muted-foreground flex items-center uppercase tracking-widest"><Mail className="w-4 h-4 mr-2 text-accent" /> {assignedPro.email}</span>}
                              </div>
                           </div>
                        </div>
-                       <Button variant="ghost" size="sm" className="text-[10px] font-bold text-primary hover:bg-primary/10 rounded-xl uppercase tracking-[0.2em] h-10 px-6 border border-primary/10" onClick={() => setIsAssigningPro(request.id)}>Modify Assignment</Button>
+                       <Button variant="ghost" size="sm" className="text-[10px] font-bold text-primary hover:bg-primary/10 rounded-xl uppercase tracking-[0.2em] h-10 px-6 border border-primary/10 font-headline" onClick={() => setIsAssigningPro(request.id)}>Modify Assignment</Button>
                     </div>
                   )}
 
                   {request.aiTriageNotes && (
                     <div className="space-y-6 mt-10 animate-in fade-in duration-700">
                       <div className="bg-primary/5 border border-primary/5 rounded-[2rem] p-8 flex gap-8 text-left shadow-inner ring-1 ring-primary/5">
-                        <BrainCircuit className="w-12 h-12 text-primary shrink-0" />
+                        <BrainCircuit className="w-12 h-12 text-primary shrink-0 opacity-40" />
                         <div className="flex-1">
                           <p className="text-[10px] font-bold text-primary uppercase mb-4 tracking-[0.3em] font-headline opacity-40">Intelligence Engine Triage</p>
                           <p className="text-lg text-primary font-bold font-body leading-relaxed">{request.aiTriageNotes}</p>
@@ -343,14 +343,14 @@ export default function MaintenancePage() {
 
                       {request.aiSuggestions && request.aiSuggestions.length > 0 && (
                         <div className="bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100/50 rounded-[2rem] p-8 flex gap-8 text-left">
-                          <div className="p-4 bg-white rounded-2xl shadow-sm text-emerald-600 h-fit">
+                          <div className="p-4 bg-white rounded-2xl shadow-sm text-emerald-600 h-fit border border-emerald-100">
                              <Lightbulb className="w-8 h-8" />
                           </div>
                           <div className="flex-1">
                             <p className="text-[10px] font-bold text-emerald-700/60 uppercase mb-4 tracking-[0.3em] font-headline">Recommended Next Steps</p>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {request.aiSuggestions.map((suggestion: string, idx: number) => (
-                                <div key={idx} className="flex gap-4 p-4 bg-white/60 rounded-2xl border border-emerald-100 text-sm font-bold text-emerald-900">
+                                <div key={idx} className="flex gap-4 p-4 bg-white/60 rounded-2xl border border-emerald-100 text-sm font-bold text-emerald-900 shadow-sm transition-all hover:bg-white">
                                   <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-500" /> {suggestion}
                                 </div>
                               ))}
@@ -367,17 +367,17 @@ export default function MaintenancePage() {
                     Analyze Issue with AI
                   </Button>
                   
-                  <Button variant="outline" className="flex-1 min-w-[200px] rounded-2xl font-bold h-14 border-primary/10 bg-white shadow-sm hover:bg-muted/50" onClick={() => setIsScheduling(request.id)}>
+                  <Button variant="outline" className="flex-1 min-w-[200px] rounded-2xl font-bold h-14 border-primary/10 bg-white shadow-sm hover:bg-muted/50 font-headline" onClick={() => setIsScheduling(request.id)}>
                     <CalendarIcon className="w-5 h-5 mr-2" /> Adjust Roadmap
                   </Button>
 
-                  <Button variant="outline" className="flex-1 min-w-[200px] rounded-2xl font-bold h-14 border-primary/10 bg-white shadow-sm hover:bg-muted/50" onClick={() => setIsAssigningPro(request.id)}>
+                  <Button variant="outline" className="flex-1 min-w-[200px] rounded-2xl font-bold h-14 border-primary/10 bg-white shadow-sm hover:bg-muted/50 font-headline" onClick={() => setIsAssigningPro(request.id)}>
                     <UserCheck className="w-5 h-5 mr-2" /> {assignedPro ? 'Change Partner' : 'Assign Partner'}
                   </Button>
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="flex-1 min-w-[200px] rounded-2xl font-bold h-14 border-primary/10 bg-white shadow-sm hover:bg-muted/50">Update Records</Button>
+                      <Button variant="outline" className="flex-1 min-w-[200px] rounded-2xl font-bold h-14 border-primary/10 bg-white shadow-sm hover:bg-muted/50 font-headline">Update Records</Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="rounded-[1.5rem] border-primary/10 shadow-2xl min-w-[240px] p-2" align="end">
                       <DropdownMenuItem className="py-4 px-5 font-bold font-headline cursor-pointer rounded-xl focus:bg-primary/5 text-primary" onClick={() => updateStatus(request, 'in-progress')}>
@@ -419,8 +419,8 @@ export default function MaintenancePage() {
                                    <HardHat className="w-6 h-6" />
                                 </div>
                                 <div>
-                                   <p className="font-bold text-xl text-primary leading-tight tracking-tight">{pro.name}</p>
-                                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1.5">{pro.role}</p>
+                                   <p className="font-bold text-xl text-primary leading-tight tracking-tight font-headline">{pro.name}</p>
+                                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1.5 font-headline">{pro.role}</p>
                                 </div>
                              </div>
                              <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center text-primary/20 group-hover:bg-primary group-hover:text-white transition-all">
@@ -449,7 +449,7 @@ export default function MaintenancePage() {
                       />
                     </div>
                     <DialogFooter className="p-10 bg-muted/5 border-t">
-                       <Button className="w-full rounded-2xl h-16 font-bold bg-primary text-white shadow-2xl shadow-primary/20 font-headline text-xl" disabled={!scheduledDate} onClick={() => handleSetSchedule(request.id)}>
+                       <Button className="w-full rounded-2xl h-16 font-bold bg-primary text-white shadow-2xl shadow-primary/20 font-headline text-xl transition-transform hover:scale-[1.01]" disabled={!scheduledDate} onClick={() => handleSetSchedule(request.id)}>
                           <Save className="w-6 h-6 mr-3" /> Synchronize Timeline
                        </Button>
                     </DialogFooter>
@@ -465,10 +465,10 @@ export default function MaintenancePage() {
                     </div>
                     <div className="p-10 text-left">
                       <Label className="text-[10px] font-bold uppercase text-primary/40 font-headline tracking-[0.2em] mb-4 block">Final Invoiced Amount (£)</Label>
-                      <Input type="number" placeholder="0.00" value={costAmount} onChange={(e) => setCostAmount(e.target.value)} className="rounded-2xl h-16 bg-muted/20 border-none font-bold text-2xl px-8" />
+                      <Input type="number" placeholder="0.00" value={costAmount} onChange={(e) => setCostAmount(e.target.value)} className="rounded-2xl h-16 bg-muted/20 border-none font-bold text-2xl px-8 focus:ring-2 focus:ring-primary" />
                     </div>
                     <DialogFooter className="p-10 bg-muted/5 border-t">
-                      <Button className="w-full rounded-2xl h-16 font-bold bg-primary shadow-2xl text-white font-headline text-xl" onClick={() => handleLogCost(request)}>Update Ledger</Button>
+                      <Button className="w-full rounded-2xl h-16 font-bold bg-primary shadow-2xl text-white font-headline text-xl transition-transform hover:scale-[1.01]" onClick={() => handleLogCost(request)}>Update Ledger</Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
@@ -488,22 +488,22 @@ export default function MaintenancePage() {
             <div className="grid gap-8 p-12 text-left bg-white">
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-primary/40 font-headline tracking-[0.3em]">Target Inventory Item</Label>
-                <select className="flex h-14 w-full rounded-2xl border-none bg-muted/20 px-6 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-primary" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
+                <select className="flex h-14 w-full rounded-2xl border-none bg-muted/20 px-6 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-primary font-headline" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
                   <option value="">Select a property from inventory...</option>
                   {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-primary/40 font-headline tracking-[0.3em]">Issue Label</Label>
-                <Input value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="e.g. Boiler Leak Detected" className="rounded-2xl h-14 bg-muted/20 border-none font-bold text-lg px-6" />
+                <Input value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="e.g. Boiler Leak Detected" className="rounded-2xl h-14 bg-muted/20 border-none font-bold text-lg px-6 focus:ring-2 focus:ring-primary" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-primary/40 font-headline tracking-[0.3em]">Operational Context</Label>
-                <Textarea value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Provide full context for contractor access..." className="rounded-2xl min-h-[150px] bg-muted/20 border-none font-medium px-6 py-4 leading-relaxed" />
+                <Textarea value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Provide full context for contractor access..." className="rounded-2xl min-h-[150px] bg-muted/20 border-none font-medium px-6 py-4 leading-relaxed focus:ring-2 focus:ring-primary" />
               </div>
             </div>
             <DialogFooter className="p-12 bg-muted/5 border-t">
-              <Button type="submit" className="w-full rounded-2xl h-16 font-bold bg-primary shadow-2xl shadow-primary/20 text-white font-headline text-xl" disabled={isSubmitting}>
+              <Button type="submit" className="w-full rounded-2xl h-16 font-bold bg-primary shadow-2xl shadow-primary/20 text-white font-headline text-xl transition-transform hover:scale-[1.01]" disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin mr-3" /> : <Save className="w-6 h-6 mr-3" />}
                 Register Task in Roadmap
               </Button>
