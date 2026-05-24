@@ -39,7 +39,7 @@ function Calendar({
           "h-10 w-10 p-0 font-bold aria-selected:opacity-100 rounded-xl transition-all flex flex-col items-center justify-center font-body hover:bg-accent/10 hover:text-accent relative cursor-pointer border-none bg-transparent text-foreground"
         ),
         selected:
-          "bg-accent text-white hover:bg-accent hover:text-white focus:bg-accent focus:text-white shadow-xl scale-105 rounded-xl",
+          "bg-accent text-white hover:bg-accent hover:text-white focus:bg-accent focus:text-white shadow-xl scale-105 rounded-xl border-none",
         today: "bg-accent/10 text-accent font-extrabold ring-1 ring-accent/20",
         outside:
           "day-outside text-muted-foreground opacity-5 aria-selected:bg-accent/20 aria-selected:text-muted-foreground",

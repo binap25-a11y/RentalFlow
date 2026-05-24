@@ -56,7 +56,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-4">
              {user ? (
-               <Button asChild className="rounded-xl font-bold bg-accent hover:bg-accent/90 text-accent-foreground px-6 h-11 shadow-lg shadow-accent/20 transition-all active:scale-95">
+               <Button asChild className="rounded-xl font-bold bg-accent hover:bg-accent/90 text-white px-6 h-11 shadow-lg shadow-accent/20 transition-all active:scale-95 border-none">
                  <Link href={profile?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
                     Portfolio Access <ChevronRight className="w-4 h-4 ml-1" />
                  </Link>
@@ -64,7 +64,7 @@ export default function LandingPage() {
              ) : (
                <>
                  <Button variant="ghost" asChild className="rounded-xl font-bold hidden sm:inline-flex text-foreground hover:bg-primary/5"><Link href="/auth">Sign In</Link></Button>
-                 <Button asChild className="rounded-xl font-bold bg-accent hover:bg-accent/90 text-accent-foreground px-6 h-11 shadow-lg shadow-accent/20 transition-all active:scale-95"><Link href="/auth">Get Started</Link></Button>
+                 <Button asChild className="rounded-xl font-bold bg-accent hover:bg-accent/90 text-white px-6 h-11 shadow-lg shadow-accent/20 transition-all active:scale-95 border-none"><Link href="/auth">Get Started</Link></Button>
                </>
              )}
           </div>
@@ -83,13 +83,13 @@ export default function LandingPage() {
             
             <div className="pt-4">
               {user && profile ? (
-                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-accent hover:bg-accent/90 text-accent-foreground text-lg font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95">
+                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-accent hover:bg-accent/90 text-white text-lg font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95 border-none">
                   <Link href={profile.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
                       Return to Portfolio <ArrowRight className="w-5 h-5 ml-3" />
                   </Link>
                 </Button>
               ) : (
-                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-accent hover:bg-accent/90 text-accent-foreground text-lg font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95">
+                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-accent hover:bg-accent/90 text-white text-lg font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95 border-none">
                   <Link href="/auth">Launch Your Portfolio <ArrowRight className="w-5 h-5 ml-3" /></Link>
                 </Button>
               )}
@@ -102,13 +102,13 @@ export default function LandingPage() {
           <div className="relative h-[550px] rounded-[3rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 animate-in fade-in zoom-in duration-1000">
             <Image src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop" alt="Luxury Property" fill className="object-cover" unoptimized priority />
             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
-            <div className="absolute bottom-10 left-10 right-10 bg-background/60 backdrop-blur-xl border border-border p-8 rounded-3xl">
+            <div className="absolute bottom-10 left-10 right-10 bg-background/40 backdrop-blur-md border border-border p-8 rounded-3xl">
                <div className="flex justify-between items-center">
                   <div className="text-left">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-60 mb-1">Active Ledger Hub</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-60 mb-1 font-headline">Active Ledger Hub</p>
                     <p className="text-2xl font-bold font-headline text-foreground">Portfolio Command</p>
                   </div>
-                  <Badge className="bg-emerald-500 text-white border-none font-bold uppercase text-[9px] tracking-widest px-4 py-1.5 rounded-full shadow-lg">Verified</Badge>
+                  <Badge className="bg-emerald-500 text-white border-none font-bold uppercase text-[9px] tracking-widest px-4 py-1.5 rounded-full shadow-lg font-headline">Verified</Badge>
                </div>
             </div>
           </div>
@@ -119,23 +119,23 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 text-center space-y-20">
           <div className="max-w-3xl mx-auto space-y-4">
              <h2 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-foreground">Engineered for Excellence</h2>
-             <p className="text-lg text-muted-foreground font-medium">Remove the friction from professional property management.</p>
+             <p className="text-lg text-muted-foreground font-medium font-body">Remove the friction from professional property management.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Card className="border-none shadow-sm rounded-[2.5rem] p-10 bg-card hover:shadow-2xl transition-all group text-left ring-1 ring-border">
               <div className="p-5 bg-accent/10 text-accent rounded-3xl w-fit mb-8 group-hover:scale-110 transition-transform"><Sparkles className="w-8 h-8" /></div>
               <h3 className="text-2xl font-bold font-headline mb-4 text-foreground">AI Maintenance Triage</h3>
-              <p className="text-muted-foreground font-medium leading-relaxed">Prioritize critical repairs and receive automated suggestions before contacting a contractor.</p>
+              <p className="text-muted-foreground font-medium font-body leading-relaxed">Prioritize critical repairs and receive automated suggestions before contacting a contractor.</p>
             </Card>
             <Card className="border-none shadow-sm rounded-[2.5rem] p-10 bg-card hover:shadow-2xl transition-all group text-left ring-1 ring-border">
               <div className="p-5 bg-primary/5 text-primary rounded-3xl w-fit mb-8 group-hover:scale-110 transition-transform"><Wallet className="w-8 h-8" /></div>
               <h3 className="text-2xl font-bold font-headline mb-4 text-foreground">Financial Command</h3>
-              <p className="text-muted-foreground font-medium leading-relaxed">Unified rental ledgers with real-time status tracking and professional visual asset records.</p>
+              <p className="text-muted-foreground font-medium font-body leading-relaxed">Unified rental ledgers with real-time status tracking and professional visual asset records.</p>
             </Card>
             <Card className="border-none shadow-sm rounded-[2.5rem] p-10 bg-card hover:shadow-2xl transition-all group text-left ring-1 ring-border">
               <div className="p-5 bg-emerald-500/10 text-emerald-600 rounded-3xl w-fit mb-8 group-hover:scale-110 transition-transform"><MessageSquare className="w-8 h-8" /></div>
               <h3 className="text-2xl font-bold font-headline mb-4 text-foreground">Resident Concierge</h3>
-              <p className="text-muted-foreground font-medium leading-relaxed">A dedicated AI assistant for residents, providing instant guidance on property protocols.</p>
+              <p className="text-muted-foreground font-medium font-body leading-relaxed">A dedicated AI assistant for residents, providing instant guidance on property protocols.</p>
             </Card>
           </div>
         </div>

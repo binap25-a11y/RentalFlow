@@ -11,14 +11,13 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '50mb',
       allowedOrigins: [
+        "localhost:9002",
+        "127.0.0.1:9002",
         "*.cloudworkstations.dev",
-        "localhost:*",
-        "127.0.0.1:*",
-        "*.firebasestorage.app",
         "*.ngrok-free.app",
         "*.loca.lt",
         "*.supabase.co",
-        "*.branch.io",
+        "*.firebasestorage.app",
         "*.vercel.app",
         "*.google.com"
       ]

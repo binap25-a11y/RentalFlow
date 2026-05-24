@@ -46,7 +46,13 @@ export async function uploadToSupabase(
     return { success: true, url: signedData.signedUrl };
   } catch (error: any) {
     console.error('Storage Orchestration Failure:', error.message);
-    return { success: false, error: error.message || 'Synchronization aborted.' };
+    // Explicitly handle "fetch" related errors that might be caught at this layer
+    return { 
+      success: false, 
+      error: error.message?.includes('fetch') 
+        ? 'Mobile Network Interruption: Payload delivery aborted by browser. Please retry.' 
+        : error.message || 'Synchronization aborted.' 
+    };
   }
 }
 
