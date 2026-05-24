@@ -12,14 +12,15 @@ export function getPool(): Pool | null {
 
   const connectionString = process.env.DATABASE_URL;
 
-  if (!connectionString || connectionString.includes('YOUR_POSTGRES_URL')) {
-    console.warn('DATABASE_URL is missing. Relational sync operations will be bypassed.');
+  // Verify connection string is a valid non-empty string before initialization
+  if (!connectionString || typeof connectionString !== 'string' || connectionString.includes('YOUR_POSTGRES_URL') || connectionString.trim() === '') {
+    console.warn('DATABASE_URL is missing or invalid. Relational sync operations will be bypassed.');
     return null;
   }
 
   try {
     pool = new Pool({
-      connectionString: connectionString,
+      connectionString: connectionString.trim(),
       ssl: {
         rejectUnauthorized: false
       },
