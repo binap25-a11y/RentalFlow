@@ -2,7 +2,7 @@
 
 /**
  * @fileOverview Resilient Cloud Storage Engine.
- * Optimized for mobile uploads with robust binary processing.
+ * Optimized for mobile uploads with robust binary processing and buffer conversion.
  */
 
 import { supabase } from '@/lib/supabase';
@@ -16,6 +16,7 @@ export async function uploadToSupabase(
     const file = formData.get('file') as File;
     if (!file) throw new Error('No valid file provided.');
 
+    // Robust binary processing for mobile compatibility
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
@@ -30,14 +31,14 @@ export async function uploadToSupabase(
 
     const { data: signedData, error: signedError } = await supabase.storage
       .from(bucket)
-      .createSignedUrl(path, 315360000); // 10 Years
+      .createSignedUrl(path, 315360000); // 10 Years Persistence
 
     if (signedError) throw signedError;
 
     return { success: true, url: signedData.signedUrl };
   } catch (error: any) {
     console.error('Storage Engine Failure:', error.message);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || 'Binary synchronization failed.' };
   }
 }
 
