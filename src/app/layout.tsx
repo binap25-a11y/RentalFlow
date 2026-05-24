@@ -54,10 +54,10 @@ export default function RootLayout({
                   var supportDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                   if (theme === 'dark' || (!theme && supportDark)) {
                     document.documentElement.classList.add('dark');
-                    document.documentElement.style.backgroundColor = '#020617'; // Match slate-950/dark:bg-background
+                    document.documentElement.style.backgroundColor = '#020617';
                   } else {
                     document.documentElement.classList.remove('dark');
-                    document.documentElement.style.backgroundColor = '#f8fafc'; // Match slate-50/bg-background
+                    document.documentElement.style.backgroundColor = '#f8fafc';
                   }
                 } catch (e) {}
               })();

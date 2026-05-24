@@ -21,11 +21,12 @@ export async function POST(req: Request) {
 
     // Sanitization: Extract the ID if the user provided the full API path (/v1/prices/price_...)
     let priceId = rawPriceId.includes('/') ? rawPriceId.split('/').pop() || '' : rawPriceId;
+    priceId = priceId.trim();
 
     // Validation: Product IDs (prod_...) cannot be used as prices in checkout line items.
     if (priceId.startsWith('prod_')) {
       return NextResponse.json({ 
-        error: "Configuration Mismatch: STRIPE_PRICE_ID is set to a Product ID. Please use a Price ID (starting with 'price_') from your Stripe Dashboard." 
+        error: `Configuration Mismatch: You are using a Product ID (${priceId}). Please use a Price ID (starting with 'price_') from your Stripe Dashboard.` 
       }, { status: 400 });
     }
 

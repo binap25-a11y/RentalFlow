@@ -3,7 +3,7 @@ import Stripe from "stripe";
 
 /**
  * @fileOverview Resilient Stripe Checkout Session Engine (Legacy Route).
- * Handles missing environment variables gracefully to prevent build-time failures.
+ * Synchronized with modern sanitization logic.
  */
 
 export async function POST(req: Request) {
@@ -14,6 +14,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Stripe configuration is missing in the environment." }, { status: 500 });
     }
 
+    const rawPriceId = process.env.STRIPE_PRICE_ID;
+    const priceId = rawPriceId.includes('/') ? rawPriceId.split('/').pop() || '' : rawPriceId;
+
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const origin = req.headers.get('origin') || 'http://localhost:9002';
 
@@ -23,7 +26,7 @@ export async function POST(req: Request) {
       customer_email: email,
       line_items: [
         {
-          price: process.env.STRIPE_PRICE_ID,
+          price: priceId.trim(),
           quantity: 1,
         },
       ],
