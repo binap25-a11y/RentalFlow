@@ -56,7 +56,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-4">
              {user ? (
-               <Button asChild className="rounded-xl font-bold bg-primary text-primary-foreground px-6 h-11 shadow-lg shadow-primary/20">
+               <Button asChild className="rounded-xl font-bold bg-accent text-accent-foreground px-6 h-11 shadow-lg shadow-accent/20">
                  <Link href={profile?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
                     Portfolio Access <ChevronRight className="w-4 h-4 ml-1" />
                  </Link>
@@ -64,7 +64,7 @@ export default function LandingPage() {
              ) : (
                <>
                  <Button variant="ghost" asChild className="rounded-xl font-bold hidden sm:inline-flex"><Link href="/auth">Sign In</Link></Button>
-                 <Button asChild className="rounded-xl font-bold bg-primary text-primary-foreground px-6 h-11 shadow-lg shadow-primary/20"><Link href="/auth">Get Started</Link></Button>
+                 <Button asChild className="rounded-xl font-bold bg-accent text-accent-foreground px-6 h-11 shadow-lg shadow-accent/20"><Link href="/auth">Get Started</Link></Button>
                </>
              )}
           </div>
@@ -83,13 +83,13 @@ export default function LandingPage() {
             
             <div className="pt-4">
               {user && profile ? (
-                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-primary text-primary-foreground text-lg font-bold shadow-2xl hover:scale-[1.02] transition-transform">
+                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-accent text-accent-foreground text-lg font-bold shadow-2xl hover:scale-[1.02] transition-transform">
                   <Link href={profile.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
                       Return to Portfolio <ArrowRight className="w-5 h-5 ml-3" />
                   </Link>
                 </Button>
               ) : (
-                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-primary text-primary-foreground text-lg font-bold shadow-2xl hover:scale-[1.02] transition-transform">
+                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-accent text-accent-foreground text-lg font-bold shadow-2xl hover:scale-[1.02] transition-transform">
                   <Link href="/auth">Launch Your Portfolio <ArrowRight className="w-5 h-5 ml-3" /></Link>
                 </Button>
               )}
@@ -143,11 +143,11 @@ export default function LandingPage() {
            <h2 className="text-4xl md:text-5xl font-headline font-bold tracking-tight">Scale your portfolio with AI.</h2>
            <p className="text-lg text-muted-foreground font-medium">Join professional landlords using automated triage to protect their assets.</p>
            {user ? (
-             <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-primary text-primary-foreground text-xl font-bold shadow-2xl">
+             <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-accent text-accent-foreground text-xl font-bold shadow-2xl">
                <Link href={profile?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>Enter Dashboard</Link>
              </Button>
            ) : (
-             <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-primary text-primary-foreground text-xl font-bold shadow-2xl">
+             <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-accent text-accent-foreground text-xl font-bold shadow-2xl">
                <Link href="/auth">Start Your Journey</Link>
              </Button>
            )}

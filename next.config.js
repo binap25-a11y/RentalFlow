@@ -18,6 +18,16 @@ const nextConfig = {
     }
   },
 
+  // 🔐 Server Infrastructure Hardening
+  // Prevents Next.js from bundling Genkit's node-native and telemetry dependencies
+  serverExternalPackages: [
+    'genkit', 
+    '@genkit-ai/google-genai', 
+    '@genkit-ai/core', 
+    '@genkit-ai/dotprompt', 
+    '@genkit-ai/flow'
+  ],
+
   images: {
     remotePatterns: [
       {
