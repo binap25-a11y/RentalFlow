@@ -3,7 +3,7 @@
 /**
  * @fileOverview Resilient Cloud Storage Engine.
  * Optimized for mobile uploads with robust binary processing and buffer conversion.
- * Resolves "failed to fetch" errors on mobile browsers.
+ * Resolves "failed to fetch" errors on mobile browsers by avoiding direct file stream issues.
  */
 
 import { supabase } from '@/lib/supabase';
@@ -17,7 +17,9 @@ export async function uploadToSupabase(
     const file = formData.get('file') as File;
     if (!file) throw new Error('No valid file provided.');
 
-    // Robust binary processing for mobile compatibility
+    // Robust binary processing for mobile compatibility:
+    // Converting the file to an ArrayBuffer and then a Buffer ensures the server
+    // receives the complete binary payload without interruption.
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
