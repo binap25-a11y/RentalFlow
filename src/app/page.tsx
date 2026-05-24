@@ -33,9 +33,9 @@ export default function LandingPage() {
 
   if (!mounted || isUserLoading || (user && isProfileLoading)) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100]">
+      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-500">
         <div className="flex flex-col items-center gap-4">
-          <div className="relative w-24 h-24 rounded-[2rem] overflow-hidden shadow-2xl">
+          <div className="relative w-24 h-24 rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5">
             <Image src={RENTALFLOW_NEUTRAL_FALLBACK} alt="RentalFlow" fill className="object-cover" unoptimized priority />
           </div>
           <Loader2 className="w-6 h-6 animate-spin text-primary opacity-40" />
@@ -49,14 +49,14 @@ export default function LandingPage() {
       <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b h-20 border-border">
         <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-             <div className="relative h-10 w-10 rounded-xl overflow-hidden shadow-lg">
+             <div className="relative h-10 w-10 rounded-xl overflow-hidden shadow-lg transition-transform hover:scale-105">
                 <Image src={RENTALFLOW_NEUTRAL_FALLBACK} alt="Logo" fill className="object-cover" unoptimized />
              </div>
              <span className="font-headline font-bold text-2xl tracking-tighter text-foreground">RentalFlow</span>
           </div>
           <div className="flex items-center gap-4">
              {user ? (
-               <Button asChild className="rounded-xl font-bold bg-accent hover:bg-accent/90 text-accent-foreground px-6 h-11 shadow-lg shadow-accent/20 transition-all active:scale-95">
+               <Button asChild className="rounded-xl font-bold bg-accent hover:bg-accent/90 text-white px-6 h-11 shadow-lg shadow-accent/20 transition-all active:scale-95">
                  <Link href={profile?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
                     Portfolio Access <ChevronRight className="w-4 h-4 ml-1" />
                  </Link>
@@ -64,7 +64,7 @@ export default function LandingPage() {
              ) : (
                <>
                  <Button variant="ghost" asChild className="rounded-xl font-bold hidden sm:inline-flex text-foreground hover:bg-primary/5"><Link href="/auth">Sign In</Link></Button>
-                 <Button asChild className="rounded-xl font-bold bg-accent hover:bg-accent/90 text-accent-foreground px-6 h-11 shadow-lg shadow-accent/20 transition-all active:scale-95"><Link href="/auth">Get Started</Link></Button>
+                 <Button asChild className="rounded-xl font-bold bg-accent hover:bg-accent/90 text-white px-6 h-11 shadow-lg shadow-accent/20 transition-all active:scale-95"><Link href="/auth">Get Started</Link></Button>
                </>
              )}
           </div>
@@ -83,13 +83,13 @@ export default function LandingPage() {
             
             <div className="pt-4">
               {user && profile ? (
-                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-accent hover:bg-accent/90 text-accent-foreground text-lg font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95">
+                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-accent hover:bg-accent/90 text-white text-lg font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95">
                   <Link href={profile.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
                       Return to Portfolio <ArrowRight className="w-5 h-5 ml-3" />
                   </Link>
                 </Button>
               ) : (
-                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-accent hover:bg-accent/90 text-accent-foreground text-lg font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95">
+                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-accent hover:bg-accent/90 text-white text-lg font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95">
                   <Link href="/auth">Launch Your Portfolio <ArrowRight className="w-5 h-5 ml-3" /></Link>
                 </Button>
               )}
@@ -101,11 +101,14 @@ export default function LandingPage() {
           </div>
           <div className="relative h-[550px] rounded-[3rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 animate-in fade-in zoom-in duration-1000">
             <Image src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop" alt="Luxury Property" fill className="object-cover" unoptimized priority />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
-            <div className="absolute bottom-10 left-10 right-10 bg-background/40 backdrop-blur-xl border border-white/10 p-8 rounded-3xl">
-               <div className="flex justify-between items-center text-white">
-                  <div className="text-left"><p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Active Ledger Hub</p><p className="text-2xl font-bold font-headline">Portfolio Command</p></div>
-                  <Badge className="bg-emerald-50 text-white border-none font-bold uppercase text-[9px] tracking-widest px-4 py-1.5 rounded-full shadow-lg">Verified</Badge>
+            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
+            <div className="absolute bottom-10 left-10 right-10 bg-background/60 backdrop-blur-xl border border-border p-8 rounded-3xl">
+               <div className="flex justify-between items-center">
+                  <div className="text-left">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-60 mb-1">Active Ledger Hub</p>
+                    <p className="text-2xl font-bold font-headline text-foreground">Portfolio Command</p>
+                  </div>
+                  <Badge className="bg-emerald-500 text-white border-none font-bold uppercase text-[9px] tracking-widest px-4 py-1.5 rounded-full shadow-lg">Verified</Badge>
                </div>
             </div>
           </div>
@@ -138,23 +141,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-32">
-        <div className="max-w-4xl mx-auto px-6 text-center bg-muted/30 rounded-[4rem] p-10 md:p-20 space-y-10 border border-border shadow-inner">
-           <h2 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-foreground">Scale your portfolio with AI.</h2>
-           <p className="text-lg text-muted-foreground font-medium">Join professional landlords using automated triage to protect their assets.</p>
-           {user ? (
-             <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-accent hover:bg-accent/90 text-accent-foreground text-xl font-bold shadow-2xl transition-all active:scale-95">
-               <Link href={profile?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>Enter Dashboard</Link>
-             </Button>
-           ) : (
-             <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-accent hover:bg-accent/90 text-accent-foreground text-xl font-bold shadow-2xl transition-all active:scale-95">
-               <Link href="/auth">Start Your Journey</Link>
-             </Button>
-           )}
-        </div>
-      </section>
-
-      <footer className="py-12 border-t border-border text-center">
+      <footer className="py-12 border-t border-border text-center bg-card">
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline opacity-40">© 2026 RENTALFLOW OPERATIONS. ALL RIGHTS RESERVED.</p>
       </footer>
     </div>

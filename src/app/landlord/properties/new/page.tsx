@@ -64,7 +64,8 @@ export default function NewPropertyPage() {
       
       const formData = new FormData();
       formData.append('file', file);
-      const path = `assets/${user.uid}/new_${tempId}/${Date.now()}_${file.name}`;
+      // Path strategy: portfolio/UID/tempID/Timestamp_Name
+      const path = `assets/${user.uid}/new_${tempId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
       
       try {
         const res = await uploadToSupabase(formData, 'property-images', path);
@@ -73,13 +74,17 @@ export default function NewPropertyPage() {
             item.id === itemId ? { ...item, url: res.url!, status: 'ready' } : item
           ));
         } else {
-          throw new Error(res.error);
+          throw new Error(res.error || "Upload failed");
         }
       } catch (err: any) {
         setLedger(prev => prev.map(item => 
           item.id === itemId ? { ...item, status: 'error' } : item
         ));
-        toast({ variant: "destructive", title: "Mobile Sync Failed", description: err.message || "Binary sync error." });
+        toast({ 
+          variant: "destructive", 
+          title: "Mobile Sync Failed", 
+          description: "Binary delivery failure. Check connection and retry." 
+        });
       }
     }
   };
@@ -91,8 +96,9 @@ export default function NewPropertyPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !db) return;
+    
     if (ledger.some(i => i.status === 'uploading')) {
-      toast({ title: "Synchronizing Assets...", description: "Please wait for mobile uploads to complete." });
+      toast({ title: "Synchronizing Assets...", description: "Heavy lifting in progress. Please wait for mobile sync to complete." });
       return;
     }
 
@@ -129,6 +135,7 @@ export default function NewPropertyPage() {
         updatedAt: serverTimestamp(),
       }, { merge: true });
 
+      // PostgreSQL Redundant Sync
       await syncPropertyToDb(serializableData);
 
       toast({ title: "Asset Registered", description: "Portfolio synchronized successfully." });
@@ -140,7 +147,7 @@ export default function NewPropertyPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left">
+    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left bg-background">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full hover:bg-primary/5 transition-colors">
@@ -148,45 +155,46 @@ export default function NewPropertyPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-headline font-bold text-foreground tracking-tight">Register Asset</h1>
-            <p className="text-muted-foreground font-medium font-body text-sm">Adding a high-value property with professional visuals.</p>
+            <p className="text-muted-foreground font-medium font-body text-sm">Adding a high-value property with professional visual orchestration.</p>
           </div>
         </div>
-        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold">
+        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[9px]">
           <Sparkles className="w-3 h-3 mr-2" /> Specification Engine
         </Badge>
       </div>
 
-      <Card className="border-none shadow-xl overflow-hidden rounded-[2.5rem] bg-card ring-1 ring-border">
+      <Card className="border-none shadow-2xl overflow-hidden rounded-[2.5rem] bg-card ring-1 ring-border">
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-1 lg:grid-cols-2">
             <div className="p-10 bg-muted/20 border-r border-border">
               <div className="flex justify-between items-center mb-6">
                 <Label className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Visual Inventory</Label>
-                <label htmlFor="image-input" className="h-10 rounded-xl font-bold text-[10px] uppercase font-headline cursor-pointer px-5 bg-primary text-primary-foreground shadow-lg flex items-center hover:opacity-90 transition-all">
+                <label htmlFor="image-input" className="h-10 rounded-xl font-bold text-[10px] uppercase font-headline cursor-pointer px-5 bg-primary text-primary-foreground shadow-lg flex items-center hover:opacity-90 transition-all active:scale-95">
                   <Camera className="w-3.5 h-3.5 mr-2" /> Capture Assets
                 </label>
               </div>
 
-              <ScrollArea className="h-[400px] pr-4">
+              <ScrollArea className="h-[450px] pr-4">
                 <div className="grid grid-cols-2 gap-4">
                   {ledger.map((item, index) => (
                     <div key={item.id} className={cn(
                       "relative aspect-video rounded-2xl overflow-hidden group shadow-sm bg-background border-2 transition-all",
-                      item.status === 'uploading' ? 'opacity-50 grayscale' : 'opacity-100',
+                      item.status === 'uploading' ? 'opacity-50 grayscale scale-[0.98]' : 'opacity-100',
                       index === 0 ? "border-primary" : "border-transparent"
                     )}>
                       <Image src={item.url} alt={`Asset ${index}`} fill className="object-cover" unoptimized />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">
-                        <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500 text-white p-2 rounded-xl shadow-lg hover:bg-red-600"><X className="w-3.5 h-3.5" /></button>
+                        <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/90 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 backdrop-blur-md"><X className="w-3.5 h-3.5" /></button>
                       </div>
                       {item.status === 'uploading' && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-sm">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/40 backdrop-blur-sm gap-2">
                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                           <span className="text-[8px] font-bold text-primary uppercase tracking-[0.2em]">Syncing...</span>
                         </div>
                       )}
                       {item.status === 'ready' && (
-                        <div className="absolute bottom-2 right-2 bg-emerald-500 text-white p-1 rounded-full shadow-lg">
-                           <CheckCircle2 className="w-3 h-3" />
+                        <div className="absolute bottom-2 right-2 bg-emerald-500 text-white p-1.5 rounded-full shadow-lg animate-in zoom-in duration-300">
+                           <CheckCircle2 className="w-3.5 h-3.5" />
                         </div>
                       )}
                     </div>
@@ -197,7 +205,8 @@ export default function NewPropertyPage() {
                   </label>
                 </div>
               </ScrollArea>
-              <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
+              <input id="image-input" type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={handleImageChange} />
+              <p className="mt-6 text-[10px] text-muted-foreground/60 italic text-center font-medium">Assets are synchronized to the ledger instantly upon selection.</p>
             </div>
 
             <div className="p-10 space-y-8">
@@ -236,15 +245,15 @@ export default function NewPropertyPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Description</Label>
-                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Narrative for this asset..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-medium text-foreground" />
+                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Operational Narrative</Label>
+                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description for internal records..." className="rounded-xl min-h-[140px] bg-muted/20 border-none font-medium text-foreground leading-relaxed" />
                 </div>
               </div>
             </div>
           </div>
-          <CardFooter className="p-10 bg-muted/5 border-t flex justify-end gap-4">
-            <Button type="button" variant="ghost" className="rounded-xl h-12 px-8 font-bold font-headline text-muted-foreground" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" disabled={isSaving || ledger.some(i => i.status === 'uploading')} className="rounded-xl font-bold bg-primary h-12 px-12 shadow-lg shadow-primary/20 font-headline text-primary-foreground transition-all hover:scale-[1.02] uppercase tracking-widest text-xs">
+          <CardFooter className="p-10 bg-muted/5 border-t flex flex-col md:flex-row justify-end gap-4">
+            <Button type="button" variant="ghost" className="w-full md:w-auto rounded-xl h-12 px-8 font-bold font-headline text-muted-foreground" onClick={() => router.back()}>Cancel</Button>
+            <Button type="submit" disabled={isSaving || ledger.some(i => i.status === 'uploading')} className="w-full md:w-auto rounded-xl font-bold bg-primary h-12 px-12 shadow-xl shadow-primary/20 font-headline text-primary-foreground transition-all hover:scale-[1.02] uppercase tracking-widest text-xs">
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
               Synchronize Asset
             </Button>
