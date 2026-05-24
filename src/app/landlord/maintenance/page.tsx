@@ -44,6 +44,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { notifyTenantOfUpdate } from "@/lib/actions/email-actions";
 
 export default function MaintenancePage() {
@@ -520,30 +521,32 @@ export default function MaintenancePage() {
       </div>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-white max-w-[650px]">
-          <form onSubmit={handleCreateRequest}>
-            <div className="p-10 bg-primary/5 border-b text-left">
+        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-white max-w-[650px] flex flex-col max-h-[90vh]">
+          <form onSubmit={handleCreateRequest} className="flex flex-col h-full overflow-hidden">
+            <div className="p-10 bg-primary/5 border-b text-left shrink-0">
               <DialogTitle className="font-headline text-2xl font-bold text-primary tracking-tight">Log Maintenance Event</DialogTitle>
               <DialogDescription className="font-medium text-muted-foreground mt-1 text-sm">Initialize a maintenance event for your professional roadmap.</DialogDescription>
             </div>
-            <div className="grid gap-6 p-10 text-left bg-white">
-              <div className="space-y-2">
-                <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Target Inventory Asset</Label>
-                <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-primary font-headline" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
-                  <option value="">Choose an inventory item...</option>
-                  {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
-                </select>
+            <ScrollArea className="flex-1">
+              <div className="grid gap-6 p-10 text-left bg-white">
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Target Inventory Asset</Label>
+                  <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-primary font-headline" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
+                    <option value="">Choose an inventory item...</option>
+                    {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Repair Identifier</Label>
+                  <Input value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="e.g. Electrical Fault Discovery" className="rounded-xl h-11 bg-muted/20 border-none font-bold text-sm px-4 focus:ring-2 focus:ring-primary font-headline" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Operational Context</Label>
+                  <Textarea value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Provide full context for contractor access..." className="rounded-xl min-h-[140px] bg-muted/20 border-none font-medium px-4 py-4 text-sm leading-relaxed focus:ring-2 focus:ring-primary" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Repair Identifier</Label>
-                <Input value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="e.g. Electrical Fault Discovery" className="rounded-xl h-11 bg-muted/20 border-none font-bold text-sm px-4 focus:ring-2 focus:ring-primary font-headline" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Operational Context</Label>
-                <Textarea value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Provide full context for contractor access..." className="rounded-xl min-h-[140px] bg-muted/20 border-none font-medium px-4 py-4 text-sm leading-relaxed focus:ring-2 focus:ring-primary" />
-              </div>
-            </div>
-            <DialogFooter className="p-8 bg-muted/5 border-t">
+            </ScrollArea>
+            <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
               <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 text-white font-headline text-sm transition-transform hover:scale-[1.01] hover:bg-primary/90" disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                 Register in Roadmap
@@ -554,23 +557,25 @@ export default function MaintenancePage() {
       </Dialog>
 
       <Dialog open={!!isEditingTask} onOpenChange={(open) => !open && setIsEditingTask(null)}>
-        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-white max-w-[650px]">
-          <form onSubmit={handleUpdateTask}>
-            <div className="p-10 bg-primary/5 border-b text-left">
+        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-white max-w-[650px] flex flex-col max-h-[90vh]">
+          <form onSubmit={handleUpdateTask} className="flex flex-col h-full overflow-hidden">
+            <div className="p-10 bg-primary/5 border-b text-left shrink-0">
               <DialogTitle className="font-headline text-2xl font-bold text-primary tracking-tight">Modify Record</DialogTitle>
               <DialogDescription className="font-medium text-muted-foreground mt-1 text-sm">Refine the specifications of this maintenance task.</DialogDescription>
             </div>
-            <div className="grid gap-6 p-10 text-left bg-white">
-              <div className="space-y-2">
-                <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Repair Identifier</Label>
-                <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none font-bold text-sm px-4 focus:ring-2 focus:ring-primary font-headline" />
+            <ScrollArea className="flex-1">
+              <div className="grid gap-6 p-10 text-left bg-white">
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Repair Identifier</Label>
+                  <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none font-bold text-sm px-4 focus:ring-2 focus:ring-primary font-headline" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Operational Context</Label>
+                  <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} required className="rounded-xl min-h-[140px] bg-muted/20 border-none font-medium px-4 py-4 text-sm leading-relaxed focus:ring-2 focus:ring-primary" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Operational Context</Label>
-                <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} required className="rounded-xl min-h-[140px] bg-muted/20 border-none font-medium px-4 py-4 text-sm leading-relaxed focus:ring-2 focus:ring-primary" />
-              </div>
-            </div>
-            <DialogFooter className="p-8 bg-muted/5 border-t">
+            </ScrollArea>
+            <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
               <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg text-white font-headline text-sm hover:bg-primary/90">
                 <Save className="w-4 h-4 mr-2" /> Update Portfolio Records
               </Button>

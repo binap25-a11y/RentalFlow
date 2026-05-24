@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { collection, doc, serverTimestamp, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { sendRentReminderEmail, sendRentReceiptEmail } from "@/lib/actions/email-actions";
@@ -538,14 +540,14 @@ export default function LandlordDashboard() {
                                     <Button 
                                       variant="ghost" 
                                       size="sm" 
-                                      className="rounded-xl h-9 font-bold text-muted-foreground" 
+                                      className="rounded-xl h-9 font-bold text-muted-foreground hover:bg-primary/5 hover:text-primary" 
                                       onClick={() => handleSendReminder(prop)}
                                       disabled={isReminding === prop.id}
                                     >
                                       {isReminding === prop.id ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <BellRing className="w-3.5 h-3.5 mr-2" />}
                                       Remind
                                     </Button>
-                                    <Button size="sm" className="rounded-xl h-9 font-bold bg-primary text-white" onClick={() => handleMarkAsPaid(prop)}>
+                                    <Button size="sm" className="rounded-xl h-9 font-bold bg-primary text-white hover:bg-primary/90" onClick={() => handleMarkAsPaid(prop)}>
                                       Confirm Receipt
                                     </Button>
                                   </>
@@ -586,7 +588,7 @@ export default function LandlordDashboard() {
                              )}
                           </div>
                        </div>
-                       <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9" asChild>
+                       <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9 hover:bg-primary/5 hover:text-primary" asChild>
                          <Link href="/landlord/maintenance"><ArrowRight className="w-4 h-4" /></Link>
                        </Button>
                     </div>
@@ -618,52 +620,56 @@ export default function LandlordDashboard() {
               <div className="grid grid-cols-1 gap-3">
                 <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" className="w-full rounded-xl border-border font-bold h-12">
+                    <Button variant="outline" className="w-full rounded-xl border-border font-bold h-12 hover:bg-primary/5 hover:text-primary">
                       <Plus className="w-4 h-4 mr-2" /> Log Portfolio Expense
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="rounded-3xl border-none shadow-2xl p-0 overflow-hidden bg-card">
-                    <div className="p-8 bg-muted/20 border-b text-left">
-                      <DialogTitle className="text-xl font-bold font-headline text-foreground">Log Manual Expense</DialogTitle>
-                      <DialogDescription className="font-medium text-muted-foreground">Record insurance, fees, or one-off costs for your tax ledger.</DialogDescription>
-                    </div>
-                    <div className="p-8 space-y-6 text-left bg-card">
-                      <div className="space-y-2">
-                        <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Expense Title</Label>
-                        <Input value={expTitle} onChange={(e) => setExpTitle(e.target.value)} placeholder="e.g. Landlord Insurance 2025" className="rounded-xl h-11 bg-muted/20 border-none font-bold text-foreground" />
+                  <DialogContent className="rounded-3xl border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh]">
+                    <form className="flex flex-col h-full overflow-hidden">
+                      <div className="p-8 bg-muted/20 border-b text-left shrink-0">
+                        <DialogTitle className="text-xl font-bold font-headline text-foreground">Log Manual Expense</DialogTitle>
+                        <DialogDescription className="font-medium text-muted-foreground">Record insurance, fees, or one-off costs for your tax ledger.</DialogDescription>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Amount (£)</Label>
-                          <Input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="0.00" className="rounded-xl h-11 bg-muted/20 border-none font-bold text-foreground" />
+                      <ScrollArea className="flex-1">
+                        <div className="p-8 space-y-6 text-left bg-card">
+                          <div className="space-y-2">
+                            <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Expense Title</Label>
+                            <Input value={expTitle} onChange={(e) => setExpTitle(e.target.value)} placeholder="e.g. Landlord Insurance 2025" className="rounded-xl h-11 bg-muted/20 border-none font-bold text-foreground" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Amount (£)</Label>
+                              <Input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="0.00" className="rounded-xl h-11 bg-muted/20 border-none font-bold text-foreground" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Category</Label>
+                              <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-body text-foreground" value={expCategory} onChange={(e) => setExpCategory(e.target.value)}>
+                                <option value="insurance">Insurance</option>
+                                <option value="legal">Legal/Professional</option>
+                                <option value="management">Management Fees</option>
+                                <option value="plumbing">Plumbing</option>
+                                <option value="electrical">Electrical</option>
+                                <option value="structural">Structural</option>
+                                <option value="other">General Maintenance</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Assign to Asset</Label>
+                            <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-body text-foreground" value={expPropertyId} onChange={(e) => setExpPropertyId(e.target.value)}>
+                              <option value="">Choose a property...</option>
+                              {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                            </select>
+                          </div>
                         </div>
-                        <div className="space-y-2">
-                          <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Category</Label>
-                          <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-body text-foreground" value={expCategory} onChange={(e) => setExpCategory(e.target.value)}>
-                            <option value="insurance">Insurance</option>
-                            <option value="legal">Legal/Professional</option>
-                            <option value="management">Management Fees</option>
-                            <option value="plumbing">Plumbing</option>
-                            <option value="electrical">Electrical</option>
-                            <option value="structural">Structural</option>
-                            <option value="other">General Maintenance</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Assign to Asset</Label>
-                        <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-body text-foreground" value={expPropertyId} onChange={(e) => setExpPropertyId(e.target.value)}>
-                          <option value="">Choose a property...</option>
-                          {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
-                        </select>
-                      </div>
-                    </div>
-                    <DialogFooter className="p-8 bg-muted/10 border-t">
-                      <Button className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-lg" onClick={handleLogManualExpense} disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
-                        {isSavingExpense ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                        Commit to Ledger
-                      </Button>
-                    </DialogFooter>
+                      </ScrollArea>
+                      <DialogFooter className="p-8 bg-muted/10 border-t shrink-0">
+                        <Button type="button" className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-lg hover:bg-primary/90" onClick={handleLogManualExpense} disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
+                          {isSavingExpense ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                          Commit to Ledger
+                        </Button>
+                      </DialogFooter>
+                    </form>
                   </DialogContent>
                 </Dialog>
               </div>
