@@ -57,7 +57,6 @@ export default function LandlordCalendarPage() {
   const [isAddRepairOpen, setIsAddRepairOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // New Repair Form State
   const [repairTitle, setRepairTitle] = useState('');
   const [repairDesc, setRepairDesc] = useState('');
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
@@ -89,7 +88,6 @@ export default function LandlordCalendarPage() {
     
     const events: PortfolioEvent[] = [];
 
-    // 1. Map Inspections
     inspections?.forEach(i => {
       const date = i.scheduledDate ? new Date(i.scheduledDate) : null;
       if (date && isValid(date)) {
@@ -105,7 +103,6 @@ export default function LandlordCalendarPage() {
       }
     });
 
-    // 2. Map Maintenance Repairs (Scheduled Only)
     maintenance?.forEach(m => {
       const date = m.scheduledDate ? new Date(m.scheduledDate) : null;
       if (date && isValid(date) && m.status !== 'completed') {
@@ -143,7 +140,7 @@ export default function LandlordCalendarPage() {
   }, [allEvents]);
 
   const modifierStyles = {
-    inspection: { boxShadow: 'inset 0 -3px 0 0 hsl(var(--primary))' },
+    inspection: { boxShadow: 'inset 0 -3px 0 0 hsl(var(--accent))' },
     repair: { boxShadow: 'inset 0 -3px 0 0 #f59e0b' }
   };
 
@@ -198,43 +195,42 @@ export default function LandlordCalendarPage() {
           <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1.5 rounded-full font-bold mb-3 uppercase tracking-[0.2em] text-[9px]">
              <Activity className="w-3 h-3 mr-2" /> Timeline Orchestration
           </Badge>
-          <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">Portfolio Calendar</h1>
+          <h1 className="text-3xl font-headline font-bold text-foreground tracking-tight">Portfolio Calendar</h1>
           <p className="text-muted-foreground font-medium font-body max-w-lg mt-1 text-sm">Managing site audits and high-fidelity repair timelines.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Calendar Control */}
         <div className="lg:col-span-4 space-y-6">
-          <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-white ring-1 ring-primary/5">
+          <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-card ring-1 ring-border">
             <CardContent className="p-6">
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={(d) => d && setSelectedDate(d)}
-                className="w-full border-none shadow-none ring-0 p-0"
+                className="w-full border-none shadow-none ring-0 p-0 bg-transparent"
                 modifiers={modifiers}
                 modifiersStyles={modifierStyles}
               />
               
-              <div className="mt-8 pt-6 border-t border-primary/5 space-y-4">
-                 <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary/40 font-headline">Operational Legend</p>
+              <div className="mt-8 pt-6 border-t border-border space-y-4">
+                 <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60 font-headline">Operational Legend</p>
                  <div className="grid grid-cols-1 gap-2">
-                    <div className="flex items-center gap-3 p-3 bg-primary/[0.02] rounded-xl border border-primary/5">
-                        <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-sm" />
-                        <span className="text-[10px] font-bold uppercase text-primary/70 tracking-widest font-headline">Site Audit Scheduled</span>
+                    <div className="flex items-center gap-3 p-3 bg-accent/5 rounded-xl border border-accent/10">
+                        <div className="w-2.5 h-2.5 rounded-full bg-accent shadow-sm" />
+                        <span className="text-[10px] font-bold uppercase text-accent tracking-widest font-headline">Site Audit Scheduled</span>
                     </div>
-                    <div className="flex items-center gap-3 p-3 bg-amber-50/50 rounded-xl border border-amber-100/50">
+                    <div className="flex items-center gap-3 p-3 bg-amber-500/10 rounded-xl border border-amber-500/10">
                         <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm" />
-                        <span className="text-[10px] font-bold uppercase text-amber-700 tracking-widest font-headline">Maintenance Event</span>
+                        <span className="text-[10px] font-bold uppercase text-amber-500 tracking-widest font-headline">Maintenance Event</span>
                     </div>
                  </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm rounded-[2rem] bg-primary text-white overflow-hidden p-8 relative group">
-            <div className="absolute -top-10 -right-10 opacity-10 group-hover:rotate-12 transition-transform duration-700">
+          <Card className="border-none shadow-sm rounded-[2rem] bg-primary text-primary-foreground overflow-hidden p-8 relative group">
+            <div className="absolute -top-10 -right-10 opacity-10 group-hover:rotate-12 transition-transform duration-700 text-foreground">
                <Clock className="w-32 h-32" />
             </div>
             <div className="relative z-10 space-y-4">
@@ -242,22 +238,21 @@ export default function LandlordCalendarPage() {
                  <Clock className="w-5 h-5" /> Quick Actions
               </h3>
               <p className="text-xs opacity-80 leading-relaxed font-body font-medium">Select a date to view current site visits or log a new repair directly to the roadmap.</p>
-              <Button className="w-full rounded-xl bg-white text-primary font-bold h-12 shadow-lg hover:bg-white/90 hover:shadow-xl transition-all text-xs uppercase tracking-widest font-headline" onClick={() => setIsAddRepairOpen(true)}>
+              <Button className="w-full rounded-xl bg-primary-foreground text-primary font-bold h-12 shadow-lg hover:opacity-90 transition-all text-xs uppercase tracking-widest font-headline" onClick={() => setIsAddRepairOpen(true)}>
                  <Plus className="w-4 h-4 mr-2" /> Schedule Task
               </Button>
             </div>
           </Card>
         </div>
 
-        {/* Right Column: Daily Ledger */}
         <div className="lg:col-span-8 space-y-8">
-          <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden min-h-[500px] ring-1 ring-primary/5">
-            <CardHeader className="bg-primary/[0.02] border-b border-primary/5 p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <Card className="border-none shadow-sm rounded-[2.5rem] bg-card overflow-hidden min-h-[500px] ring-1 ring-border">
+            <CardHeader className="bg-muted/10 border-b border-border p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="text-left">
-                 <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-primary/40 mb-1 font-headline">Daily Ledger</p>
-                 <CardTitle className="text-2xl font-headline text-primary tracking-tight">{format(selectedDate, 'PPPP')}</CardTitle>
+                 <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-60 mb-1 font-headline">Daily Ledger</p>
+                 <CardTitle className="text-2xl font-headline text-foreground tracking-tight">{format(selectedDate, 'PPPP')}</CardTitle>
               </div>
-              <Badge className="rounded-full py-1.5 px-4 font-bold bg-primary text-white uppercase text-[9px] tracking-widest shadow-sm">
+              <Badge className="rounded-full py-1.5 px-4 font-bold bg-primary text-primary-foreground uppercase text-[9px] tracking-widest shadow-sm">
                 {selectedDayEvents.length} Active Records
               </Badge>
             </CardHeader>
@@ -265,11 +260,10 @@ export default function LandlordCalendarPage() {
               {selectedDayEvents.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-24 opacity-20 text-center space-y-4">
                    <div className="p-8 bg-muted/20 rounded-[2rem]">
-                      <CalendarDays className="w-16 h-16 text-primary" />
+                      <CalendarDays className="w-16 h-16 text-foreground" />
                    </div>
-                   <h3 className="text-lg font-bold font-headline text-primary uppercase tracking-widest">Empty Ledger</h3>
-                   <p className="text-xs font-medium">No audits or maintenance recorded for this date.</p>
-                   <Button variant="ghost" className="mt-4 font-bold text-primary hover:bg-primary/5 rounded-xl h-10 px-6 text-xs uppercase tracking-widest font-headline" onClick={() => setIsAddRepairOpen(true)}>Initialize Task</Button>
+                   <h3 className="text-lg font-bold font-headline text-foreground uppercase tracking-widest">Empty Ledger</h3>
+                   <p className="text-xs font-medium text-foreground">No audits or maintenance recorded for this date.</p>
                 </div>
               ) : (
                 <div className="grid gap-4">
@@ -283,14 +277,14 @@ export default function LandlordCalendarPage() {
 
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold font-headline flex items-center text-primary tracking-tight">
+              <h3 className="text-xl font-bold font-headline flex items-center text-foreground tracking-tight">
                 <ChevronRight className="w-5 h-5 mr-1 text-accent" /> Portfolio Future State
               </h3>
               <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 font-headline">Upcoming Roadmap</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                {allEvents.filter(e => isAfter(e.date, startOfDay(new Date()))).slice(0, 6).length === 0 ? (
-                  <p className="col-span-full text-center py-16 text-muted-foreground italic text-xs font-medium bg-muted/5 rounded-[2rem] border-2 border-dashed border-primary/5">No future operations synchronized.</p>
+                  <p className="col-span-full text-center py-16 text-muted-foreground italic text-xs font-medium bg-muted/5 rounded-[2rem] border-2 border-dashed border-border">No future operations synchronized.</p>
                ) : (
                  allEvents.filter(e => isAfter(e.date, startOfDay(new Date()))).slice(0, 6).map(event => (
                     <EventCard key={event.id} event={event} compact />
@@ -301,35 +295,34 @@ export default function LandlordCalendarPage() {
         </div>
       </div>
 
-      {/* Add Repair Dialog */}
       <Dialog open={isAddRepairOpen} onOpenChange={setIsAddRepairOpen}>
-        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-[550px] bg-white flex flex-col max-h-[90vh]">
+        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-[550px] bg-card flex flex-col max-h-[90vh]">
           <form onSubmit={handleAddRepair} className="flex flex-col h-full overflow-hidden">
             <div className="p-8 bg-primary/5 border-b text-left shrink-0">
-              <DialogTitle className="text-xl font-bold font-headline text-primary tracking-tight">Schedule Maintenance</DialogTitle>
+              <DialogTitle className="text-xl font-bold font-headline text-foreground tracking-tight">Schedule Maintenance</DialogTitle>
               <DialogDescription className="text-xs font-medium text-muted-foreground mt-1">Registering an operational event for {format(selectedDate, 'PPP')}</DialogDescription>
             </div>
             <ScrollArea className="flex-1">
               <div className="p-8 space-y-6 text-left">
                 <div className="space-y-2">
-                  <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Target Inventory Asset</Label>
-                  <select className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-primary font-headline" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
+                  <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Target Inventory Asset</Label>
+                  <select className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-foreground font-headline" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
                     <option value="">Choose an asset...</option>
                     {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Repair Subject</Label>
-                  <Input value={repairTitle} onChange={(e) => setRepairTitle(e.target.value)} required placeholder="e.g. Electrical Fault Discovery" className="rounded-xl h-12 bg-muted/20 border-none font-bold text-sm px-4 focus:ring-2 focus:ring-primary font-headline" />
+                  <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Repair Subject</Label>
+                  <Input value={repairTitle} onChange={(e) => setRepairTitle(e.target.value)} required placeholder="e.g. Electrical Fault Discovery" className="rounded-xl h-12 bg-muted/20 border-none font-bold text-sm px-4" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Operational Context</Label>
-                  <Textarea value={repairDesc} onChange={(e) => setRepairDesc(e.target.value)} placeholder="Provide full context for contractor access..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-medium px-4 py-4 text-sm leading-relaxed focus:ring-2 focus:ring-primary" />
+                  <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Operational Context</Label>
+                  <Textarea value={repairDesc} onChange={(e) => setRepairDesc(e.target.value)} placeholder="Provide full context for contractor access..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-medium px-4 py-4 text-sm leading-relaxed" />
                 </div>
               </div>
             </ScrollArea>
             <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
-              <Button type="submit" disabled={isSaving || !selectedPropertyId || !repairTitle} className="w-full rounded-xl h-14 font-bold bg-primary text-white shadow-lg hover:bg-primary/90 transition-all font-headline uppercase tracking-widest text-xs">
+              <Button type="submit" disabled={isSaving || !selectedPropertyId || !repairTitle} className="w-full rounded-xl h-14 font-bold bg-primary text-primary-foreground shadow-lg hover:opacity-90 transition-all font-headline uppercase tracking-widest text-xs">
                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                 Synchronize to Ledger
               </Button>
@@ -343,18 +336,18 @@ export default function LandlordCalendarPage() {
 
 function EventCard({ event, compact = false }: { event: PortfolioEvent, compact?: boolean }) {
   const Icon = event.type === 'inspection' ? ShieldCheck : Wrench;
-  const colorClass = event.type === 'inspection' ? "bg-primary text-white shadow-sm" : "bg-amber-500 text-white shadow-sm";
+  const colorClass = event.type === 'inspection' ? "bg-accent text-white" : "bg-amber-500 text-white";
   const linkHref = event.type === 'inspection' ? `/landlord/inspections` : `/landlord/maintenance`;
 
   return (
     <Link href={linkHref} className="group block">
       <div className={cn(
-        "flex items-center justify-between transition-all hover:bg-white hover:shadow-md hover:scale-[1.01] hover:border-primary/10 bg-primary/[0.02] border border-primary/5",
+        "flex items-center justify-between transition-all hover:bg-muted/10 hover:shadow-md hover:scale-[1.01] bg-card ring-1 ring-border",
         compact ? "p-4 rounded-2xl" : "p-6 rounded-[1.75rem]"
       )}>
         <div className="flex items-center gap-5 text-left">
           <div className={cn(
-            "rounded-xl flex items-center justify-center transform group-hover:scale-105 transition-transform shrink-0",
+            "rounded-xl flex items-center justify-center transform group-hover:scale-105 transition-transform shrink-0 shadow-sm",
             compact ? "w-10 h-10" : "w-14 h-14",
             colorClass
           )}>
@@ -362,7 +355,7 @@ function EventCard({ event, compact = false }: { event: PortfolioEvent, compact?
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1">
-               <Badge variant="outline" className="uppercase text-[7px] font-bold tracking-[0.2em] text-primary/40 border-primary/5 font-headline bg-white/50 px-2 py-0.5">
+               <Badge variant="outline" className="uppercase text-[7px] font-bold tracking-[0.2em] text-muted-foreground border-border font-headline px-2 py-0.5">
                 {event.type === 'inspection' ? 'AUDIT' : 'REPAIR'}
                </Badge>
                {compact && (
@@ -370,21 +363,17 @@ function EventCard({ event, compact = false }: { event: PortfolioEvent, compact?
                )}
             </div>
             <h4 className={cn(
-              "font-bold font-headline text-primary leading-tight mb-1 tracking-tight group-hover:text-accent transition-colors truncate",
+              "font-bold font-headline leading-tight mb-1 tracking-tight text-foreground group-hover:text-accent transition-colors truncate",
               compact ? "text-sm" : "text-xl"
             )}>{event.title}</h4>
             <div className="flex flex-wrap items-center gap-3">
               <p className="text-[9px] text-muted-foreground font-bold flex items-center font-body opacity-60 uppercase tracking-widest font-headline">
                 <MapPin className="w-3 h-3 mr-1 text-accent" /> {event.subtitle}
               </p>
-              {!compact && (
-                <Badge variant="secondary" className="bg-primary/5 text-primary/60 border-none text-[7px] font-bold uppercase tracking-[0.1em] px-2 py-0.5">Status: {event.status || 'Active'}</Badge>
-              )}
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-primary/10 group-hover:text-primary transition-all shrink-0">
-           {!compact && <span className="text-[8px] font-bold uppercase tracking-[0.2em] hidden md:inline font-headline opacity-60">Open Record</span>}
+        <div className="flex items-center gap-2 text-muted-foreground/30 group-hover:text-accent transition-all shrink-0">
            <ChevronRight className={compact ? "w-4 h-4" : "w-6 h-6"} />
         </div>
       </div>

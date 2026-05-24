@@ -71,7 +71,6 @@ export function Header({ role }: HeaderProps) {
 
   useEffect(() => {
     setMounted(true);
-    // Sync UI with existing document state (set by layout script)
     const isDark = document.documentElement.classList.contains('dark');
     setIsDarkMode(isDark);
     
@@ -125,7 +124,7 @@ export function Header({ role }: HeaderProps) {
           <Search className="absolute left-3 h-4 w-4 text-muted-foreground/50" />
           <Input 
             placeholder="Search portfolio..." 
-            className="pl-9 h-10 rounded-xl bg-muted/50 border-none font-medium text-sm focus-visible:ring-ring w-full"
+            className="pl-9 h-10 rounded-xl bg-muted/30 border-none font-medium text-sm focus-visible:ring-ring w-full text-foreground"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -142,7 +141,7 @@ export function Header({ role }: HeaderProps) {
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 p-0 rounded-2xl border-none shadow-2xl overflow-hidden mt-2" align="end">
+          <PopoverContent className="w-80 p-0 rounded-2xl border-border shadow-2xl overflow-hidden mt-2 bg-card" align="end">
              <div className="p-4 bg-primary text-primary-foreground flex justify-between items-center">
                 <p className="font-bold text-xs uppercase tracking-widest font-headline">Intelligence Hub</p>
                 <Badge variant="outline" className="text-[9px] text-primary-foreground border-primary-foreground/20 font-bold">{notifications.length} New</Badge>
@@ -154,8 +153,8 @@ export function Header({ role }: HeaderProps) {
                       <div key={n.id} className="flex gap-3 items-start group relative">
                          <div className={cn(
                            "p-2 rounded-lg shrink-0",
-                           n.type === 'grade' ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
-                           n.type === 'message' ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                           n.type === 'grade' ? "bg-emerald-500/10 text-emerald-500" :
+                           n.type === 'message' ? "bg-accent/10 text-accent" : "bg-amber-500/10 text-amber-500"
                          )}>
                             {n.type === 'grade' ? <LayoutDashboard className="w-4 h-4" /> :
                              n.type === 'message' ? <MessageSquare className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
@@ -261,10 +260,10 @@ export function Header({ role }: HeaderProps) {
                     <span>Session Security</span>
                   </div>
                   <Select value={sessionTime} onValueChange={handleSessionChange}>
-                    <SelectTrigger className="h-9 w-full bg-muted border-none rounded-lg text-[10px] font-bold font-headline">
+                    <SelectTrigger className="h-9 w-full bg-muted/50 border-none rounded-lg text-[10px] font-bold font-headline text-foreground">
                       <SelectValue placeholder="Session limit" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl border-border shadow-xl">
+                    <SelectContent className="rounded-xl border-border shadow-xl bg-card">
                       <SelectItem value="15" className="text-[10px] font-bold">15 Minutes</SelectItem>
                       <SelectItem value="30" className="text-[10px] font-bold">30 Minutes</SelectItem>
                       <SelectItem value="60" className="text-[10px] font-bold">60 Minutes</SelectItem>
