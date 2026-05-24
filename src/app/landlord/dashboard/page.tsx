@@ -47,9 +47,9 @@ export default function LandlordDashboard() {
   useEffect(() => {
     setIsClient(true);
     
-    // Check for admin claims on the current token
+    // Check for admin/premium claims on the current token
     if (user) {
-      user.getIdTokenResult().then(result => {
+      user.getIdTokenResult(true).then(result => {
         setIsAdminEscalated(!!result.claims.admin || !!result.claims.premium);
       });
     }
@@ -66,7 +66,7 @@ export default function LandlordDashboard() {
   }, [db, user]);
   const { data: profile } = useDoc(userDocRef);
 
-  // Access check: allow Pro if Firestore record says so OR if the token has an admin claim
+  // Access check: allow Pro if Firestore record says so OR if the token has an admin/premium claim
   const isPro = profile?.plan === 'pro' || isAdminEscalated;
 
   const propertiesQuery = useMemoFirebase(() => {
