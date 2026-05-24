@@ -3,9 +3,7 @@ import * as admin from 'firebase-admin';
 /**
  * 🔐 Firebase Admin Engine
  * Secure server-side access to Firestore and Auth.
- * 
- * SECURITY NOTE: Environment variables are prioritized to bypass GitHub Push Protection.
- * For production, set FIREBASE_SERVICE_ACCOUNT in your hosting provider's secrets manager.
+ * Optimized for production safety and credential redaction compliance.
  */
 
 if (!admin.apps.length) {
@@ -27,7 +25,6 @@ if (!admin.apps.length) {
       // Local development fallback
       const serviceAccount = require("./serviceAccountKey.json");
       
-      // Only attempt cert initialization if the key isn't the redacted placeholder
       if (serviceAccount.private_key && !serviceAccount.private_key.includes('REDACTED')) {
         admin.initializeApp({
           credential: admin.credential.cert(serviceAccount),

@@ -19,7 +19,7 @@ import {
   Wrench, Sparkles, Clock, BrainCircuit, Loader2, 
   CheckCircle2, PlayCircle, Plus,
   Calendar as CalendarIcon, Building2,
-  Activity, Save, Edit3, ChevronRight, Lightbulb, Settings
+  Activity, Save, Settings, Lightbulb
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -244,7 +244,7 @@ export default function MaintenancePage() {
                   <div className="space-y-8 mt-10 animate-in fade-in duration-700 border-t border-border pt-10">
                     <div className="bg-primary/5 border border-border rounded-[1.75rem] p-8 flex gap-6 shadow-inner">
                       <BrainCircuit className="w-10 h-10 text-primary shrink-0 opacity-40" />
-                      <div className="flex-1">
+                      <div className="flex-1 text-left">
                         <p className="text-[9px] font-bold text-muted-foreground uppercase mb-3 tracking-[0.2em] font-headline">Fix Strategy</p>
                         <p className="text-sm text-foreground font-bold font-body leading-relaxed">{request.aiTriageNotes}</p>
                       </div>
@@ -350,7 +350,7 @@ export default function MaintenancePage() {
               </div>
             </ScrollArea>
             <DialogFooter className="p-10 bg-muted/5 border-t shrink-0">
-              <Button type="submit" className="w-full rounded-xl h-14 font-bold bg-primary shadow-lg text-primary-foreground font-headline text-sm hover:bg-primary/90" disabled={isSubmitting}>
+              <Button type="submit" className="w-full rounded-xl h-14 font-bold bg-primary shadow-lg text-primary-foreground font-headline text-sm hover:bg-primary/90 transition-all active:scale-95" disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                 Register Task
               </Button>
