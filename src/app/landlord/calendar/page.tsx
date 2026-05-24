@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -36,6 +35,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type PortfolioEvent = {
   id: string;
@@ -142,10 +142,6 @@ export default function LandlordCalendarPage() {
     return dates;
   }, [allEvents]);
 
-  /**
-   * 🎨 Professional High-Fidelity Modifier Styles
-   * Replaced generic border-bottom with high-performance boxShadow indicators.
-   */
   const modifierStyles = {
     inspection: { boxShadow: 'inset 0 -3px 0 0 hsl(var(--primary))' },
     repair: { boxShadow: 'inset 0 -3px 0 0 #f59e0b' }
@@ -189,10 +185,7 @@ export default function LandlordCalendarPage() {
   if (!isClient || isInspLoading || isMaintLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] space-y-6">
-        <div className="relative">
-          <div className="absolute inset-0 bg-primary/10 rounded-full blur-2xl animate-pulse" />
-          <Loader2 className="animate-spin text-primary w-12 h-12 opacity-60 relative z-10" />
-        </div>
+        <Loader2 className="animate-spin text-primary w-12 h-12 opacity-60" />
         <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground font-headline">Synchronizing Roadmap</p>
       </div>
     );
@@ -249,7 +242,7 @@ export default function LandlordCalendarPage() {
                  <Clock className="w-5 h-5" /> Quick Actions
               </h3>
               <p className="text-xs opacity-80 leading-relaxed font-body font-medium">Select a date to view current site visits or log a new repair directly to the roadmap.</p>
-              <Button className="w-full rounded-xl bg-white text-primary font-bold h-12 shadow-lg hover:scale-[1.01] transition-transform text-xs uppercase tracking-widest font-headline" onClick={() => setIsAddRepairOpen(true)}>
+              <Button className="w-full rounded-xl bg-white text-primary font-bold h-12 shadow-lg hover:bg-white/90 hover:shadow-xl transition-all text-xs uppercase tracking-widest font-headline" onClick={() => setIsAddRepairOpen(true)}>
                  <Plus className="w-4 h-4 mr-2" /> Schedule Task
               </Button>
             </div>
@@ -261,7 +254,7 @@ export default function LandlordCalendarPage() {
           <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden min-h-[500px] ring-1 ring-primary/5">
             <CardHeader className="bg-primary/[0.02] border-b border-primary/5 p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="text-left">
-                 <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-primary/40 mb-1 font-headline">Daily Operational Ledger</p>
+                 <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-primary/40 mb-1 font-headline">Daily Ledger</p>
                  <CardTitle className="text-2xl font-headline text-primary tracking-tight">{format(selectedDate, 'PPPP')}</CardTitle>
               </div>
               <Badge className="rounded-full py-1.5 px-4 font-bold bg-primary text-white uppercase text-[9px] tracking-widest shadow-sm">
@@ -310,31 +303,33 @@ export default function LandlordCalendarPage() {
 
       {/* Add Repair Dialog */}
       <Dialog open={isAddRepairOpen} onOpenChange={setIsAddRepairOpen}>
-        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-[550px] bg-white">
-          <form onSubmit={handleAddRepair}>
-            <div className="p-8 bg-primary/5 border-b text-left">
+        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-[550px] bg-white flex flex-col max-h-[90vh]">
+          <form onSubmit={handleAddRepair} className="flex flex-col h-full overflow-hidden">
+            <div className="p-8 bg-primary/5 border-b text-left shrink-0">
               <DialogTitle className="text-xl font-bold font-headline text-primary tracking-tight">Schedule Maintenance</DialogTitle>
               <DialogDescription className="text-xs font-medium text-muted-foreground mt-1">Registering an operational event for {format(selectedDate, 'PPP')}</DialogDescription>
             </div>
-            <div className="p-8 space-y-6 text-left">
-              <div className="space-y-2">
-                <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Target Inventory Asset</Label>
-                <select className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-primary font-headline" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
-                  <option value="">Choose an asset...</option>
-                  {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
-                </select>
+            <ScrollArea className="flex-1">
+              <div className="p-8 space-y-6 text-left">
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Target Inventory Asset</Label>
+                  <select className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-primary font-headline" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
+                    <option value="">Choose an asset...</option>
+                    {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Repair Subject</Label>
+                  <Input value={repairTitle} onChange={(e) => setRepairTitle(e.target.value)} required placeholder="e.g. Electrical Fault Discovery" className="rounded-xl h-12 bg-muted/20 border-none font-bold text-sm px-4 focus:ring-2 focus:ring-primary font-headline" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Operational Context</Label>
+                  <Textarea value={repairDesc} onChange={(e) => setRepairDesc(e.target.value)} placeholder="Provide full context for contractor access..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-medium px-4 py-4 text-sm leading-relaxed focus:ring-2 focus:ring-primary" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Repair Subject</Label>
-                <Input value={repairTitle} onChange={(e) => setRepairTitle(e.target.value)} required placeholder="e.g. Electrical Fault Discovery" className="rounded-xl h-12 bg-muted/20 border-none font-bold text-sm px-4 focus:ring-2 focus:ring-primary font-headline" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Operational Context</Label>
-                <Textarea value={repairDesc} onChange={(e) => setRepairDesc(e.target.value)} placeholder="Provide full context for contractor access..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-medium px-4 py-4 text-sm leading-relaxed focus:ring-2 focus:ring-primary" />
-              </div>
-            </div>
-            <DialogFooter className="p-8 bg-muted/5 border-t">
-              <Button type="submit" disabled={isSaving || !selectedPropertyId || !repairTitle} className="w-full rounded-xl h-14 font-bold bg-primary text-white shadow-lg hover:bg-primary/90 transition-transform active:scale-95 font-headline uppercase tracking-widest text-xs">
+            </ScrollArea>
+            <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
+              <Button type="submit" disabled={isSaving || !selectedPropertyId || !repairTitle} className="w-full rounded-xl h-14 font-bold bg-primary text-white shadow-lg hover:bg-primary/90 transition-all font-headline uppercase tracking-widest text-xs">
                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                 Synchronize to Ledger
               </Button>

@@ -370,23 +370,23 @@ export default function InspectionsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-1 border-none shadow-sm h-fit">
-          <CardHeader>
+        <Card className="lg:col-span-1 border-none shadow-sm h-fit rounded-[2rem] overflow-hidden bg-card">
+          <CardHeader className="bg-primary/5 p-8 border-b">
             <CardTitle className="text-xl font-headline text-primary tracking-tight">Schedule Audit</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-8 space-y-6">
             <div className="space-y-2 text-left">
-              <Label className="text-xs uppercase font-bold text-muted-foreground font-headline">Select Asset</Label>
-              <select className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow font-body" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
+              <Label className="text-xs uppercase font-bold text-muted-foreground font-headline tracking-widest opacity-60">Select Asset</Label>
+              <select className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow font-bold text-primary" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
                 <option value="">Choose a property...</option>
                 {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
               </select>
             </div>
             <div className="space-y-2 text-left">
-              <Label className="text-xs uppercase font-bold text-muted-foreground font-headline">Audit Date</Label>
+              <Label className="text-xs uppercase font-bold text-muted-foreground font-headline tracking-widest opacity-60">Audit Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal h-11 rounded-xl border-input hover:bg-muted/50 transition-colors font-body", !date && "text-muted-foreground")}>
+                  <Button variant={"outline"} className={cn("w-full justify-start text-left font-bold h-11 rounded-xl border-input hover:bg-muted/50 transition-colors font-body", !date && "text-muted-foreground")}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {date ? format(date, "PPP") : <span>Pick a date</span>}
                   </Button>
@@ -396,130 +396,136 @@ export default function InspectionsPage() {
                 </PopoverContent>
               </Popover>
             </div>
-            <Button className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/10 font-headline bg-primary text-white hover:bg-primary/90" onClick={handleSchedule} disabled={!date || !selectedPropertyId}>Confirm Schedule</Button>
+            <Button className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/10 font-headline bg-primary text-white hover:bg-primary/90 transition-all uppercase tracking-widest text-[10px]" onClick={handleSchedule} disabled={!date || !selectedPropertyId}>Confirm Schedule</Button>
           </CardContent>
         </Card>
 
         <div className="lg:col-span-2 space-y-6">
           <h3 className="text-xl font-bold font-headline flex items-center text-primary tracking-tight">
             <ClipboardList className="w-5 h-5 mr-2" />
-            Portfolio Compliance Ledger
+            Compliance Ledger
           </h3>
           <div className="grid gap-4">
             {!inspections || inspections.length === 0 ? (
               <div className="py-20 text-center bg-muted/20 rounded-2xl border-2 border-dashed border-primary/10">
-                <p className="text-muted-foreground font-medium font-body">No audit records found.</p>
+                <p className="text-muted-foreground font-medium font-body uppercase tracking-widest text-xs opacity-40">No audit records found.</p>
               </div>
             ) : (
               inspections.slice().sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime()).map((inspection) => (
-                <Card key={inspection.id} className="border-none shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
+                <Card key={inspection.id} className="border-none shadow-sm overflow-hidden group hover:shadow-md transition-shadow rounded-[2rem] bg-white border border-primary/5">
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row gap-6">
-                      <div className="bg-primary/5 p-4 rounded-2xl flex flex-col items-center justify-center text-primary min-w-[100px] h-fit font-headline">
-                        <span className="text-xs font-bold uppercase">{format(new Date(inspection.scheduledDate), 'MMM')}</span>
+                      <div className="bg-primary/5 p-4 rounded-2xl flex flex-col items-center justify-center text-primary min-w-[100px] h-fit font-headline shadow-inner">
+                        <span className="text-xs font-bold uppercase tracking-widest opacity-60">{format(new Date(inspection.scheduledDate), 'MMM')}</span>
                         <span className="text-3xl font-bold">{format(new Date(inspection.scheduledDate), 'dd')}</span>
                       </div>
                       <div className="flex-1 space-y-3">
                         <div className="flex items-center justify-between">
-                          <Badge variant={inspection.status === 'completed' ? 'secondary' : 'default'} className="uppercase font-bold text-[10px] font-headline">{inspection.status}</Badge>
+                          <Badge variant={inspection.status === 'completed' ? 'secondary' : 'default'} className="uppercase font-bold text-[10px] font-headline tracking-widest rounded-full">{inspection.status}</Badge>
                           <div className="flex gap-2">
-                            {inspection.status === 'completed' && <Button variant="outline" size="sm" onClick={() => downloadPDF(inspection)} className="rounded-lg h-8 text-primary border-primary/20 font-headline"><Download className="w-3 h-3 mr-2" /> Export PDF</Button>}
+                            {inspection.status === 'completed' && <Button variant="outline" size="sm" onClick={() => downloadPDF(inspection)} className="rounded-lg h-8 text-primary border-primary/20 hover:bg-primary/5 font-headline"><Download className="w-3 h-3 mr-2" /> Export PDF</Button>}
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-lg" onClick={() => handleDeleteInspection(inspection.id)}><Trash2 className="w-4 h-4" /></Button>
                           </div>
                         </div>
                         <div className="text-left">
-                          <h4 className="text-lg font-bold font-headline">{properties?.find(p => p.id === inspection.propertyId)?.addressLine1 || 'Property Asset'}</h4>
-                          <p className="text-xs text-muted-foreground font-bold flex items-center mt-1 font-body">
+                          <h4 className="text-lg font-bold font-headline text-primary tracking-tight">{properties?.find(p => p.id === inspection.propertyId)?.addressLine1 || 'Property Asset'}</h4>
+                          <p className="text-[10px] text-muted-foreground font-bold flex items-center mt-1 font-body uppercase tracking-widest opacity-60">
+                            <Clock className="w-3.5 h-3.5 mr-1.5" />
                             {inspection.conductedDate ? `Recorded: ${format(new Date(inspection.conductedDate), 'PPp')}` : `Scheduled: ${format(new Date(inspection.scheduledDate), 'PPP')}`}
                           </p>
                         </div>
                         <Dialog open={activeInspection?.id === inspection.id} onOpenChange={(open) => !open && setActiveInspection(null)}>
                           <DialogTrigger asChild>
-                            <Button className={cn("w-full md:w-auto rounded-xl font-bold h-10 px-6 font-headline", inspection.status === 'completed' ? "bg-muted hover:bg-muted/80 text-foreground" : "bg-accent hover:bg-accent/90 text-white")} onClick={() => handleOpenAudit(inspection)}>
+                            <Button className={cn("w-full md:w-auto rounded-xl font-bold h-10 px-8 font-headline uppercase tracking-widest text-[10px] transition-all", inspection.status === 'completed' ? "bg-muted hover:bg-muted/80 text-foreground" : "bg-primary hover:bg-primary/90 text-white")} onClick={() => handleOpenAudit(inspection)}>
                               {inspection.status === 'completed' ? <><Edit3 className="w-4 h-4 mr-2" /> Edit Audit</> : <><PlayCircle className="w-4 h-4 mr-2" /> Start Audit</>}
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="sm:max-w-[750px] p-0 rounded-2xl border-none shadow-2xl flex flex-col h-[85vh] overflow-hidden">
-                            <div className="p-6 bg-primary/5 border-b text-left">
-                              <DialogTitle className="text-2xl font-headline font-bold">Comprehensive Audit</DialogTitle>
-                              <DialogDescription className="font-medium text-muted-foreground font-body">{inspection.status === 'completed' ? "Updating previous findings and evidence." : "Conducting full safety audit with photographic evidence."}</DialogDescription>
+                          <DialogContent className="sm:max-w-[850px] p-0 rounded-[3rem] border-none shadow-2xl flex flex-col h-[90vh] overflow-hidden bg-white">
+                            <div className="p-8 bg-primary/5 border-b text-left shrink-0">
+                              <DialogTitle className="text-2xl font-headline font-bold text-primary tracking-tight">Professional Property Audit</DialogTitle>
+                              <DialogDescription className="font-medium text-muted-foreground font-body mt-1">Conducting full safety audit with high-fidelity evidence capture.</DialogDescription>
                             </div>
                             <ScrollArea className="flex-1 text-left">
-                              <div className="p-6 space-y-8">
+                              <div className="p-8 space-y-8">
                                 <Tabs defaultValue="exterior" className="w-full">
-                                  <div className="overflow-x-auto pb-2 no-scrollbar">
-                                    <TabsList className="inline-flex w-max min-w-full bg-muted/50 p-1 rounded-xl h-auto">
+                                  <div className="overflow-x-auto pb-4 no-scrollbar">
+                                    <TabsList className="inline-flex w-max min-w-full bg-muted/50 p-1.5 rounded-2xl h-auto gap-1">
                                       {INSPECTION_SECTIONS.map(s => (
-                                        <TabsTrigger key={s.id} value={s.id} className="rounded-lg py-2.5 px-5 flex items-center gap-2">
+                                        <TabsTrigger key={s.id} value={s.id} className="rounded-xl py-3 px-6 flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
                                           <s.icon className="w-4 h-4" />
-                                          <span className="text-xs font-bold hidden sm:inline">{s.title}</span>
+                                          <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">{s.title}</span>
                                         </TabsTrigger>
                                       ))}
                                     </TabsList>
                                   </div>
                                   {INSPECTION_SECTIONS.map(section => (
-                                    <TabsContent key={section.id} value={section.id} className="mt-6 space-y-6">
-                                      <div className="flex items-center gap-2 mb-4"><section.icon className="w-5 h-5 text-primary" /><h3 className="text-lg font-bold font-headline">{section.title}</h3></div>
-                                      {section.items.map(item => (
-                                        <div key={item} className="p-5 bg-muted/20 rounded-2xl space-y-5 border border-primary/5">
-                                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                            <Label className="font-bold text-sm text-left font-body">{item}</Label>
-                                            <div className="flex gap-2">
-                                              <Button size="sm" variant={structuredFindings[item]?.status === 'pass' ? 'default' : 'outline'} className="rounded-lg font-bold h-8 px-4 font-headline" onClick={() => handleStatusChange(item, 'pass')}><Check className="w-3 h-3 mr-2" /> PASS</Button>
-                                              <Button size="sm" variant={structuredFindings[item]?.status === 'fail' ? 'destructive' : 'outline'} className="rounded-lg font-bold h-8 px-4 font-headline" onClick={() => handleStatusChange(item, 'fail')}><X className="w-3 h-3 mr-2" /> FAIL</Button>
+                                    <TabsContent key={section.id} value={section.id} className="mt-8 space-y-8 animate-in fade-in duration-500">
+                                      <div className="flex items-center gap-3 mb-6">
+                                        <div className="p-3 bg-primary/5 rounded-xl text-primary"><section.icon className="w-6 h-6" /></div>
+                                        <h3 className="text-xl font-bold font-headline text-primary">{section.title}</h3>
+                                      </div>
+                                      <div className="grid gap-6">
+                                        {section.items.map(item => (
+                                          <div key={item} className="p-6 bg-primary/[0.02] rounded-[2rem] space-y-6 border border-primary/5 shadow-inner">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                              <Label className="font-bold text-base text-left font-headline text-primary tracking-tight">{item}</Label>
+                                              <div className="flex gap-2">
+                                                <Button size="sm" variant={structuredFindings[item]?.status === 'pass' ? 'default' : 'outline'} className="rounded-xl font-bold h-10 px-6 font-headline tracking-widest text-[10px]" onClick={() => handleStatusChange(item, 'pass')}><Check className="w-4 h-4 mr-2" /> PASS</Button>
+                                                <Button size="sm" variant={structuredFindings[item]?.status === 'fail' ? 'destructive' : 'outline'} className="rounded-xl font-bold h-10 px-6 font-headline tracking-widest text-[10px]" onClick={() => handleStatusChange(item, 'fail')}><X className="w-4 h-4 mr-2" /> FAIL</Button>
+                                              </div>
                                             </div>
-                                          </div>
-                                          
-                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                              <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Audit Notes</Label>
-                                              <Textarea placeholder="Auditor notes..." className="rounded-xl min-h-[100px] bg-white text-sm font-body" value={structuredFindings[item]?.notes || ''} onChange={(e) => handleNotesChange(item, e.target.value)} />
-                                            </div>
-                                            <div className="space-y-2">
-                                              <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Evidence Photo</Label>
-                                              <div className="relative group">
-                                                {structuredFindings[item]?.imageUrl ? (
-                                                  <div className="relative aspect-video rounded-xl overflow-hidden bg-white border border-primary/10 shadow-sm">
-                                                    <Image src={structuredFindings[item]?.imageUrl || ''} alt="Evidence" fill className="object-cover" unoptimized />
-                                                    <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-lg shadow-lg" onClick={() => setStructuredFindings(prev => ({...prev, [item]: {...prev[item], imageUrl: undefined, localFile: undefined}}))}>
-                                                      <Trash2 className="w-4 h-4" />
-                                                    </Button>
-                                                  </div>
-                                                ) : (
-                                                  <label 
-                                                    htmlFor={`upload-${item}`}
-                                                    className="w-full aspect-video rounded-xl border-2 border-dashed border-primary/10 hover:border-primary/30 transition-all bg-white flex flex-col items-center justify-center gap-2 group cursor-pointer"
-                                                  >
-                                                    <Camera className="w-8 h-8 text-primary/20 group-hover:text-primary/40 transition-colors" />
-                                                    <span className="text-[10px] font-bold uppercase text-primary/40 group-hover:text-primary/60">Capture Evidence</span>
-                                                  </label>
-                                                )}
-                                                <input 
-                                                  id={`upload-${item}`} 
-                                                  type="file" 
-                                                  accept="image/*" 
-                                                  capture="environment"
-                                                  className="hidden" 
-                                                  onChange={(e) => handleImageUpload(item, e.target.files?.[0] || null)} 
-                                                />
+                                            
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-primary/5">
+                                              <div className="space-y-2 text-left">
+                                                <Label className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary/40 font-headline">Audit Findings</Label>
+                                                <Textarea placeholder="Auditor notes..." className="rounded-2xl min-h-[120px] bg-white text-sm font-body border-primary/5 shadow-sm focus:ring-2 focus:ring-primary" value={structuredFindings[item]?.notes || ''} onChange={(e) => handleNotesChange(item, e.target.value)} />
+                                              </div>
+                                              <div className="space-y-2 text-left">
+                                                <Label className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary/40 font-headline">Evidence Capture</Label>
+                                                <div className="relative group">
+                                                  {structuredFindings[item]?.imageUrl ? (
+                                                    <div className="relative aspect-video rounded-2xl overflow-hidden bg-white border border-primary/10 shadow-lg">
+                                                      <Image src={structuredFindings[item]?.imageUrl || ''} alt="Evidence" fill className="object-cover" unoptimized />
+                                                      <Button variant="destructive" size="icon" className="absolute top-3 right-3 h-10 w-10 rounded-xl shadow-2xl transition-all hover:scale-110 active:scale-95" onClick={() => setStructuredFindings(prev => ({...prev, [item]: {...prev[item], imageUrl: undefined, localFile: undefined}}))}>
+                                                        <Trash2 className="w-5 h-5" />
+                                                      </Button>
+                                                    </div>
+                                                  ) : (
+                                                    <label 
+                                                      htmlFor={`upload-${item}`}
+                                                      className="w-full aspect-video rounded-[2rem] border-2 border-dashed border-primary/10 hover:border-primary/30 transition-all bg-white flex flex-col items-center justify-center gap-3 group cursor-pointer shadow-inner"
+                                                    >
+                                                      <div className="p-4 bg-primary/5 rounded-full group-hover:scale-110 transition-transform"><Camera className="w-8 h-8 text-primary/20 group-hover:text-primary/40" /></div>
+                                                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary/40 group-hover:text-primary/60">Capture High-Res Evidence</span>
+                                                    </label>
+                                                  )}
+                                                  <input 
+                                                    id={`upload-${item}`} 
+                                                    type="file" 
+                                                    accept="image/*" 
+                                                    capture="environment"
+                                                    className="hidden" 
+                                                    onChange={(e) => handleImageUpload(item, e.target.files?.[0] || null)} 
+                                                  />
+                                                </div>
                                               </div>
                                             </div>
                                           </div>
-                                        </div>
-                                      ))}
+                                        ))}
+                                      </div>
                                     </TabsContent>
                                   ))}
                                 </Tabs>
                               </div>
                             </ScrollArea>
-                            <DialogFooter className="p-6 bg-muted/10 border-t">
-                              <Button className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 font-headline text-white hover:bg-primary/90" onClick={handleConduct} disabled={isGenerating}>
-                                {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Finalizing Audit...</> : <><CheckCircle2 className="w-4 h-4 mr-2" /> Sign & Update Record</>}
+                            <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
+                              <Button className="w-full rounded-2xl h-14 font-bold bg-primary shadow-xl shadow-primary/20 font-headline text-white hover:bg-primary/90 uppercase tracking-widest text-xs transition-all hover:scale-[1.01]" onClick={handleConduct} disabled={isGenerating}>
+                                {isGenerating ? <><Loader2 className="w-5 h-5 mr-3 animate-spin" /> Orchestrating Audit Records...</> : <><CheckCircle2 className="w-5 h-5 mr-3" /> Sign & Finalize Official Record</>}
                               </Button>
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
-                        {inspection.summary && <div className="p-4 bg-muted/40 rounded-xl border border-primary/5 mt-4 text-left"><p className="text-[10px] font-bold text-primary uppercase mb-2 font-headline">Audit Executive Summary</p><p className="text-sm text-muted-foreground italic leading-relaxed font-body">{inspection.summary}</p></div>}
+                        {inspection.summary && <div className="p-5 bg-primary/[0.03] rounded-2xl border border-primary/5 mt-4 text-left shadow-inner"><p className="text-[9px] font-bold text-primary/60 uppercase mb-2 font-headline tracking-widest">Audit Executive Summary</p><p className="text-sm text-primary/80 italic leading-relaxed font-body font-medium">"{inspection.summary}"</p></div>}
                       </div>
                     </div>
                   </CardContent>

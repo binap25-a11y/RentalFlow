@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -381,7 +380,7 @@ export default function LandlordDashboard() {
                </span>
             </div>
           )}
-          <Button className="rounded-2xl h-11 px-6 font-bold bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all text-white" asChild>
+          <Button className="rounded-2xl h-11 px-6 font-bold bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all text-white hover:bg-primary/90" asChild>
             <Link href="/landlord/properties/new">Register New Asset</Link>
           </Button>
         </div>
@@ -492,9 +491,9 @@ export default function LandlordDashboard() {
             <CardHeader className="text-left px-10 pt-10 pb-4 border-b border-border flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <CardTitle className="text-2xl font-headline flex items-center text-foreground">
                 <ReceiptText className="w-6 h-6 mr-3 text-accent" />
-                Real-Time Collection Suite
+                Collection Suite
               </CardTitle>
-              <Button variant="outline" size="sm" onClick={downloadStatement} className={cn("rounded-xl border-accent/20 text-accent font-bold h-10 px-6", !isPro && "opacity-50 cursor-not-allowed")}>
+              <Button variant="outline" size="sm" onClick={downloadStatement} className={cn("rounded-xl border-primary/20 text-primary hover:bg-primary/5 font-bold h-10 px-6", !isPro && "opacity-50 cursor-not-allowed")}>
                 <Download className="w-4 h-4 mr-2" /> Export Portfolio Ledger
               </Button>
             </CardHeader>
@@ -580,7 +579,7 @@ export default function LandlordDashboard() {
                        <div className="min-w-0">
                           <p className="font-bold text-sm text-primary truncate">{req.title}</p>
                           <div className="flex items-center gap-2 mt-1">
-                             <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-widest text-primary/40 border-primary/5">{req.priority}</Badge>
+                             <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-widest text-primary/40 border-primary/10">{req.priority}</Badge>
                              {req.scheduledDate && (
                                <span className="text-[9px] font-bold text-emerald-600 flex items-center uppercase">
                                  <CalendarDays className="w-3 h-3 mr-1" /> {format(new Date(req.scheduledDate), 'MMM dd')}
@@ -607,7 +606,7 @@ export default function LandlordDashboard() {
                    <Sparkles className="w-5 h-5 text-accent" /> Premium Management
                  </h3>
                  <p className="text-sm opacity-80 leading-relaxed font-body">Unlock high-fidelity AI triage, unlimited asset history, and custom professional branding.</p>
-                 <Button className="w-full rounded-xl bg-white text-primary hover:bg-white/90 font-bold h-12 shadow-xl shadow-black/20" onClick={upgradeToPro} disabled={isUpgrading}>
+                 <Button className="w-full rounded-xl bg-white text-primary hover:bg-white/90 font-bold h-12 shadow-xl shadow-black/20 transition-all hover:scale-[1.01]" onClick={upgradeToPro} disabled={isUpgrading}>
                     {isUpgrading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Unlock Premium Suite"}
                  </Button>
               </div>
@@ -620,30 +619,30 @@ export default function LandlordDashboard() {
               <div className="grid grid-cols-1 gap-3">
                 <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" className="w-full rounded-xl border-border font-bold h-12 hover:bg-primary/5 hover:text-primary">
+                    <Button variant="outline" className="w-full rounded-xl border-primary/20 text-primary font-bold h-12 hover:bg-primary/5 transition-all">
                       <Plus className="w-4 h-4 mr-2" /> Log Portfolio Expense
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="rounded-3xl border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh]">
-                    <form className="flex flex-col h-full overflow-hidden">
-                      <div className="p-8 bg-muted/20 border-b text-left shrink-0">
-                        <DialogTitle className="text-xl font-bold font-headline text-foreground">Log Manual Expense</DialogTitle>
-                        <DialogDescription className="font-medium text-muted-foreground">Record insurance, fees, or one-off costs for your tax ledger.</DialogDescription>
+                  <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh] max-w-[500px]">
+                    <form className="flex flex-col h-full overflow-hidden" onSubmit={(e) => e.preventDefault()}>
+                      <div className="p-8 bg-primary/5 border-b text-left shrink-0">
+                        <DialogTitle className="text-xl font-bold font-headline text-primary">Log Portfolio Expense</DialogTitle>
+                        <DialogDescription className="font-medium text-muted-foreground mt-1">Record insurance, fees, or one-off costs for your tax ledger.</DialogDescription>
                       </div>
                       <ScrollArea className="flex-1">
-                        <div className="p-8 space-y-6 text-left bg-card">
+                        <div className="p-8 space-y-6 text-left">
                           <div className="space-y-2">
-                            <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Expense Title</Label>
-                            <Input value={expTitle} onChange={(e) => setExpTitle(e.target.value)} placeholder="e.g. Landlord Insurance 2025" className="rounded-xl h-11 bg-muted/20 border-none font-bold text-foreground" />
+                            <Label className="font-bold text-xs uppercase text-primary/40 tracking-widest font-headline">Expense Title</Label>
+                            <Input value={expTitle} onChange={(e) => setExpTitle(e.target.value)} placeholder="e.g. Landlord Insurance 2025" className="rounded-xl h-11 bg-muted/20 border-none font-bold" />
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Amount (£)</Label>
-                              <Input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="0.00" className="rounded-xl h-11 bg-muted/20 border-none font-bold text-foreground" />
+                              <Label className="font-bold text-xs uppercase text-primary/40 tracking-widest font-headline">Amount (£)</Label>
+                              <Input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="0.00" className="rounded-xl h-11 bg-muted/20 border-none font-bold" />
                             </div>
                             <div className="space-y-2">
-                              <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Category</Label>
-                              <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-body text-foreground" value={expCategory} onChange={(e) => setExpCategory(e.target.value)}>
+                              <Label className="font-bold text-xs uppercase text-primary/40 tracking-widest font-headline">Category</Label>
+                              <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold" value={expCategory} onChange={(e) => setExpCategory(e.target.value)}>
                                 <option value="insurance">Insurance</option>
                                 <option value="legal">Legal/Professional</option>
                                 <option value="management">Management Fees</option>
@@ -655,16 +654,16 @@ export default function LandlordDashboard() {
                             </div>
                           </div>
                           <div className="space-y-2">
-                            <Label className="font-bold text-xs uppercase text-muted-foreground font-headline">Assign to Asset</Label>
-                            <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-body text-foreground" value={expPropertyId} onChange={(e) => setExpPropertyId(e.target.value)}>
+                            <Label className="font-bold text-xs uppercase text-primary/40 tracking-widest font-headline">Assign to Asset</Label>
+                            <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold" value={expPropertyId} onChange={(e) => setExpPropertyId(e.target.value)}>
                               <option value="">Choose a property...</option>
                               {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
                             </select>
                           </div>
                         </div>
                       </ScrollArea>
-                      <DialogFooter className="p-8 bg-muted/10 border-t shrink-0">
-                        <Button type="button" className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-lg hover:bg-primary/90" onClick={handleLogManualExpense} disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
+                      <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
+                        <Button type="button" className="w-full rounded-xl h-12 font-bold bg-primary text-white shadow-lg hover:bg-primary/90 transition-all font-headline uppercase tracking-widest text-xs" onClick={handleLogManualExpense} disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
                           {isSavingExpense ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                           Commit to Ledger
                         </Button>

@@ -91,7 +91,7 @@ export default function TenantsPage() {
       lastName,
       email: email.toLowerCase().trim(),
       phoneNumber: phone,
-      leaseEndDate: leaseEndDate || null, // Optional: only tracked if provided
+      leaseEndDate: leaseEndDate || null,
       propertyId: selectedPropertyId,
       updatedAt: serverTimestamp(),
     };
@@ -124,7 +124,6 @@ export default function TenantsPage() {
         updatedAt: serverTimestamp(),
       });
 
-      // Send Welcome Email
       const property = properties?.find(p => p.id === selectedPropertyId);
       await sendTenantWelcomeEmail({
         tenantEmail: email.toLowerCase().trim(),
@@ -164,14 +163,14 @@ export default function TenantsPage() {
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20 font-headline text-white px-6">
+            <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20 font-headline text-white px-6 transition-all hover:scale-[1.02]">
               <Plus className="w-4 h-4 mr-2" />
               Assign New Resident
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px] rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden flex flex-col max-h-[90vh]">
+          <DialogContent className="sm:max-w-[500px] rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden flex flex-col max-h-[90vh]">
             <form onSubmit={handleSaveTenant} className="flex flex-col h-full overflow-hidden">
-              <DialogHeader className="p-8 text-left bg-primary/5 border-b">
+              <DialogHeader className="p-8 text-left bg-primary/5 border-b shrink-0">
                 <DialogTitle className="text-2xl font-bold font-headline text-primary">
                   {editingTenant ? "Update Resident" : "Assign Resident"}
                 </DialogTitle>
@@ -180,53 +179,55 @@ export default function TenantsPage() {
                 </DialogDescription>
               </DialogHeader>
               
-              <div className="flex-1 overflow-y-auto p-8 space-y-6 text-left bg-card">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">First Name</Label>
-                    <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="rounded-xl h-12 font-body bg-muted/20 border-none focus:ring-2 focus:ring-primary" placeholder="Jane" />
+              <ScrollArea className="flex-1">
+                <div className="p-8 space-y-6 text-left">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">First Name</Label>
+                      <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="rounded-xl h-12 font-body bg-muted/20 border-none focus:ring-2 focus:ring-primary font-bold" placeholder="Jane" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Last Name</Label>
+                      <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required className="rounded-xl h-12 font-body bg-muted/20 border-none focus:ring-2 focus:ring-primary font-bold" placeholder="Doe" />
+                    </div>
                   </div>
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="lastName" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Last Name</Label>
-                    <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required className="rounded-xl h-12 font-body bg-muted/20 border-none focus:ring-2 focus:ring-primary" placeholder="Doe" />
+                    <Label htmlFor="email" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Email Address</Label>
+                    <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-12 font-body bg-muted/20 border-none focus:ring-2 focus:ring-primary font-bold" placeholder="resident@example.com" />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Phone Number</Label>
+                      <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required className="rounded-xl h-12 font-body bg-muted/20 border-none focus:ring-2 focus:ring-primary font-bold" placeholder="07700 900000" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="leaseEnd" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Lease End Date</Label>
+                      <Input id="leaseEnd" type="date" value={leaseEndDate} onChange={(e) => setLeaseEndDate(e.target.value)} className="rounded-xl h-12 font-body bg-muted/20 border-none focus:ring-2 focus:ring-primary font-bold" />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="property" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Assign to Property Asset</Label>
+                    <select 
+                      id="property" 
+                      className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow font-bold text-primary"
+                      value={selectedPropertyId}
+                      onChange={(e) => setSelectedPropertyId(e.target.value)}
+                      required
+                    >
+                      <option value="">Choose an asset...</option>
+                      {properties?.map(prop => (
+                        <option key={prop.id} value={prop.id}>{prop.addressLine1}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Email Address</Label>
-                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-12 font-body bg-muted/20 border-none focus:ring-2 focus:ring-primary" placeholder="resident@example.com" />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Phone Number</Label>
-                    <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required className="rounded-xl h-12 font-body bg-muted/20 border-none focus:ring-2 focus:ring-primary" placeholder="07700 900000" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="leaseEnd" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Lease End Date</Label>
-                    <Input id="leaseEnd" type="date" value={leaseEndDate} onChange={(e) => setLeaseEndDate(e.target.value)} className="rounded-xl h-12 font-body bg-muted/20 border-none focus:ring-2 focus:ring-primary" />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="property" className="font-bold text-xs uppercase text-primary/60 tracking-wider font-headline">Assign to Property Asset</Label>
-                  <select 
-                    id="property" 
-                    className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow font-body"
-                    value={selectedPropertyId}
-                    onChange={(e) => setSelectedPropertyId(e.target.value)}
-                    required
-                  >
-                    <option value="">Choose an asset...</option>
-                    {properties?.map(prop => (
-                      <option key={prop.id} value={prop.id}>{prop.addressLine1}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              </ScrollArea>
 
-              <DialogFooter className="p-8 bg-muted/10 border-t mt-auto">
-                <Button type="submit" className="w-full rounded-xl h-14 font-bold bg-primary shadow-lg shadow-primary/20 font-headline text-lg text-white hover:bg-primary/90">
+              <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
+                <Button type="submit" className="w-full rounded-xl h-14 font-bold bg-primary shadow-lg shadow-primary/20 font-headline text-lg text-white hover:bg-primary/90 transition-all uppercase tracking-widest text-xs">
                   {editingTenant ? "Update Portfolio Records" : "Confirm Assignment"}
                 </Button>
               </DialogFooter>
