@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { adminDb } from "@/lib/firebase-admin";
+import { adminDb, adminAuth } from "@/lib/firebase-admin";
 import * as admin from 'firebase-admin';
 
 /**
  * @fileOverview Resilient Stripe Webhook Fulfillment Hub.
- * Authenticates incoming Stripe events and updates user subscription status in Firestore.
+ * Authenticates incoming Stripe events and updates user subscription status.
+ * Now implements Custom User Claims for 'premium' access.
  */
 
 export async function POST(req: Request) {
@@ -39,15 +40,20 @@ export async function POST(req: Request) {
 
     if (userId) {
       try {
+        // 1. Set Custom User Claims for secure, token-based verification
+        await adminAuth.setCustomUserClaims(userId, { premium: true });
+
+        // 2. Update Firestore record for operational analytics
         await adminDb.collection("users").doc(userId).update({
           plan: "pro",
           subscriptionId: session.subscription,
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-        console.log(`✅ User ${userId} successfully upgraded to PRO plan.`);
+
+        console.log(`✅ User ${userId} successfully upgraded with Premium Custom Claims.`);
       } catch (error) {
-        console.error(`❌ Firestore Upgrade Failed for User ${userId}:`, error);
-        return NextResponse.json({ error: "Database update failed" }, { status: 500 });
+        console.error(`❌ Fulfillment Failed for User ${userId}:`, error);
+        return NextResponse.json({ error: "Fulfillment failed" }, { status: 500 });
       }
     }
   }
