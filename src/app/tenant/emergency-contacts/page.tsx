@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -120,23 +119,23 @@ export default function TenantEmergencyContactsPage() {
           <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Support Directory</h1>
           <p className="text-muted-foreground font-medium font-body">Authorized UK services and property-specific support provided by your landlord.</p>
         </div>
-        <Button variant="outline" onClick={downloadPDF} className="rounded-xl font-bold h-11 border-primary/20 bg-white shadow-sm">
+        <Button variant="outline" onClick={downloadPDF} className="rounded-xl font-bold h-11 border-primary/20 bg-background shadow-sm">
           <Download className="w-4 h-4 mr-2" /> Download Safety Guide
         </Button>
       </div>
 
-      <div className="bg-amber-50 border border-amber-100 p-6 rounded-[2rem] flex gap-4 items-start shadow-sm">
+      <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 p-6 rounded-[2rem] flex gap-4 items-start shadow-sm">
         <AlertCircle className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
         <div>
-          <h3 className="font-bold text-amber-900 font-headline">Immediate Life Danger</h3>
-          <p className="text-sm text-amber-800 font-medium font-body mt-1">If there is immediate danger to life or fire, always call 999 first. For non-life-threatening property issues, use the authorized contacts below.</p>
+          <h3 className="font-bold text-amber-900 dark:text-amber-100 font-headline">Immediate Life Danger</h3>
+          <p className="text-sm text-amber-800 dark:text-amber-200 font-medium font-body mt-1">If there is immediate danger to life or fire, always call 999 first. For non-life-threatening property issues, use the authorized contacts below.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="space-y-6">
-           <Card className="border-none shadow-sm rounded-2xl overflow-hidden">
-             <CardHeader className="bg-primary text-white">
+           <Card className="border-none shadow-sm rounded-2xl overflow-hidden bg-card">
+             <CardHeader className="bg-primary text-primary-foreground">
                <CardTitle className="text-lg font-headline flex items-center gap-2">
                  <ShieldCheck className="w-5 h-5" /> Authorized Services
                </CardTitle>
@@ -147,7 +146,7 @@ export default function TenantEmergencyContactsPage() {
                     <div key={i} className="flex justify-between items-start gap-4 border-b border-muted pb-3 last:border-0">
                       <div className="space-y-0.5 min-w-0">
                         <p className="text-[10px] font-bold text-muted-foreground uppercase truncate">{service.role}</p>
-                        <p className="text-sm font-bold leading-tight break-words">{service.name}</p>
+                        <p className="text-sm font-bold leading-tight break-words text-foreground">{service.name}</p>
                       </div>
                       <p className="text-sm font-bold text-primary whitespace-nowrap">{service.phone}</p>
                     </div>
@@ -171,17 +170,17 @@ export default function TenantEmergencyContactsPage() {
                </Card>
              ) : (
                professionalPartners.map((contact) => (
-                 <Card key={contact.id} className="border-none shadow-md hover:shadow-lg transition-all rounded-2xl group overflow-hidden bg-white border border-transparent hover:border-accent/10">
+                 <Card key={contact.id} className="border-none shadow-md hover:shadow-lg transition-all rounded-2xl group overflow-hidden bg-card border border-transparent hover:border-accent/10">
                    <CardHeader className="pb-4 bg-accent/5">
                      <div className="flex justify-between items-start">
-                       <div className="p-3 bg-white rounded-xl shadow-sm text-accent">
+                       <div className="p-3 bg-card rounded-xl shadow-sm text-accent ring-1 ring-border">
                          <ShieldAlert className="w-5 h-5" />
                        </div>
                        <Badge variant="outline" className="border-accent/20 text-accent uppercase text-[10px] font-bold">
                          Authorized
                        </Badge>
                      </div>
-                     <CardTitle className="text-lg font-bold font-headline mt-4">{contact.name}</CardTitle>
+                     <CardTitle className="text-lg font-bold font-headline mt-4 text-foreground">{contact.name}</CardTitle>
                      <p className="text-xs font-bold text-accent uppercase tracking-widest mt-1 font-headline">
                        {contact.role}
                      </p>
@@ -199,7 +198,7 @@ export default function TenantEmergencyContactsPage() {
                      )}
                    </CardContent>
                    <CardFooter className="bg-accent/5 border-t py-4">
-                      <Button className="w-full rounded-xl font-bold h-12 bg-accent hover:bg-accent/90 text-white shadow-lg shadow-accent/10" asChild>
+                      <Button className="w-full rounded-xl font-bold h-12 bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg shadow-accent/10" asChild>
                         <a href={`tel:${contact.phone}`}>Call Professional Now</a>
                       </Button>
                    </CardFooter>
