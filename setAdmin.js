@@ -15,19 +15,29 @@ if (!admin.apps.length) {
   });
 }
 
-// YOUR SPECIFIC UID
-const uid = "E9WTQfSqRNf64HzOlCoYXuAsBuH2";
+// TARGET UIDs FOR ESCALATION
+const targetUids = [
+  "E9WTQfSqRNf64HzOlCoYXuAsBuH2",
+  "CKG5dqFs9pcFEdJjF9DVqvhiTHj1"
+];
 
-admin.auth().setCustomUserClaims(uid, {
-  admin: true,
-  premium: true,
-})
-.then(() => {
-  console.log("✅ Admin & Premium roles successfully applied to token.");
-  console.log("👉 Now logout and log back into the app to see changes.");
+async function escalateUsers() {
+  console.log("🚀 Starting security escalation for target portfolio managers...");
+  
+  for (const uid of targetUids) {
+    try {
+      await admin.auth().setCustomUserClaims(uid, {
+        admin: true,
+        premium: true,
+      });
+      console.log(`✅ Claims applied successfully for UID: ${uid}`);
+    } catch (err) {
+      console.error(`❌ Failed to escalate UID: ${uid}`, err.message);
+    }
+  }
+
+  console.log("\n👉 Escalation complete. Please logout and log back in to see changes.");
   process.exit(0);
-})
-.catch((err) => {
-  console.error("❌ Escalation Failed:", err);
-  process.exit(1);
-});
+}
+
+escalateUsers();

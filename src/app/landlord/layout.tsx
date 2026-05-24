@@ -45,7 +45,7 @@ export default function LandlordLayout({
   // Render a stable, high-fidelity loader to prevent flickering during auth/profile resolution
   if (!isClient || isUserLoading || isProfileLoading || (user && !profile)) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100]">
+      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-500">
         <div className="relative flex flex-col items-center">
           <div className="relative w-24 h-24 mb-10 animate-in fade-in zoom-in duration-1000">
             <div className="absolute inset-0 bg-primary/10 rounded-[2rem] blur-3xl animate-pulse" />
@@ -63,7 +63,7 @@ export default function LandlordLayout({
           <div className="flex flex-col items-center gap-3">
             <div className="flex items-center gap-3">
               <Loader2 className="w-4 h-4 animate-spin text-primary opacity-60" />
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Secure Ledger Sync</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Authorizing Access</p>
             </div>
           </div>
         </div>

@@ -179,9 +179,9 @@ export default function AuthPage() {
 
   if (!mounted || isUserLoading || (user && !needsProfile && !isRedirecting.current)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background overflow-hidden px-4">
+      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-500">
         <div className="relative flex flex-col items-center">
-          <div className="relative w-32 h-32 mb-10 animate-in fade-in zoom-in-95 duration-1000 slide-in-from-bottom-12">
+          <div className="relative w-32 h-32 mb-10 animate-in fade-in zoom-in-95 duration-1000">
             <div className="absolute inset-0 bg-primary/10 rounded-[2.5rem] blur-3xl animate-pulse" />
             <div className="relative z-10 w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl ring-4 ring-background">
                <Image 
@@ -194,17 +194,12 @@ export default function AuthPage() {
               />
             </div>
           </div>
-          
-          <div className="flex flex-col items-center gap-5 animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-300">
+          <div className="flex flex-col items-center gap-5">
             <h1 className="text-5xl font-headline font-bold text-primary tracking-tighter">RentalFlow</h1>
             <div className="flex flex-col items-center gap-4">
               <div className="flex items-center gap-3">
                 <Loader2 className="w-5 h-5 animate-spin text-primary opacity-60" />
                 <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Secure Ledger Sync</p>
-              </div>
-              <div className="flex items-center gap-2 px-6 py-2.5 bg-card rounded-full border border-primary/5 shadow-xl transition-all">
-                <Lock className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest font-headline">Enterprise Grade Security Active</span>
               </div>
             </div>
           </div>
@@ -266,7 +261,7 @@ export default function AuthPage() {
             </div>
 
             <Button className="w-full h-15 rounded-2xl font-bold bg-primary text-primary-foreground text-lg shadow-2xl shadow-primary/20 font-headline hover:scale-[1.02] active:scale-95 transition-all" onClick={handleCreateProfile} disabled={isLoading || !firstName || !lastName || !phoneNumber}>
-              {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-primary-foreground" /> : <><CheckCircle2 className="w-6 h-6 mr-3" /> Complete Registration</>}
+              {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-primary-foreground" /> : <><CheckCircle2 className="w-6 h-6 mr-3 text-primary-foreground" /> Complete Registration</>}
             </Button>
           </CardContent>
         </Card>
@@ -369,7 +364,7 @@ export default function AuthPage() {
                   </div>
                 </div>
                 <Button type="submit" className="w-full h-16 rounded-[1.75rem] font-bold bg-primary text-primary-foreground text-xl shadow-2xl shadow-primary/20 font-headline hover:scale-[1.01] active:scale-95 transition-all" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-primary-foreground" /> : (authMode === 'login' ? 'Access Vault' : 'Create Credentials')}
+                  {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-primary-foreground" /> : <span className="text-primary-foreground">{(authMode === 'login' ? 'Access Vault' : 'Create Credentials')}</span>}
                 </Button>
               </form>
             </div>
