@@ -3,6 +3,7 @@
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { 
   ArrowRight, Building2, ShieldCheck, Sparkles, 
   Wrench, Wallet, MessageSquare, ChevronRight,
