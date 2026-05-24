@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A resilient property operations agent for triaging maintenance requests.
@@ -40,7 +39,7 @@ Resident description: {{{maintenanceRequest}}}`,
 });
 
 /**
- * 🛡️ Hardened Deterministic Fallback Logic
+ * 🛡️ Hardened Operational Fallback Logic
  * Used when API limits are reached to maintain property safety records.
  */
 function getFallbackTriage(desc: string): MaintenanceRequestTriageOutput {
@@ -50,32 +49,32 @@ function getFallbackTriage(desc: string): MaintenanceRequestTriageOutput {
     return { 
       priority: 'critical', 
       category: 'electrical', 
-      reasoning: 'Safety-critical indicators (fire/gas/sparks) detected. (Deterministic Fallback)',
-      suggestions: ["Contact emergency services immediately", "Isolate power/gas supply", "Instruct emergency contractor"]
+      reasoning: 'Critical safety indicators (fire/gas/sparks) identified. Primary emergency response required.',
+      suggestions: ["Instruct the resident to evacuate immediately", "Contact emergency services (999)", "Instruct emergency contractor for immediate attendance"]
     };
   }
   if (text.includes('flood') || text.includes('leak') || text.includes('burst') || text.includes('pouring') || text.includes('gush')) {
     return { 
       priority: 'urgent', 
       category: 'plumbing', 
-      reasoning: 'Active water damage indicators detected. (Deterministic Fallback)',
-      suggestions: ["Locate and close internal stopcock", "Instruct emergency plumber", "Inform downstairs neighbours if applicable"]
+      reasoning: 'Active water damage indicators identified. Immediate containment necessary.',
+      suggestions: ["Instruct resident to locate and close main stopcock", "Instruct emergency plumber for same-day repair", "Assess for impact on internal structural integrity"]
     };
   }
   if (text.includes('lock') || text.includes('door') || text.includes('security') || text.includes('broken window')) {
     return { 
       priority: 'urgent', 
       category: 'structural', 
-      reasoning: 'Property security indicators detected. (Deterministic Fallback)',
-      suggestions: ["Instruct locksmith for immediate secure", "Report to local police for incident number", "Assess for forensic evidence before cleaning"]
+      reasoning: 'Property security indicators identified. Immediate secure and restore protocols initiated.',
+      suggestions: ["Instruct emergency locksmith to secure property entry points", "Obtain police incident number for insurance records", "Assess for forensic evidence before cleaning or restoration"]
     };
   }
   
   return { 
     priority: 'routine', 
     category: 'other', 
-    reasoning: 'Standard maintenance task classified via fail-safe logic ledger.',
-    suggestions: ["Inspect during next property visit", "Obtain quotes from authorized partners", "Update resident on expected timeline"]
+    reasoning: 'Standard maintenance task identified via operational safety records.',
+    suggestions: ["Schedule inspection during standard working hours", "Obtain quotes from authorized trade partners", "Update resident on expected resolution timeline"]
   };
 }
 

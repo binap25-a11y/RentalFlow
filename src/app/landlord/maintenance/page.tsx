@@ -258,13 +258,13 @@ export default function MaintenancePage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto pb-12 text-left">
-      <div className="flex flex-col gap-6">
-        <div className="text-left">
-          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-3 py-1 rounded-full font-bold mb-3 uppercase tracking-[0.15em] text-[9px]">
+      <div className="flex flex-col gap-4">
+        <div className="text-left space-y-2">
+          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-3 py-1 rounded-full font-bold uppercase tracking-[0.15em] text-[9px]">
              <Activity className="w-3 h-3 mr-2" /> Maintenance Roadmap
           </Badge>
           <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">Maintenance Hub</h1>
-          <p className="text-muted-foreground font-medium font-body max-w-xl mt-1 text-sm leading-relaxed">Orchestrating professional site upkeep and AI-driven repair triage.</p>
+          <p className="text-muted-foreground font-medium font-body max-w-xl text-sm leading-relaxed">Orchestrating professional site upkeep and AI-driven repair triage.</p>
         </div>
         <Button 
           onClick={() => setIsCreateDialogOpen(true)} 
@@ -398,7 +398,7 @@ export default function MaintenancePage() {
                     disabled={isTriaging === request.id}
                   >
                     {isTriaging === request.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                    Analyze Intelligence
+                    Triage Request
                   </Button>
                   
                   <Button 
