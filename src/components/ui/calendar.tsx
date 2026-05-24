@@ -9,11 +9,6 @@ import { buttonVariants } from "@/components/ui/button"
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
-/**
- * 📅 Professional Portfolio Calendar Component
- * Re-engineered for high-fidelity interaction and high-contrast hover states.
- * Fixed visibility for light-navy background themes.
- */
 function Calendar({
   className,
   classNames,
