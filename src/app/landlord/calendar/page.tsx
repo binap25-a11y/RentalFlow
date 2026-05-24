@@ -17,7 +17,7 @@ import {
   CalendarDays, Loader2, Wrench, ShieldCheck, 
   ChevronRight, Clock, MapPin, 
   LayoutDashboard, ArrowUpRight, Plus,
-  Building2, Save, X
+  Building2, Save, X, Activity, Briefcase
 } from "lucide-react";
 import { format, isSameDay, isAfter, startOfDay, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -116,7 +116,8 @@ export default function LandlordCalendarPage() {
           title: `Repair: ${m.title}`,
           subtitle: properties.find(p => p.id === m.propertyId)?.addressLine1 || 'Asset',
           propertyId: m.propertyId,
-          priority: m.priority
+          priority: m.priority,
+          status: m.status
         });
       }
     });
@@ -132,7 +133,7 @@ export default function LandlordCalendarPage() {
     const today = startOfDay(new Date());
     return allEvents
       .filter(e => isAfter(e.date, today))
-      .slice(0, 10);
+      .slice(0, 8);
   }, [allEvents]);
 
   const modifiers = useMemo(() => {
@@ -190,34 +191,40 @@ export default function LandlordCalendarPage() {
 
   if (!isClient || isInspLoading || isMaintLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[70vh] space-y-4">
-        <Loader2 className="animate-spin text-primary w-10 h-10 opacity-40" />
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground font-headline">Syncing Portfolio Timeline</p>
+      <div className="flex flex-col items-center justify-center h-[70vh] space-y-6">
+        <div className="relative">
+          <div className="absolute inset-0 bg-primary/10 rounded-full blur-2xl animate-pulse" />
+          <Loader2 className="animate-spin text-primary w-12 h-12 opacity-60 relative z-10" />
+        </div>
+        <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground font-headline">Synchronizing Timeline</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto pb-12 text-left">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-7xl mx-auto pb-12 text-left">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">Portfolio Calendar</h1>
-          <p className="text-muted-foreground font-medium font-body max-w-lg">High-fidelity timeline for site audits and coordinated repairs.</p>
+          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1.5 rounded-full font-bold mb-4 uppercase tracking-[0.2em] text-[10px]">
+             <Activity className="w-3 h-3 mr-2" /> Operational Roadmap
+          </Badge>
+          <h1 className="text-5xl font-headline font-bold text-primary tracking-tighter">Portfolio Calendar</h1>
+          <p className="text-muted-foreground font-medium font-body max-w-lg mt-2">Centralized orchestration for site audits and coordinated repairs.</p>
         </div>
-        <div className="flex gap-2">
-           <Button variant="outline" className="rounded-xl font-bold h-11 border-primary/10 bg-white" asChild>
+        <div className="flex gap-3">
+           <Button variant="outline" className="rounded-2xl font-bold h-12 border-primary/10 bg-white hover:bg-primary/5 transition-all shadow-sm" asChild>
               <Link href="/landlord/dashboard">
-                <LayoutDashboard className="w-4 h-4 mr-2" /> Portfolio Command
+                <LayoutDashboard className="w-4 h-4 mr-2" /> Financial Dashboard
               </Link>
            </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Calendar Control */}
-        <div className="lg:col-span-4 space-y-6">
-          <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white ring-1 ring-primary/5">
-            <CardContent className="p-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        {/* Left Column: Calendar Control & Interactive Zone */}
+        <div className="lg:col-span-4 space-y-8">
+          <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white ring-1 ring-primary/5">
+            <CardContent className="p-10">
               <Calendar
                 mode="single"
                 selected={selectedDate}
@@ -227,96 +234,64 @@ export default function LandlordCalendarPage() {
                 modifiersStyles={modifierStyles}
               />
               
-              <div className="mt-8 pt-6 border-t border-primary/5 space-y-4">
-                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/40 font-headline">Timeline Legend</p>
-                 <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-md bg-primary" />
-                        <span className="text-[10px] font-bold uppercase text-primary/60 font-headline">Asset Audit</span>
+              <div className="mt-10 pt-8 border-t border-primary/5 space-y-6">
+                 <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/40 font-headline">Workload Key</p>
+                 <div className="grid grid-cols-1 gap-4">
+                    <div className="flex items-center gap-3 p-3 bg-primary/[0.03] rounded-2xl border border-primary/5">
+                        <div className="w-3 h-3 rounded-full bg-primary shadow-lg shadow-primary/20" />
+                        <span className="text-[10px] font-bold uppercase text-primary/70 tracking-widest font-headline">Compliance Audit</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-md bg-amber-500" />
-                        <span className="text-[10px] font-bold uppercase text-primary/60 font-headline">Repair Target</span>
+                    <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-2xl border border-amber-100">
+                        <div className="w-3 h-3 rounded-full bg-amber-500 shadow-lg shadow-amber-200" />
+                        <span className="text-[10px] font-bold uppercase text-amber-700 tracking-widest font-headline">Repair Event</span>
                     </div>
                  </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm rounded-[2rem] bg-primary text-white overflow-hidden p-8 relative">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-               <Clock className="w-20 h-20" />
+          <Card className="border-none shadow-xl rounded-[2.5rem] bg-primary text-white overflow-hidden p-10 relative group">
+            <div className="absolute -top-10 -right-10 opacity-10 group-hover:rotate-12 transition-transform duration-700">
+               <Clock className="w-48 h-48" />
             </div>
-            <h3 className="text-lg font-bold font-headline mb-4 flex items-center gap-2 text-accent">
-               <Clock className="w-5 h-5" /> Operational Readiness
-            </h3>
-            <p className="text-sm opacity-80 leading-relaxed font-body font-medium relative z-10">Use this view to coordinate site visits. Select a date on the calendar to view scheduled operations or log a new repair directly to the timeline.</p>
+            <div className="relative z-10">
+              <h3 className="text-xl font-bold font-headline mb-4 flex items-center gap-3 text-accent uppercase tracking-widest">
+                 <Clock className="w-6 h-6" /> Live Readiness
+              </h3>
+              <p className="text-sm opacity-80 leading-relaxed font-body font-medium">Coordinate your site visits with precision. Click any date to view scheduled events or log a direct repair to the timeline.</p>
+              <Button className="mt-8 w-full rounded-2xl bg-white text-primary font-bold h-12 shadow-2xl shadow-black/20 hover:scale-[1.02] transition-transform" onClick={() => setIsAddRepairOpen(true)}>
+                 <Plus className="w-4 h-4 mr-2" /> Log Repair to Date
+              </Button>
+            </div>
           </Card>
         </div>
 
-        {/* Right Column: Daily Ledger & Add Repair */}
-        <div className="lg:col-span-8 space-y-8">
-          <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden min-h-[450px] ring-1 ring-primary/5">
-            <CardHeader className="bg-primary/[0.02] border-b border-primary/5 p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* Right Column: Daily Ledger & Redirection Hub */}
+        <div className="lg:col-span-8 space-y-10">
+          <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden min-h-[550px] ring-1 ring-primary/5">
+            <CardHeader className="bg-primary/[0.02] border-b border-primary/5 p-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="text-left">
-                 <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/40 mb-1 font-headline">Daily Operational Ledger</p>
-                 <CardTitle className="text-3xl font-headline text-primary tracking-tight">{format(selectedDate, 'PPPP')}</CardTitle>
+                 <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/40 mb-2 font-headline">Selected Daily Ledger</p>
+                 <CardTitle className="text-4xl font-headline text-primary tracking-tighter">{format(selectedDate, 'PPPP')}</CardTitle>
               </div>
-              <div className="flex items-center gap-3">
-                <Dialog open={isAddRepairOpen} onOpenChange={setIsAddRepairOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="rounded-xl font-bold bg-primary text-white shadow-lg shadow-primary/20 h-11 px-6">
-                      <Plus className="w-4 h-4 mr-2" /> Schedule Repair
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-[550px]">
-                    <form onSubmit={handleAddRepair}>
-                      <div className="p-8 bg-primary/5 border-b text-left">
-                        <DialogTitle className="text-2xl font-bold font-headline text-primary">Schedule Timeline Task</DialogTitle>
-                        <DialogDescription className="font-medium">Logging an operation for {format(selectedDate, 'PPP')}</DialogDescription>
-                      </div>
-                      <div className="p-8 space-y-6 text-left bg-card">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-bold uppercase text-primary/40 font-headline tracking-widest">Select Portfolio Asset</Label>
-                          <select className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
-                            <option value="">Choose a property...</option>
-                            {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
-                          </select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-bold uppercase text-primary/40 font-headline tracking-widest">Task Subject</Label>
-                          <Input value={repairTitle} onChange={(e) => setRepairTitle(e.target.value)} required placeholder="e.g. Boiler service or Electrical fix" className="rounded-xl h-12 bg-muted/20 border-none font-bold" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-bold uppercase text-primary/40 font-headline tracking-widest">Detailed Context</Label>
-                          <Textarea value={repairDesc} onChange={(e) => setRepairDesc(e.target.value)} placeholder="Notes for the visit..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-medium" />
-                        </div>
-                      </div>
-                      <DialogFooter className="p-8 bg-muted/10 border-t">
-                        <Button type="submit" disabled={isSaving || !selectedPropertyId || !repairTitle} className="w-full rounded-xl h-14 font-bold bg-primary text-white shadow-xl shadow-primary/20 font-headline text-lg">
-                          {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
-                          Commit to Portfolio Timeline
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-                <Badge className="rounded-xl py-1.5 px-4 font-bold bg-primary text-white uppercase text-[10px]">
-                  {selectedDayEvents.length} Tasks
+              <div className="flex items-center gap-4">
+                <Badge className="rounded-full py-2 px-6 font-bold bg-primary text-white uppercase text-[10px] tracking-widest shadow-xl shadow-primary/10">
+                  {selectedDayEvents.length} Active Tasks
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent className="p-8">
+            <CardContent className="p-10">
               {selectedDayEvents.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-24 opacity-30 text-center">
-                   <div className="p-8 bg-muted/30 rounded-full mb-6">
-                      <CalendarDays className="w-16 h-16 text-primary" />
+                <div className="flex flex-col items-center justify-center py-32 opacity-20 text-center">
+                   <div className="p-10 bg-muted/20 rounded-[3rem] mb-8">
+                      <CalendarDays className="w-20 h-20 text-primary" />
                    </div>
-                   <h3 className="text-xl font-bold font-headline text-primary uppercase tracking-widest">Clear Timeline</h3>
-                   <p className="text-sm font-medium mt-2">No site visits recorded for this period.</p>
+                   <h3 className="text-2xl font-bold font-headline text-primary uppercase tracking-widest">Quiet Timeline</h3>
+                   <p className="text-sm font-medium mt-3">No site visits or repairs recorded for this period.</p>
+                   <Button variant="ghost" className="mt-6 font-bold text-primary" onClick={() => setIsAddRepairOpen(true)}>Add Repair Now</Button>
                 </div>
               ) : (
-                <div className="grid gap-4">
+                <div className="grid gap-6">
                   {selectedDayEvents.map(event => (
                     <EventCard key={event.id} event={event} />
                   ))}
@@ -325,30 +300,33 @@ export default function LandlordCalendarPage() {
             </CardContent>
           </Card>
 
-          <div className="space-y-6">
-            <h3 className="text-2xl font-bold font-headline flex items-center text-primary tracking-tight">
-              <ChevronRight className="w-6 h-6 mr-1 text-accent" /> Upcoming Portfolio Roadmap
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-8">
+            <div className="flex items-center justify-between">
+              <h3 className="text-2xl font-bold font-headline flex items-center text-primary tracking-tight">
+                <ChevronRight className="w-6 h-6 mr-2 text-accent" /> Portfolio Future State
+              </h3>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Next 8 Events</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                {upcomingEvents.length === 0 ? (
-                  <p className="col-span-full text-center py-12 text-muted-foreground italic text-sm font-medium bg-muted/10 rounded-[2rem] border-2 border-dashed border-primary/5">No upcoming operations detected.</p>
+                  <p className="col-span-full text-center py-20 text-muted-foreground italic text-sm font-medium bg-muted/5 rounded-[3rem] border-2 border-dashed border-primary/5">No future operations detected.</p>
                ) : (
                  upcomingEvents.map(event => {
                    const linkHref = event.type === 'inspection' ? `/landlord/inspections` : `/landlord/maintenance`;
                    
                    return (
-                     <Link key={event.id} href={linkHref} className="flex gap-5 p-6 bg-white rounded-[1.75rem] border border-primary/5 shadow-sm items-center group hover:border-primary/20 hover:shadow-xl hover:scale-[1.02] transition-all">
+                     <Link key={event.id} href={linkHref} className="flex gap-6 p-8 bg-white rounded-[2.5rem] border border-primary/5 shadow-sm items-center group hover:border-primary/20 hover:shadow-2xl hover:scale-[1.02] transition-all">
                         <div className={cn(
-                          "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:rotate-6 shadow-sm",
+                          "w-16 h-16 rounded-3xl flex items-center justify-center shrink-0 transition-transform group-hover:rotate-6 shadow-md",
                           event.type === 'inspection' ? "bg-primary text-white" : "bg-amber-100 text-amber-600"
                         )}>
-                          {event.type === 'inspection' ? <ShieldCheck className="w-6 h-6" /> : <Wrench className="w-6 h-6" />}
+                          {event.type === 'inspection' ? <ShieldCheck className="w-8 h-8" /> : <Wrench className="w-8 h-8" />}
                         </div>
                         <div className="min-w-0 flex-1 text-left">
-                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1 font-headline">{format(event.date, 'MMM dd, yyyy')}</p>
-                           <p className="font-bold text-base text-primary truncate leading-tight">{event.title}</p>
+                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 font-headline opacity-60">{format(event.date, 'MMM dd, yyyy')}</p>
+                           <p className="font-bold text-lg text-primary truncate leading-tight tracking-tight">{event.title}</p>
                         </div>
-                        <ArrowUpRight className="w-5 h-5 text-primary/20 group-hover:text-primary transition-colors shrink-0" />
+                        <ArrowUpRight className="w-6 h-6 text-primary/10 group-hover:text-primary transition-colors shrink-0" />
                      </Link>
                    );
                  })
@@ -357,6 +335,41 @@ export default function LandlordCalendarPage() {
           </div>
         </div>
       </div>
+
+      {/* Add Repair Dialog */}
+      <Dialog open={isAddRepairOpen} onOpenChange={setIsAddRepairOpen}>
+        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden max-w-[600px] animate-in zoom-in-95 duration-300">
+          <form onSubmit={handleAddRepair}>
+            <div className="p-10 bg-primary/5 border-b text-left">
+              <DialogTitle className="text-3xl font-bold font-headline text-primary tracking-tighter">Schedule Task</DialogTitle>
+              <DialogDescription className="font-medium text-muted-foreground mt-2">Logging a high-yield maintenance event for {format(selectedDate, 'PPP')}</DialogDescription>
+            </div>
+            <div className="p-10 space-y-8 text-left bg-white">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase text-primary/40 font-headline tracking-[0.2em]">Select Asset for Audit Trail</Label>
+                <select className="flex h-14 w-full rounded-2xl border-none bg-muted/20 px-6 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold tracking-tight" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
+                  <option value="">Choose an inventory item...</option>
+                  {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase text-primary/40 font-headline tracking-[0.2em]">Repair Identification</Label>
+                <Input value={repairTitle} onChange={(e) => setRepairTitle(e.target.value)} required placeholder="e.g. Electrical Fault Resolution" className="rounded-2xl h-14 bg-muted/20 border-none font-bold text-lg" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase text-primary/40 font-headline tracking-[0.2em]">Operational Narrative</Label>
+                <Textarea value={repairDesc} onChange={(e) => setRepairDesc(e.target.value)} placeholder="Provide full context for the contractor..." className="rounded-2xl min-h-[150px] bg-muted/20 border-none font-medium leading-relaxed" />
+              </div>
+            </div>
+            <DialogFooter className="p-10 bg-muted/10 border-t">
+              <Button type="submit" disabled={isSaving || !selectedPropertyId || !repairTitle} className="w-full rounded-2xl h-16 font-bold bg-primary text-white shadow-2xl shadow-primary/20 font-headline text-xl hover:scale-[1.01] transition-transform">
+                {isSaving ? <Loader2 className="w-6 h-6 animate-spin mr-3" /> : <Save className="w-6 h-6 mr-3" />}
+                Synchronize to Roadmap
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -368,29 +381,32 @@ function EventCard({ event }: { event: PortfolioEvent }) {
 
   return (
     <Link href={linkHref} className="group block">
-      <div className="flex items-center justify-between p-6 bg-primary/[0.02] border border-primary/5 rounded-[2rem] transition-all hover:bg-white hover:shadow-2xl hover:scale-[1.01] hover:border-primary/10">
-        <div className="flex items-center gap-6 text-left">
-          <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:rotate-6 transition-transform", colorClass)}>
-             <Icon className="w-7 h-7" />
+      <div className="flex items-center justify-between p-8 bg-primary/[0.03] border border-primary/5 rounded-[2.5rem] transition-all hover:bg-white hover:shadow-2xl hover:scale-[1.01] hover:border-primary/10">
+        <div className="flex items-center gap-8 text-left">
+          <div className={cn("w-20 h-20 rounded-[2rem] flex items-center justify-center shadow-xl transform group-hover:rotate-6 transition-transform", colorClass)}>
+             <Icon className="w-10 h-10" />
           </div>
           <div>
-            <div className="flex items-center gap-3 mb-2">
-               <Badge variant="outline" className="uppercase text-[9px] font-bold tracking-[0.2em] opacity-60 border-primary/10 font-headline">
-                {event.type === 'inspection' ? 'AUDIT' : 'REPAIR'}
+            <div className="flex items-center gap-4 mb-3">
+               <Badge variant="outline" className="uppercase text-[9px] font-bold tracking-[0.2em] opacity-40 border-primary/10 font-headline bg-white/50">
+                {event.type === 'inspection' ? 'OFFICIAL AUDIT' : 'REPAIR TICKET'}
                </Badge>
                {event.priority && (
-                 <Badge className="text-[9px] uppercase font-bold bg-red-100 text-red-700 border-none px-3 font-headline">{event.priority}</Badge>
+                 <Badge className="text-[9px] uppercase font-bold bg-red-100 text-red-700 border-none px-4 py-1 rounded-full font-headline tracking-widest">{event.priority}</Badge>
                )}
             </div>
-            <h4 className="text-2xl font-bold font-headline text-primary leading-none mb-2 tracking-tight group-hover:text-accent transition-colors">{event.title}</h4>
-            <p className="text-sm text-muted-foreground font-bold flex items-center font-body opacity-60">
-              <MapPin className="w-3.5 h-3.5 mr-1.5" /> {event.subtitle}
-            </p>
+            <h4 className="text-3xl font-bold font-headline text-primary leading-tight mb-2 tracking-tighter group-hover:text-accent transition-colors">{event.title}</h4>
+            <div className="flex flex-wrap items-center gap-6">
+              <p className="text-sm text-muted-foreground font-bold flex items-center font-body opacity-60 uppercase tracking-widest">
+                <MapPin className="w-4 h-4 mr-2 text-accent" /> {event.subtitle}
+              </p>
+              <Badge variant="secondary" className="bg-primary/5 text-primary/60 border-none text-[8px] font-bold uppercase tracking-[0.1em]">Status: {event.status || 'Active'}</Badge>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-3 text-primary/20 group-hover:text-primary transition-all">
-           <span className="text-[10px] font-bold uppercase tracking-widest hidden md:inline">Inspect Task</span>
-           <ChevronRight className="w-6 h-6" />
+        <div className="flex items-center gap-4 text-primary/10 group-hover:text-primary transition-all">
+           <span className="text-[10px] font-bold uppercase tracking-[0.3em] hidden md:inline">Open Ledger</span>
+           <ChevronRight className="w-8 h-8" />
         </div>
       </div>
     </Link>
