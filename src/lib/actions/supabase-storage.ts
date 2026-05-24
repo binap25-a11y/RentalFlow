@@ -2,13 +2,11 @@
 
 /**
  * @fileOverview High-Fidelity Cloud Storage Engine.
- * Optimized for mobile uploads with robust binary processing and extended timeouts.
+ * Optimized for mobile uploads with robust binary processing.
  * Resolves "failed to fetch" errors on mobile by ensuring complete payload delivery and larger body limits.
  */
 
 import { supabase } from '@/lib/supabase';
-
-export const maxDuration = 120; // 2 Minutes for large mobile binary syncs
 
 export async function uploadToSupabase(
   formData: FormData,

@@ -47,7 +47,6 @@ export default function NewPropertyPage() {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
-    // Use a temporary prefix for path to avoid conflicts
     const tempId = Math.random().toString(36).substring(7);
 
     const newItems: LedgerItem[] = files.map(file => ({
@@ -64,7 +63,6 @@ export default function NewPropertyPage() {
       
       const formData = new FormData();
       formData.append('file', file);
-      // Path strategy: portfolio/UID/tempID/Timestamp_Name
       const path = `assets/${user.uid}/new_${tempId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
       
       try {
@@ -83,7 +81,7 @@ export default function NewPropertyPage() {
         toast({ 
           variant: "destructive", 
           title: "Mobile Sync Failed", 
-          description: "Binary delivery failure. Check connection and retry." 
+          description: "Network Interruption: Please retry visual capture." 
         });
       }
     }
@@ -98,7 +96,7 @@ export default function NewPropertyPage() {
     if (!user || !db) return;
     
     if (ledger.some(i => i.status === 'uploading')) {
-      toast({ title: "Synchronizing Assets...", description: "Heavy lifting in progress. Please wait for mobile sync to complete." });
+      toast({ title: "Synchronizing Assets...", description: "Binary transfer in progress. Please wait for mobile sync to complete." });
       return;
     }
 
@@ -135,7 +133,6 @@ export default function NewPropertyPage() {
         updatedAt: serverTimestamp(),
       }, { merge: true });
 
-      // PostgreSQL Redundant Sync
       await syncPropertyToDb(serializableData);
 
       toast({ title: "Asset Registered", description: "Portfolio synchronized successfully." });
