@@ -13,6 +13,7 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker>
  * 📅 Professional Portfolio Calendar
  * Re-engineered for Light Navy visual identity and hover-state accuracy.
  * Optimized with React Day Picker v9 compatibility.
+ * Explicitly prevents dark/black hover states.
  */
 function Calendar({
   className,
@@ -31,10 +32,10 @@ function Calendar({
         caption_label: "text-lg font-bold font-headline text-primary tracking-tight",
         nav: "space-x-1 flex items-center",
         button_previous: cn(
-          "h-8 w-8 bg-transparent p-0 opacity-40 hover:opacity-100 absolute left-1 z-10 rounded-xl border border-primary/10 shadow-sm transition-all flex items-center justify-center cursor-pointer hover:bg-primary/5"
+          "h-8 w-8 bg-transparent p-0 opacity-40 hover:opacity-100 absolute left-1 z-10 rounded-xl border border-primary/10 shadow-sm transition-all flex items-center justify-center cursor-pointer hover:bg-primary/10 hover:text-primary"
         ),
         button_next: cn(
-          "h-8 w-8 bg-transparent p-0 opacity-40 hover:opacity-100 absolute right-1 z-10 rounded-xl border border-primary/10 shadow-sm transition-all flex items-center justify-center cursor-pointer hover:bg-primary/5"
+          "h-8 w-8 bg-transparent p-0 opacity-40 hover:opacity-100 absolute right-1 z-10 rounded-xl border border-primary/10 shadow-sm transition-all flex items-center justify-center cursor-pointer hover:bg-primary/10 hover:text-primary"
         ),
         month_grid: "w-full border-collapse",
         weekdays: "flex w-full mb-6 justify-between",

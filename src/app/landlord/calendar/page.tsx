@@ -129,13 +129,6 @@ export default function LandlordCalendarPage() {
     return allEvents.filter(e => isSameDay(e.date, selectedDate));
   }, [allEvents, selectedDate]);
 
-  const upcomingEvents = useMemo(() => {
-    const today = startOfDay(new Date());
-    return allEvents
-      .filter(e => isAfter(e.date, today))
-      .slice(0, 8);
-  }, [allEvents]);
-
   const modifiers = useMemo(() => {
     const dates: Record<string, Date[]> = {
       inspection: [],
@@ -305,31 +298,15 @@ export default function LandlordCalendarPage() {
               <h3 className="text-2xl font-bold font-headline flex items-center text-primary tracking-tight">
                 <ChevronRight className="w-6 h-6 mr-2 text-accent" /> Portfolio Future State
               </h3>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Next 8 Events</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Next Operations</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               {upcomingEvents.length === 0 ? (
+               {allEvents.filter(e => isAfter(e.date, startOfDay(new Date()))).slice(0, 8).length === 0 ? (
                   <p className="col-span-full text-center py-20 text-muted-foreground italic text-sm font-medium bg-muted/5 rounded-[3rem] border-2 border-dashed border-primary/5">No future operations detected.</p>
                ) : (
-                 upcomingEvents.map(event => {
-                   const linkHref = event.type === 'inspection' ? `/landlord/inspections` : `/landlord/maintenance`;
-                   
-                   return (
-                     <Link key={event.id} href={linkHref} className="flex gap-6 p-8 bg-white rounded-[2.5rem] border border-primary/5 shadow-sm items-center group hover:border-primary/20 hover:shadow-2xl hover:scale-[1.02] transition-all">
-                        <div className={cn(
-                          "w-16 h-16 rounded-3xl flex items-center justify-center shrink-0 transition-transform group-hover:rotate-6 shadow-md",
-                          event.type === 'inspection' ? "bg-primary text-white" : "bg-amber-100 text-amber-600"
-                        )}>
-                          {event.type === 'inspection' ? <ShieldCheck className="w-8 h-8" /> : <Wrench className="w-8 h-8" />}
-                        </div>
-                        <div className="min-w-0 flex-1 text-left">
-                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 font-headline opacity-60">{format(event.date, 'MMM dd, yyyy')}</p>
-                           <p className="font-bold text-lg text-primary truncate leading-tight tracking-tight">{event.title}</p>
-                        </div>
-                        <ArrowUpRight className="w-6 h-6 text-primary/10 group-hover:text-primary transition-colors shrink-0" />
-                     </Link>
-                   );
-                 })
+                 allEvents.filter(e => isAfter(e.date, startOfDay(new Date()))).slice(0, 8).map(event => (
+                    <EventCard key={event.id} event={event} compact />
+                 ))
                )}
             </div>
           </div>
@@ -374,39 +351,51 @@ export default function LandlordCalendarPage() {
   );
 }
 
-function EventCard({ event }: { event: PortfolioEvent }) {
+function EventCard({ event, compact = false }: { event: PortfolioEvent, compact?: boolean }) {
   const Icon = event.type === 'inspection' ? ShieldCheck : Wrench;
   const colorClass = event.type === 'inspection' ? "bg-primary text-white" : "bg-amber-500 text-white";
   const linkHref = event.type === 'inspection' ? `/landlord/inspections` : `/landlord/maintenance`;
 
   return (
     <Link href={linkHref} className="group block">
-      <div className="flex items-center justify-between p-8 bg-primary/[0.03] border border-primary/5 rounded-[2.5rem] transition-all hover:bg-white hover:shadow-2xl hover:scale-[1.01] hover:border-primary/10">
-        <div className="flex items-center gap-8 text-left">
-          <div className={cn("w-20 h-20 rounded-[2rem] flex items-center justify-center shadow-xl transform group-hover:rotate-6 transition-transform", colorClass)}>
-             <Icon className="w-10 h-10" />
+      <div className={cn(
+        "flex items-center justify-between transition-all hover:bg-white hover:shadow-2xl hover:scale-[1.01] hover:border-primary/10 bg-primary/[0.03] border border-primary/5",
+        compact ? "p-6 rounded-[2rem]" : "p-8 rounded-[2.5rem]"
+      )}>
+        <div className="flex items-center gap-6 text-left">
+          <div className={cn(
+            "rounded-[1.5rem] flex items-center justify-center shadow-xl transform group-hover:rotate-6 transition-transform shrink-0",
+            compact ? "w-14 h-14" : "w-20 h-20",
+            colorClass
+          )}>
+             <Icon className={compact ? "w-7 h-7" : "w-10 h-10"} />
           </div>
-          <div>
-            <div className="flex items-center gap-4 mb-3">
-               <Badge variant="outline" className="uppercase text-[9px] font-bold tracking-[0.2em] opacity-40 border-primary/10 font-headline bg-white/50">
+          <div className="min-w-0">
+            <div className="flex items-center gap-3 mb-2">
+               <Badge variant="outline" className="uppercase text-[8px] font-bold tracking-[0.2em] opacity-40 border-primary/10 font-headline bg-white/50">
                 {event.type === 'inspection' ? 'OFFICIAL AUDIT' : 'REPAIR TICKET'}
                </Badge>
-               {event.priority && (
-                 <Badge className="text-[9px] uppercase font-bold bg-red-100 text-red-700 border-none px-4 py-1 rounded-full font-headline tracking-widest">{event.priority}</Badge>
+               {compact && (
+                 <span className="text-[10px] font-bold text-muted-foreground uppercase opacity-40">{format(event.date, 'MMM dd')}</span>
                )}
             </div>
-            <h4 className="text-3xl font-bold font-headline text-primary leading-tight mb-2 tracking-tighter group-hover:text-accent transition-colors">{event.title}</h4>
-            <div className="flex flex-wrap items-center gap-6">
-              <p className="text-sm text-muted-foreground font-bold flex items-center font-body opacity-60 uppercase tracking-widest">
-                <MapPin className="w-4 h-4 mr-2 text-accent" /> {event.subtitle}
+            <h4 className={cn(
+              "font-bold font-headline text-primary leading-tight mb-1 tracking-tighter group-hover:text-accent transition-colors truncate",
+              compact ? "text-lg" : "text-3xl"
+            )}>{event.title}</h4>
+            <div className="flex flex-wrap items-center gap-4">
+              <p className="text-[10px] text-muted-foreground font-bold flex items-center font-body opacity-60 uppercase tracking-widest">
+                <MapPin className="w-3 h-3 mr-1 text-accent" /> {event.subtitle}
               </p>
-              <Badge variant="secondary" className="bg-primary/5 text-primary/60 border-none text-[8px] font-bold uppercase tracking-[0.1em]">Status: {event.status || 'Active'}</Badge>
+              {!compact && (
+                <Badge variant="secondary" className="bg-primary/5 text-primary/60 border-none text-[8px] font-bold uppercase tracking-[0.1em]">Status: {event.status || 'Active'}</Badge>
+              )}
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-4 text-primary/10 group-hover:text-primary transition-all">
-           <span className="text-[10px] font-bold uppercase tracking-[0.3em] hidden md:inline">Open Ledger</span>
-           <ChevronRight className="w-8 h-8" />
+        <div className="flex items-center gap-4 text-primary/10 group-hover:text-primary transition-all shrink-0">
+           {!compact && <span className="text-[10px] font-bold uppercase tracking-[0.3em] hidden md:inline">Open Ledger</span>}
+           <ChevronRight className={compact ? "w-6 h-6" : "w-8 h-8"} />
         </div>
       </div>
     </Link>
