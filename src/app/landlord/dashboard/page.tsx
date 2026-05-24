@@ -7,7 +7,7 @@ import {
   Calendar as CalendarIcon, Zap, ClipboardList, AlertTriangle,
   PoundSterling, PieChart as PieChartIcon, ArrowUpRight, ArrowDownRight,
   Target, Download, Plus, Save, Users, Wrench, Clock, ReceiptText, BellRing,
-  Crown, Sparkles
+  Crown, Sparkles, ShieldCheck
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
