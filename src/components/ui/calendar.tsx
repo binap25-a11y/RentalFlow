@@ -10,9 +10,9 @@ import { buttonVariants } from "@/components/ui/button"
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
 /**
- * 📅 Professional Portfolio Calendar
- * Re-engineered for Light Navy visual identity and high-fidelity interaction.
- * Explicitly prevents dark/black hover states and provides rounded selection blocks.
+ * 📅 Professional Portfolio Calendar Component
+ * Re-engineered for high-fidelity interaction and "Light Navy" visual identity.
+ * Hover states are optimized for readability using the accent blue palette.
  */
 function Calendar({
   className,
@@ -28,28 +28,28 @@ function Calendar({
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-6",
         month_caption: "flex justify-center pt-1 relative items-center mb-6 h-10",
-        caption_label: "text-xl font-bold font-headline text-primary tracking-tight",
+        caption_label: "text-lg font-bold font-headline text-primary tracking-tight",
         nav: "space-x-1 flex items-center",
         button_previous: cn(
-          "h-9 w-9 bg-transparent p-0 opacity-40 hover:opacity-100 absolute left-1 z-10 rounded-xl border border-primary/10 shadow-sm transition-all flex items-center justify-center cursor-pointer hover:bg-primary/5 hover:text-primary"
+          "h-9 w-9 bg-transparent p-0 opacity-40 hover:opacity-100 absolute left-1 z-10 rounded-xl border border-primary/10 shadow-sm transition-all flex items-center justify-center cursor-pointer hover:bg-accent/5 hover:text-accent hover:border-accent/20"
         ),
         button_next: cn(
-          "h-9 w-9 bg-transparent p-0 opacity-40 hover:opacity-100 absolute right-1 z-10 rounded-xl border border-primary/10 shadow-sm transition-all flex items-center justify-center cursor-pointer hover:bg-primary/5 hover:text-primary"
+          "h-9 w-9 bg-transparent p-0 opacity-40 hover:opacity-100 absolute right-1 z-10 rounded-xl border border-primary/10 shadow-sm transition-all flex items-center justify-center cursor-pointer hover:bg-accent/5 hover:text-accent hover:border-accent/20"
         ),
         month_grid: "w-full border-collapse",
-        weekdays: "flex w-full mb-6 justify-between",
-        weekday: "text-muted-foreground w-10 font-bold text-[10px] flex items-center justify-center uppercase tracking-[0.2em] h-10 shrink-0 font-headline opacity-20",
+        weekdays: "flex w-full mb-4 justify-between",
+        weekday: "text-muted-foreground w-10 font-bold text-[9px] flex items-center justify-center uppercase tracking-[0.3em] h-10 shrink-0 font-headline opacity-30",
         week: "flex w-full mt-2 justify-between",
         day: "h-11 w-11 text-center text-sm p-0 relative focus-within:relative focus-within:z-20 shrink-0 flex items-center justify-center",
         day_button: cn(
-          "h-10 w-10 p-0 font-bold aria-selected:opacity-100 rounded-xl transition-all flex flex-col items-center justify-center font-body hover:bg-primary/5 hover:text-primary relative cursor-pointer border-none bg-transparent"
+          "h-10 w-10 p-0 font-bold aria-selected:opacity-100 rounded-xl transition-all flex flex-col items-center justify-center font-body hover:bg-accent/10 hover:text-accent relative cursor-pointer border-none bg-transparent"
         ),
         selected:
           "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground shadow-xl scale-105 rounded-xl",
-        today: "bg-primary/5 text-primary font-bold ring-1 ring-primary/10",
+        today: "bg-primary/5 text-primary font-extrabold ring-1 ring-primary/10",
         outside:
-          "day-outside text-muted-foreground opacity-10 aria-selected:bg-primary/20 aria-selected:text-muted-foreground",
-        disabled: "text-muted-foreground opacity-30",
+          "day-outside text-muted-foreground opacity-5 aria-selected:bg-primary/20 aria-selected:text-muted-foreground",
+        disabled: "text-muted-foreground opacity-20",
         hidden: "invisible",
         ...classNames,
       }}
