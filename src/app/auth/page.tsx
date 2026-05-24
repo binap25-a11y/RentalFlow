@@ -350,7 +350,7 @@ export default function AuthPage() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2 text-left">
                   <Label htmlFor="email" className="font-bold text-xs uppercase text-muted-foreground tracking-widest font-headline">Email Address</Label>
-                  <Input id="email" type="email" placeholder="name@domain.com" value={email} onChange={(e) => setEmail(target.value)} required className="rounded-2xl h-14 border-none bg-muted/20 font-body font-bold text-lg px-6" />
+                  <Input id="email" type="email" placeholder="name@domain.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-2xl h-14 border-none bg-muted/20 font-body font-bold text-lg px-6" />
                 </div>
                 <div className="space-y-2 text-left">
                   <div className="flex justify-between items-center">
@@ -358,7 +358,7 @@ export default function AuthPage() {
                     <button type="button" className="text-[10px] font-bold text-accent uppercase tracking-widest hover:underline">Reset</button>
                   </div>
                   <div className="relative">
-                    <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(target.value)} required className="rounded-2xl h-14 border-none bg-muted/20 font-body font-bold text-lg px-6 pr-12" />
+                    <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="rounded-2xl h-14 border-none bg-muted/20 font-body font-bold text-lg px-6 pr-12" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-4 text-primary/30 hover:text-primary transition-colors">
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
