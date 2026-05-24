@@ -31,7 +31,6 @@ export default function LandingPage() {
     setMounted(true);
   }, []);
 
-  // Stabilize the loading experience to prevent flickering when user is already logged in
   if (!mounted || isUserLoading || (user && isProfileLoading)) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background z-[100]">
@@ -57,7 +56,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background font-body selection:bg-primary selection:text-primary-foreground">
-      {/* Navigation Header */}
       <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 h-20">
         <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -91,7 +89,6 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <section className="relative pt-40 pb-32 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[800px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
@@ -99,16 +96,17 @@ export default function LandingPage() {
             <Badge variant="outline" className="py-2 px-4 rounded-full border-primary/20 bg-primary/5 text-primary font-bold uppercase tracking-[0.2em] text-[10px]">
               <Sparkles className="w-3 h-3 mr-2 text-accent" /> AI-Powered Portfolio Orchestration
             </Badge>
-            <div className="space-y-4">
+            <div className="space-y-6">
               <h1 className="text-6xl md:text-8xl font-headline font-bold text-foreground tracking-tighter leading-[0.9]">
                 Premium Property <br/>
                 <span className="text-accent">Management.</span>
               </h1>
-              {user && (
-                <div className="pt-4">
+              
+              {user && profile && (
+                <div className="pt-2">
                   <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-primary text-lg font-bold shadow-2xl shadow-primary/20 text-primary-foreground hover:scale-[1.02] transition-transform">
-                    <Link href={profile?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
-                        Return to Portfolio <ArrowRight className="w-5 h-5 ml-3" />
+                    <Link href={profile.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
+                        Return to {profile.role === 'landlord' ? 'Portfolio' : 'Hub'} <ArrowRight className="w-5 h-5 ml-3" />
                     </Link>
                   </Button>
                 </div>
@@ -145,7 +143,6 @@ export default function LandingPage() {
               className="object-cover" 
               unoptimized 
               priority
-              data-ai-hint="modern architecture"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
             <div className="absolute bottom-10 left-10 right-10 bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-3xl">
@@ -161,7 +158,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features Grid */}
       <section id="features" className="py-32 bg-muted/30">
         <div className="max-w-7xl mx-auto px-6 text-center space-y-20">
           <div className="max-w-3xl mx-auto space-y-4">
@@ -194,7 +190,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Compliance Section */}
       <section id="compliance" className="py-32 bg-slate-900 text-white overflow-hidden relative">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-accent/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center gap-20">
@@ -245,7 +240,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Footer */}
       <section className="py-32">
         <div className="max-w-4xl mx-auto px-6 text-center bg-muted/30 rounded-[4rem] p-10 md:p-20 space-y-10 border border-border">
            <h2 className="text-4xl md:text-5xl font-headline font-bold text-foreground tracking-tight">Ready to modernize your portfolio?</h2>
