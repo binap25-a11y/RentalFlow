@@ -40,7 +40,7 @@ Resident description: {{{maintenanceRequest}}}`,
 
 /**
  * 🛡️ Hardened Operational Fallback Logic
- * Used when API limits are reached to maintain property safety records.
+ * Used when AI services are restricted to maintain property safety records.
  */
 function getFallbackTriage(desc: string): MaintenanceRequestTriageOutput {
   const text = (desc || "").toLowerCase();
@@ -65,7 +65,7 @@ function getFallbackTriage(desc: string): MaintenanceRequestTriageOutput {
     return { 
       priority: 'urgent', 
       category: 'structural', 
-      reasoning: 'Property security indicators identified. Immediate secure and restore protocols initiated.',
+      reasoning: 'Property security indicators identified. Immediate safety protocols initiated.',
       suggestions: ["Instruct emergency locksmith to secure property entry points", "Obtain police incident number for insurance records", "Assess for forensic evidence before cleaning or restoration"]
     };
   }

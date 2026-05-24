@@ -421,14 +421,14 @@ export default function MaintenancePage() {
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" className="flex-1 min-w-[180px] rounded-xl font-bold h-12 border-primary/10 bg-white shadow-sm hover:bg-primary/5 hover:text-primary text-xs font-headline">Update Status</Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="rounded-xl border-primary/10 shadow-xl min-w-[220px] p-2" align="end">
-                      <DropdownMenuItem className="py-3 px-4 font-bold text-xs font-headline cursor-pointer rounded-lg focus:bg-primary/5 text-primary" onClick={() => updateStatus(request, 'in-progress')}>
+                    <DropdownMenuContent className="rounded-xl border-primary/10 shadow-xl min-w-[220px] p-2 bg-white" align="end">
+                      <DropdownMenuItem className="py-3 px-4 font-bold text-xs font-headline cursor-pointer rounded-lg focus:bg-primary/5 text-primary focus:text-primary" onClick={() => updateStatus(request, 'in-progress')}>
                         <PlayCircle className="w-4 h-4 mr-3 text-sky-600" /> In Progress
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="py-3 px-4 font-bold text-xs font-headline cursor-pointer rounded-lg focus:bg-primary/5 text-primary" onClick={() => updateStatus(request, 'completed')}>
+                      <DropdownMenuItem className="py-3 px-4 font-bold text-xs font-headline cursor-pointer rounded-lg focus:bg-primary/5 text-primary focus:text-primary" onClick={() => updateStatus(request, 'completed')}>
                         <CheckCircle2 className="w-4 h-4 mr-3 text-emerald-600" /> Completed
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="py-3 px-4 font-bold text-xs font-headline cursor-pointer rounded-lg focus:bg-primary/5 text-primary" onClick={() => setIsLoggingCost(request.id)}>
+                      <DropdownMenuItem className="py-3 px-4 font-bold text-xs font-headline cursor-pointer rounded-lg focus:bg-primary/5 text-primary focus:text-primary" onClick={() => setIsLoggingCost(request.id)}>
                         <PoundSterling className="w-4 h-4 mr-3 text-amber-600" /> Log Final Cost
                       </DropdownMenuItem>
                     </DropdownMenuContent>
