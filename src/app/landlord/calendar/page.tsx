@@ -15,9 +15,9 @@ import { Button } from "@/components/ui/button";
 import { 
   CalendarDays, Loader2, Wrench, ShieldCheck, 
   Users, ChevronRight, Clock, MapPin, 
-  AlertTriangle, CheckCircle2, LayoutDashboard
+  LayoutDashboard
 } from "lucide-react";
-import { format, isSameDay, isAfter, isBefore, addDays, startOfDay, parseISO, addYears } from "date-fns";
+import { format, isSameDay, isAfter, startOfDay, parseISO, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -73,7 +73,7 @@ export default function LandlordCalendarPage() {
 
     inspections?.forEach(i => {
       const date = i.scheduledDate ? new Date(i.scheduledDate) : null;
-      if (date) {
+      if (date && isValid(date)) {
         events.push({
           id: i.id,
           type: 'inspection',
@@ -88,7 +88,7 @@ export default function LandlordCalendarPage() {
 
     maintenance?.forEach(m => {
       const date = m.scheduledDate ? new Date(m.scheduledDate) : null;
-      if (date && m.status !== 'completed') {
+      if (date && isValid(date) && m.status !== 'completed') {
         events.push({
           id: m.id,
           type: 'repair',
@@ -102,9 +102,11 @@ export default function LandlordCalendarPage() {
     });
 
     tenants?.forEach(t => {
-      if (!t.leaseEndDate) return;
-      const date = new Date(t.leaseEndDate);
-      if (!isNaN(date.getTime())) {
+      // CRITICAL FIX: Only include leases that have a verified date string
+      if (!t.leaseEndDate || typeof t.leaseEndDate !== 'string' || t.leaseEndDate.trim() === '') return;
+      
+      const date = parseISO(t.leaseEndDate);
+      if (isValid(date)) {
         events.push({
           id: t.id,
           type: 'lease',
@@ -125,10 +127,8 @@ export default function LandlordCalendarPage() {
 
   const upcomingEvents = useMemo(() => {
     const today = startOfDay(new Date());
-    const oneYearFromNow = addYears(today, 1);
-    
     return allEvents
-      .filter(e => isAfter(e.date, today) && isBefore(e.date, oneYearFromNow))
+      .filter(e => isAfter(e.date, today))
       .slice(0, 10);
   }, [allEvents]);
 
@@ -210,7 +210,7 @@ export default function LandlordCalendarPage() {
             <h3 className="text-lg font-bold font-headline mb-4 flex items-center gap-2">
                <Clock className="w-5 h-5 text-accent" /> Operational View
             </h3>
-            <p className="text-sm opacity-80 leading-relaxed font-body">This calendar reflects the current operational state of your portfolio. Legend items appear only when verified events exist in your ledger.</p>
+            <p className="text-sm opacity-80 leading-relaxed font-body">This calendar reflects the current verified state of your portfolio. Events without end dates are strictly excluded from the roadmap.</p>
           </Card>
         </div>
 
@@ -249,7 +249,7 @@ export default function LandlordCalendarPage() {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                {upcomingEvents.length === 0 ? (
-                  <p className="col-span-full text-center py-10 text-muted-foreground italic text-sm">No operational milestones detected in the next 12 months.</p>
+                  <p className="col-span-full text-center py-10 text-muted-foreground italic text-sm">No verified upcoming milestones detected.</p>
                ) : (
                  upcomingEvents.map(event => {
                    const linkHref = event.type === 'inspection' ? `/landlord/inspections` :
