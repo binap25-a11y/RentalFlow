@@ -46,7 +46,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background font-body selection:bg-primary selection:text-primary-foreground overflow-x-hidden text-left">
-      <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b h-20">
+      <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b h-20 border-border">
         <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
              <div className="relative h-10 w-10 rounded-xl overflow-hidden shadow-lg">
@@ -56,7 +56,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-4">
              {user ? (
-               <Button asChild className="rounded-xl font-bold bg-accent hover:bg-accent/90 text-white px-6 h-11 shadow-lg shadow-accent/20 transition-all active:scale-95">
+               <Button asChild className="rounded-xl font-bold bg-accent hover:bg-accent/90 text-accent-foreground px-6 h-11 shadow-lg shadow-accent/20 transition-all active:scale-95">
                  <Link href={profile?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
                     Portfolio Access <ChevronRight className="w-4 h-4 ml-1" />
                  </Link>
@@ -64,7 +64,7 @@ export default function LandingPage() {
              ) : (
                <>
                  <Button variant="ghost" asChild className="rounded-xl font-bold hidden sm:inline-flex text-foreground hover:bg-primary/5"><Link href="/auth">Sign In</Link></Button>
-                 <Button asChild className="rounded-xl font-bold bg-accent hover:bg-accent/90 text-white px-6 h-11 shadow-lg shadow-accent/20 transition-all active:scale-95"><Link href="/auth">Get Started</Link></Button>
+                 <Button asChild className="rounded-xl font-bold bg-accent hover:bg-accent/90 text-accent-foreground px-6 h-11 shadow-lg shadow-accent/20 transition-all active:scale-95"><Link href="/auth">Get Started</Link></Button>
                </>
              )}
           </div>
@@ -83,13 +83,13 @@ export default function LandingPage() {
             
             <div className="pt-4">
               {user && profile ? (
-                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-accent hover:bg-accent/90 text-white text-lg font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95">
+                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-accent hover:bg-accent/90 text-accent-foreground text-lg font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95">
                   <Link href={profile.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
                       Return to Portfolio <ArrowRight className="w-5 h-5 ml-3" />
                   </Link>
                 </Button>
               ) : (
-                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-accent hover:bg-accent/90 text-white text-lg font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95">
+                <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-accent hover:bg-accent/90 text-accent-foreground text-lg font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95">
                   <Link href="/auth">Launch Your Portfolio <ArrowRight className="w-5 h-5 ml-3" /></Link>
                 </Button>
               )}
@@ -143,11 +143,11 @@ export default function LandingPage() {
            <h2 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-foreground">Scale your portfolio with AI.</h2>
            <p className="text-lg text-muted-foreground font-medium">Join professional landlords using automated triage to protect their assets.</p>
            {user ? (
-             <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-accent hover:bg-accent/90 text-white text-xl font-bold shadow-2xl transition-all active:scale-95">
+             <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-accent hover:bg-accent/90 text-accent-foreground text-xl font-bold shadow-2xl transition-all active:scale-95">
                <Link href={profile?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>Enter Dashboard</Link>
              </Button>
            ) : (
-             <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-accent hover:bg-accent/90 text-white text-xl font-bold shadow-2xl transition-all active:scale-95">
+             <Button size="lg" asChild className="h-16 px-12 rounded-2xl bg-accent hover:bg-accent/90 text-accent-foreground text-xl font-bold shadow-2xl transition-all active:scale-95">
                <Link href="/auth">Start Your Journey</Link>
              </Button>
            )}

@@ -1,12 +1,14 @@
 'use server';
 
 /**
- * @fileOverview Resilient Cloud Storage Engine.
- * Optimized for mobile uploads with robust binary processing and buffer conversion.
- * Resolves "failed to fetch" errors on mobile browsers by avoiding direct file stream issues.
+ * @fileOverview High-Fidelity Cloud Storage Engine.
+ * Optimized for mobile uploads with robust binary processing and extended timeouts.
+ * Resolves "failed to fetch" errors on mobile by ensuring complete payload delivery.
  */
 
 import { supabase } from '@/lib/supabase';
+
+export const maxDuration = 60; // Extend server action timeout for large mobile uploads
 
 export async function uploadToSupabase(
   formData: FormData,
@@ -15,11 +17,10 @@ export async function uploadToSupabase(
 ) {
   try {
     const file = formData.get('file') as File;
-    if (!file) throw new Error('No valid file provided.');
+    if (!file) throw new Error('No valid binary payload detected.');
 
-    // Robust binary processing for mobile compatibility:
-    // Converting the file to an ArrayBuffer and then a Buffer ensures the server
-    // receives the complete binary payload without interruption.
+    // Robust binary processing: 
+    // Converting to ArrayBuffer then Buffer is more stable for Next.js 15 Server Actions
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
@@ -32,8 +33,8 @@ export async function uploadToSupabase(
       });
 
     if (uploadError) {
-      console.error('Supabase Upload Error:', uploadError);
-      throw uploadError;
+      console.error('Supabase Core Sync Error:', uploadError);
+      throw new Error(uploadError.message || 'Binary delivery failed.');
     }
 
     const { data: signedData, error: signedError } = await supabase.storage
@@ -44,8 +45,8 @@ export async function uploadToSupabase(
 
     return { success: true, url: signedData.signedUrl };
   } catch (error: any) {
-    console.error('Storage Engine Failure:', error.message);
-    return { success: false, error: error.message || 'Binary synchronization failed.' };
+    console.error('Storage Orchestration Failure:', error.message);
+    return { success: false, error: error.message || 'Synchronization aborted.' };
   }
 }
 

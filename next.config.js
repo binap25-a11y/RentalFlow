@@ -9,12 +9,15 @@ const nextConfig = {
 
   experimental: {
     serverActions: {
-      bodySizeLimit: '20mb',
+      bodySizeLimit: '50mb',
       allowedOrigins: [
         "*.cloudworkstations.dev",
         "localhost:3000",
         "localhost:9002",
-        "*.firebasestorage.app"
+        "*.firebasestorage.app",
+        "*.ngrok-free.app",
+        "*.loca.lt",
+        "*.supabase.co"
       ]
     }
   },

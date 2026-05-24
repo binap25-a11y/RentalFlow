@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
-import { uploadToSupabase, deleteFromSupabase } from '@/lib/actions/supabase-storage';
+import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 import { cn, isUserUploadedAsset } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -104,7 +104,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       
       const formData = new FormData();
       formData.append('file', file);
-      const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name}`;
+      const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
       
       try {
         const res = await uploadToSupabase(formData, 'property-images', path);
@@ -113,13 +113,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
             item.id === itemId ? { ...item, url: res.url!, status: 'ready' } : item
           ));
         } else {
-          throw new Error(res.error);
+          throw new Error(res.error || "Binary delivery failure.");
         }
       } catch (err: any) {
         setLedger(prev => prev.map(item => 
           item.id === itemId ? { ...item, status: 'error' } : item
         ));
-        toast({ variant: "destructive", title: "Mobile Sync Failed", description: err.message || "Binary upload error." });
+        toast({ variant: "destructive", title: "Mobile Sync Failed", description: err.message || "Binary sync error." });
       }
     }
   };
@@ -238,6 +238,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       {item.status === 'ready' && (
                         <div className="absolute bottom-2 right-2 bg-emerald-500 text-white p-1 rounded-full shadow-lg">
                            <CheckCircle2 className="w-3 h-3" />
+                        </div>
+                      )}
+                      {item.status === 'error' && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-red-500/20 backdrop-blur-sm">
+                           <X className="w-8 h-8 text-red-600" />
                         </div>
                       )}
                     </div>
