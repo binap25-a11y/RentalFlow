@@ -1,34 +1,51 @@
 const admin = require("firebase-admin");
-const serviceAccount = require("./src/lib/serviceAccountKey.json");
 
 /**
  * 🛠️ Permanent Admin/Premium Escalation Script
  * 
- * INSTRUCTIONS:
- * 1. Ensure your serviceAccountKey.json is correct in src/lib/
- * 2. Run in terminal: node setAdmin.js
- * 3. Log out and back in to the app to refresh your token.
+ * SECURITY NOTICE: Actual private keys have been redacted to allow GitHub pushes.
+ * To use this script locally:
+ * 1. Obtain a valid serviceAccountKey.json from Firebase Console.
+ * 2. Place it in src/lib/
+ * 3. Run: node setAdmin.js
  */
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+async function initialize() {
+  try {
+    const serviceAccount = require("./src/lib/serviceAccountKey.json");
+    
+    if (serviceAccount.private_key.includes('REDACTED')) {
+      console.error("❌ Escalation Aborted: src/lib/serviceAccountKey.json contains a redacted placeholder.");
+      console.log("👉 Please replace it with a valid key from your Firebase Console to run escalation.");
+      process.exit(1);
+    }
+
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+    }
+    return true;
+  } catch (err) {
+    console.error("❌ Failed to load credentials:", err.message);
+    return false;
+  }
 }
 
-// TARGET UIDs FOR ESCALATION (Verified for your accounts)
+// TARGET UIDs FOR ESCALATION
 const targetUids = [
   "E9WTQfSqRNf64HzOlCoYXuAsBuH2",
   "CKG5dqFs9pcFEdJjF9DVqvhiTHj1"
 ];
 
 async function escalateUsers() {
+  const ready = await initialize();
+  if (!ready) return;
+
   console.log("🚀 Starting security escalation for target portfolio managers...");
   
   for (const uid of targetUids) {
     try {
-      // Apply Custom User Claims for immediate security-level access
-      // This bypasses Firestore-only checks and is verified at the token level.
       await admin.auth().setCustomUserClaims(uid, {
         admin: true,
         premium: true,
