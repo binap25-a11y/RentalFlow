@@ -241,7 +241,7 @@ export default function MaintenancePage() {
              <Activity className="w-3 h-3 mr-2" /> Maintenance Roadmap
           </Badge>
           <h1 className="text-3xl font-headline font-bold text-primary tracking-tight">Maintenance Hub</h1>
-          <p className="text-muted-foreground font-medium font-body max-w-xl mt-1 text-sm">Orchestrating professional site upkeep and AI-driven repair triage.</p>
+          <p className="text-muted-foreground font-medium font-body max-w-xl mt-1 text-sm text-left">Orchestrating professional site upkeep and AI-driven repair triage.</p>
         </div>
         <Button onClick={() => setIsCreateDialogOpen(true)} className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-8 shadow-lg shadow-primary/20 text-white text-sm transition-all hover:scale-[1.02]">
           <Plus className="w-4 h-4 mr-2" /> Log New Request
@@ -348,9 +348,9 @@ export default function MaintenancePage() {
                             <p className="text-[8px] font-bold text-emerald-700/60 uppercase tracking-[0.2em] font-headline">Recommendations</p>
                           </div>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="flex flex-col gap-4">
                             {request.aiSuggestions.map((suggestion: string, idx: number) => (
-                              <div key={idx} className="flex gap-3 p-5 bg-white/60 rounded-2xl border border-emerald-100 text-[11px] font-bold text-emerald-900 shadow-sm transition-all hover:bg-white">
+                              <div key={idx} className="flex gap-3 p-5 bg-white/60 rounded-2xl border border-emerald-100 text-[11px] font-bold text-emerald-900 shadow-sm transition-all hover:bg-white text-left">
                                 <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" /> {suggestion}
                               </div>
                             ))}
@@ -403,7 +403,7 @@ export default function MaintenancePage() {
                       {contractors.length === 0 ? (
                         <div className="p-12 text-center space-y-6">
                           <HardHat className="w-12 h-12 mx-auto text-primary/10" />
-                          <p className="text-sm font-bold text-muted-foreground font-headline uppercase tracking-widest">Directory Empty</p>
+                          <p className="text-sm font-bold text-muted-foreground font-headline uppercase tracking-widest text-center">Directory Empty</p>
                           <Button asChild className="rounded-xl font-bold bg-primary text-white h-10 px-6"><a href="/landlord/emergency-contacts">Add Contractor First</a></Button>
                         </div>
                       ) : (
@@ -480,7 +480,7 @@ export default function MaintenancePage() {
           <form onSubmit={handleCreateRequest}>
             <div className="p-10 bg-primary/5 border-b text-left">
               <DialogTitle className="font-headline text-3xl font-bold text-primary tracking-tight">Log Maintenance Event</DialogTitle>
-              <DialogDescription className="font-medium text-muted-foreground mt-1 text-sm">Initialize a maintenance event for your professional roadmap.</DialogDescription>
+              <DialogDescription className="font-medium text-muted-foreground mt-1 text-sm text-left">Initialize a maintenance event for your professional roadmap.</DialogDescription>
             </div>
             <div className="grid gap-8 p-10 text-left bg-white">
               <div className="space-y-2">
@@ -491,11 +491,11 @@ export default function MaintenancePage() {
                 </select>
               </div>
               <div className="space-y-2">
-                <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Repair Identifier</Label>
+                <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest text-left">Repair Identifier</Label>
                 <Input value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="e.g. Electrical Fault Discovery" className="rounded-xl h-12 bg-muted/20 border-none font-bold text-sm px-4 focus:ring-2 focus:ring-primary font-headline" />
               </div>
               <div className="space-y-2">
-                <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Operational Context</Label>
+                <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest text-left">Operational Context</Label>
                 <Textarea value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Provide high-fidelity context for contractor or management access..." className="rounded-xl min-h-[160px] bg-muted/20 border-none font-medium px-4 py-4 text-sm leading-relaxed focus:ring-2 focus:ring-primary" />
               </div>
             </div>
