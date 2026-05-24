@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -46,7 +45,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background font-body selection:bg-primary selection:text-primary-foreground overflow-x-hidden">
+    <div className="min-h-screen bg-background font-body selection:bg-primary selection:text-primary-foreground overflow-x-hidden text-left">
       <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b h-20">
         <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">

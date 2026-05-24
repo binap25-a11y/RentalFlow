@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -19,9 +18,9 @@ import { doc, serverTimestamp, collection } from "firebase/firestore";
 import { 
   Wrench, Sparkles, Clock, BrainCircuit, Loader2, 
   CheckCircle2, PlayCircle, Plus, PoundSterling,
-  ChevronRight, Lightbulb, UserCheck, HardHat, Phone, Mail,
-  Calendar as CalendarIcon, Building2, ShieldAlert,
-  Activity, Save, ArrowRight, Edit3
+  ChevronRight, Lightbulb, UserCheck, HardHat,
+  Calendar as CalendarIcon, Building2,
+  Activity, Save, Edit3
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";

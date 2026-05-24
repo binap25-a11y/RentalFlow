@@ -1,4 +1,3 @@
-
 import * as admin from 'firebase-admin';
 
 /**
@@ -6,6 +5,7 @@ import * as admin from 'firebase-admin';
  * Secure server-side access to Firestore and Auth.
  * 
  * SECURITY NOTE: Environment variables are prioritized to bypass GitHub Push Protection.
+ * For production, set FIREBASE_SERVICE_ACCOUNT in your hosting provider's secrets manager.
  */
 
 if (!admin.apps.length) {
