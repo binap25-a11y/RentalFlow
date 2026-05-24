@@ -62,7 +62,7 @@ export default function AuthPage() {
             if (isRedirecting.current) return;
             isRedirecting.current = true;
             
-            // Landlords go to Properties directly
+            // Redirect Landlords to their primary inventory view
             router.replace(userData?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
           } else {
             setNeedsProfile(true);
@@ -126,6 +126,7 @@ export default function AuthPage() {
         }
       }
       
+      // Force token refresh to ensure custom claims (if any) are synced
       await user.getIdToken(true);
       toast({ title: "Profile Ready", description: `Welcome to RentalFlow.` });
       
