@@ -65,6 +65,7 @@ export default function LandlordCalendarPage() {
     
     const events: PortfolioEvent[] = [];
 
+    // 1. Map Inspections
     inspections?.forEach(i => {
       const date = i.scheduledDate ? new Date(i.scheduledDate) : null;
       if (date && isValid(date)) {
@@ -80,6 +81,7 @@ export default function LandlordCalendarPage() {
       }
     });
 
+    // 2. Map Maintenance Repairs (Scheduled Only)
     maintenance?.forEach(m => {
       const date = m.scheduledDate ? new Date(m.scheduledDate) : null;
       if (date && isValid(date) && m.status !== 'completed') {
