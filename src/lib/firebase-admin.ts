@@ -4,8 +4,7 @@ import * as admin from 'firebase-admin';
  * 🔐 Firebase Admin Engine
  * Secure server-side access to Firestore and Auth.
  * 
- * SECURITY NOTE: To prevent GITHUB PUSH PROTECTION errors, do not store actual keys in the JSON file.
- * Use the FIREBASE_SERVICE_ACCOUNT environment variable in production.
+ * SECURITY NOTE: Environment variables are prioritized to bypass GitHub Push Protection.
  */
 
 if (!admin.apps.length) {

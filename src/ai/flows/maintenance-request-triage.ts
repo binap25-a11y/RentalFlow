@@ -1,8 +1,7 @@
-
 'use server';
 /**
  * @fileOverview A resilient property operations agent for triaging maintenance requests.
- * Includes deterministic fallback logic and actionable suggestions.
+ * Refined to provide professional, actionable Fix Strategies without technical jargon.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -16,7 +15,7 @@ export type MaintenanceRequestTriageInput = z.infer<typeof MaintenanceRequestTri
 const MaintenanceRequestTriageOutputSchema = z.object({
   priority: z.enum(['critical', 'urgent', 'routine', 'low']).describe('The suggested priority level.'),
   category: z.enum(['plumbing', 'electrical', 'HVAC', 'appliance', 'structural', 'pest control', 'cosmetic', 'other']).describe('The suggested category.'),
-  reasoning: z.string().describe('A brief explanation for the triage result.'),
+  reasoning: z.string().describe('A professional fix strategy and justification for the triage result.'),
   suggestions: z.array(z.string()).describe('2-3 specific, professional next steps for the landlord to resolve this issue.'),
 });
 export type MaintenanceRequestTriageOutput = z.infer<typeof MaintenanceRequestTriageOutputSchema>;
@@ -28,7 +27,7 @@ const triagePrompt = ai.definePrompt({
   output: { schema: MaintenanceRequestTriageOutputSchema },
   config: { temperature: 0 },
   prompt: `You are an expert Property Operations Manager. 
-Triage the resident maintenance request and suggest the appropriate priority, category, and specific professional suggestions for resolution.
+Triage the resident maintenance request and provide a professional Fix Strategy and specific professional suggestions for resolution.
 
 SCHEMA:
 - priority: 'critical' (immediate danger), 'urgent' (damage risk), 'routine' (standard), 'low' (cosmetic).
@@ -39,10 +38,6 @@ SCHEMA:
 Resident description: {{{maintenanceRequest}}}`,
 });
 
-/**
- * 🛡️ Hardened Operational Fallback Logic
- * Used when AI services are restricted to maintain property safety records.
- */
 function getFallbackTriage(desc: string): MaintenanceRequestTriageOutput {
   const text = (desc || "").toLowerCase();
   
@@ -81,10 +76,7 @@ function getFallbackTriage(desc: string): MaintenanceRequestTriageOutput {
 
 export async function triageMaintenanceRequest(input: MaintenanceRequestTriageInput): Promise<MaintenanceRequestTriageOutput> {
   let retries = 2;
-  
-  if (!input.maintenanceRequest || input.maintenanceRequest.trim().length < 5) {
-    return getFallbackTriage(input.maintenanceRequest);
-  }
+  if (!input.maintenanceRequest || input.maintenanceRequest.trim().length < 5) return getFallbackTriage(input.maintenanceRequest);
 
   while (retries >= 0) {
     try {
@@ -94,20 +86,13 @@ export async function triageMaintenanceRequest(input: MaintenanceRequestTriageIn
     } catch (error: any) {
       const errorMsg = error.message || "";
       const isQuotaError = errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('quota');
-      
       if (isQuotaError && retries > 0) {
         await new Promise(resolve => setTimeout(resolve, 2000));
         retries--;
         continue;
       }
-      
-      if (isQuotaError || errorMsg.includes('500')) {
-        return getFallbackTriage(input.maintenanceRequest);
-      }
-      
       return getFallbackTriage(input.maintenanceRequest);
     }
   }
-  
   return getFallbackTriage(input.maintenanceRequest);
 }

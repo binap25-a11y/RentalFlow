@@ -11,8 +11,7 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
 /**
  * 📅 Professional Portfolio Calendar Component
- * Re-engineered for high-fidelity interaction and "Light Navy" visual identity.
- * Hover states are optimized for readability using the primary navy palette.
+ * Re-engineered for high-fidelity interaction and high-contrast hover states.
  */
 function Calendar({
   className,
@@ -45,7 +44,7 @@ function Calendar({
           "h-10 w-10 p-0 font-bold aria-selected:opacity-100 rounded-xl transition-all flex flex-col items-center justify-center font-body hover:bg-primary/5 hover:text-primary relative cursor-pointer border-none bg-transparent text-foreground"
         ),
         selected:
-          "bg-primary text-white hover:bg-primary/90 hover:text-white focus:bg-primary focus:text-white shadow-xl scale-105 rounded-xl",
+          "bg-primary text-white hover:bg-primary hover:text-white focus:bg-primary focus:text-white shadow-xl scale-105 rounded-xl",
         today: "bg-accent/10 text-accent font-extrabold ring-1 ring-accent/20",
         outside:
           "day-outside text-muted-foreground opacity-5 aria-selected:bg-primary/20 aria-selected:text-muted-foreground",

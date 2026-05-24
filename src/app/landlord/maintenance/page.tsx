@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -157,7 +156,6 @@ export default function MaintenancePage() {
 
   const handleTriage = async (request: any) => {
     if (!user || !db) return;
-    
     const desc = request.description || '';
     if (desc.trim().length < 5) {
       toast({ variant: "destructive", title: "Triage Denied", description: "Request context is too brief for AI analysis." });
@@ -259,7 +257,7 @@ export default function MaintenancePage() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto pb-12 text-left">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto pb-12 text-left">
       <div className="space-y-6">
         <div className="text-left space-y-2">
           <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-3 py-1 rounded-full font-bold uppercase tracking-[0.15em] text-[9px]">
@@ -270,7 +268,7 @@ export default function MaintenancePage() {
         </div>
         <Button 
           onClick={() => setIsCreateDialogOpen(true)} 
-          className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-8 shadow-lg shadow-primary/20 text-white text-sm transition-all hover:scale-[1.02] hover:shadow-primary/30 w-fit"
+          className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-12 px-8 shadow-lg shadow-primary/20 text-white text-sm transition-all hover:scale-[1.02] w-fit"
         >
           <Plus className="w-4 h-4 mr-2" /> Log New Request
         </Button>
@@ -284,7 +282,6 @@ export default function MaintenancePage() {
             </div>
             <h3 className="text-lg font-bold font-headline text-primary opacity-40 uppercase tracking-widest text-center">Empty Ledger</h3>
             <p className="text-muted-foreground font-medium mt-2 text-sm text-center">No active maintenance tasks registered.</p>
-            <Button variant="ghost" className="mt-6 font-bold text-primary text-xs hover:bg-primary/5 rounded-xl h-10 px-6" onClick={() => setIsCreateDialogOpen(true)}>Initialize First Task</Button>
           </Card>
         ) : (
           requests.slice().sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).map((request) => {
@@ -301,11 +298,6 @@ export default function MaintenancePage() {
                       <Badge className={cn("capitalize font-bold text-[8px] px-3 py-1 tracking-[0.1em] rounded-full", getPriorityColor(request.priority))}>
                         {request.priority}
                       </Badge>
-                      {request.cost > 0 && (
-                        <Badge className="bg-amber-50 text-amber-700 font-bold border border-amber-100 text-[8px] px-3 py-1 uppercase tracking-[0.1em] rounded-full">
-                          £{request.cost} cost
-                        </Badge>
-                      )}
                       <span className="text-[9px] text-muted-foreground font-bold uppercase flex items-center tracking-widest opacity-60 font-headline">
                         <Clock className="w-3.5 h-3.5 mr-1.5" /> {request.createdAt ? format(new Date(request.createdAt.seconds * 1000), 'PPp') : 'Just now'}
                       </span>
@@ -343,46 +335,28 @@ export default function MaintenancePage() {
                     </div>
                   </div>
 
-                  {assignedPro && (
-                    <div className="mt-8 p-6 bg-primary/[0.02] border border-primary/10 rounded-[1.5rem] flex flex-col md:flex-row md:items-center justify-between gap-6">
-                       <div className="flex items-center gap-6 text-left">
-                          <div className="p-4 bg-white dark:bg-primary/20 rounded-xl text-primary shadow-md ring-1 ring-primary/5">
-                             <HardHat className="w-8 h-8" />
-                          </div>
-                          <div>
-                             <p className="text-[8px] font-bold text-primary/40 uppercase tracking-widest mb-1 font-headline">Operational Partner</p>
-                             <p className="font-bold text-lg text-primary tracking-tight font-headline">{assignedPro.name}</p>
-                             <div className="flex gap-4 mt-2">
-                                <span className="text-[10px] font-bold text-muted-foreground flex items-center uppercase tracking-widest font-headline"><Phone className="w-3 h-3 mr-1.5 text-accent" /> {assignedPro.phone}</span>
-                                {assignedPro.email && <span className="text-[10px] font-bold text-muted-foreground flex items-center uppercase tracking-widest font-headline"><Mail className="w-3 h-3 mr-1.5 text-accent" /> {assignedPro.email}</span>}
-                             </div>
-                          </div>
-                       </div>
-                    </div>
-                  )}
-
                   {request.aiTriageNotes && (
-                    <div className="space-y-6 mt-8 animate-in fade-in duration-700">
+                    <div className="space-y-8 mt-10 animate-in fade-in duration-700 border-t border-primary/5 pt-10">
                       <div className="bg-primary/[0.02] border border-primary/5 rounded-[1.75rem] p-8 flex gap-6 text-left shadow-inner">
                         <BrainCircuit className="w-10 h-10 text-primary shrink-0 opacity-40" />
                         <div className="flex-1">
-                          <p className="text-[8px] font-bold text-primary uppercase mb-3 tracking-[0.2em] font-headline opacity-40">Fix Strategy & Reasoning</p>
+                          <p className="text-[9px] font-bold text-primary/60 uppercase mb-3 tracking-[0.2em] font-headline">Fix Strategy</p>
                           <p className="text-sm text-primary font-bold font-body leading-relaxed">{request.aiTriageNotes}</p>
                         </div>
                       </div>
 
                       {request.aiSuggestions && request.aiSuggestions.length > 0 && (
-                        <div className="bg-emerald-50/40 border border-emerald-100/50 rounded-[1.75rem] p-8 flex flex-col gap-6 text-left">
-                          <div className="space-y-2">
-                            <div className="p-3 bg-white rounded-xl shadow-sm text-emerald-600 h-fit border border-emerald-100 w-fit">
-                               <Lightbulb className="w-6 h-6" />
+                        <div className="flex flex-col gap-6 text-left pl-2">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100 shadow-sm text-emerald-600">
+                               <Lightbulb className="w-5 h-5" />
                             </div>
-                            <p className="text-[8px] font-bold text-emerald-700/60 uppercase tracking-[0.2em] font-headline">Actionable Recommendations</p>
+                            <p className="text-[9px] font-bold text-emerald-700/60 uppercase tracking-[0.2em] font-headline">Recommendations</p>
                           </div>
                           
-                          <div className="flex flex-col gap-4">
+                          <div className="flex flex-col gap-3">
                             {request.aiSuggestions.map((suggestion: string, idx: number) => (
-                              <div key={idx} className="flex gap-3 p-5 bg-white/60 rounded-2xl border border-emerald-100 text-[11px] font-bold text-emerald-900 shadow-sm transition-all hover:bg-white text-left w-fit">
+                              <div key={idx} className="flex gap-3 p-4 bg-emerald-50/40 rounded-2xl border border-emerald-100/50 text-[11px] font-bold text-emerald-900 shadow-sm transition-all hover:bg-white text-left w-fit min-w-[300px]">
                                 <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" /> {suggestion}
                               </div>
                             ))}
@@ -395,7 +369,7 @@ export default function MaintenancePage() {
                 <CardFooter className="bg-muted/5 p-6 flex flex-wrap gap-4 border-t border-primary/5">
                   <Button 
                     variant="outline" 
-                    className="flex-1 min-w-[180px] bg-white text-primary rounded-xl font-bold h-12 border border-primary/10 shadow-sm transition-all text-xs font-headline hover:bg-accent/10 hover:text-accent hover:border-accent/30" 
+                    className="flex-1 min-w-[180px] bg-white text-primary rounded-xl font-bold h-12 border border-primary/10 shadow-sm transition-all text-xs font-headline hover:bg-accent/10 hover:text-accent" 
                     onClick={() => handleTriage(request)} 
                     disabled={isTriaging === request.id}
                   >
@@ -405,7 +379,7 @@ export default function MaintenancePage() {
                   
                   <Button 
                     variant="outline" 
-                    className="flex-1 min-w-[180px] rounded-xl font-bold h-12 border-primary/10 bg-white shadow-sm hover:bg-primary/5 hover:text-primary hover:border-primary/30 text-xs font-headline" 
+                    className="flex-1 min-w-[180px] rounded-xl font-bold h-12 border-primary/10 bg-white shadow-sm hover:bg-primary/5 hover:text-primary text-xs font-headline" 
                     onClick={() => setIsScheduling(request.id)}
                   >
                     <CalendarIcon className="w-4 h-4 mr-2" /> Target Roadmap
@@ -413,7 +387,7 @@ export default function MaintenancePage() {
 
                   <Button 
                     variant="outline" 
-                    className="flex-1 min-w-[180px] rounded-xl font-bold h-12 border-primary/10 bg-white shadow-sm hover:bg-primary/5 hover:text-primary hover:border-primary/30 text-xs font-headline" 
+                    className="flex-1 min-w-[180px] rounded-xl font-bold h-12 border-primary/10 bg-white shadow-sm hover:bg-primary/5 hover:text-primary text-xs font-headline" 
                     onClick={() => setIsAssigningPro(request.id)}
                   >
                     <UserCheck className="w-4 h-4 mr-2" /> {assignedPro ? 'Change Partner' : 'Assign Partner'}
@@ -424,13 +398,13 @@ export default function MaintenancePage() {
                       <Button variant="outline" className="flex-1 min-w-[180px] rounded-xl font-bold h-12 border-primary/10 bg-white shadow-sm hover:bg-primary/5 hover:text-primary text-xs font-headline">Update Status</Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="rounded-xl border-primary/10 shadow-xl min-w-[220px] p-2 bg-white" align="end">
-                      <DropdownMenuItem className="py-3 px-4 font-bold text-xs font-headline cursor-pointer rounded-lg focus:bg-primary/5 text-primary focus:text-primary" onClick={() => updateStatus(request, 'in-progress')}>
+                      <DropdownMenuItem className="py-3 px-4 font-bold text-xs font-headline cursor-pointer rounded-lg focus:bg-primary/5 focus:text-primary" onClick={() => updateStatus(request, 'in-progress')}>
                         <PlayCircle className="w-4 h-4 mr-3 text-sky-600" /> In Progress
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="py-3 px-4 font-bold text-xs font-headline cursor-pointer rounded-lg focus:bg-primary/5 text-primary focus:text-primary" onClick={() => updateStatus(request, 'completed')}>
+                      <DropdownMenuItem className="py-3 px-4 font-bold text-xs font-headline cursor-pointer rounded-lg focus:bg-primary/5 focus:text-primary" onClick={() => updateStatus(request, 'completed')}>
                         <CheckCircle2 className="w-4 h-4 mr-3 text-emerald-600" /> Completed
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="py-3 px-4 font-bold text-xs font-headline cursor-pointer rounded-lg focus:bg-primary/5 text-primary focus:text-primary" onClick={() => setIsLoggingCost(request.id)}>
+                      <DropdownMenuItem className="py-3 px-4 font-bold text-xs font-headline cursor-pointer rounded-lg focus:bg-primary/5 focus:text-primary" onClick={() => setIsLoggingCost(request.id)}>
                         <PoundSterling className="w-4 h-4 mr-3 text-amber-600" /> Log Final Cost
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -439,39 +413,40 @@ export default function MaintenancePage() {
 
                 {/* Assignment Dialog */}
                 <Dialog open={isAssigningPro === request.id} onOpenChange={(open) => !open && setIsAssigningPro(null)}>
-                  <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-[500px] bg-white">
-                    <div className="p-8 bg-primary/5 border-b text-left">
+                  <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-[500px] bg-white flex flex-col max-h-[85vh]">
+                    <div className="p-8 bg-primary/5 border-b text-left shrink-0">
                       <DialogTitle className="text-xl font-bold font-headline text-primary tracking-tight">Partner Assignment</DialogTitle>
                       <DialogDescription className="text-xs font-medium text-muted-foreground mt-1">Select an authorized professional to resolve this issue.</DialogDescription>
                     </div>
-                    <div className="p-6 space-y-3 max-h-[450px] overflow-y-auto no-scrollbar">
-                      {contractors.length === 0 ? (
-                        <div className="p-12 text-center space-y-6">
-                          <HardHat className="w-12 h-12 mx-auto text-primary/10" />
-                          <p className="text-sm font-bold text-muted-foreground font-headline uppercase tracking-widest text-center">Directory Empty</p>
-                          <Button asChild className="rounded-xl font-bold bg-primary text-white h-10 px-6 hover:bg-primary/90"><a href="/landlord/emergency-contacts">Add Contractor First</a></Button>
-                        </div>
-                      ) : (
-                        contractors.map(pro => (
-                          <button 
-                            key={pro.id} 
-                            onClick={() => handleAssignContractor(request.id, pro.id)}
-                            className="w-full flex items-center justify-between p-5 rounded-2xl hover:bg-primary/[0.03] transition-all text-left group border border-transparent hover:border-primary/5 shadow-sm bg-white"
-                          >
-                             <div className="flex items-center gap-5">
-                                <div className="p-3 bg-primary/5 rounded-xl text-primary font-bold shadow-inner group-hover:scale-105 transition-transform">
-                                   <HardHat className="w-5 h-5" />
-                                </div>
-                                <div>
-                                   <p className="font-bold text-sm text-primary tracking-tight font-headline">{pro.name}</p>
-                                   <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">{pro.role}</p>
-                                </div>
-                             </div>
-                             <ChevronRight className="w-4 h-4 text-primary/20 group-hover:text-primary transition-all" />
-                          </button>
-                        ))
-                      )}
-                    </div>
+                    <ScrollArea className="flex-1">
+                      <div className="p-6 space-y-3">
+                        {contractors.length === 0 ? (
+                          <div className="p-12 text-center space-y-6">
+                            <HardHat className="w-12 h-12 mx-auto text-primary/10" />
+                            <p className="text-sm font-bold text-muted-foreground font-headline uppercase tracking-widest">Directory Empty</p>
+                          </div>
+                        ) : (
+                          contractors.map(pro => (
+                            <button 
+                              key={pro.id} 
+                              onClick={() => handleAssignContractor(request.id, pro.id)}
+                              className="w-full flex items-center justify-between p-5 rounded-2xl hover:bg-primary/[0.03] transition-all text-left group border border-transparent hover:border-primary/5 shadow-sm bg-white"
+                            >
+                               <div className="flex items-center gap-5">
+                                  <div className="p-3 bg-primary/5 rounded-xl text-primary font-bold shadow-inner">
+                                     <HardHat className="w-5 h-5" />
+                                  </div>
+                                  <div>
+                                     <p className="font-bold text-sm text-primary font-headline">{pro.name}</p>
+                                     <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{pro.role}</p>
+                                  </div>
+                               </div>
+                               <ChevronRight className="w-4 h-4 text-primary/20 group-hover:text-primary transition-all" />
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </ScrollArea>
                   </DialogContent>
                 </Dialog>
 
@@ -479,38 +454,16 @@ export default function MaintenancePage() {
                 <Dialog open={isScheduling === request.id} onOpenChange={(open) => !open && setIsScheduling(null)}>
                   <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-[450px] bg-white">
                     <div className="p-8 bg-primary/5 border-b text-left">
-                      <DialogTitle className="text-xl font-bold font-headline text-primary tracking-tight">Target Lifecycle</DialogTitle>
+                      <DialogTitle className="text-xl font-bold font-headline text-primary tracking-tight">Target Roadmap</DialogTitle>
                       <DialogDescription className="text-xs font-medium text-muted-foreground mt-1">Register this repair in your property roadmap.</DialogDescription>
                     </div>
                     <div className="p-8 flex justify-center">
-                      <Calendar
-                        mode="single"
-                        selected={scheduledDate}
-                        onSelect={setScheduledDate}
-                        className="rounded-2xl border-none shadow-inner bg-white p-0"
-                      />
+                      <Calendar mode="single" selected={scheduledDate} onSelect={setScheduledDate} className="rounded-2xl border-none shadow-inner bg-white p-0" />
                     </div>
                     <DialogFooter className="p-6 bg-muted/5 border-t">
-                       <Button className="w-full rounded-xl h-12 font-bold bg-primary text-white shadow-lg shadow-primary/20 font-headline text-sm hover:bg-primary/90" disabled={!scheduledDate} onClick={() => handleSetSchedule(request.id)}>
+                       <Button className="w-full rounded-xl h-12 font-bold bg-primary text-white shadow-lg font-headline text-sm hover:bg-primary/90" disabled={!scheduledDate} onClick={() => handleSetSchedule(request.id)}>
                           <Save className="w-4 h-4 mr-2" /> Synchronize Timeline
                        </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-
-                {/* Cost Logging Dialog */}
-                <Dialog open={isLoggingCost === request.id} onOpenChange={(open) => !open && setIsLoggingCost(null)}>
-                  <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden bg-white max-w-[450px]">
-                    <div className="p-8 bg-primary/5 border-b text-left">
-                      <DialogTitle className="text-xl font-bold font-headline text-primary tracking-tight">Log Expense</DialogTitle>
-                      <DialogDescription className="text-xs font-medium text-muted-foreground mt-1">Update your portfolio records with final invoiced costs.</DialogDescription>
-                    </div>
-                    <div className="p-8 text-left">
-                      <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest mb-3 block">Final Amount (£)</Label>
-                      <Input type="number" placeholder="0.00" value={costAmount} onChange={(e) => setCostAmount(e.target.value)} className="rounded-xl h-14 bg-muted/20 border-none font-bold text-2xl px-6 focus:ring-2 focus:ring-primary font-headline" />
-                    </div>
-                    <DialogFooter className="p-8 bg-muted/5 border-t">
-                      <Button className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg text-white font-headline text-sm hover:bg-primary/90" onClick={() => handleLogCost(request)}>Commit to Ledger</Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
@@ -531,23 +484,23 @@ export default function MaintenancePage() {
               <div className="grid gap-6 p-10 text-left bg-white">
                 <div className="space-y-2">
                   <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Target Inventory Asset</Label>
-                  <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-primary font-headline" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
+                  <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-primary" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
                     <option value="">Choose an inventory item...</option>
                     {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
                   </select>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Repair Identifier</Label>
-                  <Input value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="e.g. Electrical Fault Discovery" className="rounded-xl h-11 bg-muted/20 border-none font-bold text-sm px-4 focus:ring-2 focus:ring-primary font-headline" />
+                  <Input value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="e.g. Electrical Fault Discovery" className="rounded-xl h-11 bg-muted/20 border-none font-bold text-sm px-4" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Operational Context</Label>
-                  <Textarea value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Provide full context for contractor access..." className="rounded-xl min-h-[140px] bg-muted/20 border-none font-medium px-4 py-4 text-sm leading-relaxed focus:ring-2 focus:ring-primary" />
+                  <Textarea value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Provide full context for contractor access..." className="rounded-xl min-h-[140px] bg-muted/20 border-none font-medium px-4 py-4 text-sm leading-relaxed" />
                 </div>
               </div>
             </ScrollArea>
             <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
-              <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 text-white font-headline text-sm transition-transform hover:scale-[1.01] hover:bg-primary/90" disabled={isSubmitting}>
+              <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg text-white font-headline text-sm hover:bg-primary/90" disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                 Register in Roadmap
               </Button>
@@ -567,11 +520,11 @@ export default function MaintenancePage() {
               <div className="grid gap-6 p-10 text-left bg-white">
                 <div className="space-y-2">
                   <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Repair Identifier</Label>
-                  <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none font-bold text-sm px-4 focus:ring-2 focus:ring-primary font-headline" />
+                  <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none font-bold text-sm px-4" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[9px] font-bold uppercase text-primary/40 font-headline tracking-widest">Operational Context</Label>
-                  <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} required className="rounded-xl min-h-[140px] bg-muted/20 border-none font-medium px-4 py-4 text-sm leading-relaxed focus:ring-2 focus:ring-primary" />
+                  <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} required className="rounded-xl min-h-[140px] bg-muted/20 border-none font-medium px-4 py-4 text-sm leading-relaxed" />
                 </div>
               </div>
             </ScrollArea>
