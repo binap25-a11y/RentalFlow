@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { 
   CalendarDays, Loader2, Wrench, ShieldCheck, 
   ChevronRight, Clock, MapPin, 
-  LayoutDashboard
+  LayoutDashboard, ArrowUpRight
 } from "lucide-react";
 import { format, isSameDay, isAfter, startOfDay, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -65,7 +65,7 @@ export default function LandlordCalendarPage() {
     
     const events: PortfolioEvent[] = [];
 
-    // 1. Map Inspections
+    // 1. Map Inspections (Filter out if no date)
     inspections?.forEach(i => {
       const date = i.scheduledDate ? new Date(i.scheduledDate) : null;
       if (date && isValid(date)) {
@@ -130,26 +130,32 @@ export default function LandlordCalendarPage() {
   };
 
   if (!isClient || isInspLoading || isMaintLoading) {
-    return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh] space-y-4">
+        <Loader2 className="animate-spin text-primary w-10 h-10 opacity-40" />
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground font-headline">Syncing Portfolio Timeline</p>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto pb-12 text-left">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Portfolio Calendar</h1>
-          <p className="text-muted-foreground font-medium font-body">Timeline for compliance audits and operational maintenance.</p>
+          <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">Portfolio Calendar</h1>
+          <p className="text-muted-foreground font-medium font-body max-w-lg">Centralized timeline for audits and coordinated repairs.</p>
         </div>
         <div className="flex gap-2">
            <Button variant="outline" className="rounded-xl font-bold h-11 border-primary/10 bg-white" asChild>
               <Link href="/landlord/dashboard">
-                <LayoutDashboard className="w-4 h-4 mr-2" /> Back to Stats
+                <LayoutDashboard className="w-4 h-4 mr-2" /> View Dashboard
               </Link>
            </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column: Calendar Control */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
             <CardContent className="p-8">
@@ -162,52 +168,55 @@ export default function LandlordCalendarPage() {
                 modifiersStyles={modifierStyles}
               />
               
-              <div className="mt-8 pt-6 border-t border-primary/5 space-y-3">
-                 {modifiers.inspection.length > 0 && (
-                   <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 rounded-full bg-primary" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Property Audits</span>
-                   </div>
-                 )}
-                 {modifiers.repair.length > 0 && (
-                   <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 rounded-full bg-amber-500" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Scheduled Repairs</span>
-                   </div>
-                 )}
+              <div className="mt-8 pt-6 border-t border-primary/5 space-y-4">
+                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/40 font-headline">Timeline Legend</p>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                        <span className="text-[10px] font-bold uppercase text-primary/60 font-headline">Audit</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-amber-500" />
+                        <span className="text-[10px] font-bold uppercase text-primary/60 font-headline">Repair</span>
+                    </div>
+                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-none shadow-sm rounded-[2rem] bg-primary text-white overflow-hidden p-8">
-            <h3 className="text-lg font-bold font-headline mb-4 flex items-center gap-2">
-               <Clock className="w-5 h-5 text-accent" /> Roadmap Context
+            <h3 className="text-lg font-bold font-headline mb-4 flex items-center gap-2 text-accent">
+               <Clock className="w-5 h-5" /> Operational Readiness
             </h3>
-            <p className="text-sm opacity-80 leading-relaxed font-body">This calendar reflects active property audits and maintenance tasks. Use this for coordinating site visits and contractor assignments.</p>
+            <p className="text-sm opacity-80 leading-relaxed font-body font-medium">Use this view to coordinate site visits with contractors. Clicking a task in the Daily Ledger will redirect you to its specific management view.</p>
           </Card>
         </div>
 
+        {/* Right Column: Daily Ledger & Roadmap */}
         <div className="lg:col-span-8 space-y-8">
-          <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden min-h-[400px]">
+          <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden min-h-[450px]">
             <CardHeader className="bg-primary/[0.02] border-b border-primary/5 p-8">
               <div className="flex justify-between items-center">
                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/40 mb-1">Portfolio Ledger</p>
-                    <CardTitle className="text-2xl font-headline text-primary">{format(selectedDate, 'PPPP')}</CardTitle>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/40 mb-1 font-headline">Daily Operational Ledger</p>
+                    <CardTitle className="text-3xl font-headline text-primary tracking-tight">{format(selectedDate, 'PPPP')}</CardTitle>
                  </div>
-                 <Badge variant="outline" className="rounded-xl py-1 px-4 font-bold border-primary/10 text-primary uppercase text-[10px]">
-                   {selectedDayEvents.length} Tasks Scheduled
+                 <Badge className="rounded-xl py-1.5 px-4 font-bold bg-primary text-white uppercase text-[10px]">
+                   {selectedDayEvents.length} Events
                  </Badge>
               </div>
             </CardHeader>
             <CardContent className="p-8">
               {selectedDayEvents.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 opacity-30">
-                   <CalendarDays className="w-12 h-12 mb-4" />
-                   <p className="text-sm font-bold uppercase tracking-widest">No Tasks Scheduled</p>
+                <div className="flex flex-col items-center justify-center py-24 opacity-30 text-center">
+                   <div className="p-6 bg-muted/50 rounded-full mb-6">
+                      <CalendarDays className="w-12 h-12 text-primary" />
+                   </div>
+                   <h3 className="text-xl font-bold font-headline text-primary uppercase tracking-widest">Day Clear</h3>
+                   <p className="text-sm font-medium mt-2">No audits or repairs scheduled for this date.</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="grid gap-4">
                   {selectedDayEvents.map(event => (
                     <EventCard key={event.id} event={event} />
                   ))}
@@ -217,28 +226,29 @@ export default function LandlordCalendarPage() {
           </Card>
 
           <div className="space-y-6">
-            <h3 className="text-xl font-bold font-headline flex items-center text-primary">
-              <ChevronRight className="w-5 h-5 mr-1 text-accent" /> Upcoming Portfolio Roadmap
+            <h3 className="text-2xl font-bold font-headline flex items-center text-primary tracking-tight">
+              <ChevronRight className="w-6 h-6 mr-1 text-accent" /> Upcoming Portfolio Roadmap
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                {upcomingEvents.length === 0 ? (
-                  <p className="col-span-full text-center py-10 text-muted-foreground italic text-sm">No verified upcoming events detected.</p>
+                  <p className="col-span-full text-center py-12 text-muted-foreground italic text-sm font-medium bg-muted/20 rounded-[2rem] border-2 border-dashed border-primary/5">No upcoming operations detected.</p>
                ) : (
                  upcomingEvents.map(event => {
                    const linkHref = event.type === 'inspection' ? `/landlord/inspections` : `/landlord/maintenance`;
                    
                    return (
-                     <Link key={event.id} href={linkHref} className="flex gap-4 p-5 bg-white rounded-2xl border border-primary/5 shadow-sm items-center group hover:border-primary/20 hover:shadow-md hover:scale-[1.02] transition-all">
+                     <Link key={event.id} href={linkHref} className="flex gap-5 p-6 bg-white rounded-[1.75rem] border border-primary/5 shadow-sm items-center group hover:border-primary/20 hover:shadow-xl hover:scale-[1.02] transition-all">
                         <div className={cn(
-                          "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:rotate-6",
-                          event.type === 'inspection' ? "bg-primary/10 text-primary" : "bg-amber-100 text-amber-600"
+                          "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:rotate-6 shadow-sm",
+                          event.type === 'inspection' ? "bg-primary text-white" : "bg-amber-100 text-amber-600"
                         )}>
-                          {event.type === 'inspection' ? <ShieldCheck className="w-5 h-5" /> : <Wrench className="w-5 h-5" />}
+                          {event.type === 'inspection' ? <ShieldCheck className="w-6 h-6" /> : <Wrench className="w-6 h-6" />}
                         </div>
-                        <div className="min-w-0">
-                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{format(event.date, 'MMM dd, yyyy')}</p>
-                           <p className="font-bold text-sm text-primary truncate">{event.title}</p>
+                        <div className="min-w-0 flex-1">
+                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1 font-headline">{format(event.date, 'MMM dd, yyyy')}</p>
+                           <p className="font-bold text-base text-primary truncate leading-tight">{event.title}</p>
                         </div>
+                        <ArrowUpRight className="w-5 h-5 text-primary/20 group-hover:text-primary transition-colors shrink-0" />
                      </Link>
                    );
                  })
@@ -254,35 +264,35 @@ export default function LandlordCalendarPage() {
 function EventCard({ event }: { event: PortfolioEvent }) {
   const Icon = event.type === 'inspection' ? ShieldCheck : Wrench;
   const colorClass = event.type === 'inspection' ? "bg-primary text-white" : "bg-amber-500 text-white";
-  
   const linkHref = event.type === 'inspection' ? `/landlord/inspections` : `/landlord/maintenance`;
 
   return (
-    <div className="group flex items-center justify-between p-6 bg-primary/[0.02] border border-primary/5 rounded-[2rem] transition-all hover:bg-white hover:shadow-xl hover:scale-[1.01] hover:border-primary/10">
-      <div className="flex items-center gap-6 text-left">
-        <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:rotate-6 transition-transform", colorClass)}>
-           <Icon className="w-6 h-6" />
-        </div>
-        <div>
-          <Badge variant="outline" className="mb-2 uppercase text-[9px] font-bold tracking-[0.2em] opacity-60 border-primary/10">
-            {event.type}
-          </Badge>
-          <h4 className="text-xl font-bold font-headline text-primary leading-tight mb-1">{event.title}</h4>
-          <div className="flex items-center gap-3">
-             <p className="text-xs text-muted-foreground font-medium flex items-center">
-                <MapPin className="w-3 h-3 mr-1 opacity-50" /> {event.subtitle}
-             </p>
-             {event.priority && (
-               <Badge className="text-[9px] uppercase font-bold bg-red-100 text-red-700 border-none">{event.priority}</Badge>
-             )}
+    <Link href={linkHref} className="group block">
+      <div className="flex items-center justify-between p-6 bg-primary/[0.02] border border-primary/5 rounded-[2rem] transition-all hover:bg-white hover:shadow-2xl hover:scale-[1.01] hover:border-primary/10">
+        <div className="flex items-center gap-6 text-left">
+          <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:rotate-6 transition-transform", colorClass)}>
+             <Icon className="w-7 h-7" />
+          </div>
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+               <Badge variant="outline" className="uppercase text-[9px] font-bold tracking-[0.2em] opacity-60 border-primary/10 font-headline">
+                {event.type}
+               </Badge>
+               {event.priority && (
+                 <Badge className="text-[9px] uppercase font-bold bg-red-100 text-red-700 border-none px-3 font-headline">{event.priority}</Badge>
+               )}
+            </div>
+            <h4 className="text-2xl font-bold font-headline text-primary leading-none mb-2 tracking-tight group-hover:text-accent transition-colors">{event.title}</h4>
+            <p className="text-sm text-muted-foreground font-bold flex items-center font-body opacity-60">
+              <MapPin className="w-3.5 h-3.5 mr-1.5" /> {event.subtitle}
+            </p>
           </div>
         </div>
+        <div className="flex items-center gap-3 text-primary/20 group-hover:text-primary transition-all">
+           <span className="text-[10px] font-bold uppercase tracking-widest hidden md:inline">Manage Task</span>
+           <ChevronRight className="w-6 h-6" />
+        </div>
       </div>
-      <Button variant="ghost" size="icon" asChild className="rounded-2xl h-12 w-12 hover:bg-primary hover:text-white transition-all">
-         <Link href={linkHref}>
-            <ChevronRight className="w-6 h-6" />
-         </Link>
-      </Button>
-    </div>
+    </Link>
   );
 }
