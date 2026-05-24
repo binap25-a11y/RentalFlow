@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,21 +42,32 @@ export default function LandlordDashboard() {
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [isAdminEscalated, setIsAdminEscalated] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
+    
+    // Check for admin claims on the current token
+    if (user) {
+      user.getIdTokenResult().then(result => {
+        setIsAdminEscalated(!!result.claims.admin || !!result.claims.premium);
+      });
+    }
+
     const params = new URLSearchParams(window.location.search);
     if (params.get('payment') === 'success') {
       toast({ title: "Premium Activated", description: "Your high-yield management tools are now live." });
     }
-  }, [toast]);
+  }, [user, toast]);
 
   const userDocRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, 'users', user.uid);
   }, [db, user]);
   const { data: profile } = useDoc(userDocRef);
-  const isPro = profile?.plan === 'pro';
+
+  // Access check: allow Pro if Firestore record says so OR if the token has an admin claim
+  const isPro = profile?.plan === 'pro' || isAdminEscalated;
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -363,9 +373,11 @@ export default function LandlordDashboard() {
               Upgrade to Premium – £10/month
             </Button>
           ) : (
-            <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100">
-               <ShieldCheck className="w-4 h-4" />
-               <span className="text-[10px] font-bold uppercase tracking-widest font-headline">Premium Plan Active</span>
+            <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 shadow-sm animate-in zoom-in-95">
+               {isAdminEscalated ? <ShieldCheck className="w-4 h-4" /> : <Crown className="w-4 h-4" />}
+               <span className="text-[10px] font-bold uppercase tracking-widest font-headline">
+                 {isAdminEscalated ? "Admin Access Verified" : "Premium Plan Active"}
+               </span>
             </div>
           )}
           <Button className="rounded-2xl h-11 px-6 font-bold bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all text-white" asChild>
