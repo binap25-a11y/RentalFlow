@@ -6,7 +6,7 @@ import * as admin from 'firebase-admin';
 /**
  * @fileOverview Resilient Stripe Webhook Fulfillment Hub.
  * Authenticates incoming Stripe events and updates user subscription status.
- * Now implements Custom User Claims for 'premium' access as requested.
+ * Implements Custom User Claims for 'admin' and 'premium' access.
  */
 
 export async function POST(req: Request) {
@@ -41,8 +41,11 @@ export async function POST(req: Request) {
     if (userId) {
       try {
         // 1. Set Custom User Claims for secure, token-based verification
-        // Using premium: true as requested for upgraded users
-        await adminAuth.setCustomUserClaims(userId, { premium: true });
+        // Matches requested pattern: { admin: true, premium: true }
+        await adminAuth.setCustomUserClaims(userId, { 
+          admin: true, 
+          premium: true 
+        });
 
         // 2. Update Firestore record for operational analytics and UI binding
         await adminDb.collection("users").doc(userId).update({
@@ -51,7 +54,7 @@ export async function POST(req: Request) {
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
 
-        console.log(`✅ User ${userId} successfully upgraded with Premium Custom Claims.`);
+        console.log(`✅ User ${userId} successfully upgraded with Admin & Premium Custom Claims.`);
       } catch (error) {
         console.error(`❌ Fulfillment Failed for User ${userId}:`, error);
         return NextResponse.json({ error: "Fulfillment failed" }, { status: 500 });

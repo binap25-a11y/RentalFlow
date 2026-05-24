@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 /**
  * 🔐 Firebase Admin Engine
  * Secure server-side access to Firestore and Auth for automated plan upgrades.
- * Uses applicationDefault() for standard production environments (Google Cloud/Render).
+ * Uses applicationDefault() for production stability.
  */
 
 if (!admin.apps.length) {
