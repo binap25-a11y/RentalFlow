@@ -128,7 +128,7 @@ export default function NewPropertyPage() {
         variant: "destructive", 
         title: isRlsError ? "Security Policy Error" : "Registration Failed", 
         description: isRlsError 
-          ? "Upload denied by Supabase. Please see src/lib/supabase-usage-guide.md to fix." 
+          ? "Upload denied by Supabase. Please check storage policies." 
           : err.message || "Check storage availability and try again." 
       });
       setIsSaving(false);
@@ -158,9 +158,9 @@ export default function NewPropertyPage() {
             <div className="p-8 lg:p-12 bg-primary/5 border-r border-primary/10">
               <div className="flex justify-between items-center mb-6 text-left">
                 <Label className="font-bold text-xs uppercase tracking-widest text-primary/60 block font-headline">Visual Orchestration</Label>
-                <Button type="button" variant="ghost" size="sm" className="h-8 rounded-lg font-bold text-[10px] uppercase font-headline" onClick={() => document.getElementById('image-input')?.click()}>
+                <label htmlFor="image-input" className="h-8 rounded-lg font-bold text-[10px] uppercase font-headline cursor-pointer px-3 bg-muted/50 flex items-center hover:bg-muted transition-colors">
                   <Plus className="w-3 h-3 mr-1" /> Add Photos
-                </Button>
+                </label>
               </div>
 
               {ledger.length > 0 ? (
@@ -180,21 +180,20 @@ export default function NewPropertyPage() {
                       )}
                     </div>
                   ))}
-                  <button 
-                    type="button" 
-                    onClick={() => document.getElementById('image-input')?.click()}
-                    className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white flex flex-col items-center justify-center gap-2"
+                  <label 
+                    htmlFor="image-input"
+                    className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white flex flex-col items-center justify-center gap-2 cursor-pointer"
                   >
                     <Plus className="w-6 h-6 text-primary/20" />
-                  </button>
+                  </label>
                 </div>
               ) : (
-                <div className="relative group overflow-hidden rounded-3xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white aspect-video w-full flex items-center justify-center shadow-inner">
-                  <button type="button" onClick={() => document.getElementById('image-input')?.click()} className="flex flex-col items-center gap-3">
+                <label htmlFor="image-input" className="relative group overflow-hidden rounded-3xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-white aspect-video w-full flex items-center justify-center shadow-inner cursor-pointer">
+                  <div className="flex flex-col items-center gap-3">
                     <div className="p-5 bg-primary/10 rounded-full"><ImageIcon className="w-8 h-8 text-primary" /></div>
                     <span className="text-sm font-bold text-primary font-headline">Upload Property Assets</span>
-                  </button>
-                </div>
+                  </div>
+                </label>
               )}
               <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
             </div>

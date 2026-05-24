@@ -26,7 +26,7 @@ import { format } from "date-fns";
 import { 
   Calendar as CalendarIcon, Loader2, Download, 
   CheckCircle2, ClipboardList, ShieldAlert, Home, Wrench, 
-  Check, X, AlertTriangle, Info, Trash2, Edit3, PlayCircle, Camera, Image as ImageIcon
+  Check, X, AlertTriangle, Info, Trash2, Edit3, PlayCircle, Camera
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -250,9 +250,9 @@ export default function InspectionsPage() {
       
       const isPass = data.status === 'pass';
       if (isPass) {
-        pdf.setTextColor(16, 185, 129); // Professional Green
+        pdf.setTextColor(16, 185, 129);
       } else {
-        pdf.setTextColor(239, 68, 68); // Professional Red
+        pdf.setTextColor(239, 68, 68);
       }
       
       pdf.setFont("helvetica", "bold");
@@ -301,7 +301,6 @@ export default function InspectionsPage() {
     const property = properties?.find(p => p.id === activeInspection.propertyId);
 
     try {
-      // 1. Upload Images to Supabase
       const finalStructuredFindings: any = {};
       const findingsList = Object.entries(structuredFindings);
 
@@ -325,7 +324,6 @@ export default function InspectionsPage() {
         };
       }
 
-      // 2. Generate AI Report
       const flatFindingsString = Object.entries(finalStructuredFindings).map(([item, data]: [string, any]) => {
         return `${item}: ${data.status?.toUpperCase() || 'UNCHECKED'} ${data.notes ? `(Notes: ${data.notes})` : ''}`;
       }).join('\n');
@@ -335,7 +333,6 @@ export default function InspectionsPage() {
         findings: flatFindingsString
       });
 
-      // 3. Persist to Firestore
       const inspectionRef = doc(db, 'inspections', activeInspection.id);
       const completedData = {
         ...activeInspection,
@@ -349,8 +346,6 @@ export default function InspectionsPage() {
       };
 
       updateDocumentNonBlocking(inspectionRef, completedData);
-      
-      // 4. Download PDF (Asynchronously)
       await downloadPDF(completedData);
 
       toast({ title: "Audit Finalized", description: "Official record updated and report downloaded." });
@@ -491,18 +486,19 @@ export default function InspectionsPage() {
                                                     </Button>
                                                   </div>
                                                 ) : (
-                                                  <button 
-                                                    onClick={() => document.getElementById(`upload-${item}`)?.click()}
-                                                    className="w-full aspect-video rounded-xl border-2 border-dashed border-primary/10 hover:border-primary/30 transition-all bg-white flex flex-col items-center justify-center gap-2 group"
+                                                  <label 
+                                                    htmlFor={`upload-${item}`}
+                                                    className="w-full aspect-video rounded-xl border-2 border-dashed border-primary/10 hover:border-primary/30 transition-all bg-white flex flex-col items-center justify-center gap-2 group cursor-pointer"
                                                   >
                                                     <Camera className="w-8 h-8 text-primary/20 group-hover:text-primary/40 transition-colors" />
                                                     <span className="text-[10px] font-bold uppercase text-primary/40 group-hover:text-primary/60">Capture Evidence</span>
-                                                  </button>
+                                                  </label>
                                                 )}
                                                 <input 
                                                   id={`upload-${item}`} 
                                                   type="file" 
                                                   accept="image/*" 
+                                                  capture="environment"
                                                   className="hidden" 
                                                   onChange={(e) => handleImageUpload(item, e.target.files?.[0] || null)} 
                                                 />
