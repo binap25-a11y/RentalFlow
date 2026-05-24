@@ -14,16 +14,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   CalendarDays, Loader2, Wrench, ShieldCheck, 
-  Users, ChevronRight, Clock, MapPin, 
+  ChevronRight, Clock, MapPin, 
   LayoutDashboard
 } from "lucide-react";
-import { format, isSameDay, isAfter, startOfDay, parseISO, isValid } from "date-fns";
+import { format, isSameDay, isAfter, startOfDay, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 type PortfolioEvent = {
   id: string;
-  type: 'inspection' | 'lease' | 'repair';
+  type: 'inspection' | 'repair';
   date: Date;
   title: string;
   subtitle: string;
@@ -60,12 +60,6 @@ export default function LandlordCalendarPage() {
   }, [db, user]);
   const { data: maintenance, loading: isMaintLoading } = useCollection(maintenanceQuery);
 
-  const tenantsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return getLandlordCollectionQuery(db, "tenantProfiles", user.uid);
-  }, [db, user]);
-  const { data: tenants, loading: isTenantsLoading } = useCollection(tenantsQuery);
-
   const allEvents = useMemo(() => {
     if (!isClient || !properties) return [];
     
@@ -101,25 +95,8 @@ export default function LandlordCalendarPage() {
       }
     });
 
-    tenants?.forEach(t => {
-      // CRITICAL FIX: Only include leases that have a verified date string
-      if (!t.leaseEndDate || typeof t.leaseEndDate !== 'string' || t.leaseEndDate.trim() === '') return;
-      
-      const date = parseISO(t.leaseEndDate);
-      if (isValid(date)) {
-        events.push({
-          id: t.id,
-          type: 'lease',
-          date,
-          title: `Lease Renewal: ${t.firstName} ${t.lastName}`,
-          subtitle: properties.find(p => p.id === t.propertyId)?.addressLine1 || 'Asset',
-          propertyId: t.propertyId
-        });
-      }
-    });
-
     return events.sort((a, b) => a.date.getTime() - b.date.getTime());
-  }, [inspections, maintenance, tenants, properties, isClient]);
+  }, [inspections, maintenance, properties, isClient]);
 
   const selectedDayEvents = useMemo(() => {
     return allEvents.filter(e => isSameDay(e.date, selectedDate));
@@ -135,22 +112,22 @@ export default function LandlordCalendarPage() {
   const modifiers = useMemo(() => {
     const dates: Record<string, Date[]> = {
       inspection: [],
-      lease: [],
       repair: []
     };
     allEvents.forEach(e => {
-      dates[e.type].push(e.date);
+      if (dates[e.type]) {
+        dates[e.type].push(e.date);
+      }
     });
     return dates;
   }, [allEvents]);
 
   const modifierStyles = {
     inspection: { borderBottom: '2px solid hsl(var(--primary))' },
-    lease: { borderBottom: '2px solid #10b981' },
     repair: { borderBottom: '2px solid #f59e0b' }
   };
 
-  if (!isClient || isInspLoading || isMaintLoading || isTenantsLoading) {
+  if (!isClient || isInspLoading || isMaintLoading) {
     return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   }
 
@@ -159,7 +136,7 @@ export default function LandlordCalendarPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Portfolio Calendar</h1>
-          <p className="text-muted-foreground font-medium font-body">Integrated timeline for compliance, renewals, and operations.</p>
+          <p className="text-muted-foreground font-medium font-body">Timeline for compliance audits and operational maintenance.</p>
         </div>
         <div className="flex gap-2">
            <Button variant="outline" className="rounded-xl font-bold h-11 border-primary/10 bg-white" asChild>
@@ -190,12 +167,6 @@ export default function LandlordCalendarPage() {
                       <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Property Audits</span>
                    </div>
                  )}
-                 {modifiers.lease.length > 0 && (
-                   <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Lease Expiries</span>
-                   </div>
-                 )}
                  {modifiers.repair.length > 0 && (
                    <div className="flex items-center gap-3">
                       <div className="w-3 h-3 rounded-full bg-amber-500" />
@@ -208,9 +179,9 @@ export default function LandlordCalendarPage() {
 
           <Card className="border-none shadow-sm rounded-[2rem] bg-primary text-white overflow-hidden p-8">
             <h3 className="text-lg font-bold font-headline mb-4 flex items-center gap-2">
-               <Clock className="w-5 h-5 text-accent" /> Operational View
+               <Clock className="w-5 h-5 text-accent" /> Roadmap Context
             </h3>
-            <p className="text-sm opacity-80 leading-relaxed font-body">This calendar reflects the current verified state of your portfolio. Events without end dates are strictly excluded from the roadmap.</p>
+            <p className="text-sm opacity-80 leading-relaxed font-body">This calendar reflects active property audits and maintenance tasks. Use this for coordinating site visits and contractor assignments.</p>
           </Card>
         </div>
 
@@ -223,7 +194,7 @@ export default function LandlordCalendarPage() {
                     <CardTitle className="text-2xl font-headline text-primary">{format(selectedDate, 'PPPP')}</CardTitle>
                  </div>
                  <Badge variant="outline" className="rounded-xl py-1 px-4 font-bold border-primary/10 text-primary uppercase text-[10px]">
-                   {selectedDayEvents.length} Events Listed
+                   {selectedDayEvents.length} Tasks Scheduled
                  </Badge>
               </div>
             </CardHeader>
@@ -231,7 +202,7 @@ export default function LandlordCalendarPage() {
               {selectedDayEvents.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 opacity-30">
                    <CalendarDays className="w-12 h-12 mb-4" />
-                   <p className="text-sm font-bold uppercase tracking-widest">No Events Scheduled</p>
+                   <p className="text-sm font-bold uppercase tracking-widest">No Tasks Scheduled</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -249,21 +220,18 @@ export default function LandlordCalendarPage() {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                {upcomingEvents.length === 0 ? (
-                  <p className="col-span-full text-center py-10 text-muted-foreground italic text-sm">No verified upcoming milestones detected.</p>
+                  <p className="col-span-full text-center py-10 text-muted-foreground italic text-sm">No verified upcoming events detected.</p>
                ) : (
                  upcomingEvents.map(event => {
-                   const linkHref = event.type === 'inspection' ? `/landlord/inspections` :
-                                   event.type === 'lease' ? `/landlord/tenants` : `/landlord/maintenance`;
+                   const linkHref = event.type === 'inspection' ? `/landlord/inspections` : `/landlord/maintenance`;
                    
                    return (
                      <Link key={event.id} href={linkHref} className="flex gap-4 p-5 bg-white rounded-2xl border border-primary/5 shadow-sm items-center group hover:border-primary/20 hover:shadow-md hover:scale-[1.02] transition-all">
                         <div className={cn(
                           "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:rotate-6",
-                          event.type === 'inspection' ? "bg-primary/10 text-primary" :
-                          event.type === 'lease' ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"
+                          event.type === 'inspection' ? "bg-primary/10 text-primary" : "bg-amber-100 text-amber-600"
                         )}>
-                          {event.type === 'inspection' ? <ShieldCheck className="w-5 h-5" /> : 
-                           event.type === 'lease' ? <Users className="w-5 h-5" /> : <Wrench className="w-5 h-5" />}
+                          {event.type === 'inspection' ? <ShieldCheck className="w-5 h-5" /> : <Wrench className="w-5 h-5" />}
                         </div>
                         <div className="min-w-0">
                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{format(event.date, 'MMM dd, yyyy')}</p>
@@ -282,12 +250,10 @@ export default function LandlordCalendarPage() {
 }
 
 function EventCard({ event }: { event: PortfolioEvent }) {
-  const Icon = event.type === 'inspection' ? ShieldCheck : event.type === 'lease' ? Users : Wrench;
-  const colorClass = event.type === 'inspection' ? "bg-primary text-white" : 
-                    event.type === 'lease' ? "bg-emerald-500 text-white" : "bg-amber-500 text-white";
+  const Icon = event.type === 'inspection' ? ShieldCheck : Wrench;
+  const colorClass = event.type === 'inspection' ? "bg-primary text-white" : "bg-amber-500 text-white";
   
-  const linkHref = event.type === 'inspection' ? `/landlord/inspections` :
-                   event.type === 'lease' ? `/landlord/tenants` : `/landlord/maintenance`;
+  const linkHref = event.type === 'inspection' ? `/landlord/inspections` : `/landlord/maintenance`;
 
   return (
     <div className="group flex items-center justify-between p-6 bg-primary/[0.02] border border-primary/5 rounded-[2rem] transition-all hover:bg-white hover:shadow-xl hover:scale-[1.01] hover:border-primary/10">
