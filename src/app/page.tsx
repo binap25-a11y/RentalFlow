@@ -55,7 +55,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background font-body selection:bg-primary selection:text-primary-foreground">
+    <div className="min-h-screen bg-background font-body selection:bg-primary selection:text-primary-foreground overflow-x-hidden">
       <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 h-20">
         <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -72,7 +72,7 @@ export default function LandingPage() {
              {user ? (
                <Button variant="ghost" asChild className="rounded-xl font-bold text-primary">
                  <Link href={profile?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
-                    Portal Access <ChevronRight className="w-4 h-4 ml-1" />
+                    Portfolio Access <ChevronRight className="w-4 h-4 ml-1" />
                  </Link>
                </Button>
              ) : (
@@ -106,7 +106,7 @@ export default function LandingPage() {
                 <div className="pt-2">
                   <Button size="lg" asChild className="h-16 px-10 rounded-2xl bg-primary text-lg font-bold shadow-2xl shadow-primary/20 text-primary-foreground hover:scale-[1.02] transition-transform">
                     <Link href={profile.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
-                        Return to {profile.role === 'landlord' ? 'Portfolio' : 'Hub'} <ArrowRight className="w-5 h-5 ml-3" />
+                        Return to Portfolio <ArrowRight className="w-5 h-5 ml-3" />
                     </Link>
                   </Button>
                 </div>

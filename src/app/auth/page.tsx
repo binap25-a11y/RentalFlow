@@ -65,6 +65,7 @@ export default function AuthPage() {
             // Sync claims before redirecting
             await user.getIdToken(true);
             
+            // Redirect landlords directly to properties for immediate operational context
             router.replace(userData?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
           } else {
             setNeedsProfile(true);
@@ -128,7 +129,6 @@ export default function AuthPage() {
         }
       }
       
-      // Force token refresh to ensure custom claims (including admin/premium) are synced
       await user.getIdToken(true);
       toast({ title: "Profile Ready", description: `Welcome to RentalFlow.` });
       
@@ -177,6 +177,7 @@ export default function AuthPage() {
     }
   };
 
+  // High-fidelity full-screen loader to prevent UI flickering during initial mount and auth checks
   if (!mounted || isUserLoading || (user && !needsProfile && !isRedirecting.current)) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-500">
@@ -199,7 +200,7 @@ export default function AuthPage() {
             <div className="flex flex-col items-center gap-4">
               <div className="flex items-center gap-3">
                 <Loader2 className="w-5 h-5 animate-spin text-primary opacity-60" />
-                <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Secure Ledger Sync</p>
+                <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Authorizing Session</p>
               </div>
             </div>
           </div>
@@ -349,7 +350,7 @@ export default function AuthPage() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2 text-left">
                   <Label htmlFor="email" className="font-bold text-xs uppercase text-muted-foreground tracking-widest font-headline">Email Address</Label>
-                  <Input id="email" type="email" placeholder="name@domain.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-2xl h-14 border-none bg-muted/20 font-body font-bold text-lg px-6" />
+                  <Input id="email" type="email" placeholder="name@domain.com" value={email} onChange={(e) => setEmail(target.value)} required className="rounded-2xl h-14 border-none bg-muted/20 font-body font-bold text-lg px-6" />
                 </div>
                 <div className="space-y-2 text-left">
                   <div className="flex justify-between items-center">
@@ -357,7 +358,7 @@ export default function AuthPage() {
                     <button type="button" className="text-[10px] font-bold text-accent uppercase tracking-widest hover:underline">Reset</button>
                   </div>
                   <div className="relative">
-                    <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="rounded-2xl h-14 border-none bg-muted/20 font-body font-bold text-lg px-6 pr-12" />
+                    <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(target.value)} required className="rounded-2xl h-14 border-none bg-muted/20 font-body font-bold text-lg px-6 pr-12" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-4 text-primary/30 hover:text-primary transition-colors">
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
