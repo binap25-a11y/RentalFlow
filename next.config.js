@@ -18,7 +18,8 @@ const nextConfig = {
         "*.ngrok-free.app",
         "*.loca.lt",
         "*.supabase.co",
-        "*.branch.io"
+        "*.branch.io",
+        "*.vercel.app"
       ]
     }
   },

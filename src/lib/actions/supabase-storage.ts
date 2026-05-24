@@ -20,6 +20,7 @@ export async function uploadToSupabase(
     if (!file) throw new Error('No valid binary payload detected.');
 
     // Robust binary processing for Next.js 15 Server Actions
+    // Conversion to Buffer ensures stable stream delivery across mobile networks
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 

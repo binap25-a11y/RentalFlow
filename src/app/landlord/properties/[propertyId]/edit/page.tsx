@@ -187,10 +187,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
   };
 
-  if (isLoading || !isInitialized) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+  if (isLoading || !isInitialized) return <div className="flex h-[70vh] items-center justify-center bg-background"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left">
+    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left bg-background">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full hover:bg-primary/5 transition-colors">
@@ -238,11 +238,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       {item.status === 'ready' && (
                         <div className="absolute bottom-2 right-2 bg-emerald-500 text-white p-1 rounded-full shadow-lg">
                            <CheckCircle2 className="w-3 h-3" />
-                        </div>
-                      )}
-                      {item.status === 'error' && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-red-500/20 backdrop-blur-sm">
-                           <X className="w-8 h-8 text-red-600" />
                         </div>
                       )}
                     </div>
