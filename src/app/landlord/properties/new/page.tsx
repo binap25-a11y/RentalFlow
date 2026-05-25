@@ -68,7 +68,7 @@ export default function NewPropertyPage() {
         const { error: uploadError } = await supabase.storage
           .from('property-images')
           .upload(path, optimizedAsset, {
-            contentType: file.type || 'image/jpeg',
+            contentType: 'image/jpeg',
             upsert: true
           });
 
