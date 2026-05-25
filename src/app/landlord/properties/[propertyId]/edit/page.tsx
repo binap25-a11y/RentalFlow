@@ -250,19 +250,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       index === 0 ? "border-accent" : "border-transparent",
                       (item.status === 'error' || item.isBroken) && "border-destructive"
                     )}>
-                      {!item.isBroken ? (
-                        <img 
-                          src={item.status === 'ready' && item.cloudUrl ? item.cloudUrl : item.previewUrl} 
-                          alt="" 
-                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                          onError={() => handleImageError(item.id)}
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/20 gap-2">
-                          <Building2 className="w-8 h-8 text-muted-foreground/30" />
-                          <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/40">Sync Pending</span>
-                        </div>
-                      )}
+                      <img 
+                        src={item.status === 'ready' && item.cloudUrl ? item.cloudUrl : item.previewUrl} 
+                        alt="" 
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        onError={() => handleImageError(item.id)}
+                      />
                       
                       <div className="absolute top-3 right-3 flex gap-2 z-20">
                         <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-black/60 backdrop-blur-xl text-accent p-2.5 rounded-2xl hover:scale-110 transition-transform shadow-2xl border border-white/10">
