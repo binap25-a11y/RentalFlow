@@ -184,8 +184,8 @@ export default function ProfilePage() {
                       </div>
                     </CardContent>
                     <CardFooter className="p-8 bg-muted/10 border-t flex justify-end">
-                      <Button type="submit" disabled={isSaving} className="rounded-xl h-12 px-10 font-bold bg-primary text-primary-foreground shadow-lg shadow-primary/20 font-headline uppercase tracking-widest text-[10px]">
-                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                      <Button type="submit" disabled={isSaving} className="rounded-xl h-12 px-10 font-bold bg-accent text-white shadow-lg shadow-accent/20 font-headline uppercase tracking-widest text-[10px] border-none">
+                        {isSaving ? <Loader2 className="w-4 h-4 mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                         Save Account Specs
                       </Button>
                     </CardFooter>

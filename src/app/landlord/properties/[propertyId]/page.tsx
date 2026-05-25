@@ -273,7 +273,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         priority={index === 0}
                       />
                       {index === 0 && (
-                        <div className="absolute top-6 left-6 px-4 py-1.5 bg-primary text-primary-foreground text-[10px] font-bold uppercase rounded-full shadow-2xl font-headline">Cover Identity</div>
+                        <div className="absolute top-6 left-6 px-4 py-1.5 bg-accent text-white text-[10px] font-bold uppercase rounded-full shadow-2xl font-headline">Cover Identity</div>
                       )}
                     </div>
                   </CarouselItem>
@@ -351,7 +351,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                ) : (
                  <div className="p-16 text-center bg-muted/10 rounded-[2.5rem] border-2 border-dashed border-border flex flex-col items-center">
                     <p className="text-xs text-muted-foreground font-bold font-headline mb-4 opacity-50 uppercase tracking-widest">No residents assigned</p>
-                    <Button asChild className="rounded-xl font-bold bg-primary text-primary-foreground shadow-lg text-xs h-10 px-8">
+                    <Button asChild className="rounded-xl font-bold bg-accent text-white shadow-lg text-xs h-10 px-8 border-none">
                       <Link href="/landlord/tenants">Assign Resident</Link>
                     </Button>
                  </div>
@@ -363,7 +363,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 <h3 className="font-bold font-headline text-lg text-foreground">Property Vault</h3>
                 <Dialog open={isDocDialogOpen} onOpenChange={(o) => { setIsDocDialogOpen(o); if(!o) setUploadedDocUrl(null); }}>
                   <DialogTrigger asChild>
-                    <Button className="rounded-xl font-bold bg-primary text-primary-foreground h-10 shadow-lg px-6 text-xs uppercase tracking-widest">
+                    <Button className="rounded-xl font-bold bg-accent text-white h-10 shadow-lg px-6 text-xs uppercase tracking-widest border-none">
                       <Plus className="w-4 h-4 mr-2" /> Upload Record
                     </Button>
                   </DialogTrigger>
@@ -416,7 +416,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         </div>
                       </ScrollArea>
                       <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
-                        <Button type="submit" disabled={isUploadingDoc || !uploadedDocUrl || !newDocName} className="w-full rounded-xl h-14 font-bold bg-primary shadow-xl text-primary-foreground font-headline text-xs uppercase tracking-widest hover:scale-[1.01] transition-transform">
+                        <Button type="submit" disabled={isUploadingDoc || !uploadedDocUrl || !newDocName} className="w-full rounded-xl h-14 font-bold bg-accent text-white shadow-xl font-headline text-xs uppercase tracking-widest hover:scale-[1.01] transition-transform border-none">
                           <ShieldCheck className="w-4 h-4 mr-2" />
                           Finalize Ledger Entry
                         </Button>
@@ -517,10 +517,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         </div>
 
         <div className="space-y-8">
-           <Card className="border-none shadow-sm rounded-[2rem] bg-primary text-primary-foreground overflow-hidden text-left">
+           <Card className="border-none shadow-sm rounded-[2rem] bg-accent text-white overflow-hidden text-left">
              <CardHeader className="pb-4">
                 <CardTitle className="text-lg font-bold font-headline flex items-center gap-2">
-                   <ShieldCheck className="w-5 h-5 text-accent" /> Security Context
+                   <ShieldCheck className="w-5 h-5 text-white/80" /> Security Context
                 </CardTitle>
              </CardHeader>
              <CardContent className="space-y-4">

@@ -14,10 +14,10 @@ export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-15
 /**
  * 🖼️ Resilient Mobile Optimization Engine
  * Redesigned for 100% reliability on mobile (iOS/Android).
- * Uses URL.createObjectURL for extreme memory efficiency.
- * If the device hits memory limits, it SILENTLY returns the original file.
+ * USES URL.createObjectURL for extreme memory efficiency.
+ * IF THE DEVICE HITS MEMORY LIMITS, it SILENTLY returns the original file.
  */
-export async function compressImage(file: File, maxWidth = 1200, quality = 0.7): Promise<Blob | File> {
+export async function compressImage(file: File, maxWidth = 1200, quality = 0.75): Promise<Blob | File> {
   // Skip non-images or small files
   if (!file.type.startsWith('image/') || file.size < 1024 * 512) {
     return file;
@@ -25,7 +25,7 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.7):
 
   try {
     return await new Promise((resolve) => {
-      // Strict safety timeout (3s)
+      // Strict safety timeout (3s) to prevent blocking the UI
       const timeout = setTimeout(() => resolve(file), 3000);
 
       const objectUrl = URL.createObjectURL(file);
