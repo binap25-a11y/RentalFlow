@@ -98,7 +98,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
-      // INSTANT PREVIEW: Direct blob access
+      // INSTANT PREVIEW: Direct blob access for immediate mobile feedback
       const localUrl = URL.createObjectURL(file);
       
       const newItem: LedgerItem = {
@@ -170,9 +170,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     try {
       const finalUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
       
-      // Select the first real user upload as primary, otherwise fallback
+      // STORAGE-FIRST SYNC:
+      // 1. Identify real user uploads (Supabase/Blob)
       const userUploads = finalUrls.filter(u => isRealUserUpload(u));
-      const primaryUrl = userUploads.length > 0 ? userUploads[0] : (finalUrls[0] || RENTALFLOW_NEUTRAL_FALLBACK);
+      
+      // 2. PURGE PLACEHOLDERS: If the user has uploaded their own images, 
+      // we remove any original Unsplash placeholders to ensure their identity is locked in.
+      const purgedGallery = userUploads.length > 0 ? userUploads : finalUrls;
+      const primaryUrl = purgedGallery.length > 0 ? purgedGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
 
       const serializableData = {
         id: propertyId,
@@ -182,7 +187,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         zipCode,
         rentAmount: parseFloat(rentAmount) || 0,
         imageUrl: primaryUrl,
-        imageUrls: finalUrls,
+        imageUrls: purgedGallery,
         propertyType,
         numberOfBedrooms: parseInt(bedrooms, 10) || 1,
         numberOfBathrooms: parseInt(bathrooms, 10) || 1,
@@ -221,7 +226,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </div>
         </div>
         <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[9px]">
-          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Direct Sync Active
+          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Storage-First Sync Active
         </Badge>
       </div>
 
@@ -245,7 +250,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
-                      {/* INSTANT PREVIEW: Standard img avoids proxy crashes */}
+                      {/* Using standard img for local blob stability on mobile */}
                       <img 
                         src={item.previewUrl} 
                         alt={`Asset ${index}`} 

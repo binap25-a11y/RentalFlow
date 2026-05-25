@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { supabase } from '@/lib/supabase';
-import { cn, compressImage, withRetry, RENTALFLOW_NEUTRAL_FALLBACK } from '@/lib/utils';
+import { cn, compressImage, withRetry, isRealUserUpload, RENTALFLOW_NEUTRAL_FALLBACK } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -49,7 +49,7 @@ export default function NewPropertyPage() {
 
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
-      // INSTANT PREVIEW: Use local object URL for immediate display
+      // INSTANT PREVIEW: Local blob for mobile responsiveness
       const localUrl = URL.createObjectURL(file);
       
       const newItem: LedgerItem = {
@@ -64,7 +64,7 @@ export default function NewPropertyPage() {
         const optimizedBlob = await compressImage(file);
         const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
-        // DIRECT SYNC: Standard anon client bypasses RS256 algorithm collisions
+        // DIRECT SYNC: Bypassing algorithm collisions
         const publicUrl = await withRetry(async () => {
           const { error: uploadError } = await supabase.storage
             .from('property-images')
@@ -114,7 +114,11 @@ export default function NewPropertyPage() {
     const propertyRef = doc(db, 'properties', propertyId);
 
     const finalImageUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
-    const finalImageUrl = finalImageUrls[0] || '';
+    
+    // STORAGE-FIRST SYNC: Ensure placeholders are purged if user uploads exist
+    const userUploads = finalImageUrls.filter(isRealUserUpload);
+    const purgedGallery = userUploads.length > 0 ? userUploads : finalImageUrls;
+    const finalImageUrl = purgedGallery.length > 0 ? purgedGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
 
     try {
       const serializableData = {
@@ -125,7 +129,7 @@ export default function NewPropertyPage() {
         zipCode,
         rentAmount: parseFloat(rentAmount) || 0,
         imageUrl: finalImageUrl,
-        imageUrls: finalImageUrls,
+        imageUrls: purgedGallery,
         propertyType,
         numberOfBedrooms: parseInt(bedrooms, 10) || 1,
         numberOfBathrooms: parseInt(bathrooms, 10) || 1,
@@ -165,7 +169,7 @@ export default function NewPropertyPage() {
           </div>
         </div>
         <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[9px]">
-          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Direct Sync Enabled
+          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Storage-First Sync Enabled
         </Badge>
       </div>
 
@@ -189,7 +193,6 @@ export default function NewPropertyPage() {
                       index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
-                      {/* Using standard img to avoid Next.js Image proxy for local blobs */}
                       <img 
                         src={item.previewUrl} 
                         alt={`Asset ${index}`} 

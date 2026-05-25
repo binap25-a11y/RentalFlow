@@ -13,7 +13,6 @@ export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-15
 
 /**
  * 🔄 Resilient Retry Wrapper
- * Automatically retries async operations (like uploads) to handle flakey mobile networks.
  */
 export async function withRetry<T>(
   fn: () => Promise<T>,
@@ -31,8 +30,6 @@ export async function withRetry<T>(
 
 /**
  * 🖼️ Resilient Mobile Optimization Engine
- * Converts HEIC/PNG to high-quality JPG and downscales for 100% mobile stability.
- * Optimized for low-RAM devices: if optimization hits a memory limit or takes too long, it returns the original file.
  */
 export async function compressImage(file: File, maxWidth = 1200, quality = 0.7): Promise<Blob | File> {
   if (!file.type.startsWith('image/') || file.size < 1024 * 300) {
@@ -111,7 +108,11 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.7):
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
-  return url.startsWith('blob:') || url.includes('supabase.co') || url.includes('firebasestorage.app');
+  const lowerUrl = url.toLowerCase();
+  return lowerUrl.startsWith('blob:') || 
+         lowerUrl.includes('supabase.co') || 
+         lowerUrl.includes('firebasestorage.app') ||
+         lowerUrl.includes('firebasestorage.googleapis.com');
 }
 
 /**
@@ -126,23 +127,25 @@ export function isValidAssetUrl(url: any): boolean {
  * Prioritizes user-uploaded content over placeholders.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
-  // 1. Priority: User Uploads (Direct image or first image in gallery)
+  // 1. Priority: User Uploads (Direct image)
   if (isRealUserUpload(imageUrl)) return imageUrl!;
   
+  // 2. Check Gallery for any real uploads
   if (imageUrls && Array.isArray(imageUrls)) {
     const firstReal = imageUrls.find(u => isRealUserUpload(u));
     if (firstReal) return firstReal;
   }
 
-  // 2. Secondary: Remote images (Unsplash seeds etc) that aren't the brand fallback
+  // 3. Secondary: Remote images (Unsplash seeds etc) that aren't the brand fallback
   if (isValidAssetUrl(imageUrl) && imageUrl !== RENTALFLOW_NEUTRAL_FALLBACK) return imageUrl!;
   
-  // 3. Fallback: Neutral professional brand asset
+  // 4. Fallback: Neutral professional brand asset
   return RENTALFLOW_NEUTRAL_FALLBACK;
 }
 
 /**
  * 🖼️ Synchronized Gallery Resolver
+ * If any user uploads exist, we purge placeholders to satisfy the "replace placeholder" requirement.
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
@@ -153,12 +156,12 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
     });
   }
   
-  const result = Array.from(assets);
-  const userUploads = result.filter(isRealUserUpload);
+  const allAssets = Array.from(assets);
+  const userUploads = allAssets.filter(isRealUserUpload);
   
   // If user has uploaded any actual images, only show those to purge placeholders
   if (userUploads.length > 0) return userUploads;
   
   // Otherwise show existing valid URLs or the brand identity
-  return result.length > 0 ? result : [RENTALFLOW_NEUTRAL_FALLBACK];
+  return allAssets.length > 0 ? allAssets : [RENTALFLOW_NEUTRAL_FALLBACK];
 }
