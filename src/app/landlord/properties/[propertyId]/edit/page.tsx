@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, use, useMemo } from 'react';
@@ -71,7 +70,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // USER-DATA ONLY: Initialize ledger with starred cover first
       const urls = property.imageUrls || [];
       const primary = property.imageUrl;
       
@@ -195,120 +193,124 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   if (isLoading || !isInitialized) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-accent" /></div>;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left bg-background">
+    <div className="max-w-5xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-16 text-left bg-background">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="h-10 w-10 rounded-full hover:bg-primary/5 transition-colors flex items-center justify-center">
-            <ArrowLeft className="w-5 h-5 text-foreground" />
+        <div className="flex items-center gap-6">
+          <button onClick={() => router.back()} className="h-12 w-12 rounded-2xl hover:bg-white/5 transition-all flex items-center justify-center border border-white/5 shadow-2xl">
+            <ArrowLeft className="w-6 h-6 text-foreground" />
           </button>
           <div>
-            <h1 className="text-2xl font-headline font-bold text-foreground tracking-tight">Modify Asset Specs</h1>
-            <p className="text-muted-foreground font-medium font-body text-xs mt-0.5">Updating {address || 'Property Record'}.</p>
+            <h1 className="text-3xl font-headline font-bold text-foreground tracking-tight">Modify Asset Specs</h1>
+            <p className="text-muted-foreground font-medium font-body text-sm mt-1 opacity-60">Updating {address || 'Property Record'}.</p>
           </div>
         </div>
-        <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[9px]">
-          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Instant Sync Active
+        <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 px-5 py-2 rounded-full font-bold uppercase tracking-[0.25em] text-[10px] animate-pulse">
+          <Sparkles className="w-3.5 h-3.5 mr-2" /> High-Fidelity Sync Active
         </Badge>
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden rounded-[2.5rem] bg-card ring-1 ring-border">
+      <Card className="border-none shadow-2xl overflow-hidden rounded-[3rem] bg-card ring-1 ring-white/5">
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-1 lg:grid-cols-2">
-            <div className="p-8 bg-muted/10 border-r border-border">
-              <div className="flex justify-between items-center mb-6">
-                <Label className="font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground opacity-60 font-headline">Visual Inventory</Label>
-                <label htmlFor="image-input" className="h-10 rounded-xl font-bold text-[10px] uppercase font-headline cursor-pointer px-5 bg-accent text-white shadow-lg flex items-center hover:bg-accent/90 transition-all active:scale-95">
-                  <Plus className="w-3.5 h-3.5 mr-2" /> Add Assets
+            <div className="p-10 bg-white/[0.02] border-r border-white/5">
+              <div className="flex justify-between items-center mb-8">
+                <Label className="font-bold text-[10px] uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">Visual Asset Ledger</Label>
+                <label htmlFor="image-input" className="h-11 rounded-2xl font-bold text-[10px] uppercase tracking-[0.1em] font-headline cursor-pointer px-6 bg-accent text-white shadow-2xl shadow-accent/20 flex items-center hover:bg-accent/90 transition-all active:scale-95">
+                  <Plus className="w-4 h-4 mr-2" /> Register Assets
                 </label>
               </div>
 
-              <ScrollArea className="h-[450px] pr-4">
-                <div className="grid grid-cols-2 gap-4">
+              <ScrollArea className="h-[500px] pr-4">
+                <div className="grid grid-cols-2 gap-5">
                   {ledger.map((item, index) => (
                     <div key={item.id} className={cn(
-                      "relative aspect-video rounded-2xl overflow-hidden group shadow-sm bg-background border-2 transition-all",
-                      item.status === 'uploading' ? 'opacity-50 grayscale scale-[0.98]' : 'opacity-100',
-                      index === 0 ? "border-accent" : "border-transparent",
+                      "relative aspect-square rounded-[2rem] overflow-hidden group shadow-2xl bg-background border-2 transition-all duration-500",
+                      item.status === 'uploading' ? 'opacity-50 grayscale scale-[0.95]' : 'opacity-100',
+                      index === 0 ? "border-accent ring-4 ring-accent/10" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
                       <img 
                         src={item.previewUrl} 
                         alt="" 
-                        className="absolute inset-0 h-full w-full object-cover"
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.src = RENTALFLOW_NEUTRAL_FALLBACK;
                         }}
                       />
-                      <div className="absolute top-2 right-2 flex gap-1 z-20">
-                        <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-card/90 text-accent p-2 rounded-xl hover:scale-110 transition-transform shadow-lg border border-border">
-                          <Star className={cn("w-3.5 h-3.5", index === 0 && "fill-accent")} />
+                      <div className="absolute top-3 right-3 flex gap-2 z-20">
+                        <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-black/60 backdrop-blur-xl text-accent p-2.5 rounded-2xl hover:scale-110 transition-transform shadow-2xl border border-white/10">
+                          <Star className={cn("w-4 h-4", index === 0 && "fill-accent")} />
                         </button>
-                        <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 transition-all active:scale-90"><X className="w-3.5 h-3.5" /></button>
+                        <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/80 backdrop-blur-xl text-white p-2.5 rounded-2xl shadow-2xl hover:bg-red-600 transition-all active:scale-90 border border-white/10"><X className="w-4 h-4" /></button>
                       </div>
                       
+                      {index === 0 && (
+                        <div className="absolute bottom-3 left-3 px-3 py-1 bg-accent text-white text-[8px] font-bold uppercase rounded-full shadow-2xl font-headline tracking-widest z-20">Cover</div>
+                      )}
+
                       {item.status === 'uploading' && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-card/60 backdrop-blur-md gap-2">
-                           <Loader2 className="w-6 h-6 animate-spin text-accent" />
-                           <span className="text-[8px] font-bold text-accent uppercase tracking-[0.2em]">Syncing Binary...</span>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-xl gap-3">
+                           <Loader2 className="w-8 h-8 animate-spin text-primary opacity-60" />
+                           <span className="text-[9px] font-bold text-primary uppercase tracking-[0.4em]">Syncing...</span>
                         </div>
                       )}
                     </div>
                   ))}
-                  <label htmlFor="image-input" className="aspect-video rounded-2xl border-2 border-dashed border-accent/20 hover:border-accent/40 transition-all bg-muted/5 flex flex-col items-center justify-center gap-2 group cursor-pointer shadow-inner">
-                    <Plus className="w-6 h-6 text-accent/20 group-hover:text-accent/40" />
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">Gallery Select</span>
+                  <label htmlFor="image-input" className="aspect-square rounded-[2rem] border-2 border-dashed border-white/5 hover:border-accent/40 transition-all duration-500 bg-white/[0.01] flex flex-col items-center justify-center gap-4 group cursor-pointer shadow-inner">
+                    <div className="p-5 bg-white/5 rounded-full group-hover:scale-110 transition-transform duration-500"><Plus className="w-8 h-8 text-white/10 group-hover:text-accent/40" /></div>
+                    <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-30">Gallery Select</span>
                   </label>
                 </div>
               </ScrollArea>
               <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
             </div>
 
-            <div className="p-10 space-y-8">
-              <div className="space-y-6 text-left">
-                <div className="space-y-2">
-                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Street Address</Label>
-                  <Input value={address} onChange={(e) => setAddress(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground" />
+            <div className="p-12 space-y-10">
+              <div className="space-y-8 text-left">
+                <div className="space-y-3">
+                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Operational Location</Label>
+                  <Input value={address} onChange={(e) => setAddress(e.target.value)} required className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner" placeholder="Street Address" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">City</Label>
-                    <Input value={city} onChange={(e) => setCity(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground" />
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Registry City</Label>
+                    <Input value={city} onChange={(e) => setCity(e.target.value)} required className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner" placeholder="City" />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Postcode</Label>
-                    <Input value={zipCode} onChange={(e) => setZipCode(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground" />
+                  <div className="space-y-3">
+                    <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Postcode Identity</Label>
+                    <Input value={zipCode} onChange={(e) => setZipCode(e.target.value)} required className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner" placeholder="Postcode" />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Asset Class</Label>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Asset Classification</Label>
                     <Select value={propertyType} onValueChange={setPropertyType}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground"><SelectValue /></SelectTrigger>
-                      <SelectContent className="rounded-xl border-border bg-card">
-                        <SelectItem value="Apartment">Apartment</SelectItem>
-                        <SelectItem value="House">House</SelectItem>
-                        <SelectItem value="Studio">Studio</SelectItem>
+                      <SelectTrigger className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner focus:ring-accent"><SelectValue /></SelectTrigger>
+                      <SelectContent className="rounded-2xl border-white/5 bg-card shadow-2xl p-2">
+                        <SelectItem value="Apartment" className="rounded-xl font-bold py-3">Apartment Registry</SelectItem>
+                        <SelectItem value="House" className="rounded-xl font-bold py-3">Residential House</SelectItem>
+                        <SelectItem value="Studio" className="rounded-xl font-bold py-3">Modern Studio</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Monthly Yield (£)</Label>
-                    <Input type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground" />
+                  <div className="space-y-3">
+                    <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Target Yield (£)</Label>
+                    <Input type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner" placeholder="0.00" />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Description</Label>
-                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Narrative for this asset..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-medium text-foreground leading-relaxed" />
+                <div className="space-y-3">
+                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Operational Narrative</Label>
+                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Internal narrative for this asset ledger..." className="rounded-2xl min-h-[160px] bg-muted/30 border-none font-medium text-base px-6 py-5 shadow-inner leading-relaxed" />
                 </div>
               </div>
             </div>
           </div>
-          <CardFooter className="p-8 bg-muted/5 border-t flex flex-col md:flex-row justify-end gap-4 shrink-0">
-            <Button type="button" variant="ghost" className="w-full md:w-auto rounded-xl h-12 px-8 font-bold font-headline text-muted-foreground" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" disabled={isSaving || ledger.some(i => i.status === 'uploading')} className="w-full md:w-auto rounded-xl font-bold bg-accent h-12 px-12 shadow-xl shadow-accent/20 font-headline text-white transition-all hover:bg-accent/90 uppercase tracking-widest text-xs border-none">
-              {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-              Save & Exit
+          <CardFooter className="p-10 bg-white/[0.01] border-t border-white/5 flex flex-col md:flex-row justify-end gap-5 shrink-0">
+            <Button type="button" variant="ghost" className="w-full md:w-auto rounded-2xl h-14 px-10 font-bold font-headline text-muted-foreground hover:bg-white/5 hover:text-foreground border border-white/5 transition-all" onClick={() => router.back()}>Cancel</Button>
+            <Button type="submit" disabled={isSaving || ledger.some(i => i.status === 'uploading')} className="w-full md:w-auto rounded-2xl font-bold bg-accent h-14 px-14 shadow-2xl shadow-accent/20 font-headline text-white transition-all hover:bg-accent/90 uppercase tracking-[0.2em] text-[11px] border-none hover:scale-[1.02]">
+              {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
+              Save & Synchronize
             </Button>
           </CardFooter>
         </form>
