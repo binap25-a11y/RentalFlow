@@ -180,7 +180,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const handleFinalizeDocument = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !db || !uploadedDocUrl || !property) return;
+    if ( !user || !db || !uploadedDocUrl || !property) return;
 
     const docId = doc(collection(db, 'documents')).id;
     const docRef = doc(db, 'documents', docId);
