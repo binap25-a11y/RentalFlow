@@ -21,7 +21,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
   id: string;
-  url: string;
+  previewUrl: string; // Reliable local blob: URL
+  cloudUrl?: string;   // Final Supabase URL
   status: 'uploading' | 'ready' | 'error';
 };
 
@@ -53,7 +54,7 @@ export default function NewPropertyPage() {
       
       const newItem: LedgerItem = {
         id: tempId,
-        url: localUrl,
+        previewUrl: localUrl,
         status: 'uploading'
       };
       
@@ -63,7 +64,6 @@ export default function NewPropertyPage() {
         const optimizedBlob = await compressImage(file);
         const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
-        // Standard supabase client synchronization
         const publicUrl = await withRetry(async () => {
           const { error: uploadError } = await supabase.storage
             .from('property-images')
@@ -79,7 +79,7 @@ export default function NewPropertyPage() {
         });
         
         setLedger(prev => prev.map(item => 
-          item.id === tempId ? { ...item, url: publicUrl, status: 'ready' } : item
+          item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
         ));
       } catch (err: any) {
         console.error("Direct Sync Failure:", err);
@@ -113,7 +113,7 @@ export default function NewPropertyPage() {
     const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
-    const finalImageUrls = ledger.filter(i => i.status === 'ready').map(i => i.url);
+    const finalImageUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
     const finalImageUrl = finalImageUrls[0] || '';
 
     try {
@@ -189,7 +189,8 @@ export default function NewPropertyPage() {
                       index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
-                      <Image src={item.url} alt={`Asset ${index}`} fill className="object-cover" unoptimized />
+                      {/* ALWAYS use the previewUrl (local blob) for visual stability */}
+                      <Image src={item.previewUrl} alt={`Asset ${index}`} fill className="object-cover" unoptimized />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">
                         <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/90 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 backdrop-blur-md transition-all active:scale-90"><X className="w-3.5 h-3.5" /></button>
                       </div>

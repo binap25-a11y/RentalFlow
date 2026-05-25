@@ -120,10 +120,14 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
 
 /**
  * 🖼️ Strict User Asset Identifier
+ * Now handles blob: URLs to prevent local previews from being filtered out.
  */
 export function isUserUploadedAsset(url: any): boolean {
-  if (!url || typeof url !== 'string' || url.trim() === '' || !url.startsWith('http')) return false;
+  if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
+  // Allow local previews during the upload session
+  if (url.startsWith('blob:')) return true;
+
   const isStorageAsset = url.includes('supabase.co') || url.includes('firebasestorage.app');
   const isGenericPlaceholder = 
     url.includes('picsum.photos') ||
@@ -138,7 +142,7 @@ export function isUserUploadedAsset(url: any): boolean {
  * 🖼️ Asset Validation Engine
  */
 export function isValidAssetUrl(url: any): boolean {
-  return !!(url && typeof url === 'string' && url.trim() !== '' && url.startsWith('http'));
+  return !!(url && typeof url === 'string' && url.trim() !== '' && (url.startsWith('http') || url.startsWith('blob:')));
 }
 
 /**

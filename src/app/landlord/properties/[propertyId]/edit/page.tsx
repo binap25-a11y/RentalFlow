@@ -27,7 +27,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
   id: string;
-  url: string;
+  previewUrl: string; // Reliable local blob: URL
+  cloudUrl?: string;   // Final Supabase URL
   status: 'uploading' | 'ready' | 'error';
   isNew: boolean;
 };
@@ -78,7 +79,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       
       const initialLedger = gallery
         .filter(url => isUserUploadedAsset(url))
-        .map(url => ({ id: Math.random().toString(), url, status: 'ready' as const, isNew: false }));
+        .map(url => ({ 
+          id: Math.random().toString(36).substring(7), 
+          previewUrl: url, 
+          cloudUrl: url, 
+          status: 'ready' as const, 
+          isNew: false 
+        }));
         
       setLedger(initialLedger);
       setIsInitialized(true);
@@ -95,7 +102,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       
       const newItem: LedgerItem = {
         id: tempId,
-        url: localUrl,
+        previewUrl: localUrl,
         status: 'uploading',
         isNew: true
       };
@@ -106,7 +113,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         const optimizedBlob = await compressImage(file);
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
-        // Use the standard supabase client to avoid header "alg" validation errors
         const publicUrl = await withRetry(async () => {
           const { error: uploadError } = await supabase.storage
             .from('property-images')
@@ -122,7 +128,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         });
         
         setLedger(prev => prev.map(item => 
-          item.id === tempId ? { ...item, url: publicUrl, status: 'ready' } : item
+          item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
         ));
       } catch (err: any) {
         console.error("Direct Sync Error:", err);
@@ -161,7 +167,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     setIsSaving(true);
 
     try {
-      const finalUrls = ledger.filter(i => i.status === 'ready').map(i => i.url);
+      const finalUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
       const primaryUrl = finalUrls.length > 0 ? finalUrls[0] : (property?.imageUrl || '');
 
       const serializableData = {
@@ -235,7 +241,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
-                      <Image src={item.url} alt={`Asset ${index}`} fill className="object-cover" unoptimized />
+                      {/* ALWAYS use the previewUrl (local blob) for visual stability */}
+                      <Image src={item.previewUrl} alt={`Asset ${index}`} fill className="object-cover" unoptimized />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">
                         <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-card/90 text-accent p-2 rounded-xl hover:scale-110 transition-transform shadow-lg border border-border"><Star className={cn("w-3.5 h-3.5", index === 0 && "fill-accent")} /></button>
                         <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 transition-all active:scale-90"><X className="w-3.5 h-3.5" /></button>
