@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star, Building2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
@@ -117,14 +117,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
-    const newItems: LedgerItem[] = [];
-
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
       const uploadItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
-      newItems.push(uploadItem);
       setLedger(prev => [...prev, uploadItem]);
 
       try {
@@ -172,9 +169,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   };
 
   const handleImageError = (id: string) => {
-    setLedger(prev => prev.map(item => 
-      item.id === id ? { ...item, isBroken: true } : item
-    ));
+    // If cloud URL fails, try falling back to preview URL if it's a blob, or mark as truly broken
+    setLedger(prev => prev.map(item => {
+      if (item.id === id) {
+        return { ...item, isBroken: true };
+      }
+      return item;
+    }));
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -243,39 +244,44 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
               <ScrollArea className="h-[600px] pr-4">
                 <div className="grid grid-cols-2 gap-5">
-                  {ledger.map((item, index) => (
-                    <div key={item.id} className={cn(
-                      "relative aspect-square rounded-[2rem] overflow-hidden group shadow-2xl bg-background border-2 transition-all duration-500",
-                      item.status === 'uploading' ? 'opacity-50 grayscale scale-[0.95]' : 'opacity-100',
-                      index === 0 ? "border-accent" : "border-transparent",
-                      (item.status === 'error' || item.isBroken) && "border-destructive"
-                    )}>
-                      <img 
-                        src={item.status === 'ready' && item.cloudUrl ? item.cloudUrl : item.previewUrl} 
-                        alt="" 
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                        onError={() => handleImageError(item.id)}
-                      />
-                      
-                      <div className="absolute top-3 right-3 flex gap-2 z-20">
-                        <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-black/60 backdrop-blur-xl text-accent p-2.5 rounded-2xl hover:scale-110 transition-transform shadow-2xl border border-white/10">
-                          <Star className={cn("w-4 h-4", index === 0 && "fill-accent")} />
-                        </button>
-                        <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/80 backdrop-blur-xl text-white p-2.5 rounded-2xl shadow-2xl hover:bg-red-600 transition-all active:scale-90 border border-white/10"><X className="w-4 h-4" /></button>
-                      </div>
-                      
-                      {index === 0 && (
-                        <div className="absolute bottom-3 left-3 px-3 py-1 bg-accent text-white text-[8px] font-bold uppercase rounded-full shadow-2xl font-headline tracking-widest z-20">Cover</div>
-                      )}
-
-                      {item.status === 'uploading' && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-xl gap-3">
-                           <Loader2 className="w-8 h-8 animate-spin text-primary opacity-60" />
-                           <span className="text-[9px] font-bold text-primary uppercase tracking-[0.4em]">Syncing...</span>
+                  {ledger.map((item, index) => {
+                    // Optimized Preview logic: Use cloud URL if ready and not broken, fallback to local blob
+                    const displayUrl = (item.status === 'ready' && item.cloudUrl && !item.isBroken) ? item.cloudUrl : item.previewUrl;
+                    
+                    return (
+                      <div key={item.id} className={cn(
+                        "relative aspect-square rounded-[2rem] overflow-hidden group shadow-2xl bg-background border-2 transition-all duration-500",
+                        item.status === 'uploading' ? 'opacity-50 grayscale scale-[0.95]' : 'opacity-100',
+                        index === 0 ? "border-accent" : "border-transparent",
+                        (item.status === 'error' || item.isBroken) && "border-destructive"
+                      )}>
+                        <img 
+                          src={displayUrl} 
+                          alt="" 
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          onError={() => handleImageError(item.id)}
+                        />
+                        
+                        <div className="absolute top-3 right-3 flex gap-2 z-20">
+                          <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-black/60 backdrop-blur-xl text-accent p-2.5 rounded-2xl hover:scale-110 transition-transform shadow-2xl border border-white/10">
+                            <Star className={cn("w-4 h-4", index === 0 && "fill-accent")} />
+                          </button>
+                          <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/80 backdrop-blur-xl text-white p-2.5 rounded-2xl shadow-2xl hover:bg-red-600 transition-all active:scale-90 border border-white/10"><X className="w-4 h-4" /></button>
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        
+                        {index === 0 && (
+                          <div className="absolute bottom-3 left-3 px-3 py-1 bg-accent text-white text-[8px] font-bold uppercase rounded-full shadow-2xl font-headline tracking-widest z-20">Cover</div>
+                        )}
+
+                        {item.status === 'uploading' && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-xl gap-3">
+                             <Loader2 className="w-8 h-8 animate-spin text-primary opacity-60" />
+                             <span className="text-[9px] font-bold text-primary uppercase tracking-[0.4em]">Syncing...</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                   <label htmlFor="image-input" className="aspect-square rounded-[2rem] border-2 border-dashed border-white/5 hover:border-accent/40 transition-all duration-500 bg-white/[0.01] flex flex-col items-center justify-center gap-4 group cursor-pointer shadow-inner">
                     <div className="p-5 bg-white/5 rounded-full group-hover:scale-110 transition-transform duration-500"><Plus className="w-8 h-8 text-white/10 group-hover:text-accent/40" /></div>
                     <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-30">Gallery Select</span>
