@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { RENTALFLOW_LOGO_URL, RENTALFLOW_NEUTRAL_FALLBACK, getResolvedImageUrl } from '@/lib/utils';
+import { RENTALFLOW_LOGO_URL, RENTALFLOW_NEUTRAL_FALLBACK, getResolvedImageUrl, isRealUserUpload } from '@/lib/utils';
 import { useEffect, useState, useMemo } from 'react';
 import { doc } from 'firebase/firestore';
 
@@ -36,10 +36,14 @@ export default function LandingPage() {
 
   const heroImage = useMemo(() => {
     if (properties && properties.length > 0) {
-      const sorted = [...properties].sort((a, b) => 
-        (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)
-      );
-      return getResolvedImageUrl(sorted[0].imageUrl, sorted[0].imageUrls);
+      // Prioritize the most recently updated property that has actual user photography
+      const withImages = properties.filter(p => p.imageUrl && isRealUserUpload(p.imageUrl));
+      if (withImages.length > 0) {
+        const sorted = [...withImages].sort((a, b) => 
+          (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)
+        );
+        return sorted[0].imageUrl;
+      }
     }
     return RENTALFLOW_NEUTRAL_FALLBACK;
   }, [properties]);
@@ -133,7 +137,7 @@ export default function LandingPage() {
                     <p className="text-[10px] font-bold uppercase tracking widest text-muted-foreground opacity-60 mb-1 font-headline">Active Ledger Hub</p>
                     <p className="text-2xl font-bold font-headline text-foreground">Portfolio Command</p>
                   </div>
-                  <Badge className="bg-emerald-500 text-white border-none font-bold uppercase text-[9px] tracking-widest px-4 py-1.5 rounded-full shadow-lg font-headline">Verified</Badge>
+                  <Badge className="bg-emerald-50 text-white border-none font-bold uppercase text-[9px] tracking-widest px-4 py-1.5 rounded-full shadow-lg font-headline">Verified</Badge>
                </div>
             </div>
           </div>

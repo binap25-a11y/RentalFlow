@@ -9,7 +9,7 @@ import { doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
+import { RENTALFLOW_LOGO_URL } from "@/lib/utils";
 
 export default function TenantLayout({
   children,
@@ -47,7 +47,7 @@ export default function TenantLayout({
     }
   }, [user, isUserLoading, profile, isProfileLoading, router, isClient]);
 
-  const BRAND_LOGO_URL = RENTALFLOW_NEUTRAL_FALLBACK;
+  const BRAND_LOGO_URL = RENTALFLOW_LOGO_URL;
 
   if (!isClient || isUserLoading || isProfileLoading || (user && !profile)) {
     return (
