@@ -49,7 +49,7 @@ export default function NewPropertyPage() {
 
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
-      // STABLE PREVIEW: Creating local blob pointer
+      // INSTANT PREVIEW: Use local object URL for immediate display
       const localUrl = URL.createObjectURL(file);
       
       const newItem: LedgerItem = {
@@ -64,6 +64,7 @@ export default function NewPropertyPage() {
         const optimizedBlob = await compressImage(file);
         const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
+        // DIRECT SYNC: Standard anon client bypasses RS256 algorithm collisions
         const publicUrl = await withRetry(async () => {
           const { error: uploadError } = await supabase.storage
             .from('property-images')
@@ -92,6 +93,10 @@ export default function NewPropertyPage() {
   };
 
   const removeFromLedger = (id: string) => {
+    const item = ledger.find(i => i.id === id);
+    if (item?.previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(item.previewUrl);
+    }
     setLedger(prev => prev.filter(i => i.id !== id));
   };
 
@@ -184,7 +189,7 @@ export default function NewPropertyPage() {
                       index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
-                      {/* STABLE PREVIEW: Standard img bypasses Next.js proxy for unstable blobs */}
+                      {/* Using standard img to avoid Next.js Image proxy for local blobs */}
                       <img 
                         src={item.previewUrl} 
                         alt={`Asset ${index}`} 

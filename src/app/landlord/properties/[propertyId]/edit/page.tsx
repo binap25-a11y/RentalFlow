@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { supabase } from '@/lib/supabase';
-import { cn, isUserUploadedAsset, compressImage, withRetry, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
+import { cn, isRealUserUpload, compressImage, withRetry, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -98,6 +98,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
+      // INSTANT PREVIEW: Direct blob access
       const localUrl = URL.createObjectURL(file);
       
       const newItem: LedgerItem = {
@@ -113,6 +114,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         const optimizedBlob = await compressImage(file);
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
+        // DIRECT SYNC: Standard client avoids header parameter errors
         const publicUrl = await withRetry(async () => {
           const { error: uploadError } = await supabase.storage
             .from('property-images')
@@ -141,6 +143,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   };
 
   const removeFromLedger = (id: string) => {
+    const item = ledger.find(i => i.id === id);
+    if (item?.previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(item.previewUrl);
+    }
     setLedger(prev => prev.filter(i => i.id !== id));
   };
 
@@ -163,10 +169,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     try {
       const finalUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
-      // If user has uploaded images, use the first one as primary. 
-      // Otherwise keep existing or use fallback.
-      const userUploads = finalUrls.filter(u => isUserUploadedAsset(u));
-      const primaryUrl = userUploads.length > 0 ? userUploads[0] : (finalUrls[0] || property?.imageUrl || RENTALFLOW_NEUTRAL_FALLBACK);
+      
+      // Select the first real user upload as primary, otherwise fallback
+      const userUploads = finalUrls.filter(u => isRealUserUpload(u));
+      const primaryUrl = userUploads.length > 0 ? userUploads[0] : (finalUrls[0] || RENTALFLOW_NEUTRAL_FALLBACK);
 
       const serializableData = {
         id: propertyId,
@@ -239,15 +245,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
+                      {/* INSTANT PREVIEW: Standard img avoids proxy crashes */}
                       <img 
                         src={item.previewUrl} 
                         alt={`Asset ${index}`} 
                         className="absolute inset-0 h-full w-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          if (target.src !== RENTALFLOW_NEUTRAL_FALLBACK) {
-                             target.src = RENTALFLOW_NEUTRAL_FALLBACK;
-                          }
+                          target.src = RENTALFLOW_NEUTRAL_FALLBACK;
                         }}
                       />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">

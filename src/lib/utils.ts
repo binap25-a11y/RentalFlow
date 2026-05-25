@@ -34,14 +34,14 @@ export async function withRetry<T>(
  * Converts HEIC/PNG to high-quality JPG and downscales for 100% mobile stability.
  * Optimized for low-RAM devices: if optimization hits a memory limit or takes too long, it returns the original file.
  */
-export async function compressImage(file: File, maxWidth = 1000, quality = 0.6): Promise<Blob | File> {
+export async function compressImage(file: File, maxWidth = 1200, quality = 0.7): Promise<Blob | File> {
   if (!file.type.startsWith('image/') || file.size < 1024 * 300) {
     return file;
   }
 
   try {
     return await new Promise((resolve) => {
-      const timeout = setTimeout(() => resolve(file), 3000);
+      const timeout = setTimeout(() => resolve(file), 4000);
       const objectUrl = URL.createObjectURL(file);
       const img = new Image();
       
@@ -74,12 +74,14 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
           }
 
           ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'medium';
+          ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, width, height);
 
           canvas.toBlob(
             (blob) => {
               clearTimeout(timeout);
+              // Clean up memory after processing
+              URL.revokeObjectURL(objectUrl);
               resolve(blob && blob.size < file.size ? blob : file);
             },
             'image/jpeg',
@@ -105,30 +107,11 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
 
 /**
  * 🖼️ User Asset Identifier
- * Strictly identifies assets that were intentionally uploaded or are being 
- * synchronized by the user (Supabase, Firebase, Blob, DataURI).
+ * Strictly identifies assets that were intentionally uploaded (Supabase, Firebase, Blob).
  */
-export function isUserUploadedAsset(url: any): boolean {
+export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
-  
-  // Local previews and inline data are always assets
-  if (url.startsWith('blob:') || url.startsWith('data:image/')) return true;
-
-  // Cloud storage is the definitive source for user assets
-  const isStorageAsset = url.includes('supabase.co') || url.includes('firebasestorage.app');
-  if (isStorageAsset) return true;
-
-  // Generic placeholders are NOT assets
-  const isGenericPlaceholder = 
-    url.includes('placehold.co') ||
-    url.includes('via.placeholder.com') ||
-    url.includes('picsum.photos');
-                    
-  if (isGenericPlaceholder) return false;
-
-  // Treat initial Unsplash seeds as assets IF no cloud assets are available, 
-  // but they are considered lower priority than Supabase uploads.
-  return url.startsWith('http') && url !== RENTALFLOW_NEUTRAL_FALLBACK;
+  return url.startsWith('blob:') || url.includes('supabase.co') || url.includes('firebasestorage.app');
 }
 
 /**
@@ -140,19 +123,21 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
+ * Prioritizes user-uploaded content over placeholders.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
-  // 1. Check if the primary image is a real user upload (Supabase/Blob)
-  if (isUserUploadedAsset(imageUrl)) return imageUrl!;
+  // 1. Priority: User Uploads (Direct image or first image in gallery)
+  if (isRealUserUpload(imageUrl)) return imageUrl!;
   
-  // 2. Check the gallery for any user upload
   if (imageUrls && Array.isArray(imageUrls)) {
-    const firstUserUrl = imageUrls.find(u => isUserUploadedAsset(u));
-    if (firstUserUrl) return firstUserUrl;
+    const firstReal = imageUrls.find(u => isRealUserUpload(u));
+    if (firstReal) return firstReal;
   }
 
-  // 3. Fallback to existing URL if valid, otherwise the brand fallback
-  if (isValidAssetUrl(imageUrl)) return imageUrl!;
+  // 2. Secondary: Remote images (Unsplash seeds etc) that aren't the brand fallback
+  if (isValidAssetUrl(imageUrl) && imageUrl !== RENTALFLOW_NEUTRAL_FALLBACK) return imageUrl!;
+  
+  // 3. Fallback: Neutral professional brand asset
   return RENTALFLOW_NEUTRAL_FALLBACK;
 }
 
@@ -167,12 +152,13 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
       if (isValidAssetUrl(u)) assets.add(u);
     });
   }
-  const result = Array.from(assets);
-  const userUploads = result.filter(isUserUploadedAsset);
   
-  // If user has uploaded images, only show those to remove placeholders
+  const result = Array.from(assets);
+  const userUploads = result.filter(isRealUserUpload);
+  
+  // If user has uploaded any actual images, only show those to purge placeholders
   if (userUploads.length > 0) return userUploads;
   
-  // If result has at least one valid URL, use it, otherwise fallback
+  // Otherwise show existing valid URLs or the brand identity
   return result.length > 0 ? result : [RENTALFLOW_NEUTRAL_FALLBACK];
 }
