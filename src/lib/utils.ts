@@ -103,7 +103,7 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.85)
 /**
  * 🖼️ User Asset Identifier
  * Strictly identifies assets that were intentionally uploaded by the user to cloud storage.
- * DECISIVELY REJECTS all known stock image and placeholder domains to prevent identity confusion.
+ * DECISIVELY REJECTS all known stock image and placeholder domains.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
@@ -119,7 +119,7 @@ export function isRealUserUpload(url: any): boolean {
     'pexels.com'
   ];
 
-  // Specific Stock Identifiers (Skyscraper) to exclude from the professional ledger
+  // Specific Stock Identifiers to exclude from the professional ledger
   const forbiddenIds = [
     'photo-1486406146926-c627a92ad1ab', 
     'photo-1560518883-ce09059eeffa'
@@ -148,12 +148,13 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
- * USER-DATA ONLY POLICY: Returns user photography if any exists. Returns null otherwise for dynamic icons.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string | null {
+  // Priority 1: Specifically designated primary cover
   if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
     return imageUrl;
   }
+  // Priority 2: First available verified cloud binary
   if (imageUrls && Array.isArray(imageUrls)) {
     const realGallery = imageUrls.filter(isRealUserUpload);
     if (realGallery.length > 0) return realGallery[0];

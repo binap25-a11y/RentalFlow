@@ -97,7 +97,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   /**
    * 🔄 Transactional Visual Sync
    * Commits the current stable state of the ledger to Firestore immediately.
-   * This is strictly isolated from the manual Save button to prevent race conditions.
+   * This is strictly isolated from the manual Save button to prevent state-reset overrides.
    */
   const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
@@ -106,7 +106,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // Transactional Update: Only affects identity fields
     updateDocumentNonBlocking(propertyRef, {
       imageUrl: readyUrls.length > 0 ? readyUrls[0] : null,
       imageUrls: readyUrls,
@@ -123,7 +122,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const localUrl = URL.createObjectURL(file);
       
       const uploadItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
-      setLedger(prev => [...prev, uploadItem]);
+      setLedger(prev => {
+        const next = [...prev, uploadItem];
+        return next;
+      });
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -184,8 +186,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
     
-    // DECISIVE ACTION: Exclude imageUrl and imageUrls from this payload.
-    // They are handled by syncVisualsToFirestore() to prevent state-sync overwrites.
+    // DECISIVE ACTION: Exclude visual binary fields from this payload.
+    // They are handled atomically by syncVisualsToFirestore to prevent state race conditions.
     const serializableData = {
       id: propertyId, 
       landlordId: user.uid, 
@@ -247,7 +249,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
               <ScrollArea className="h-[600px] pr-4">
                 <div className="grid grid-cols-2 gap-5">
                   {ledger.map((item, index) => {
-                    // SELF-HEALING LOGIC: Use local blob preview until cloud is verified as loaded.
                     const displayUrl = (item.status === 'ready' && item.cloudUrl && !item.isBroken) ? item.cloudUrl : item.previewUrl;
                     
                     return (
