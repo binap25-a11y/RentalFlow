@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
  * Used ONLY in the UI when a property has zero user-uploaded photography.
  * Updated identity: Modern Premium Residence (Replaces skyscraper).
  */
-export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop";
+export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=1200&auto=format&fit=crop";
 
 /**
  * 🏢 Brand Identity Asset

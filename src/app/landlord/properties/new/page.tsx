@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp, collection } from 'firebase/firestore';
 import { Card, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ type LedgerItem = {
 
 /**
  * 🛠️ Asset Registration Hub
- * Implements Instant Transactional Persistence for visuals.
+ * Implements Atomic Sync for visuals.
  */
 export default function NewPropertyPage() {
   const { user } = useUser();
@@ -52,21 +52,17 @@ export default function NewPropertyPage() {
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
 
   /**
-   * 🔄 Instant Transactional Sync
-   * Syncs the visual ledger to Firestore whenever it changes.
+   * 🔄 Atomic Visual Sync
    */
-  useEffect(() => {
+  const syncVisualsToFirestore = (updatedLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId) return;
 
-    const isUploading = ledger.some(i => i.status === 'uploading');
+    const isUploading = updatedLedger.some(i => i.status === 'uploading');
     if (isUploading) return;
 
-    const userOnly = ledger
+    const userOnly = updatedLedger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
-
-    // Note: We only sync if there is at least one upload to initialize the record.
-    if (userOnly.length === 0) return;
 
     const propertyRef = doc(db, 'properties', propertyId);
     setDocumentNonBlocking(propertyRef, {
@@ -77,7 +73,7 @@ export default function NewPropertyPage() {
       updatedAt: serverTimestamp(),
       memberIds: [user.uid]
     }, { merge: true });
-  }, [ledger, db, user, propertyId]);
+  };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -102,9 +98,11 @@ export default function NewPropertyPage() {
           return url;
         });
         
-        setLedger(prev => prev.map(item => 
-          item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
-        ));
+        setLedger(prev => {
+          const next = prev.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item);
+          syncVisualsToFirestore(next);
+          return next;
+        });
       } catch (err) {
         setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
       }
@@ -113,14 +111,20 @@ export default function NewPropertyPage() {
   };
 
   const removeFromLedger = (id: string) => {
-    setLedger(prev => prev.filter(i => i.id !== id));
+    setLedger(prev => {
+      const next = prev.filter(i => i.id !== id);
+      syncVisualsToFirestore(next);
+      return next;
+    });
   };
 
   const setAsPrimary = (id: string) => {
     setLedger(prev => {
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
-      return [item, ...prev.filter(i => i.id !== id)];
+      const next = [item, ...prev.filter(i => i.id !== id)];
+      syncVisualsToFirestore(next);
+      return next;
     });
     toast({ title: "Identity Updated", description: "Primary cover designated." });
   };
@@ -164,7 +168,7 @@ export default function NewPropertyPage() {
   };
 
   return (
-    <div className="max-w-5xl auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left bg-background">
+    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left bg-background">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button onClick={() => router.back()} className="h-10 w-10 rounded-full hover:bg-primary/5 transition-colors flex items-center justify-center">
@@ -176,7 +180,7 @@ export default function NewPropertyPage() {
           </div>
         </div>
         <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[9px]">
-          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Storage-First Sync Enabled
+          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Atomic Sync Active
         </Badge>
       </div>
 

@@ -34,7 +34,7 @@ type LedgerItem = {
 /**
  * 🛠️ Asset Configuration Hub
  * High-fidelity property modification hub.
- * Implements Instant Transactional Persistence for visuals.
+ * Implements Transactional Persistence for visuals.
  */
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -97,16 +97,16 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   }, [property, isInitialized]);
 
   /**
-   * 🔄 Instant Transactional Sync
-   * Monitors the visual ledger and commits ready cloud binaries to Firestore immediately.
+   * 🔄 Transactional Visual Sync
+   * Commits the current ledger to Firestore microsecond-instantly.
    */
-  useEffect(() => {
-    if (!isInitialized || !db || !propertyRef) return;
-
-    const isUploading = ledger.some(i => i.status === 'uploading');
+  const syncVisualsToFirestore = (updatedLedger: LedgerItem[]) => {
+    if (!db || !propertyRef) return;
+    
+    const isUploading = updatedLedger.some(i => i.status === 'uploading');
     if (isUploading) return;
 
-    const userOnly = ledger
+    const userOnly = updatedLedger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
@@ -115,7 +115,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       imageUrls: userOnly,
       updatedAt: serverTimestamp(),
     });
-  }, [ledger, isInitialized, db, propertyRef]);
+  };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -125,7 +125,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
-      setLedger(prev => [...prev, { id: tempId, previewUrl: localUrl, status: 'uploading' }]);
+      const uploadItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
+      setLedger(prev => [...prev, uploadItem]);
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -140,9 +141,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           return url;
         });
         
-        setLedger(prev => prev.map(item => 
-          item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
-        ));
+        setLedger(prev => {
+          const next = prev.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item);
+          syncVisualsToFirestore(next);
+          return next;
+        });
       } catch (err) {
         setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
       }
@@ -151,14 +154,20 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   };
 
   const removeFromLedger = (id: string) => {
-    setLedger(prev => prev.filter(i => i.id !== id));
+    setLedger(prev => {
+      const next = prev.filter(i => i.id !== id);
+      syncVisualsToFirestore(next);
+      return next;
+    });
   };
 
   const setAsPrimary = (id: string) => {
     setLedger(prev => {
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
-      return [item, ...prev.filter(i => i.id !== id)];
+      const next = [item, ...prev.filter(i => i.id !== id)];
+      syncVisualsToFirestore(next);
+      return next;
     });
     toast({ title: "Identity Updated", description: "Designated primary cover." });
   };
@@ -208,7 +217,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </div>
         </div>
         <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 px-5 py-2 rounded-full font-bold uppercase tracking-[0.25em] text-[10px]">
-          <Sparkles className="w-3.5 h-3.5 mr-2" /> High-Fidelity Sync Active
+          <Sparkles className="w-3.5 h-3.5 mr-2" /> Atomic Sync Active
         </Badge>
       </div>
 
