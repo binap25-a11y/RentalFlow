@@ -25,6 +25,10 @@ type LedgerItem = {
   status: 'uploading' | 'ready' | 'error';
 };
 
+/**
+ * 🛠️ Asset Registration Hub
+ * Implements Instant Transactional Persistence for visuals.
+ */
 export default function NewPropertyPage() {
   const { user } = useUser();
   const db = useFirestore();
@@ -48,13 +52,16 @@ export default function NewPropertyPage() {
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
 
   /**
-   * 🔄 Linear Synchronization Engine
-   * Directly commits visual state to Firestore outside of the React update cycle.
+   * 🔄 Instant Transactional Sync
+   * Syncs the visual ledger to Firestore whenever it changes.
    */
-  const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
-    if (!db || !user || !propertyId) return;
+  useEffect(() => {
+    if (!db || !user || !propertyId || ledger.length === 0) return;
 
-    const userOnly = currentLedger
+    const isUploading = ledger.some(i => i.status === 'uploading');
+    if (isUploading) return;
+
+    const userOnly = ledger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
@@ -67,7 +74,7 @@ export default function NewPropertyPage() {
       updatedAt: serverTimestamp(),
       memberIds: [user.uid]
     }, { merge: true });
-  }, [db, user, propertyId]);
+  }, [ledger, db, user, propertyId]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -94,13 +101,9 @@ export default function NewPropertyPage() {
           return url;
         });
         
-        setLedger(prev => {
-          const next = prev.map(item => 
-            item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
-          );
-          syncVisualsToFirestore(next);
-          return next;
-        });
+        setLedger(prev => prev.map(item => 
+          item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
+        ));
       } catch (err) {
         setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
       }
@@ -111,17 +114,15 @@ export default function NewPropertyPage() {
   };
 
   const removeFromLedger = (id: string) => {
-    const next = ledger.filter(i => i.id !== id);
-    setLedger(next);
-    syncVisualsToFirestore(next);
+    setLedger(prev => prev.filter(i => i.id !== id));
   };
 
   const setAsPrimary = (id: string) => {
-    const item = ledger.find(i => i.id === id);
-    if (!item) return;
-    const next = [item, ...ledger.filter(i => i.id !== id)];
-    setLedger(next);
-    syncVisualsToFirestore(next);
+    setLedger(prev => {
+      const item = prev.find(i => i.id === id);
+      if (!item) return prev;
+      return [item, ...prev.filter(i => i.id !== id)];
+    });
     toast({ title: "Identity Updated", description: "Primary cover designated." });
   };
 
@@ -142,13 +143,13 @@ export default function NewPropertyPage() {
       description: description, isOccupied: false, memberIds: [user.uid]
     };
 
-    // Instant Submission Orchestration
+    // Instant Submission
     setDocumentNonBlocking(propertyRef, {
       ...serializableData,
       tenantIds: [], isActive: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
     }, { merge: true });
 
-    // Secondary Relational Sync (Background)
+    // Background Sync
     syncPropertyToDb(serializableData);
     
     toast({ title: "Asset Registered" });
@@ -254,7 +255,7 @@ export default function NewPropertyPage() {
                   </div>
                   <div className="space-y-2">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Bathrooms</Label>
-                    <Select value={bathrooms} onValueChange={setBedrooms}>
+                    <Select value={bathrooms} onValueChange={setBathrooms}>
                       <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-xl border-border bg-card">
                         {[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={n.toString()} className="font-bold">{n} Bathroom{n > 1 ? 's' : ''}</SelectItem>)}

@@ -34,7 +34,7 @@ type LedgerItem = {
 /**
  * 🛠️ Asset Configuration Hub
  * High-fidelity property modification hub.
- * Implements Linear Event-Driven Persistence for visuals.
+ * Implements Instant Transactional Persistence for visuals.
  */
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -97,14 +97,18 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   }, [property, isInitialized]);
 
   /**
-   * 🔄 Linear Synchronization Engine
-   * Directly commits visual state to Firestore outside of the React update cycle.
-   * Ensures every change is transactional and reflected instantly across hubs.
+   * 🔄 Instant Transactional Sync
+   * Monitors the visual ledger and commits ready cloud binaries to Firestore immediately.
+   * This ensures designating a primary cover (Star) reflects across all hubs without a manual save.
    */
-  const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
-    if (!db || !propertyRef) return;
+  useEffect(() => {
+    if (!isInitialized || !db || !propertyRef) return;
 
-    const userOnly = currentLedger
+    // We only sync if there are no pending uploads to prevent race conditions
+    const isUploading = ledger.some(i => i.status === 'uploading');
+    if (isUploading) return;
+
+    const userOnly = ledger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
@@ -113,7 +117,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       imageUrls: userOnly,
       updatedAt: serverTimestamp(),
     });
-  }, [db, propertyRef]);
+  }, [ledger, isInitialized, db, propertyRef]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -140,14 +144,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           return url;
         });
         
-        setLedger(prev => {
-          const next = prev.map(item => 
-            item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
-          );
-          // Linear Sync: Pass the calculated next state directly
-          syncVisualsToFirestore(next);
-          return next;
-        });
+        setLedger(prev => prev.map(item => 
+          item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
+        ));
       } catch (err) {
         setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
       }
@@ -157,17 +156,15 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   };
 
   const removeFromLedger = (id: string) => {
-    const next = ledger.filter(i => i.id !== id);
-    setLedger(next);
-    syncVisualsToFirestore(next);
+    setLedger(prev => prev.filter(i => i.id !== id));
   };
 
   const setAsPrimary = (id: string) => {
-    const item = ledger.find(i => i.id === id);
-    if (!item) return;
-    const next = [item, ...ledger.filter(i => i.id !== id)];
-    setLedger(next);
-    syncVisualsToFirestore(next);
+    setLedger(prev => {
+      const item = prev.find(i => i.id === id);
+      if (!item) return prev;
+      return [item, ...prev.filter(i => i.id !== id)];
+    });
     toast({ title: "Identity Updated", description: "Designated primary cover." });
   };
 
@@ -188,10 +185,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       memberIds: property?.memberIds || [user.uid]
     };
 
-    // Instant Persistence Orchestration (Non-Blocking)
+    // Instant Submission (Non-Blocking)
     updateDocumentNonBlocking(propertyRef, { ...serializableData, updatedAt: serverTimestamp() });
     
-    // Background Server Sync
+    // Background Sync
     syncPropertyToDb(serializableData);
     
     toast({ title: "Portfolio Sync Complete" });

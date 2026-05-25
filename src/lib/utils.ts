@@ -110,16 +110,22 @@ export async function compressImage(file: File, maxWidth = 800, quality = 0.75):
 /**
  * 🖼️ User Asset Identifier
  * Strictly identifies assets that were intentionally uploaded by the user to the cloud.
- * Excludes all stock domains and brand identity icons.
+ * Prioritizes Supabase/Firebase binaries and rejects all stock site domains.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
   const u = url.toLowerCase();
   
-  // List of forbidden partial matches (known placeholders)
+  // Known local/private binaries
+  if (u.startsWith('blob:') || u.startsWith('data:image/')) return true;
+  
+  // Specific cloud storage providers for the RentalFlow ecosystem
+  if (u.includes('supabase.co') || u.includes('firebasestorage.googleapis.com')) return true;
+
+  // List of forbidden partial matches (known placeholders/stock sites)
   const forbidden = [
-    'images.unsplash.com',
+    'unsplash.com',
     'picsum.photos',
     'placehold.co',
     'placeholder.com',
@@ -130,10 +136,9 @@ export function isRealUserUpload(url: any): boolean {
   
   // Explicitly exclude brand identity assets from property ledgers
   if (url === RENTALFLOW_LOGO_URL || url === RENTALFLOW_NEUTRAL_FALLBACK) return false;
-  if (u.includes('logo') || u.includes('fallback') || u.includes('placeholder')) return false;
 
-  // Valid: Supabase storage, Firebase storage, local blob previews, or data URIs
-  return true;
+  // Valid: Any other recognized URL scheme that isn't a stock site
+  return u.startsWith('http');
 }
 
 /**
