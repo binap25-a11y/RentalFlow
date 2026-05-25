@@ -126,7 +126,8 @@ export function isRealUserUpload(url: any): boolean {
     'picsum.photos',
     'placehold.co',
     'placeholder.com',
-    'pexels.com'
+    'pexels.com',
+    'photo-1486406146926-c627a92ad1ab' // Purge Skyscraper ID
   ];
 
   if (forbidden.some(f => u.includes(f))) return false;
