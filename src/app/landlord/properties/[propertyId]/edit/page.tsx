@@ -89,9 +89,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   }, [property, isInitialized]);
 
   /**
-   * 🔄 Direct Transactional Persistence
+   * 🔄 Direct Transactional Persistence (Instant Sync)
    * Synchronizes visual state to Firestore micro-seconds after binary stabilization.
-   * Strictly purges placeholders if user uploads exist.
+   * Strictly purges placeholders if real user uploads exist.
    */
   const performDirectSync = (currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId || !propertyRef) return;
@@ -103,6 +103,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const userOnly = readyUrls.filter(isRealUserUpload);
     const finalGallery = userOnly.length > 0 ? userOnly : readyUrls;
     const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : BRAND_FALLBACK;
+
+    // Local ledger cleanup: Remove placeholders if real uploads exist
+    if (userOnly.length > 0) {
+      setLedger(prev => prev.filter(item => 
+        item.status === 'uploading' || (item.cloudUrl && isRealUserUpload(item.cloudUrl))
+      ));
+    }
 
     updateDocumentNonBlocking(propertyRef, {
       imageUrl: primaryUrl,
@@ -141,9 +148,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedLedger = updatedLedger.map(item => 
           item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
         );
-        setLedger(updatedLedger);
         
-        // TRANSACTIONAL SYNC: Update Firestore immediately to prevent revert on divert
+        // TRANSACTIONAL SYNC: Update Firestore immediately to lock in the cover image
         performDirectSync(updatedLedger);
         toast({ title: "Visual Binary Synchronized" });
       } catch (err) {
@@ -216,7 +222,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </div>
         </div>
         <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[9px]">
-          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Storage-First Sync Active
+          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Instant Sync Enabled
         </Badge>
       </div>
 
