@@ -139,8 +139,8 @@ export default function NewPropertyPage() {
 
     setIsSaving(true);
     const propertyRef = doc(db, 'properties', propertyId);
-    const userOnly = ledger.filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl)).map(i => i.cloudUrl!);
-
+    
+    // Note: We strictly exclude imageUrl/imageUrls here to avoid race conditions with the atomic sync.
     const serializableData = {
       id: propertyId, 
       landlordId: user.uid, 
@@ -148,8 +148,6 @@ export default function NewPropertyPage() {
       city, 
       zipCode, 
       rentAmount: parseFloat(rentAmount) || 0,
-      imageUrl: userOnly.length > 0 ? userOnly[0] : null,
-      imageUrls: userOnly, 
       propertyType,
       numberOfBedrooms: parseInt(bedrooms, 10) || 1, 
       numberOfBathrooms: parseInt(bathrooms, 10) || 1,
