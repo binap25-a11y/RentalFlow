@@ -15,8 +15,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { supabase } from '@/lib/supabase';
-import { cn, compressImage, withRetry, isRealUserUpload, RENTALFLOW_NEUTRAL_FALLBACK } from '@/lib/utils';
+import { cn, compressImage, withRetry, isRealUserUpload } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area";
+
+/**
+ * 🖼️ Professional Fallback Identity
+ */
+const BRAND_FALLBACK = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop";
 
 type LedgerItem = {
   id: string;
@@ -62,7 +67,7 @@ export default function NewPropertyPage() {
 
     const userOnly = readyUrls.filter(isRealUserUpload);
     const finalGallery = userOnly.length > 0 ? userOnly : readyUrls;
-    const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
+    const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : BRAND_FALLBACK;
 
     const propertyRef = doc(db, 'properties', propertyId);
     setDocumentNonBlocking(propertyRef, {
@@ -109,6 +114,7 @@ export default function NewPropertyPage() {
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
           );
+          // INSTANT TRANSACTIONAL PERSISTENCE
           performDirectSync(updated);
           return updated;
         });
@@ -157,7 +163,7 @@ export default function NewPropertyPage() {
     const finalImageUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
     const userUploads = finalImageUrls.filter(isRealUserUpload);
     const purgedGallery = userUploads.length > 0 ? userUploads : finalImageUrls;
-    const finalImageUrl = purgedGallery.length > 0 ? purgedGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
+    const finalImageUrl = purgedGallery.length > 0 ? purgedGallery[0] : BRAND_FALLBACK;
 
     try {
       const serializableData = {
@@ -231,13 +237,14 @@ export default function NewPropertyPage() {
                       index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
+                      {/* Standard <img> tag for session stability */}
                       <img 
                         src={item.previewUrl} 
                         alt={`Asset ${index}`} 
                         className="absolute inset-0 h-full w-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = RENTALFLOW_NEUTRAL_FALLBACK;
+                          target.src = BRAND_FALLBACK;
                         }}
                       />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">

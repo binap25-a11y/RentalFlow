@@ -118,7 +118,12 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="relative h-[550px] rounded-[3rem] overflow-hidden shadow-2xl ring-1 ring-border animate-in fade-in zoom-in duration-1000">
-            <Image src={heroImage} alt="Portfolio Hero" fill className="object-cover" unoptimized priority />
+            {/* Standard <img> tag for reliable binary delivery on the Landing Page */}
+            <img 
+              src={heroImage} 
+              alt="Portfolio Hero" 
+              className="absolute inset-0 h-full w-full object-cover" 
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
             <div className="absolute bottom-10 left-10 right-10 bg-background/60 backdrop-blur-md border border-border p-8 rounded-3xl">
                <div className="flex justify-between items-center">

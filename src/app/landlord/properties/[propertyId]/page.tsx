@@ -262,6 +262,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 {gallery.map((url: string, index: number) => (
                   <CarouselItem key={`${url}-${index}`}>
                     <div className="relative h-[300px] md:h-[450px] w-full bg-muted cursor-zoom-in group" onClick={() => setLightboxUrl(url)}>
+                      {/* Standard <img> tag for high-fidelity cross-device visibility */}
                       <img 
                         src={url} 
                         alt={`Property ${index}`} 

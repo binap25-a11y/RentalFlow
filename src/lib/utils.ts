@@ -105,6 +105,7 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
 /**
  * 🖼️ User Asset Identifier
  * Strictly identifies assets that were intentionally uploaded or are in-flight blobs.
+ * Explicitly identifies and excludes known placeholder domains.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
@@ -116,11 +117,7 @@ export function isRealUserUpload(url: any): boolean {
   }
 
   // Identify real uploads (Supabase, Firebase, or in-session Blobs)
-  return u.startsWith('blob:') || 
-         u.includes('supabase') || 
-         u.includes('firebasestorage') ||
-         u.includes('googleapi') ||
-         u.includes('googleusercontent');
+  return u.startsWith('blob:') || u.startsWith('http') || u.startsWith('data:image/');
 }
 
 /**
@@ -135,17 +132,17 @@ export function isValidAssetUrl(url: any): boolean {
  * Prioritizes user-uploaded content over placeholders.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
-  // If the primary image is a real user upload, use it
-  if (isRealUserUpload(imageUrl)) return imageUrl!;
-  
-  // Check the gallery for any real user uploads
+  // Check the gallery for any real user uploads first (User-First Policy)
   if (imageUrls && Array.isArray(imageUrls)) {
     const firstReal = imageUrls.find(u => isRealUserUpload(u));
     if (firstReal) return firstReal;
   }
 
-  // Fallback to existing valid URL if it's not the brand fallback
-  if (isValidAssetUrl(imageUrl) && imageUrl !== RENTALFLOW_NEUTRAL_FALLBACK) return imageUrl!;
+  // If the primary image is a real user upload, use it
+  if (isRealUserUpload(imageUrl)) return imageUrl!;
+
+  // Fallback to existing valid URL if it's not a generic placeholder
+  if (isValidAssetUrl(imageUrl) && !imageUrl?.includes('picsum') && !imageUrl?.includes('unsplash')) return imageUrl!;
   
   return RENTALFLOW_NEUTRAL_FALLBACK;
 }

@@ -1,17 +1,3 @@
-
 {
-  "placeholderImages": [
-    {
-      "id": "hero-property",
-      "description": "Luxury modern apartment building exterior at twilight",
-      "imageUrl": "https://picsum.photos/seed/rentalflow-hero/1200/800",
-      "imageHint": "modern architecture"
-    },
-    {
-      "id": "feature-ai",
-      "description": "Abstract neural network or AI visualization",
-      "imageUrl": "https://picsum.photos/seed/ai-tech/600/400",
-      "imageHint": "artificial intelligence"
-    }
-  ]
+  "placeholderImages": []
 }

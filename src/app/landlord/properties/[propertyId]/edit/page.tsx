@@ -22,8 +22,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { supabase } from '@/lib/supabase';
-import { cn, isRealUserUpload, compressImage, withRetry, getResolvedGallery, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
+import { cn, isRealUserUpload, compressImage, withRetry, getResolvedGallery } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
+/**
+ * 🖼️ Professional Fallback Identity
+ * Hardened to prevent ReferenceErrors during synchronization.
+ */
+const BRAND_FALLBACK = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop";
 
 type LedgerItem = {
   id: string;
@@ -92,6 +98,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   /**
    * 🔄 Direct Transactional Persistence
    * Synchronizes the visual state to Firestore immediately upon binary stabilization.
+   * This ensures changes propagate to Inventory and Details pages instantly.
    */
   const performDirectSync = (currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId || !propertyRef || currentLedger.some(i => i.status === 'uploading')) return;
@@ -100,9 +107,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl)
       .map(i => i.cloudUrl!);
 
+    // Filter to only user-uploaded assets to ensure placeholders are purged
     const userOnly = readyUrls.filter(isRealUserUpload);
     const finalGallery = userOnly.length > 0 ? userOnly : readyUrls;
-    const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
+    const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : BRAND_FALLBACK;
 
     updateDocumentNonBlocking(propertyRef, {
       imageUrl: primaryUrl,
@@ -145,6 +153,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
           );
+          // INSTANT TRANSACTIONAL PERSISTENCE
           performDirectSync(updated);
           return updated;
         });
@@ -192,7 +201,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const readyUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
       const userOnly = readyUrls.filter(isRealUserUpload);
       const purgedGallery = userOnly.length > 0 ? userOnly : readyUrls;
-      const primaryUrl = purgedGallery.length > 0 ? purgedGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
+      const primaryUrl = purgedGallery.length > 0 ? purgedGallery[0] : BRAND_FALLBACK;
 
       const serializableData = {
         id: propertyId,
@@ -240,7 +249,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </div>
         </div>
         <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[9px]">
-          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Transactional Sync Active
+          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Storage-First Sync Active
         </Badge>
       </div>
 
@@ -264,13 +273,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
+                      {/* Standard <img> tag for mobile binary stability */}
                       <img 
                         src={item.previewUrl} 
                         alt={`Asset ${index}`} 
                         className="absolute inset-0 h-full w-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = RENTALFLOW_NEUTRAL_FALLBACK;
+                          target.src = BRAND_FALLBACK;
                         }}
                       />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">
