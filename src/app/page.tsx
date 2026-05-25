@@ -8,7 +8,7 @@ import {
   ArrowRight, ShieldCheck, Sparkles, 
   Wallet, MessageSquare, ChevronRight,
   Loader2, Activity, Zap, Building2,
-  Shield
+  Shield, Bot
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
