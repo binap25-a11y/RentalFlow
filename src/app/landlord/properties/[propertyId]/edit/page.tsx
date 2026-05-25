@@ -106,11 +106,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         const optimizedBlob = await compressImage(file);
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
-        // DIRECT CLIENT SYNC: Bypasses server action bottlenecks for reliable mobile delivery
+        // DIRECT-TO-CLOUD: Resolved persistent failed-to-fetch errors on mobile
         const { error: uploadError } = await supabase.storage
           .from('property-images')
           .upload(path, optimizedBlob, {
-            contentType: file.type || 'image/jpeg',
+            contentType: 'image/jpeg',
             upsert: true
           });
 
@@ -129,7 +129,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         toast({ 
           variant: "destructive", 
           title: "Synchronization Interrupted", 
-          description: "Visual delivery failed. Please check your connection." 
+          description: "Visual delivery failed. Please check your network." 
         });
       }
     }
@@ -193,7 +193,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
   };
 
-  if (isLoading || !isInitialized) return <div className="flex h-[70vh] items-center justify-center bg-background"><Loader2 className="animate-spin text-primary" /></div>;
+  if (isLoading || !isInitialized) return <div className="flex h-[70vh] items-center justify-center bg-background"><Loader2 className="animate-spin text-accent" /></div>;
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left bg-background">
@@ -207,8 +207,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
             <p className="text-muted-foreground font-medium font-body text-xs mt-0.5">Updating {address || 'Property Record'}.</p>
           </div>
         </div>
-        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[9px]">
-          <Sparkles className="w-3 h-3 mr-2 text-accent" /> High-Fidelity Sync
+        <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[9px]">
+          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Direct Sync Active
         </Badge>
       </div>
 
@@ -229,18 +229,18 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                     <div key={item.id} className={cn(
                       "relative aspect-video rounded-2xl overflow-hidden group shadow-sm bg-background border-2 transition-all",
                       item.status === 'uploading' ? 'opacity-50 grayscale scale-[0.98]' : 'opacity-100',
-                      index === 0 ? "border-primary" : "border-transparent",
+                      index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
                       <Image src={item.url} alt={`Asset ${index}`} fill className="object-cover" unoptimized />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">
-                        <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-background/90 text-primary p-2 rounded-xl hover:scale-110 transition-transform shadow-lg"><Star className={cn("w-3.5 h-3.5", index === 0 && "fill-primary")} /></button>
+                        <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-card/90 text-accent p-2 rounded-xl hover:scale-110 transition-transform shadow-lg border border-border"><Star className={cn("w-3.5 h-3.5", index === 0 && "fill-accent")} /></button>
                         <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 transition-all active:scale-90"><X className="w-3.5 h-3.5" /></button>
                       </div>
                       {item.status === 'uploading' && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-md gap-2">
-                           <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                           <span className="text-[8px] font-bold text-primary uppercase tracking-[0.2em]">Synchronizing...</span>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-card/60 backdrop-blur-md gap-2">
+                           <Loader2 className="w-6 h-6 animate-spin text-accent" />
+                           <span className="text-[8px] font-bold text-accent uppercase tracking-[0.2em]">Synchronizing...</span>
                         </div>
                       )}
                       {item.status === 'ready' && (
@@ -250,8 +250,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       )}
                     </div>
                   ))}
-                  <label htmlFor="image-input" className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-muted/5 flex flex-col items-center justify-center gap-2 group cursor-pointer shadow-inner">
-                    <Plus className="w-6 h-6 text-primary/20 group-hover:text-primary/40" />
+                  <label htmlFor="image-input" className="aspect-video rounded-2xl border-2 border-dashed border-accent/20 hover:border-accent/40 transition-all bg-muted/5 flex flex-col items-center justify-center gap-2 group cursor-pointer shadow-inner">
+                    <Plus className="w-6 h-6 text-accent/20 group-hover:text-accent/40" />
                     <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">Gallery Select</span>
                   </label>
                 </div>

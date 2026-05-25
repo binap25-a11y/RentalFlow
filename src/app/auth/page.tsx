@@ -159,7 +159,7 @@ export default function AuthPage() {
           <div className="relative w-24 h-24 rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5">
              <Image src={RENTALFLOW_NEUTRAL_FALLBACK} alt="RentalFlow" fill className="object-cover" unoptimized priority />
           </div>
-          <Loader2 className="w-6 h-6 animate-spin text-primary opacity-40" />
+          <Loader2 className="w-6 h-6 animate-spin text-accent opacity-40" />
         </div>
       </div>
     );
@@ -170,18 +170,18 @@ export default function AuthPage() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-left">
         <Card className="w-full max-w-xl border-none shadow-2xl bg-card overflow-hidden rounded-[3rem]">
           <CardHeader className="text-center bg-primary/5 pb-10 pt-12">
-            <CardTitle className="text-3xl font-headline font-bold text-primary">Identity Establishment</CardTitle>
+            <CardTitle className="text-3xl font-headline font-bold text-foreground">Identity Establishment</CardTitle>
             <CardDescription className="font-medium">Define your management or residency role.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-8 pt-10 px-10 pb-12">
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground font-headline">First Name</Label>
-                <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-12 rounded-xl bg-muted/20 border-none font-bold" />
+                <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground" />
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground font-headline">Last Name</Label>
-                <Input value={lastName} onChange={(e) => setLastName(e.target.value)} className="h-12 rounded-xl bg-muted/20 border-none font-bold" />
+                <Input value={lastName} onChange={(e) => setLastName(e.target.value)} className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground" />
               </div>
             </div>
             <div className="space-y-2">
@@ -195,9 +195,9 @@ export default function AuthPage() {
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground font-headline">Phone</Label>
-              <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="h-12 rounded-xl bg-muted/20 border-none font-bold" />
+              <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground" />
             </div>
-            <Button className="w-full h-14 rounded-2xl font-bold bg-accent text-white text-lg shadow-xl shadow-accent/10 border-none" onClick={handleCreateProfile} disabled={isLoading}>
+            <Button className="w-full h-14 rounded-2xl font-bold bg-accent text-white text-lg shadow-xl shadow-accent/10 border-none transition-all hover:scale-[1.01]" onClick={handleCreateProfile} disabled={isLoading}>
               {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Complete Registration"}
             </Button>
           </CardContent>
@@ -209,7 +209,7 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative">
       <div className="absolute top-8 left-8">
-         <Button variant="ghost" asChild className="rounded-xl font-bold"><Link href="/"><ArrowLeft className="w-4 h-4 mr-2" /> Home</Link></Button>
+         <Button variant="ghost" asChild className="rounded-xl font-bold text-foreground hover:bg-primary/5"><Link href="/"><ArrowLeft className="w-4 h-4 mr-2" /> Home</Link></Button>
       </div>
       <div className="max-w-xl w-full text-center">
         <div className="mb-12 inline-flex flex-col items-center">
@@ -220,33 +220,33 @@ export default function AuthPage() {
         </div>
         <Card className="border-none shadow-2xl rounded-[3rem] p-2 bg-card">
           <CardHeader className="pt-10 pb-6 text-center">
-            <CardTitle className="text-3xl font-headline font-bold">Authentication</CardTitle>
+            <CardTitle className="text-3xl font-headline font-bold text-foreground">Authentication</CardTitle>
             <CardDescription className="font-medium">Access your professional portfolio vault.</CardDescription>
           </CardHeader>
           <CardContent className="px-10 pb-12 space-y-6">
-            <Button variant="outline" className="w-full h-14 rounded-2xl font-bold border-primary/10 hover:bg-muted/50" onClick={handleGoogleSignIn} disabled={isLoading}>
+            <Button variant="outline" className="w-full h-14 rounded-2xl font-bold border-border bg-muted/10 hover:bg-muted/20 text-foreground" onClick={handleGoogleSignIn} disabled={isLoading}>
               Continue with Google
             </Button>
-            <div className="relative my-4"><div className="absolute inset-0 flex items-center"><span className="w-full border-t opacity-10"></span></div><div className="relative flex justify-center text-[10px] uppercase font-bold text-muted-foreground tracking-widest"><span className="bg-card px-4">or use email</span></div></div>
+            <div className="relative my-4"><div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/10"></span></div><div className="relative flex justify-center text-[10px] uppercase font-bold text-muted-foreground tracking-widest"><span className="bg-card px-4">or use email</span></div></div>
             <form onSubmit={handleSubmit} className="space-y-6 text-left">
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase text-muted-foreground font-headline">Email</Label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 rounded-xl bg-muted/20 border-none font-bold" />
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground" />
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase text-muted-foreground font-headline">Password</Label>
                 <div className="relative">
-                  <Input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="h-12 rounded-xl bg-muted/20 border-none font-bold pr-12" />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-3 text-muted-foreground/40 hover:text-primary">
+                  <Input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="h-12 rounded-xl bg-muted/20 border-none font-bold pr-12 text-foreground" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-3 text-muted-foreground/40 hover:text-accent">
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
               </div>
-              <Button type="submit" className="w-full h-14 rounded-2xl font-extrabold bg-accent text-white text-xl shadow-xl shadow-accent/20 border-none" disabled={isLoading}>
+              <Button type="submit" className="w-full h-14 rounded-2xl font-extrabold bg-accent text-white text-xl shadow-xl shadow-accent/20 border-none transition-all hover:scale-[1.01]" disabled={isLoading}>
                 {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : (authMode === 'login' ? 'Access Vault' : 'Create Credentials')}
               </Button>
             </form>
-            <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full text-xs font-bold text-muted-foreground hover:text-primary transition-all font-headline uppercase tracking-widest mt-6">
+            <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full text-xs font-bold text-muted-foreground hover:text-accent transition-all font-headline uppercase tracking-widest mt-6">
               {authMode === 'login' ? "Create Professional Account" : "Back to Sign In"}
             </button>
           </CardContent>

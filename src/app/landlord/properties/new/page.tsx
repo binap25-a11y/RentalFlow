@@ -47,7 +47,7 @@ export default function NewPropertyPage() {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
-    // Process Files Sequentially to prevent mobile RAM exhaustion
+    // Sequential Processing for Mobile Stability
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
@@ -61,16 +61,14 @@ export default function NewPropertyPage() {
       setLedger(prev => [...prev, newItem]);
 
       try {
-        // Resilient Optimization (Silent Fallback)
-        const optimizedBinary = await compressImage(file);
-        
+        const optimizedBlob = await compressImage(file);
         const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
-        // DIRECT CLIENT SYNC: Resolved persistent failed-to-fetch errors
+        // DIRECT-TO-CLOUD: Bypasses Next.js payload and timeout constraints
         const { error: uploadError } = await supabase.storage
           .from('property-images')
-          .upload(path, optimizedBinary, {
-            contentType: file.type || 'image/jpeg',
+          .upload(path, optimizedBlob, {
+            contentType: 'image/jpeg',
             upsert: true
           });
 
@@ -164,8 +162,8 @@ export default function NewPropertyPage() {
             <p className="text-muted-foreground font-medium font-body text-sm">Adding a high-value property with professional visual orchestration.</p>
           </div>
         </div>
-        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[9px]">
-          <Sparkles className="w-3 h-3 mr-2 text-accent" /> High-Fidelity Sync
+        <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[9px]">
+          <Sparkles className="w-3 h-3 mr-2" /> Direct Sync Enabled
         </Badge>
       </div>
 
@@ -186,7 +184,7 @@ export default function NewPropertyPage() {
                     <div key={item.id} className={cn(
                       "relative aspect-video rounded-2xl overflow-hidden group shadow-sm bg-background border-2 transition-all",
                       item.status === 'uploading' ? 'opacity-50 grayscale scale-[0.98]' : 'opacity-100',
-                      index === 0 ? "border-primary" : "border-transparent",
+                      index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
                       <Image src={item.url} alt={`Asset ${index}`} fill className="object-cover" unoptimized />
@@ -194,9 +192,9 @@ export default function NewPropertyPage() {
                         <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/90 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 backdrop-blur-md transition-all active:scale-90"><X className="w-3.5 h-3.5" /></button>
                       </div>
                       {item.status === 'uploading' && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-md gap-2">
-                           <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                           <span className="text-[8px] font-bold text-primary uppercase tracking-[0.2em]">Synchronizing...</span>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-card/60 backdrop-blur-md gap-2">
+                           <Loader2 className="w-6 h-6 animate-spin text-accent" />
+                           <span className="text-[8px] font-bold text-accent uppercase tracking-[0.2em]">Synchronizing...</span>
                         </div>
                       )}
                       {item.status === 'ready' && (
@@ -206,8 +204,8 @@ export default function NewPropertyPage() {
                       )}
                     </div>
                   ))}
-                  <label htmlFor="image-input" className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-muted/5 flex flex-col items-center justify-center gap-2 group cursor-pointer shadow-inner">
-                    <Plus className="w-6 h-6 text-primary/20 group-hover:text-primary/40" />
+                  <label htmlFor="image-input" className="aspect-video rounded-2xl border-2 border-dashed border-accent/20 hover:border-accent/40 transition-all bg-muted/5 flex flex-col items-center justify-center gap-2 group cursor-pointer shadow-inner">
+                    <Plus className="w-6 h-6 text-accent/20 group-hover:text-accent/40" />
                     <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">Gallery Select</span>
                   </label>
                 </div>

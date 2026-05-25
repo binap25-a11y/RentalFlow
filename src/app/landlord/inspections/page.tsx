@@ -137,15 +137,15 @@ export default function InspectionsPage() {
     }));
 
     try {
-      // High-Fidelity Optimizer
+      // High-Fidelity Sequential Optimizer
       const optimizedBlob = await compressImage(file);
-      
       const path = `audits/${user.uid}/${activeInspection.id}/${itemId.replace(/\s+/g, '_')}_${Date.now()}`;
       
+      // DIRECT-TO-CLOUD Sync
       const { error: uploadError } = await supabase.storage
         .from('property-images')
         .upload(path, optimizedBlob, {
-          contentType: file.type || 'image/jpeg',
+          contentType: 'image/jpeg',
           upsert: true
         });
 
@@ -239,7 +239,7 @@ export default function InspectionsPage() {
     }
   };
 
-  if (!isClient || isPropLoading || isInspLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+  if (!isClient || isPropLoading || isInspLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-accent" /></div>;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left bg-background">
@@ -258,7 +258,7 @@ export default function InspectionsPage() {
           <CardContent className="p-8 space-y-6">
             <div className="space-y-2">
               <Label className="text-xs uppercase font-bold text-muted-foreground font-headline tracking-widest opacity-60">Select Asset</Label>
-              <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow font-bold text-foreground" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
+              <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none transition-shadow font-bold text-foreground" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
                 <option value="">Choose a property...</option>
                 {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
               </select>
@@ -277,13 +277,13 @@ export default function InspectionsPage() {
                 </PopoverContent>
               </Popover>
             </div>
-            <Button className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/10 font-headline bg-primary text-primary-foreground hover:bg-primary/90 transition-all uppercase tracking-widest text-[10px] border-none" onClick={handleSchedule} disabled={!date || !selectedPropertyId}>Confirm Schedule</Button>
+            <Button className="w-full rounded-xl h-11 font-bold shadow-lg shadow-accent/10 font-headline bg-accent text-white hover:bg-accent/90 transition-all uppercase tracking-widest text-[10px] border-none" onClick={handleSchedule} disabled={!date || !selectedPropertyId}>Confirm Schedule</Button>
           </CardContent>
         </Card>
 
         <div className="lg:col-span-2 space-y-6">
           <h3 className="text-xl font-bold font-headline flex items-center text-foreground tracking-tight">
-            <ClipboardList className="w-5 h-5 mr-2" />
+            <ClipboardList className="w-5 h-5 mr-2 text-accent" />
             Compliance Ledger
           </h3>
           <div className="grid gap-4">
@@ -304,7 +304,7 @@ export default function InspectionsPage() {
                         <div className="flex items-center justify-between">
                           <Badge variant={inspection.status === 'completed' ? 'secondary' : 'default'} className="uppercase font-bold text-[10px] font-headline tracking-widest rounded-full">{inspection.status}</Badge>
                           <div className="flex gap-2">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-lg" onClick={() => handleDeleteInspection(inspection.id)}><Trash2 className="w-4 h-4" /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-lg" onClick={() => handleDeleteInspection(inspection.id)}><Trash2 className="w-4 h-4" /></Button>
                           </div>
                         </div>
                         <div className="text-left">
@@ -316,7 +316,7 @@ export default function InspectionsPage() {
                         </div>
                         <Dialog open={activeInspection?.id === inspection.id} onOpenChange={(open) => !open && setActiveInspection(null)}>
                           <DialogTrigger asChild>
-                            <Button className={cn("w-full md:w-auto rounded-xl font-bold h-10 px-8 font-headline uppercase tracking-widest text-[10px] transition-all", inspection.status === 'completed' ? "bg-muted hover:bg-muted/80 text-foreground" : "bg-primary hover:bg-primary/90 text-primary-foreground")} onClick={() => handleOpenAudit(inspection)}>
+                            <Button className={cn("w-full md:w-auto rounded-xl font-bold h-10 px-8 font-headline uppercase tracking-widest text-[10px] transition-all", inspection.status === 'completed' ? "bg-muted hover:bg-muted/80 text-foreground" : "bg-accent hover:bg-accent/90 text-white shadow-lg")} onClick={() => handleOpenAudit(inspection)}>
                               {inspection.status === 'completed' ? <><Edit3 className="w-4 h-4 mr-2" /> Edit Audit</> : <><PlayCircle className="w-4 h-4 mr-2" /> Start Audit</>}
                             </Button>
                           </DialogTrigger>
@@ -358,7 +358,7 @@ export default function InspectionsPage() {
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border">
                                               <div className="space-y-2 text-left">
                                                 <Label className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60 font-headline">Audit Findings</Label>
-                                                <Textarea placeholder="Auditor notes..." className="rounded-2xl min-h-[120px] bg-muted/20 text-sm font-body border-none shadow-inner focus:ring-2 focus:ring-primary text-foreground" value={structuredFindings[item]?.notes || ''} onChange={(e) => handleNotesChange(item, e.target.value)} />
+                                                <Textarea placeholder="Auditor notes..." className="rounded-2xl min-h-[120px] bg-muted/20 text-sm font-body border-none shadow-inner focus:ring-2 focus:ring-accent text-foreground" value={structuredFindings[item]?.notes || ''} onChange={(e) => handleNotesChange(item, e.target.value)} />
                                               </div>
                                               <div className="space-y-2 text-left">
                                                 <Label className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60 font-headline">Evidence Capture</Label>
@@ -375,12 +375,12 @@ export default function InspectionsPage() {
                                                   ) : (
                                                     <label 
                                                       htmlFor={`upload-${item}`}
-                                                      className="w-full aspect-video rounded-[2rem] border-2 border-dashed border-border hover:border-primary/30 transition-all bg-muted/10 flex flex-col items-center justify-center gap-3 group cursor-pointer shadow-inner"
+                                                      className="w-full aspect-video rounded-[2rem] border-2 border-dashed border-border hover:border-accent/30 transition-all bg-muted/10 flex flex-col items-center justify-center gap-3 group cursor-pointer shadow-inner"
                                                     >
                                                       {structuredFindings[item]?.isSyncing ? (
                                                         <div className="flex flex-col items-center gap-2">
-                                                          <Loader2 className="w-8 h-8 animate-spin text-primary opacity-40" />
-                                                          <span className="text-[8px] font-bold uppercase text-primary tracking-[0.3em]">Syncing Binary...</span>
+                                                          <Loader2 className="w-8 h-8 animate-spin text-accent opacity-40" />
+                                                          <span className="text-[8px] font-bold uppercase text-accent tracking-[0.3em]">Syncing Binary...</span>
                                                         </div>
                                                       ) : (
                                                         <>
@@ -410,7 +410,7 @@ export default function InspectionsPage() {
                               </div>
                             </ScrollArea>
                             <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
-                              <Button className="w-full rounded-2xl h-14 font-bold bg-primary shadow-xl shadow-primary/20 font-headline text-primary-foreground hover:bg-primary/90 uppercase tracking-widest text-xs transition-all hover:scale-[1.01] border-none" onClick={handleFinalizeAudit} disabled={isGenerating || Object.values(structuredFindings).some(f => f.isSyncing)}>
+                              <Button className="w-full rounded-2xl h-14 font-bold bg-accent shadow-xl shadow-accent/20 font-headline text-white hover:bg-accent/90 uppercase tracking-widest text-xs transition-all hover:scale-[1.01] border-none" onClick={handleFinalizeAudit} disabled={isGenerating || Object.values(structuredFindings).some(f => f.isSyncing)}>
                                 {isGenerating ? <><Loader2 className="w-5 h-5 mr-3 animate-spin" /> Orchestrating Audit Records...</> : <><CheckCircle2 className="w-5 h-5 mr-3" /> Sign & Finalize Official Record</>}
                               </Button>
                             </DialogFooter>

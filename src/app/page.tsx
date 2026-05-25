@@ -38,14 +38,14 @@ export default function LandingPage() {
           <div className="relative w-24 h-24 rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5">
             <Image src={RENTALFLOW_NEUTRAL_FALLBACK} alt="RentalFlow" fill className="object-cover" unoptimized priority />
           </div>
-          <Loader2 className="w-6 h-6 animate-spin text-primary opacity-40" />
+          <Loader2 className="w-6 h-6 animate-spin text-accent opacity-40" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background font-body selection:bg-primary selection:text-primary-foreground overflow-x-hidden text-left">
+    <div className="min-h-screen bg-background font-body selection:bg-accent selection:text-white overflow-x-hidden text-left">
       <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b h-20 border-border">
         <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -74,8 +74,8 @@ export default function LandingPage() {
       <section className="relative pt-40 pb-32">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
           <div className="text-left space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            <Badge variant="outline" className="py-2 px-4 rounded-full border-primary/20 bg-primary/5 text-primary font-bold uppercase tracking-[0.2em] text-[10px]">
-              <Sparkles className="w-3 h-3 mr-2 text-accent" /> AI-Powered Portfolio Orchestration
+            <Badge variant="outline" className="py-2 px-4 rounded-full border-accent/20 bg-accent/5 text-accent font-bold uppercase tracking-[0.2em] text-[10px]">
+              <Sparkles className="w-3 h-3 mr-2" /> AI-Powered Portfolio Orchestration
             </Badge>
             <h1 className="text-6xl md:text-8xl font-headline font-bold tracking-tighter leading-[0.9] text-foreground">
               Premium Property <br/><span className="text-accent">Management.</span>
@@ -123,17 +123,17 @@ export default function LandingPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Card className="border-none shadow-sm rounded-[2.5rem] p-10 bg-card hover:shadow-2xl transition-all group text-left ring-1 ring-border">
-              <div className="p-5 bg-accent/10 text-white rounded-3xl w-fit mb-8 group-hover:scale-110 transition-transform"><Sparkles className="w-8 h-8" /></div>
+              <div className="p-5 bg-accent/10 text-accent rounded-3xl w-fit mb-8 group-hover:scale-110 transition-transform"><Sparkles className="w-8 h-8" /></div>
               <h3 className="text-2xl font-bold font-headline mb-4 text-foreground">AI Maintenance Triage</h3>
               <p className="text-muted-foreground font-medium font-body leading-relaxed">Prioritize critical repairs and receive automated suggestions before contacting a contractor.</p>
             </Card>
             <Card className="border-none shadow-sm rounded-[2.5rem] p-10 bg-card hover:shadow-2xl transition-all group text-left ring-1 ring-border">
-              <div className="p-5 bg-primary/5 text-primary rounded-3xl w-fit mb-8 group-hover:scale-110 transition-transform"><Wallet className="w-8 h-8" /></div>
+              <div className="p-5 bg-accent/5 text-accent rounded-3xl w-fit mb-8 group-hover:scale-110 transition-transform"><Wallet className="w-8 h-8" /></div>
               <h3 className="text-2xl font-bold font-headline mb-4 text-foreground">Financial Command</h3>
               <p className="text-muted-foreground font-medium font-body leading-relaxed">Unified rental ledgers with real-time status tracking and professional visual asset records.</p>
             </Card>
             <Card className="border-none shadow-sm rounded-[2.5rem] p-10 bg-card hover:shadow-2xl transition-all group text-left ring-1 ring-border">
-              <div className="p-5 bg-emerald-500/10 text-emerald-600 rounded-3xl w-fit mb-8 group-hover:scale-110 transition-transform"><MessageSquare className="w-8 h-8" /></div>
+              <div className="p-5 bg-emerald-500/10 text-emerald-500 rounded-3xl w-fit mb-8 group-hover:scale-110 transition-transform"><MessageSquare className="w-8 h-8" /></div>
               <h3 className="text-2xl font-bold font-headline mb-4 text-foreground">Resident Concierge</h3>
               <p className="text-muted-foreground font-medium font-body leading-relaxed">A dedicated AI assistant for residents, providing instant guidance on property protocols.</p>
             </Card>

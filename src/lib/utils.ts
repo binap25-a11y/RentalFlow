@@ -18,8 +18,8 @@ export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-15
  * it returns the original file silently so the sync flow is never interrupted.
  */
 export async function compressImage(file: File, maxWidth = 1200, quality = 0.75): Promise<Blob | File> {
-  // Skip optimization for non-image files or small files
-  if (!file.type.startsWith('image/') || file.size < 800000) {
+  // Skip optimization for non-image files or very small files
+  if (!file.type.startsWith('image/') || file.size < 500000) {
     return file;
   }
 
@@ -36,7 +36,7 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.75)
             let width = img.width;
             let height = img.height;
 
-            // Maintain Aspect Ratio with ceiling
+            // Maintain Aspect Ratio with 1200px ceiling for mobile stability
             if (width > height) {
               if (width > maxWidth) {
                 height *= maxWidth / width;
@@ -58,6 +58,9 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.75)
               return;
             }
 
+            // High-Quality Downsampling
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, width, height);
 
             canvas.toBlob(
@@ -73,7 +76,7 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.75)
               quality
             );
           } catch (e) {
-            console.warn("Compression canvas failure: fallback to original.");
+            console.warn("Resilient Fallback: Canvas failure, using original.");
             resolve(file);
           }
         };
@@ -81,11 +84,11 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.75)
       };
       reader.onerror = () => resolve(file);
       
-      // Safety timeout: don't block user for more than 4s
-      setTimeout(() => resolve(file), 4000);
+      // Safety timeout: don't block user for more than 5s
+      setTimeout(() => resolve(file), 5000);
     });
   } catch (error) {
-    console.warn("Resilient Fallback: Optimization engine bypassed due to memory constraints.");
+    console.warn("Resilient Fallback: Optimization bypassed due to device constraints.");
     return file;
   }
 }
