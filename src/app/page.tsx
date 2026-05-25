@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { RENTALFLOW_LOGO_URL, RENTALFLOW_NEUTRAL_FALLBACK, getResolvedImageUrl, isRealUserUpload } from '@/lib/utils';
+import { cn, RENTALFLOW_LOGO_URL, RENTALFLOW_NEUTRAL_FALLBACK, getResolvedImageUrl, isRealUserUpload } from '@/lib/utils';
 import { useEffect, useState, useMemo } from 'react';
 import { doc } from 'firebase/firestore';
 
