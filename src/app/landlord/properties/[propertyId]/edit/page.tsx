@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { supabase } from '@/lib/supabase';
-import { cn, isUserUploadedAsset, compressImage, withRetry } from "@/lib/utils";
+import { cn, isUserUploadedAsset, compressImage, withRetry, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -97,7 +97,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
-      // PREVIEW STABILITY: Standard blob creation, revocation managed by component unmount if needed
+      // PREVIEW STABILITY: Standard blob creation
       const localUrl = URL.createObjectURL(file);
       
       const newItem: LedgerItem = {
@@ -236,7 +236,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
-                      {/* STABLE PREVIEW: Using standard img tag for temporary blob assets to prevent Next.js proxy errors */}
                       <img 
                         src={item.previewUrl} 
                         alt={`Asset ${index}`} 
