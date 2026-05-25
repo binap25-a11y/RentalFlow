@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { supabase } from '@/lib/supabase';
-import { cn, isRealUserUpload, compressImage, withRetry } from "@/lib/utils";
+import { cn, isRealUserUpload, compressImage, withRetry, getResolvedGallery, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -31,11 +31,6 @@ type LedgerItem = {
   cloudUrl?: string;   
   status: 'uploading' | 'ready' | 'error';
 };
-
-/**
- * Identity local fallback to prevent ReferenceErrors at runtime.
- */
-const BRAND_FALLBACK = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop";
 
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -77,10 +72,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      const gallery = Array.isArray(property.imageUrls) ? [...property.imageUrls] : [];
-      if (property.imageUrl && !gallery.includes(property.imageUrl)) {
-        gallery.unshift(property.imageUrl);
-      }
+      // STORAGE-FIRST POLICY: Initialization strictly purges placeholders if user uploads exist
+      const gallery = getResolvedGallery(property.imageUrl, property.imageUrls);
       
       const initialLedger = Array.from(new Set(gallery))
         .filter(url => url && url.startsWith('http'))
@@ -99,7 +92,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   /**
    * 🔄 Direct Transactional Persistence
    * Synchronizes the visual state to Firestore immediately upon binary stabilization.
-   * This ensures that images are permanently locked in even if the user navigates away.
    */
   const performDirectSync = (currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId || !propertyRef || currentLedger.some(i => i.status === 'uploading')) return;
@@ -110,7 +102,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     const userOnly = readyUrls.filter(isRealUserUpload);
     const finalGallery = userOnly.length > 0 ? userOnly : readyUrls;
-    const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : BRAND_FALLBACK;
+    const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
 
     updateDocumentNonBlocking(propertyRef, {
       imageUrl: primaryUrl,
@@ -153,7 +145,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
           );
-          // Trigger direct transactional sync
           performDirectSync(updated);
           return updated;
         });
@@ -201,7 +192,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const readyUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
       const userOnly = readyUrls.filter(isRealUserUpload);
       const purgedGallery = userOnly.length > 0 ? userOnly : readyUrls;
-      const primaryUrl = purgedGallery.length > 0 ? purgedGallery[0] : BRAND_FALLBACK;
+      const primaryUrl = purgedGallery.length > 0 ? purgedGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
 
       const serializableData = {
         id: propertyId,
@@ -279,7 +270,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                         className="absolute inset-0 h-full w-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = BRAND_FALLBACK;
+                          target.src = RENTALFLOW_NEUTRAL_FALLBACK;
                         }}
                       />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">

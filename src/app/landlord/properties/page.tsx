@@ -9,8 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Building2, MapPin, Plus, Bed, Bath, Loader2, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import Image from "next/image";
-import { cn, getResolvedImageUrl } from "@/lib/utils";
+import { cn, getResolvedImageUrl, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
 
 export default function PropertiesPage() {
   const { user } = useUser();
@@ -70,13 +69,14 @@ export default function PropertiesPage() {
           properties.map((property) => (
             <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card border border-transparent hover:border-accent/10">
               <div className="relative aspect-video w-full overflow-hidden bg-muted">
-                <Image 
+                <img 
                   src={getResolvedImageUrl(property.imageUrl, property.imageUrls)} 
                   alt={property.addressLine1} 
-                  fill 
-                  className="object-cover transition-transform duration-500 group-hover:scale-105" 
-                  unoptimized 
-                  priority
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = RENTALFLOW_NEUTRAL_FALLBACK;
+                  }}
                 />
                 <Badge className={cn("absolute top-4 right-4 font-bold shadow-lg py-1 px-3 text-[10px] uppercase", property.isOccupied ? 'bg-emerald-500' : 'bg-amber-500')}>
                   {property.isOccupied ? 'Occupied' : 'Vacant'}

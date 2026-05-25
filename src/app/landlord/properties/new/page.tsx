@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { supabase } from '@/lib/supabase';
-import { cn, compressImage, withRetry, isRealUserUpload } from '@/lib/utils';
+import { cn, compressImage, withRetry, isRealUserUpload, RENTALFLOW_NEUTRAL_FALLBACK } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -24,11 +24,6 @@ type LedgerItem = {
   cloudUrl?: string;   
   status: 'uploading' | 'ready' | 'error';
 };
-
-/**
- * Identity local fallback to prevent ReferenceErrors at runtime.
- */
-const BRAND_FALLBACK = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop";
 
 export default function NewPropertyPage() {
   const { user } = useUser();
@@ -57,7 +52,6 @@ export default function NewPropertyPage() {
   /**
    * 🔄 Direct Transactional Persistence
    * Synchronizes the visual state to Firestore immediately upon binary stabilization.
-   * This ensures that images are permanently locked in even if the user navigates away.
    */
   const performDirectSync = (currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId || currentLedger.some(i => i.status === 'uploading')) return;
@@ -68,7 +62,7 @@ export default function NewPropertyPage() {
 
     const userOnly = readyUrls.filter(isRealUserUpload);
     const finalGallery = userOnly.length > 0 ? userOnly : readyUrls;
-    const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : BRAND_FALLBACK;
+    const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
 
     const propertyRef = doc(db, 'properties', propertyId);
     setDocumentNonBlocking(propertyRef, {
@@ -115,7 +109,6 @@ export default function NewPropertyPage() {
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
           );
-          // Trigger direct transactional sync
           performDirectSync(updated);
           return updated;
         });
@@ -164,7 +157,7 @@ export default function NewPropertyPage() {
     const finalImageUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
     const userUploads = finalImageUrls.filter(isRealUserUpload);
     const purgedGallery = userUploads.length > 0 ? userUploads : finalImageUrls;
-    const finalImageUrl = purgedGallery.length > 0 ? purgedGallery[0] : BRAND_FALLBACK;
+    const finalImageUrl = purgedGallery.length > 0 ? purgedGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
 
     try {
       const serializableData = {
@@ -244,7 +237,7 @@ export default function NewPropertyPage() {
                         className="absolute inset-0 h-full w-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = BRAND_FALLBACK;
+                          target.src = RENTALFLOW_NEUTRAL_FALLBACK;
                         }}
                       />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">

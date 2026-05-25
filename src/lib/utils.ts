@@ -79,7 +79,6 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
           canvas.toBlob(
             (blob) => {
               clearTimeout(timeout);
-              // Do NOT revoke objectUrl here as it may be used by UI previews
               resolve(blob && blob.size < file.size ? blob : file);
             },
             'image/jpeg',
@@ -120,7 +119,8 @@ export function isRealUserUpload(url: any): boolean {
   return u.startsWith('blob:') || 
          u.includes('supabase') || 
          u.includes('firebasestorage') ||
-         u.includes('googleapi');
+         u.includes('googleapi') ||
+         u.includes('googleusercontent');
 }
 
 /**
