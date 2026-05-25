@@ -12,49 +12,72 @@ export function cn(...inputs: ClassValue[]) {
 export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop";
 
 /**
- * 🖼️ Client-Side Image Compression
- * Optimized for mobile devices to prevent "Connection Interrupted" errors.
- * Reduces 10MB+ images to <1MB while maintaining professional quality.
- * Requested Specs: Max Width 1200px, Quality 0.7-0.8
+ * 🖼️ Client-Side Image Compression (Fail-Safe)
+ * Optimized for mobile devices to prevent "Memory Exhaustion" or "Connection Interrupted" errors.
+ * If compression fails (common with massive 4K/12MP photos on mobile RAM), it falls back to the original file.
  */
-export async function compressImage(file: File, maxWidth = 1200, quality = 0.75): Promise<Blob> {
-  // If not an image, return as is (for documents)
+export async function compressImage(file: File, maxWidth = 1200, quality = 0.75): Promise<Blob | File> {
+  // 1. Skip if not an image or very small (already optimized)
   if (!file.type.startsWith('image/')) return file;
+  if (file.size < 200 * 1024) return file; // Skip if < 200KB
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
+    
     reader.onload = (event) => {
       const img = new Image();
       img.src = event.target?.result as string;
+      
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
+        try {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
 
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return reject(new Error('Canvas Context unavailable'));
-        
-        ctx.drawImage(img, 0, 0, width, height);
-        canvas.toBlob((blob) => {
-          if (blob) {
-            console.log(`Image Optimized: ${(file.size / 1024 / 1024).toFixed(2)}MB -> ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
-            resolve(blob);
-          } else {
-            reject(new Error('Binary Compression failed'));
+          // Only resize if significantly larger than target
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
           }
-        }, 'image/jpeg', quality);
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          
+          if (!ctx) {
+            console.warn('Compression: Canvas context unavailable. Using original file.');
+            return resolve(file);
+          }
+          
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              console.log(`Compression Complete: ${(file.size / 1024 / 1024).toFixed(2)}MB -> ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
+              resolve(blob);
+            } else {
+              console.warn('Compression: Blob conversion failed. Using original file.');
+              resolve(file);
+            }
+          }, 'image/jpeg', quality);
+        } catch (err) {
+          console.error('Compression Engine Error (Memory/RAM):', err);
+          // 🛠️ CRITICAL FALLBACK: Return original file if compression crashes on mobile
+          resolve(file);
+        }
       };
-      img.onerror = (err) => reject(err);
+      
+      img.onerror = (err) => {
+        console.error('Compression: Image loading error. Using original file.', err);
+        resolve(file);
+      };
     };
-    reader.onerror = (error) => reject(error);
+
+    reader.onerror = (error) => {
+      console.error('Compression: FileReader error. Using original file.', error);
+      resolve(file);
+    };
   });
 }
 

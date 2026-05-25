@@ -89,6 +89,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
+    // 🛠️ SEQUENTIAL SYNC: Process one at a time for mobile RAM safety
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
@@ -103,15 +104,15 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setLedger(prev => [...prev, newItem]);
 
       try {
-        // High-Fidelity Compression requested: 1200px Max Width, 0.75 Quality
-        const compressedBlob = await compressImage(file, 1200, 0.75);
+        // High-Fidelity Fallback Compression: Enforces 1200px / 0.75 Quality
+        const optimizedAsset = await compressImage(file, 1200, 0.75);
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
-        // DIRECT CLIENT SYNC: Bypasses server bottlenecks for mobile stability
+        // DIRECT CLIENT SYNC: Resolved timeout issues by bypassing server actions
         const { error: uploadError } = await supabase.storage
           .from('property-images')
-          .upload(path, compressedBlob, {
-            contentType: 'image/jpeg',
+          .upload(path, optimizedAsset, {
+            contentType: file.type || 'image/jpeg',
             upsert: true
           });
 
@@ -130,7 +131,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         toast({ 
           variant: "destructive", 
           title: "Mobile Sync Failed", 
-          description: "Connection interrupted. Compression engine failed to deliver asset." 
+          description: "Connection interrupted. High-fidelity sync failed. Please try a smaller file." 
         });
       }
     }
@@ -257,6 +258,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   </label>
                 </div>
               </ScrollArea>
+              {/* 📱 MOBILE GALLERY FIX: No capture attribute allows Gallery + Camera selection */}
               <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
             </div>
 

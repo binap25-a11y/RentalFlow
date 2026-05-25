@@ -47,6 +47,7 @@ export default function NewPropertyPage() {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
+    // 🛠️ SEQUENTIAL SYNC: Process one at a time to prevent mobile RAM crashes
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
@@ -60,15 +61,15 @@ export default function NewPropertyPage() {
       setLedger(prev => [...prev, newItem]);
 
       try {
-        // Requested Optimization: Client-side compression before direct cloud sync
-        const compressedBlob = await compressImage(file, 1200, 0.75);
+        // High-Fidelity Fallback Compression: Returns original if device fails
+        const optimizedAsset = await compressImage(file, 1200, 0.75);
         const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
-        // DIRECT CLIENT SYNC: Bypasses server bottlenecks
+        // DIRECT CLIENT SYNC: Bypasses server middleware for heavy binary data
         const { error: uploadError } = await supabase.storage
           .from('property-images')
-          .upload(path, compressedBlob, {
-            contentType: 'image/jpeg',
+          .upload(path, optimizedAsset, {
+            contentType: file.type || 'image/jpeg',
             upsert: true
           });
 
@@ -87,7 +88,7 @@ export default function NewPropertyPage() {
         toast({ 
           variant: "destructive", 
           title: "Mobile Sync Failed", 
-          description: "Connection interrupted. High-fidelity compression failed to deliver asset." 
+          description: "Cloud connection interrupted. Check your network or try a smaller image." 
         });
       }
     }
@@ -210,6 +211,7 @@ export default function NewPropertyPage() {
                   </label>
                 </div>
               </ScrollArea>
+              {/* 📱 MOBILE GALLERY FIX: No capture attribute allows Gallery + Camera selection */}
               <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
             </div>
 
