@@ -14,72 +14,78 @@ export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-15
 /**
  * 🖼️ Resilient Mobile Optimization Engine
  * Reduces massive 10MB+ mobile photos to ~1MB high-quality versions.
- * Fail-Safe: If browser memory or format limits are hit, it returns the original file.
+ * Fail-Safe Architecture: If browser memory or format limits are hit (common on mobile), 
+ * it returns the original file silently so the sync flow is never interrupted.
  */
 export async function compressImage(file: File, maxWidth = 1200, quality = 0.75): Promise<Blob | File> {
   // Skip optimization for non-image files or small files
-  if (!file.type.startsWith('image/') || file.size < 500000) {
+  if (!file.type.startsWith('image/') || file.size < 800000) {
     return file;
   }
 
   try {
-    return await new Promise((resolve, reject) => {
+    return await new Promise((resolve) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = (event) => {
         const img = new Image();
         img.src = event.target?.result as string;
         img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
+          try {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
 
-          // Maintain Aspect Ratio with 1200px ceiling
-          if (width > height) {
-            if (width > maxWidth) {
-              height *= maxWidth / width;
-              width = maxWidth;
-            }
-          } else {
-            if (height > maxWidth) {
-              width *= maxWidth / height;
-              height = maxWidth;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            resolve(file); // Fallback
-            return;
-          }
-
-          ctx.drawImage(img, 0, 0, width, height);
-
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                // Only use the optimized version if it's actually smaller
-                resolve(blob.size < file.size ? blob : file);
-              } else {
-                resolve(file);
+            // Maintain Aspect Ratio with ceiling
+            if (width > height) {
+              if (width > maxWidth) {
+                height *= maxWidth / width;
+                width = maxWidth;
               }
-            },
-            'image/jpeg',
-            quality
-          );
+            } else {
+              if (height > maxWidth) {
+                width *= maxWidth / height;
+                height = maxWidth;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              resolve(file); 
+              return;
+            }
+
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob(
+              (blob) => {
+                if (blob) {
+                  // Only use the optimized version if it's actually smaller
+                  resolve(blob.size < file.size ? blob : file);
+                } else {
+                  resolve(file);
+                }
+              },
+              'image/jpeg',
+              quality
+            );
+          } catch (e) {
+            console.warn("Compression canvas failure: fallback to original.");
+            resolve(file);
+          }
         };
         img.onerror = () => resolve(file);
       };
       reader.onerror = () => resolve(file);
       
-      // Safety timeout: don't block user for more than 5s
-      setTimeout(() => resolve(file), 5000);
+      // Safety timeout: don't block user for more than 4s
+      setTimeout(() => resolve(file), 4000);
     });
   } catch (error) {
-    console.warn("Resilient Fallback: Optimization engine bypassed due to memory/format constraints.");
+    console.warn("Resilient Fallback: Optimization engine bypassed due to memory constraints.");
     return file;
   }
 }

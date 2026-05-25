@@ -154,7 +154,7 @@ export default function AuthPage() {
 
   if (!mounted || isUserLoading || (user && !needsProfile && !isRedirecting.current)) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-500">
+      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-500 pointer-events-none">
         <div className="flex flex-col items-center gap-4">
           <div className="relative w-24 h-24 rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5">
              <Image src={RENTALFLOW_NEUTRAL_FALLBACK} alt="RentalFlow" fill className="object-cover" unoptimized priority />
@@ -197,7 +197,7 @@ export default function AuthPage() {
               <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground font-headline">Phone</Label>
               <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="h-12 rounded-xl bg-muted/20 border-none font-bold" />
             </div>
-            <Button className="w-full h-14 rounded-2xl font-bold bg-primary text-primary-foreground text-lg shadow-xl shadow-primary/10" onClick={handleCreateProfile} disabled={isLoading}>
+            <Button className="w-full h-14 rounded-2xl font-bold bg-accent text-white text-lg shadow-xl shadow-accent/10 border-none" onClick={handleCreateProfile} disabled={isLoading}>
               {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Complete Registration"}
             </Button>
           </CardContent>
@@ -213,7 +213,7 @@ export default function AuthPage() {
       </div>
       <div className="max-w-xl w-full text-center">
         <div className="mb-12 inline-flex flex-col items-center">
-          <div className="h-24 w-24 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 mb-6">
+          <div className="relative h-24 w-24 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 mb-6">
             <Image src={RENTALFLOW_NEUTRAL_FALLBACK} alt="Logo" fill className="object-cover" unoptimized priority />
           </div>
           <h1 className="text-5xl font-headline font-bold text-foreground tracking-tighter">RentalFlow</h1>
@@ -242,7 +242,7 @@ export default function AuthPage() {
                   </button>
                 </div>
               </div>
-              <Button type="submit" className="w-full h-14 rounded-2xl font-extrabold bg-primary text-primary-foreground text-xl shadow-xl shadow-primary/20" disabled={isLoading}>
+              <Button type="submit" className="w-full h-14 rounded-2xl font-extrabold bg-accent text-white text-xl shadow-xl shadow-accent/20 border-none" disabled={isLoading}>
                 {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : (authMode === 'login' ? 'Access Vault' : 'Create Credentials')}
               </Button>
             </form>

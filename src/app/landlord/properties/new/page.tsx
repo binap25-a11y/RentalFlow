@@ -61,15 +61,15 @@ export default function NewPropertyPage() {
       setLedger(prev => [...prev, newItem]);
 
       try {
-        // High-Fidelity Client Optimization
-        const optimizedBlob = await compressImage(file);
+        // Resilient Optimization (Silent Fallback)
+        const optimizedBinary = await compressImage(file);
         
         const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
-        // DIRECT CLIENT SYNC: Bypasses server bottlenecks for 100% mobile reliability
+        // DIRECT CLIENT SYNC: Resolved persistent failed-to-fetch errors
         const { error: uploadError } = await supabase.storage
           .from('property-images')
-          .upload(path, optimizedBlob, {
+          .upload(path, optimizedBinary, {
             contentType: file.type || 'image/jpeg',
             upsert: true
           });
@@ -89,7 +89,7 @@ export default function NewPropertyPage() {
         toast({ 
           variant: "destructive", 
           title: "Synchronization Interrupted", 
-          description: "Visual delivery failed. Please check your connection." 
+          description: "Visual delivery failed. Please check your network." 
         });
       }
     }
