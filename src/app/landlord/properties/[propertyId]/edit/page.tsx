@@ -22,7 +22,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { supabase } from '@/lib/supabase';
-import { cn, isUserUploadedAsset } from "@/lib/utils";
+import { cn, isUserUploadedAsset, compressImage } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -103,12 +103,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setLedger(prev => [...prev, newItem]);
 
       try {
-        const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_') || 'edit_asset.jpg'}`;
+        const optimizedBlob = await compressImage(file);
+        const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
         // DIRECT CLIENT SYNC: Bypasses server action bottlenecks for reliable mobile delivery
         const { error: uploadError } = await supabase.storage
           .from('property-images')
-          .upload(path, file, {
+          .upload(path, optimizedBlob, {
             contentType: file.type || 'image/jpeg',
             upsert: true
           });
@@ -128,7 +129,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         toast({ 
           variant: "destructive", 
           title: "Synchronization Interrupted", 
-          description: "Visual delivery failed. Please check your network connection." 
+          description: "Visual delivery failed. Please check your connection." 
         });
       }
     }
@@ -207,7 +208,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </div>
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[9px]">
-          <Sparkles className="w-3 h-3 mr-2" /> High-Fidelity Sync
+          <Sparkles className="w-3 h-3 mr-2 text-accent" /> High-Fidelity Sync
         </Badge>
       </div>
 

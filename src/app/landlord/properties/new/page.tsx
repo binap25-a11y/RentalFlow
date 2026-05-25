@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { supabase } from '@/lib/supabase';
-import { cn } from '@/lib/utils';
+import { cn, compressImage } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -47,6 +47,7 @@ export default function NewPropertyPage() {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
+    // Process Files Sequentially to prevent mobile RAM exhaustion
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
@@ -60,12 +61,15 @@ export default function NewPropertyPage() {
       setLedger(prev => [...prev, newItem]);
 
       try {
-        const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/\s+/g, '_') || 'asset.jpg'}`;
+        // High-Fidelity Client Optimization
+        const optimizedBlob = await compressImage(file);
         
-        // DIRECT-TO-CLOUD SYNC: Bypasses server action bottlenecks for reliable mobile delivery
+        const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+        
+        // DIRECT CLIENT SYNC: Bypasses server bottlenecks for 100% mobile reliability
         const { error: uploadError } = await supabase.storage
           .from('property-images')
-          .upload(path, file, {
+          .upload(path, optimizedBlob, {
             contentType: file.type || 'image/jpeg',
             upsert: true
           });
@@ -78,14 +82,14 @@ export default function NewPropertyPage() {
           item.id === tempId ? { ...item, url: publicUrl, status: 'ready' } : item
         ));
       } catch (err: any) {
-        console.error("Mobile Sync Error:", err);
+        console.error("Direct Sync Failure:", err);
         setLedger(prev => prev.map(item => 
           item.id === tempId ? { ...item, status: 'error' } : item
         ));
         toast({ 
           variant: "destructive", 
           title: "Synchronization Interrupted", 
-          description: "Visual delivery failed. Please check your network connection." 
+          description: "Visual delivery failed. Please check your connection." 
         });
       }
     }

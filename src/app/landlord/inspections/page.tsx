@@ -137,12 +137,14 @@ export default function InspectionsPage() {
     }));
 
     try {
-      // Direct-to-Cloud Sync for Mobile Reliability
-      const path = `audits/${user.uid}/${activeInspection.id}/${itemId.replace(/\s+/g, '_') || 'item'}_${Date.now()}`;
+      // High-Fidelity Optimizer
+      const optimizedBlob = await compressImage(file);
+      
+      const path = `audits/${user.uid}/${activeInspection.id}/${itemId.replace(/\s+/g, '_')}_${Date.now()}`;
       
       const { error: uploadError } = await supabase.storage
         .from('property-images')
-        .upload(path, file, {
+        .upload(path, optimizedBlob, {
           contentType: file.type || 'image/jpeg',
           upsert: true
         });
@@ -240,7 +242,7 @@ export default function InspectionsPage() {
   if (!isClient || isPropLoading || isInspLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left bg-background">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-headline font-bold text-foreground mb-2 tracking-tight">Inspections & Audits</h1>

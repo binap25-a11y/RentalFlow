@@ -231,7 +231,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   if (!property) return <div className="p-20 text-center font-bold font-headline text-foreground opacity-40">Asset record not found.</div>;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-12">
+    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-12 bg-background">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full hover:bg-primary/5 transition-colors">
