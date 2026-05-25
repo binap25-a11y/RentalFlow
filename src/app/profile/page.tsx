@@ -17,7 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 import { Header } from "@/components/dashboard/header";
-import { uploadToSupabase } from '@/lib/actions/supabase-storage';
+import { supabase } from '@/lib/supabase';
+import { compressImage } from '@/lib/utils';
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
@@ -51,17 +52,24 @@ export default function ProfilePage() {
 
     setIsUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const path = `profiles/${user.uid}/${Date.now()}_${file.name}`;
+      const compressedBlob = await compressImage(file, 400, 0.8);
+      const path = `profiles/${user.uid}/avatar_${Date.now()}.jpg`;
       
-      const result = await uploadToSupabase(formData, 'property-documents', path);
-      if (result.success && result.url) {
-        await updateProfile(user, { photoURL: result.url });
-        toast({ title: "Identity Updated", description: "Profile photo synchronized." });
-      }
-    } catch (error) {
-      toast({ variant: "destructive", title: "Upload Failed" });
+      const { error: uploadError } = await supabase.storage
+        .from('property-documents')
+        .upload(path, compressedBlob, {
+          contentType: 'image/jpeg',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from('property-documents').getPublicUrl(path);
+
+      await updateProfile(user, { photoURL: publicUrl });
+      toast({ title: "Identity Updated" });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Sync Failed", description: error.message });
     } finally {
       setIsUploading(false);
     }
@@ -91,7 +99,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (isUserLoading || isProfileLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+  if (isUserLoading || isProfileLoading) return <div className="flex h-screen items-center justify-center bg-background"><Loader2 className="animate-spin text-primary" /></div>;
   if (!profile) return null;
 
   return (
@@ -108,7 +116,7 @@ export default function ProfilePage() {
             <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
                 <div>
-                  <h1 className="text-4xl font-headline font-bold text-primary mb-2 tracking-tight">Account Specs</h1>
+                  <h1 className="text-4xl font-headline font-bold text-foreground mb-2 tracking-tight">Account Specs</h1>
                   <p className="text-muted-foreground font-medium font-body">Manage your identity and authentication credentials.</p>
                 </div>
               </div>
@@ -133,14 +141,8 @@ export default function ProfilePage() {
                       <input id="avatar-input" type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold font-headline text-primary leading-tight">{firstName} {lastName}</h3>
+                      <h3 className="text-2xl font-bold font-headline text-foreground leading-tight">{firstName} {lastName}</h3>
                       <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">{profile.role} account</p>
-                    </div>
-                    <div className="pt-4 space-y-2">
-                       <div className="flex items-center gap-3 px-4 py-2 bg-primary/5 rounded-xl border border-primary/10">
-                          <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Verified Credentials</span>
-                       </div>
                     </div>
                   </div>
                 </Card>
@@ -148,7 +150,7 @@ export default function ProfilePage() {
                 <Card className="lg:col-span-2 border-none shadow-sm rounded-[2.5rem] bg-card overflow-hidden">
                   <form onSubmit={handleSave}>
                     <CardHeader className="p-8 pb-4 border-b border-primary/5 bg-primary/[0.02] text-left">
-                      <CardTitle className="text-xl font-headline flex items-center text-primary">
+                      <CardTitle className="text-xl font-headline flex items-center text-foreground">
                         <User className="w-5 h-5 mr-3 text-accent" />
                         Identity Profile
                       </CardTitle>
@@ -156,31 +158,31 @@ export default function ProfilePage() {
                     <CardContent className="p-10 space-y-8 text-left">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-2">
-                          <Label className="font-bold text-xs uppercase text-primary/40 tracking-widest font-headline">First Name</Label>
+                          <Label className="font-bold text-xs uppercase text-muted-foreground opacity-40 tracking-widest font-headline">First Name</Label>
                           <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="h-12 rounded-xl bg-muted/20 border-none font-bold" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="font-bold text-xs uppercase text-primary/40 tracking-widest font-headline">Last Name</Label>
+                          <Label className="font-bold text-xs uppercase text-muted-foreground opacity-40 tracking-widest font-headline">Last Name</Label>
                           <Input value={lastName} onChange={(e) => setLastName(e.target.value)} required className="h-12 rounded-xl bg-muted/20 border-none font-bold" />
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label className="font-bold text-xs uppercase text-primary/40 tracking-widest font-headline">Contact Electronic Mail</Label>
+                        <Label className="font-bold text-xs uppercase text-muted-foreground opacity-40 tracking-widest font-headline">Contact Electronic Mail</Label>
                         <div className="relative">
-                          <Mail className="absolute left-4 top-3.5 h-5 w-5 text-primary/20" />
+                          <Mail className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground opacity-20" />
                           <Input value={user?.email || ''} readOnly className="pl-12 h-12 rounded-xl bg-muted/10 border-none font-bold opacity-60 cursor-not-allowed" />
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label className="font-bold text-xs uppercase text-primary/40 tracking-widest font-headline">Official Mobile Number</Label>
+                        <Label className="font-bold text-xs uppercase text-muted-foreground opacity-40 tracking-widest font-headline">Official Mobile Number</Label>
                         <div className="relative">
-                          <Phone className="absolute left-4 top-3.5 h-5 w-5 text-primary/20" />
+                          <Phone className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground opacity-20" />
                           <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} required className="pl-12 h-12 rounded-xl bg-muted/20 border-none font-bold" />
                         </div>
                       </div>
                     </CardContent>
                     <CardFooter className="p-8 bg-muted/10 border-t flex justify-end">
-                      <Button type="submit" disabled={isSaving} className="rounded-xl h-12 px-10 font-bold bg-primary text-white shadow-lg shadow-primary/20 font-headline">
+                      <Button type="submit" disabled={isSaving} className="rounded-xl h-12 px-10 font-bold bg-primary text-primary-foreground shadow-lg shadow-primary/20 font-headline uppercase tracking-widest text-[10px]">
                         {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                         Save Account Specs
                       </Button>

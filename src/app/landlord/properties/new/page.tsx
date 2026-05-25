@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, CheckCircle2, Camera } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -51,7 +51,6 @@ export default function NewPropertyPage() {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
-      // 1. Instant local preview
       const newItem: LedgerItem = {
         id: tempId,
         url: localUrl,
@@ -61,11 +60,9 @@ export default function NewPropertyPage() {
       setLedger(prev => [...prev, newItem]);
 
       try {
-        // 2. Client-side optimization to prevent network failures
         const compressedBlob = await compressImage(file);
-        const path = `assets/${user.uid}/new_property_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+        const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
-        // 3. Direct cloud sync bypassing NextJS server bottlenecks
         const { error: uploadError } = await supabase.storage
           .from('property-images')
           .upload(path, compressedBlob, {
@@ -81,14 +78,14 @@ export default function NewPropertyPage() {
           item.id === tempId ? { ...item, url: publicUrl, status: 'ready' } : item
         ));
       } catch (err: any) {
-        console.error("Mobile Sync Error:", err);
+        console.error("Direct Sync Error:", err);
         setLedger(prev => prev.map(item => 
           item.id === tempId ? { ...item, status: 'error' } : item
         ));
         toast({ 
           variant: "destructive", 
           title: "Mobile Sync Failed", 
-          description: "Cloud connection interrupted. Please check your data and retry." 
+          description: "Connection interrupted. Please try again." 
         });
       }
     }
@@ -104,7 +101,7 @@ export default function NewPropertyPage() {
     if (!user || !db) return;
     
     if (ledger.some(i => i.status === 'uploading')) {
-      toast({ title: "Synchronizing Assets...", description: "Please wait for mobile sync to complete." });
+      toast({ title: "Syncing Assets...", description: "Please wait for background uploads to complete." });
       return;
     }
 
@@ -143,7 +140,7 @@ export default function NewPropertyPage() {
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Asset Registered", description: "Portfolio synchronized successfully." });
+      toast({ title: "Asset Registered" });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       toast({ variant: "destructive", title: "Registration Failed", description: err.message });
@@ -212,7 +209,6 @@ export default function NewPropertyPage() {
                 </div>
               </ScrollArea>
               <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
-              <p className="mt-6 text-[10px] text-muted-foreground/60 italic text-center font-medium">Assets are compressed and synchronized to the cloud instantly.</p>
             </div>
 
             <div className="p-10 space-y-8">

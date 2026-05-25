@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star, CheckCircle2, Camera } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -103,11 +103,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setLedger(prev => [...prev, newItem]);
 
       try {
-        // High-Fidelity Client-Side Optimization
         const compressedBlob = await compressImage(file);
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
-        // Direct storage sync bypassing potential Server Action timeouts
         const { error: uploadError } = await supabase.storage
           .from('property-images')
           .upload(path, compressedBlob, {
@@ -130,7 +128,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         toast({ 
           variant: "destructive", 
           title: "Mobile Sync Failed", 
-          description: "Cloud connection interrupted. Please try again." 
+          description: "Connection interrupted. Please check your data and retry." 
         });
       }
     }
@@ -152,7 +150,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     e.preventDefault();
     if (!user || !db || !propertyRef) return;
     if (ledger.some(i => i.status === 'uploading')) {
-      toast({ title: "Syncing Assets...", description: "Please wait for mobile uploads to complete." });
+      toast({ title: "Syncing Assets...", description: "Please wait for background uploads to complete." });
       return;
     }
 
@@ -186,7 +184,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Portfolio Synchronized", description: "All records and visuals are live." });
+      toast({ title: "Portfolio Synchronized" });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       toast({ variant: "destructive", title: "Update Failed", description: err.message });
@@ -229,8 +227,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   {ledger.map((item, index) => (
                     <div key={item.id} className={cn(
                       "relative aspect-video rounded-2xl overflow-hidden group shadow-sm bg-background border-2 transition-all",
-                      item.status === 'uploading' ? 'opacity-50 grayscale' : 'opacity-100',
-                      index === 0 ? "border-primary" : "border-transparent"
+                      item.status === 'uploading' ? 'opacity-50 grayscale scale-[0.98]' : 'opacity-100',
+                      index === 0 ? "border-primary" : "border-transparent",
+                      item.status === 'error' && "border-destructive"
                     )}>
                       <Image src={item.url} alt={`Asset ${index}`} fill className="object-cover" unoptimized />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">
@@ -238,7 +237,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                         <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 transition-all active:scale-90"><X className="w-3.5 h-3.5" /></button>
                       </div>
                       {item.status === 'uploading' && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-sm gap-2">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-md gap-2">
                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
                            <span className="text-[8px] font-bold text-primary uppercase tracking-[0.2em]">Syncing...</span>
                         </div>

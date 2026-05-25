@@ -43,8 +43,12 @@ export async function compressImage(file: File, maxWidth = 1600, quality = 0.85)
         
         ctx.drawImage(img, 0, 0, width, height);
         canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Binary Compression failed'));
+          if (blob) {
+            console.log(`Image Optimized: ${(file.size / 1024 / 1024).toFixed(2)}MB -> ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
+            resolve(blob);
+          } else {
+            reject(new Error('Binary Compression failed'));
+          }
         }, 'image/jpeg', quality);
       };
       img.onerror = (err) => reject(err);
