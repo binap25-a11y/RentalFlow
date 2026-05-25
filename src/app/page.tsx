@@ -99,7 +99,7 @@ export default function LandingPage() {
               Accelerate your rental operations with automated maintenance triage and professional visual ledgers.
             </p>
           </div>
-          <div className="relative h-[550px] rounded-[3rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 animate-in fade-in zoom-in duration-1000">
+          <div className="relative h-[550px] rounded-[3rem] overflow-hidden shadow-2xl ring-1 ring-border animate-in fade-in zoom-in duration-1000">
             <Image src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop" alt="Luxury Property" fill className="object-cover" unoptimized priority />
             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
             <div className="absolute bottom-10 left-10 right-10 bg-background/60 backdrop-blur-md border border-border p-8 rounded-3xl">
