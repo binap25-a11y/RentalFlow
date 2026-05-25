@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, CheckCircle2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, CheckCircle2, AlertTriangle, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
@@ -31,7 +31,7 @@ export default function NewPropertyPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  // 🔐 Identity Isolation: Generate property ID early to support Instant Sync
+  // 🔐 Identity Isolation: Stable ID for Instant Sync
   const propertyId = useMemo(() => {
     if (!db) return '';
     return doc(collection(db, 'properties')).id;
@@ -48,39 +48,44 @@ export default function NewPropertyPage() {
   
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-  const latestLedgerRef = useRef<LedgerItem[]>([]);
 
   /**
-   * 🔄 Instant Persistent Sync
-   * For new properties, we initialize the document upon the first successful image upload.
+   * 🔄 Instant Transactional Persistence (Autosave)
+   * Syncs user photography to Firestore the moment an upload finishes.
+   * This handles the "divert" case where user navigates away before final save.
    */
-  const syncVisualsToFirestore = (currentLedger: LedgerItem[]) => {
+  useEffect(() => {
     if (!db || !user || !propertyId) return;
-    
-    const readyCloudUrls = currentLedger
-      .filter(i => i.status === 'ready' && i.cloudUrl)
-      .map(i => i.cloudUrl!);
+    if (ledger.length === 0 || ledger.some(i => i.status === 'uploading')) return;
 
-    if (readyCloudUrls.length === 0) return;
+    const syncToFirebase = () => {
+      const readyUrls = ledger
+        .filter(i => i.status === 'ready' && i.cloudUrl)
+        .map(i => i.cloudUrl!);
 
-    const userUploads = readyCloudUrls.filter(u => isRealUserUpload(u));
-    const finalGallery = userUploads.length > 0 ? userUploads : readyCloudUrls;
-    const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
+      // STORAGE-FIRST: Once user photography exists, purge all default fallbacks
+      const userOnly = readyUrls.filter(isRealUserUpload);
+      const finalGallery = userOnly.length > 0 ? userOnly : readyUrls;
+      const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
 
-    const propertyRef = doc(db, 'properties', propertyId);
-    setDocumentNonBlocking(propertyRef, {
-      id: propertyId,
-      landlordId: user.uid,
-      imageUrl: primaryUrl,
-      imageUrls: finalGallery,
-      addressLine1: address || 'New Property Record',
-      city: city || '',
-      zipCode: zipCode || '',
-      updatedAt: serverTimestamp(),
-      isActive: true,
-      memberIds: [user.uid]
-    }, { merge: true });
-  };
+      const propertyRef = doc(db, 'properties', propertyId);
+      setDocumentNonBlocking(propertyRef, {
+        id: propertyId,
+        landlordId: user.uid,
+        imageUrl: primaryUrl,
+        imageUrls: finalGallery,
+        addressLine1: address || 'New Property Record',
+        city: city || '',
+        zipCode: zipCode || '',
+        updatedAt: serverTimestamp(),
+        memberIds: [user.uid]
+      }, { merge: true });
+      console.log("New Asset Visuals synchronized.");
+    };
+
+    const timer = setTimeout(syncToFirebase, 1000);
+    return () => clearTimeout(timer);
+  }, [ledger, db, user, propertyId, address, city, zipCode]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -90,15 +95,11 @@ export default function NewPropertyPage() {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
-      const newItem: LedgerItem = {
+      setLedger(prev => [...prev, {
         id: tempId,
         previewUrl: localUrl,
         status: 'uploading'
-      };
-      
-      const updatedLedger = [...latestLedgerRef.current, newItem];
-      setLedger(updatedLedger);
-      latestLedgerRef.current = updatedLedger;
+      }]);
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -111,28 +112,19 @@ export default function NewPropertyPage() {
               contentType: 'image/jpeg',
               upsert: true
             });
-
           if (uploadError) throw uploadError;
-
           const { data: { publicUrl: url } } = supabase.storage.from('property-images').getPublicUrl(path);
           return url;
         });
         
-        const finalizedLedger = latestLedgerRef.current.map(item => 
+        setLedger(prev => prev.map(item => 
           item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
-        );
-        
-        setLedger(finalizedLedger);
-        latestLedgerRef.current = finalizedLedger;
-        
-        syncVisualsToFirestore(finalizedLedger);
+        ));
         toast({ title: "Visual Binary Synchronized" });
-      } catch (err: any) {
-        const errorLedger = latestLedgerRef.current.map(item => 
+      } catch (err) {
+        setLedger(prev => prev.map(item => 
           item.id === tempId ? { ...item, status: 'error' } : item
-        );
-        setLedger(errorLedger);
-        latestLedgerRef.current = errorLedger;
+        ));
         toast({ variant: "destructive", title: "Sync Failed" });
       }
     }
@@ -140,16 +132,20 @@ export default function NewPropertyPage() {
   };
 
   const removeFromLedger = (id: string) => {
-    const updatedLedger = latestLedgerRef.current.filter(i => i.id !== id);
-    setLedger(updatedLedger);
-    latestLedgerRef.current = updatedLedger;
-    syncVisualsToFirestore(updatedLedger);
+    setLedger(prev => prev.filter(i => i.id !== id));
+  };
+
+  const setAsPrimary = (id: string) => {
+    setLedger(prev => {
+      const item = prev.find(i => i.id === id);
+      if (!item) return prev;
+      return [item, ...prev.filter(i => i.id !== id)];
+    });
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !db || !propertyId) return;
-    
     if (ledger.some(i => i.status === 'uploading')) {
       toast({ title: "Synchronizing Records...", description: "Please wait for background uploads to complete." });
       return;
@@ -190,7 +186,6 @@ export default function NewPropertyPage() {
       }, { merge: true });
 
       await syncPropertyToDb(serializableData);
-
       toast({ title: "Asset Registered" });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
@@ -246,6 +241,7 @@ export default function NewPropertyPage() {
                         }}
                       />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">
+                        <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-card/90 text-accent p-2 rounded-xl hover:scale-110 transition-transform shadow-lg border border-border"><Star className={cn("w-3.5 h-3.5", index === 0 && "fill-accent")} /></button>
                         <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/90 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 backdrop-blur-md transition-all active:scale-90"><X className="w-3.5 h-3.5" /></button>
                       </div>
                       

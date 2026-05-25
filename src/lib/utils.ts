@@ -104,22 +104,20 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
 
 /**
  * 🖼️ User Asset Identifier
- * Strictly identifies assets that were intentionally uploaded.
+ * Strictly identifies assets that were intentionally uploaded or are in-flight blobs.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
-  const lowerUrl = url.toLowerCase();
+  const u = url.toLowerCase();
   
   // Explicitly identify and exclude stock placeholders
-  if (lowerUrl.includes('picsum.photos') || lowerUrl.includes('unsplash.com') || lowerUrl.includes('placehold.co')) {
+  if (u.includes('picsum.photos') || u.toLowerCase().includes('unsplash.com') || u.toLowerCase().includes('placehold.co')) {
     return false;
   }
 
-  return lowerUrl.startsWith('blob:') || 
-         lowerUrl.includes('supabase.co') || 
-         lowerUrl.includes('supabase.in') ||
-         lowerUrl.includes('firebasestorage.app') ||
-         lowerUrl.includes('firebasestorage.googleapis.com');
+  return u.startsWith('blob:') || 
+         u.includes('supabase') || 
+         u.includes('firebasestorage');
 }
 
 /**

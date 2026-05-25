@@ -30,7 +30,6 @@ type LedgerItem = {
   previewUrl: string; 
   cloudUrl?: string;   
   status: 'uploading' | 'ready' | 'error';
-  isNew: boolean;
 };
 
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
@@ -60,9 +59,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  
-  const latestLedgerRef = useRef<LedgerItem[]>([]);
 
+  // Initialize from existing property data
   useEffect(() => {
     if (property && !isInitialized) {
       setAddress(property.addressLine1 || '');
@@ -85,43 +83,44 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           id: Math.random().toString(36).substring(7), 
           previewUrl: url, 
           cloudUrl: url, 
-          status: 'ready' as const, 
-          isNew: false 
+          status: 'ready' as const
         }));
         
       setLedger(initialLedger);
-      latestLedgerRef.current = initialLedger;
       setIsInitialized(true);
     }
   }, [property, isInitialized]);
 
   /**
-   * 🔄 Instant Persistent Sync
-   * Updates the Firestore database immediately upon successful binary delivery to Supabase.
-   * This ensures changes are locked in even if the user diverts from the page before saving.
+   * 🔄 Instant Transactional Persistence (Autosave)
+   * Watches the ledger and performs background synchronization to Firestore.
+   * This ensures visuals are never lost when the user diverts from the page.
    */
-  const syncVisualsToFirestore = (currentLedger: LedgerItem[]) => {
-    if (!propertyRef) return;
-    
-    const readyCloudUrls = currentLedger
-      .filter(i => i.status === 'ready' && i.cloudUrl)
-      .map(i => i.cloudUrl!);
+  useEffect(() => {
+    if (!isInitialized || !propertyRef) return;
+    if (ledger.some(i => i.status === 'uploading')) return;
 
-    if (readyCloudUrls.length === 0) return;
+    const syncToFirebase = () => {
+      const readyUrls = ledger
+        .filter(i => i.status === 'ready' && i.cloudUrl)
+        .map(i => i.cloudUrl!);
 
-    // Premium Sanitization: Strictly purge placeholders once user photography is present.
-    const userUploads = readyCloudUrls.filter(u => isRealUserUpload(u));
-    const finalGallery = userUploads.length > 0 ? userUploads : readyCloudUrls;
-    const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
+      // STORAGE-FIRST POLICY: Purge placeholders if user has provided actual photography
+      const userUploads = readyUrls.filter(isRealUserUpload);
+      const finalGallery = userUploads.length > 0 ? userUploads : readyUrls;
+      const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
 
-    updateDocumentNonBlocking(propertyRef, {
-      imageUrl: primaryUrl,
-      imageUrls: finalGallery,
-      updatedAt: serverTimestamp(),
-    });
-    
-    console.log("Visual Records Synchronized to Firestore.");
-  };
+      updateDocumentNonBlocking(propertyRef, {
+        imageUrl: primaryUrl,
+        imageUrls: finalGallery,
+        updatedAt: serverTimestamp(),
+      });
+      console.log("Visual Ledger synchronized to Firestore.");
+    };
+
+    const timer = setTimeout(syncToFirebase, 1000);
+    return () => clearTimeout(timer);
+  }, [ledger, isInitialized, propertyRef]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -131,16 +130,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
-      const newItem: LedgerItem = {
+      setLedger(prev => [...prev, {
         id: tempId,
         previewUrl: localUrl,
-        status: 'uploading',
-        isNew: true
-      };
-      
-      const updatedLedger = [...latestLedgerRef.current, newItem];
-      setLedger(updatedLedger);
-      latestLedgerRef.current = updatedLedger;
+        status: 'uploading'
+      }]);
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -153,51 +147,36 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
               contentType: 'image/jpeg',
               upsert: true
             });
-
           if (uploadError) throw uploadError;
-
           const { data: { publicUrl: url } } = supabase.storage.from('property-images').getPublicUrl(path);
           return url;
         });
         
-        const finalizedLedger = latestLedgerRef.current.map(item => 
+        setLedger(prev => prev.map(item => 
           item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
-        );
-        
-        setLedger(finalizedLedger);
-        latestLedgerRef.current = finalizedLedger;
-        
-        // LOCK IN CHANGES TRANSACTIONALLY
-        syncVisualsToFirestore(finalizedLedger);
-        
+        ));
         toast({ title: "Visual Binary Synchronized" });
-      } catch (err: any) {
-        console.error("Direct Sync Error:", err);
-        const errorLedger = latestLedgerRef.current.map(item => 
+      } catch (err) {
+        setLedger(prev => prev.map(item => 
           item.id === tempId ? { ...item, status: 'error' } : item
-        );
-        setLedger(errorLedger);
-        latestLedgerRef.current = errorLedger;
-        toast({ variant: "destructive", title: "Sync Failed", description: "Binary delivery interrupted." });
+        ));
+        toast({ variant: "destructive", title: "Sync Failed" });
       }
     }
     e.target.value = '';
   };
 
   const removeFromLedger = (id: string) => {
-    const updatedLedger = latestLedgerRef.current.filter(i => i.id !== id);
-    setLedger(updatedLedger);
-    latestLedgerRef.current = updatedLedger;
-    syncVisualsToFirestore(updatedLedger);
+    setLedger(prev => prev.filter(i => i.id !== id));
+    toast({ title: "Asset Removed" });
   };
 
   const setAsPrimary = (id: string) => {
-    const item = latestLedgerRef.current.find(i => i.id === id);
-    if (!item) return;
-    const updatedLedger = [item, ...latestLedgerRef.current.filter(i => i.id !== id)];
-    setLedger(updatedLedger);
-    latestLedgerRef.current = updatedLedger;
-    syncVisualsToFirestore(updatedLedger);
+    setLedger(prev => {
+      const item = prev.find(i => i.id === id);
+      if (!item) return prev;
+      return [item, ...prev.filter(i => i.id !== id)];
+    });
     toast({ title: "Cover Identity Updated" });
   };
 
@@ -210,11 +189,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
 
     setIsSaving(true);
-
     try {
-      const finalUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
-      const userUploads = finalUrls.filter(isRealUserUpload);
-      const purgedGallery = userUploads.length > 0 ? userUploads : finalUrls;
+      const readyUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
+      const userOnly = readyUrls.filter(isRealUserUpload);
+      const purgedGallery = userOnly.length > 0 ? userOnly : readyUrls;
       const primaryUrl = purgedGallery.length > 0 ? purgedGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
 
       const serializableData = {
@@ -240,7 +218,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       }, { merge: true });
 
       await syncPropertyToDb(serializableData);
-
       toast({ title: "Portfolio Persistent Sync Complete" });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
