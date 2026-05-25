@@ -1,4 +1,3 @@
-
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -103,14 +102,22 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.85)
 /**
  * 🖼️ User Asset Identifier
  * Strictly identifies assets that were intentionally uploaded by the user to cloud storage.
- * DECISIVELY REJECTS all known stock image and placeholder domains.
+ * DECISIVELY REJECTS all known stock image and placeholder domains while favoring authorized projects.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
   const u = url.toLowerCase();
   
-  // DECISIVE BLACKLIST: PURGE all known stock image/placeholder domains
+  // 1. WHITELIST: Authorized Project & Binary States
+  const isAuthorizedStorage = (
+    u.includes('wgezhbkkhamaawxgcqjf') || 
+    u.includes('supabase.co') || 
+    u.includes('firebasestorage') ||
+    u.startsWith('blob:')
+  );
+
+  // 2. BLACKLIST: Forbidden Stock & Placeholder Domains
   const forbiddenDomains = [
     'unsplash.com',
     'picsum.photos',
@@ -119,25 +126,17 @@ export function isRealUserUpload(url: any): boolean {
     'pexels.com'
   ];
 
-  // Specific Stock Identifiers to exclude from the professional ledger
+  // Specific Stock Identifiers that trigger fallback logic
   const forbiddenIds = [
     'photo-1486406146926-c627a92ad1ab', 
     'photo-1560518883-ce09059eeffa'
   ];
 
-  // Reject if it matches any stock patterns or placeholders
-  if (forbiddenDomains.some(d => u.includes(d))) return false;
-  if (forbiddenIds.some(id => u.includes(id))) return false;
-  if (url === RENTALFLOW_LOGO_URL) return false;
+  const containsForbiddenDomain = forbiddenDomains.some(d => u.includes(d));
+  const containsForbiddenId = forbiddenIds.some(id => u.includes(id));
 
-  // DECISIVE WHITELIST: AUTHORIZED PROJECT ONLY (wgezhbkkhamaawxgcqjf)
-  return (
-    u.includes('wgezhbkkhamaawxgcqjf') ||
-    u.includes('supabase.co') || 
-    u.startsWith('blob:') || 
-    u.includes('firebasestorage.app') || 
-    u.includes('firebasestorage.googleapis.com')
-  );
+  // A real upload is authorized storage AND does not contain forbidden signatures
+  return isAuthorizedStorage && !containsForbiddenDomain && !containsForbiddenId;
 }
 
 /**
