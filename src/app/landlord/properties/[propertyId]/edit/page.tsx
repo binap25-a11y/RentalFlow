@@ -97,7 +97,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   /**
    * 🔄 Transactional Visual Sync
    * This is the microsecond-instant sync layer.
-   * Visual choices are committed to Firestore immediately so they aren't lost if Save is not clicked.
+   * Visual choices are committed to Firestore immediately within their own transactional lifecycle.
    */
   const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
@@ -162,6 +162,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
       const updated = [item, ...prev.filter(i => i.id !== id)];
+      // Atomic sync inside the state update to ensure Firestore mirrors the choice instantly
       syncVisualsToFirestore(updated);
       return updated;
     });
@@ -269,7 +270,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                         </div>
                         
                         {index === 0 && (
-                          <div className="absolute bottom-3 left-3 px-3 py-1 bg-accent text-white text-[8px] font-bold uppercase rounded-full shadow-2xl font-headline tracking-widest z-20">Cover</div>
+                          <div className="absolute bottom-3 left-3 px-3 py-1 bg-accent text-white text-[8px] font-bold uppercase rounded-full shadow-2xl font-headline z-20 tracking-widest">Cover</div>
                         )}
 
                         {item.status === 'uploading' && (

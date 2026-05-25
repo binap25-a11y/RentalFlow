@@ -115,7 +115,7 @@ export function isRealUserUpload(url: any): boolean {
     'unsplash.com',
     'picsum.photos',
     'placehold.co',
-    'placeholder.com',
+    'placeholder',
     'pexels.com'
   ];
 
@@ -125,7 +125,7 @@ export function isRealUserUpload(url: any): boolean {
     'photo-1560518883-ce09059eeffa'
   ];
 
-  // Reject if it matches any stock patterns
+  // Reject if it matches any stock patterns or placeholders
   if (forbiddenDomains.some(d => u.includes(d))) return false;
   if (forbiddenIds.some(id => u.includes(id))) return false;
   if (url === RENTALFLOW_LOGO_URL) return false;
@@ -169,10 +169,12 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
+  
   // Primary cover ALWAYS goes first if valid
   if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
     assets.add(imageUrl);
   }
+  
   // Followed by all other verified binaries
   if (imageUrls && Array.isArray(imageUrls)) {
     imageUrls.forEach(u => {
@@ -181,5 +183,6 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
       }
     });
   }
+  
   return Array.from(assets);
 }
