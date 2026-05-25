@@ -1,3 +1,4 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -70,7 +71,7 @@ export async function compressImage(file: File, maxWidth = 800, quality = 0.75):
           canvas.width = width;
           canvas.height = height;
 
-          const ctx = canvas.getContext('2d');
+          const ctx = canvas.createElement('canvas').getContext('2d');
           if (!ctx) {
             clearTimeout(timeout);
             resolve(file);

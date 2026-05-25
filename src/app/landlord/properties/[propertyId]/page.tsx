@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, use, useMemo, useEffect } from 'react';
@@ -71,7 +72,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
-  // USER-DATA ONLY: Resolve gallery instantly from Firestore
+  /**
+   * 🖼️ User-Data Only Resolution
+   * Strictly resolves photography from the Firestore record.
+   * Placeholders are only provided if the user has zero uploaded photography.
+   */
   const gallery = useMemo(() => {
     return getResolvedGallery(property?.imageUrl, property?.imageUrls);
   }, [property]);
