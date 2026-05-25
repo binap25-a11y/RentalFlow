@@ -49,43 +49,34 @@ export default function NewPropertyPage() {
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Identity local fallback to prevent ReferenceErrors at runtime
+  const BRAND_FALLBACK = RENTALFLOW_NEUTRAL_FALLBACK;
+
   /**
-   * 🔄 Instant Transactional Persistence (Autosave)
-   * Syncs user photography to Firestore the moment an upload finishes.
-   * This handles the "divert" case where user navigates away before final save.
+   * 🔄 Direct Transactional Persistence
+   * Synchronizes the visual state to Firestore immediately upon binary stabilization.
    */
-  useEffect(() => {
-    if (!db || !user || !propertyId) return;
-    if (ledger.length === 0 || ledger.some(i => i.status === 'uploading')) return;
+  const performDirectSync = (currentLedger: LedgerItem[]) => {
+    if (!db || !user || !propertyId || currentLedger.some(i => i.status === 'uploading')) return;
 
-    const syncToFirebase = () => {
-      const readyUrls = ledger
-        .filter(i => i.status === 'ready' && i.cloudUrl)
-        .map(i => i.cloudUrl!);
+    const readyUrls = currentLedger
+      .filter(i => i.status === 'ready' && i.cloudUrl)
+      .map(i => i.cloudUrl!);
 
-      // STORAGE-FIRST: Once user photography exists, purge all default fallbacks
-      const userOnly = readyUrls.filter(isRealUserUpload);
-      const finalGallery = userOnly.length > 0 ? userOnly : readyUrls;
-      const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
+    const userOnly = readyUrls.filter(isRealUserUpload);
+    const finalGallery = userOnly.length > 0 ? userOnly : readyUrls;
+    const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : BRAND_FALLBACK;
 
-      const propertyRef = doc(db, 'properties', propertyId);
-      setDocumentNonBlocking(propertyRef, {
-        id: propertyId,
-        landlordId: user.uid,
-        imageUrl: primaryUrl,
-        imageUrls: finalGallery,
-        addressLine1: address || 'New Property Record',
-        city: city || '',
-        zipCode: zipCode || '',
-        updatedAt: serverTimestamp(),
-        memberIds: [user.uid]
-      }, { merge: true });
-      console.log("New Asset Visuals synchronized.");
-    };
-
-    const timer = setTimeout(syncToFirebase, 1000);
-    return () => clearTimeout(timer);
-  }, [ledger, db, user, propertyId, address, city, zipCode]);
+    const propertyRef = doc(db, 'properties', propertyId);
+    setDocumentNonBlocking(propertyRef, {
+      id: propertyId,
+      landlordId: user.uid,
+      imageUrl: primaryUrl,
+      imageUrls: finalGallery,
+      updatedAt: serverTimestamp(),
+      memberIds: [user.uid]
+    }, { merge: true });
+  };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -117,9 +108,13 @@ export default function NewPropertyPage() {
           return url;
         });
         
-        setLedger(prev => prev.map(item => 
-          item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
-        ));
+        setLedger(prev => {
+          const updated = prev.map(item => 
+            item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
+          );
+          performDirectSync(updated);
+          return updated;
+        });
         toast({ title: "Visual Binary Synchronized" });
       } catch (err) {
         setLedger(prev => prev.map(item => 
@@ -132,14 +127,20 @@ export default function NewPropertyPage() {
   };
 
   const removeFromLedger = (id: string) => {
-    setLedger(prev => prev.filter(i => i.id !== id));
+    setLedger(prev => {
+      const updated = prev.filter(i => i.id !== id);
+      performDirectSync(updated);
+      return updated;
+    });
   };
 
   const setAsPrimary = (id: string) => {
     setLedger(prev => {
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
-      return [item, ...prev.filter(i => i.id !== id)];
+      const updated = [item, ...prev.filter(i => i.id !== id)];
+      performDirectSync(updated);
+      return updated;
     });
   };
 
@@ -157,7 +158,7 @@ export default function NewPropertyPage() {
     const finalImageUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
     const userUploads = finalImageUrls.filter(isRealUserUpload);
     const purgedGallery = userUploads.length > 0 ? userUploads : finalImageUrls;
-    const finalImageUrl = purgedGallery.length > 0 ? purgedGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
+    const finalImageUrl = purgedGallery.length > 0 ? purgedGallery[0] : BRAND_FALLBACK;
 
     try {
       const serializableData = {
@@ -237,7 +238,7 @@ export default function NewPropertyPage() {
                         className="absolute inset-0 h-full w-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = RENTALFLOW_NEUTRAL_FALLBACK;
+                          target.src = BRAND_FALLBACK;
                         }}
                       />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">

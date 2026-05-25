@@ -31,7 +31,6 @@ export async function withRetry<T>(
 /**
  * 🖼️ Resilient Mobile Optimization Engine
  * Converts HEIC/PNG/TIFF to High-Quality JPEG (1000px max)
- * SILENT FALLBACK: If RAM is exhausted, returns original file.
  */
 export async function compressImage(file: File, maxWidth = 1000, quality = 0.6): Promise<Blob | File> {
   if (!file.type.startsWith('image/') || file.size < 1024 * 300) {
@@ -111,7 +110,7 @@ export function isRealUserUpload(url: any): boolean {
   const u = url.toLowerCase();
   
   // Explicitly identify and exclude stock placeholders
-  if (u.includes('picsum.photos') || u.toLowerCase().includes('unsplash.com') || u.toLowerCase().includes('placehold.co')) {
+  if (u.includes('picsum.photos') || u.includes('unsplash.com') || u.includes('placehold.co')) {
     return false;
   }
 
@@ -132,14 +131,16 @@ export function isValidAssetUrl(url: any): boolean {
  * Prioritizes user-uploaded content over placeholders.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
+  // If the primary image is a real user upload, use it
   if (isRealUserUpload(imageUrl)) return imageUrl!;
   
+  // Check the gallery for any real user uploads
   if (imageUrls && Array.isArray(imageUrls)) {
     const firstReal = imageUrls.find(u => isRealUserUpload(u));
     if (firstReal) return firstReal;
   }
 
-  // If no user uploads exist, show existing valid URL or brand identity
+  // Fallback to existing valid URL if it's not the brand fallback
   if (isValidAssetUrl(imageUrl) && imageUrl !== RENTALFLOW_NEUTRAL_FALLBACK) return imageUrl!;
   
   return RENTALFLOW_NEUTRAL_FALLBACK;
@@ -161,8 +162,7 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
   const allAssets = Array.from(assets);
   const userUploads = allAssets.filter(isRealUserUpload);
   
-  // Premium Enforcement: If user has uploaded any actual images, only show those. 
-  // Never "mix" user photos with stock placeholders.
+  // Premium Enforcement: If user has uploaded any actual images, only show those.
   if (userUploads.length > 0) return userUploads;
   
   return allAssets.length > 0 ? allAssets : [RENTALFLOW_NEUTRAL_FALLBACK];

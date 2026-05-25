@@ -36,7 +36,11 @@ export default function LandingPage() {
 
   const heroImage = useMemo(() => {
     if (properties && properties.length > 0) {
-      return getResolvedImageUrl(properties[0].imageUrl, properties[0].imageUrls);
+      // Sort by updatedAt to ensure the most recently synchronized asset is featured
+      const sorted = [...properties].sort((a, b) => 
+        (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)
+      );
+      return getResolvedImageUrl(sorted[0].imageUrl, sorted[0].imageUrls);
     }
     return RENTALFLOW_NEUTRAL_FALLBACK;
   }, [properties]);
@@ -119,7 +123,7 @@ export default function LandingPage() {
             <div className="absolute bottom-10 left-10 right-10 bg-background/60 backdrop-blur-md border border-border p-8 rounded-3xl">
                <div className="flex justify-between items-center">
                   <div className="text-left">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-60 mb-1 font-headline">Active Ledger Hub</p>
+                    <p className="text-[10px] font-bold uppercase tracking widest text-muted-foreground opacity-60 mb-1 font-headline">Active Ledger Hub</p>
                     <p className="text-2xl font-bold font-headline text-foreground">Portfolio Command</p>
                   </div>
                   <Badge className="bg-emerald-50 text-white border-none font-bold uppercase text-[9px] tracking-widest px-4 py-1.5 rounded-full shadow-lg font-headline">Verified</Badge>
