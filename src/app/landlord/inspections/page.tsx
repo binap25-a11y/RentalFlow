@@ -31,7 +31,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn, compressImage, withRetry } from "@/lib/utils";
 import { generateInspectionReport } from "@/ai/flows/generate-inspection-report";
-import { supabase } from '@/lib/supabase';
+import { getAuthSupabase } from '@/lib/supabase';
 import Image from 'next/image';
 
 const INSPECTION_SECTIONS = [
@@ -137,13 +137,17 @@ export default function InspectionsPage() {
     }));
 
     try {
-      // Bulletproof Mobile Optimization: Converts to high-quality JPG
+      // Get Auth ID Token for Supabase Proxy
+      const token = await user.getIdToken();
+      const supabaseAuth = getAuthSupabase(token);
+
+      // Bulletproof Mobile Optimization
       const optimizedBlob = await compressImage(file);
       const path = `audits/${user.uid}/${activeInspection.id}/${itemId.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`;
       
-      // DIRECT-TO-CLOUD SYNC with RETRY logic
+      // AUTHENTICATED DIRECT-TO-CLOUD SYNC with RETRY logic
       const publicUrl = await withRetry(async () => {
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabaseAuth.storage
           .from('property-images')
           .upload(path, optimizedBlob, {
             contentType: 'image/jpeg',
@@ -152,7 +156,7 @@ export default function InspectionsPage() {
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl: url } } = supabase.storage.from('property-images').getPublicUrl(path);
+        const { data: { publicUrl: url } } = supabaseAuth.storage.from('property-images').getPublicUrl(path);
         return url;
       });
       

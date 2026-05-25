@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
-import { supabase } from '@/lib/supabase';
+import { getAuthSupabase } from '@/lib/supabase';
 import { cn, isUserUploadedAsset, compressImage, withRetry } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -89,6 +89,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
+    // Get Firebase Token for Authenticated Supabase Proxy
+    const token = await user.getIdToken();
+    const supabaseAuth = getAuthSupabase(token);
+
     // Sequential Synchronization: Prevents mobile network congestion
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
@@ -104,23 +108,22 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setLedger(prev => [...prev, newItem]);
 
       try {
-        // High-Fidelity Optimizer with Fail-Safe RAM protection
+        // High-Fidelity Optimizer with Fail-Safe
         const optimizedBlob = await compressImage(file);
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
-        // DIRECT-TO-CLOUD with Automated Retry Logic
+        // AUTHENTICATED DIRECT-TO-CLOUD with Automated Retry Logic
         const publicUrl = await withRetry(async () => {
-          const { error: uploadError } = await supabase.storage
+          const { error: uploadError } = await supabaseAuth.storage
             .from('property-images')
             .upload(path, optimizedBlob, {
               contentType: 'image/jpeg',
-              upsert: true,
-              cacheControl: '3600'
+              upsert: true
             });
 
           if (uploadError) throw uploadError;
 
-          const { data: { publicUrl: url } } = supabase.storage.from('property-images').getPublicUrl(path);
+          const { data: { publicUrl: url } } = supabaseAuth.storage.from('property-images').getPublicUrl(path);
           return url;
         });
         

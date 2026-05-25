@@ -32,10 +32,10 @@ export async function withRetry<T>(
 /**
  * 🖼️ Resilient Mobile Optimization Engine
  * Converts HEIC/PNG to high-quality JPG and downscales for 100% mobile stability.
- * Optimized for low-RAM devices: if optimization hits a memory limit, it returns the original file.
+ * Optimized for low-RAM devices: if optimization hits a memory limit or takes too long, it returns the original file.
  */
 export async function compressImage(file: File, maxWidth = 1000, quality = 0.6): Promise<Blob | File> {
-  // Skip non-images or files that are already small enough
+  // Skip non-images or files that are already small enough (under 300KB)
   if (!file.type.startsWith('image/') || file.size < 1024 * 300) {
     return file;
   }
@@ -57,7 +57,7 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
           let width = img.width;
           let height = img.height;
 
-          // Sequential Downscaling for RAM Stability (Memory safe for mobile)
+          // Sequential Downscaling for RAM Stability
           if (width > height) {
             if (width > maxWidth) {
               height *= maxWidth / width;
@@ -82,7 +82,7 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
           }
 
           ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'medium'; // Medium is more stable on low-RAM mobile
+          ctx.imageSmoothingQuality = 'medium';
           ctx.drawImage(img, 0, 0, width, height);
 
           canvas.toBlob(

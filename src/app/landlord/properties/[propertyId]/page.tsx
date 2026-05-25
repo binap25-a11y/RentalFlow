@@ -47,7 +47,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from '@/lib/supabase';
+import { getAuthSupabase } from '@/lib/supabase';
 import { syncDocumentToDb } from '@/lib/actions/db-sync';
 import { format } from 'date-fns';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -154,11 +154,15 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     setIsUploadingDoc(true);
     setUploadedDocUrl(null);
 
-    // DIRECT CLIENT SYNC: Bypasses tunnel bottlenecks
+    // Get Auth Token for Supabase RLS
+    const token = await user.getIdToken();
+    const supabaseAuth = getAuthSupabase(token);
+
+    // DIRECT AUTHENTICATED SYNC: Bypasses tunnel bottlenecks and respects RLS
     const path = `vault/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
     
     try {
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabaseAuth.storage
         .from('property-documents')
         .upload(path, file, {
           contentType: file.type,
@@ -167,7 +171,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage.from('property-documents').getPublicUrl(path);
+      const { data: { publicUrl } } = supabaseAuth.storage.from('property-documents').getPublicUrl(path);
       
       setUploadedDocUrl(publicUrl);
       if (!newDocName) setNewDocName(file.name.split('.')[0]);
