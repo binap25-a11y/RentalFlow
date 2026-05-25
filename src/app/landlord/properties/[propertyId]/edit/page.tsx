@@ -89,6 +89,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
+    // Sequential Synchronization: Prevents mobile network congestion
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
@@ -103,17 +104,18 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setLedger(prev => [...prev, newItem]);
 
       try {
-        // RAM-Safe High-Fidelity Optimizer
+        // High-Fidelity Optimizer with Fail-Safe RAM protection
         const optimizedBlob = await compressImage(file);
-        const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+        const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
-        // DIRECT-TO-CLOUD with RETRY logic for flakey mobile networks
+        // DIRECT-TO-CLOUD with Automated Retry Logic
         const publicUrl = await withRetry(async () => {
           const { error: uploadError } = await supabase.storage
             .from('property-images')
             .upload(path, optimizedBlob, {
               contentType: 'image/jpeg',
-              upsert: true
+              upsert: true,
+              cacheControl: '3600'
             });
 
           if (uploadError) throw uploadError;
@@ -133,7 +135,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         toast({ 
           variant: "destructive", 
           title: "Synchronization Interrupted", 
-          description: "Visual delivery failed. Please check your network." 
+          description: "Visual delivery failed. Please check your signal." 
         });
       }
     }
@@ -222,7 +224,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
             <div className="p-8 bg-muted/10 border-r border-border">
               <div className="flex justify-between items-center mb-6">
                 <Label className="font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground opacity-60 font-headline">Visual Inventory</Label>
-                <label htmlFor="image-input" className="h-10 rounded-xl font-bold text-[10px] uppercase font-headline cursor-pointer px-5 bg-accent text-white shadow-lg flex items-center hover:bg-accent/90 transition-all">
+                <label htmlFor="image-input" className="h-10 rounded-xl font-bold text-[10px] uppercase font-headline cursor-pointer px-5 bg-accent text-white shadow-lg flex items-center hover:bg-accent/90 transition-all active:scale-95">
                   <Plus className="w-3.5 h-3.5 mr-2" /> Add Assets
                 </label>
               </div>

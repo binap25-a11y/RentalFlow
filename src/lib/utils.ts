@@ -32,22 +32,21 @@ export async function withRetry<T>(
 /**
  * 🖼️ Resilient Mobile Optimization Engine
  * Converts HEIC/PNG to high-quality JPG and downscales for 100% mobile stability.
- * USES URL.createObjectURL for extreme memory efficiency.
- * IF THE DEVICE HITS MEMORY LIMITS, it SILENTLY returns the original file.
+ * Optimized for low-RAM devices: if optimization hits a memory limit, it returns the original file.
  */
-export async function compressImage(file: File, maxWidth = 1200, quality = 0.75): Promise<Blob | File> {
-  // Skip non-images or very small files
-  if (!file.type.startsWith('image/') || file.size < 1024 * 200) {
+export async function compressImage(file: File, maxWidth = 1000, quality = 0.6): Promise<Blob | File> {
+  // Skip non-images or files that are already small enough
+  if (!file.type.startsWith('image/') || file.size < 1024 * 300) {
     return file;
   }
 
   try {
     return await new Promise((resolve) => {
-      // Strict safety timeout (5s) to prevent blocking the UI
+      // Memory safety timeout (3s) to prevent blocking the UI
       const timeout = setTimeout(() => {
-        console.warn("Optimization timed out, returning original.");
+        console.warn("Optimization timeout: falling back to original.");
         resolve(file);
-      }, 5000);
+      }, 3000);
 
       const objectUrl = URL.createObjectURL(file);
       const img = new Image();
@@ -58,7 +57,7 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.75)
           let width = img.width;
           let height = img.height;
 
-          // Sequential Downscaling for RAM Stability
+          // Sequential Downscaling for RAM Stability (Memory safe for mobile)
           if (width > height) {
             if (width > maxWidth) {
               height *= maxWidth / width;
@@ -83,7 +82,7 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.75)
           }
 
           ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
+          ctx.imageSmoothingQuality = 'medium'; // Medium is more stable on low-RAM mobile
           ctx.drawImage(img, 0, 0, width, height);
 
           canvas.toBlob(
