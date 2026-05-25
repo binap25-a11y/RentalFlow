@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +19,7 @@ import {
 } from 'recharts';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
+import { cn, getResolvedImageUrl, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
 import { 
   Dialog, 
   DialogContent, 
@@ -306,10 +305,18 @@ export default function LandlordDashboard() {
                          <tr key={prop.id} className="hover:bg-muted/10 transition-colors group">
                            <td className="px-10 py-6">
                              <div className="flex items-center gap-4">
-                               <div className="p-2.5 bg-primary/5 rounded-xl group-hover:scale-110 transition-transform">
-                                 <Building2 className="w-5 h-5 text-muted-foreground" />
+                               <div className="relative h-12 w-12 rounded-xl overflow-hidden shadow-sm ring-1 ring-border group-hover:scale-110 transition-transform bg-muted shrink-0">
+                                 <img 
+                                   src={getResolvedImageUrl(prop.imageUrl, prop.imageUrls)} 
+                                   alt="" 
+                                   className="absolute inset-0 h-full w-full object-cover"
+                                   onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      target.src = RENTALFLOW_NEUTRAL_FALLBACK;
+                                   }}
+                                 />
                                </div>
-                               <span className="font-bold text-sm text-foreground">{prop.addressLine1}</span>
+                               <span className="font-bold text-sm text-foreground truncate">{prop.addressLine1}</span>
                              </div>
                            </td>
                            <td className="px-10 py-6 font-bold text-sm text-foreground">£{prop.rentAmount?.toLocaleString()}</td>
