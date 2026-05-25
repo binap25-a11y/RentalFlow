@@ -10,13 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Image as ImageIcon, Loader2, Sparkles, X, Plus, Star, CheckCircle2, Camera } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, CheckCircle2, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { cn } from '@/lib/utils';
+import { cn, compressImage } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -49,6 +49,7 @@ export default function NewPropertyPage() {
 
     const tempId = Math.random().toString(36).substring(7);
 
+    // Initial Ledger Registration
     const newItems: LedgerItem[] = files.map(file => ({
       id: Math.random().toString(),
       url: URL.createObjectURL(file),
@@ -61,11 +62,14 @@ export default function NewPropertyPage() {
       const file = files[i];
       const itemId = newItems[i].id;
       
-      const formData = new FormData();
-      formData.append('file', file);
-      const path = `assets/${user.uid}/new_${tempId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
-      
       try {
+        // 🛠️ Mobile Resilience: Compress before binary delivery
+        const compressedBlob = await compressImage(file);
+        const formData = new FormData();
+        formData.append('file', compressedBlob, `compressed_${file.name}`);
+        
+        const path = `assets/${user.uid}/new_${tempId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+        
         const res = await uploadToSupabase(formData, 'property-images', path);
         if (res.success && res.url) {
           setLedger(prev => prev.map(item => 
@@ -81,7 +85,7 @@ export default function NewPropertyPage() {
         toast({ 
           variant: "destructive", 
           title: "Mobile Sync Failed", 
-          description: "Network Interruption: Please retry visual capture." 
+          description: err.message || "Network Interruption: Please retry visual capture." 
         });
       }
     }
@@ -96,7 +100,7 @@ export default function NewPropertyPage() {
     if (!user || !db) return;
     
     if (ledger.some(i => i.status === 'uploading')) {
-      toast({ title: "Synchronizing Assets...", description: "Binary transfer in progress. Please wait for mobile sync to complete." });
+      toast({ title: "Synchronizing Assets...", description: "Please wait for mobile sync to complete." });
       return;
     }
 
@@ -163,7 +167,7 @@ export default function NewPropertyPage() {
       <Card className="border-none shadow-2xl overflow-hidden rounded-[2.5rem] bg-card ring-1 ring-border">
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-1 lg:grid-cols-2">
-            <div className="p-10 bg-muted/20 border-r border-border">
+            <div className="p-10 bg-muted/10 border-r border-border">
               <div className="flex justify-between items-center mb-6">
                 <Label className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Visual Inventory</Label>
                 <label htmlFor="image-input" className="h-10 rounded-xl font-bold text-[10px] uppercase font-headline cursor-pointer px-5 bg-primary text-primary-foreground shadow-lg flex items-center hover:opacity-90 transition-all active:scale-95">
@@ -177,14 +181,15 @@ export default function NewPropertyPage() {
                     <div key={item.id} className={cn(
                       "relative aspect-video rounded-2xl overflow-hidden group shadow-sm bg-background border-2 transition-all",
                       item.status === 'uploading' ? 'opacity-50 grayscale scale-[0.98]' : 'opacity-100',
-                      index === 0 ? "border-primary" : "border-transparent"
+                      index === 0 ? "border-primary" : "border-transparent",
+                      item.status === 'error' && "border-destructive"
                     )}>
                       <Image src={item.url} alt={`Asset ${index}`} fill className="object-cover" unoptimized />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">
                         <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/90 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 backdrop-blur-md"><X className="w-3.5 h-3.5" /></button>
                       </div>
                       {item.status === 'uploading' && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/40 backdrop-blur-sm gap-2">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-md gap-2">
                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
                            <span className="text-[8px] font-bold text-primary uppercase tracking-[0.2em]">Syncing...</span>
                         </div>
@@ -196,37 +201,37 @@ export default function NewPropertyPage() {
                       )}
                     </div>
                   ))}
-                  <label htmlFor="image-input" className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-background flex flex-col items-center justify-center gap-2 group cursor-pointer shadow-inner">
+                  <label htmlFor="image-input" className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-muted/5 flex flex-col items-center justify-center gap-2 group cursor-pointer shadow-inner">
                     <Plus className="w-6 h-6 text-primary/20 group-hover:text-primary/40" />
                     <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">Add More</span>
                   </label>
                 </div>
               </ScrollArea>
               <input id="image-input" type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={handleImageChange} />
-              <p className="mt-6 text-[10px] text-muted-foreground/60 italic text-center font-medium">Assets are synchronized to the ledger instantly upon selection.</p>
+              <p className="mt-6 text-[10px] text-muted-foreground/60 italic text-center font-medium">Assets are compressed and synchronized to the ledger instantly.</p>
             </div>
 
             <div className="p-10 space-y-8">
               <div className="grid grid-cols-1 gap-6 text-left">
                 <div className="space-y-2">
                   <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Street Address</Label>
-                  <Input value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="e.g. 12 High Street" className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground" />
+                  <Input value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="e.g. 12 High Street" className="rounded-xl h-12 bg-muted/10 border-none font-bold text-foreground" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">City</Label>
-                    <Input value={city} onChange={(e) => setCity(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground" />
+                    <Input value={city} onChange={(e) => setCity(e.target.value)} required className="rounded-xl h-12 bg-muted/10 border-none font-bold text-foreground" />
                   </div>
                   <div className="space-y-2">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Postcode</Label>
-                    <Input value={zipCode} onChange={(e) => setZipCode(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground" />
+                    <Input value={zipCode} onChange={(e) => setZipCode(e.target.value)} required className="rounded-xl h-12 bg-muted/10 border-none font-bold text-foreground" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Asset Class</Label>
                     <Select value={propertyType} onValueChange={setPropertyType}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground">
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/10 border-none font-bold text-foreground">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl border-border bg-card">
@@ -238,12 +243,12 @@ export default function NewPropertyPage() {
                   </div>
                   <div className="space-y-2">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Monthly Yield (£)</Label>
-                    <Input type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground" />
+                    <Input type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/10 border-none font-bold text-foreground" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Operational Narrative</Label>
-                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description for internal records..." className="rounded-xl min-h-[140px] bg-muted/20 border-none font-medium text-foreground leading-relaxed" />
+                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description for internal records..." className="rounded-xl min-h-[140px] bg-muted/10 border-none font-medium text-foreground leading-relaxed" />
                 </div>
               </div>
             </div>

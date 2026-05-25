@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 218 49% 12%;
-    --card: 0 0% 100%;
-    --card-foreground: 218 49% 12%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 218 49% 12%;
-    --primary: 218 49% 25%;
-    --primary-foreground: 210 40% 99%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 218 49% 25%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --background: 222 47% 4%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 7%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 7%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222 47% 10%;
+    --secondary: 222 47% 12%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 222 47% 12%;
+    --muted-foreground: 215 25% 75%;
     --accent: 199 89% 48%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 218 49% 25%;
+    --border: 222 47% 15%;
+    --input: 222 47% 15%;
+    --ring: 199 89% 48%;
     --radius: 1.25rem;
     --sidebar-background: 218 49% 25%;
     --sidebar-foreground: 210 40% 98%;
@@ -32,6 +32,19 @@
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 218 49% 30%;
     --sidebar-ring: 218 49% 25%;
+  }
+
+  /* Force Midnight defaults for standard light class as well */
+  .light {
+    --background: 222 47% 4%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 7%;
+    --card-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222 47% 10%;
+    --accent: 199 89% 48%;
+    --accent-foreground: 210 40% 98%;
+    --border: 222 47% 15%;
   }
 
   .dark {
