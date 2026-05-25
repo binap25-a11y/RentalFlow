@@ -60,9 +60,9 @@ export default function NewPropertyPage() {
       setLedger(prev => [...prev, newItem]);
 
       try {
-        const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+        const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/\s+/g, '_') || 'asset.jpg'}`;
         
-        // DIRECT CLIENT SYNC: Bypasses server bottlenecks entirely
+        // DIRECT-TO-CLOUD SYNC: Bypasses server action bottlenecks for reliable mobile delivery
         const { error: uploadError } = await supabase.storage
           .from('property-images')
           .upload(path, file, {
@@ -78,14 +78,14 @@ export default function NewPropertyPage() {
           item.id === tempId ? { ...item, url: publicUrl, status: 'ready' } : item
         ));
       } catch (err: any) {
-        console.error("Direct Sync Error:", err);
+        console.error("Mobile Sync Error:", err);
         setLedger(prev => prev.map(item => 
           item.id === tempId ? { ...item, status: 'error' } : item
         ));
         toast({ 
           variant: "destructive", 
           title: "Synchronization Interrupted", 
-          description: "Visual delivery failed. Please check your connection." 
+          description: "Visual delivery failed. Please check your network connection." 
         });
       }
     }
@@ -101,7 +101,7 @@ export default function NewPropertyPage() {
     if (!user || !db) return;
     
     if (ledger.some(i => i.status === 'uploading')) {
-      toast({ title: "Syncing Assets...", description: "Please wait for background uploads to complete." });
+      toast({ title: "Synchronizing Records...", description: "Please wait for background uploads to complete." });
       return;
     }
 
@@ -152,16 +152,16 @@ export default function NewPropertyPage() {
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left bg-background">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full hover:bg-primary/5 transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+          <button onClick={() => router.back()} className="h-10 w-10 rounded-full hover:bg-primary/5 transition-colors flex items-center justify-center">
+            <ArrowLeft className="w-5 h-5 text-foreground" />
+          </button>
           <div>
             <h1 className="text-3xl font-headline font-bold text-foreground tracking-tight">Register Asset</h1>
             <p className="text-muted-foreground font-medium font-body text-sm">Adding a high-value property with professional visual orchestration.</p>
           </div>
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[9px]">
-          <Sparkles className="w-3 h-3 mr-2" /> Specification Engine
+          <Sparkles className="w-3 h-3 mr-2 text-accent" /> High-Fidelity Sync
         </Badge>
       </div>
 
@@ -255,7 +255,7 @@ export default function NewPropertyPage() {
           </div>
           <CardFooter className="p-10 bg-muted/5 border-t flex flex-col md:flex-row justify-end gap-4">
             <Button type="button" variant="ghost" className="w-full md:w-auto rounded-xl h-12 px-8 font-bold font-headline text-muted-foreground" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" disabled={isSaving || ledger.some(i => i.status === 'uploading')} className="w-full md:w-auto rounded-xl font-bold bg-accent h-12 px-12 shadow-xl shadow-accent/20 font-headline text-white transition-all hover:scale-[1.02] uppercase tracking-widest text-xs">
+            <Button type="submit" disabled={isSaving || ledger.some(i => i.status === 'uploading')} className="w-full md:w-auto rounded-xl font-bold bg-accent h-12 px-12 shadow-xl shadow-accent/20 font-headline text-white transition-all hover:scale-[1.02] uppercase tracking-widest text-xs border-none">
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
               Synchronize Asset
             </Button>

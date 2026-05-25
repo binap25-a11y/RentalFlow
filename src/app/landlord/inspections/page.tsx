@@ -137,15 +137,13 @@ export default function InspectionsPage() {
     }));
 
     try {
-      // High-Fidelity Client Optimization (Fail-Safe)
-      const optimizedBinary = await compressImage(file, 1200, 0.75);
-      const path = `audits/${user.uid}/${activeInspection.id}/${itemId.replace(/\s+/g, '_')}_${Date.now()}`;
+      // Direct-to-Cloud Sync for Mobile Reliability
+      const path = `audits/${user.uid}/${activeInspection.id}/${itemId.replace(/\s+/g, '_') || 'item'}_${Date.now()}`;
       
-      // DIRECT CLIENT SYNC: Resolved persistent timeout issues
       const { error: uploadError } = await supabase.storage
         .from('property-images')
-        .upload(path, optimizedBinary, {
-          contentType: 'image/jpeg',
+        .upload(path, file, {
+          contentType: file.type || 'image/jpeg',
           upsert: true
         });
 
@@ -159,14 +157,15 @@ export default function InspectionsPage() {
       }));
       toast({ title: "Evidence Synchronized" });
     } catch (err: any) {
+      console.error("Audit Sync Failure:", err);
       setStructuredFindings(prev => ({
         ...prev,
         [itemId]: { ...prev[itemId], isSyncing: false }
       }));
       toast({ 
         variant: "destructive", 
-        title: "Sync Interrupted", 
-        description: "Binary delivery failed. Using original asset if possible."
+        title: "Synchronization Interrupted", 
+        description: "Visual delivery failed. Please check your connection."
       });
     }
   };
@@ -241,8 +240,8 @@ export default function InspectionsPage() {
   if (!isClient || isPropLoading || isInspLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-headline font-bold text-foreground mb-2 tracking-tight">Inspections & Audits</h1>
           <p className="text-muted-foreground font-medium font-body">Official portfolio compliance tracking and safety records.</p>
@@ -250,23 +249,23 @@ export default function InspectionsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-1 border-none shadow-sm h-fit rounded-[2rem] overflow-hidden bg-card">
+        <Card className="lg:col-span-1 border-none shadow-sm h-fit rounded-[2rem] overflow-hidden bg-card ring-1 ring-border">
           <CardHeader className="bg-primary/5 p-8 border-b">
             <CardTitle className="text-xl font-headline text-foreground tracking-tight">Schedule Audit</CardTitle>
           </CardHeader>
           <CardContent className="p-8 space-y-6">
-            <div className="space-y-2 text-left">
+            <div className="space-y-2">
               <Label className="text-xs uppercase font-bold text-muted-foreground font-headline tracking-widest opacity-60">Select Asset</Label>
-              <select className="flex h-11 w-full rounded-xl border-none bg-muted/10 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow font-bold text-foreground" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
+              <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow font-bold text-foreground" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
                 <option value="">Choose a property...</option>
                 {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
               </select>
             </div>
-            <div className="space-y-2 text-left">
+            <div className="space-y-2">
               <Label className="text-xs uppercase font-bold text-muted-foreground font-headline tracking-widest opacity-60">Audit Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant={"outline"} className={cn("w-full justify-start text-left font-bold h-11 rounded-xl border-input hover:bg-muted/50 transition-colors font-body", !date && "text-muted-foreground")}>
+                  <Button variant={"outline"} className={cn("w-full justify-start text-left font-bold h-11 rounded-xl border-border bg-muted/20 hover:bg-muted/30 transition-colors font-body", !date && "text-muted-foreground")}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {date ? format(date, "PPP") : <span>Pick a date</span>}
                   </Button>
@@ -276,7 +275,7 @@ export default function InspectionsPage() {
                 </PopoverContent>
               </Popover>
             </div>
-            <Button className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/10 font-headline bg-primary text-primary-foreground hover:bg-primary/90 transition-all uppercase tracking-widest text-[10px]" onClick={handleSchedule} disabled={!date || !selectedPropertyId}>Confirm Schedule</Button>
+            <Button className="w-full rounded-xl h-11 font-bold shadow-lg shadow-primary/10 font-headline bg-primary text-primary-foreground hover:bg-primary/90 transition-all uppercase tracking-widest text-[10px] border-none" onClick={handleSchedule} disabled={!date || !selectedPropertyId}>Confirm Schedule</Button>
           </CardContent>
         </Card>
 
@@ -295,7 +294,7 @@ export default function InspectionsPage() {
                 <Card key={inspection.id} className="border-none shadow-sm overflow-hidden group hover:shadow-md transition-shadow rounded-[2rem] bg-card ring-1 ring-border">
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row gap-6">
-                      <div className="bg-primary/5 p-4 rounded-2xl flex flex-col items-center justify-center text-foreground min-w-[100px] h-fit font-headline shadow-inner">
+                      <div className="bg-primary/5 p-4 rounded-2xl flex flex-col items-center justify-center text-foreground min-w-[100px] h-fit font-headline shadow-inner ring-1 ring-border">
                         <span className="text-xs font-bold uppercase tracking-widest opacity-60">{format(new Date(inspection.scheduledDate), 'MMM')}</span>
                         <span className="text-3xl font-bold">{format(new Date(inspection.scheduledDate), 'dd')}</span>
                       </div>
@@ -340,7 +339,7 @@ export default function InspectionsPage() {
                                   {INSPECTION_SECTIONS.map(section => (
                                     <TabsContent key={section.id} value={section.id} className="mt-8 space-y-8 animate-in fade-in duration-500">
                                       <div className="flex items-center gap-3 mb-6">
-                                        <div className="p-3 bg-primary/5 rounded-xl text-foreground"><section.icon className="w-6 h-6" /></div>
+                                        <div className="p-3 bg-primary/5 rounded-xl text-foreground ring-1 ring-border"><section.icon className="w-6 h-6" /></div>
                                         <h3 className="text-xl font-bold font-headline text-foreground">{section.title}</h3>
                                       </div>
                                       <div className="grid gap-6">
@@ -357,7 +356,7 @@ export default function InspectionsPage() {
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border">
                                               <div className="space-y-2 text-left">
                                                 <Label className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60 font-headline">Audit Findings</Label>
-                                                <Textarea placeholder="Auditor notes..." className="rounded-2xl min-h-[120px] bg-background text-sm font-body border-border shadow-sm focus:ring-2 focus:ring-primary" value={structuredFindings[item]?.notes || ''} onChange={(e) => handleNotesChange(item, e.target.value)} />
+                                                <Textarea placeholder="Auditor notes..." className="rounded-2xl min-h-[120px] bg-muted/20 text-sm font-body border-none shadow-inner focus:ring-2 focus:ring-primary text-foreground" value={structuredFindings[item]?.notes || ''} onChange={(e) => handleNotesChange(item, e.target.value)} />
                                               </div>
                                               <div className="space-y-2 text-left">
                                                 <Label className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60 font-headline">Evidence Capture</Label>
@@ -374,12 +373,12 @@ export default function InspectionsPage() {
                                                   ) : (
                                                     <label 
                                                       htmlFor={`upload-${item}`}
-                                                      className="w-full aspect-video rounded-[2rem] border-2 border-dashed border-border hover:border-primary/30 transition-all bg-background flex flex-col items-center justify-center gap-3 group cursor-pointer shadow-inner"
+                                                      className="w-full aspect-video rounded-[2rem] border-2 border-dashed border-border hover:border-primary/30 transition-all bg-muted/10 flex flex-col items-center justify-center gap-3 group cursor-pointer shadow-inner"
                                                     >
                                                       {structuredFindings[item]?.isSyncing ? (
                                                         <div className="flex flex-col items-center gap-2">
                                                           <Loader2 className="w-8 h-8 animate-spin text-primary opacity-40" />
-                                                          <span className="text-[8px] font-bold uppercase text-primary tracking-[0.3em]">Syncing binary...</span>
+                                                          <span className="text-[8px] font-bold uppercase text-primary tracking-[0.3em]">Syncing Binary...</span>
                                                         </div>
                                                       ) : (
                                                         <>
@@ -409,7 +408,7 @@ export default function InspectionsPage() {
                               </div>
                             </ScrollArea>
                             <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
-                              <Button className="w-full rounded-2xl h-14 font-bold bg-primary shadow-xl shadow-primary/20 font-headline text-primary-foreground hover:bg-primary/90 uppercase tracking-widest text-xs transition-all hover:scale-[1.01]" onClick={handleFinalizeAudit} disabled={isGenerating || Object.values(structuredFindings).some(f => f.isSyncing)}>
+                              <Button className="w-full rounded-2xl h-14 font-bold bg-primary shadow-xl shadow-primary/20 font-headline text-primary-foreground hover:bg-primary/90 uppercase tracking-widest text-xs transition-all hover:scale-[1.01] border-none" onClick={handleFinalizeAudit} disabled={isGenerating || Object.values(structuredFindings).some(f => f.isSyncing)}>
                                 {isGenerating ? <><Loader2 className="w-5 h-5 mr-3 animate-spin" /> Orchestrating Audit Records...</> : <><CheckCircle2 className="w-5 h-5 mr-3" /> Sign & Finalize Official Record</>}
                               </Button>
                             </DialogFooter>

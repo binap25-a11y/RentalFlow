@@ -103,9 +103,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setLedger(prev => [...prev, newItem]);
 
       try {
-        const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+        const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_') || 'edit_asset.jpg'}`;
         
-        // DIRECT CLIENT SYNC: Resolved timeout issues by bypassing server actions
+        // DIRECT CLIENT SYNC: Bypasses server action bottlenecks for reliable mobile delivery
         const { error: uploadError } = await supabase.storage
           .from('property-images')
           .upload(path, file, {
@@ -128,7 +128,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         toast({ 
           variant: "destructive", 
           title: "Synchronization Interrupted", 
-          description: "Visual delivery failed. Please check your connection." 
+          description: "Visual delivery failed. Please check your network connection." 
         });
       }
     }
@@ -150,7 +150,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     e.preventDefault();
     if (!user || !db || !propertyRef) return;
     if (ledger.some(i => i.status === 'uploading')) {
-      toast({ title: "Syncing Assets...", description: "Please wait for background uploads to complete." });
+      toast({ title: "Synchronizing Assets...", description: "Please wait for background uploads to complete." });
       return;
     }
 
@@ -198,9 +198,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left bg-background">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full hover:bg-primary/5 transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+          <button onClick={() => router.back()} className="h-10 w-10 rounded-full hover:bg-primary/5 transition-colors flex items-center justify-center">
+            <ArrowLeft className="w-5 h-5 text-foreground" />
+          </button>
           <div>
             <h1 className="text-2xl font-headline font-bold text-foreground tracking-tight">Modify Asset Specs</h1>
             <p className="text-muted-foreground font-medium font-body text-xs mt-0.5">Updating {address || 'Property Record'}.</p>
@@ -302,7 +302,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </div>
           <CardFooter className="p-8 bg-muted/5 border-t flex flex-col md:flex-row justify-end gap-4 shrink-0">
             <Button type="button" variant="ghost" className="w-full md:w-auto rounded-xl h-12 px-8 font-bold font-headline text-muted-foreground" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" disabled={isSaving || ledger.some(i => i.status === 'uploading')} className="w-full md:w-auto rounded-xl font-bold bg-accent h-12 px-12 shadow-xl shadow-accent/20 font-headline text-white transition-all hover:scale-[1.02] uppercase tracking-widest text-xs">
+            <Button type="submit" disabled={isSaving || ledger.some(i => i.status === 'uploading')} className="w-full md:w-auto rounded-xl font-bold bg-accent h-12 px-12 shadow-xl shadow-accent/20 font-headline text-white transition-all hover:scale-[1.02] uppercase tracking-widest text-xs border-none">
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
               Save & Synchronize
             </Button>
