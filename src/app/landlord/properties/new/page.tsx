@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp, collection } from 'firebase/firestore';
 import { Card, CardFooter } from "@/components/ui/card";
@@ -48,30 +48,27 @@ export default function NewPropertyPage() {
   
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-  const ledgerSyncRef = useRef<string>('');
 
-  // TRANSACTIONAL ATOMIC SYNC: Orchestrate visuals to Firestore whenever the ledger reaches a stable state.
-  useEffect(() => {
+  /**
+   * 🔄 Transactional Visual Sync
+   */
+  const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId) return;
 
-    const currentReadyUrls = ledger
+    const readyUrls = currentLedger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
-
-    const syncKey = currentReadyUrls.join(',');
-    if (syncKey === ledgerSyncRef.current) return;
-    ledgerSyncRef.current = syncKey;
 
     const propertyRef = doc(db, 'properties', propertyId);
     setDocumentNonBlocking(propertyRef, {
       id: propertyId,
       landlordId: user.uid,
-      imageUrl: currentReadyUrls.length > 0 ? currentReadyUrls[0] : null,
-      imageUrls: currentReadyUrls,
+      imageUrl: readyUrls.length > 0 ? readyUrls[0] : null,
+      imageUrls: readyUrls,
       updatedAt: serverTimestamp(),
       memberIds: [user.uid]
     }, { merge: true });
-  }, [ledger, db, user, propertyId]);
+  }, [db, user, propertyId]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -97,7 +94,11 @@ export default function NewPropertyPage() {
           return url;
         });
         
-        setLedger(prev => prev.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item));
+        setLedger(prev => {
+          const updated = prev.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item);
+          syncVisualsToFirestore(updated);
+          return updated;
+        });
       } catch (err) {
         setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
       }
@@ -106,14 +107,20 @@ export default function NewPropertyPage() {
   };
 
   const removeFromLedger = (id: string) => {
-    setLedger(prev => prev.filter(i => i.id !== id));
+    setLedger(prev => {
+      const updated = prev.filter(i => i.id !== id);
+      syncVisualsToFirestore(updated);
+      return updated;
+    });
   };
 
   const setAsPrimary = (id: string) => {
     setLedger(prev => {
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
-      return [item, ...prev.filter(i => i.id !== id)];
+      const updated = [item, ...prev.filter(i => i.id !== id)];
+      syncVisualsToFirestore(updated);
+      return updated;
     });
     toast({ title: "Identity Updated", description: "Primary cover designated." });
   };

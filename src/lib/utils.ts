@@ -8,7 +8,6 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * 🏢 Brand Identity Asset
- * Used EXCLUSIVELY for the company logo and authentication branding.
  */
 export const RENTALFLOW_LOGO_URL = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=512&h=512&auto=format&fit=crop";
 
@@ -117,15 +116,13 @@ export function isRealUserUpload(url: any): boolean {
     'picsum.photos',
     'placehold.co',
     'placeholder.com',
-    'pexels.com',
-    'images.unsplash.com'
+    'pexels.com'
   ];
 
   // Specific Stock Identifiers to exclude from the professional ledger
   const forbiddenIds = [
-    'photo-1486406146926-c627a92ad1ab', // skyscraper
-    'photo-1560518883-ce09059eeffa',   // logo
-    'photo-1613490493576-7fde63acd811'    // residence
+    'photo-1486406146926-c627a92ad1ab', // corporate skyscraper
+    'photo-1560518883-ce09059eeffa'    // logo
   ];
 
   if (forbiddenDomains.some(d => u.includes(d))) return false;
@@ -151,7 +148,7 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
- * USER-DATA ONLY POLICY: Returns user photography if any exists. Returns null otherwise for premium UI fallbacks.
+ * USER-DATA ONLY POLICY: Returns user photography if any exists. Returns null otherwise for dynamic icons.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string | null {
   if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {

@@ -60,7 +60,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const ledgerSyncRef = useRef<string>('');
 
   useEffect(() => {
     if (property && !isInitialized) {
@@ -95,35 +94,37 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
   }, [property, isInitialized]);
 
-  // TRANSACTIONAL ATOMIC SYNC: Orchestrate visuals to Firestore whenever the ledger reaches a stable state.
-  // This bypasses race conditions during manual saving.
-  useEffect(() => {
-    if (!isInitialized || !db || !propertyRef) return;
+  /**
+   * 🔄 Transactional Visual Sync
+   * Commits the current stable state of the ledger to Firestore immediately.
+   * Prevents synchronization race conditions during manual saving.
+   */
+  const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
+    if (!db || !propertyRef) return;
 
-    const currentReadyUrls = ledger
+    const readyUrls = currentLedger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    const syncKey = currentReadyUrls.join(',');
-    if (syncKey === ledgerSyncRef.current) return;
-    ledgerSyncRef.current = syncKey;
-
     updateDocumentNonBlocking(propertyRef, {
-      imageUrl: currentReadyUrls.length > 0 ? currentReadyUrls[0] : null,
-      imageUrls: currentReadyUrls,
+      imageUrl: readyUrls.length > 0 ? readyUrls[0] : null,
+      imageUrls: readyUrls,
       updatedAt: serverTimestamp(),
     });
-  }, [ledger, isInitialized, db, propertyRef]);
+  }, [db, propertyRef]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
+
+    const newItems: LedgerItem[] = [];
 
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
       const uploadItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
+      newItems.push(uploadItem);
       setLedger(prev => [...prev, uploadItem]);
 
       try {
@@ -139,7 +140,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           return url;
         });
         
-        setLedger(prev => prev.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item));
+        setLedger(prev => {
+          const updated = prev.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item);
+          syncVisualsToFirestore(updated);
+          return updated;
+        });
       } catch (err) {
         setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
       }
@@ -148,14 +153,20 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   };
 
   const removeFromLedger = (id: string) => {
-    setLedger(prev => prev.filter(i => i.id !== id));
+    setLedger(prev => {
+      const updated = prev.filter(i => i.id !== id);
+      syncVisualsToFirestore(updated);
+      return updated;
+    });
   };
 
   const setAsPrimary = (id: string) => {
     setLedger(prev => {
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
-      return [item, ...prev.filter(i => i.id !== id)];
+      const updated = [item, ...prev.filter(i => i.id !== id)];
+      syncVisualsToFirestore(updated);
+      return updated;
     });
     toast({ title: "Identity Updated", description: "Designated primary cover." });
   };
@@ -172,7 +183,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
     
-    // Form data sync
     const serializableData = {
       id: propertyId, 
       landlordId: user.uid, 
