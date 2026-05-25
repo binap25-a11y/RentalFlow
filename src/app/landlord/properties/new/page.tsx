@@ -48,7 +48,7 @@ export default function NewPropertyPage() {
   
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-  const latestLedgerRef = useState<LedgerItem[]>([]); // Ref surrogate
+  const latestLedgerRef = useRef<LedgerItem[]>([]);
 
   /**
    * 🔄 Instant Persistent Sync
@@ -96,11 +96,9 @@ export default function NewPropertyPage() {
         status: 'uploading'
       };
       
-      setLedger(prev => {
-        const next = [...prev, newItem];
-        // We'll use this closure's next state for instant sync after the await
-        return next;
-      });
+      const updatedLedger = [...latestLedgerRef.current, newItem];
+      setLedger(updatedLedger);
+      latestLedgerRef.current = updatedLedger;
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -120,19 +118,21 @@ export default function NewPropertyPage() {
           return url;
         });
         
-        setLedger(prev => {
-          const next = prev.map(item => 
-            item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
-          );
-          syncVisualsToFirestore(next);
-          return next;
-        });
-
+        const finalizedLedger = latestLedgerRef.current.map(item => 
+          item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
+        );
+        
+        setLedger(finalizedLedger);
+        latestLedgerRef.current = finalizedLedger;
+        
+        syncVisualsToFirestore(finalizedLedger);
         toast({ title: "Visual Binary Synchronized" });
       } catch (err: any) {
-        setLedger(prev => prev.map(item => 
+        const errorLedger = latestLedgerRef.current.map(item => 
           item.id === tempId ? { ...item, status: 'error' } : item
-        ));
+        );
+        setLedger(errorLedger);
+        latestLedgerRef.current = errorLedger;
         toast({ variant: "destructive", title: "Sync Failed" });
       }
     }
@@ -140,11 +140,10 @@ export default function NewPropertyPage() {
   };
 
   const removeFromLedger = (id: string) => {
-    setLedger(prev => {
-      const next = prev.filter(i => i.id !== id);
-      syncVisualsToFirestore(next);
-      return next;
-    });
+    const updatedLedger = latestLedgerRef.current.filter(i => i.id !== id);
+    setLedger(updatedLedger);
+    latestLedgerRef.current = updatedLedger;
+    syncVisualsToFirestore(updatedLedger);
   };
 
   const handleSave = async (e: React.FormEvent) => {
