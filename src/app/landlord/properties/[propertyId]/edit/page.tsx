@@ -77,7 +77,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const gallery = getResolvedGallery(property.imageUrl, property.imageUrls);
       const initialLedger = gallery
         .filter(url => url && (url.startsWith('http') || url.startsWith('blob:')))
-        .filter(isRealUserUpload) // Strictly exclude placeholders from ledger
+        .filter(isRealUserUpload) 
         .map(url => ({ 
           id: Math.random().toString(36).substring(7), 
           previewUrl: url, 
@@ -119,7 +119,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
-      // 1. Instant Preview
       setLedger(prev => [...prev, { id: tempId, previewUrl: localUrl, status: 'uploading' }]);
 
       try {
@@ -135,7 +134,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           return url;
         });
         
-        // 2. Finalize Binary
+        // 2. Finalize Binary and trigger INSTANT SYNC
         setLedger(prev => {
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item

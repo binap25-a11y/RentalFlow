@@ -141,7 +141,7 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
 
   if (realUploads.length > 0) return realUploads[0];
   
-  // If no user uploads exist, we still return the valid URL unless it's a known stock placeholder we want to ignore
+  // If no user uploads exist, return first valid URL (if any) or neutral brand fallback
   const anyValid = allPossible.find(u => isValidAssetUrl(u));
   return anyValid || RENTALFLOW_NEUTRAL_FALLBACK;
 }
