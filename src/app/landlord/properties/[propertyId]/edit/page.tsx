@@ -99,12 +99,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   /**
    * 🔄 Instant Transactional Sync
    * Monitors the visual ledger and commits ready cloud binaries to Firestore immediately.
-   * This ensures designating a primary cover (Star) reflects across all hubs without a manual save.
    */
   useEffect(() => {
     if (!isInitialized || !db || !propertyRef) return;
 
-    // We only sync if there are no pending uploads to prevent race conditions
     const isUploading = ledger.some(i => i.status === 'uploading');
     if (isUploading) return;
 
@@ -122,8 +120,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
-
-    toast({ title: "Synchronizing Visuals", description: `Processing binary assets...` });
 
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
@@ -151,7 +147,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
       }
     }
-    toast({ title: "Visual Sync Complete" });
     e.target.value = '';
   };
 
@@ -175,20 +170,23 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const userOnly = ledger.filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl)).map(i => i.cloudUrl!);
 
     const serializableData = {
-      id: propertyId, landlordId: user.uid, addressLine1: address,
-      city, zipCode, rentAmount: parseFloat(rentAmount) || 0,
+      id: propertyId, 
+      landlordId: user.uid, 
+      addressLine1: address,
+      city, 
+      zipCode, 
+      rentAmount: parseFloat(rentAmount) || 0,
       imageUrl: userOnly.length > 0 ? userOnly[0] : null, 
       imageUrls: userOnly, 
       propertyType,
-      numberOfBedrooms: parseInt(bedrooms, 10) || 1, numberOfBathrooms: parseInt(bathrooms, 10) || 1,
-      description: description, isOccupied: property?.isOccupied || false,
+      numberOfBedrooms: parseInt(bedrooms, 10) || 1, 
+      numberOfBathrooms: parseInt(bathrooms, 10) || 1,
+      description: description, 
+      isOccupied: property?.isOccupied || false,
       memberIds: property?.memberIds || [user.uid]
     };
 
-    // Instant Submission (Non-Blocking)
     updateDocumentNonBlocking(propertyRef, { ...serializableData, updatedAt: serverTimestamp() });
-    
-    // Background Sync
     syncPropertyToDb(serializableData);
     
     toast({ title: "Portfolio Sync Complete" });
@@ -209,7 +207,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
             <p className="text-muted-foreground font-medium font-body text-sm mt-1 opacity-60">Updating {address || 'Property Record'}.</p>
           </div>
         </div>
-        <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 px-5 py-2 rounded-full font-bold uppercase tracking-[0.25em] text-[10px] animate-pulse">
+        <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 px-5 py-2 rounded-full font-bold uppercase tracking-[0.25em] text-[10px]">
           <Sparkles className="w-3.5 h-3.5 mr-2" /> High-Fidelity Sync Active
         </Badge>
       </div>

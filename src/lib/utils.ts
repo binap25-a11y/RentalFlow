@@ -8,9 +8,9 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * 🖼️ High-Fidelity Professional Fallback
  * Used ONLY in the UI when a property has zero user-uploaded photography.
- * This architectural facade is NEVER stored in the database.
+ * Updated identity: Modern Premium Residence (Replaces skyscraper).
  */
-export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1200&auto=format&fit=crop";
+export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop";
 
 /**
  * 🏢 Brand Identity Asset
@@ -110,15 +110,12 @@ export async function compressImage(file: File, maxWidth = 800, quality = 0.75):
 /**
  * 🖼️ User Asset Identifier
  * Strictly identifies assets that were intentionally uploaded by the user to the cloud.
- * Prioritizes Supabase/Firebase binaries and rejects all stock site domains.
+ * Rejects stock site domains and brand placeholders.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
   const u = url.toLowerCase();
-  
-  // Known local/private binaries
-  if (u.startsWith('blob:') || u.startsWith('data:image/')) return true;
   
   // Specific cloud storage providers for the RentalFlow ecosystem
   if (u.includes('supabase.co') || u.includes('firebasestorage.googleapis.com')) return true;
@@ -137,7 +134,6 @@ export function isRealUserUpload(url: any): boolean {
   // Explicitly exclude brand identity assets from property ledgers
   if (url === RENTALFLOW_LOGO_URL || url === RENTALFLOW_NEUTRAL_FALLBACK) return false;
 
-  // Valid: Any other recognized URL scheme that isn't a stock site
   return u.startsWith('http');
 }
 
@@ -145,7 +141,7 @@ export function isRealUserUpload(url: any): boolean {
  * 🖼️ Asset Validation Engine
  */
 export function isValidAssetUrl(url: any): boolean {
-  return !!(url && typeof url === 'string' && url.trim() !== '' && (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:image/')));
+  return !!(url && typeof url === 'string' && url.trim() !== '' && url.startsWith('http'));
 }
 
 /**
@@ -170,7 +166,6 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
 
 /**
  * 🖼️ Synchronized Gallery Resolver
- * USER-DATA ONLY POLICY: Returns only real user assets. Returns fallback array if empty.
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
@@ -187,8 +182,7 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
     });
   }
   
-  // Filter out ephemeral blobs for the detail view
-  const userUploads = Array.from(assets).filter(u => !u.startsWith('blob:'));
+  const userUploads = Array.from(assets);
   
   if (userUploads.length > 0) {
     return userUploads;

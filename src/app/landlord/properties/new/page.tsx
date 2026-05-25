@@ -56,7 +56,7 @@ export default function NewPropertyPage() {
    * Syncs the visual ledger to Firestore whenever it changes.
    */
   useEffect(() => {
-    if (!db || !user || !propertyId || ledger.length === 0) return;
+    if (!db || !user || !propertyId) return;
 
     const isUploading = ledger.some(i => i.status === 'uploading');
     if (isUploading) return;
@@ -64,6 +64,9 @@ export default function NewPropertyPage() {
     const userOnly = ledger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
+
+    // Note: We only sync if there is at least one upload to initialize the record.
+    if (userOnly.length === 0) return;
 
     const propertyRef = doc(db, 'properties', propertyId);
     setDocumentNonBlocking(propertyRef, {
@@ -79,8 +82,6 @@ export default function NewPropertyPage() {
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user || !propertyId) return;
-
-    toast({ title: "Synchronizing Visuals", description: `Processing binary assets...` });
 
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
@@ -108,8 +109,6 @@ export default function NewPropertyPage() {
         setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
       }
     }
-
-    toast({ title: "Visual Sync Complete" });
     e.target.value = '';
   };
 
@@ -134,22 +133,30 @@ export default function NewPropertyPage() {
     const userOnly = ledger.filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl)).map(i => i.cloudUrl!);
 
     const serializableData = {
-      id: propertyId, landlordId: user.uid, addressLine1: address,
-      city, zipCode, rentAmount: parseFloat(rentAmount) || 0,
+      id: propertyId, 
+      landlordId: user.uid, 
+      addressLine1: address,
+      city, 
+      zipCode, 
+      rentAmount: parseFloat(rentAmount) || 0,
       imageUrl: userOnly.length > 0 ? userOnly[0] : null,
       imageUrls: userOnly, 
       propertyType,
-      numberOfBedrooms: parseInt(bedrooms, 10) || 1, numberOfBathrooms: parseInt(bathrooms, 10) || 1,
-      description: description, isOccupied: false, memberIds: [user.uid]
+      numberOfBedrooms: parseInt(bedrooms, 10) || 1, 
+      numberOfBathrooms: parseInt(bathrooms, 10) || 1,
+      description: description, 
+      isOccupied: false, 
+      memberIds: [user.uid]
     };
 
-    // Instant Submission
     setDocumentNonBlocking(propertyRef, {
       ...serializableData,
-      tenantIds: [], isActive: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+      tenantIds: [], 
+      isActive: true, 
+      createdAt: serverTimestamp(), 
+      updatedAt: serverTimestamp(),
     }, { merge: true });
 
-    // Background Sync
     syncPropertyToDb(serializableData);
     
     toast({ title: "Asset Registered" });
