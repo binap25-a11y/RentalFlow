@@ -52,6 +52,7 @@ export default function NewPropertyPage() {
   /**
    * 🔄 Instant Transactional Persistence (Effect-Based)
    * USER-DATA ONLY: Firestore only stores real photography.
+   * STARRED COVER SYNC: The first item in the ledger is the primary identity.
    */
   useEffect(() => {
     if (!db || !user || !propertyId) return;
@@ -119,7 +120,7 @@ export default function NewPropertyPage() {
       if (!item) return prev;
       return [item, ...prev.filter(i => i.id !== id)];
     });
-    toast({ title: "Identity Updated" });
+    toast({ title: "Identity Updated", description: "Primary cover designated." });
   };
 
   const handleSave = async (e: React.FormEvent) => {

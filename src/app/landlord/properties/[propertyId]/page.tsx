@@ -75,6 +75,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   /**
    * 🖼️ User-Data Only Resolution
    * Strictly resolves photography from the Firestore record.
+   * Priority: property.imageUrl (The starred/designated cover)
    */
   const gallery = useMemo(() => {
     return getResolvedGallery(property?.imageUrl, property?.imageUrls);

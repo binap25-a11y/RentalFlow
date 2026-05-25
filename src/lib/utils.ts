@@ -3,7 +3,7 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  twMerge(clsx(inputs))
 }
 
 /**
@@ -146,6 +146,7 @@ export function isValidAssetUrl(url: any): boolean {
 /**
  * 🖼️ Robust Asset Resolution Engine
  * USER-DATA ONLY POLICY: Returns user photography if any exists. Returns fallback only as a UI last resort.
+ * PRIORITY: property.imageUrl (the specific primary designated by the user)
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
   // 1. If explicit Cover URL is a real user upload, it IS the identity.
@@ -166,11 +167,12 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
 /**
  * 🖼️ Synchronized Gallery Resolver
  * USER-DATA ONLY POLICY: Returns only real user assets. Returns fallback array if empty.
+ * ENSURES: property.imageUrl (Starred Primary) is ALWAYS index 0.
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
   
-  // Add cover if it's a real user upload
+  // Add cover FIRST if it's a real user upload (This ensures it is the first slide)
   if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
     assets.add(imageUrl);
   }

@@ -69,9 +69,18 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setDescription(property.description || '');
       setPropertyType(property.propertyType || 'Apartment');
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
-      setBedrooms(property.numberOfBathrooms?.toString() || '1');
+      setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      const initialLedger = (property.imageUrls || [])
+      // USER-DATA ONLY: Initialize ledger with starred cover first
+      const urls = property.imageUrls || [];
+      const primary = property.imageUrl;
+      
+      let sortedUrls = [...urls];
+      if (primary && urls.includes(primary)) {
+        sortedUrls = [primary, ...urls.filter(u => u !== primary)];
+      }
+
+      const initialLedger = sortedUrls
         .filter(url => url && isRealUserUpload(url))
         .map(url => ({ 
           id: Math.random().toString(36).substring(7), 
@@ -88,7 +97,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   /**
    * 🔄 Instant Transactional Persistence (Effect-Based)
    * Commits visual changes to Firestore the microsecond an upload reaches Supabase
-   * or a primary cover is selected.
+   * or a primary cover is selected (via starring).
    */
   useEffect(() => {
     if (!db || !user || !propertyId || !propertyRef || !isInitialized) return;
