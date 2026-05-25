@@ -137,7 +137,7 @@ export default function InspectionsPage() {
     }));
 
     try {
-      // 🛠️ Mobile Resilience: Compress massive mobile photo before binary delivery
+      // 🛠️ Mobile Resilience: Compress before binary delivery
       const compressedBlob = await compressImage(file);
       const formData = new FormData();
       formData.append('file', compressedBlob, `audit_compressed_${file.name}`);

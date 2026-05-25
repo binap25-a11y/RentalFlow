@@ -2,8 +2,7 @@
 
 /**
  * @fileOverview High-Fidelity Cloud Storage Engine.
- * Optimized for mobile uploads with robust binary processing.
- * Resolves "failed to fetch" errors on mobile by ensuring complete payload delivery and larger body limits.
+ * Optimized for mobile uploads with robust binary processing and client-side compression assistance.
  */
 
 import { supabase } from '@/lib/supabase';
@@ -11,7 +10,6 @@ import { supabase } from '@/lib/supabase';
 /**
  * 🛠️ Binary Synchronization Engine
  * Converts FormData binaries into a stable Buffer for resilient mobile delivery.
- * NOTE: Next.js 15 strict mode requires "use server" files to export ONLY async functions.
  */
 export async function uploadToSupabase(
   formData: FormData,
@@ -22,8 +20,7 @@ export async function uploadToSupabase(
     const file = formData.get('file') as File;
     if (!file) throw new Error('No valid binary payload detected.');
 
-    // Robust binary processing for Next.js 15 Server Actions
-    // Conversion to Buffer ensures stable stream delivery across mobile networks and handles 4G/5G hiccups
+    // Robust binary processing for stable stream delivery across mobile networks
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 

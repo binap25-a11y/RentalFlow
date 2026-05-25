@@ -247,7 +247,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       )}
                       {item.status === 'ready' && (
                         <div className="absolute bottom-2 right-2 bg-emerald-500 text-white p-1 rounded-full shadow-lg animate-in zoom-in duration-300">
-                           <CheckCircle2 className="w-3 h-3" />
+                           <CheckCircle2 className="w-3" />
                         </div>
                       )}
                     </div>
