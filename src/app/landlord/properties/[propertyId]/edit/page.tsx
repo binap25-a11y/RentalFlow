@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, use, useCallback, useRef } from 'react';
+import { useState, useEffect, use, useCallback } from 'react';
 import { 
   useUser, 
   useFirestore, 
@@ -97,6 +97,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   /**
    * 🔄 Transactional Visual Sync
    * Commits the current stable state of the ledger to Firestore immediately.
+   * This is strictly isolated from the manual Save button to prevent race conditions.
    */
   const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
@@ -105,6 +106,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
+    // Transactional Update: Only affects identity fields
     updateDocumentNonBlocking(propertyRef, {
       imageUrl: readyUrls.length > 0 ? readyUrls[0] : null,
       imageUrls: readyUrls,
@@ -182,6 +184,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
     
+    // DECISIVE ACTION: Exclude imageUrl and imageUrls from this payload.
+    // They are handled by syncVisualsToFirestore() to prevent state-sync overwrites.
     const serializableData = {
       id: propertyId, 
       landlordId: user.uid, 
@@ -197,8 +201,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       memberIds: property?.memberIds || [user.uid]
     };
 
-    // Note: We intentionally DO NOT update imageUrls here to avoid race conditions 
-    // with the atomic visual sync. We only sync text fields.
     updateDocumentNonBlocking(propertyRef, { ...serializableData, updatedAt: serverTimestamp() });
     
     try {

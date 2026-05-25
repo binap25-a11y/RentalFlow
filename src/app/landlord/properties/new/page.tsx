@@ -33,6 +33,7 @@ export default function NewPropertyPage() {
   const { toast } = useToast();
   const router = useRouter();
 
+  // Stable Property ID Generation
   const propertyId = useMemo(() => {
     if (!db) return '';
     return doc(collection(db, 'properties')).id;
@@ -52,6 +53,8 @@ export default function NewPropertyPage() {
 
   /**
    * 🔄 Transactional Visual Sync
+   * This is called microsecond-instantly upon visual changes to lock in the identity
+   * before any manual save occurs.
    */
   const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId) return;
@@ -140,7 +143,7 @@ export default function NewPropertyPage() {
     setIsSaving(true);
     const propertyRef = doc(db, 'properties', propertyId);
     
-    // Note: We strictly exclude imageUrl/imageUrls here to avoid race conditions with the atomic sync.
+    // Note: strictly excluding visual binary fields to prevent stale-state overwrites.
     const serializableData = {
       id: propertyId, 
       landlordId: user.uid, 
