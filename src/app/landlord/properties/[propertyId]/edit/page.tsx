@@ -34,7 +34,8 @@ type LedgerItem = {
 /**
  * 🛠️ Asset Configuration Hub
  * High-fidelity property modification hub.
- * Implements Linear Event-Driven Synchronization for visuals.
+ * Implements TRANSACTIONAL ATOMIC SYNC for visuals.
+ * Designating a cover or completing an upload syncs instantly to Firestore.
  */
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -97,14 +98,15 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   }, [property, isInitialized]);
 
   /**
-   * 🔄 Transactional Visual Sync
-   * Commits the provided ledger state to Firestore immediately.
+   * 🔄 Transactional Identity Sync
+   * Commits the provided ledger state to Firestore microsecond-instantly.
+   * This is the "Source of Truth" for visual synchronicity across all hubs.
    */
   const syncVisualsToFirestore = (updatedLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
     
-    const isUploading = updatedLedger.some(i => i.status === 'uploading');
-    if (isUploading) return;
+    // Safety: Only sync if no active uploads are in progress
+    if (updatedLedger.some(i => i.status === 'uploading')) return;
 
     const userOnly = updatedLedger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))

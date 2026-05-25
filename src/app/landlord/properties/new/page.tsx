@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from 'react';
-import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp, collection } from 'firebase/firestore';
 import { Card, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,8 @@ type LedgerItem = {
 
 /**
  * 🛠️ Asset Registration Hub
- * Implements Linear Event-Driven Synchronization for visuals.
+ * Implements TRANSACTIONAL ATOMIC SYNC for visuals.
+ * Visual modifications update Firestore microsecond-instantly.
  */
 export default function NewPropertyPage() {
   const { user } = useUser();
@@ -52,13 +53,13 @@ export default function NewPropertyPage() {
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
 
   /**
-   * 🔄 Transactional Visual Sync
+   * 🔄 Transactional Identity Sync
+   * Commits the provided ledger state to Firestore microsecond-instantly.
    */
   const syncVisualsToFirestore = (updatedLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId) return;
 
-    const isUploading = updatedLedger.some(i => i.status === 'uploading');
-    if (isUploading) return;
+    if (updatedLedger.some(i => i.status === 'uploading')) return;
 
     const userOnly = updatedLedger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))

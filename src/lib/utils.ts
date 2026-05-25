@@ -8,13 +8,14 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * 🖼️ High-Fidelity Professional Fallback
  * Used ONLY in the UI when a property has zero user-uploaded photography.
- * Updated identity: Modern Premium Residence (Replaces skyscraper).
+ * Identity: Modern Premium Residence (Pool House).
  */
 export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=1200&auto=format&fit=crop";
 
 /**
  * 🏢 Brand Identity Asset
  * Used EXCLUSIVELY for the company logo and authentication branding (House & Keys).
+ * photo-1560518883-ce09059eeffa
  */
 export const RENTALFLOW_LOGO_URL = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=512&h=512&auto=format&fit=crop";
 
@@ -110,7 +111,7 @@ export async function compressImage(file: File, maxWidth = 800, quality = 0.75):
 /**
  * 🖼️ User Asset Identifier
  * Strictly identifies assets that were intentionally uploaded by the user to the cloud.
- * Rejects stock site domains and brand placeholders.
+ * DECISIVELY REJECTS: Skyscraper ID, Brand Logo ID, and known stock site domains.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
@@ -120,19 +121,27 @@ export function isRealUserUpload(url: any): boolean {
   // Specific cloud storage providers for the RentalFlow ecosystem
   if (u.includes('supabase.co') || u.includes('firebasestorage.googleapis.com')) return true;
 
+  // BLACKLIST: Decisively reject these IDs from being treated as property photography
+  const blacklistedIds = [
+    'photo-1486406146926-c627a92ad1ab', // Forbidden Skyscraper
+    'photo-1560518883-ce09059eeffa', // Brand Logo (House/Keys)
+    'photo-1613490493576-7fde63acd811'  // Fallback Modern House (Resolved dynamically)
+  ];
+
+  if (blacklistedIds.some(id => u.includes(id))) return false;
+
   // List of forbidden partial matches (known placeholders/stock sites)
-  const forbidden = [
+  const forbiddenDomains = [
     'unsplash.com',
     'picsum.photos',
     'placehold.co',
     'placeholder.com',
-    'pexels.com',
-    'photo-1486406146926-c627a92ad1ab' // Purge Skyscraper ID
+    'pexels.com'
   ];
 
-  if (forbidden.some(f => u.includes(f))) return false;
+  if (forbiddenDomains.some(f => u.includes(f))) return false;
   
-  // Explicitly exclude brand identity assets from property ledgers
+  // Explicitly exclude defined constants
   if (url === RENTALFLOW_LOGO_URL || url === RENTALFLOW_NEUTRAL_FALLBACK) return false;
 
   return u.startsWith('http');
