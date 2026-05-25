@@ -8,8 +8,15 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * 🖼️ High-Fidelity Professional Fallback
  * Used ONLY when a property has zero user-uploaded photography.
+ * Updated to a neutral dark architecture shot to distinguish from the Brand Logo.
  */
-export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop";
+export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1200&auto=format&fit=crop";
+
+/**
+ * 🏢 Brand Identity Asset
+ * Used EXCLUSIVELY for the company logo and authentication branding.
+ */
+export const RENTALFLOW_LOGO_URL = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=512&h=512&auto=format&fit=crop";
 
 /**
  * 🔄 Resilient Retry Wrapper

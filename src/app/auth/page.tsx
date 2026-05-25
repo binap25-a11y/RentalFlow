@@ -15,7 +15,7 @@ import { updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import Link from 'next/link';
-import { RENTALFLOW_NEUTRAL_FALLBACK } from '@/lib/utils';
+import { RENTALFLOW_LOGO_URL } from '@/lib/utils';
 
 export default function AuthPage() {
   const router = useRouter();
@@ -156,7 +156,7 @@ export default function AuthPage() {
       <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-500">
         <div className="flex flex-col items-center gap-4">
           <div className="relative w-24 h-24 rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5">
-             <Image src={RENTALFLOW_NEUTRAL_FALLBACK} alt="RentalFlow" fill className="object-cover" unoptimized priority />
+             <Image src={RENTALFLOW_LOGO_URL} alt="RentalFlow" fill className="object-cover" unoptimized priority />
           </div>
           <Loader2 className="w-6 h-6 animate-spin text-accent opacity-40" />
         </div>
@@ -213,7 +213,7 @@ export default function AuthPage() {
       <div className="max-w-xl w-full text-center">
         <div className="mb-12 inline-flex flex-col items-center">
           <div className="relative h-24 w-24 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 mb-6">
-            <Image src={RENTALFLOW_NEUTRAL_FALLBACK} alt="Logo" fill className="object-cover" unoptimized priority />
+            <Image src={RENTALFLOW_LOGO_URL} alt="Logo" fill className="object-cover" unoptimized priority />
           </div>
           <h1 className="text-5xl font-headline font-bold text-foreground tracking-tighter">RentalFlow</h1>
         </div>

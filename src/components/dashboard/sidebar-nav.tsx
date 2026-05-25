@@ -16,7 +16,7 @@ import {
   HardHat,
   CalendarDays
 } from 'lucide-react';
-import { cn, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
+import { cn, RENTALFLOW_LOGO_URL } from "@/lib/utils";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/firebase";
@@ -69,7 +69,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
     }
   };
 
-  const LOGO_URL = RENTALFLOW_NEUTRAL_FALLBACK;
+  const LOGO_URL = RENTALFLOW_LOGO_URL;
 
   return (
     <Sidebar className="border-r border-sidebar-border shadow-2xl">

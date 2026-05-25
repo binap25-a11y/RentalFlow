@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { RENTALFLOW_NEUTRAL_FALLBACK, getResolvedImageUrl } from '@/lib/utils';
+import { RENTALFLOW_LOGO_URL, RENTALFLOW_NEUTRAL_FALLBACK, getResolvedImageUrl } from '@/lib/utils';
 import { useEffect, useState, useMemo } from 'react';
 import { doc } from 'firebase/firestore';
 
@@ -54,7 +54,7 @@ export default function LandingPage() {
       <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-500">
         <div className="flex flex-col items-center gap-4">
           <div className="relative w-24 h-24 rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5">
-            <Image src={RENTALFLOW_NEUTRAL_FALLBACK} alt="RentalFlow" fill className="object-cover" unoptimized priority />
+            <Image src={RENTALFLOW_LOGO_URL} alt="RentalFlow" fill className="object-cover" unoptimized priority />
           </div>
           <Loader2 className="w-6 h-6 animate-spin text-accent opacity-40" />
         </div>
@@ -68,7 +68,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
              <div className="relative h-10 w-10 rounded-xl overflow-hidden shadow-lg transition-transform hover:scale-105">
-                <Image src={RENTALFLOW_NEUTRAL_FALLBACK} alt="Logo" fill className="object-cover" unoptimized />
+                <Image src={RENTALFLOW_LOGO_URL} alt="Logo" fill className="object-cover" unoptimized />
              </div>
              <span className="font-headline font-bold text-2xl tracking-tighter text-foreground">RentalFlow</span>
           </div>
