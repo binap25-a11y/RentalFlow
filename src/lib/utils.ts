@@ -118,19 +118,18 @@ export function isRealUserUpload(url: any): boolean {
   
   // List of forbidden partial matches (known placeholders)
   const forbidden = [
+    'images.unsplash.com',
     'picsum.photos',
     'placehold.co',
     'placeholder.com'
   ];
 
-  // We explicitly check for images.unsplash.com BUT allow it ONLY if it's NOT our fallback/logo
-  // This is a safety measure in case a user actually pastes an unsplash link, 
-  // though we prefer Supabase binaries.
   if (forbidden.some(f => u.includes(f))) return false;
   
-  // Explicitly exclude brand identity assets and generic building fallbacks
+  // Explicitly exclude brand identity assets from property ledgers
   if (url === RENTALFLOW_LOGO_URL || url === RENTALFLOW_NEUTRAL_FALLBACK) return false;
 
+  // Valid: Supabase storage, Firebase storage, local blob previews, or data URIs
   return true;
 }
 
@@ -182,7 +181,7 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
     });
   }
   
-  // High-fidelity resolution for detail hub
+  // Filter out ephemeral blobs for the detail view to ensure high-fidelity cloud binaries only
   const userUploads = Array.from(assets).filter(u => !u.startsWith('blob:'));
   
   if (userUploads.length > 0) {
