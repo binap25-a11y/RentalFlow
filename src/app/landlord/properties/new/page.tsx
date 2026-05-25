@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp, collection } from 'firebase/firestore';
 import { Card, CardFooter } from "@/components/ui/card";
@@ -48,14 +48,13 @@ export default function NewPropertyPage() {
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
 
   /**
-   * 🔄 Instant Transactional Persistence (Effect-Based)
-   * USER-DATA ONLY: Firestore only stores real photography.
-   * STARRED COVER SYNC: The first item in the ledger is the primary identity.
+   * 🔄 Event-Driven Visual Sync
+   * Commits visual state to Firestore immediately.
    */
-  useEffect(() => {
+  const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId) return;
 
-    const userOnly = ledger
+    const userOnly = currentLedger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
@@ -68,7 +67,7 @@ export default function NewPropertyPage() {
       updatedAt: serverTimestamp(),
       memberIds: [user.uid]
     }, { merge: true });
-  }, [ledger, db, user, propertyId]);
+  }, [db, user, propertyId]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -76,7 +75,7 @@ export default function NewPropertyPage() {
 
     toast({ title: "Synchronizing Visuals", description: `Processing binary assets...` });
 
-    const uploadPromises = files.map(async (file) => {
+    for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
@@ -95,28 +94,37 @@ export default function NewPropertyPage() {
           return url;
         });
         
-        setLedger(prev => prev.map(item => 
-          item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
-        ));
+        setLedger(prev => {
+          const next = prev.map(item => 
+            item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
+          );
+          syncVisualsToFirestore(next);
+          return next;
+        });
       } catch (err) {
         setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
       }
-    });
+    }
 
-    await Promise.all(uploadPromises);
     toast({ title: "Visual Sync Complete" });
     e.target.value = '';
   };
 
   const removeFromLedger = (id: string) => {
-    setLedger(prev => prev.filter(i => i.id !== id));
+    setLedger(prev => {
+      const next = prev.filter(i => i.id !== id);
+      syncVisualsToFirestore(next);
+      return next;
+    });
   };
 
   const setAsPrimary = (id: string) => {
     setLedger(prev => {
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
-      return [item, ...prev.filter(i => i.id !== id)];
+      const next = [item, ...prev.filter(i => i.id !== id)];
+      syncVisualsToFirestore(next);
+      return next;
     });
     toast({ title: "Identity Updated", description: "Primary cover designated." });
   };
@@ -250,7 +258,7 @@ export default function NewPropertyPage() {
                   </div>
                   <div className="space-y-2">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Bathrooms</Label>
-                    <Select value={bathrooms} onValueChange={setBathrooms}>
+                    <Select value={bathrooms} onValueChange={setBedrooms}>
                       <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-xl border-border bg-card">
                         {[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={n.toString()} className="font-bold">{n} Bathroom{n > 1 ? 's' : ''}</SelectItem>)}
