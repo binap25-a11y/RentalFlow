@@ -52,9 +52,11 @@ export default function ProfilePage() {
 
     setIsUploading(true);
     try {
+      // Direct compression: small avatar size
       const compressedBlob = await compressImage(file, 400, 0.8);
       const path = `profiles/${user.uid}/avatar_${Date.now()}.jpg`;
       
+      // DIRECT CLIENT SYNC: Resolved mobile network timeouts
       const { error: uploadError } = await supabase.storage
         .from('property-documents')
         .upload(path, compressedBlob, {
@@ -159,25 +161,25 @@ export default function ProfilePage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-2">
                           <Label className="font-bold text-xs uppercase text-muted-foreground opacity-40 tracking-widest font-headline">First Name</Label>
-                          <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="h-12 rounded-xl bg-muted/20 border-none font-bold" />
+                          <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground" />
                         </div>
                         <div className="space-y-2">
                           <Label className="font-bold text-xs uppercase text-muted-foreground opacity-40 tracking-widest font-headline">Last Name</Label>
-                          <Input value={lastName} onChange={(e) => setLastName(e.target.value)} required className="h-12 rounded-xl bg-muted/20 border-none font-bold" />
+                          <Input value={lastName} onChange={(e) => setLastName(e.target.value)} required className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label className="font-bold text-xs uppercase text-muted-foreground opacity-40 tracking-widest font-headline">Contact Electronic Mail</Label>
                         <div className="relative">
                           <Mail className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground opacity-20" />
-                          <Input value={user?.email || ''} readOnly className="pl-12 h-12 rounded-xl bg-muted/10 border-none font-bold opacity-60 cursor-not-allowed" />
+                          <Input value={user?.email || ''} readOnly className="pl-12 h-12 rounded-xl bg-muted/10 border-none font-bold opacity-60 cursor-not-allowed text-foreground" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label className="font-bold text-xs uppercase text-muted-foreground opacity-40 tracking-widest font-headline">Official Mobile Number</Label>
                         <div className="relative">
                           <Phone className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground opacity-20" />
-                          <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} required className="pl-12 h-12 rounded-xl bg-muted/20 border-none font-bold" />
+                          <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} required className="pl-12 h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground" />
                         </div>
                       </div>
                     </CardContent>

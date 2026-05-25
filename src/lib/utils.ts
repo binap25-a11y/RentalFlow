@@ -15,8 +15,9 @@ export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-15
  * 🖼️ Client-Side Image Compression
  * Optimized for mobile devices to prevent "Connection Interrupted" errors.
  * Reduces 10MB+ images to <1MB while maintaining professional quality.
+ * Requested Specs: Max Width 1200px, Quality 0.7-0.8
  */
-export async function compressImage(file: File, maxWidth = 1600, quality = 0.85): Promise<Blob> {
+export async function compressImage(file: File, maxWidth = 1200, quality = 0.75): Promise<Blob> {
   // If not an image, return as is (for documents)
   if (!file.type.startsWith('image/')) return file;
 

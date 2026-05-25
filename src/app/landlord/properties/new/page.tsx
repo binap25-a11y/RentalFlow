@@ -60,9 +60,11 @@ export default function NewPropertyPage() {
       setLedger(prev => [...prev, newItem]);
 
       try {
-        const compressedBlob = await compressImage(file);
+        // Requested Optimization: Client-side compression before direct cloud sync
+        const compressedBlob = await compressImage(file, 1200, 0.75);
         const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
+        // DIRECT CLIENT SYNC: Bypasses server bottlenecks
         const { error: uploadError } = await supabase.storage
           .from('property-images')
           .upload(path, compressedBlob, {
@@ -85,7 +87,7 @@ export default function NewPropertyPage() {
         toast({ 
           variant: "destructive", 
           title: "Mobile Sync Failed", 
-          description: "Connection interrupted. Please try again." 
+          description: "Connection interrupted. High-fidelity compression failed to deliver asset." 
         });
       }
     }

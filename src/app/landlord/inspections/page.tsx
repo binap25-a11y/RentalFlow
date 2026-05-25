@@ -137,10 +137,11 @@ export default function InspectionsPage() {
     }));
 
     try {
-      // 🛠️ Direct Cloud Sync: Resolves Mobile Network Payload Errors
-      const compressedBlob = await compressImage(file);
+      // 🛠️ High-Fidelity Compression requested: 1200px, 0.75 quality
+      const compressedBlob = await compressImage(file, 1200, 0.75);
       const path = `audits/${user.uid}/${activeInspection.id}/${itemId.replace(/\s+/g, '_')}_${Date.now()}`;
       
+      // DIRECT CLIENT SYNC: Bypasses server bottlenecks
       const { error: uploadError } = await supabase.storage
         .from('property-images')
         .upload(path, compressedBlob, {
@@ -165,7 +166,7 @@ export default function InspectionsPage() {
       toast({ 
         variant: "destructive", 
         title: "Mobile Sync Failed", 
-        description: "Direct cloud synchronization failed. Please check your gallery selection and retry."
+        description: "Direct cloud synchronization failed. High-fidelity compression failed to deliver asset."
       });
     }
   };

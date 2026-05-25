@@ -103,9 +103,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setLedger(prev => [...prev, newItem]);
 
       try {
-        const compressedBlob = await compressImage(file);
+        // High-Fidelity Compression requested: 1200px Max Width, 0.75 Quality
+        const compressedBlob = await compressImage(file, 1200, 0.75);
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
+        // DIRECT CLIENT SYNC: Bypasses server bottlenecks for mobile stability
         const { error: uploadError } = await supabase.storage
           .from('property-images')
           .upload(path, compressedBlob, {
@@ -128,7 +130,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         toast({ 
           variant: "destructive", 
           title: "Mobile Sync Failed", 
-          description: "Connection interrupted. Please check your data and retry." 
+          description: "Connection interrupted. Compression engine failed to deliver asset." 
         });
       }
     }
