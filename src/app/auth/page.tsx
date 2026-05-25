@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Eye, EyeOff, User as UserIcon, Phone, CheckCircle2, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Loader2, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp, setDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -170,34 +170,34 @@ export default function AuthPage() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-left">
         <Card className="w-full max-w-xl border-none shadow-2xl bg-card overflow-hidden rounded-[3rem]">
           <CardHeader className="text-center bg-primary/5 pb-10 pt-12">
-            <CardTitle className="text-3xl font-headline font-bold text-foreground">Identity Establishment</CardTitle>
-            <CardDescription className="font-medium">Define your management or residency role.</CardDescription>
+            <CardTitle className="text-3xl font-headline font-bold text-foreground tracking-tight">Identity Establishment</CardTitle>
+            <CardDescription className="font-medium text-muted-foreground">Define your management or residency role.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-8 pt-10 px-10 pb-12">
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground font-headline">First Name</Label>
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground opacity-60 font-headline">First Name</Label>
                 <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground" />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground font-headline">Last Name</Label>
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Last Name</Label>
                 <Input value={lastName} onChange={(e) => setLastName(e.target.value)} className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground" />
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground font-headline">Role</Label>
+              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Role</Label>
               <Tabs value={role} onValueChange={(v) => setRole(v as any)}>
                 <TabsList className="grid w-full grid-cols-2 h-12 bg-muted/20 rounded-xl">
-                  <TabsTrigger value="landlord" className="rounded-lg font-bold">Landlord</TabsTrigger>
-                  <TabsTrigger value="tenant" className="rounded-lg font-bold">Resident</TabsTrigger>
+                  <TabsTrigger value="landlord" className="rounded-lg font-bold data-[state=active]:bg-accent data-[state=active]:text-white">Landlord</TabsTrigger>
+                  <TabsTrigger value="tenant" className="rounded-lg font-bold data-[state=active]:bg-accent data-[state=active]:text-white">Resident</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground font-headline">Phone</Label>
+              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Phone</Label>
               <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground" />
             </div>
-            <Button className="w-full h-14 rounded-2xl font-bold bg-accent text-white text-lg shadow-xl shadow-accent/10 border-none transition-all hover:scale-[1.01]" onClick={handleCreateProfile} disabled={isLoading}>
+            <Button className="w-full h-14 rounded-2xl font-bold bg-accent text-white text-lg shadow-xl shadow-accent/20 border-none transition-all hover:scale-[1.01]" onClick={handleCreateProfile} disabled={isLoading}>
               {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Complete Registration"}
             </Button>
           </CardContent>
@@ -230,11 +230,11 @@ export default function AuthPage() {
             <div className="relative my-4"><div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/10"></span></div><div className="relative flex justify-center text-[10px] uppercase font-bold text-muted-foreground tracking-widest"><span className="bg-card px-4">or use email</span></div></div>
             <form onSubmit={handleSubmit} className="space-y-6 text-left">
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-muted-foreground font-headline">Email</Label>
+                <Label className="text-xs font-bold uppercase text-muted-foreground opacity-60 font-headline">Email</Label>
                 <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground" />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-muted-foreground font-headline">Password</Label>
+                <Label className="text-xs font-bold uppercase text-muted-foreground opacity-60 font-headline">Password</Label>
                 <div className="relative">
                   <Input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="h-12 rounded-xl bg-muted/20 border-none font-bold pr-12 text-foreground" />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-3 text-muted-foreground/40 hover:text-accent">

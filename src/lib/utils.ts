@@ -14,11 +14,11 @@ export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-15
 /**
  * 🖼️ Resilient Mobile Optimization Engine
  * Reduces massive 10MB+ mobile photos to ~1MB high-quality versions (1200px, 0.75 quality).
- * Fail-Safe Architecture: If browser memory or format limits are hit, 
+ * Fail-Safe Architecture: If browser memory or format limits are hit (common on iOS), 
  * it returns the original file silently so the sync flow is never interrupted.
  */
 export async function compressImage(file: File, maxWidth = 1200, quality = 0.75): Promise<Blob | File> {
-  // Skip optimization for non-image files or very small files
+  // Skip optimization for non-image files or very small files (< 500KB)
   if (!file.type.startsWith('image/') || file.size < 500000) {
     return file;
   }
@@ -54,6 +54,7 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.75)
 
             const ctx = canvas.getContext('2d');
             if (!ctx) {
+              console.warn("Compression Engine: Canvas context unavailable. Using original.");
               resolve(file); 
               return;
             }
@@ -76,16 +77,22 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.75)
               quality
             );
           } catch (e) {
-            console.warn("Resilient Fallback: Canvas failure, using original.");
+            console.warn("Resilient Fallback: Canvas memory failure. Synchronizing original.");
             resolve(file);
           }
         };
-        img.onerror = () => resolve(file);
+        img.onerror = () => {
+          console.warn("Compression Engine: Image load error. Using original.");
+          resolve(file);
+        };
       };
-      reader.onerror = () => resolve(file);
+      reader.onerror = () => {
+        console.warn("Compression Engine: FileReader error. Using original.");
+        resolve(file);
+      };
       
-      // Safety timeout: don't block user for more than 5s
-      setTimeout(() => resolve(file), 5000);
+      // Safety timeout: don't block user for more than 4s during compression
+      setTimeout(() => resolve(file), 4000);
     });
   } catch (error) {
     console.warn("Resilient Fallback: Optimization bypassed due to device constraints.");
