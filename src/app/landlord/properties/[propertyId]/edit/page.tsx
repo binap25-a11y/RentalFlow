@@ -91,6 +91,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   /**
    * 🔄 Instant Transactional Persistence
    * Directly updates Firestore microsecond a binary upload completes.
+   * This ensures visual sync across Inventory, Details, and Hero pages instantly.
    */
   const performDirectSync = (currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId || !propertyRef) return;
@@ -102,6 +103,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const userOnly = readyUrls.filter(isRealUserUpload);
     const primaryUrl = userOnly.length > 0 ? userOnly[0] : BRAND_FALLBACK;
 
+    // DIRECT NON-BLOCKING UPDATE: No dependency on "Save" button for visuals
     updateDocumentNonBlocking(propertyRef, {
       imageUrl: primaryUrl,
       imageUrls: userOnly,
@@ -138,6 +140,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
           );
+          // INSTANT SYNC: Perform direct Firestore commit
           performDirectSync(updated);
           return updated;
         });
@@ -237,6 +240,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
+                      {/* Standard <img> tag to ensure instant updates bypass Next.js image proxying */}
                       <img 
                         src={item.previewUrl} 
                         alt={`Asset ${index}`} 
