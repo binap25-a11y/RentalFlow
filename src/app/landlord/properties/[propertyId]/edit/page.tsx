@@ -103,7 +103,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const userOnly = readyUrls.filter(isRealUserUpload);
     const primaryUrl = userOnly.length > 0 ? userOnly[0] : BRAND_FALLBACK;
 
-    // DIRECT NON-BLOCKING UPDATE: Immediate sync to Portfolio Inventory
+    // DIRECT NON-BLOCKING UPDATE: Immediate sync to Portfolio Inventory and Detail Cover
     updateDocumentNonBlocking(propertyRef, {
       imageUrl: primaryUrl,
       imageUrls: userOnly,
@@ -164,7 +164,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   };
 
   /**
-   * ⭐ Star Coverage Sync
+   * ⭐ Transactional Star Synchronization
    * Designated images moved to primary position instantly update cover id for entire app.
    */
   const setAsPrimary = (id: string) => {

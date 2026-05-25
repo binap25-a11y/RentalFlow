@@ -109,24 +109,25 @@ export async function compressImage(file: File, maxWidth = 800, quality = 0.75):
 
 /**
  * 🖼️ User Asset Identifier
- * Strictly identifies assets that were intentionally uploaded.
- * Excludes stock placeholders and the brand logo from being treated as "user content".
+ * Strictly identifies assets that were intentionally uploaded by the user.
+ * Excludes known stock domains and the specific Brand Logo to prevent identity collision.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   const u = url.toLowerCase();
   
-  // Explicitly identify and exclude stock placeholders and brand identity
+  // Blacklist: Known stock and brand identity sources
   if (
+    u.includes('images.unsplash.com') || 
     u.includes('picsum.photos') || 
-    u.includes('unsplash.com') || 
     u.includes('placehold.co') ||
-    u.includes('placeholder')
+    u.includes('placeholder.com') ||
+    url === RENTALFLOW_LOGO_URL
   ) {
     return false;
   }
 
-  // Identify real uploads (Supabase, Firebase, or in-session Blobs)
+  // Whitelist: Supabase, Firebase, Blobs, DataURIs
   return u.startsWith('blob:') || u.includes('supabase.co') || u.includes('firebasestorage') || u.startsWith('data:image/');
 }
 
@@ -142,19 +143,19 @@ export function isValidAssetUrl(url: any): boolean {
  * STORAGE-FIRST POLICY: Prioritizes user uploads and STRICTLY PURGES placeholders/logos if real assets exist.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
-  const allPossible = [imageUrl, ...(imageUrls || [])].filter(isValidAssetUrl);
-  const realUploads = allPossible.filter(isRealUserUpload).filter(u => !u.startsWith('blob:'));
+  // 1. If explicit Cover URL is a real user upload, it IS the identity.
+  if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
+    return imageUrl;
+  }
 
-  if (realUploads.length > 0) return realUploads[0];
-  
-  // Filter out any known stock/brand domains even if they were passed in as defaults
-  const nonStock = allPossible.filter(u => 
-    !u.includes('unsplash') && 
-    !u.includes('picsum') && 
-    !u.includes('placehold')
-  );
-  
-  return nonStock.length > 0 ? nonStock[0] : RENTALFLOW_NEUTRAL_FALLBACK;
+  // 2. Otherwise, look for the first real upload in the gallery.
+  if (imageUrls && Array.isArray(imageUrls)) {
+    const realGallery = imageUrls.filter(isRealUserUpload).filter(u => !u.startsWith('blob:'));
+    if (realGallery.length > 0) return realGallery[0];
+  }
+
+  // 3. Fallback to Neutral Architecture facade
+  return RENTALFLOW_NEUTRAL_FALLBACK;
 }
 
 /**
@@ -163,7 +164,11 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
+  
+  // Prioritize cover first if valid
   if (imageUrl && isValidAssetUrl(imageUrl)) assets.add(imageUrl);
+  
+  // Add gallery assets
   if (imageUrls && Array.isArray(imageUrls)) {
     imageUrls.forEach(u => {
       if (isValidAssetUrl(u)) assets.add(u);
@@ -173,15 +178,9 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
   const allAssets = Array.from(assets);
   const userUploads = allAssets.filter(isRealUserUpload).filter(u => !u.startsWith('blob:'));
   
-  // Once a user has uploaded any actual images, we strictly purge all stock placeholders and brand logos from the gallery
+  // Once a user has uploaded any actual images, we strictly purge all stock placeholders and brand logos
   if (userUploads.length > 0) return userUploads;
   
-  // If no real uploads, return original assets only if they aren't stock/brand placeholders
-  const nonStockAssets = allAssets.filter(a => 
-    !a.includes('unsplash') && 
-    !a.includes('picsum') && 
-    !a.includes('placehold')
-  );
-  
-  return nonStockAssets.length > 0 ? nonStockAssets : [RENTALFLOW_NEUTRAL_FALLBACK];
+  // If no real uploads, return neutral fallback only
+  return [RENTALFLOW_NEUTRAL_FALLBACK];
 }
