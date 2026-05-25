@@ -33,6 +33,7 @@ export async function withRetry<T>(
  * 🖼️ Resilient Mobile Optimization Engine
  * Converts HEIC/PNG to high-quality JPG and downscales for 100% mobile stability.
  * Optimized for low-RAM devices: if optimization hits a memory limit or takes too long, it returns the original file.
+ * NOTE: Revocation of object URLs is now handled by the caller to prevent preview race conditions.
  */
 export async function compressImage(file: File, maxWidth = 1000, quality = 0.6): Promise<Blob | File> {
   // Skip non-images or files that are already small enough (under 300KB)
@@ -75,7 +76,6 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
 
           const ctx = canvas.getContext('2d');
           if (!ctx) {
-            URL.revokeObjectURL(objectUrl);
             clearTimeout(timeout);
             resolve(file);
             return;
@@ -87,7 +87,6 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
 
           canvas.toBlob(
             (blob) => {
-              URL.revokeObjectURL(objectUrl);
               clearTimeout(timeout);
               if (blob && blob.size < file.size) {
                 resolve(blob);
@@ -99,14 +98,12 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
             quality
           );
         } catch (e) {
-          URL.revokeObjectURL(objectUrl);
           clearTimeout(timeout);
           resolve(file);
         }
       };
 
       img.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
         clearTimeout(timeout);
         resolve(file);
       };
@@ -120,13 +117,13 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
 
 /**
  * 🖼️ Strict User Asset Identifier
- * Now handles blob: URLs to prevent local previews from being filtered out.
+ * Now handles blob: and base64 URLs to prevent local previews from being filtered out.
  */
 export function isUserUploadedAsset(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
   // Allow local previews during the upload session
-  if (url.startsWith('blob:')) return true;
+  if (url.startsWith('blob:') || url.startsWith('data:image/')) return true;
 
   const isStorageAsset = url.includes('supabase.co') || url.includes('firebasestorage.app');
   const isGenericPlaceholder = 
@@ -142,7 +139,7 @@ export function isUserUploadedAsset(url: any): boolean {
  * 🖼️ Asset Validation Engine
  */
 export function isValidAssetUrl(url: any): boolean {
-  return !!(url && typeof url === 'string' && url.trim() !== '' && (url.startsWith('http') || url.startsWith('blob:')));
+  return !!(url && typeof url === 'string' && url.trim() !== '' && (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:image/')));
 }
 
 /**

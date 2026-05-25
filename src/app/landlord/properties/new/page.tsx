@@ -10,19 +10,18 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { supabase } from '@/lib/supabase';
-import { cn, compressImage, withRetry } from '@/lib/utils';
+import { cn, compressImage, withRetry, RENTALFLOW_NEUTRAL_FALLBACK } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
   id: string;
-  previewUrl: string; // Reliable local blob: URL
-  cloudUrl?: string;   // Final Supabase URL
+  previewUrl: string; 
+  cloudUrl?: string;   
   status: 'uploading' | 'ready' | 'error';
 };
 
@@ -50,6 +49,7 @@ export default function NewPropertyPage() {
 
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
+      // STABLE PREVIEW: Creating local blob pointer
       const localUrl = URL.createObjectURL(file);
       
       const newItem: LedgerItem = {
@@ -86,11 +86,6 @@ export default function NewPropertyPage() {
         setLedger(prev => prev.map(item => 
           item.id === tempId ? { ...item, status: 'error' } : item
         ));
-        toast({ 
-          variant: "destructive", 
-          title: "Synchronization Interrupted", 
-          description: "Visual delivery failed. Please check your signal." 
-        });
       }
     }
     e.target.value = '';
@@ -189,20 +184,37 @@ export default function NewPropertyPage() {
                       index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
-                      {/* ALWAYS use the previewUrl (local blob) for visual stability */}
-                      <Image src={item.previewUrl} alt={`Asset ${index}`} fill className="object-cover" unoptimized />
+                      {/* STABLE PREVIEW: Standard img bypasses Next.js proxy for unstable blobs */}
+                      <img 
+                        src={item.previewUrl} 
+                        alt={`Asset ${index}`} 
+                        className="absolute inset-0 h-full w-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = RENTALFLOW_NEUTRAL_FALLBACK;
+                        }}
+                      />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">
                         <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/90 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 backdrop-blur-md transition-all active:scale-90"><X className="w-3.5 h-3.5" /></button>
                       </div>
+                      
                       {item.status === 'uploading' && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-card/60 backdrop-blur-md gap-2">
                            <Loader2 className="w-6 h-6 animate-spin text-accent" />
                            <span className="text-[8px] font-bold text-accent uppercase tracking-[0.2em]">Synchronizing...</span>
                         </div>
                       )}
+
                       {item.status === 'ready' && (
                         <div className="absolute bottom-2 right-2 bg-emerald-500 text-white p-1.5 rounded-full shadow-lg animate-in zoom-in duration-300">
                            <CheckCircle2 className="w-3.5 h-3.5" />
+                        </div>
+                      )}
+
+                      {item.status === 'error' && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-destructive/10 backdrop-blur-sm gap-2">
+                           <AlertTriangle className="w-6 h-6 text-destructive" />
+                           <span className="text-[8px] font-bold text-destructive uppercase tracking-widest px-2 text-center">Sync Error</span>
                         </div>
                       )}
                     </div>
