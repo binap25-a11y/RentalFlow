@@ -104,7 +104,6 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
 /**
  * 🖼️ User Asset Identifier
  * Strictly identifies assets that were intentionally uploaded.
- * Explicitly identifies and excludes known placeholder domains.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
@@ -133,22 +132,16 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
- * Prioritizes user-uploaded content over placeholders.
+ * STORAGE-FIRST POLICY: Prioritizes user-uploaded content and PURGES placeholders if real assets exist.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
-  // Check the gallery for any real user uploads first (User-First Policy)
-  if (imageUrls && Array.isArray(imageUrls)) {
-    const firstReal = imageUrls.find(u => isRealUserUpload(u));
-    if (firstReal) return firstReal;
-  }
+  const allPossible = [imageUrl, ...(imageUrls || [])].filter(isValidAssetUrl);
+  const realUploads = allPossible.filter(u => isRealUserUpload(u));
 
-  // If the primary image is a real user upload, use it
-  if (isRealUserUpload(imageUrl)) return imageUrl!;
-
-  // Fallback to existing valid URL if it's not a generic placeholder
-  if (isValidAssetUrl(imageUrl) && !imageUrl?.includes('picsum') && !imageUrl?.includes('unsplash')) return imageUrl!;
+  if (realUploads.length > 0) return realUploads[0];
   
-  return RENTALFLOW_NEUTRAL_FALLBACK;
+  const anyValid = allPossible.find(u => isValidAssetUrl(u));
+  return anyValid || RENTALFLOW_NEUTRAL_FALLBACK;
 }
 
 /**
@@ -167,7 +160,7 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
   const allAssets = Array.from(assets);
   const userUploads = allAssets.filter(isRealUserUpload);
   
-  // Premium Enforcement: If user has uploaded any actual images, only show those to keep it professional
+  // Premium Enforcement: Once a user has uploaded any actual images, we strictly purge all stock placeholders
   if (userUploads.length > 0) return userUploads;
   
   return allAssets.length > 0 ? allAssets : [RENTALFLOW_NEUTRAL_FALLBACK];

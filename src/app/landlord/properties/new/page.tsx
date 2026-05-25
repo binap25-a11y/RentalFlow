@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, CheckCircle2, AlertTriangle, Star } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
@@ -54,6 +54,7 @@ export default function NewPropertyPage() {
   /**
    * 🔄 Direct Transactional Persistence
    * Overwrites Firestore micro-seconds after binary delivery.
+   * Strictly purges placeholders if user uploads exist.
    */
   const performDirectSync = (currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId) return;
@@ -109,7 +110,7 @@ export default function NewPropertyPage() {
         );
         setLedger(updatedLedger);
         
-        // TRANSACTIONAL SYNC: Ensure database record exists and includes images
+        // TRANSACTIONAL SYNC: Ensure database record exists and includes images immediately
         performDirectSync(updatedLedger);
         toast({ title: "Visual Binary Synchronized" });
       } catch (err) {
