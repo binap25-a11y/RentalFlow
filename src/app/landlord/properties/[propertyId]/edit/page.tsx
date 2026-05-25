@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { supabase } from '@/lib/supabase';
-import { cn, isRealUserUpload, compressImage, withRetry, getResolvedGallery, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
+import { cn, isRealUserUpload, compressImage, withRetry, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -71,7 +71,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
       // SANITIZATION: Initialize ledger with ONLY real user uploads
-      // This prevents stock placeholders from being carried into the edit session.
       const initialLedger = (property.imageUrls || [])
         .filter(url => url && isRealUserUpload(url))
         .map(url => ({ 
@@ -163,6 +162,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
       const updated = [item, ...prev.filter(i => i.id !== id)];
+      // TRANSACTIONAL COMMIT FOR STAR SELECTION
       performDirectSync(updated);
       return updated;
     });

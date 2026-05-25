@@ -110,7 +110,7 @@ export async function compressImage(file: File, maxWidth = 800, quality = 0.75):
 /**
  * 🖼️ User Asset Identifier
  * Strictly identifies assets that were intentionally uploaded by the user to the cloud.
- * Excludes all stock domains and brand logo.
+ * Excludes all stock domains and brand identity icons.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
@@ -142,7 +142,7 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
- * USER-DATA ONLY POLICY: Prefers user photography. Returns fallback only if no data exists.
+ * USER-DATA ONLY POLICY: Returns user photography if any exists. Returns fallback only as a UI last resort.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
   // 1. If explicit Cover URL is a real user upload, it IS the identity.
@@ -150,7 +150,7 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
     return imageUrl;
   }
 
-  // 2. Otherwise, look for the first real upload in the gallery.
+  // 2. Otherwise, look for the first real upload in the gallery array.
   if (imageUrls && Array.isArray(imageUrls)) {
     const realGallery = imageUrls.filter(isRealUserUpload);
     if (realGallery.length > 0) return realGallery[0];
@@ -168,19 +168,25 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
   const assets = new Set<string>();
   
   // Add cover if it's a real user upload
-  if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) assets.add(imageUrl);
+  if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
+    assets.add(imageUrl);
+  }
   
   // Add gallery assets that are real user uploads
   if (imageUrls && Array.isArray(imageUrls)) {
     imageUrls.forEach(u => {
-      if (isValidAssetUrl(u) && isRealUserUpload(u)) assets.add(u);
+      if (isValidAssetUrl(u) && isRealUserUpload(u)) {
+        assets.add(u);
+      }
     });
   }
   
-  // Filter out ephemeral blobs for the detail view
+  // Filter out ephemeral blobs for the detail view to ensure high-fidelity cloud binaries only
   const userUploads = Array.from(assets).filter(u => !u.startsWith('blob:'));
   
-  if (userUploads.length > 0) return userUploads;
+  if (userUploads.length > 0) {
+    return userUploads;
+  }
   
   // UI Fallback (Never stored in DB)
   return [RENTALFLOW_NEUTRAL_FALLBACK];
