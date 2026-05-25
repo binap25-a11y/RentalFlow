@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useUser, useFirestore, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp, collection } from 'firebase/firestore';
 import { Card, CardFooter } from "@/components/ui/card";
@@ -52,9 +52,8 @@ export default function NewPropertyPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   /**
-   * 🔄 Direct Transactional Persistence
-   * Overwrites Firestore micro-seconds after binary delivery.
-   * Strictly purges placeholders if user uploads exist.
+   * 🔄 Direct Transactional Persistence (Autosave)
+   * Synchronizes visual state directly to Firestore to bypass component lag.
    */
   const performDirectSync = (currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId) return;
@@ -64,15 +63,14 @@ export default function NewPropertyPage() {
       .map(i => i.cloudUrl!);
 
     const userOnly = readyUrls.filter(isRealUserUpload);
-    const finalGallery = userOnly.length > 0 ? userOnly : readyUrls;
-    const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : BRAND_FALLBACK;
+    const primaryUrl = userOnly.length > 0 ? userOnly[0] : BRAND_FALLBACK;
 
     const propertyRef = doc(db, 'properties', propertyId);
     setDocumentNonBlocking(propertyRef, {
       id: propertyId,
       landlordId: user.uid,
       imageUrl: primaryUrl,
-      imageUrls: finalGallery,
+      imageUrls: userOnly,
       updatedAt: serverTimestamp(),
       memberIds: [user.uid]
     }, { merge: true });
@@ -82,15 +80,12 @@ export default function NewPropertyPage() {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user || !propertyId) return;
 
-    let updatedLedger = [...ledger];
-
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
-      const newItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
-      updatedLedger = [...updatedLedger, newItem];
-      setLedger(updatedLedger);
+      // 1. Instant Preview
+      setLedger(prev => [...prev, { id: tempId, previewUrl: localUrl, status: 'uploading' }]);
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -105,13 +100,16 @@ export default function NewPropertyPage() {
           return url;
         });
         
-        updatedLedger = updatedLedger.map(item => 
-          item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
-        );
-        setLedger(updatedLedger);
+        // 2. Finalize Binary
+        setLedger(prev => {
+          const updated = prev.map(item => 
+            item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
+          );
+          // 3. Direct Transactional Sync
+          performDirectSync(updated);
+          return updated;
+        });
         
-        // TRANSACTIONAL SYNC: Ensure database record exists and includes images immediately
-        performDirectSync(updatedLedger);
         toast({ title: "Visual Binary Synchronized" });
       } catch (err) {
         setLedger(prev => prev.map(item => 
@@ -124,18 +122,22 @@ export default function NewPropertyPage() {
   };
 
   const removeFromLedger = (id: string) => {
-    const updated = ledger.filter(i => i.id !== id);
-    setLedger(updated);
-    performDirectSync(updated);
+    setLedger(prev => {
+      const updated = prev.filter(i => i.id !== id);
+      performDirectSync(updated);
+      return updated;
+    });
     toast({ title: "Asset Removed" });
   };
 
   const setAsPrimary = (id: string) => {
-    const item = ledger.find(i => i.id === id);
-    if (!item) return;
-    const updated = [item, ...ledger.filter(i => i.id !== id)];
-    setLedger(updated);
-    performDirectSync(updated);
+    setLedger(prev => {
+      const item = prev.find(i => i.id === id);
+      if (!item) return prev;
+      const updated = [item, ...prev.filter(i => i.id !== id)];
+      performDirectSync(updated);
+      return updated;
+    });
     toast({ title: "Cover Identity Updated" });
   };
 
@@ -146,15 +148,13 @@ export default function NewPropertyPage() {
     const propertyRef = doc(db, 'properties', propertyId);
 
     try {
-      const finalImageUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
-      const userUploads = finalImageUrls.filter(isRealUserUpload);
-      const purgedGallery = userUploads.length > 0 ? userUploads : finalImageUrls;
-      const finalImageUrl = purgedGallery.length > 0 ? purgedGallery[0] : BRAND_FALLBACK;
+      const userOnly = ledger.filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl)).map(i => i.cloudUrl!);
+      const finalImageUrl = userOnly.length > 0 ? userOnly[0] : BRAND_FALLBACK;
 
       const serializableData = {
         id: propertyId, landlordId: user.uid, addressLine1: address,
         city, zipCode, rentAmount: parseFloat(rentAmount) || 0,
-        imageUrl: finalImageUrl, imageUrls: purgedGallery, propertyType,
+        imageUrl: finalImageUrl, imageUrls: userOnly, propertyType,
         numberOfBedrooms: parseInt(bedrooms, 10) || 1, numberOfBathrooms: parseInt(bathrooms, 10) || 1,
         description: description, isOccupied: false, memberIds: [user.uid]
       };
@@ -227,7 +227,7 @@ export default function NewPropertyPage() {
                       {item.status === 'uploading' && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-card/60 backdrop-blur-md gap-2">
                            <Loader2 className="w-6 h-6 animate-spin text-accent" />
-                           <span className="text-[8px] font-bold text-accent uppercase tracking-[0.2em]">Synchronizing...</span>
+                           <span className="text-[8px] font-bold text-accent uppercase tracking-[0.2em]">Syncing Binary...</span>
                         </div>
                       )}
                     </div>

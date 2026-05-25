@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use, useRef } from 'react';
+import { useState, useEffect, use, useMemo } from 'react';
 import { 
   useUser, 
   useFirestore, 
@@ -73,9 +73,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
+      // STORAGE-FIRST: Purge placeholders from initialization
       const gallery = getResolvedGallery(property.imageUrl, property.imageUrls);
-      const initialLedger = Array.from(new Set(gallery))
+      const initialLedger = gallery
         .filter(url => url && (url.startsWith('http') || url.startsWith('blob:')))
+        .filter(isRealUserUpload) // Strictly exclude placeholders from ledger
         .map(url => ({ 
           id: Math.random().toString(36).substring(7), 
           previewUrl: url, 
@@ -89,9 +91,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   }, [property, isInitialized]);
 
   /**
-   * 🔄 Direct Transactional Persistence (Instant Sync)
-   * Synchronizes visual state to Firestore micro-seconds after binary stabilization.
-   * Strictly purges placeholders if real user uploads exist.
+   * 🔄 Direct Transactional Persistence (Autosave)
+   * Synchronizes visual state directly to Firestore to bypass state lag.
    */
   const performDirectSync = (currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId || !propertyRef) return;
@@ -101,19 +102,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .map(i => i.cloudUrl!);
 
     const userOnly = readyUrls.filter(isRealUserUpload);
-    const finalGallery = userOnly.length > 0 ? userOnly : readyUrls;
-    const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : BRAND_FALLBACK;
-
-    // Local ledger cleanup: Remove placeholders if real uploads exist
-    if (userOnly.length > 0) {
-      setLedger(prev => prev.filter(item => 
-        item.status === 'uploading' || (item.cloudUrl && isRealUserUpload(item.cloudUrl))
-      ));
-    }
+    const primaryUrl = userOnly.length > 0 ? userOnly[0] : BRAND_FALLBACK;
 
     updateDocumentNonBlocking(propertyRef, {
       imageUrl: primaryUrl,
-      imageUrls: finalGallery,
+      imageUrls: userOnly,
       updatedAt: serverTimestamp(),
     });
   };
@@ -122,15 +115,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
-    let updatedLedger = [...ledger];
-
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
-      const newItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
-      updatedLedger = [...updatedLedger, newItem];
-      setLedger(updatedLedger);
+      // 1. Instant Preview
+      setLedger(prev => [...prev, { id: tempId, previewUrl: localUrl, status: 'uploading' }]);
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -145,12 +135,16 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           return url;
         });
         
-        updatedLedger = updatedLedger.map(item => 
-          item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
-        );
+        // 2. Finalize Binary
+        setLedger(prev => {
+          const updated = prev.map(item => 
+            item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
+          );
+          // 3. Direct Transactional Sync to Firestore
+          performDirectSync(updated);
+          return updated;
+        });
         
-        // TRANSACTIONAL SYNC: Update Firestore immediately to lock in the cover image
-        performDirectSync(updatedLedger);
         toast({ title: "Visual Binary Synchronized" });
       } catch (err) {
         setLedger(prev => prev.map(item => 
@@ -163,18 +157,22 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   };
 
   const removeFromLedger = (id: string) => {
-    const updated = ledger.filter(i => i.id !== id);
-    setLedger(updated);
-    performDirectSync(updated);
+    setLedger(prev => {
+      const updated = prev.filter(i => i.id !== id);
+      performDirectSync(updated);
+      return updated;
+    });
     toast({ title: "Asset Removed" });
   };
 
   const setAsPrimary = (id: string) => {
-    const item = ledger.find(i => i.id === id);
-    if (!item) return;
-    const updated = [item, ...ledger.filter(i => i.id !== id)];
-    setLedger(updated);
-    performDirectSync(updated);
+    setLedger(prev => {
+      const item = prev.find(i => i.id === id);
+      if (!item) return prev;
+      const updated = [item, ...prev.filter(i => i.id !== id)];
+      performDirectSync(updated);
+      return updated;
+    });
     toast({ title: "Cover Identity Updated" });
   };
 
@@ -183,21 +181,19 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     if (!user || !db || !propertyRef) return;
     setIsSaving(true);
     try {
-      const readyUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
-      const userOnly = readyUrls.filter(isRealUserUpload);
-      const purgedGallery = userOnly.length > 0 ? userOnly : readyUrls;
-      const primaryUrl = purgedGallery.length > 0 ? purgedGallery[0] : BRAND_FALLBACK;
+      const userOnly = ledger.filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl)).map(i => i.cloudUrl!);
+      const primaryUrl = userOnly.length > 0 ? userOnly[0] : BRAND_FALLBACK;
 
       const serializableData = {
         id: propertyId, landlordId: user.uid, addressLine1: address,
         city, zipCode, rentAmount: parseFloat(rentAmount) || 0,
-        imageUrl: primaryUrl, imageUrls: purgedGallery, propertyType,
+        imageUrl: primaryUrl, imageUrls: userOnly, propertyType,
         numberOfBedrooms: parseInt(bedrooms, 10) || 1, numberOfBathrooms: parseInt(bathrooms, 10) || 1,
         description: description, isOccupied: property?.isOccupied || false,
         memberIds: property?.memberIds || [user.uid]
       };
 
-      setDocumentNonBlocking(propertyRef, { ...serializableData, updatedAt: serverTimestamp() }, { merge: true });
+      updateDocumentNonBlocking(propertyRef, { ...serializableData, updatedAt: serverTimestamp() });
       await syncPropertyToDb(serializableData);
       toast({ title: "Portfolio Persistent Sync Complete" });
       router.push(`/landlord/properties/${propertyId}`);
@@ -263,7 +259,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       {item.status === 'uploading' && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-card/60 backdrop-blur-md gap-2">
                            <Loader2 className="w-6 h-6 animate-spin text-accent" />
-                           <span className="text-[8px] font-bold text-accent uppercase tracking-[0.2em]">Synchronizing...</span>
+                           <span className="text-[8px] font-bold text-accent uppercase tracking-[0.2em]">Syncing Binary...</span>
                         </div>
                       )}
                     </div>

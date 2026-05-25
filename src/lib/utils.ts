@@ -30,16 +30,16 @@ export async function withRetry<T>(
 
 /**
  * 🖼️ Resilient Mobile Optimization Engine
- * Converts HEIC/PNG/TIFF to High-Quality JPEG (1000px max).
+ * Optimized for high-speed binary delivery (800px max).
  */
-export async function compressImage(file: File, maxWidth = 1000, quality = 0.6): Promise<Blob | File> {
-  if (!file.type.startsWith('image/') || file.size < 1024 * 300) {
+export async function compressImage(file: File, maxWidth = 800, quality = 0.6): Promise<Blob | File> {
+  if (!file.type.startsWith('image/') || file.size < 1024 * 200) {
     return file;
   }
 
   try {
     return await new Promise((resolve) => {
-      const timeout = setTimeout(() => resolve(file), 3000);
+      const timeout = setTimeout(() => resolve(file), 2000);
       const objectUrl = URL.createObjectURL(file);
       const img = new Image();
       
@@ -133,21 +133,22 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
- * STORAGE-FIRST POLICY: Prioritizes user-uploaded content and PURGES placeholders if real assets exist.
+ * STORAGE-FIRST POLICY: Prioritizes user uploads and STRICTLY PURGES placeholders if real assets exist.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
   const allPossible = [imageUrl, ...(imageUrls || [])].filter(isValidAssetUrl);
-  const realUploads = allPossible.filter(u => isRealUserUpload(u));
+  const realUploads = allPossible.filter(isRealUserUpload);
 
   if (realUploads.length > 0) return realUploads[0];
   
+  // If no user uploads exist, we still return the valid URL unless it's a known stock placeholder we want to ignore
   const anyValid = allPossible.find(u => isValidAssetUrl(u));
   return anyValid || RENTALFLOW_NEUTRAL_FALLBACK;
 }
 
 /**
  * 🖼️ Synchronized Gallery Resolver
- * STORAGE-FIRST POLICY: If ANY user uploads exist, we strictly purge ALL original placeholders.
+ * STORAGE-FIRST POLICY: If ANY user uploads exist, we strictly purge ALL original stock placeholders.
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
@@ -164,5 +165,8 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
   // Premium Enforcement: Once a user has uploaded any actual images, we strictly purge all stock placeholders
   if (userUploads.length > 0) return userUploads;
   
-  return allAssets.length > 0 ? allAssets : [RENTALFLOW_NEUTRAL_FALLBACK];
+  // If no real uploads, return original assets only if they aren't stock placeholders
+  const nonStockAssets = allAssets.filter(a => !a.includes('unsplash') && !a.includes('picsum'));
+  
+  return nonStockAssets.length > 0 ? nonStockAssets : [RENTALFLOW_NEUTRAL_FALLBACK];
 }
