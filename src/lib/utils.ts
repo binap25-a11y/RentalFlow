@@ -34,14 +34,12 @@ export async function withRetry<T>(
  * SILENT FALLBACK: If RAM is exhausted, returns original file.
  */
 export async function compressImage(file: File, maxWidth = 1000, quality = 0.6): Promise<Blob | File> {
-  // Bypasses small files or non-images
   if (!file.type.startsWith('image/') || file.size < 1024 * 300) {
     return file;
   }
 
   try {
     return await new Promise((resolve) => {
-      // 3-second RAM safety timeout
       const timeout = setTimeout(() => resolve(file), 3000);
       const objectUrl = URL.createObjectURL(file);
       const img = new Image();
@@ -81,7 +79,6 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
           canvas.toBlob(
             (blob) => {
               clearTimeout(timeout);
-              // Only return compressed if it actually saved space
               resolve(blob && blob.size < file.size ? blob : file);
             },
             'image/jpeg',
@@ -112,6 +109,12 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   const lowerUrl = url.toLowerCase();
+  
+  // Explicitly identify and exclude stock placeholders
+  if (lowerUrl.includes('picsum.photos') || lowerUrl.includes('unsplash.com') || lowerUrl.includes('placehold.co')) {
+    return false;
+  }
+
   return lowerUrl.startsWith('blob:') || 
          lowerUrl.includes('supabase.co') || 
          lowerUrl.includes('supabase.in') ||
@@ -138,7 +141,7 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
     if (firstReal) return firstReal;
   }
 
-  // If no user uploads, show existing valid URL or brand identity
+  // If no user uploads exist, show existing valid URL or brand identity
   if (isValidAssetUrl(imageUrl) && imageUrl !== RENTALFLOW_NEUTRAL_FALLBACK) return imageUrl!;
   
   return RENTALFLOW_NEUTRAL_FALLBACK;
@@ -146,7 +149,7 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
 
 /**
  * 🖼️ Synchronized Gallery Resolver
- * If any user uploads exist, we purge ALL placeholders to satisfy the "replace placeholder" requirement.
+ * STORAGE-FIRST POLICY: If ANY user uploads exist, we strictly purge ALL original placeholders.
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
@@ -160,7 +163,8 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
   const allAssets = Array.from(assets);
   const userUploads = allAssets.filter(isRealUserUpload);
   
-  // Storage-First Policy: If user has uploaded any actual images, only show those.
+  // Premium Enforcement: If user has uploaded any actual images, only show those. 
+  // Never "mix" user photos with stock placeholders.
   if (userUploads.length > 0) return userUploads;
   
   return allAssets.length > 0 ? allAssets : [RENTALFLOW_NEUTRAL_FALLBACK];

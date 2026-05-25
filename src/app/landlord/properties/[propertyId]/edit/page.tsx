@@ -95,7 +95,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
   }, [property, isInitialized]);
 
-  // INSTANT PERSISTENT SYNC: Updates Firestore immediately when an image is ready
+  /**
+   * 🔄 Instant Persistent Sync
+   * Updates the Firestore database immediately upon successful binary delivery to Supabase.
+   * This ensures changes are locked in even if the user diverts from the page before saving.
+   */
   const syncVisualsToFirestore = (currentLedger: LedgerItem[]) => {
     if (!propertyRef) return;
     
@@ -105,7 +109,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     if (readyCloudUrls.length === 0) return;
 
-    // Storage-First Policy: Purge placeholders if user photography exists
+    // Premium Sanitization: Strictly purge placeholders once user photography is present.
     const userUploads = readyCloudUrls.filter(u => isRealUserUpload(u));
     const finalGallery = userUploads.length > 0 ? userUploads : readyCloudUrls;
     const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
@@ -163,7 +167,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         setLedger(finalizedLedger);
         latestLedgerRef.current = finalizedLedger;
         
-        // LOCK IN CHANGES IMMEDIATELY
+        // LOCK IN CHANGES TRANSACTIONALLY
         syncVisualsToFirestore(finalizedLedger);
         
         toast({ title: "Visual Binary Synchronized" });

@@ -49,7 +49,6 @@ export default function NewPropertyPage() {
 
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
-      // INSTANT PREVIEW: Local blob for mobile responsiveness
       const localUrl = URL.createObjectURL(file);
       
       const newItem: LedgerItem = {
@@ -64,7 +63,6 @@ export default function NewPropertyPage() {
         const optimizedBlob = await compressImage(file);
         const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
-        // DIRECT SYNC: Bypassing algorithm collisions
         const publicUrl = await withRetry(async () => {
           const { error: uploadError } = await supabase.storage
             .from('property-images')
@@ -93,10 +91,6 @@ export default function NewPropertyPage() {
   };
 
   const removeFromLedger = (id: string) => {
-    const item = ledger.find(i => i.id === id);
-    if (item?.previewUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(item.previewUrl);
-    }
     setLedger(prev => prev.filter(i => i.id !== id));
   };
 
@@ -115,7 +109,7 @@ export default function NewPropertyPage() {
 
     const finalImageUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
     
-    // STORAGE-FIRST SYNC: Ensure placeholders are purged if user uploads exist
+    // Premium Enforcement: Purge all placeholders if user uploads exist.
     const userUploads = finalImageUrls.filter(isRealUserUpload);
     const purgedGallery = userUploads.length > 0 ? userUploads : finalImageUrls;
     const finalImageUrl = purgedGallery.length > 0 ? purgedGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
