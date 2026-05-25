@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase';
 /**
  * 🛠️ Binary Synchronization Engine
  * Converts FormData binaries into a stable Buffer for resilient mobile delivery.
+ * NOTE: Next.js 15 strict mode requires "use server" files to export ONLY async functions.
  */
 export async function uploadToSupabase(
   formData: FormData,

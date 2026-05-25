@@ -29,7 +29,7 @@ import {
   Check, X, AlertTriangle, Info, Trash2, Edit3, PlayCircle, Camera, Clock
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import { cn, compressImage } from "@/lib/utils";
 import { generateInspectionReport } from "@/ai/flows/generate-inspection-report";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 import Image from 'next/image';
@@ -136,11 +136,14 @@ export default function InspectionsPage() {
       [itemId]: { ...prev[itemId], isSyncing: true }
     }));
 
-    const formData = new FormData();
-    formData.append('file', file);
-    const path = `audits/${user.uid}/${activeInspection.id}/${itemId.replace(/\s+/g, '_')}_${Date.now()}`;
-    
     try {
+      // 🛠️ Mobile Resilience: Compress massive mobile photo before binary delivery
+      const compressedBlob = await compressImage(file);
+      const formData = new FormData();
+      formData.append('file', compressedBlob, `audit_compressed_${file.name}`);
+      
+      const path = `audits/${user.uid}/${activeInspection.id}/${itemId.replace(/\s+/g, '_')}_${Date.now()}`;
+      
       const res = await uploadToSupabase(formData, 'property-images', path);
       if (res.success && res.url) {
         setStructuredFindings(prev => ({
@@ -149,14 +152,20 @@ export default function InspectionsPage() {
         }));
         toast({ title: "Evidence Synchronized" });
       } else {
-        throw new Error(res.error);
+        throw new Error(res.error || "Upload failure.");
       }
     } catch (err: any) {
       setStructuredFindings(prev => ({
         ...prev,
         [itemId]: { ...prev[itemId], isSyncing: false }
       }));
-      toast({ variant: "destructive", title: "Sync Failed", description: err.message });
+      toast({ 
+        variant: "destructive", 
+        title: "Mobile Sync Failed", 
+        description: err.message?.includes('fetch') 
+          ? "Network Interrupt: Please retry binary capture." 
+          : err.message || "Binary sync error." 
+      });
     }
   };
 
@@ -195,7 +204,6 @@ export default function InspectionsPage() {
     const { jsPDF } = await import("jspdf");
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
-    const today = format(new Date(), 'PPp');
     
     pdf.setFillColor(31, 41, 55);
     pdf.rect(0, 0, pageWidth, 40, 'F');
@@ -261,7 +269,7 @@ export default function InspectionsPage() {
           <CardContent className="p-8 space-y-6">
             <div className="space-y-2 text-left">
               <Label className="text-xs uppercase font-bold text-muted-foreground font-headline tracking-widest opacity-60">Select Asset</Label>
-              <select className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow font-bold text-foreground" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
+              <select className="flex h-11 w-full rounded-xl border-none bg-muted/10 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow font-bold text-foreground" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
                 <option value="">Choose a property...</option>
                 {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
               </select>

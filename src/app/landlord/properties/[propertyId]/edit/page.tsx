@@ -22,7 +22,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { cn, isUserUploadedAsset } from "@/lib/utils";
+import { cn, isUserUploadedAsset, compressImage } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -102,11 +102,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const file = files[i];
       const itemId = newItems[i].id;
       
-      const formData = new FormData();
-      formData.append('file', file);
-      const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
-      
       try {
+        // 🛠️ Mobile Resilience: Compress before binary delivery
+        const compressedBlob = await compressImage(file);
+        const formData = new FormData();
+        formData.append('file', compressedBlob, `compressed_${file.name}`);
+        
+        const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+        
         const res = await uploadToSupabase(formData, 'property-images', path);
         if (res.success && res.url) {
           setLedger(prev => prev.map(item => 
@@ -119,7 +122,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         setLedger(prev => prev.map(item => 
           item.id === itemId ? { ...item, status: 'error' } : item
         ));
-        toast({ variant: "destructive", title: "Mobile Sync Failed", description: err.message || "Binary sync error." });
+        toast({ 
+          variant: "destructive", 
+          title: "Mobile Sync Failed", 
+          description: err.message?.includes('fetch') 
+            ? "Network Interrupt: Please retry visual capture." 
+            : err.message || "Binary sync error." 
+        });
       }
     }
   };
@@ -209,7 +218,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       <Card className="border-none shadow-sm overflow-hidden rounded-[2.5rem] bg-card ring-1 ring-border">
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-1 lg:grid-cols-2">
-            <div className="p-8 bg-muted/20 border-r border-border">
+            <div className="p-8 bg-muted/10 border-r border-border">
               <div className="flex justify-between items-center mb-6">
                 <Label className="font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground opacity-60 font-headline">Visual Inventory</Label>
                 <label htmlFor="image-input" className="h-10 rounded-xl font-bold text-[10px] uppercase font-headline cursor-pointer px-5 bg-primary text-primary-foreground shadow-lg flex items-center hover:opacity-90 transition-all">
@@ -231,24 +240,25 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                         <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500 text-white p-2 rounded-xl shadow-lg hover:bg-red-600"><X className="w-3.5 h-3.5" /></button>
                       </div>
                       {item.status === 'uploading' && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-sm">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-sm gap-2">
                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                           <span className="text-[8px] font-bold text-primary uppercase tracking-[0.2em]">Syncing...</span>
                         </div>
                       )}
                       {item.status === 'ready' && (
-                        <div className="absolute bottom-2 right-2 bg-emerald-500 text-white p-1 rounded-full shadow-lg">
+                        <div className="absolute bottom-2 right-2 bg-emerald-500 text-white p-1 rounded-full shadow-lg animate-in zoom-in duration-300">
                            <CheckCircle2 className="w-3 h-3" />
                         </div>
                       )}
                     </div>
                   ))}
-                  <label htmlFor="image-input" className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-background flex flex-col items-center justify-center gap-2 group cursor-pointer shadow-inner">
+                  <label htmlFor="image-input" className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-muted/5 flex flex-col items-center justify-center gap-2 group cursor-pointer shadow-inner">
                     <Plus className="w-6 h-6 text-primary/20 group-hover:text-primary/40" />
                     <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">Add More</span>
                   </label>
                 </div>
               </ScrollArea>
-              <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
+              <input id="image-input" type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={handleImageChange} />
             </div>
 
             <div className="p-10 space-y-8">

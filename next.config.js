@@ -24,7 +24,9 @@ const nextConfig = {
         "*.firebasestorage.app",
         "*.vercel.app",
         "*.google.com",
-        "https://*.google.com"
+        "https://*.google.com",
+        "*.web.app",
+        "*.firebaseapp.com"
       ]
     }
   },
