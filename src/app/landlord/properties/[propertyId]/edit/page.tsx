@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect, use, useMemo } from 'react';
+import { useState, useEffect, use, useMemo, useCallback } from 'react';
 import { 
   useUser, 
   useFirestore, 
@@ -70,7 +71,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // SANITIZATION: Initialize ledger with ONLY real user uploads
       const initialLedger = (property.imageUrls || [])
         .filter(url => url && isRealUserUpload(url))
         .map(url => ({ 
@@ -86,24 +86,25 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   }, [property, isInitialized]);
 
   /**
-   * 🔄 Instant Transactional Persistence
-   * Directly updates Firestore the microsecond a binary upload completes.
-   * This ensures visuals are locked in even if the user navigates away.
+   * 🔄 Instant Transactional Persistence (Effect-Based)
+   * This effect watches the ledger and commits changes to Firestore the microsecond
+   * an upload completes or the primary image order changes.
    */
-  const performDirectSync = (currentLedger: LedgerItem[]) => {
-    if (!db || !user || !propertyId || !propertyRef) return;
+  useEffect(() => {
+    if (!db || !user || !propertyId || !propertyRef || !isInitialized) return;
 
-    const userOnly = currentLedger
+    const userOnly = ledger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // TRANSACTIONAL AUTO-SAVE: Visual identity is locked in background
+    // Transactional Autosave: Always prioritize user data and lock it into Firestore.
+    // If no user photography exists, imageUrl becomes null (UI will resolve fallback).
     updateDocumentNonBlocking(propertyRef, {
       imageUrl: userOnly.length > 0 ? userOnly[0] : null,
       imageUrls: userOnly,
       updatedAt: serverTimestamp(),
     });
-  };
+  }, [ledger, db, user, propertyId, propertyRef, isInitialized]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -130,30 +131,21 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           return url;
         });
         
-        setLedger(prev => {
-          const updated = prev.map(item => 
-            item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
-          );
-          // INSTANT TRANSACTIONAL SYNC
-          performDirectSync(updated);
-          return updated;
-        });
+        setLedger(prev => prev.map(item => 
+          item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
+        ));
       } catch (err) {
         setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
       }
     });
 
     await Promise.all(uploadPromises);
-    toast({ title: "Visual Binary Sync Complete" });
+    toast({ title: "Gallery Updated" });
     e.target.value = '';
   };
 
   const removeFromLedger = (id: string) => {
-    setLedger(prev => {
-      const updated = prev.filter(i => i.id !== id);
-      performDirectSync(updated);
-      return updated;
-    });
+    setLedger(prev => prev.filter(i => i.id !== id));
     toast({ title: "Asset Removed" });
   };
 
@@ -161,10 +153,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     setLedger(prev => {
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
-      const updated = [item, ...prev.filter(i => i.id !== id)];
-      // TRANSACTIONAL COMMIT FOR STAR SELECTION
-      performDirectSync(updated);
-      return updated;
+      return [item, ...prev.filter(i => i.id !== id)];
     });
     toast({ title: "Cover Identity Updated" });
   };
@@ -212,7 +201,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </div>
         </div>
         <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[9px]">
-          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Instant Sync Enabled
+          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Instant Sync Active
         </Badge>
       </div>
 

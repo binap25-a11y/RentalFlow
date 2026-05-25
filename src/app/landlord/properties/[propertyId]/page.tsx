@@ -274,7 +274,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" 
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = RENTALFLOW_NEUTRAL_FALLBACK;
+                          if (target.src !== RENTALFLOW_NEUTRAL_FALLBACK) {
+                             target.src = RENTALFLOW_NEUTRAL_FALLBACK;
+                          }
                         }}
                       />
                       {index === 0 && (
