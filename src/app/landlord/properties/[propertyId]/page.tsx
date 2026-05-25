@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, use, useMemo, useEffect } from 'react';
@@ -230,26 +231,28 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-12 bg-background">
-      <div className="flex items-start gap-6 text-left border-b border-white/5 pb-10">
-        <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-2xl hover:bg-primary/5 transition-colors h-12 w-12 border border-white/5 shrink-0 shadow-sm mt-1">
-          <ArrowLeft className="w-6 h-6" />
-        </Button>
-        <div className="min-w-0 flex-1">
-          <h1 className="text-3xl md:text-5xl font-headline font-bold text-foreground tracking-tight truncate">{property.addressLine1}</h1>
-          <p className="text-muted-foreground flex items-center font-medium font-body text-xs md:text-lg mt-2 opacity-60">
-            <MapPin className="w-4 h-4 md:w-5 md:h-5 mr-2 text-accent" /> {property.city}, {property.zipCode}
-          </p>
-          
-          <div className="flex flex-wrap gap-4 mt-8">
-            <Button variant="outline" onClick={downloadRentStatement} className="rounded-xl font-bold h-12 border-border bg-card shadow-lg font-headline text-[10px] uppercase tracking-widest px-8 hover:bg-white/5 transition-all">
-              <Download className="w-4 h-4 mr-2 text-accent" /> Rent Statement
-            </Button>
-            <Button variant="outline" className="rounded-xl font-bold h-12 border-border bg-card shadow-lg font-headline text-[10px] uppercase tracking-widest px-8 hover:bg-white/5 transition-all" asChild>
-              <Link href={`/landlord/properties/${propertyId}/edit`}>
-                <Edit3 className="w-4 h-4 mr-2 text-accent" /> Modify Specs
-              </Link>
-            </Button>
+      <div className="flex flex-col gap-6 text-left border-b border-white/5 pb-10">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-2xl hover:bg-primary/5 transition-colors h-10 w-10 border border-white/5 shrink-0 shadow-sm">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-3xl md:text-5xl font-headline font-bold text-foreground tracking-tight truncate">{property.addressLine1}</h1>
+            <p className="text-muted-foreground flex items-center font-medium font-body text-xs md:text-lg mt-1 opacity-60">
+              <MapPin className="w-4 h-4 md:w-5 md:h-5 mr-2 text-accent" /> {property.city}, {property.zipCode}
+            </p>
           </div>
+        </div>
+        
+        <div className="flex flex-wrap gap-4 pl-14">
+          <Button variant="outline" onClick={downloadRentStatement} className="rounded-xl font-bold h-11 border-border bg-card shadow-lg font-headline text-[10px] uppercase tracking-widest px-8 hover:bg-white/5 transition-all">
+            <Download className="w-4 h-4 mr-2 text-accent" /> Rent Statement
+          </Button>
+          <Button variant="outline" className="rounded-xl font-bold h-11 border-border bg-card shadow-lg font-headline text-[10px] uppercase tracking-widest px-8 hover:bg-white/5 transition-all" asChild>
+            <Link href={`/landlord/properties/${propertyId}/edit`}>
+              <Edit3 className="w-4 h-4 mr-2 text-accent" /> Modify Specs
+            </Link>
+          </Button>
         </div>
       </div>
 

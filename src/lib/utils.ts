@@ -1,3 +1,4 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -103,7 +104,7 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.85)
 /**
  * 🖼️ User Asset Identifier
  * Strictly identifies assets that were intentionally uploaded by the user to cloud storage.
- * DECISIVELY REJECTS all known stock image and placeholder domains.
+ * DECISIVELY REJECTS all known stock image and placeholder domains to prevent "Wrong Image" persistence.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
@@ -117,7 +118,7 @@ export function isRealUserUpload(url: any): boolean {
     'placehold.co',
     'placeholder.com',
     'pexels.com',
-    'photo-1486406146926-c627a92ad1ab', // skyscraper
+    'photo-1486406146926-c627a92ad1ab', // corporate skyscraper
     'photo-1560518883-ce09059eeffa',   // brand logo
     'photo-1613490493576-7fde63acd811'    // residence placeholder
   ];
@@ -125,8 +126,8 @@ export function isRealUserUpload(url: any): boolean {
   if (forbiddenKeywords.some(k => u.includes(k))) return false;
   if (url === RENTALFLOW_LOGO_URL) return false;
 
-  // DECISIVE WHITELIST: Only Supabase or local blobs are authorized as "User-Data"
-  return u.includes('supabase.co') || u.startsWith('blob:') || u.includes('firebasestorage.app') || u.includes('firebasestorage.googleapis.com');
+  // DECISIVE WHITELIST: Only Supabase, Firebase, or local blobs are authorized
+  return u.includes('supabase.co') || u.includes('supabase.app') || u.startsWith('blob:') || u.includes('firebasestorage.app') || u.includes('firebasestorage.googleapis.com');
 }
 
 /**
@@ -138,7 +139,7 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
- * USER-DATA ONLY POLICY: Returns user photography if any exists. Returns null otherwise to trigger UI icons.
+ * USER-DATA ONLY POLICY: Returns user photography if any exists. Returns null otherwise.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string | null {
   if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
