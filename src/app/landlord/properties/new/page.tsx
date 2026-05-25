@@ -48,8 +48,8 @@ export default function NewPropertyPage() {
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
 
   /**
-   * 🔄 Event-Driven Visual Sync
-   * Commits visual state to Firestore immediately.
+   * 🔄 Linear Synchronization Engine
+   * Directly commits visual state to Firestore outside of the React update cycle.
    */
   const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId) return;
@@ -111,21 +111,17 @@ export default function NewPropertyPage() {
   };
 
   const removeFromLedger = (id: string) => {
-    setLedger(prev => {
-      const next = prev.filter(i => i.id !== id);
-      syncVisualsToFirestore(next);
-      return next;
-    });
+    const next = ledger.filter(i => i.id !== id);
+    setLedger(next);
+    syncVisualsToFirestore(next);
   };
 
   const setAsPrimary = (id: string) => {
-    setLedger(prev => {
-      const item = prev.find(i => i.id === id);
-      if (!item) return prev;
-      const next = [item, ...prev.filter(i => i.id !== id)];
-      syncVisualsToFirestore(next);
-      return next;
-    });
+    const item = ledger.find(i => i.id === id);
+    if (!item) return;
+    const next = [item, ...ledger.filter(i => i.id !== id)];
+    setLedger(next);
+    syncVisualsToFirestore(next);
     toast({ title: "Identity Updated", description: "Primary cover designated." });
   };
 

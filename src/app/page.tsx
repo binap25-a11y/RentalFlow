@@ -57,17 +57,16 @@ export default function LandingPage() {
 
   /**
    * 🖼️ Professional Identity Resolution
-   * Strictly prioritizes high-fidelity user photography for the hero experience.
+   * Uses standard getResolvedImageUrl to mirror the Inventory identity perfectly.
    */
   const heroImage = useMemo(() => {
     if (properties && properties.length > 0) {
-      const withImages = properties.filter(p => p.imageUrl && isRealUserUpload(p.imageUrl));
-      if (withImages.length > 0) {
-        const sorted = [...withImages].sort((a, b) => 
-          (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)
-        );
-        return sorted[0].imageUrl;
-      }
+      // Sort by most recently updated to feature the latest work
+      const sorted = [...properties].sort((a, b) => 
+        (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)
+      );
+      // Resolve the identity of the most recently edited asset
+      return getResolvedImageUrl(sorted[0].imageUrl, sorted[0].imageUrls);
     }
     return RENTALFLOW_NEUTRAL_FALLBACK;
   }, [properties]);

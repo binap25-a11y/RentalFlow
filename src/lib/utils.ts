@@ -130,6 +130,7 @@ export function isRealUserUpload(url: any): boolean {
   
   // Explicitly exclude brand identity assets from property ledgers
   if (url === RENTALFLOW_LOGO_URL || url === RENTALFLOW_NEUTRAL_FALLBACK) return false;
+  if (u.includes('logo') || u.includes('fallback') || u.includes('placeholder')) return false;
 
   // Valid: Supabase storage, Firebase storage, local blob previews, or data URIs
   return true;

@@ -34,7 +34,7 @@ type LedgerItem = {
 /**
  * 🛠️ Asset Configuration Hub
  * High-fidelity property modification hub.
- * Implements Event-Driven Transactional Persistence for visuals.
+ * Implements Linear Event-Driven Persistence for visuals.
  */
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -97,9 +97,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   }, [property, isInitialized]);
 
   /**
-   * 🔄 Event-Driven Persistence Engine
-   * Directly synchronizes visual state to Firestore.
-   * Called immediately upon upload completion, removal, or primary cover selection.
+   * 🔄 Linear Synchronization Engine
+   * Directly commits visual state to Firestore outside of the React update cycle.
+   * Ensures every change is transactional and reflected instantly across hubs.
    */
   const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
@@ -144,6 +144,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           const next = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
           );
+          // Linear Sync: Pass the calculated next state directly
           syncVisualsToFirestore(next);
           return next;
         });
@@ -156,21 +157,17 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   };
 
   const removeFromLedger = (id: string) => {
-    setLedger(prev => {
-      const next = prev.filter(i => i.id !== id);
-      syncVisualsToFirestore(next);
-      return next;
-    });
+    const next = ledger.filter(i => i.id !== id);
+    setLedger(next);
+    syncVisualsToFirestore(next);
   };
 
   const setAsPrimary = (id: string) => {
-    setLedger(prev => {
-      const item = prev.find(i => i.id === id);
-      if (!item) return prev;
-      const next = [item, ...prev.filter(i => i.id !== id)];
-      syncVisualsToFirestore(next);
-      return next;
-    });
+    const item = ledger.find(i => i.id === id);
+    if (!item) return;
+    const next = [item, ...ledger.filter(i => i.id !== id)];
+    setLedger(next);
+    syncVisualsToFirestore(next);
     toast({ title: "Identity Updated", description: "Designated primary cover." });
   };
 
