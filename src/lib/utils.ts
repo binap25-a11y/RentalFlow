@@ -119,10 +119,10 @@ export function isRealUserUpload(url: any): boolean {
     'pexels.com'
   ];
 
-  // Specific Stock Identifiers to exclude from the professional ledger
+  // Specific Stock Identifiers (Skyscraper) to exclude from the professional ledger
   const forbiddenIds = [
-    'photo-1486406146926-c627a92ad1ab', // corporate skyscraper
-    'photo-1560518883-ce09059eeffa'    // logo
+    'photo-1486406146926-c627a92ad1ab', 
+    'photo-1560518883-ce09059eeffa'
   ];
 
   if (forbiddenDomains.some(d => u.includes(d))) return false;
