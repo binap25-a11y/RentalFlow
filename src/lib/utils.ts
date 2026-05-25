@@ -116,20 +116,21 @@ export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   const u = url.toLowerCase();
   
-  // Strict check: Must not be a placeholder domain
-  if (
-    u.includes('images.unsplash.com') || 
-    u.includes('picsum.photos') || 
-    u.includes('placehold.co') ||
-    u.includes('placeholder.com') ||
-    url === RENTALFLOW_LOGO_URL ||
-    url === RENTALFLOW_NEUTRAL_FALLBACK
-  ) {
-    return false;
-  }
+  // List of forbidden partial matches (known placeholders)
+  const forbidden = [
+    'images.unsplash.com',
+    'picsum.photos',
+    'placehold.co',
+    'placeholder.com'
+  ];
+
+  if (forbidden.some(f => u.includes(f))) return false;
+  
+  // Explicitly exclude brand identity assets from property ledgers
+  if (url === RENTALFLOW_LOGO_URL || url === RENTALFLOW_NEUTRAL_FALLBACK) return false;
 
   // Valid: Supabase storage, Firebase storage, local blob previews, or data URIs
-  return u.startsWith('blob:') || u.includes('supabase.co') || u.includes('firebasestorage') || u.startsWith('data:image/');
+  return true;
 }
 
 /**
