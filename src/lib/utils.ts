@@ -8,13 +8,13 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * 🖼️ High-Fidelity Professional Fallback
  * Used ONLY when a property has zero user-uploaded photography.
- * Updated to a neutral dark architecture shot to distinguish from the Brand Logo.
+ * This is a neutral architectural shot, NOT the brand logo.
  */
 export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1200&auto=format&fit=crop";
 
 /**
  * 🏢 Brand Identity Asset
- * Used EXCLUSIVELY for the company logo and authentication branding.
+ * Used EXCLUSIVELY for the company logo and authentication branding (House & Keys).
  */
 export const RENTALFLOW_LOGO_URL = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=512&h=512&auto=format&fit=crop";
 
@@ -37,7 +37,6 @@ export async function withRetry<T>(
 
 /**
  * 🖼️ Resilient Mobile Optimization Engine
- * Optimized for high-speed binary delivery (800px max) with premium clarity.
  */
 export async function compressImage(file: File, maxWidth = 800, quality = 0.75): Promise<Blob | File> {
   if (!file.type.startsWith('image/') || file.size < 1024 * 100) {
@@ -111,13 +110,13 @@ export async function compressImage(file: File, maxWidth = 800, quality = 0.75):
 /**
  * 🖼️ User Asset Identifier
  * Strictly identifies assets that were intentionally uploaded.
- * Excludes stock placeholders from Unsplash, Picsum, etc.
+ * Excludes stock placeholders and the brand logo from being treated as "user content".
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   const u = url.toLowerCase();
   
-  // Explicitly identify and exclude stock placeholders
+  // Explicitly identify and exclude stock placeholders and brand identity
   if (
     u.includes('picsum.photos') || 
     u.includes('unsplash.com') || 
@@ -140,7 +139,7 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
- * STORAGE-FIRST POLICY: Prioritizes user uploads and STRICTLY PURGES placeholders if real assets exist.
+ * STORAGE-FIRST POLICY: Prioritizes user uploads and STRICTLY PURGES placeholders/logos if real assets exist.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
   const allPossible = [imageUrl, ...(imageUrls || [])].filter(isValidAssetUrl);
@@ -148,8 +147,13 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
 
   if (realUploads.length > 0) return realUploads[0];
   
-  // Filter out any known stock domains even if they were passed in as defaults
-  const nonStock = allPossible.filter(u => !u.includes('unsplash') && !u.includes('picsum') && !u.includes('placehold'));
+  // Filter out any known stock/brand domains even if they were passed in as defaults
+  const nonStock = allPossible.filter(u => 
+    !u.includes('unsplash') && 
+    !u.includes('picsum') && 
+    !u.includes('placehold')
+  );
+  
   return nonStock.length > 0 ? nonStock[0] : RENTALFLOW_NEUTRAL_FALLBACK;
 }
 
@@ -169,11 +173,15 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
   const allAssets = Array.from(assets);
   const userUploads = allAssets.filter(isRealUserUpload).filter(u => !u.startsWith('blob:'));
   
-  // Premium Enforcement: Once a user has uploaded any actual images, we strictly purge all stock placeholders
+  // Once a user has uploaded any actual images, we strictly purge all stock placeholders and brand logos from the gallery
   if (userUploads.length > 0) return userUploads;
   
-  // If no real uploads, return original assets only if they aren't stock placeholders
-  const nonStockAssets = allAssets.filter(a => !a.includes('unsplash') && !a.includes('picsum') && !a.includes('placehold'));
+  // If no real uploads, return original assets only if they aren't stock/brand placeholders
+  const nonStockAssets = allAssets.filter(a => 
+    !a.includes('unsplash') && 
+    !a.includes('picsum') && 
+    !a.includes('placehold')
+  );
   
   return nonStockAssets.length > 0 ? nonStockAssets : [RENTALFLOW_NEUTRAL_FALLBACK];
 }

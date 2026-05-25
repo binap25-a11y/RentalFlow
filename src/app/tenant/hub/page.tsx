@@ -10,12 +10,10 @@ import {
   Loader2, Home, Sparkles, Send, Bot, 
   ChevronRight, CheckCircle2, Clock, ReceiptText
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { tenantConcierge } from "@/ai/flows/tenant-concierge-flow";
-import { cn, getResolvedImageUrl } from "@/lib/utils";
-import { format } from "date-fns";
+import { cn, getResolvedImageUrl, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
 import { query, collection, where } from "firebase/firestore";
 
 export default function TenantHub() {
@@ -85,7 +83,15 @@ export default function TenantHub() {
         <div className="lg:col-span-8 space-y-8">
           <Card className="border-none shadow-sm overflow-hidden rounded-[2.5rem] bg-card group ring-1 ring-border">
             <div className="relative h-[450px] w-full bg-muted overflow-hidden">
-              <Image src={getResolvedImageUrl(property?.imageUrl, property?.imageUrls)} alt={property.addressLine1} fill className="object-cover transition-transform duration-1000 group-hover:scale-105" unoptimized priority />
+              <img 
+                src={getResolvedImageUrl(property?.imageUrl, property?.imageUrls)} 
+                alt={property.addressLine1} 
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105" 
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = RENTALFLOW_NEUTRAL_FALLBACK;
+                }}
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
               <div className="absolute bottom-10 left-10 text-foreground text-left space-y-4 max-w-2xl bg-background/40 backdrop-blur-md p-6 rounded-2xl border border-border">
                 <Badge className="bg-emerald-500 text-white border-none font-bold uppercase tracking-[0.2em] text-[10px] py-1.5 px-4 rounded-full shadow-lg font-headline">Active Tenancy</Badge>

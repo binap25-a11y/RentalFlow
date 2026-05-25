@@ -36,7 +36,6 @@ export default function LandingPage() {
 
   const heroImage = useMemo(() => {
     if (properties && properties.length > 0) {
-      // Sort by updatedAt to ensure the most recently synchronized asset is featured
       const sorted = [...properties].sort((a, b) => 
         (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)
       );
@@ -118,11 +117,14 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="relative h-[550px] rounded-[3rem] overflow-hidden shadow-2xl ring-1 ring-border animate-in fade-in zoom-in duration-1000">
-            {/* Standard <img> tag for reliable binary delivery on the Landing Page */}
             <img 
               src={heroImage} 
               alt="Portfolio Hero" 
-              className="absolute inset-0 h-full w-full object-cover" 
+              className="absolute inset-0 h-full w-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = RENTALFLOW_NEUTRAL_FALLBACK;
+              }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
             <div className="absolute bottom-10 left-10 right-10 bg-background/60 backdrop-blur-md border border-border p-8 rounded-3xl">
@@ -131,7 +133,7 @@ export default function LandingPage() {
                     <p className="text-[10px] font-bold uppercase tracking widest text-muted-foreground opacity-60 mb-1 font-headline">Active Ledger Hub</p>
                     <p className="text-2xl font-bold font-headline text-foreground">Portfolio Command</p>
                   </div>
-                  <Badge className="bg-emerald-50 text-white border-none font-bold uppercase text-[9px] tracking-widest px-4 py-1.5 rounded-full shadow-lg font-headline">Verified</Badge>
+                  <Badge className="bg-emerald-500 text-white border-none font-bold uppercase text-[9px] tracking-widest px-4 py-1.5 rounded-full shadow-lg font-headline">Verified</Badge>
                </div>
             </div>
           </div>
