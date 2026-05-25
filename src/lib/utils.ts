@@ -16,8 +16,12 @@ export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-15
  * 🖼️ Client-Side Image Compression
  * Essential for mobile devices with high-resolution cameras.
  * Reduces 10MB+ images to <1MB while maintaining professional quality.
+ * Specifically handles "Payload delivery error" by reducing the binary size.
  */
 export async function compressImage(file: File, maxWidth = 1600, quality = 0.85): Promise<Blob> {
+  // If not an image, return as is (for documents)
+  if (!file.type.startsWith('image/')) return file;
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);

@@ -6,8 +6,8 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { Loader2 } from "lucide-react";
 import { doc } from "firebase/firestore";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
 
@@ -19,7 +19,9 @@ export default function LandlordLayout({
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
+  const pathname = usePathname();
   const [isClient, setIsClient] = useState(false);
+  const initialPathRef = useRef(pathname);
 
   useEffect(() => {
     setIsClient(true);
@@ -32,9 +34,10 @@ export default function LandlordLayout({
 
   const { data: profile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
-  // Accelerated Redirection Logic
+  // Accelerated Redirection Logic with Session Persistence
   useEffect(() => {
     if (isClient && !isUserLoading && !user) {
+      // Save current path to potentially return here after login if needed
       router.replace('/auth');
     } else if (isClient && !isProfileLoading && profile && profile.role !== 'landlord') {
       router.replace(profile.role === 'tenant' ? '/tenant/hub' : '/auth');

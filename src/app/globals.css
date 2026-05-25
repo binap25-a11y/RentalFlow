@@ -24,17 +24,17 @@
     --input: 222 47% 15%;
     --ring: 199 89% 48%;
     --radius: 1.25rem;
-    --sidebar-background: 218 49% 25%;
+    --sidebar-background: 222 47% 3%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 199 89% 48%;
     --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 218 49% 18%;
+    --sidebar-accent: 222 47% 10%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 218 49% 30%;
-    --sidebar-ring: 218 49% 25%;
+    --sidebar-border: 222 47% 15%;
+    --sidebar-ring: 199 89% 48%;
   }
 
-  /* Force Midnight defaults for standard light class as well */
+  /* Force Midnight defaults for standard light class as well to ensure consistent premium feel */
   .light {
     --background: 222 47% 4%;
     --foreground: 210 40% 98%;
