@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
-import { getAuthSupabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { cn, compressImage, withRetry } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -47,11 +47,6 @@ export default function NewPropertyPage() {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
-    // Get Firebase ID Token for Authenticated Supabase RLS
-    const token = await user.getIdToken();
-    const supabaseAuth = getAuthSupabase(token);
-
-    // Sequential Processing for Mobile Stability
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
@@ -65,13 +60,12 @@ export default function NewPropertyPage() {
       setLedger(prev => [...prev, newItem]);
 
       try {
-        // High-Fidelity Optimizer with Fail-Safe
         const optimizedBlob = await compressImage(file);
         const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
-        // AUTHENTICATED DIRECT SYNC with RETRY
+        // Standard supabase client synchronization
         const publicUrl = await withRetry(async () => {
-          const { error: uploadError } = await supabaseAuth.storage
+          const { error: uploadError } = await supabase.storage
             .from('property-images')
             .upload(path, optimizedBlob, {
               contentType: 'image/jpeg',
@@ -80,7 +74,7 @@ export default function NewPropertyPage() {
 
           if (uploadError) throw uploadError;
 
-          const { data: { publicUrl: url } } = supabaseAuth.storage.from('property-images').getPublicUrl(path);
+          const { data: { publicUrl: url } } = supabase.storage.from('property-images').getPublicUrl(path);
           return url;
         });
         

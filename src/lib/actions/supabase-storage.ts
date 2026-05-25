@@ -1,9 +1,8 @@
 'use server';
 
 /**
- * @fileOverview High-Fidelity Cloud Storage Engine (Server Utility).
- * Optimized for administrative and automated synchronization tasks.
- * NOTE: For large mobile binary uploads, client-side direct sync is preferred to bypass payload limits.
+ * @fileOverview Standard Cloud Storage Engine (Server Utility).
+ * Standardized on the Anon client to resolve "alg" algorithm rejection errors.
  */
 
 import { supabase } from '@/lib/supabase';
@@ -20,6 +19,7 @@ export async function uploadToSupabase(
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // Using the standard client resolves algorithm header parameter conflicts
     const { error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(path, buffer, {

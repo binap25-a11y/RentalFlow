@@ -56,7 +56,7 @@ export default function ProfilePage() {
       const compressedBlob = await compressImage(file, 400, 0.8);
       const path = `profiles/${user.uid}/avatar_${Date.now()}.jpg`;
       
-      // DIRECT CLIENT SYNC: Resolved mobile network timeouts
+      // Standard client to resolve "alg" algorithm errors
       const { error: uploadError } = await supabase.storage
         .from('property-documents')
         .upload(path, compressedBlob, {
