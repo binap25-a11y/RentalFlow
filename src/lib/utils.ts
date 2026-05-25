@@ -1,4 +1,3 @@
-
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -125,6 +124,7 @@ export function isRealUserUpload(url: any): boolean {
     'photo-1560518883-ce09059eeffa'
   ];
 
+  // Reject if it matches any stock patterns
   if (forbiddenDomains.some(d => u.includes(d))) return false;
   if (forbiddenIds.some(id => u.includes(id))) return false;
   if (url === RENTALFLOW_LOGO_URL) return false;

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useMemo, useEffect } from 'react';
@@ -73,7 +72,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
   const gallery = useMemo(() => {
-    return getResolvedGallery(property?.imageUrl, property?.imageUrls);
+    if (!property) return [];
+    return getResolvedGallery(property.imageUrl, property.imageUrls);
   }, [property]);
 
   const tenantsQuery = useMemoFirebase(() => {
