@@ -379,9 +379,11 @@ export default function InspectionsPage() {
                                                   {structuredFindings[item]?.imageUrl ? (
                                                     <div className="relative aspect-video rounded-2xl overflow-hidden bg-background border border-border shadow-lg">
                                                       <Image src={structuredFindings[item]?.imageUrl || ''} alt="Evidence" fill className="object-cover" unoptimized />
-                                                      <Button variant="destructive" size="icon" className="absolute top-3 right-3 h-10 w-10 rounded-xl shadow-2xl transition-all hover:scale-110 active:scale-95" onClick={() => setStructuredFindings(prev => ({...prev, [item]: {...prev[item], imageUrl: undefined}}))}>
-                                                        <Trash2 className="w-5 h-5" />
-                                                      </Button>
+                                                      <div className="absolute top-3 right-3 flex gap-1 z-20">
+                                                        <Button variant="destructive" size="icon" className="h-10 w-10 rounded-xl shadow-2xl transition-all hover:scale-110 active:scale-95 bg-red-500 text-white" onClick={() => setStructuredFindings(prev => ({...prev, [item]: {...prev[item], imageUrl: undefined}}))}>
+                                                          <Trash2 className="w-5 h-5" />
+                                                        </Button>
+                                                      </div>
                                                     </div>
                                                   ) : (
                                                     <label 

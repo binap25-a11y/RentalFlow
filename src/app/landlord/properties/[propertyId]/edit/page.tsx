@@ -103,10 +103,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setLedger(prev => [...prev, newItem]);
 
       try {
-        // High-Fidelity Client-Side Compression to prevent network payload failures
+        // High-Fidelity Client-Side Optimization
         const compressedBlob = await compressImage(file);
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
+        // Direct storage sync bypassing potential Server Action timeouts
         const { error: uploadError } = await supabase.storage
           .from('property-images')
           .upload(path, compressedBlob, {
@@ -129,7 +130,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         toast({ 
           variant: "destructive", 
           title: "Mobile Sync Failed", 
-          description: "Connection interrupted. Retrying may be necessary." 
+          description: "Cloud connection interrupted. Please try again." 
         });
       }
     }
@@ -234,7 +235,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       <Image src={item.url} alt={`Asset ${index}`} fill className="object-cover" unoptimized />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">
                         <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-background/90 text-primary p-2 rounded-xl hover:scale-110 transition-transform shadow-lg"><Star className={cn("w-3.5 h-3.5", index === 0 && "fill-primary")} /></button>
-                        <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500 text-white p-2 rounded-xl shadow-lg hover:bg-red-600"><X className="w-3.5 h-3.5" /></button>
+                        <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 transition-all active:scale-90"><X className="w-3.5 h-3.5" /></button>
                       </div>
                       {item.status === 'uploading' && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-sm gap-2">

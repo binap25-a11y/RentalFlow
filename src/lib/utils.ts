@@ -8,15 +8,13 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * 🖼️ High-Fidelity Professional Fallback
  * Used ONLY when a property has zero user-uploaded photography.
- * This is a neutral architectural image from Unsplash.
  */
 export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop";
 
 /**
  * 🖼️ Client-Side Image Compression
- * Essential for mobile devices with high-resolution cameras.
+ * Optimized for mobile devices to prevent "Connection Interrupted" errors.
  * Reduces 10MB+ images to <1MB while maintaining professional quality.
- * Specifically handles "Payload delivery error" by reducing the binary size.
  */
 export async function compressImage(file: File, maxWidth = 1600, quality = 0.85): Promise<Blob> {
   // If not an image, return as is (for documents)

@@ -47,11 +47,11 @@ export default function NewPropertyPage() {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
-    // Direct Cloud Sync logic to bypass Next.js Server Action bottlenecks
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
+      // 1. Instant local preview
       const newItem: LedgerItem = {
         id: tempId,
         url: localUrl,
@@ -61,10 +61,11 @@ export default function NewPropertyPage() {
       setLedger(prev => [...prev, newItem]);
 
       try {
-        // Optimize on client to ensure fast delivery on mobile networks
+        // 2. Client-side optimization to prevent network failures
         const compressedBlob = await compressImage(file);
-        const path = `assets/${user.uid}/new_${tempId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+        const path = `assets/${user.uid}/new_property_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
+        // 3. Direct cloud sync bypassing NextJS server bottlenecks
         const { error: uploadError } = await supabase.storage
           .from('property-images')
           .upload(path, compressedBlob, {
@@ -80,18 +81,17 @@ export default function NewPropertyPage() {
           item.id === tempId ? { ...item, url: publicUrl, status: 'ready' } : item
         ));
       } catch (err: any) {
-        console.error("Direct Sync Error:", err);
+        console.error("Mobile Sync Error:", err);
         setLedger(prev => prev.map(item => 
           item.id === tempId ? { ...item, status: 'error' } : item
         ));
         toast({ 
           variant: "destructive", 
           title: "Mobile Sync Failed", 
-          description: "Connection interrupted. Retrying may be necessary." 
+          description: "Cloud connection interrupted. Please check your data and retry." 
         });
       }
     }
-    // Clear input so same file can be selected again if needed
     e.target.value = '';
   };
 
@@ -190,7 +190,7 @@ export default function NewPropertyPage() {
                     )}>
                       <Image src={item.url} alt={`Asset ${index}`} fill className="object-cover" unoptimized />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">
-                        <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/90 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 backdrop-blur-md"><X className="w-3.5 h-3.5" /></button>
+                        <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/90 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 backdrop-blur-md transition-all active:scale-90"><X className="w-3.5 h-3.5" /></button>
                       </div>
                       {item.status === 'uploading' && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-md gap-2">
