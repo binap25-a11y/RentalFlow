@@ -170,8 +170,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     if (!user || !db || !propertyRef) return;
 
     setIsSaving(true);
-    const userOnly = ledger.filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl)).map(i => i.cloudUrl!);
-
+    
+    // Metadata sync only - visuals are handled by atomic transactional sync
     const serializableData = {
       id: propertyId, 
       landlordId: user.uid, 
@@ -179,8 +179,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       city, 
       zipCode, 
       rentAmount: parseFloat(rentAmount) || 0,
-      imageUrl: userOnly.length > 0 ? userOnly[0] : null, 
-      imageUrls: userOnly, 
       propertyType,
       numberOfBedrooms: parseInt(bedrooms, 10) || 1, 
       numberOfBathrooms: parseInt(bathrooms, 10) || 1,

@@ -110,13 +110,14 @@ export function isRealUserUpload(url: any): boolean {
   
   const u = url.toLowerCase();
   
-  // REJECT all known stock image/placeholder domains
+  // REJECT all known stock image/placeholder domains and specific legacy skyscraper IDs
   const forbiddenKeywords = [
     'unsplash.com',
     'picsum.photos',
     'placehold.co',
     'placeholder.com',
-    'pexels.com'
+    'pexels.com',
+    'photo-1486406146926-c627a92ad1ab'
   ];
 
   if (forbiddenKeywords.some(k => u.includes(k))) return false;
