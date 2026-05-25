@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -69,7 +70,12 @@ export default function LandlordCalendarPage() {
     if (!db || !user) return null;
     return getLandlordCollectionQuery(db, "properties", user.uid);
   }, [db, user]);
-  const { data: properties } = useCollection(propertiesQuery);
+  const { data: allProperties } = useCollection(propertiesQuery);
+
+  // Operational Filter: Only include active properties for the calendar
+  const properties = useMemo(() => 
+    allProperties?.filter(p => !p.isDeleted) || [], 
+  [allProperties]);
 
   const inspectionsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -90,7 +96,7 @@ export default function LandlordCalendarPage() {
 
     inspections?.forEach(i => {
       const date = i.scheduledDate ? new Date(i.scheduledDate) : null;
-      if (date && isValid(date)) {
+      if (date && isValid(date) && properties.some(p => p.id === i.propertyId)) {
         events.push({
           id: i.id,
           type: 'inspection',
@@ -105,7 +111,7 @@ export default function LandlordCalendarPage() {
 
     maintenance?.forEach(m => {
       const date = m.scheduledDate ? new Date(m.scheduledDate) : null;
-      if (date && isValid(date) && m.status !== 'completed') {
+      if (date && isValid(date) && m.status !== 'completed' && properties.some(p => p.id === m.propertyId)) {
         events.push({
           id: m.id,
           type: 'repair',

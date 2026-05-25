@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +7,7 @@ import {
   ShieldAlert, Loader2, CheckCircle2,
   Zap, Target, Download, Plus, Save, ReceiptText, BellRing,
   Crown, Sparkles, ShieldCheck, PoundSterling, ArrowUpRight, ArrowDownRight,
-  CalendarDays
+  CalendarDays, Archive
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
@@ -65,7 +66,12 @@ export default function LandlordDashboard() {
     if (!db || !user) return null;
     return getLandlordCollectionQuery(db, "properties", user.uid);
   }, [db, user]);
-  const { data: properties, loading: propLoading } = useCollection(propertiesQuery);
+  const { data: allProperties, loading: propLoading } = useCollection(propertiesQuery);
+
+  // Operational Filter: Only include active properties for financial stats
+  const properties = useMemo(() => 
+    allProperties?.filter(p => !p.isDeleted) || [], 
+  [allProperties]);
 
   const maintenanceQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -391,6 +397,13 @@ export default function LandlordDashboard() {
                             <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 font-headline">Amount (£)</Label>
                             <Input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="0.00" className="rounded-xl h-11 bg-muted/20 border-none font-bold" />
                           </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 font-headline">Assign to Asset</Label>
+                          <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-4 py-2 text-sm font-bold" value={expPropertyId} onChange={(e) => setExpPropertyId(e.target.value)} required>
+                            <option value="">Select Asset...</option>
+                            {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                          </select>
                         </div>
                       </div>
                     </ScrollArea>
