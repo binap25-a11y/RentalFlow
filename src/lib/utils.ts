@@ -17,16 +17,19 @@ export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-15
  * USES URL.createObjectURL for extreme memory efficiency.
  * IF THE DEVICE HITS MEMORY LIMITS, it SILENTLY returns the original file.
  */
-export async function compressImage(file: File, maxWidth = 1200, quality = 0.75): Promise<Blob | File> {
+export async function compressImage(file: File, maxWidth = 1000, quality = 0.6): Promise<Blob | File> {
   // Skip non-images or small files
-  if (!file.type.startsWith('image/') || file.size < 1024 * 512) {
+  if (!file.type.startsWith('image/') || file.size < 1024 * 300) {
     return file;
   }
 
   try {
     return await new Promise((resolve) => {
-      // Strict safety timeout (3s) to prevent blocking the UI
-      const timeout = setTimeout(() => resolve(file), 3000);
+      // Strict safety timeout (4s) to prevent blocking the UI
+      const timeout = setTimeout(() => {
+        console.warn("Compression timed out, returning original.");
+        resolve(file);
+      }, 4000);
 
       const objectUrl = URL.createObjectURL(file);
       const img = new Image();
@@ -37,6 +40,7 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.75)
           let width = img.width;
           let height = img.height;
 
+          // Sequential Downscaling for RAM Stability
           if (width > height) {
             if (width > maxWidth) {
               height *= maxWidth / width;

@@ -47,7 +47,7 @@ export default function NewPropertyPage() {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
-    // Sequential Processing for Mobile Stability
+    // Sequential Processing for Mobile RAM Stability
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
@@ -63,13 +63,13 @@ export default function NewPropertyPage() {
       try {
         // RAM-Safe Optimizer: Silently returns original if RAM is low
         const optimizedBlob = await compressImage(file);
-        const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+        const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
         // DIRECT-TO-CLOUD: Bypasses Next.js limits
         const { error: uploadError } = await supabase.storage
           .from('property-images')
           .upload(path, optimizedBlob, {
-            contentType: 'image/jpeg',
+            contentType: (optimizedBlob as any).type || file.type || 'image/jpeg',
             upsert: true
           });
 
@@ -88,7 +88,7 @@ export default function NewPropertyPage() {
         toast({ 
           variant: "destructive", 
           title: "Synchronization Interrupted", 
-          description: "Network delivery failed. Please check your signal." 
+          description: "Visual delivery failed. Please check your signal." 
         });
       }
     }

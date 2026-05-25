@@ -139,13 +139,13 @@ export default function InspectionsPage() {
     try {
       // High-Fidelity Sequential Optimizer
       const optimizedBlob = await compressImage(file);
-      const path = `audits/${user.uid}/${activeInspection.id}/${itemId.replace(/\s+/g, '_')}_${Date.now()}`;
+      const path = `audits/${user.uid}/${activeInspection.id}/${itemId.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`;
       
       // DIRECT-TO-CLOUD Sync
       const { error: uploadError } = await supabase.storage
         .from('property-images')
         .upload(path, optimizedBlob, {
-          contentType: 'image/jpeg',
+          contentType: (optimizedBlob as any).type || file.type || 'image/jpeg',
           upsert: true
         });
 
@@ -167,7 +167,7 @@ export default function InspectionsPage() {
       toast({ 
         variant: "destructive", 
         title: "Synchronization Interrupted", 
-        description: "Visual delivery failed. Please check your connection."
+        description: "Visual delivery failed. Please check your signal."
       });
     }
   };
