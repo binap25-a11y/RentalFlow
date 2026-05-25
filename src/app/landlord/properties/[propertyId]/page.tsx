@@ -244,22 +244,23 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-2xl hover:bg-primary/5 transition-colors h-12 w-12 border border-white/5 shrink-0 shadow-sm">
             <ArrowLeft className="w-6 h-6" />
           </Button>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h1 className="text-3xl md:text-5xl font-headline font-bold text-foreground tracking-tight truncate">{property.addressLine1}</h1>
             <p className="text-muted-foreground flex items-center font-medium font-body text-xs md:text-lg mt-1.5 opacity-60">
               <MapPin className="w-4 h-4 md:w-5 md:h-5 mr-2 text-accent" /> {property.city}, {property.zipCode}
             </p>
+            
+            <div className="flex flex-wrap gap-3 mt-6">
+              <Button variant="outline" onClick={downloadRentStatement} className="rounded-[1.25rem] font-bold h-12 border-border bg-card shadow-lg font-headline text-[10px] uppercase tracking-widest px-8 hover:bg-white/5 transition-all">
+                <Download className="w-4 h-4 mr-2 text-accent" /> Rent Statement
+              </Button>
+              <Button variant="outline" className="rounded-[1.25rem] font-bold h-12 border-border bg-card shadow-lg font-headline text-[10px] uppercase tracking-widest px-8 hover:bg-white/5 transition-all" asChild>
+                <Link href={`/landlord/properties/${propertyId}/edit`}>
+                  <Edit3 className="w-4 h-4 mr-2 text-accent" /> Modify Specs
+                </Link>
+              </Button>
+            </div>
           </div>
-        </div>
-        <div className="flex flex-wrap gap-3 pl-0 md:pl-[68px]">
-          <Button variant="outline" onClick={downloadRentStatement} className="flex-1 md:flex-none rounded-[1.25rem] font-bold h-12 border-border bg-card shadow-lg font-headline text-[10px] uppercase tracking-widest px-8 hover:bg-white/5 transition-all">
-            <Download className="w-4 h-4 mr-2 text-accent" /> Rent Statement
-          </Button>
-          <Button variant="outline" className="flex-1 md:flex-none rounded-[1.25rem] font-bold h-12 border-border bg-card shadow-lg font-headline text-[10px] uppercase tracking-widest px-8 hover:bg-white/5 transition-all" asChild>
-            <Link href={`/landlord/properties/${propertyId}/edit`}>
-              <Edit3 className="w-4 h-4 mr-2 text-accent" /> Modify Specs
-            </Link>
-          </Button>
         </div>
       </div>
 
