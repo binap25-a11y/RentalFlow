@@ -104,6 +104,7 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
 /**
  * 🖼️ User Asset Identifier
  * Strictly identifies assets that were intentionally uploaded.
+ * Excludes stock placeholders from Unsplash, Picsum, etc.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
