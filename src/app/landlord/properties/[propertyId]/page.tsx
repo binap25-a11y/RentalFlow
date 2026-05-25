@@ -244,6 +244,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           </div>
         </div>
         
+        {/* OPERATIONAL BUTTONS: Stacked directly below heading as requested */}
         <div className="flex flex-wrap gap-4 pl-14">
           <Button variant="outline" onClick={downloadRentStatement} className="rounded-xl font-bold h-11 border-border bg-card shadow-lg font-headline text-[10px] uppercase tracking-widest px-8 hover:bg-white/5 transition-all">
             <Download className="w-4 h-4 mr-2 text-accent" /> Rent Statement

@@ -129,11 +129,10 @@ export function isRealUserUpload(url: any): boolean {
   if (forbiddenIds.some(id => u.includes(id))) return false;
   if (url === RENTALFLOW_LOGO_URL) return false;
 
-  // DECISIVE WHITELIST: Only Supabase (wgezhbkkhamaawxgcqjf), Firebase, or local blobs are authorized
+  // DECISIVE WHITELIST: AUTHORIZED PROJECT ONLY (wgezhbkkhamaawxgcqjf)
   return (
-    u.includes('supabase.co') || 
     u.includes('wgezhbkkhamaawxgcqjf') ||
-    u.includes('supabase.app') || 
+    u.includes('supabase.co') || 
     u.startsWith('blob:') || 
     u.includes('firebasestorage.app') || 
     u.includes('firebasestorage.googleapis.com')
