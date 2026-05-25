@@ -102,38 +102,39 @@ export async function compressImage(file: File, maxWidth = 800, quality = 0.75):
 
 /**
  * 🖼️ User Asset Identifier
- * Strictly identifies assets that were intentionally uploaded by the user to Supabase.
+ * Strictly identifies assets that were intentionally uploaded by the user to cloud storage.
+ * DECISIVELY REJECTS all known stock image and placeholder domains.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
   const u = url.toLowerCase();
   
-  // Specific cloud storage providers for the RentalFlow ecosystem
-  if (u.includes('supabase.co') || u.includes('firebasestorage.googleapis.com')) return true;
-
-  // DECISIVELY REJECT all known stock image/placeholder domains
-  const forbiddenDomains = [
+  // DECISIVELY REJECT all known stock image/placeholder domains and IDs
+  const forbiddenKeywords = [
     'unsplash.com',
     'picsum.photos',
     'placehold.co',
     'placeholder.com',
-    'pexels.com'
+    'pexels.com',
+    'photo-1486406146926-c627a92ad1ab', // Corporate skyscraper ID
+    'photo-1560518883-ce09059eeffa'  // Brand identity ID
   ];
 
-  if (forbiddenDomains.some(f => u.includes(f))) return false;
+  if (forbiddenKeywords.some(k => u.includes(k))) return false;
   
-  // Exclude explicit brand asset
+  // Exclude explicit brand asset constant
   if (url === RENTALFLOW_LOGO_URL) return false;
 
-  return u.startsWith('http');
+  // Specific cloud storage providers or standard binary paths are valid
+  return u.startsWith('http') || u.startsWith('blob:');
 }
 
 /**
  * 🖼️ Asset Validation Engine
  */
 export function isValidAssetUrl(url: any): boolean {
-  return !!(url && typeof url === 'string' && url.trim() !== '' && url.startsWith('http'));
+  return !!(url && typeof url === 'string' && url.trim() !== '' && (url.startsWith('http') || url.startsWith('blob:')));
 }
 
 /**
@@ -141,7 +142,7 @@ export function isValidAssetUrl(url: any): boolean {
  * USER-DATA ONLY POLICY: Returns user photography if any exists. Returns null otherwise.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string | null {
-  // 1. If explicit Cover URL is a real user upload, it IS the identity.
+  // 1. If explicit Cover URL is a real user upload, it IS the primary identity.
   if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
     return imageUrl;
   }
@@ -152,7 +153,7 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
     if (realGallery.length > 0) return realGallery[0];
   }
 
-  // 3. No user photography found
+  // 3. No user photography found (return null to trigger UI fallbacks)
   return null;
 }
 

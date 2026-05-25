@@ -280,9 +280,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 <CarouselNext className="right-6 bg-black/40 border-none shadow-2xl text-white opacity-0 group-hover:opacity-100 transition-opacity" />
               </Carousel>
             ) : (
-              <div className="relative h-[400px] md:h-[550px] w-full bg-gradient-to-br from-muted/50 to-muted flex flex-col items-center justify-center gap-4">
-                <div className="p-8 bg-white/5 rounded-[2rem] border border-white/5">
-                   <Building2 className="w-16 h-16 text-muted-foreground/20" />
+              <div className="relative h-[400px] md:h-[550px] w-full bg-gradient-to-br from-primary/10 to-accent/5 flex flex-col items-center justify-center gap-4">
+                <div className="p-8 bg-white/5 rounded-[2rem] border border-white/5 shadow-inner">
+                   <Building2 className="w-16 h-16 text-muted-foreground/30" />
                 </div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">No Visual Identity Recorded</p>
               </div>

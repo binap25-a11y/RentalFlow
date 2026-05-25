@@ -94,8 +94,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const syncVisualsToFirestore = (updatedLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
     
-    if (updatedLedger.some(i => i.status === 'uploading')) return;
-
+    // Filter for ready cloud URLs strictly
     const userOnly = updatedLedger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
@@ -123,6 +122,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       try {
         const optimizedBlob = await compressImage(file);
+        // Property-unique high-fidelity binary path
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
         const publicUrl = await withRetry(async () => {
