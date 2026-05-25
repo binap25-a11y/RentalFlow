@@ -137,7 +137,7 @@ export function isValidAssetUrl(url: any): boolean {
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
   const allPossible = [imageUrl, ...(imageUrls || [])].filter(isValidAssetUrl);
-  const realUploads = allPossible.filter(isRealUserUpload);
+  const realUploads = allPossible.filter(isRealUserUpload).filter(u => !u.startsWith('blob:'));
 
   if (realUploads.length > 0) return realUploads[0];
   
@@ -160,13 +160,13 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
   }
   
   const allAssets = Array.from(assets);
-  const userUploads = allAssets.filter(isRealUserUpload);
+  const userUploads = allAssets.filter(isRealUserUpload).filter(u => !u.startsWith('blob:'));
   
   // Premium Enforcement: Once a user has uploaded any actual images, we strictly purge all stock placeholders
   if (userUploads.length > 0) return userUploads;
   
   // If no real uploads, return original assets only if they aren't stock placeholders
-  const nonStockAssets = allAssets.filter(a => !a.includes('unsplash') && !a.includes('picsum'));
+  const nonStockAssets = allAssets.filter(a => !a.includes('unsplash') && !a.includes('picsum') && !a.includes('placehold'));
   
   return nonStockAssets.length > 0 ? nonStockAssets : [RENTALFLOW_NEUTRAL_FALLBACK];
 }

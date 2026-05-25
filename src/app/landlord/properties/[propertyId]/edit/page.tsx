@@ -6,7 +6,6 @@ import {
   useFirestore, 
   useDoc, 
   useMemoFirebase,
-  setDocumentNonBlocking,
   updateDocumentNonBlocking,
 } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
@@ -91,14 +90,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   }, [property, isInitialized]);
 
   /**
-   * 🔄 Direct Transactional Persistence (Autosave)
-   * Synchronizes visual state directly to Firestore to bypass state lag.
+   * 🔄 Instant Transactional Persistence
+   * Directly updates Firestore microsecond a binary upload completes.
    */
   const performDirectSync = (currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId || !propertyRef) return;
 
     const readyUrls = currentLedger
-      .filter(i => i.status === 'ready' && i.cloudUrl)
+      .filter(i => i.status === 'ready' && i.cloudUrl && i.cloudUrl.startsWith('http'))
       .map(i => i.cloudUrl!);
 
     const userOnly = readyUrls.filter(isRealUserUpload);
@@ -115,7 +114,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
-    for (const file of files) {
+    toast({ title: "Synchronizing Visuals", description: `Processing ${files.length} binary assets...` });
+
+    const uploadPromises = files.map(async (file) => {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
@@ -134,24 +135,21 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           return url;
         });
         
-        // 2. Finalize Binary and trigger INSTANT SYNC
+        // Finalize state and trigger immediate transactional sync
         setLedger(prev => {
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
           );
-          // 3. Direct Transactional Sync to Firestore
           performDirectSync(updated);
           return updated;
         });
-        
-        toast({ title: "Visual Binary Synchronized" });
       } catch (err) {
-        setLedger(prev => prev.map(item => 
-          item.id === tempId ? { ...item, status: 'error' } : item
-        ));
-        toast({ variant: "destructive", title: "Sync Failed" });
+        setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
       }
-    }
+    });
+
+    await Promise.all(uploadPromises);
+    toast({ title: "Visual Binary Sync Complete" });
     e.target.value = '';
   };
 
@@ -180,7 +178,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     if (!user || !db || !propertyRef) return;
     setIsSaving(true);
     try {
-      const userOnly = ledger.filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl)).map(i => i.cloudUrl!);
+      const userOnly = ledger.filter(i => i.status === 'ready' && i.cloudUrl && i.cloudUrl.startsWith('http') && isRealUserUpload(i.cloudUrl)).map(i => i.cloudUrl!);
       const primaryUrl = userOnly.length > 0 ? userOnly[0] : BRAND_FALLBACK;
 
       const serializableData = {

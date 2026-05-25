@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from 'react';
-import { useUser, useFirestore, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp, collection } from 'firebase/firestore';
 import { Card, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,7 @@ export default function NewPropertyPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  // 🔐 Stable Identity Pre-Generation
+  // 🔐 Stable Identity Pre-Generation for Instant Sync
   const propertyId = useMemo(() => {
     if (!db) return '';
     return doc(collection(db, 'properties')).id;
@@ -52,14 +52,14 @@ export default function NewPropertyPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   /**
-   * 🔄 Direct Transactional Persistence (Autosave)
-   * Synchronizes visual state directly to Firestore to bypass component lag.
+   * 🔄 Instant Transactional Persistence
+   * Directly updates Firestore microsecond a binary upload completes.
    */
   const performDirectSync = (currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId) return;
 
     const readyUrls = currentLedger
-      .filter(i => i.status === 'ready' && i.cloudUrl)
+      .filter(i => i.status === 'ready' && i.cloudUrl && i.cloudUrl.startsWith('http'))
       .map(i => i.cloudUrl!);
 
     const userOnly = readyUrls.filter(isRealUserUpload);
@@ -80,11 +80,12 @@ export default function NewPropertyPage() {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user || !propertyId) return;
 
-    for (const file of files) {
+    toast({ title: "Synchronizing visuals...", description: `Initializing binary orchestration for ${files.length} items.` });
+
+    const uploadPromises = files.map(async (file) => {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
-      // 1. Instant Preview
       setLedger(prev => [...prev, { id: tempId, previewUrl: localUrl, status: 'uploading' }]);
 
       try {
@@ -100,24 +101,21 @@ export default function NewPropertyPage() {
           return url;
         });
         
-        // 2. Finalize Binary
+        // Update state and fire direct sync
         setLedger(prev => {
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
           );
-          // 3. Direct Transactional Sync
           performDirectSync(updated);
           return updated;
         });
-        
-        toast({ title: "Visual Binary Synchronized" });
       } catch (err) {
-        setLedger(prev => prev.map(item => 
-          item.id === tempId ? { ...item, status: 'error' } : item
-        ));
-        toast({ variant: "destructive", title: "Sync Failed" });
+        setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
       }
-    }
+    });
+
+    await Promise.all(uploadPromises);
+    toast({ title: "Gallery Synced" });
     e.target.value = '';
   };
 
@@ -148,7 +146,7 @@ export default function NewPropertyPage() {
     const propertyRef = doc(db, 'properties', propertyId);
 
     try {
-      const userOnly = ledger.filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl)).map(i => i.cloudUrl!);
+      const userOnly = ledger.filter(i => i.status === 'ready' && i.cloudUrl && i.cloudUrl.startsWith('http') && isRealUserUpload(i.cloudUrl)).map(i => i.cloudUrl!);
       const finalImageUrl = userOnly.length > 0 ? userOnly[0] : BRAND_FALLBACK;
 
       const serializableData = {
