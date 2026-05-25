@@ -13,8 +13,8 @@ export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-15
 
 /**
  * 🖼️ Resilient Mobile Optimization Engine
- * Reduces massive 10MB+ mobile photos to ~1MB high-quality versions.
- * Fail-Safe Architecture: If browser memory or format limits are hit (common on mobile), 
+ * Reduces massive 10MB+ mobile photos to ~1MB high-quality versions (1200px, 0.75 quality).
+ * Fail-Safe Architecture: If browser memory or format limits are hit, 
  * it returns the original file silently so the sync flow is never interrupted.
  */
 export async function compressImage(file: File, maxWidth = 1200, quality = 0.75): Promise<Blob | File> {

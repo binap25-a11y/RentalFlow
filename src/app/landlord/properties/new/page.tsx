@@ -163,7 +163,7 @@ export default function NewPropertyPage() {
           </div>
         </div>
         <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[9px]">
-          <Sparkles className="w-3 h-3 mr-2" /> Direct Sync Enabled
+          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Direct Sync Enabled
         </Badge>
       </div>
 
