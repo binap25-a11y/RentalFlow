@@ -290,7 +290,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   <div className="space-y-3">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Bedrooms</Label>
                     <Select value={bedrooms} onValueChange={setBedrooms}>
-                      <SelectTrigger className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner focus:ring-accent"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner focus:ring-accent text-foreground"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-xl border-white/5 bg-card">
                         {[1, 2, 3, 4, 5, 6, 7, 8].map(n => <SelectItem key={n} value={n.toString()} className="font-bold">{n} Bedroom{n > 1 ? 's' : ''}</SelectItem>)}
                       </SelectContent>
@@ -299,7 +299,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   <div className="space-y-3">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Bathrooms</Label>
                     <Select value={bathrooms} onValueChange={setBathrooms}>
-                      <SelectTrigger className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner focus:ring-accent"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner focus:ring-accent text-foreground"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-xl border-white/5 bg-card">
                         {[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={n.toString()} className="font-bold">{n} Bathroom{n > 1 ? 's' : ''}</SelectItem>)}
                       </SelectContent>
@@ -311,7 +311,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   <div className="space-y-3">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Asset Classification</Label>
                     <Select value={propertyType} onValueChange={setPropertyType}>
-                      <SelectTrigger className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner focus:ring-accent"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner focus:ring-accent text-foreground"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-2xl border-white/5 bg-card shadow-2xl p-2">
                         <SelectItem value="Apartment" className="rounded-xl font-bold py-3">Apartment Registry</SelectItem>
                         <SelectItem value="House" className="rounded-xl font-bold py-3">Residential House</SelectItem>
@@ -326,7 +326,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                 </div>
                 <div className="space-y-3">
                   <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Operational Narrative</Label>
-                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Internal narrative for this asset ledger..." className="rounded-2xl min-h-[160px] bg-muted/30 border-none font-medium text-base px-6 py-5 shadow-inner leading-relaxed" />
+                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Internal narrative for this asset ledger..." className="rounded-2xl min-h-[160px] bg-muted/30 border-none font-medium text-base px-6 py-5 shadow-inner leading-relaxed text-foreground" />
                 </div>
               </div>
             </div>

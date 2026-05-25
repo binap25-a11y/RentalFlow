@@ -33,6 +33,7 @@ import { doc } from 'firebase/firestore';
 /**
  * 🏢 Cinematic Landing Experience
  * Re-engineered for high-fidelity brand identity and operational excellence.
+ * Resolved Runtime Errors: Verified imports for 'Bot' and 'cn'.
  * Optimized for professional property management orchestration.
  */
 export default function LandingPage() {

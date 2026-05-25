@@ -12,7 +12,7 @@ import {
   deleteDocumentNonBlocking
 } from '@/firebase';
 import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,10 +21,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   MapPin, 
   Edit3, Loader2, Save, ArrowLeft,
-  Bed, Bath, X, Maximize2, FileText, Wrench, 
-  ClipboardList, Plus, Download, Trash2, Calendar,
-  ShieldCheck, AlertCircle, Clock, Zap, ShieldAlert,
-  ChevronRight, CheckCircle2, FileUp, Users
+  Bed, Bath, X, FileText, Wrench, 
+  ClipboardList, Plus, Download, Trash2,
+  ShieldCheck, AlertCircle, Clock,
+  CheckCircle2, FileUp, Users
 } from "lucide-react";
 import { 
   Dialog, 
@@ -54,6 +54,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 /**
  * 🏢 Property Management Hub
  * High-fidelity orchestrator for a single property asset.
+ * Layout optimized: Operational buttons positioned below heading and address.
  * Synchronizes visuals, residents, and compliance documentation in real-time.
  */
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
@@ -76,10 +77,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
-  /**
-   * 🖼️ User-Data Only Resolution
-   * Strictly prioritizes Supabase binaries over fallbacks.
-   */
   const gallery = useMemo(() => {
     return getResolvedGallery(property?.imageUrl, property?.imageUrls);
   }, [property]);
@@ -239,9 +236,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-12 bg-background">
-      <div className="flex flex-col gap-6 text-left border-b border-white/5 pb-8">
-        <div className="flex items-center gap-5">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-2xl hover:bg-primary/5 transition-colors h-12 w-12 border border-white/5 shrink-0 shadow-sm">
+      <div className="flex flex-col gap-6 text-left border-b border-white/5 pb-10">
+        <div className="flex items-start gap-5">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-2xl hover:bg-primary/5 transition-colors h-12 w-12 border border-white/5 shrink-0 shadow-sm mt-1">
             <ArrowLeft className="w-6 h-6" />
           </Button>
           <div className="min-w-0 flex-1">
@@ -250,7 +247,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               <MapPin className="w-4 h-4 md:w-5 md:h-5 mr-2 text-accent" /> {property.city}, {property.zipCode}
             </p>
             
-            <div className="flex flex-wrap gap-3 mt-6">
+            {/* Operational Layout: Buttons below Heading and Address */}
+            <div className="flex flex-wrap gap-3 mt-8">
               <Button variant="outline" onClick={downloadRentStatement} className="rounded-[1.25rem] font-bold h-12 border-border bg-card shadow-lg font-headline text-[10px] uppercase tracking-widest px-8 hover:bg-white/5 transition-all">
                 <Download className="w-4 h-4 mr-2 text-accent" /> Rent Statement
               </Button>
