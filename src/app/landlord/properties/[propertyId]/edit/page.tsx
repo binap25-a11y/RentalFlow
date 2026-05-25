@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useRef } from 'react';
 import { 
   useUser, 
   useFirestore, 
   useDoc, 
   useMemoFirebase,
   setDocumentNonBlocking,
+  updateDocumentNonBlocking,
 } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -59,6 +60,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Track ledger changes for instant Firestore sync
+  const lastSyncRef = useRef<string[]>([]);
 
   useEffect(() => {
     if (property && !isInitialized) {
@@ -88,9 +92,31 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         }));
         
       setLedger(initialLedger);
+      lastSyncRef.current = initialLedger.map(i => i.cloudUrl!);
       setIsInitialized(true);
     }
   }, [property, isInitialized]);
+
+  // INSTANT FIRESTORE SYNC: Automatically lock in new cloud URLs as they finish
+  useEffect(() => {
+    const readyCloudUrls = ledger.filter(i => i.status === 'ready' && i.cloudUrl).map(i => i.cloudUrl!);
+    
+    // Only sync if the list of ready URLs has actually changed
+    if (readyCloudUrls.length > 0 && JSON.stringify(readyCloudUrls) !== JSON.stringify(lastSyncRef.current) && propertyRef) {
+      const userUploads = readyCloudUrls.filter(u => isRealUserUpload(u));
+      const purgedGallery = userUploads.length > 0 ? userUploads : readyCloudUrls;
+      const primaryUrl = purgedGallery.length > 0 ? purgedGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
+
+      updateDocumentNonBlocking(propertyRef, {
+        imageUrl: primaryUrl,
+        imageUrls: purgedGallery,
+        updatedAt: serverTimestamp(),
+      });
+      
+      lastSyncRef.current = readyCloudUrls;
+      console.log("Visual Ledger Synchronized to Firestore.");
+    }
+  }, [ledger, propertyRef]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -132,11 +158,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         setLedger(prev => prev.map(item => 
           item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
         ));
+        toast({ title: "Binary Synchronized" });
       } catch (err: any) {
         console.error("Direct Sync Error:", err);
         setLedger(prev => prev.map(item => 
           item.id === tempId ? { ...item, status: 'error' } : item
         ));
+        toast({ variant: "destructive", title: "Visual Delivery Failed", description: "Binary rejected by storage engine." });
       }
     }
     e.target.value = '';
@@ -144,9 +172,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
   const removeFromLedger = (id: string) => {
     const item = ledger.find(i => i.id === id);
-    if (item?.previewUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(item.previewUrl);
-    }
+    // Note: revokeObjectURL removed to prevent race conditions on mobile previews
     setLedger(prev => prev.filter(i => i.id !== id));
   };
 
@@ -171,11 +197,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const finalUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
       
       // STORAGE-FIRST SYNC:
-      // 1. Identify real user uploads (Supabase/Blob)
       const userUploads = finalUrls.filter(u => isRealUserUpload(u));
-      
-      // 2. PURGE PLACEHOLDERS: If the user has uploaded their own images, 
-      // we remove any original Unsplash placeholders to ensure their identity is locked in.
       const purgedGallery = userUploads.length > 0 ? userUploads : finalUrls;
       const primaryUrl = purgedGallery.length > 0 ? purgedGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
 
@@ -226,7 +248,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </div>
         </div>
         <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[9px]">
-          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Storage-First Sync Active
+          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Persistent Storage Sync
         </Badge>
       </div>
 

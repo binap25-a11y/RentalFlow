@@ -78,7 +78,7 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.7):
             (blob) => {
               clearTimeout(timeout);
               // Clean up memory after processing
-              URL.revokeObjectURL(objectUrl);
+              // Note: Aggressive revocation removed to prevent preview race conditions on mobile
               resolve(blob && blob.size < file.size ? blob : file);
             },
             'image/jpeg',
@@ -111,6 +111,7 @@ export function isRealUserUpload(url: any): boolean {
   const lowerUrl = url.toLowerCase();
   return lowerUrl.startsWith('blob:') || 
          lowerUrl.includes('supabase.co') || 
+         lowerUrl.includes('supabase.in') ||
          lowerUrl.includes('firebasestorage.app') ||
          lowerUrl.includes('firebasestorage.googleapis.com');
 }
