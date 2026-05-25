@@ -96,8 +96,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
   /**
    * 🔄 Transactional Visual Sync
-   * Commits the current stable state of the ledger to Firestore immediately.
-   * This ensures that choices like 'Star (Primary)' are locked in even if navigation occurs.
+   * This is the microsecond-instant sync layer.
+   * Visual choices are committed to Firestore immediately so they aren't lost if Save is not clicked.
    */
   const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
@@ -165,7 +165,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       syncVisualsToFirestore(updated);
       return updated;
     });
-    toast({ title: "Identity Updated", description: "Designated primary cover." });
+    toast({ title: "Designated Primary Cover" });
   };
 
   const handleImageError = (id: string) => {
@@ -182,7 +182,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     setIsSaving(true);
     
     // DECISIVE ACTION: Exclude visual binary fields from this payload.
-    // They are handled atomically by syncVisualsToFirestore to prevent state race conditions.
+    // They are handled atomically by syncVisualsToFirestore to prevent stale state overwrites.
     const serializableData = {
       id: propertyId, 
       landlordId: user.uid, 
@@ -244,7 +244,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
               <ScrollArea className="h-[600px] pr-4">
                 <div className="grid grid-cols-2 gap-5">
                   {ledger.map((item, index) => {
-                    // Logic-Driven Preview: Fallback to high-fidelity local blob if cloud binary is broken or pending.
+                    // Self-Healing Source: Priority 1 is cloudUrl if verified, otherwise high-fidelity local preview.
                     const displayUrl = (item.status === 'ready' && item.cloudUrl && !item.isBroken) ? item.cloudUrl : item.previewUrl;
                     
                     return (

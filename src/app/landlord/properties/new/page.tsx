@@ -53,8 +53,8 @@ export default function NewPropertyPage() {
 
   /**
    * 🔄 Transactional Visual Sync
-   * This is called microsecond-instantly upon visual changes to lock in the identity
-   * before any manual save occurs.
+   * This is the microsecond-instant sync layer.
+   * Designated primary cover is committed to Firestore immediately so it mirrors across the app.
    */
   const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId) return;
@@ -126,7 +126,7 @@ export default function NewPropertyPage() {
       syncVisualsToFirestore(updated);
       return updated;
     });
-    toast({ title: "Identity Updated", description: "Primary cover designated." });
+    toast({ title: "Designated Primary Cover" });
   };
 
   const handleImageError = (id: string) => {
@@ -209,6 +209,7 @@ export default function NewPropertyPage() {
               <ScrollArea className="h-[450px] pr-4">
                 <div className="grid grid-cols-2 gap-4">
                   {ledger.map((item, index) => {
+                    // Optimized Preview: prioritizes verified cloud URLs but falls back to local blobs to prevent "broken image" state.
                     const displayUrl = (item.status === 'ready' && item.cloudUrl && !item.isBroken) ? item.cloudUrl : item.previewUrl;
                     
                     return (
