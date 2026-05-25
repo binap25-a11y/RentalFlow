@@ -89,21 +89,21 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
-    const newItems: LedgerItem[] = files.map(file => ({
-      id: Math.random().toString(),
-      url: URL.createObjectURL(file),
-      status: 'uploading',
-      isNew: true
-    }));
-    
-    setLedger(prev => [...prev, ...newItems]);
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const itemId = newItems[i].id;
+    for (const file of files) {
+      const tempId = Math.random().toString(36).substring(7);
+      const localUrl = URL.createObjectURL(file);
       
+      const newItem: LedgerItem = {
+        id: tempId,
+        url: localUrl,
+        status: 'uploading',
+        isNew: true
+      };
+      
+      setLedger(prev => [...prev, newItem]);
+
       try {
-        // 🛠️ Direct Cloud Sync: Eliminates Server Action Payload Bottlenecks
+        // High-Fidelity Client-Side Compression to prevent network payload failures
         const compressedBlob = await compressImage(file);
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
@@ -119,22 +119,24 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         const { data: { publicUrl } } = supabase.storage.from('property-images').getPublicUrl(path);
         
         setLedger(prev => prev.map(item => 
-          item.id === itemId ? { ...item, url: publicUrl, status: 'ready' } : item
+          item.id === tempId ? { ...item, url: publicUrl, status: 'ready' } : item
         ));
       } catch (err: any) {
+        console.error("Direct Sync Error:", err);
         setLedger(prev => prev.map(item => 
-          item.id === itemId ? { ...item, status: 'error' } : item
+          item.id === tempId ? { ...item, status: 'error' } : item
         ));
         toast({ 
           variant: "destructive", 
           title: "Mobile Sync Failed", 
-          description: "Cloud connection interrupted. Gallery selection is still active."
+          description: "Connection interrupted. Retrying may be necessary." 
         });
       }
     }
+    e.target.value = '';
   };
 
-  const removeFromLedger = async (id: string) => {
+  const removeFromLedger = (id: string) => {
     setLedger(prev => prev.filter(i => i.id !== id));
   };
 
@@ -249,7 +251,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   ))}
                   <label htmlFor="image-input" className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-muted/5 flex flex-col items-center justify-center gap-2 group cursor-pointer shadow-inner">
                     <Plus className="w-6 h-6 text-primary/20 group-hover:text-primary/40" />
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">Add More</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">Gallery Select</span>
                   </label>
                 </div>
               </ScrollArea>

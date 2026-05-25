@@ -47,23 +47,21 @@ export default function NewPropertyPage() {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
-    const tempId = Math.random().toString(36).substring(7);
-
-    // Initial Ledger Registration
-    const newItems: LedgerItem[] = files.map(file => ({
-      id: Math.random().toString(),
-      url: URL.createObjectURL(file),
-      status: 'uploading'
-    }));
-    
-    setLedger(prev => [...prev, ...newItems]);
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const itemId = newItems[i].id;
+    // Direct Cloud Sync logic to bypass Next.js Server Action bottlenecks
+    for (const file of files) {
+      const tempId = Math.random().toString(36).substring(7);
+      const localUrl = URL.createObjectURL(file);
       
+      const newItem: LedgerItem = {
+        id: tempId,
+        url: localUrl,
+        status: 'uploading'
+      };
+      
+      setLedger(prev => [...prev, newItem]);
+
       try {
-        // 🛠️ Direct Cloud Sync: Bypasses server payload limits
+        // Optimize on client to ensure fast delivery on mobile networks
         const compressedBlob = await compressImage(file);
         const path = `assets/${user.uid}/new_${tempId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
@@ -79,19 +77,22 @@ export default function NewPropertyPage() {
         const { data: { publicUrl } } = supabase.storage.from('property-images').getPublicUrl(path);
         
         setLedger(prev => prev.map(item => 
-          item.id === itemId ? { ...item, url: publicUrl, status: 'ready' } : item
+          item.id === tempId ? { ...item, url: publicUrl, status: 'ready' } : item
         ));
       } catch (err: any) {
+        console.error("Direct Sync Error:", err);
         setLedger(prev => prev.map(item => 
-          item.id === itemId ? { ...item, status: 'error' } : item
+          item.id === tempId ? { ...item, status: 'error' } : item
         ));
         toast({ 
           variant: "destructive", 
           title: "Mobile Sync Failed", 
-          description: "Cloud connection interrupted. Please check your data signal and retry."
+          description: "Connection interrupted. Retrying may be necessary." 
         });
       }
     }
+    // Clear input so same file can be selected again if needed
+    e.target.value = '';
   };
 
   const removeFromLedger = (id: string) => {
@@ -218,23 +219,23 @@ export default function NewPropertyPage() {
               <div className="grid grid-cols-1 gap-6 text-left">
                 <div className="space-y-2">
                   <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Street Address</Label>
-                  <Input value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="e.g. 12 High Street" className="rounded-xl h-12 bg-muted/10 border-none font-bold text-foreground" />
+                  <Input value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="e.g. 12 High Street" className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">City</Label>
-                    <Input value={city} onChange={(e) => setCity(e.target.value)} required className="rounded-xl h-12 bg-muted/10 border-none font-bold text-foreground" />
+                    <Input value={city} onChange={(e) => setCity(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground" />
                   </div>
                   <div className="space-y-2">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Postcode</Label>
-                    <Input value={zipCode} onChange={(e) => setZipCode(e.target.value)} required className="rounded-xl h-12 bg-muted/10 border-none font-bold text-foreground" />
+                    <Input value={zipCode} onChange={(e) => setZipCode(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Asset Class</Label>
                     <Select value={propertyType} onValueChange={setPropertyType}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/10 border-none font-bold text-foreground">
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl border-border bg-card">
@@ -246,12 +247,12 @@ export default function NewPropertyPage() {
                   </div>
                   <div className="space-y-2">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Monthly Yield (£)</Label>
-                    <Input type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/10 border-none font-bold text-foreground" />
+                    <Input type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Operational Narrative</Label>
-                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description for internal records..." className="rounded-xl min-h-[140px] bg-muted/10 border-none font-medium text-foreground leading-relaxed" />
+                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description for internal records..." className="rounded-xl min-h-[140px] bg-muted/20 border-none font-medium text-foreground leading-relaxed" />
                 </div>
               </div>
             </div>
