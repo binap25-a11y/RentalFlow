@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, use, useMemo, useCallback } from 'react';
+import { useState, useEffect, use, useMemo } from 'react';
 import { 
   useUser, 
   useFirestore, 
@@ -87,8 +87,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
   /**
    * 🔄 Instant Transactional Persistence (Effect-Based)
-   * This effect watches the ledger and commits changes to Firestore the microsecond
-   * an upload completes or the primary image order changes.
+   * Commits visual changes to Firestore the microsecond an upload reaches Supabase
+   * or a primary cover is selected.
    */
   useEffect(() => {
     if (!db || !user || !propertyId || !propertyRef || !isInitialized) return;
@@ -97,8 +97,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // Transactional Autosave: Always prioritize user data and lock it into Firestore.
-    // If no user photography exists, imageUrl becomes null (UI will resolve fallback).
     updateDocumentNonBlocking(propertyRef, {
       imageUrl: userOnly.length > 0 ? userOnly[0] : null,
       imageUrls: userOnly,
@@ -110,7 +108,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
-    toast({ title: "Synchronizing Visuals", description: `Processing ${files.length} binary assets...` });
+    toast({ title: "Synchronizing Visuals", description: `Processing binary assets...` });
 
     const uploadPromises = files.map(async (file) => {
       const tempId = Math.random().toString(36).substring(7);
@@ -140,13 +138,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     });
 
     await Promise.all(uploadPromises);
-    toast({ title: "Gallery Updated" });
+    toast({ title: "Visual Sync Complete" });
     e.target.value = '';
   };
 
   const removeFromLedger = (id: string) => {
     setLedger(prev => prev.filter(i => i.id !== id));
-    toast({ title: "Asset Removed" });
   };
 
   const setAsPrimary = (id: string) => {
@@ -155,7 +152,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       if (!item) return prev;
       return [item, ...prev.filter(i => i.id !== id)];
     });
-    toast({ title: "Cover Identity Updated" });
+    toast({ title: "Identity Updated", description: "Designated primary cover." });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -178,7 +175,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       updateDocumentNonBlocking(propertyRef, { ...serializableData, updatedAt: serverTimestamp() });
       await syncPropertyToDb(serializableData);
-      toast({ title: "Portfolio Persistent Sync Complete" });
+      toast({ title: "Portfolio Sync Complete" });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       toast({ variant: "destructive", title: "Update Failed", description: err.message });
@@ -186,7 +183,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
   };
 
-  if (isLoading || !isInitialized) return <div className="flex h-[70vh] items-center justify-center bg-background"><Loader2 className="animate-spin text-accent" /></div>;
+  if (isLoading || !isInitialized) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-accent" /></div>;
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left bg-background">
@@ -227,7 +224,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                     )}>
                       <img 
                         src={item.previewUrl} 
-                        alt={`Asset ${index}`} 
+                        alt="" 
                         className="absolute inset-0 h-full w-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;

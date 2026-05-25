@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp, collection } from 'firebase/firestore';
 import { Card, CardFooter } from "@/components/ui/card";
@@ -31,7 +32,6 @@ export default function NewPropertyPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  // 🔐 Stable Identity Pre-Generation for Instant Sync
   const propertyId = useMemo(() => {
     if (!db) return '';
     return doc(collection(db, 'properties')).id;
@@ -50,13 +50,13 @@ export default function NewPropertyPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   /**
-   * 🔄 Instant Transactional Persistence
+   * 🔄 Instant Transactional Persistence (Effect-Based)
    * USER-DATA ONLY: Firestore only stores real photography.
    */
-  const performDirectSync = (currentLedger: LedgerItem[]) => {
+  useEffect(() => {
     if (!db || !user || !propertyId) return;
 
-    const userOnly = currentLedger
+    const userOnly = ledger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
@@ -69,13 +69,13 @@ export default function NewPropertyPage() {
       updatedAt: serverTimestamp(),
       memberIds: [user.uid]
     }, { merge: true });
-  };
+  }, [ledger, db, user, propertyId]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user || !propertyId) return;
 
-    toast({ title: "Synchronizing visuals...", description: `Initializing binary orchestration for ${files.length} items.` });
+    toast({ title: "Synchronizing Visuals", description: `Processing binary assets...` });
 
     const uploadPromises = files.map(async (file) => {
       const tempId = Math.random().toString(36).substring(7);
@@ -96,42 +96,30 @@ export default function NewPropertyPage() {
           return url;
         });
         
-        setLedger(prev => {
-          const updated = prev.map(item => 
-            item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
-          );
-          // INSTANT TRANSACTIONAL SYNC
-          performDirectSync(updated);
-          return updated;
-        });
+        setLedger(prev => prev.map(item => 
+          item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
+        ));
       } catch (err) {
         setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
       }
     });
 
     await Promise.all(uploadPromises);
-    toast({ title: "Gallery Synced" });
+    toast({ title: "Visual Sync Complete" });
     e.target.value = '';
   };
 
   const removeFromLedger = (id: string) => {
-    setLedger(prev => {
-      const updated = prev.filter(i => i.id !== id);
-      performDirectSync(updated);
-      return updated;
-    });
-    toast({ title: "Asset Removed" });
+    setLedger(prev => prev.filter(i => i.id !== id));
   };
 
   const setAsPrimary = (id: string) => {
     setLedger(prev => {
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
-      const updated = [item, ...prev.filter(i => i.id !== id)];
-      performDirectSync(updated);
-      return updated;
+      return [item, ...prev.filter(i => i.id !== id)];
     });
-    toast({ title: "Cover Identity Updated" });
+    toast({ title: "Identity Updated" });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -206,7 +194,7 @@ export default function NewPropertyPage() {
                     )}>
                       <img 
                         src={item.previewUrl} 
-                        alt={`Asset ${index}`} 
+                        alt="" 
                         className="absolute inset-0 h-full w-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;

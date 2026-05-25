@@ -75,7 +75,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   /**
    * 🖼️ User-Data Only Resolution
    * Strictly resolves photography from the Firestore record.
-   * Placeholders are only provided if the user has zero uploaded photography.
    */
   const gallery = useMemo(() => {
     return getResolvedGallery(property?.imageUrl, property?.imageUrls);
@@ -175,9 +174,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       
       setUploadedDocUrl(publicUrl);
       if (!newDocName) setNewDocName(file.name.split('.')[0]);
-      toast({ title: "Sync Ready", description: "Document synchronized to cloud." });
+      toast({ title: "Sync Ready" });
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Sync Interrupted", description: "Please retry." });
+      toast({ variant: "destructive", title: "Sync Interrupted" });
     } finally {
       setIsUploadingDoc(false);
     }
@@ -270,13 +269,11 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     <div className="relative h-[300px] md:h-[450px] w-full bg-muted cursor-zoom-in group" onClick={() => setLightboxUrl(url)}>
                       <img 
                         src={url} 
-                        alt={`Property Asset ${index}`} 
+                        alt="" 
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" 
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          if (target.src !== RENTALFLOW_NEUTRAL_FALLBACK) {
-                             target.src = RENTALFLOW_NEUTRAL_FALLBACK;
-                          }
+                          target.src = RENTALFLOW_NEUTRAL_FALLBACK;
                         }}
                       />
                       {index === 0 && (
@@ -573,7 +570,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             <div className="relative w-full h-full flex items-center justify-center">
               <img 
                 src={lightboxUrl} 
-                alt="High resolution property asset" 
+                alt="" 
                 className="object-contain max-w-full max-h-[90vh] rounded-2xl shadow-2xl" 
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
