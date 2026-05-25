@@ -53,7 +53,7 @@ export default function NewPropertyPage() {
 
   /**
    * 🔄 Instant Transactional Persistence
-   * Directly updates Firestore microsecond a binary upload completes.
+   * Directly updates Firestore microsecond a binary upload completes or star is pressed.
    */
   const performDirectSync = (currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId) return;
@@ -105,6 +105,7 @@ export default function NewPropertyPage() {
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
           );
+          // INSTANT SYNC: Perform direct Firestore commit
           performDirectSync(updated);
           return updated;
         });
@@ -127,15 +128,20 @@ export default function NewPropertyPage() {
     toast({ title: "Asset Removed" });
   };
 
+  /**
+   * ⭐ Star Coverage Sync
+   * Designated images moved to primary position instantly update cover id.
+   */
   const setAsPrimary = (id: string) => {
     setLedger(prev => {
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
       const updated = [item, ...prev.filter(i => i.id !== id)];
+      // TRANSACTIONAL SYNC: Starred image becomes cover id microsecond it is pressed
       performDirectSync(updated);
       return updated;
     });
-    toast({ title: "Cover Identity Updated" });
+    toast({ title: "Cover Identity Updated", description: "Identity synced across portfolio." });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -217,7 +223,9 @@ export default function NewPropertyPage() {
                         }}
                       />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">
-                        <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-card/90 text-accent p-2 rounded-xl hover:scale-110 transition-transform shadow-lg border border-border"><Star className={cn("w-3.5 h-3.5", index === 0 && "fill-accent")} /></button>
+                        <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-card/90 text-accent p-2 rounded-xl hover:scale-110 transition-transform shadow-lg border border-border">
+                          <Star className={cn("w-3.5 h-3.5", index === 0 && "fill-accent")} />
+                        </button>
                         <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 transition-all active:scale-90"><X className="w-3.5 h-3.5" /></button>
                       </div>
                       

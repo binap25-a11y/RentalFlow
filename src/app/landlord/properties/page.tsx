@@ -69,7 +69,6 @@ export default function PropertiesPage() {
           properties.map((property) => (
             <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-2xl bg-card border border-transparent hover:border-accent/10">
               <div className="relative aspect-video w-full overflow-hidden bg-muted">
-                {/* Standard <img> tag for instant updates and reliable visual stability across devices */}
                 <img 
                   src={getResolvedImageUrl(property.imageUrl, property.imageUrls)} 
                   alt={property.addressLine1} 

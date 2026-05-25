@@ -90,7 +90,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
   /**
    * 🔄 Instant Transactional Persistence
-   * Directly updates Firestore microsecond a binary upload completes.
+   * Directly updates Firestore microsecond a binary upload completes or star is pressed.
    * This ensures visual sync across Inventory, Details, and Hero pages instantly.
    */
   const performDirectSync = (currentLedger: LedgerItem[]) => {
@@ -103,7 +103,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const userOnly = readyUrls.filter(isRealUserUpload);
     const primaryUrl = userOnly.length > 0 ? userOnly[0] : BRAND_FALLBACK;
 
-    // DIRECT NON-BLOCKING UPDATE: No dependency on "Save" button for visuals
+    // DIRECT NON-BLOCKING UPDATE: Immediate sync to Portfolio Inventory
     updateDocumentNonBlocking(propertyRef, {
       imageUrl: primaryUrl,
       imageUrls: userOnly,
@@ -140,7 +140,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
           );
-          // INSTANT SYNC: Perform direct Firestore commit
+          // INSTANT SYNC: Commit visual status to Firestore
           performDirectSync(updated);
           return updated;
         });
@@ -163,15 +163,20 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     toast({ title: "Asset Removed" });
   };
 
+  /**
+   * ⭐ Star Coverage Sync
+   * Designated images moved to primary position instantly update cover id for entire app.
+   */
   const setAsPrimary = (id: string) => {
     setLedger(prev => {
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
       const updated = [item, ...prev.filter(i => i.id !== id)];
+      // TRANSACTIONAL SYNC: Starred image becomes cover id microsecond it is pressed
       performDirectSync(updated);
       return updated;
     });
-    toast({ title: "Cover Identity Updated" });
+    toast({ title: "Cover Identity Updated", description: "Identity synced across portfolio." });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -240,7 +245,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
-                      {/* Standard <img> tag to ensure instant updates bypass Next.js image proxying */}
                       <img 
                         src={item.previewUrl} 
                         alt={`Asset ${index}`} 
@@ -251,7 +255,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                         }}
                       />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">
-                        <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-card/90 text-accent p-2 rounded-xl hover:scale-110 transition-transform shadow-lg border border-border"><Star className={cn("w-3.5 h-3.5", index === 0 && "fill-accent")} /></button>
+                        <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-card/90 text-accent p-2 rounded-xl hover:scale-110 transition-transform shadow-lg border border-border">
+                          <Star className={cn("w-3.5 h-3.5", index === 0 && "fill-accent")} />
+                        </button>
                         <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 transition-all active:scale-90"><X className="w-3.5 h-3.5" /></button>
                       </div>
                       
