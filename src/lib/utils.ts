@@ -104,7 +104,7 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.85)
 /**
  * 🖼️ User Asset Identifier
  * Strictly identifies assets that were intentionally uploaded by the user to cloud storage.
- * DECISIVELY REJECTS all known stock image and placeholder domains to prevent "Wrong Image" persistence.
+ * DECISIVELY REJECTS all known stock image and placeholder domains to prevent identity confusion.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
@@ -121,11 +121,11 @@ export function isRealUserUpload(url: any): boolean {
     'images.unsplash.com'
   ];
 
-  // Specific Stock Identifiers that were causing persistence issues
+  // Specific Stock Identifiers to exclude from the professional ledger
   const forbiddenIds = [
-    'photo-1486406146926-c627a92ad1ab', // corporate skyscraper
-    'photo-1560518883-ce09059eeffa',   // brand logo
-    'photo-1613490493576-7fde63acd811'    // residence placeholder
+    'photo-1486406146926-c627a92ad1ab', // skyscraper
+    'photo-1560518883-ce09059eeffa',   // logo
+    'photo-1613490493576-7fde63acd811'    // residence
   ];
 
   if (forbiddenDomains.some(d => u.includes(d))) return false;
@@ -151,7 +151,7 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
- * USER-DATA ONLY POLICY: Returns user photography if any exists. Returns null otherwise.
+ * USER-DATA ONLY POLICY: Returns user photography if any exists. Returns null otherwise for premium UI fallbacks.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string | null {
   if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {

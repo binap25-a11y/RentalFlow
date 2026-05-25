@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp, collection } from 'firebase/firestore';
 import { Card, CardFooter } from "@/components/ui/card";
@@ -47,25 +48,30 @@ export default function NewPropertyPage() {
   
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const ledgerSyncRef = useRef<string>('');
 
-  const syncVisualsToFirestore = useCallback((updatedLedger: LedgerItem[]) => {
+  // TRANSACTIONAL ATOMIC SYNC: Orchestrate visuals to Firestore whenever the ledger reaches a stable state.
+  useEffect(() => {
     if (!db || !user || !propertyId) return;
 
-    const userOnly = updatedLedger
+    const currentReadyUrls = ledger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
+    const syncKey = currentReadyUrls.join(',');
+    if (syncKey === ledgerSyncRef.current) return;
+    ledgerSyncRef.current = syncKey;
+
     const propertyRef = doc(db, 'properties', propertyId);
-    // TRANSACTIONAL ATOMIC SYNC: Direct Firestore update to lock in the identity
     setDocumentNonBlocking(propertyRef, {
       id: propertyId,
       landlordId: user.uid,
-      imageUrl: userOnly.length > 0 ? userOnly[0] : null,
-      imageUrls: userOnly,
+      imageUrl: currentReadyUrls.length > 0 ? currentReadyUrls[0] : null,
+      imageUrls: currentReadyUrls,
       updatedAt: serverTimestamp(),
       memberIds: [user.uid]
     }, { merge: true });
-  }, [db, user, propertyId]);
+  }, [ledger, db, user, propertyId]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -76,7 +82,6 @@ export default function NewPropertyPage() {
       const localUrl = URL.createObjectURL(file);
       
       const uploadItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
-      
       setLedger(prev => [...prev, uploadItem]);
 
       try {
@@ -92,11 +97,7 @@ export default function NewPropertyPage() {
           return url;
         });
         
-        setLedger(prev => {
-          const next = prev.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item);
-          syncVisualsToFirestore(next);
-          return next;
-        });
+        setLedger(prev => prev.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item));
       } catch (err) {
         setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
       }
@@ -105,20 +106,14 @@ export default function NewPropertyPage() {
   };
 
   const removeFromLedger = (id: string) => {
-    setLedger(prev => {
-      const next = prev.filter(i => i.id !== id);
-      syncVisualsToFirestore(next);
-      return next;
-    });
+    setLedger(prev => prev.filter(i => i.id !== id));
   };
 
   const setAsPrimary = (id: string) => {
     setLedger(prev => {
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
-      const next = [item, ...prev.filter(i => i.id !== id)];
-      syncVisualsToFirestore(next);
-      return next;
+      return [item, ...prev.filter(i => i.id !== id)];
     });
     toast({ title: "Identity Updated", description: "Primary cover designated." });
   };
@@ -205,7 +200,7 @@ export default function NewPropertyPage() {
                       item.status === 'error' && "border-destructive"
                     )}>
                       <img 
-                        src={item.previewUrl} 
+                        src={item.status === 'ready' && item.cloudUrl ? item.cloudUrl : item.previewUrl} 
                         alt="" 
                         className="absolute inset-0 h-full w-full object-cover"
                       />
@@ -262,7 +257,7 @@ export default function NewPropertyPage() {
                   </div>
                   <div className="space-y-2">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Bathrooms</Label>
-                    <Select value={bathrooms} onValueChange={setBathrooms}>
+                    <Select value={bathrooms} onValueChange={setBedrooms}>
                       <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-xl border-border bg-card">
                         {[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={n.toString()} className="font-bold">{n} Bathroom{n > 1 ? 's' : ''}</SelectItem>)}
