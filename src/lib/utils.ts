@@ -13,85 +13,84 @@ export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-15
 
 /**
  * 🖼️ Resilient Mobile Optimization Engine
- * Redesigned for 100% reliability on mobile.
- * If the device hits memory limits or format errors, it SILENTLY returns the original file.
- * This ensures the user is never blocked by a "Compression Failed" message.
+ * Redesigned for 100% reliability on mobile (iOS/Android).
+ * Uses URL.createObjectURL for extreme memory efficiency.
+ * If the device hits memory limits, it SILENTLY returns the original file.
  */
-export async function compressImage(file: File, maxWidth = 1000, quality = 0.6): Promise<Blob | File> {
-  // Skip optimization for non-image files or very small files (< 500KB)
-  if (!file.type.startsWith('image/') || file.size < 500000) {
+export async function compressImage(file: File, maxWidth = 1200, quality = 0.7): Promise<Blob | File> {
+  // Skip non-images or small files
+  if (!file.type.startsWith('image/') || file.size < 1024 * 512) {
     return file;
   }
 
   try {
     return await new Promise((resolve) => {
-      // Safety timeout: if compression hangs, return original after 3s
+      // Strict safety timeout (3s)
       const timeout = setTimeout(() => resolve(file), 3000);
 
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target?.result as string;
-        img.onload = () => {
-          try {
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+      
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
 
-            // Enforce conservative mobile-safe boundaries
-            if (width > height) {
-              if (width > maxWidth) {
-                height *= maxWidth / width;
-                width = maxWidth;
-              }
-            } else {
-              if (height > maxWidth) {
-                width *= maxWidth / height;
-                height = maxWidth;
-              }
+          if (width > height) {
+            if (width > maxWidth) {
+              height *= maxWidth / width;
+              width = maxWidth;
             }
-
-            canvas.width = width;
-            canvas.height = height;
-
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-              clearTimeout(timeout);
-              resolve(file); 
-              return;
+          } else {
+            if (height > maxWidth) {
+              width *= maxWidth / height;
+              height = maxWidth;
             }
+          }
 
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'medium';
-            ctx.drawImage(img, 0, 0, width, height);
+          canvas.width = width;
+          canvas.height = height;
 
-            canvas.toBlob(
-              (blob) => {
-                clearTimeout(timeout);
-                if (blob && blob.size < file.size) {
-                  resolve(blob);
-                } else {
-                  resolve(file);
-                }
-              },
-              'image/jpeg',
-              quality
-            );
-          } catch (e) {
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            URL.revokeObjectURL(objectUrl);
             clearTimeout(timeout);
             resolve(file);
+            return;
           }
-        };
-        img.onerror = () => {
+
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'medium';
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              URL.revokeObjectURL(objectUrl);
+              clearTimeout(timeout);
+              if (blob && blob.size < file.size) {
+                resolve(blob);
+              } else {
+                resolve(file);
+              }
+            },
+            'image/jpeg',
+            quality
+          );
+        } catch (e) {
+          URL.revokeObjectURL(objectUrl);
           clearTimeout(timeout);
           resolve(file);
-        };
+        }
       };
-      reader.onerror = () => {
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
         clearTimeout(timeout);
         resolve(file);
       };
+
+      img.src = objectUrl;
     });
   } catch (error) {
     return file;
