@@ -69,7 +69,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setDescription(property.description || '');
       setPropertyType(property.propertyType || 'Apartment');
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
-      setBathrooms(property.numberOfBathrooms?.toString() || '1');
+      setBedrooms(property.numberOfBathrooms?.toString() || '1');
       
       const initialLedger = (property.imageUrls || [])
         .filter(url => url && isRealUserUpload(url))

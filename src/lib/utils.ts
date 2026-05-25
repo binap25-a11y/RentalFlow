@@ -115,6 +115,7 @@ export async function compressImage(file: File, maxWidth = 800, quality = 0.75):
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
+  
   const u = url.toLowerCase();
   
   // List of forbidden partial matches (known placeholders)
@@ -122,7 +123,8 @@ export function isRealUserUpload(url: any): boolean {
     'images.unsplash.com',
     'picsum.photos',
     'placehold.co',
-    'placeholder.com'
+    'placeholder.com',
+    'pexels.com'
   ];
 
   if (forbidden.some(f => u.includes(f))) return false;
