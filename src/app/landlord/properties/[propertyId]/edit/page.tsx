@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, use, useCallback } from 'react';
@@ -16,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
@@ -29,6 +30,7 @@ type LedgerItem = {
   previewUrl: string; 
   cloudUrl?: string;   
   status: 'uploading' | 'ready' | 'error';
+  isBroken?: boolean;
 };
 
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
@@ -99,7 +101,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // TRANSACTIONAL ATOMIC SYNC: Committed microsecond-instantly
     updateDocumentNonBlocking(propertyRef, {
       imageUrl: userOnly.length > 0 ? userOnly[0] : null,
       imageUrls: userOnly,
@@ -116,7 +117,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const localUrl = URL.createObjectURL(file);
       
       const uploadItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
-      
       setLedger(prev => [...prev, uploadItem]);
 
       try {
@@ -163,13 +163,18 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     toast({ title: "Identity Updated", description: "Designated primary cover." });
   };
 
+  const handleImageError = (id: string) => {
+    setLedger(prev => prev.map(item => 
+      item.id === id ? { ...item, isBroken: true } : item
+    ));
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !db || !propertyRef) return;
 
     setIsSaving(true);
     
-    // Metadata sync: Visuals are managed via transactional sync within handlers to prevent stale overrides
     const serializableData = {
       id: propertyId, 
       landlordId: user.uid, 
@@ -235,13 +240,22 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       "relative aspect-square rounded-[2rem] overflow-hidden group shadow-2xl bg-background border-2 transition-all duration-500",
                       item.status === 'uploading' ? 'opacity-50 grayscale scale-[0.95]' : 'opacity-100',
                       index === 0 ? "border-accent" : "border-transparent",
-                      item.status === 'error' && "border-destructive"
+                      (item.status === 'error' || item.isBroken) && "border-destructive"
                     )}>
-                      <img 
-                        src={item.previewUrl} 
-                        alt="" 
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
+                      {!item.isBroken ? (
+                        <img 
+                          src={item.status === 'ready' && item.cloudUrl ? item.cloudUrl : item.previewUrl} 
+                          alt="" 
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          onError={() => handleImageError(item.id)}
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/20 gap-2">
+                          <Building2 className="w-8 h-8 text-muted-foreground/30" />
+                          <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/40">Sync Pending</span>
+                        </div>
+                      )}
+                      
                       <div className="absolute top-3 right-3 flex gap-2 z-20">
                         <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-black/60 backdrop-blur-xl text-accent p-2.5 rounded-2xl hover:scale-110 transition-transform shadow-2xl border border-white/10">
                           <Star className={cn("w-4 h-4", index === 0 && "fill-accent")} />

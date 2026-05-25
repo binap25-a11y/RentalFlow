@@ -112,22 +112,34 @@ export function isRealUserUpload(url: any): boolean {
   const u = url.toLowerCase();
   
   // DECISIVE BLACKLIST: PURGE all known stock image/placeholder domains
-  const forbiddenKeywords = [
+  const forbiddenDomains = [
     'unsplash.com',
     'picsum.photos',
     'placehold.co',
     'placeholder.com',
     'pexels.com',
+    'images.unsplash.com'
+  ];
+
+  // Specific Stock Identifiers that were causing persistence issues
+  const forbiddenIds = [
     'photo-1486406146926-c627a92ad1ab', // corporate skyscraper
     'photo-1560518883-ce09059eeffa',   // brand logo
     'photo-1613490493576-7fde63acd811'    // residence placeholder
   ];
 
-  if (forbiddenKeywords.some(k => u.includes(k))) return false;
+  if (forbiddenDomains.some(d => u.includes(d))) return false;
+  if (forbiddenIds.some(id => u.includes(id))) return false;
   if (url === RENTALFLOW_LOGO_URL) return false;
 
   // DECISIVE WHITELIST: Only Supabase, Firebase, or local blobs are authorized
-  return u.includes('supabase.co') || u.includes('supabase.app') || u.startsWith('blob:') || u.includes('firebasestorage.app') || u.includes('firebasestorage.googleapis.com');
+  return (
+    u.includes('supabase.co') || 
+    u.includes('supabase.app') || 
+    u.startsWith('blob:') || 
+    u.includes('firebasestorage.app') || 
+    u.includes('firebasestorage.googleapis.com')
+  );
 }
 
 /**
