@@ -1,3 +1,4 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -168,7 +169,7 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
-  // Primary cover ALWAYS goes first
+  // Primary cover ALWAYS goes first if valid
   if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
     assets.add(imageUrl);
   }
