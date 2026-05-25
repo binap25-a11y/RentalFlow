@@ -97,7 +97,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
-      // PREVIEW STABILITY: Standard blob creation
       const localUrl = URL.createObjectURL(file);
       
       const newItem: LedgerItem = {

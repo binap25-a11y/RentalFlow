@@ -33,22 +33,15 @@ export async function withRetry<T>(
  * 🖼️ Resilient Mobile Optimization Engine
  * Converts HEIC/PNG to high-quality JPG and downscales for 100% mobile stability.
  * Optimized for low-RAM devices: if optimization hits a memory limit or takes too long, it returns the original file.
- * NOTE: Revocation of object URLs is now handled by the caller to prevent preview race conditions.
  */
 export async function compressImage(file: File, maxWidth = 1000, quality = 0.6): Promise<Blob | File> {
-  // Skip non-images or files that are already small enough (under 300KB)
   if (!file.type.startsWith('image/') || file.size < 1024 * 300) {
     return file;
   }
 
   try {
     return await new Promise((resolve) => {
-      // Memory safety timeout (3s) to prevent blocking the UI
-      const timeout = setTimeout(() => {
-        console.warn("Optimization timeout: falling back to original.");
-        resolve(file);
-      }, 3000);
-
+      const timeout = setTimeout(() => resolve(file), 3000);
       const objectUrl = URL.createObjectURL(file);
       const img = new Image();
       
@@ -58,7 +51,6 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
           let width = img.width;
           let height = img.height;
 
-          // Sequential Downscaling for RAM Stability
           if (width > height) {
             if (width > maxWidth) {
               height *= maxWidth / width;
@@ -88,11 +80,7 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
           canvas.toBlob(
             (blob) => {
               clearTimeout(timeout);
-              if (blob && blob.size < file.size) {
-                resolve(blob);
-              } else {
-                resolve(file);
-              }
+              resolve(blob && blob.size < file.size ? blob : file);
             },
             'image/jpeg',
             quality
@@ -116,23 +104,28 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
 }
 
 /**
- * 🖼️ Strict User Asset Identifier
- * Now handles blob: and base64 URLs to prevent local previews from being filtered out.
+ * 🖼️ User Asset Identifier
+ * Determines if a URL represents a meaningful property asset.
+ * Relaxed to prevent filtering out seeded Unsplash or manual URL entries.
  */
 export function isUserUploadedAsset(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
-  // Allow local previews during the upload session
   if (url.startsWith('blob:') || url.startsWith('data:image/')) return true;
 
   const isStorageAsset = url.includes('supabase.co') || url.includes('firebasestorage.app');
+  if (isStorageAsset) return true;
+
+  // Only exclude very generic "temp" placeholders
   const isGenericPlaceholder = 
-    url.includes('picsum.photos') ||
     url.includes('placehold.co') ||
-    url.includes('via.placeholder.com') ||
-    url.includes('images.unsplash.com');
+    url.includes('via.placeholder.com');
                     
-  return isStorageAsset && !isGenericPlaceholder;
+  if (isGenericPlaceholder) return false;
+
+  // If it's a valid remote URL (like Unsplash), we treat it as an asset 
+  // so the user doesn't lose their seeded portfolio imagery.
+  return url.startsWith('http');
 }
 
 /**
