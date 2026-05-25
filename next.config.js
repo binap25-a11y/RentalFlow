@@ -22,7 +22,8 @@ const nextConfig = {
         "*.supabase.co",
         "*.firebasestorage.app",
         "*.vercel.app",
-        "*.google.com"
+        "*.google.com",
+        "https://*.google.com"
       ]
     }
   },
