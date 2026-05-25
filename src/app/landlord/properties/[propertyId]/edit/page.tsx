@@ -76,8 +76,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         gallery.unshift(property.imageUrl);
       }
       
+      // Initialize ledger: Keep existing images but mark them as ready
       const initialLedger = gallery
-        .filter(url => isUserUploadedAsset(url))
+        .filter(url => url && url.startsWith('http'))
         .map(url => ({ 
           id: Math.random().toString(36).substring(7), 
           previewUrl: url, 
@@ -162,7 +163,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     try {
       const finalUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
-      const primaryUrl = finalUrls.length > 0 ? finalUrls[0] : (property?.imageUrl || '');
+      // If user has uploaded images, use the first one as primary. 
+      // Otherwise keep existing or use fallback.
+      const userUploads = finalUrls.filter(u => isUserUploadedAsset(u));
+      const primaryUrl = userUploads.length > 0 ? userUploads[0] : (finalUrls[0] || property?.imageUrl || RENTALFLOW_NEUTRAL_FALLBACK);
 
       const serializableData = {
         id: propertyId,
@@ -241,7 +245,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                         className="absolute inset-0 h-full w-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = RENTALFLOW_NEUTRAL_FALLBACK;
+                          if (target.src !== RENTALFLOW_NEUTRAL_FALLBACK) {
+                             target.src = RENTALFLOW_NEUTRAL_FALLBACK;
+                          }
                         }}
                       />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">

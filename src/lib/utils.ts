@@ -105,27 +105,30 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
 
 /**
  * 🖼️ User Asset Identifier
- * Determines if a URL represents a meaningful property asset.
- * Relaxed to prevent filtering out seeded Unsplash or manual URL entries.
+ * Strictly identifies assets that were intentionally uploaded or are being 
+ * synchronized by the user (Supabase, Firebase, Blob, DataURI).
  */
 export function isUserUploadedAsset(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
+  // Local previews and inline data are always assets
   if (url.startsWith('blob:') || url.startsWith('data:image/')) return true;
 
+  // Cloud storage is the definitive source for user assets
   const isStorageAsset = url.includes('supabase.co') || url.includes('firebasestorage.app');
   if (isStorageAsset) return true;
 
-  // Only exclude very generic "temp" placeholders
+  // Generic placeholders are NOT assets
   const isGenericPlaceholder = 
     url.includes('placehold.co') ||
-    url.includes('via.placeholder.com');
+    url.includes('via.placeholder.com') ||
+    url.includes('picsum.photos');
                     
   if (isGenericPlaceholder) return false;
 
-  // If it's a valid remote URL (like Unsplash), we treat it as an asset 
-  // so the user doesn't lose their seeded portfolio imagery.
-  return url.startsWith('http');
+  // Treat initial Unsplash seeds as assets IF no cloud assets are available, 
+  // but they are considered lower priority than Supabase uploads.
+  return url.startsWith('http') && url !== RENTALFLOW_NEUTRAL_FALLBACK;
 }
 
 /**
@@ -139,11 +142,17 @@ export function isValidAssetUrl(url: any): boolean {
  * 🖼️ Robust Asset Resolution Engine
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
+  // 1. Check if the primary image is a real user upload (Supabase/Blob)
   if (isUserUploadedAsset(imageUrl)) return imageUrl!;
+  
+  // 2. Check the gallery for any user upload
   if (imageUrls && Array.isArray(imageUrls)) {
     const firstUserUrl = imageUrls.find(u => isUserUploadedAsset(u));
     if (firstUserUrl) return firstUserUrl;
   }
+
+  // 3. Fallback to existing URL if valid, otherwise the brand fallback
+  if (isValidAssetUrl(imageUrl)) return imageUrl!;
   return RENTALFLOW_NEUTRAL_FALLBACK;
 }
 
@@ -160,6 +169,10 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
   }
   const result = Array.from(assets);
   const userUploads = result.filter(isUserUploadedAsset);
+  
+  // If user has uploaded images, only show those to remove placeholders
   if (userUploads.length > 0) return userUploads;
-  return [RENTALFLOW_NEUTRAL_FALLBACK];
+  
+  // If result has at least one valid URL, use it, otherwise fallback
+  return result.length > 0 ? result : [RENTALFLOW_NEUTRAL_FALLBACK];
 }

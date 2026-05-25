@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, getLandlordCollectionQuery } from '@/firebase';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,8 +11,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { RENTALFLOW_NEUTRAL_FALLBACK } from '@/lib/utils';
-import { useEffect, useState } from 'react';
+import { RENTALFLOW_NEUTRAL_FALLBACK, getResolvedImageUrl } from '@/lib/utils';
+import { useEffect, useState, useMemo } from 'react';
 import { doc } from 'firebase/firestore';
 
 export default function LandingPage() {
@@ -26,6 +26,20 @@ export default function LandingPage() {
   }, [db, user]);
 
   const { data: profile, isLoading: isProfileLoading } = useDoc(userDocRef);
+
+  const propertiesQuery = useMemoFirebase(() => {
+    if (!db || !user || profile?.role !== 'landlord') return null;
+    return getLandlordCollectionQuery(db, "properties", user.uid);
+  }, [db, user, profile]);
+
+  const { data: properties } = useCollection(propertiesQuery);
+
+  const heroImage = useMemo(() => {
+    if (properties && properties.length > 0) {
+      return getResolvedImageUrl(properties[0].imageUrl, properties[0].imageUrls);
+    }
+    return RENTALFLOW_NEUTRAL_FALLBACK;
+  }, [properties]);
 
   useEffect(() => {
     setMounted(true);
@@ -100,7 +114,7 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="relative h-[550px] rounded-[3rem] overflow-hidden shadow-2xl ring-1 ring-border animate-in fade-in zoom-in duration-1000">
-            <Image src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop" alt="Luxury Property" fill className="object-cover" unoptimized priority />
+            <Image src={heroImage} alt="Portfolio Hero" fill className="object-cover" unoptimized priority />
             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
             <div className="absolute bottom-10 left-10 right-10 bg-background/60 backdrop-blur-md border border-border p-8 rounded-3xl">
                <div className="flex justify-between items-center">
@@ -108,7 +122,7 @@ export default function LandingPage() {
                     <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-60 mb-1 font-headline">Active Ledger Hub</p>
                     <p className="text-2xl font-bold font-headline text-foreground">Portfolio Command</p>
                   </div>
-                  <Badge className="bg-emerald-500 text-white border-none font-bold uppercase text-[9px] tracking-widest px-4 py-1.5 rounded-full shadow-lg font-headline">Verified</Badge>
+                  <Badge className="bg-emerald-50 text-white border-none font-bold uppercase text-[9px] tracking-widest px-4 py-1.5 rounded-full shadow-lg font-headline">Verified</Badge>
                </div>
             </div>
           </div>
