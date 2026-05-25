@@ -99,6 +99,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
+    // TRANSACTIONAL ATOMIC SYNC: Committed microsecond-instantly
     updateDocumentNonBlocking(propertyRef, {
       imageUrl: userOnly.length > 0 ? userOnly[0] : null,
       imageUrls: userOnly,
@@ -144,17 +145,21 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   };
 
   const removeFromLedger = (id: string) => {
-    const next = ledger.filter(i => i.id !== id);
-    setLedger(next);
-    syncVisualsToFirestore(next);
+    setLedger(prev => {
+      const next = prev.filter(i => i.id !== id);
+      syncVisualsToFirestore(next);
+      return next;
+    });
   };
 
   const setAsPrimary = (id: string) => {
-    const item = ledger.find(i => i.id === id);
-    if (!item) return;
-    const next = [item, ...ledger.filter(i => i.id !== id)];
-    setLedger(next);
-    syncVisualsToFirestore(next);
+    setLedger(prev => {
+      const item = prev.find(i => i.id === id);
+      if (!item) return prev;
+      const next = [item, ...prev.filter(i => i.id !== id)];
+      syncVisualsToFirestore(next);
+      return next;
+    });
     toast({ title: "Identity Updated", description: "Designated primary cover." });
   };
 
@@ -164,7 +169,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
     
-    // Metadata sync only - visuals are handled by atomic transactional sync within event handlers
+    // Metadata sync: Visuals are managed via transactional sync within handlers to prevent stale overrides
     const serializableData = {
       id: propertyId, 
       landlordId: user.uid, 

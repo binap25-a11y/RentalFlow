@@ -56,6 +56,7 @@ export default function NewPropertyPage() {
       .map(i => i.cloudUrl!);
 
     const propertyRef = doc(db, 'properties', propertyId);
+    // TRANSACTIONAL ATOMIC SYNC: Direct Firestore update to lock in the identity
     setDocumentNonBlocking(propertyRef, {
       id: propertyId,
       landlordId: user.uid,

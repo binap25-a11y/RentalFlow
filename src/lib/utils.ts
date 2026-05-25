@@ -31,7 +31,7 @@ export async function withRetry<T>(
 /**
  * 🖼️ Resilient Mobile Optimization Engine
  */
-export async function compressImage(file: File, maxWidth = 800, quality = 0.75): Promise<Blob | File> {
+export async function compressImage(file: File, maxWidth = 1200, quality = 0.85): Promise<Blob | File> {
   if (!file.type.startsWith('image/') || file.size < 1024 * 100) {
     return file;
   }
@@ -103,14 +103,14 @@ export async function compressImage(file: File, maxWidth = 800, quality = 0.75):
 /**
  * 🖼️ User Asset Identifier
  * Strictly identifies assets that were intentionally uploaded by the user to cloud storage.
- * REJECTS all known stock image and placeholder domains.
+ * DECISIVELY REJECTS all known stock image and placeholder domains.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
   const u = url.toLowerCase();
   
-  // REJECT all known stock image/placeholder domains and specific legacy skyscraper IDs
+  // DECISIVE BLACKLIST: PURGE all known stock image/placeholder domains
   const forbiddenKeywords = [
     'unsplash.com',
     'picsum.photos',
@@ -118,16 +118,15 @@ export function isRealUserUpload(url: any): boolean {
     'placeholder.com',
     'pexels.com',
     'photo-1486406146926-c627a92ad1ab', // skyscraper
-    'photo-1560518883-ce09059eeffa'   // brand logo
+    'photo-1560518883-ce09059eeffa',   // brand logo
+    'photo-1613490493576-7fde63acd811'    // residence placeholder
   ];
 
   if (forbiddenKeywords.some(k => u.includes(k))) return false;
-  
-  // Exclude explicit brand asset constant
   if (url === RENTALFLOW_LOGO_URL) return false;
 
-  // Specific cloud storage providers or standard binary paths are valid
-  return u.startsWith('http') || u.startsWith('blob:');
+  // DECISIVE WHITELIST: Only Supabase or local blobs are authorized as "User-Data"
+  return u.includes('supabase.co') || u.startsWith('blob:') || u.includes('firebasestorage.app') || u.includes('firebasestorage.googleapis.com');
 }
 
 /**
@@ -139,21 +138,16 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
- * USER-DATA ONLY POLICY: Returns user photography if any exists. Returns null otherwise.
+ * USER-DATA ONLY POLICY: Returns user photography if any exists. Returns null otherwise to trigger UI icons.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string | null {
-  // 1. If explicit Cover URL is a real user upload, it IS the primary identity.
   if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
     return imageUrl;
   }
-
-  // 2. Otherwise, look for the first real upload in the gallery array.
   if (imageUrls && Array.isArray(imageUrls)) {
     const realGallery = imageUrls.filter(isRealUserUpload);
     if (realGallery.length > 0) return realGallery[0];
   }
-
-  // 3. No user photography found (return null to trigger UI fallbacks)
   return null;
 }
 
@@ -162,11 +156,9 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
-  
   if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
     assets.add(imageUrl);
   }
-  
   if (imageUrls && Array.isArray(imageUrls)) {
     imageUrls.forEach(u => {
       if (isValidAssetUrl(u) && isRealUserUpload(u)) {
@@ -174,6 +166,5 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
       }
     });
   }
-  
   return Array.from(assets);
 }
