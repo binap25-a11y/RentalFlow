@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { supabase } from '@/lib/supabase';
-import { cn, compressImage } from '@/lib/utils';
+import { cn, compressImage, withRetry } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -47,7 +47,7 @@ export default function NewPropertyPage() {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
-    // Sequential Processing for Mobile RAM Stability
+    // Sequential Processing for Mobile Stability
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
@@ -61,21 +61,24 @@ export default function NewPropertyPage() {
       setLedger(prev => [...prev, newItem]);
 
       try {
-        // RAM-Safe Optimizer: Silently returns original if RAM is low
+        // High-Fidelity Optimizer: HEIC to JPG conversion included
         const optimizedBlob = await compressImage(file);
         const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
-        // DIRECT-TO-CLOUD: Bypasses Next.js limits
-        const { error: uploadError } = await supabase.storage
-          .from('property-images')
-          .upload(path, optimizedBlob, {
-            contentType: (optimizedBlob as any).type || file.type || 'image/jpeg',
-            upsert: true
-          });
+        // DIRECT-TO-CLOUD SYNC with RETRY
+        const publicUrl = await withRetry(async () => {
+          const { error: uploadError } = await supabase.storage
+            .from('property-images')
+            .upload(path, optimizedBlob, {
+              contentType: 'image/jpeg',
+              upsert: true
+            });
 
-        if (uploadError) throw uploadError;
+          if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage.from('property-images').getPublicUrl(path);
+          const { data: { publicUrl: url } } = supabase.storage.from('property-images').getPublicUrl(path);
+          return url;
+        });
         
         setLedger(prev => prev.map(item => 
           item.id === tempId ? { ...item, url: publicUrl, status: 'ready' } : item
@@ -174,7 +177,7 @@ export default function NewPropertyPage() {
             <div className="p-10 bg-muted/10 border-r border-border">
               <div className="flex justify-between items-center mb-6">
                 <Label className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Visual Inventory</Label>
-                <label htmlFor="image-input" className="h-10 rounded-xl font-bold text-[10px] uppercase font-headline cursor-pointer px-5 bg-accent text-white shadow-lg flex items-center hover:opacity-90 transition-all active:scale-95">
+                <label htmlFor="image-input" className="h-10 rounded-xl font-bold text-[10px] uppercase font-headline cursor-pointer px-5 bg-accent text-white shadow-lg flex items-center hover:bg-accent/90 transition-all active:scale-95">
                   <Plus className="w-3.5 h-3.5 mr-2" /> Add Assets
                 </label>
               </div>
@@ -258,7 +261,7 @@ export default function NewPropertyPage() {
           </div>
           <CardFooter className="p-10 bg-muted/5 border-t flex flex-col md:flex-row justify-end gap-4">
             <Button type="button" variant="ghost" className="w-full md:w-auto rounded-xl h-12 px-8 font-bold font-headline text-muted-foreground" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" disabled={isSaving || ledger.some(i => i.status === 'uploading')} className="w-full md:w-auto rounded-xl font-bold bg-accent h-12 px-12 shadow-xl shadow-accent/20 font-headline text-white transition-all hover:scale-[1.02] uppercase tracking-widest text-xs border-none">
+            <Button type="submit" disabled={isSaving || ledger.some(i => i.status === 'uploading')} className="w-full md:w-auto rounded-xl font-bold bg-accent h-12 px-12 shadow-xl shadow-accent/20 font-headline text-white transition-all hover:bg-accent/90 uppercase tracking-widest text-xs border-none">
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
               Synchronize Asset
             </Button>

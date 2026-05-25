@@ -29,7 +29,7 @@ import {
   Check, X, AlertTriangle, Info, Trash2, Edit3, PlayCircle, Camera, Clock
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { cn, compressImage } from "@/lib/utils";
+import { cn, compressImage, withRetry } from "@/lib/utils";
 import { generateInspectionReport } from "@/ai/flows/generate-inspection-report";
 import { supabase } from '@/lib/supabase';
 import Image from 'next/image';
@@ -137,21 +137,24 @@ export default function InspectionsPage() {
     }));
 
     try {
-      // High-Fidelity Sequential Optimizer
+      // Bulletproof Mobile Optimization: Converts to high-quality JPG
       const optimizedBlob = await compressImage(file);
       const path = `audits/${user.uid}/${activeInspection.id}/${itemId.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`;
       
-      // DIRECT-TO-CLOUD Sync
-      const { error: uploadError } = await supabase.storage
-        .from('property-images')
-        .upload(path, optimizedBlob, {
-          contentType: (optimizedBlob as any).type || file.type || 'image/jpeg',
-          upsert: true
-        });
+      // DIRECT-TO-CLOUD SYNC with RETRY logic
+      const publicUrl = await withRetry(async () => {
+        const { error: uploadError } = await supabase.storage
+          .from('property-images')
+          .upload(path, optimizedBlob, {
+            contentType: 'image/jpeg',
+            upsert: true
+          });
 
-      if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage.from('property-images').getPublicUrl(path);
+        const { data: { publicUrl: url } } = supabase.storage.from('property-images').getPublicUrl(path);
+        return url;
+      });
       
       setStructuredFindings(prev => ({
         ...prev,

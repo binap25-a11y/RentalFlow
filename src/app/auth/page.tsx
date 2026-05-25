@@ -196,7 +196,7 @@ export default function AuthPage() {
               <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Phone</Label>
               <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground" />
             </div>
-            <Button className="w-full h-14 rounded-2xl font-bold bg-accent text-white text-lg shadow-xl shadow-accent/20 border-none transition-all hover:scale-[1.01]" onClick={handleCreateProfile} disabled={isLoading}>
+            <Button className="w-full h-14 rounded-2xl font-bold bg-accent hover:bg-accent/90 text-white text-lg shadow-xl shadow-accent/20 border-none transition-all hover:scale-[1.01]" onClick={handleCreateProfile} disabled={isLoading}>
               {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Complete Registration"}
             </Button>
           </CardContent>
@@ -241,7 +241,7 @@ export default function AuthPage() {
                   </button>
                 </div>
               </div>
-              <Button type="submit" className="w-full h-14 rounded-2xl font-extrabold bg-accent text-white text-xl shadow-xl shadow-accent/20 border-none transition-all hover:scale-[1.01]" disabled={isLoading}>
+              <Button type="submit" className="w-full h-14 rounded-2xl font-extrabold bg-accent hover:bg-accent/90 text-white text-xl shadow-xl shadow-accent/20 border-none transition-all hover:scale-[1.01]" disabled={isLoading}>
                 {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : (authMode === 'login' ? 'Access Vault' : 'Create Credentials')}
               </Button>
             </form>

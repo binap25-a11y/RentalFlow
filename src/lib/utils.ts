@@ -12,24 +12,42 @@ export function cn(...inputs: ClassValue[]) {
 export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop";
 
 /**
+ * 🔄 Resilient Retry Wrapper
+ * Automatically retries async operations (like uploads) to handle flakey mobile networks.
+ */
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  retries = 3,
+  delay = 1000
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retries <= 0) throw error;
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    return withRetry(fn, retries - 1, delay * 2);
+  }
+}
+
+/**
  * 🖼️ Resilient Mobile Optimization Engine
- * Redesigned for 100% reliability on mobile (iOS/Android).
+ * Converts HEIC/PNG to high-quality JPG and downscales for 100% mobile stability.
  * USES URL.createObjectURL for extreme memory efficiency.
  * IF THE DEVICE HITS MEMORY LIMITS, it SILENTLY returns the original file.
  */
-export async function compressImage(file: File, maxWidth = 1000, quality = 0.6): Promise<Blob | File> {
-  // Skip non-images or small files
-  if (!file.type.startsWith('image/') || file.size < 1024 * 300) {
+export async function compressImage(file: File, maxWidth = 1200, quality = 0.75): Promise<Blob | File> {
+  // Skip non-images or very small files
+  if (!file.type.startsWith('image/') || file.size < 1024 * 200) {
     return file;
   }
 
   try {
     return await new Promise((resolve) => {
-      // Strict safety timeout (4s) to prevent blocking the UI
+      // Strict safety timeout (5s) to prevent blocking the UI
       const timeout = setTimeout(() => {
-        console.warn("Compression timed out, returning original.");
+        console.warn("Optimization timed out, returning original.");
         resolve(file);
-      }, 4000);
+      }, 5000);
 
       const objectUrl = URL.createObjectURL(file);
       const img = new Image();
@@ -65,7 +83,7 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
           }
 
           ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'medium';
+          ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, width, height);
 
           canvas.toBlob(
