@@ -31,7 +31,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn, compressImage } from "@/lib/utils";
 import { generateInspectionReport } from "@/ai/flows/generate-inspection-report";
-import { uploadToSupabase } from '@/lib/actions/supabase-storage';
+import { supabase } from '@/lib/supabase';
 import Image from 'next/image';
 
 const INSPECTION_SECTIONS = [
@@ -137,23 +137,26 @@ export default function InspectionsPage() {
     }));
 
     try {
-      // 🛠️ Mobile Resilience: Compress before binary delivery
+      // 🛠️ Direct Cloud Sync: Resolves Mobile Network Payload Errors
       const compressedBlob = await compressImage(file);
-      const formData = new FormData();
-      formData.append('file', compressedBlob, `audit_compressed_${file.name}`);
-      
       const path = `audits/${user.uid}/${activeInspection.id}/${itemId.replace(/\s+/g, '_')}_${Date.now()}`;
       
-      const res = await uploadToSupabase(formData, 'property-images', path);
-      if (res.success && res.url) {
-        setStructuredFindings(prev => ({
-          ...prev,
-          [itemId]: { ...prev[itemId], imageUrl: res.url, isSyncing: false }
-        }));
-        toast({ title: "Evidence Synchronized" });
-      } else {
-        throw new Error(res.error || "Upload failure.");
-      }
+      const { error: uploadError } = await supabase.storage
+        .from('property-images')
+        .upload(path, compressedBlob, {
+          contentType: 'image/jpeg',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from('property-images').getPublicUrl(path);
+      
+      setStructuredFindings(prev => ({
+        ...prev,
+        [itemId]: { ...prev[itemId], imageUrl: publicUrl, isSyncing: false }
+      }));
+      toast({ title: "Evidence Synchronized" });
     } catch (err: any) {
       setStructuredFindings(prev => ({
         ...prev,
@@ -162,9 +165,7 @@ export default function InspectionsPage() {
       toast({ 
         variant: "destructive", 
         title: "Mobile Sync Failed", 
-        description: err.message?.includes('fetch') 
-          ? "Network Interrupt: Please retry binary capture." 
-          : err.message || "Binary sync error." 
+        description: "Direct cloud synchronization failed. Please check your gallery selection and retry."
       });
     }
   };
@@ -395,7 +396,7 @@ export default function InspectionsPage() {
                                                       ) : (
                                                         <>
                                                           <div className="p-4 bg-primary/5 rounded-full group-hover:scale-110 transition-transform"><Camera className="w-8 h-8 text-muted-foreground opacity-40 group-hover:opacity-60" /></div>
-                                                          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-40 group-hover:opacity-60">Capture Visual Asset</span>
+                                                          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-40 group-hover:opacity-60">Gallery Select</span>
                                                         </>
                                                       )}
                                                     </label>

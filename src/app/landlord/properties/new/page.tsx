@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
-import { uploadToSupabase } from '@/lib/actions/supabase-storage';
+import { supabase } from '@/lib/supabase';
 import { cn, compressImage } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -63,21 +63,24 @@ export default function NewPropertyPage() {
       const itemId = newItems[i].id;
       
       try {
-        // 🛠️ Mobile Resilience: Compress before binary delivery
+        // 🛠️ Direct Cloud Sync: Bypasses server payload limits
         const compressedBlob = await compressImage(file);
-        const formData = new FormData();
-        formData.append('file', compressedBlob, `compressed_${file.name}`);
-        
         const path = `assets/${user.uid}/new_${tempId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
-        const res = await uploadToSupabase(formData, 'property-images', path);
-        if (res.success && res.url) {
-          setLedger(prev => prev.map(item => 
-            item.id === itemId ? { ...item, url: res.url!, status: 'ready' } : item
-          ));
-        } else {
-          throw new Error(res.error || "Upload failed");
-        }
+        const { error: uploadError } = await supabase.storage
+          .from('property-images')
+          .upload(path, compressedBlob, {
+            contentType: 'image/jpeg',
+            upsert: true
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage.from('property-images').getPublicUrl(path);
+        
+        setLedger(prev => prev.map(item => 
+          item.id === itemId ? { ...item, url: publicUrl, status: 'ready' } : item
+        ));
       } catch (err: any) {
         setLedger(prev => prev.map(item => 
           item.id === itemId ? { ...item, status: 'error' } : item
@@ -85,7 +88,7 @@ export default function NewPropertyPage() {
         toast({ 
           variant: "destructive", 
           title: "Mobile Sync Failed", 
-          description: err.message || "Network Interruption: Please retry visual capture." 
+          description: "Cloud connection interrupted. Please check your data signal and retry."
         });
       }
     }
@@ -171,7 +174,7 @@ export default function NewPropertyPage() {
               <div className="flex justify-between items-center mb-6">
                 <Label className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Visual Inventory</Label>
                 <label htmlFor="image-input" className="h-10 rounded-xl font-bold text-[10px] uppercase font-headline cursor-pointer px-5 bg-primary text-primary-foreground shadow-lg flex items-center hover:opacity-90 transition-all active:scale-95">
-                  <Camera className="w-3.5 h-3.5 mr-2" /> Capture Assets
+                  <Plus className="w-3.5 h-3.5 mr-2" /> Add Assets
                 </label>
               </div>
 
@@ -203,12 +206,12 @@ export default function NewPropertyPage() {
                   ))}
                   <label htmlFor="image-input" className="aspect-video rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all bg-muted/5 flex flex-col items-center justify-center gap-2 group cursor-pointer shadow-inner">
                     <Plus className="w-6 h-6 text-primary/20 group-hover:text-primary/40" />
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">Add More</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">Gallery Select</span>
                   </label>
                 </div>
               </ScrollArea>
               <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
-              <p className="mt-6 text-[10px] text-muted-foreground/60 italic text-center font-medium">Assets are compressed and synchronized to the ledger instantly.</p>
+              <p className="mt-6 text-[10px] text-muted-foreground/60 italic text-center font-medium">Assets are compressed and synchronized to the cloud instantly.</p>
             </div>
 
             <div className="p-10 space-y-8">

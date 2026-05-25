@@ -47,7 +47,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { uploadToSupabase } from '@/lib/actions/supabase-storage';
+import { supabase } from '@/lib/supabase';
 import { syncDocumentToDb } from '@/lib/actions/db-sync';
 import { format } from 'date-fns';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -154,21 +154,26 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     setIsUploadingDoc(true);
     setUploadedDocUrl(null);
 
-    const formData = new FormData();
-    formData.append('file', file);
+    // 🛠️ Direct Cloud Sync: Bypasses Server Action Binary Limits
     const path = `vault/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
     
     try {
-      const res = await uploadToSupabase(formData, 'property-documents', path);
-      if (res.success && res.url) {
-        setUploadedDocUrl(res.url);
-        if (!newDocName) setNewDocName(file.name.split('.')[0]);
-        toast({ title: "Mobile Sync Ready", description: "File synchronized to cloud." });
-      } else {
-        throw new Error(res.error || "Binary delivery failure.");
-      }
+      const { error: uploadError } = await supabase.storage
+        .from('property-documents')
+        .upload(path, file, {
+          contentType: file.type,
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from('property-documents').getPublicUrl(path);
+      
+      setUploadedDocUrl(publicUrl);
+      if (!newDocName) setNewDocName(file.name.split('.')[0]);
+      toast({ title: "Mobile Sync Ready", description: "File synchronized to cloud." });
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Sync Failed", description: err.message });
+      toast({ variant: "destructive", title: "Sync Failed", description: "Mobile connection interrupted. Please retry." });
     } finally {
       setIsUploadingDoc(false);
     }
@@ -371,7 +376,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                       <ScrollArea className="flex-1">
                         <div className="p-8 space-y-6 text-left">
                           <div className="space-y-2">
-                            <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.2em] opacity-60">Mobile File Selection</Label>
+                            <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.2em] opacity-60">Visual Asset Ledger</Label>
                             <div className="relative group">
                                <label htmlFor="vault-file" className="w-full h-40 rounded-3xl border-2 border-dashed border-border hover:border-primary/30 transition-all flex flex-col items-center justify-center gap-3 cursor-pointer bg-muted/10 shadow-inner overflow-hidden">
                                   {isUploadingDoc ? (

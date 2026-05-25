@@ -1,17 +1,13 @@
 'use server';
 
 /**
- * @fileOverview High-Fidelity Cloud Storage Engine.
- * Optimized for mobile uploads with robust binary processing and client-side compression assistance.
+ * @fileOverview High-Fidelity Cloud Storage Engine (Server Utility).
+ * Optimized for administrative and automated synchronization tasks.
+ * NOTE: For large mobile binary uploads, client-side direct sync is preferred to bypass payload limits.
  */
 
 import { supabase } from '@/lib/supabase';
 
-/**
- * 🛠️ Binary Synchronization Engine
- * Converts FormData binaries into a stable Buffer for resilient mobile delivery.
- * Fixed: Removed non-async constant export to satisfy Next.js 15 'use server' constraints.
- */
 export async function uploadToSupabase(
   formData: FormData,
   bucket: 'property-images' | 'property-documents',
@@ -21,7 +17,6 @@ export async function uploadToSupabase(
     const file = formData.get('file') as File;
     if (!file) throw new Error('No valid binary payload detected.');
 
-    // Robust binary processing for stable stream delivery across mobile networks
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
@@ -38,20 +33,14 @@ export async function uploadToSupabase(
       throw new Error(uploadError.message || 'Binary delivery failed.');
     }
 
-    const { data: signedData, error: signedError } = await supabase.storage
-      .from(bucket)
-      .createSignedUrl(path, 315360000); // 10 Years Persistence
+    const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(path);
 
-    if (signedError) throw signedError;
-
-    return { success: true, url: signedData.signedUrl };
+    return { success: true, url: publicData.publicUrl };
   } catch (error: any) {
     console.error('Storage Orchestration Failure:', error.message);
     return { 
       success: false, 
-      error: error.message?.includes('fetch') 
-        ? 'Mobile Network Interruption: Payload delivery aborted by browser. Please retry.' 
-        : error.message || 'Synchronization aborted.' 
+      error: error.message || 'Synchronization aborted.' 
     };
   }
 }

@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
-import { uploadToSupabase } from '@/lib/actions/supabase-storage';
+import { supabase } from '@/lib/supabase';
 import { cn, isUserUploadedAsset, compressImage } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -103,21 +103,24 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const itemId = newItems[i].id;
       
       try {
-        // 🛠️ Mobile Resilience: Compress before binary delivery
+        // 🛠️ Direct Cloud Sync: Eliminates Server Action Payload Bottlenecks
         const compressedBlob = await compressImage(file);
-        const formData = new FormData();
-        formData.append('file', compressedBlob, `compressed_${file.name}`);
-        
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
-        const res = await uploadToSupabase(formData, 'property-images', path);
-        if (res.success && res.url) {
-          setLedger(prev => prev.map(item => 
-            item.id === itemId ? { ...item, url: res.url!, status: 'ready' } : item
-          ));
-        } else {
-          throw new Error(res.error || "Binary delivery failure.");
-        }
+        const { error: uploadError } = await supabase.storage
+          .from('property-images')
+          .upload(path, compressedBlob, {
+            contentType: 'image/jpeg',
+            upsert: true
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage.from('property-images').getPublicUrl(path);
+        
+        setLedger(prev => prev.map(item => 
+          item.id === itemId ? { ...item, url: publicUrl, status: 'ready' } : item
+        ));
       } catch (err: any) {
         setLedger(prev => prev.map(item => 
           item.id === itemId ? { ...item, status: 'error' } : item
@@ -125,21 +128,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         toast({ 
           variant: "destructive", 
           title: "Mobile Sync Failed", 
-          description: err.message?.includes('fetch') 
-            ? "Network Interrupt: Please retry visual capture." 
-            : err.message || "Binary sync error." 
+          description: "Cloud connection interrupted. Gallery selection is still active."
         });
       }
     }
   };
 
   const removeFromLedger = async (id: string) => {
-    const item = ledger.find(i => i.id === id);
-    if (!item) return;
-
-    if (item.isNew && item.url.startsWith('blob:')) {
-      URL.revokeObjectURL(item.url);
-    }
     setLedger(prev => prev.filter(i => i.id !== id));
   };
 
@@ -222,7 +217,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
               <div className="flex justify-between items-center mb-6">
                 <Label className="font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground opacity-60 font-headline">Visual Inventory</Label>
                 <label htmlFor="image-input" className="h-10 rounded-xl font-bold text-[10px] uppercase font-headline cursor-pointer px-5 bg-primary text-primary-foreground shadow-lg flex items-center hover:opacity-90 transition-all">
-                  <Camera className="w-3.5 h-3.5 mr-2" /> Capture Assets
+                  <Plus className="w-3.5 h-3.5 mr-2" /> Add Assets
                 </label>
               </div>
 
