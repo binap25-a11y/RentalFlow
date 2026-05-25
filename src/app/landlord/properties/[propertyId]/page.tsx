@@ -24,7 +24,7 @@ import {
   Bed, Bath, X, Maximize2, FileText, Wrench, 
   ClipboardList, Plus, Download, Trash2, Calendar,
   ShieldCheck, AlertCircle, Clock, Zap, ShieldAlert,
-  ChevronRight, CheckCircle2, FileUp
+  ChevronRight, CheckCircle2, FileUp, Users
 } from "lucide-react";
 import { 
   Dialog, 
@@ -51,6 +51,11 @@ import { syncDocumentToDb } from '@/lib/actions/db-sync';
 import { format } from 'date-fns';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+/**
+ * 🏢 Property Management Hub
+ * High-fidelity orchestrator for a single property asset.
+ * Synchronizes visuals, residents, and compliance documentation in real-time.
+ */
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
   const propertyId = resolvedParams.propertyId;
@@ -73,6 +78,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   /**
    * 🖼️ User-Data Only Resolution
+   * Strictly prioritizes Supabase binaries over fallbacks.
    */
   const gallery = useMemo(() => {
     return getResolvedGallery(property?.imageUrl, property?.imageUrls);

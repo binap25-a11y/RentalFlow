@@ -31,6 +31,11 @@ type LedgerItem = {
   status: 'uploading' | 'ready' | 'error';
 };
 
+/**
+ * 🛠️ Asset Configuration Hub
+ * High-fidelity property modification hub.
+ * Implements Instant Transactional Persistence for visuals and background relational sync.
+ */
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
   const propertyId = resolvedParams.propertyId;
@@ -178,7 +183,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       memberIds: property?.memberIds || [user.uid]
     };
 
-    // Instant Persistence Orchestration
+    // Instant Persistence Orchestration (Non-Blocking)
     updateDocumentNonBlocking(propertyRef, { ...serializableData, updatedAt: serverTimestamp() });
     
     // Background Server Sync

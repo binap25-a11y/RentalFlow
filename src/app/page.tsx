@@ -5,17 +5,36 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
-  ArrowRight, ShieldCheck, Sparkles, 
-  Wallet, MessageSquare, ChevronRight,
-  Loader2, Activity, Zap, Building2,
-  Shield, Bot
+  ArrowRight, 
+  ShieldCheck, 
+  Sparkles, 
+  Wallet, 
+  MessageSquare, 
+  ChevronRight,
+  Loader2, 
+  Activity, 
+  Zap, 
+  Building2,
+  Shield, 
+  Bot 
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { cn, RENTALFLOW_LOGO_URL, RENTALFLOW_NEUTRAL_FALLBACK, getResolvedImageUrl, isRealUserUpload } from '@/lib/utils';
+import { 
+  cn, 
+  RENTALFLOW_LOGO_URL, 
+  RENTALFLOW_NEUTRAL_FALLBACK, 
+  getResolvedImageUrl, 
+  isRealUserUpload 
+} from '@/lib/utils';
 import { useEffect, useState, useMemo } from 'react';
 import { doc } from 'firebase/firestore';
 
+/**
+ * 🏢 Cinematic Landing Experience
+ * Re-engineered for high-fidelity brand identity and operational excellence.
+ * Optimized for professional property management orchestration.
+ */
 export default function LandingPage() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
@@ -35,6 +54,10 @@ export default function LandingPage() {
 
   const { data: properties } = useCollection(propertiesQuery);
 
+  /**
+   * 🖼️ Professional Identity Resolution
+   * Strictly prioritizes high-fidelity user photography for the hero experience.
+   */
   const heroImage = useMemo(() => {
     if (properties && properties.length > 0) {
       const withImages = properties.filter(p => p.imageUrl && isRealUserUpload(p.imageUrl));
@@ -70,7 +93,7 @@ export default function LandingPage() {
       <nav className="fixed top-0 w-full z-50 bg-background/60 backdrop-blur-xl border-b h-20 border-white/5">
         <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-             <div className="relative h-11 w-11 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 group-hover:scale-110 transition-transform duration-500">
+             <div className="relative h-11 w-11 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
                 <Image src={RENTALFLOW_LOGO_URL} alt="Logo" fill className="object-cover" unoptimized />
              </div>
              <span className="font-headline font-bold text-2xl tracking-tighter text-foreground">RentalFlow</span>
