@@ -24,7 +24,7 @@ import {
   Bed, Bath, X, FileText, Wrench, 
   ClipboardList, Plus, Download, Trash2,
   ShieldCheck, AlertCircle, Clock,
-  CheckCircle2, FileUp, Users
+  CheckCircle2, FileUp, Users, Building2
 } from "lucide-react";
 import { 
   Dialog, 
@@ -35,7 +35,7 @@ import {
   DialogFooter,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { cn, getResolvedGallery, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
+import { cn, getResolvedGallery } from "@/lib/utils";
 import {
   Carousel,
   CarouselContent,
@@ -51,12 +51,6 @@ import { syncDocumentToDb } from '@/lib/actions/db-sync';
 import { format } from 'date-fns';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-/**
- * 🏢 Property Management Hub
- * High-fidelity orchestrator for a single property asset.
- * Layout optimized: Operational buttons positioned below heading and address.
- * Synchronizes visuals, residents, and compliance documentation in real-time.
- */
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
   const propertyId = resolvedParams.propertyId;
@@ -247,7 +241,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
               <MapPin className="w-4 h-4 md:w-5 md:h-5 mr-2 text-accent" /> {property.city}, {property.zipCode}
             </p>
             
-            {/* Operational Layout: Buttons below Heading and Address */}
             <div className="flex flex-wrap gap-3 mt-8">
               <Button variant="outline" onClick={downloadRentStatement} className="rounded-[1.25rem] font-bold h-12 border-border bg-card shadow-lg font-headline text-[10px] uppercase tracking-widest px-8 hover:bg-white/5 transition-all">
                 <Download className="w-4 h-4 mr-2 text-accent" /> Rent Statement
@@ -265,30 +258,35 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2 space-y-10">
           <Card className="border-none shadow-2xl overflow-hidden bg-card rounded-[3rem] ring-1 ring-white/5">
-            <Carousel className="w-full group">
-              <CarouselContent>
-                {gallery.map((url: string, index: number) => (
-                  <CarouselItem key={`${url}-${index}`}>
-                    <div className="relative h-[400px] md:h-[550px] w-full bg-muted cursor-zoom-in overflow-hidden" onClick={() => setLightboxUrl(url)}>
-                      <img 
-                        src={url} 
-                        alt="" 
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105" 
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = RENTALFLOW_NEUTRAL_FALLBACK;
-                        }}
-                      />
-                      {index === 0 && (
-                        <div className="absolute top-8 left-8 px-5 py-2 bg-accent text-white text-[11px] font-bold uppercase rounded-full shadow-2xl font-headline z-10 tracking-[0.1em]">Verified Primary Identity</div>
-                      )}
-                    </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="left-6 bg-black/40 border-none shadow-2xl text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-              <CarouselNext className="right-6 bg-black/40 border-none shadow-2xl text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-            </Carousel>
+            {gallery.length > 0 ? (
+              <Carousel className="w-full group">
+                <CarouselContent>
+                  {gallery.map((url: string, index: number) => (
+                    <CarouselItem key={`${url}-${index}`}>
+                      <div className="relative h-[400px] md:h-[550px] w-full bg-muted cursor-zoom-in overflow-hidden" onClick={() => setLightboxUrl(url)}>
+                        <img 
+                          src={url} 
+                          alt="" 
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105" 
+                        />
+                        {index === 0 && (
+                          <div className="absolute top-8 left-8 px-5 py-2 bg-accent text-white text-[11px] font-bold uppercase rounded-full shadow-2xl font-headline z-10 tracking-[0.1em]">Verified Primary Identity</div>
+                        )}
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-6 bg-black/40 border-none shadow-2xl text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                <CarouselNext className="right-6 bg-black/40 border-none shadow-2xl text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Carousel>
+            ) : (
+              <div className="relative h-[400px] md:h-[550px] w-full bg-gradient-to-br from-muted/50 to-muted flex flex-col items-center justify-center gap-4">
+                <div className="p-8 bg-white/5 rounded-[2rem] border border-white/5">
+                   <Building2 className="w-16 h-16 text-muted-foreground/20" />
+                </div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">No Visual Identity Recorded</p>
+              </div>
+            )}
             
             <CardContent className="p-10 md:p-12 space-y-10 text-left">
               <div className="flex flex-wrap gap-4 items-center">
@@ -603,10 +601,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 src={lightboxUrl} 
                 alt="" 
                 className="object-contain max-w-full max-h-[90vh] rounded-[2.5rem] shadow-[0_0_100px_-12px_rgba(0,0,0,0.8)]" 
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = RENTALFLOW_NEUTRAL_FALLBACK;
-                }}
               />
               <button 
                 onClick={() => setLightboxUrl(null)}

@@ -16,12 +16,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { supabase } from '@/lib/supabase';
-import { cn, isRealUserUpload, compressImage, withRetry, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
+import { cn, isRealUserUpload, compressImage, withRetry } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -31,12 +31,6 @@ type LedgerItem = {
   status: 'uploading' | 'ready' | 'error';
 };
 
-/**
- * 🛠️ Asset Configuration Hub
- * High-fidelity property modification hub.
- * Implements TRANSACTIONAL ATOMIC SYNC for visuals.
- * Designating a cover or completing an upload syncs instantly to Firestore.
- */
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
   const propertyId = resolvedParams.propertyId;
@@ -97,15 +91,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
   }, [property, isInitialized]);
 
-  /**
-   * 🔄 Transactional Identity Sync
-   * Commits the provided ledger state to Firestore microsecond-instantly.
-   * This is the "Source of Truth" for visual synchronicity across all hubs.
-   */
   const syncVisualsToFirestore = (updatedLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
     
-    // Safety: Only sync if no active uploads are in progress
     if (updatedLedger.some(i => i.status === 'uploading')) return;
 
     const userOnly = updatedLedger
@@ -131,7 +119,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       
       const uploadItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
       currentLedger = [...currentLedger, uploadItem];
-      setLedger(currentLedger);
+      setLedger([...currentLedger]);
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -147,11 +135,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         });
         
         currentLedger = currentLedger.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item);
-        setLedger(currentLedger);
+        setLedger([...currentLedger]);
         syncVisualsToFirestore(currentLedger);
       } catch (err) {
         currentLedger = currentLedger.map(item => item.id === tempId ? { ...item, status: 'error' } : item);
-        setLedger(currentLedger);
+        setLedger([...currentLedger]);
       }
     }
     e.target.value = '';
@@ -245,10 +233,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                         src={item.previewUrl} 
                         alt="" 
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = RENTALFLOW_NEUTRAL_FALLBACK;
-                        }}
                       />
                       <div className="absolute top-3 right-3 flex gap-2 z-20">
                         <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-black/60 backdrop-blur-xl text-accent p-2.5 rounded-2xl hover:scale-110 transition-transform shadow-2xl border border-white/10">

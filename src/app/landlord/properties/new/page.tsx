@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from 'react';
-import { useUser, useFirestore, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp, collection } from 'firebase/firestore';
 import { Card, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { supabase } from '@/lib/supabase';
-import { cn, compressImage, withRetry, isRealUserUpload, RENTALFLOW_NEUTRAL_FALLBACK } from '@/lib/utils';
+import { cn, compressImage, withRetry, isRealUserUpload } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -25,11 +25,6 @@ type LedgerItem = {
   status: 'uploading' | 'ready' | 'error';
 };
 
-/**
- * 🛠️ Asset Registration Hub
- * Implements TRANSACTIONAL ATOMIC SYNC for visuals.
- * Visual modifications update Firestore microsecond-instantly.
- */
 export default function NewPropertyPage() {
   const { user } = useUser();
   const db = useFirestore();
@@ -52,10 +47,6 @@ export default function NewPropertyPage() {
   
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
 
-  /**
-   * 🔄 Transactional Identity Sync
-   * Commits the provided ledger state to Firestore microsecond-instantly.
-   */
   const syncVisualsToFirestore = (updatedLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId) return;
 
@@ -88,7 +79,7 @@ export default function NewPropertyPage() {
       
       const uploadItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
       currentLedger = [...currentLedger, uploadItem];
-      setLedger(currentLedger);
+      setLedger([...currentLedger]);
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -104,11 +95,11 @@ export default function NewPropertyPage() {
         });
         
         currentLedger = currentLedger.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item);
-        setLedger(currentLedger);
+        setLedger([...currentLedger]);
         syncVisualsToFirestore(currentLedger);
       } catch (err) {
         currentLedger = currentLedger.map(item => item.id === tempId ? { ...item, status: 'error' } : item);
-        setLedger(currentLedger);
+        setLedger([...currentLedger]);
       }
     }
     e.target.value = '';
@@ -208,10 +199,6 @@ export default function NewPropertyPage() {
                         src={item.previewUrl} 
                         alt="" 
                         className="absolute inset-0 h-full w-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = RENTALFLOW_NEUTRAL_FALLBACK;
-                        }}
                       />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">
                         <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-card/90 text-accent p-2 rounded-xl hover:scale-110 transition-transform shadow-lg border border-border">

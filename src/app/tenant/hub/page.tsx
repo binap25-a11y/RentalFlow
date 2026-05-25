@@ -8,12 +8,12 @@ import { Input } from "@/components/ui/input";
 import { 
   MapPin, AlertCircle, Wrench, 
   Loader2, Home, Sparkles, Send, Bot, 
-  ChevronRight, CheckCircle2, Clock, ReceiptText
+  ChevronRight, CheckCircle2, Clock, ReceiptText, Building2
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { tenantConcierge } from "@/ai/flows/tenant-concierge-flow";
-import { cn, getResolvedImageUrl, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
+import { cn, getResolvedImageUrl } from "@/lib/utils";
 import { query, collection, where } from "firebase/firestore";
 
 export default function TenantHub() {
@@ -69,6 +69,8 @@ export default function TenantHub() {
 
   if (!property) return <div className="flex flex-col items-center justify-center h-[70vh] text-center space-y-8"><Home className="w-20 h-20 text-muted-foreground/20" /><h2 className="text-3xl font-bold font-headline text-foreground">Lease Registration Pending</h2><Button asChild className="rounded-2xl h-12 px-10 font-bold"><Link href="/tenant/messages">Contact Management</Link></Button></div>;
 
+  const imageUrl = getResolvedImageUrl(property?.imageUrl, property?.imageUrls);
+
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-12">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 text-left">
@@ -83,15 +85,17 @@ export default function TenantHub() {
         <div className="lg:col-span-8 space-y-8">
           <Card className="border-none shadow-sm overflow-hidden rounded-[2.5rem] bg-card group ring-1 ring-border">
             <div className="relative h-[450px] w-full bg-muted overflow-hidden">
-              <img 
-                src={getResolvedImageUrl(property?.imageUrl, property?.imageUrls)} 
-                alt={property.addressLine1} 
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105" 
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = RENTALFLOW_NEUTRAL_FALLBACK;
-                }}
-              />
+              {imageUrl ? (
+                <img 
+                  src={imageUrl} 
+                  alt={property.addressLine1} 
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105" 
+                />
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-muted flex items-center justify-center">
+                  <Building2 className="w-24 h-24 text-muted-foreground/10" />
+                </div>
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
               <div className="absolute bottom-10 left-10 text-foreground text-left space-y-4 max-w-2xl bg-background/40 backdrop-blur-md p-6 rounded-2xl border border-border">
                 <Badge className="bg-emerald-500 text-white border-none font-bold uppercase tracking-[0.2em] text-[10px] py-1.5 px-4 rounded-full shadow-lg font-headline">Active Tenancy</Badge>

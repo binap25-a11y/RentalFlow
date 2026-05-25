@@ -10,11 +10,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Building2, MapPin, Plus, Bed, Bath, 
   Loader2, Trash2, RotateCcw, Archive, 
-  Search, ShieldAlert, ChevronRight, Info
+  Search, ShieldAlert
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { cn, getResolvedImageUrl, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
+import { cn, getResolvedImageUrl } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 
 export default function PropertiesPage() {
@@ -129,52 +129,57 @@ export default function PropertiesPage() {
                 </Button>
               </div>
             ) : (
-              activeProperties.map((property) => (
-                <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-2xl transition-all duration-500 rounded-[2.5rem] bg-card ring-1 ring-border">
-                  <div className="relative aspect-video w-full overflow-hidden bg-muted">
-                    <img 
-                      src={getResolvedImageUrl(property.imageUrl, property.imageUrls)} 
-                      alt={property.addressLine1} 
-                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110" 
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = RENTALFLOW_NEUTRAL_FALLBACK;
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <Badge className={cn("absolute top-6 right-6 font-bold shadow-2xl py-1.5 px-4 text-[9px] uppercase tracking-widest rounded-full border-none", property.isOccupied ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white')}>
-                      {property.isOccupied ? 'Occupied' : 'Vacant'}
-                    </Badge>
-                  </div>
-                  <CardHeader className="pb-2 text-left space-y-2 p-8">
-                    <Badge variant="outline" className="text-[8px] uppercase font-bold text-accent border-accent/20 w-fit tracking-widest py-0.5 px-2 font-headline bg-accent/5">
-                      {property.propertyType}
-                    </Badge>
-                    <CardTitle className="text-xl font-bold font-headline truncate tracking-tight text-foreground group-hover:text-accent transition-colors">{property.addressLine1}</CardTitle>
-                    <p className="text-xs text-muted-foreground flex items-center font-medium font-body opacity-60"><MapPin className="w-3.5 h-3.5 mr-1.5 text-accent" /> {property.city}, {property.zipCode}</p>
-                  </CardHeader>
-                  <CardContent className="pb-6 text-left px-8">
-                    <div className="flex gap-6 items-center mb-6 py-4 border-y border-border/50">
-                      <span className="flex items-center text-[10px] font-bold text-muted-foreground font-headline uppercase tracking-widest"><Bed className="w-4 h-4 mr-2 text-primary opacity-40" /> {property.numberOfBedrooms || 1} Bed</span>
-                      <span className="flex items-center text-[10px] font-bold text-muted-foreground font-headline uppercase tracking-widest"><Bath className="w-4 h-4 mr-2 text-primary opacity-40" /> {property.numberOfBathrooms || 1} Bath</span>
+              activeProperties.map((property) => {
+                const imageUrl = getResolvedImageUrl(property.imageUrl, property.imageUrls);
+                return (
+                  <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-2xl transition-all duration-500 rounded-[2.5rem] bg-card ring-1 ring-border">
+                    <div className="relative aspect-video w-full overflow-hidden bg-muted">
+                      {imageUrl ? (
+                        <img 
+                          src={imageUrl} 
+                          alt={property.addressLine1} 
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-muted flex items-center justify-center">
+                          <Building2 className="w-12 h-12 text-muted-foreground/20" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <Badge className={cn("absolute top-6 right-6 font-bold shadow-2xl py-1.5 px-4 text-[9px] uppercase tracking-widest rounded-full border-none", property.isOccupied ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white')}>
+                        {property.isOccupied ? 'Occupied' : 'Vacant'}
+                      </Badge>
                     </div>
-                    <div className="flex items-end justify-between">
-                       <p className="text-2xl font-bold text-foreground font-headline tracking-tighter">£{property.rentAmount?.toLocaleString()}<span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest ml-2 opacity-40">/ mo</span></p>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex gap-2 p-6 pt-2 bg-muted/5 border-t border-border">
-                    <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-11 font-headline uppercase tracking-widest text-[9px] border-border bg-card hover:bg-primary/5 transition-all" asChild>
-                      <Link href={`/landlord/properties/${property.id}`}>Command Hub</Link>
-                    </Button>
-                    <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl border-border bg-card text-muted-foreground hover:text-accent hover:bg-accent/5" asChild>
-                       <Link href={`/landlord/properties/${property.id}/edit`}><Plus className="w-4 h-4" /></Link>
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl text-destructive/40 hover:text-destructive hover:bg-destructive/10 transition-all" onClick={() => handleArchiveProperty(property.id)}>
-                      <Archive className="w-4 h-4" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))
+                    <CardHeader className="pb-2 text-left space-y-2 p-8">
+                      <Badge variant="outline" className="text-[8px] uppercase font-bold text-accent border-accent/20 w-fit tracking-widest py-0.5 px-2 font-headline bg-accent/5">
+                        {property.propertyType}
+                      </Badge>
+                      <CardTitle className="text-xl font-bold font-headline truncate tracking-tight text-foreground group-hover:text-accent transition-colors">{property.addressLine1}</CardTitle>
+                      <p className="text-xs text-muted-foreground flex items-center font-medium font-body opacity-60"><MapPin className="w-3.5 h-3.5 mr-1.5 text-accent" /> {property.city}, {property.zipCode}</p>
+                    </CardHeader>
+                    <CardContent className="pb-6 text-left px-8">
+                      <div className="flex gap-6 items-center mb-6 py-4 border-y border-border/50">
+                        <span className="flex items-center text-[10px] font-bold text-muted-foreground font-headline uppercase tracking-widest"><Bed className="w-4 h-4 mr-2 text-primary opacity-40" /> {property.numberOfBedrooms || 1} Bed</span>
+                        <span className="flex items-center text-[10px] font-bold text-muted-foreground font-headline uppercase tracking-widest"><Bath className="w-4 h-4 mr-2 text-primary opacity-40" /> {property.numberOfBathrooms || 1} Bath</span>
+                      </div>
+                      <div className="flex items-end justify-between">
+                         <p className="text-2xl font-bold text-foreground font-headline tracking-tighter">£{property.rentAmount?.toLocaleString()}<span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest ml-2 opacity-40">/ mo</span></p>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex gap-2 p-6 pt-2 bg-muted/5 border-t border-border">
+                      <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-11 font-headline uppercase tracking-widest text-[9px] border-border bg-card hover:bg-primary/5 transition-all" asChild>
+                        <Link href={`/landlord/properties/${property.id}`}>Command Hub</Link>
+                      </Button>
+                      <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl border-border bg-card text-muted-foreground hover:text-accent hover:bg-accent/5" asChild>
+                         <Link href={`/landlord/properties/${property.id}/edit`}><Plus className="w-4 h-4" /></Link>
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl text-destructive/40 hover:text-destructive hover:bg-destructive/10 transition-all" onClick={() => handleArchiveProperty(property.id)}>
+                        <Archive className="w-4 h-4" />
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                );
+              })
             )}
           </div>
         </TabsContent>
@@ -196,33 +201,42 @@ export default function PropertiesPage() {
                    <p className="text-xs font-bold font-headline uppercase tracking-widest">Vault Empty</p>
                 </div>
               ) : (
-                archivedProperties.map(property => (
-                  <Card key={property.id} className="border-none shadow-sm rounded-2xl bg-card ring-1 ring-border overflow-hidden">
-                    <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-6">
-                      <div className="flex items-center gap-5 w-full text-left">
-                        <div className="relative h-16 w-24 rounded-xl overflow-hidden bg-muted shrink-0">
-                          <img 
-                            src={getResolvedImageUrl(property.imageUrl, property.imageUrls)} 
-                            alt="" 
-                            className="absolute inset-0 h-full w-full object-cover grayscale" 
-                          />
+                archivedProperties.map(property => {
+                  const imageUrl = getResolvedImageUrl(property.imageUrl, property.imageUrls);
+                  return (
+                    <Card key={property.id} className="border-none shadow-sm rounded-2xl bg-card ring-1 ring-border overflow-hidden">
+                      <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div className="flex items-center gap-5 w-full text-left">
+                          <div className="relative h-16 w-24 rounded-xl overflow-hidden bg-muted shrink-0">
+                            {imageUrl ? (
+                              <img 
+                                src={imageUrl} 
+                                alt="" 
+                                className="absolute inset-0 h-full w-full object-cover grayscale" 
+                              />
+                            ) : (
+                              <div className="absolute inset-0 bg-muted/50 flex items-center justify-center">
+                                <Building2 className="w-6 h-6 text-muted-foreground/30" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                             <h4 className="font-bold text-base font-headline text-foreground truncate">{property.addressLine1}</h4>
+                             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Archived: {property.deletedAt ? new Date(property.deletedAt.seconds * 1000).toLocaleDateString() : 'Recently'}</p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                           <h4 className="font-bold text-base font-headline text-foreground truncate">{property.addressLine1}</h4>
-                           <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Archived: {property.deletedAt ? new Date(property.deletedAt.seconds * 1000).toLocaleDateString() : 'Recently'}</p>
+                        <div className="flex items-center gap-3 w-full md:w-auto">
+                          <Button variant="outline" className="flex-1 md:flex-none rounded-xl font-bold h-11 px-6 border-border text-foreground hover:bg-accent/10 hover:text-accent" onClick={() => handleRestoreProperty(property.id)}>
+                            <RotateCcw className="w-4 h-4 mr-2" /> Restore
+                          </Button>
+                          <Button variant="ghost" className="flex-1 md:flex-none rounded-xl font-bold h-11 px-6 text-destructive/60 hover:text-white hover:bg-red-500" onClick={() => handlePermanentDelete(property.id)}>
+                            <Trash2 className="w-4 h-4 mr-2" /> Purge
+                          </Button>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-3 w-full md:w-auto">
-                        <Button variant="outline" className="flex-1 md:flex-none rounded-xl font-bold h-11 px-6 border-border text-foreground hover:bg-accent/10 hover:text-accent" onClick={() => handleRestoreProperty(property.id)}>
-                          <RotateCcw className="w-4 h-4 mr-2" /> Restore
-                        </Button>
-                        <Button variant="ghost" className="flex-1 md:flex-none rounded-xl font-bold h-11 px-6 text-destructive/60 hover:text-white hover:bg-red-500" onClick={() => handlePermanentDelete(property.id)}>
-                          <Trash2 className="w-4 h-4 mr-2" /> Purge
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                      </CardContent>
+                    </Card>
+                  );
+                })
               )}
             </div>
           </div>

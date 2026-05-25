@@ -19,7 +19,7 @@ import {
 } from 'recharts';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { cn, getResolvedImageUrl, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
+import { cn, getResolvedImageUrl } from "@/lib/utils";
 import { 
   Dialog, 
   DialogContent, 
@@ -308,20 +308,21 @@ export default function LandlordDashboard() {
                    <tbody className="divide-y divide-white/5">
                      {properties?.filter(p => p.isOccupied).map(prop => {
                        const isPaid = currentMonthPayments?.find(pm => pm.propertyId === prop.id)?.status === 'paid';
+                       const imageUrl = getResolvedImageUrl(prop.imageUrl, prop.imageUrls);
                        return (
                          <tr key={prop.id} className="hover:bg-white/[0.02] transition-colors group">
                            <td className="px-12 py-8">
                              <div className="flex items-center gap-5">
-                               <div className="relative h-14 w-14 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/5 group-hover:scale-110 transition-transform bg-muted shrink-0">
-                                 <img 
-                                   src={getResolvedImageUrl(prop.imageUrl, prop.imageUrls)} 
-                                   alt="" 
-                                   className="absolute inset-0 h-full w-full object-cover"
-                                   onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
-                                      target.src = RENTALFLOW_NEUTRAL_FALLBACK;
-                                   }}
-                                 />
+                               <div className="relative h-14 w-14 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/5 group-hover:scale-110 transition-transform bg-muted shrink-0 flex items-center justify-center">
+                                 {imageUrl ? (
+                                   <img 
+                                     src={imageUrl} 
+                                     alt="" 
+                                     className="absolute inset-0 h-full w-full object-cover"
+                                   />
+                                 ) : (
+                                   <Building2 className="w-6 h-6 text-muted-foreground/30" />
+                                 )}
                                </div>
                                <div className="min-w-0">
                                  <span className="font-bold text-base text-foreground truncate block">{prop.addressLine1}</span>

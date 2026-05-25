@@ -8,14 +8,11 @@ import {
   ArrowRight, 
   ShieldCheck, 
   Sparkles, 
-  Wallet, 
-  MessageSquare, 
   ChevronRight,
   Loader2, 
   Activity, 
   Zap, 
   Building2,
-  Shield, 
   Bot 
 } from "lucide-react";
 import Image from "next/image";
@@ -23,19 +20,11 @@ import Link from "next/link";
 import { 
   cn, 
   RENTALFLOW_LOGO_URL, 
-  RENTALFLOW_NEUTRAL_FALLBACK, 
-  getResolvedImageUrl, 
-  isRealUserUpload 
+  getResolvedImageUrl 
 } from '@/lib/utils';
 import { useEffect, useState, useMemo } from 'react';
 import { doc } from 'firebase/firestore';
 
-/**
- * 🏢 Cinematic Landing Experience
- * Re-engineered for high-fidelity brand identity and operational excellence.
- * Resolved Runtime Errors: Verified imports for 'Bot' and 'cn'.
- * Optimized for professional property management orchestration.
- */
 export default function LandingPage() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
@@ -55,20 +44,14 @@ export default function LandingPage() {
 
   const { data: properties } = useCollection(propertiesQuery);
 
-  /**
-   * 🖼️ Professional Identity Resolution
-   * Uses standard getResolvedImageUrl to mirror the Inventory identity perfectly.
-   */
   const heroImage = useMemo(() => {
     if (properties && properties.length > 0) {
-      // Sort by most recently updated to feature the latest work
       const sorted = [...properties].sort((a, b) => 
         (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)
       );
-      // Resolve the identity of the most recently edited asset
       return getResolvedImageUrl(sorted[0].imageUrl, sorted[0].imageUrls);
     }
-    return RENTALFLOW_NEUTRAL_FALLBACK;
+    return null;
   }, [properties]);
 
   useEffect(() => {
@@ -165,15 +148,17 @@ export default function LandingPage() {
           <div className="relative group">
             <div className="absolute -inset-1 bg-accent/20 rounded-[4rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-1000" />
             <div className="relative h-[650px] rounded-[3.5rem] overflow-hidden shadow-2xl ring-1 ring-white/10 animate-in fade-in zoom-in duration-1000 bg-muted">
-              <img 
-                src={heroImage} 
-                alt="Portfolio Identity" 
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = RENTALFLOW_NEUTRAL_FALLBACK;
-                }}
-              />
+              {heroImage ? (
+                <img 
+                  src={heroImage} 
+                  alt="Portfolio Identity" 
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                />
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                  <Building2 className="w-24 h-24 text-primary/10" />
+                </div>
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60" />
               <div className="absolute bottom-12 left-10 right-10 glass p-10 rounded-[2.5rem] animate-in slide-in-from-bottom-10 duration-1000 delay-500">
                  <div className="flex justify-between items-center">

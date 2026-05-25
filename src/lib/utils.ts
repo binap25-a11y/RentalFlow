@@ -6,16 +6,8 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * 🖼️ High-Fidelity Professional Fallback
- * Used ONLY in the UI when a property has zero user-uploaded photography.
- * Identity: Modern Premium Residence (Pool House).
- */
-export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=1200&auto=format&fit=crop";
-
-/**
  * 🏢 Brand Identity Asset
  * Used EXCLUSIVELY for the company logo and authentication branding (House & Keys).
- * photo-1560518883-ce09059eeffa
  */
 export const RENTALFLOW_LOGO_URL = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=512&h=512&auto=format&fit=crop";
 
@@ -110,8 +102,7 @@ export async function compressImage(file: File, maxWidth = 800, quality = 0.75):
 
 /**
  * 🖼️ User Asset Identifier
- * Strictly identifies assets that were intentionally uploaded by the user to the cloud.
- * DECISIVELY REJECTS: Skyscraper ID, Brand Logo ID, and known stock site domains.
+ * Strictly identifies assets that were intentionally uploaded by the user to Supabase.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
@@ -121,16 +112,7 @@ export function isRealUserUpload(url: any): boolean {
   // Specific cloud storage providers for the RentalFlow ecosystem
   if (u.includes('supabase.co') || u.includes('firebasestorage.googleapis.com')) return true;
 
-  // BLACKLIST: Decisively reject these IDs from being treated as property photography
-  const blacklistedIds = [
-    'photo-1486406146926-c627a92ad1ab', // Forbidden Skyscraper
-    'photo-1560518883-ce09059eeffa', // Brand Logo (House/Keys)
-    'photo-1613490493576-7fde63acd811'  // Fallback Modern House (Resolved dynamically)
-  ];
-
-  if (blacklistedIds.some(id => u.includes(id))) return false;
-
-  // List of forbidden partial matches (known placeholders/stock sites)
+  // DECISIVELY REJECT all known stock image/placeholder domains
   const forbiddenDomains = [
     'unsplash.com',
     'picsum.photos',
@@ -141,8 +123,8 @@ export function isRealUserUpload(url: any): boolean {
 
   if (forbiddenDomains.some(f => u.includes(f))) return false;
   
-  // Explicitly exclude defined constants
-  if (url === RENTALFLOW_LOGO_URL || url === RENTALFLOW_NEUTRAL_FALLBACK) return false;
+  // Exclude explicit brand asset
+  if (url === RENTALFLOW_LOGO_URL) return false;
 
   return u.startsWith('http');
 }
@@ -156,9 +138,9 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
- * USER-DATA ONLY POLICY: Returns user photography if any exists. Returns fallback only as a UI last resort.
+ * USER-DATA ONLY POLICY: Returns user photography if any exists. Returns null otherwise.
  */
-export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
+export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string | null {
   // 1. If explicit Cover URL is a real user upload, it IS the identity.
   if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
     return imageUrl;
@@ -170,8 +152,8 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
     if (realGallery.length > 0) return realGallery[0];
   }
 
-  // 3. UI Fallback (Never stored in DB)
-  return RENTALFLOW_NEUTRAL_FALLBACK;
+  // 3. No user photography found
+  return null;
 }
 
 /**
@@ -192,11 +174,5 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
     });
   }
   
-  const userUploads = Array.from(assets);
-  
-  if (userUploads.length > 0) {
-    return userUploads;
-  }
-  
-  return [RENTALFLOW_NEUTRAL_FALLBACK];
+  return Array.from(assets);
 }
