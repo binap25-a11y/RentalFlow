@@ -293,7 +293,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
             <div className="p-12 space-y-10">
               <div className="space-y-8 text-left">
                 <div className="space-y-3">
-                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Operational Location</Label>
+                  <Label className="font-bold text-[10px] uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">Operational Location</Label>
                   <Input value={address} onChange={(e) => setAddress(e.target.value)} required className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner" placeholder="Street Address" />
                 </div>
                 <div className="grid grid-cols-2 gap-6">

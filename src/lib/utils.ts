@@ -148,13 +148,14 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
+ * DECISIVELY PRIORITIZES the designated primary cover.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string | null {
-  // Priority 1: Specifically designated primary cover
+  // Priority 1: Specifically designated primary cover (imageUrl field)
   if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
     return imageUrl;
   }
-  // Priority 2: First available verified cloud binary
+  // Priority 2: First available verified cloud binary in the array
   if (imageUrls && Array.isArray(imageUrls)) {
     const realGallery = imageUrls.filter(isRealUserUpload);
     if (realGallery.length > 0) return realGallery[0];
@@ -167,9 +168,11 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
+  // Primary cover ALWAYS goes first
   if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
     assets.add(imageUrl);
   }
+  // Followed by all other verified binaries
   if (imageUrls && Array.isArray(imageUrls)) {
     imageUrls.forEach(u => {
       if (isValidAssetUrl(u) && isRealUserUpload(u)) {
