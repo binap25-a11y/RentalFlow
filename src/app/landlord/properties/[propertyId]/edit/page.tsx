@@ -97,7 +97,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   /**
    * 🔄 Transactional Visual Sync
    * Commits the current stable state of the ledger to Firestore immediately.
-   * This is strictly isolated from the manual Save button to prevent state-reset overrides.
+   * This ensures that choices like 'Star (Primary)' are locked in even if navigation occurs.
    */
   const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
@@ -122,10 +122,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const localUrl = URL.createObjectURL(file);
       
       const uploadItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
-      setLedger(prev => {
-        const next = [...prev, uploadItem];
-        return next;
-      });
+      setLedger(prev => [...prev, uploadItem]);
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -173,9 +170,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
   const handleImageError = (id: string) => {
     setLedger(prev => prev.map(item => {
-      if (item.id === id) {
-        return { ...item, isBroken: true };
-      }
+      if (item.id === id) return { ...item, isBroken: true };
       return item;
     }));
   };
@@ -249,6 +244,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
               <ScrollArea className="h-[600px] pr-4">
                 <div className="grid grid-cols-2 gap-5">
                   {ledger.map((item, index) => {
+                    // Logic-Driven Preview: Fallback to high-fidelity local blob if cloud binary is broken or pending.
                     const displayUrl = (item.status === 'ready' && item.cloudUrl && !item.isBroken) ? item.cloudUrl : item.previewUrl;
                     
                     return (

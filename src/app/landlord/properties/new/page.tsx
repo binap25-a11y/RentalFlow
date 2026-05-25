@@ -54,7 +54,7 @@ export default function NewPropertyPage() {
   /**
    * 🔄 Transactional Visual Sync
    * This is called microsecond-instantly upon visual changes to lock in the identity
-   * before any manual save occurs, resolving the "removed image" failure.
+   * before any manual save occurs.
    */
   const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId) return;

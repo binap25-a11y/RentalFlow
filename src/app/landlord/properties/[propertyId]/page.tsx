@@ -244,7 +244,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           </div>
         </div>
         
-        {/* OPERATIONAL BUTTONS: Stacked directly below heading as requested */}
         <div className="flex flex-wrap gap-4 pl-14">
           <Button variant="outline" onClick={downloadRentStatement} className="rounded-xl font-bold h-11 border-border bg-card shadow-lg font-headline text-[10px] uppercase tracking-widest px-8 hover:bg-white/5 transition-all">
             <Download className="w-4 h-4 mr-2 text-accent" /> Rent Statement
@@ -314,9 +313,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     ) : (
                       <p className="text-5xl font-bold text-foreground font-headline tracking-tighter">£{property.rentAmount?.toLocaleString()}</p>
                     )}
-                    <Button variant="ghost" size="icon" onClick={isEditingRent ? handleUpdateRent : () => setIsEditingRent(true)} className="rounded-2xl hover:bg-primary/5 h-12 w-12 border border-white/5">
+                    <button onClick={isEditingRent ? handleUpdateRent : () => setIsEditingRent(true)} className="rounded-2xl hover:bg-primary/5 h-12 w-12 border border-white/5 flex items-center justify-center transition-all">
                       {isEditingRent ? <Save className="w-5 h-5 text-emerald-500" /> : <Edit3 className="w-5 h-5 text-muted-foreground opacity-60" />}
-                    </Button>
+                    </button>
                   </div>
                 </div>
                 <div className="p-4 px-8 bg-primary/5 rounded-[2rem] border border-white/5 shadow-inner">
