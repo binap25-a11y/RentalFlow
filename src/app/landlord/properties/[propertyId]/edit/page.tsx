@@ -97,7 +97,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   /**
    * 🔄 Transactional Visual Sync
    * Commits the current stable state of the ledger to Firestore immediately.
-   * Prevents synchronization race conditions during manual saving.
    */
   const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
@@ -169,7 +168,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   };
 
   const handleImageError = (id: string) => {
-    // If cloud URL fails, try falling back to preview URL if it's a blob, or mark as truly broken
     setLedger(prev => prev.map(item => {
       if (item.id === id) {
         return { ...item, isBroken: true };
@@ -245,7 +243,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
               <ScrollArea className="h-[600px] pr-4">
                 <div className="grid grid-cols-2 gap-5">
                   {ledger.map((item, index) => {
-                    // Optimized Preview logic: Use cloud URL if ready and not broken, fallback to local blob
+                    // SELF-HEALING LOGIC: Use local blob preview until cloud is verified as loaded.
                     const displayUrl = (item.status === 'ready' && item.cloudUrl && !item.isBroken) ? item.cloudUrl : item.previewUrl;
                     
                     return (
