@@ -404,7 +404,6 @@ export default function InspectionsPage() {
                                                     id={`upload-${item}`} 
                                                     type="file" 
                                                     accept="image/*" 
-                                                    capture="environment"
                                                     className="hidden" 
                                                     onChange={(e) => handleImageUpload(item, e.target.files?.[0] || null)} 
                                                     disabled={structuredFindings[item]?.isSyncing}

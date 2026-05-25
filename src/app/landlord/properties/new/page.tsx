@@ -207,7 +207,7 @@ export default function NewPropertyPage() {
                   </label>
                 </div>
               </ScrollArea>
-              <input id="image-input" type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={handleImageChange} />
+              <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
               <p className="mt-6 text-[10px] text-muted-foreground/60 italic text-center font-medium">Assets are compressed and synchronized to the ledger instantly.</p>
             </div>
 

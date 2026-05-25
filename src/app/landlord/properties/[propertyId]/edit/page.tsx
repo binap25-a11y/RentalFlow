@@ -258,7 +258,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   </label>
                 </div>
               </ScrollArea>
-              <input id="image-input" type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={handleImageChange} />
+              <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
             </div>
 
             <div className="p-10 space-y-8">
