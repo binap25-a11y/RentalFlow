@@ -123,7 +123,7 @@ export default function LandingPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Card className="border-none shadow-sm rounded-[2.5rem] p-10 bg-card hover:shadow-2xl transition-all group text-left ring-1 ring-border">
-              <div className="p-5 bg-accent/10 text-accent rounded-3xl w-fit mb-8 group-hover:scale-110 transition-transform"><Sparkles className="w-8 h-8" /></div>
+              <div className="p-5 bg-accent/10 text-white rounded-3xl w-fit mb-8 group-hover:scale-110 transition-transform"><Sparkles className="w-8 h-8" /></div>
               <h3 className="text-2xl font-bold font-headline mb-4 text-foreground">AI Maintenance Triage</h3>
               <p className="text-muted-foreground font-medium font-body leading-relaxed">Prioritize critical repairs and receive automated suggestions before contacting a contractor.</p>
             </Card>

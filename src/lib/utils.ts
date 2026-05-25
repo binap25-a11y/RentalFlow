@@ -12,69 +12,13 @@ export function cn(...inputs: ClassValue[]) {
 export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop";
 
 /**
- * 🖼️ Fail-Safe Client-Side Image Optimization
- * Optimized for mobile devices to prevent "Memory Exhaustion" or "Engine Failed" errors.
- * This version is designed to be 100% resilient: if anything fails, it returns the original file.
+ * 🖼️ Optimized Pass-Through for Mobile Reliability
+ * Removed aggressive canvas compression to resolve "Connection Interrupted" errors.
+ * Large mobile binaries are now handled directly by the cloud storage engine.
  */
 export async function compressImage(file: File, maxWidth = 1200, quality = 0.75): Promise<Blob | File> {
-  // 1. Instant skip for non-images or small files
-  if (!file.type.startsWith('image/')) return file;
-  if (file.size < 300 * 1024) return file; 
-
-  return new Promise((resolve) => {
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target?.result as string;
-        
-        img.onload = () => {
-          try {
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
-
-            if (width > maxWidth) {
-              height = Math.round((height * maxWidth) / width);
-              width = maxWidth;
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            
-            if (!ctx) {
-              console.warn('Sync Engine: Canvas unavailable. Using original binary.');
-              return resolve(file);
-            }
-            
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            canvas.toBlob((blob) => {
-              if (blob) {
-                console.log(`Sync Ready: ${(file.size / 1024 / 1024).toFixed(2)}MB -> ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
-                resolve(blob);
-              } else {
-                resolve(file);
-              }
-            }, 'image/jpeg', quality);
-          } catch (err) {
-            // 🛠️ CRITICAL FALLBACK: Returns original file if mobile RAM crashes
-            console.warn('Sync Engine: Memory limit reached. Bypassing compression.');
-            resolve(file);
-          }
-        };
-        
-        img.onerror = () => resolve(file);
-      };
-
-      reader.onerror = () => resolve(file);
-    } catch (e) {
-      resolve(file);
-    }
-  });
+  // Pass-through: Bypassing browser canvas bottlenecks to ensure 100% mobile reliability.
+  return file;
 }
 
 /**

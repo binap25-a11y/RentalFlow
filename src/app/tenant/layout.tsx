@@ -33,9 +33,16 @@ export default function TenantLayout({
   const { data: profile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
   useEffect(() => {
-    if (!isUserLoading && !user && isClient) {
-      router.replace('/auth');
-    } else if (!isProfileLoading && profile && profile.role !== 'tenant' && isClient) {
+    if (!isClient || isUserLoading) return;
+
+    if (!user) {
+      const timer = setTimeout(() => {
+        if (!user) router.replace('/auth');
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+
+    if (!isProfileLoading && profile && profile.role !== 'tenant') {
       router.replace(profile.role === 'landlord' ? '/landlord/properties' : '/auth');
     }
   }, [user, isUserLoading, profile, isProfileLoading, router, isClient]);

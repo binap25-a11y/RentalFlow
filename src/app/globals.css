@@ -34,7 +34,7 @@
     --sidebar-ring: 199 89% 48%;
   }
 
-  /* Force Midnight Theme as primary standard */
+  /* Strict Midnight Theme Enforcement */
   .light, .dark {
     --background: 222 47% 4%;
     --foreground: 210 40% 98%;
@@ -64,6 +64,9 @@
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline font-bold tracking-tight text-foreground;
+  }
+  input, textarea, select {
+    @apply bg-muted/20 border-none text-foreground focus:ring-2 focus:ring-accent outline-none;
   }
 }
 

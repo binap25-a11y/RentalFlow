@@ -21,7 +21,7 @@ export default function LandlordLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [isClient, setIsClient] = useState(false);
-  const initialPathRef = useRef(pathname);
+  const hasCheckedSession = useRef(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -34,19 +34,27 @@ export default function LandlordLayout({
 
   const { data: profile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
-  // Accelerated Redirection Logic with Session Persistence
+  // High-Fidelity Session Persistence Logic
   useEffect(() => {
-    if (isClient && !isUserLoading && !user) {
-      // Save current path to potentially return here after login if needed
-      router.replace('/auth');
-    } else if (isClient && !isProfileLoading && profile && profile.role !== 'landlord') {
+    if (!isClient || isUserLoading) return;
+
+    if (!user) {
+      // Allow a split second for re-hydration if tab was in background
+      const timer = setTimeout(() => {
+        if (!user) router.replace('/auth');
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+
+    if (!isProfileLoading && profile && profile.role !== 'landlord') {
       router.replace(profile.role === 'tenant' ? '/tenant/hub' : '/auth');
     }
+    
+    hasCheckedSession.current = true;
   }, [user, isUserLoading, profile, isProfileLoading, router, isClient]);
 
   const BRAND_LOGO_URL = RENTALFLOW_NEUTRAL_FALLBACK;
 
-  // Render a stable, high-fidelity brand loader to prevent flickering on mobile
   if (!isClient || isUserLoading || isProfileLoading || (user && !profile)) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-500">

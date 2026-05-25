@@ -22,7 +22,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { supabase } from '@/lib/supabase';
-import { cn, isUserUploadedAsset, compressImage } from "@/lib/utils";
+import { cn, isUserUploadedAsset } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -103,14 +103,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setLedger(prev => [...prev, newItem]);
 
       try {
-        // High-Fidelity Client Optimization (Fail-Safe)
-        const optimizedAsset = await compressImage(file, 1200, 0.75);
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
         // DIRECT CLIENT SYNC: Resolved timeout issues by bypassing server actions
         const { error: uploadError } = await supabase.storage
           .from('property-images')
-          .upload(path, optimizedAsset, {
+          .upload(path, file, {
             contentType: file.type || 'image/jpeg',
             upsert: true
           });
@@ -129,8 +127,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         ));
         toast({ 
           variant: "destructive", 
-          title: "Mobile Sync Interrupted", 
-          description: "Syncing without optimization. Check your network." 
+          title: "Synchronization Interrupted", 
+          description: "Visual delivery failed. Please check your connection." 
         });
       }
     }
@@ -219,7 +217,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
             <div className="p-8 bg-muted/10 border-r border-border">
               <div className="flex justify-between items-center mb-6">
                 <Label className="font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground opacity-60 font-headline">Visual Inventory</Label>
-                <label htmlFor="image-input" className="h-10 rounded-xl font-bold text-[10px] uppercase font-headline cursor-pointer px-5 bg-primary text-primary-foreground shadow-lg flex items-center hover:opacity-90 transition-all">
+                <label htmlFor="image-input" className="h-10 rounded-xl font-bold text-[10px] uppercase font-headline cursor-pointer px-5 bg-accent text-white shadow-lg flex items-center hover:opacity-90 transition-all">
                   <Plus className="w-3.5 h-3.5 mr-2" /> Add Assets
                 </label>
               </div>
@@ -241,7 +239,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       {item.status === 'uploading' && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-md gap-2">
                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                           <span className="text-[8px] font-bold text-primary uppercase tracking-[0.2em]">Syncing Binary...</span>
+                           <span className="text-[8px] font-bold text-primary uppercase tracking-[0.2em]">Synchronizing...</span>
                         </div>
                       )}
                       {item.status === 'ready' && (
@@ -304,7 +302,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </div>
           <CardFooter className="p-8 bg-muted/5 border-t flex flex-col md:flex-row justify-end gap-4 shrink-0">
             <Button type="button" variant="ghost" className="w-full md:w-auto rounded-xl h-12 px-8 font-bold font-headline text-muted-foreground" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" disabled={isSaving || ledger.some(i => i.status === 'uploading')} className="w-full md:w-auto rounded-xl font-bold bg-primary h-12 px-12 shadow-xl shadow-primary/20 font-headline text-primary-foreground transition-all hover:scale-[1.02] uppercase tracking-widest text-xs">
+            <Button type="submit" disabled={isSaving || ledger.some(i => i.status === 'uploading')} className="w-full md:w-auto rounded-xl font-bold bg-accent h-12 px-12 shadow-xl shadow-accent/20 font-headline text-white transition-all hover:scale-[1.02] uppercase tracking-widest text-xs">
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
               Save & Synchronize
             </Button>
