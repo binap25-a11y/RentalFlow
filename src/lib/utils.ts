@@ -103,22 +103,20 @@ export async function compressImage(file: File, maxWidth = 800, quality = 0.75):
 /**
  * 🖼️ User Asset Identifier
  * Strictly identifies assets that were intentionally uploaded by the user to cloud storage.
- * DECISIVELY REJECTS all known stock image and placeholder domains.
+ * REJECTS all known stock image and placeholder domains.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
   const u = url.toLowerCase();
   
-  // DECISIVELY REJECT all known stock image/placeholder domains and IDs
+  // REJECT all known stock image/placeholder domains
   const forbiddenKeywords = [
     'unsplash.com',
     'picsum.photos',
     'placehold.co',
     'placeholder.com',
-    'pexels.com',
-    'photo-1486406146926-c627a92ad1ab', // Corporate skyscraper ID
-    'photo-1560518883-ce09059eeffa'  // Brand identity ID
+    'pexels.com'
   ];
 
   if (forbiddenKeywords.some(k => u.includes(k))) return false;

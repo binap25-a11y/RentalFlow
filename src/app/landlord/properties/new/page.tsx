@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp, collection } from 'firebase/firestore';
 import { Card, CardFooter } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star, Building2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
@@ -46,11 +46,10 @@ export default function NewPropertyPage() {
   const [bathrooms, setBathrooms] = useState('1');
   
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const syncVisualsToFirestore = (updatedLedger: LedgerItem[]) => {
+  const syncVisualsToFirestore = useCallback((updatedLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId) return;
-
-    if (updatedLedger.some(i => i.status === 'uploading')) return;
 
     const userOnly = updatedLedger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
@@ -65,21 +64,19 @@ export default function NewPropertyPage() {
       updatedAt: serverTimestamp(),
       memberIds: [user.uid]
     }, { merge: true });
-  };
+  }, [db, user, propertyId]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user || !propertyId) return;
-
-    let currentLedger = [...ledger];
 
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
       const uploadItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
-      currentLedger = [...currentLedger, uploadItem];
-      setLedger([...currentLedger]);
+      
+      setLedger(prev => [...prev, uploadItem]);
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -94,36 +91,42 @@ export default function NewPropertyPage() {
           return url;
         });
         
-        currentLedger = currentLedger.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item);
-        setLedger([...currentLedger]);
-        syncVisualsToFirestore(currentLedger);
+        setLedger(prev => {
+          const next = prev.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item);
+          syncVisualsToFirestore(next);
+          return next;
+        });
       } catch (err) {
-        currentLedger = currentLedger.map(item => item.id === tempId ? { ...item, status: 'error' } : item);
-        setLedger([...currentLedger]);
+        setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
       }
     }
     e.target.value = '';
   };
 
   const removeFromLedger = (id: string) => {
-    const next = ledger.filter(i => i.id !== id);
-    setLedger(next);
-    syncVisualsToFirestore(next);
+    setLedger(prev => {
+      const next = prev.filter(i => i.id !== id);
+      syncVisualsToFirestore(next);
+      return next;
+    });
   };
 
   const setAsPrimary = (id: string) => {
-    const item = ledger.find(i => i.id === id);
-    if (!item) return;
-    const next = [item, ...ledger.filter(i => i.id !== id)];
-    setLedger(next);
-    syncVisualsToFirestore(next);
+    setLedger(prev => {
+      const item = prev.find(i => i.id === id);
+      if (!item) return prev;
+      const next = [item, ...prev.filter(i => i.id !== id)];
+      syncVisualsToFirestore(next);
+      return next;
+    });
     toast({ title: "Identity Updated", description: "Primary cover designated." });
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !db || !propertyId) return;
 
+    setIsSaving(true);
     const propertyRef = doc(db, 'properties', propertyId);
     const userOnly = ledger.filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl)).map(i => i.cloudUrl!);
 
@@ -152,11 +155,16 @@ export default function NewPropertyPage() {
       updatedAt: serverTimestamp(),
     }, { merge: true });
 
-    syncPropertyToDb(serializableData);
-    
-    toast({ title: "Asset Registered" });
-    router.push(`/landlord/properties/${propertyId}`);
+    try {
+      await syncPropertyToDb(serializableData);
+      toast({ title: "Asset Registered" });
+      router.push(`/landlord/properties/${propertyId}`);
+    } catch (e) {
+       router.push(`/landlord/properties/${propertyId}`);
+    }
   };
+
+  const isUploading = ledger.some(i => i.status === 'uploading');
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left bg-background">
@@ -288,8 +296,8 @@ export default function NewPropertyPage() {
           </div>
           <CardFooter className="p-10 bg-muted/5 border-t flex flex-col md:flex-row justify-end gap-4">
             <Button type="button" variant="ghost" className="w-full md:w-auto rounded-xl h-12 px-8 font-bold font-headline text-muted-foreground" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" disabled={ledger.some(i => i.status === 'uploading')} className="w-full md:w-auto rounded-xl font-bold bg-accent h-12 px-12 shadow-xl shadow-accent/20 font-headline text-white transition-all hover:bg-accent/90 uppercase tracking-widest text-xs border-none">
-              <Save className="w-4 h-4 mr-2" />
+            <Button type="submit" disabled={isUploading || isSaving} className="w-full md:w-auto rounded-xl font-bold bg-accent h-12 px-12 shadow-xl shadow-accent/20 font-headline text-white transition-all hover:bg-accent/90 uppercase tracking-widest text-xs border-none">
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
               Synchronize Asset
             </Button>
           </CardFooter>

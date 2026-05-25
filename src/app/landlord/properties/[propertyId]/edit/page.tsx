@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use, useMemo } from 'react';
+import { useState, useEffect, use, useCallback } from 'react';
 import { 
   useUser, 
   useFirestore, 
@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star, Building2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
@@ -57,6 +57,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (property && !isInitialized) {
@@ -91,10 +92,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
   }, [property, isInitialized]);
 
-  const syncVisualsToFirestore = (updatedLedger: LedgerItem[]) => {
+  const syncVisualsToFirestore = useCallback((updatedLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
     
-    // Filter for ready cloud URLs strictly
     const userOnly = updatedLedger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
@@ -104,25 +104,25 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       imageUrls: userOnly,
       updatedAt: serverTimestamp(),
     });
-  };
+  }, [db, propertyRef]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
-
-    let currentLedger = [...ledger];
 
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
       const uploadItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
-      currentLedger = [...currentLedger, uploadItem];
-      setLedger([...currentLedger]);
+      
+      setLedger(prev => {
+        const next = [...prev, uploadItem];
+        return next;
+      });
 
       try {
         const optimizedBlob = await compressImage(file);
-        // Property-unique high-fidelity binary path
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
         const publicUrl = await withRetry(async () => {
@@ -134,36 +134,42 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           return url;
         });
         
-        currentLedger = currentLedger.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item);
-        setLedger([...currentLedger]);
-        syncVisualsToFirestore(currentLedger);
+        setLedger(prev => {
+          const next = prev.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item);
+          syncVisualsToFirestore(next);
+          return next;
+        });
       } catch (err) {
-        currentLedger = currentLedger.map(item => item.id === tempId ? { ...item, status: 'error' } : item);
-        setLedger([...currentLedger]);
+        setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
       }
     }
     e.target.value = '';
   };
 
   const removeFromLedger = (id: string) => {
-    const next = ledger.filter(i => i.id !== id);
-    setLedger(next);
-    syncVisualsToFirestore(next);
+    setLedger(prev => {
+      const next = prev.filter(i => i.id !== id);
+      syncVisualsToFirestore(next);
+      return next;
+    });
   };
 
   const setAsPrimary = (id: string) => {
-    const item = ledger.find(i => i.id === id);
-    if (!item) return;
-    const next = [item, ...ledger.filter(i => i.id !== id)];
-    setLedger(next);
-    syncVisualsToFirestore(next);
+    setLedger(prev => {
+      const item = prev.find(i => i.id === id);
+      if (!item) return prev;
+      const next = [item, ...prev.filter(i => i.id !== id)];
+      syncVisualsToFirestore(next);
+      return next;
+    });
     toast({ title: "Identity Updated", description: "Designated primary cover." });
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !db || !propertyRef) return;
 
+    setIsSaving(true);
     const userOnly = ledger.filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl)).map(i => i.cloudUrl!);
 
     const serializableData = {
@@ -184,11 +190,17 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     };
 
     updateDocumentNonBlocking(propertyRef, { ...serializableData, updatedAt: serverTimestamp() });
-    syncPropertyToDb(serializableData);
     
-    toast({ title: "Portfolio Sync Complete" });
-    router.push(`/landlord/properties/${propertyId}`);
+    try {
+      await syncPropertyToDb(serializableData);
+      toast({ title: "Portfolio Sync Complete" });
+      router.push(`/landlord/properties/${propertyId}`);
+    } catch (e) {
+      router.push(`/landlord/properties/${propertyId}`);
+    }
   };
+
+  const isUploading = ledger.some(i => i.status === 'uploading');
 
   if (isLoading || !isInitialized) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-accent" /></div>;
 
@@ -326,8 +338,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </div>
           <CardFooter className="p-10 bg-white/[0.01] border-t border-white/5 flex flex-col md:flex-row justify-end gap-5 shrink-0">
             <Button type="button" variant="ghost" className="w-full md:w-auto rounded-2xl h-14 px-10 font-bold font-headline text-muted-foreground hover:bg-white/5 hover:text-foreground border border-white/5 transition-all" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" disabled={ledger.some(i => i.status === 'uploading')} className="w-full md:w-auto rounded-2xl font-bold bg-accent h-14 px-14 shadow-2xl shadow-accent/20 font-headline text-white transition-all hover:bg-accent/90 uppercase tracking-[0.2em] text-[11px] border-none hover:scale-[1.02]">
-              <Save className="w-5 h-5 mr-3" />
+            <Button type="submit" disabled={isUploading || isSaving} className="w-full md:w-auto rounded-2xl font-bold bg-accent h-14 px-14 shadow-2xl shadow-accent/20 font-headline text-white transition-all hover:bg-accent/90 uppercase tracking-[0.2em] text-[11px] border-none hover:scale-[1.02]">
+              {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
               Save & Synchronize
             </Button>
           </CardFooter>
