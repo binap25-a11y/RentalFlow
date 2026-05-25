@@ -31,7 +31,6 @@ export async function withRetry<T>(
 /**
  * 🖼️ Resilient Mobile Optimization Engine
  * Converts HEIC/PNG/TIFF to High-Quality JPEG (1000px max).
- * Hardened to ensure blob URLs are not revoked prematurely.
  */
 export async function compressImage(file: File, maxWidth = 1000, quality = 0.6): Promise<Blob | File> {
   if (!file.type.startsWith('image/') || file.size < 1024 * 300) {
@@ -104,7 +103,7 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
 
 /**
  * 🖼️ User Asset Identifier
- * Strictly identifies assets that were intentionally uploaded or are in-flight blobs.
+ * Strictly identifies assets that were intentionally uploaded.
  * Explicitly identifies and excludes known placeholder domains.
  */
 export function isRealUserUpload(url: any): boolean {
@@ -112,12 +111,17 @@ export function isRealUserUpload(url: any): boolean {
   const u = url.toLowerCase();
   
   // Explicitly identify and exclude stock placeholders
-  if (u.includes('picsum.photos') || u.includes('unsplash.com') || u.includes('placehold.co')) {
+  if (
+    u.includes('picsum.photos') || 
+    u.includes('unsplash.com') || 
+    u.includes('placehold.co') ||
+    u.includes('placeholder')
+  ) {
     return false;
   }
 
   // Identify real uploads (Supabase, Firebase, or in-session Blobs)
-  return u.startsWith('blob:') || u.startsWith('http') || u.startsWith('data:image/');
+  return u.startsWith('blob:') || u.includes('supabase.co') || u.includes('firebasestorage') || u.startsWith('data:image/');
 }
 
 /**

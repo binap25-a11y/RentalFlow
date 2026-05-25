@@ -15,13 +15,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { supabase } from '@/lib/supabase';
-import { cn, compressImage, withRetry, isRealUserUpload } from '@/lib/utils';
+import { cn, compressImage, withRetry, isRealUserUpload, RENTALFLOW_NEUTRAL_FALLBACK } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-/**
- * 🖼️ Professional Fallback Identity
- */
-const BRAND_FALLBACK = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop";
+const BRAND_FALLBACK = RENTALFLOW_NEUTRAL_FALLBACK;
 
 type LedgerItem = {
   id: string;
@@ -36,7 +33,7 @@ export default function NewPropertyPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  // 🔐 Identity Isolation: Stable ID for Instant Sync
+  // 🔐 Stable Identity Pre-Generation
   const propertyId = useMemo(() => {
     if (!db) return '';
     return doc(collection(db, 'properties')).id;
@@ -56,10 +53,10 @@ export default function NewPropertyPage() {
 
   /**
    * 🔄 Direct Transactional Persistence
-   * Synchronizes the visual state to Firestore immediately upon binary stabilization.
+   * Overwrites Firestore micro-seconds after binary delivery.
    */
   const performDirectSync = (currentLedger: LedgerItem[]) => {
-    if (!db || !user || !propertyId || currentLedger.some(i => i.status === 'uploading')) return;
+    if (!db || !user || !propertyId) return;
 
     const readyUrls = currentLedger
       .filter(i => i.status === 'ready' && i.cloudUrl)
@@ -84,15 +81,15 @@ export default function NewPropertyPage() {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user || !propertyId) return;
 
+    let updatedLedger = [...ledger];
+
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
-      setLedger(prev => [...prev, {
-        id: tempId,
-        previewUrl: localUrl,
-        status: 'uploading'
-      }]);
+      const newItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
+      updatedLedger = [...updatedLedger, newItem];
+      setLedger(updatedLedger);
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -101,23 +98,19 @@ export default function NewPropertyPage() {
         const publicUrl = await withRetry(async () => {
           const { error: uploadError } = await supabase.storage
             .from('property-images')
-            .upload(path, optimizedBlob, {
-              contentType: 'image/jpeg',
-              upsert: true
-            });
+            .upload(path, optimizedBlob, { contentType: 'image/jpeg', upsert: true });
           if (uploadError) throw uploadError;
           const { data: { publicUrl: url } } = supabase.storage.from('property-images').getPublicUrl(path);
           return url;
         });
         
-        setLedger(prev => {
-          const updated = prev.map(item => 
-            item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
-          );
-          // INSTANT TRANSACTIONAL PERSISTENCE
-          performDirectSync(updated);
-          return updated;
-        });
+        updatedLedger = updatedLedger.map(item => 
+          item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
+        );
+        setLedger(updatedLedger);
+        
+        // TRANSACTIONAL SYNC: Ensure database record exists and includes images
+        performDirectSync(updatedLedger);
         toast({ title: "Visual Binary Synchronized" });
       } catch (err) {
         setLedger(prev => prev.map(item => 
@@ -130,65 +123,44 @@ export default function NewPropertyPage() {
   };
 
   const removeFromLedger = (id: string) => {
-    setLedger(prev => {
-      const updated = prev.filter(i => i.id !== id);
-      performDirectSync(updated);
-      return updated;
-    });
+    const updated = ledger.filter(i => i.id !== id);
+    setLedger(updated);
+    performDirectSync(updated);
     toast({ title: "Asset Removed" });
   };
 
   const setAsPrimary = (id: string) => {
-    setLedger(prev => {
-      const item = prev.find(i => i.id === id);
-      if (!item) return prev;
-      const updated = [item, ...prev.filter(i => i.id !== id)];
-      performDirectSync(updated);
-      return updated;
-    });
+    const item = ledger.find(i => i.id === id);
+    if (!item) return;
+    const updated = [item, ...ledger.filter(i => i.id !== id)];
+    setLedger(updated);
+    performDirectSync(updated);
     toast({ title: "Cover Identity Updated" });
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !db || !propertyId) return;
-    if (ledger.some(i => i.status === 'uploading')) {
-      toast({ title: "Synchronizing Records...", description: "Please wait for background uploads to complete." });
-      return;
-    }
-
     setIsSaving(true);
     const propertyRef = doc(db, 'properties', propertyId);
 
-    const finalImageUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
-    const userUploads = finalImageUrls.filter(isRealUserUpload);
-    const purgedGallery = userUploads.length > 0 ? userUploads : finalImageUrls;
-    const finalImageUrl = purgedGallery.length > 0 ? purgedGallery[0] : BRAND_FALLBACK;
-
     try {
+      const finalImageUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
+      const userUploads = finalImageUrls.filter(isRealUserUpload);
+      const purgedGallery = userUploads.length > 0 ? userUploads : finalImageUrls;
+      const finalImageUrl = purgedGallery.length > 0 ? purgedGallery[0] : BRAND_FALLBACK;
+
       const serializableData = {
-        id: propertyId,
-        landlordId: user.uid,
-        addressLine1: address,
-        city,
-        zipCode,
-        rentAmount: parseFloat(rentAmount) || 0,
-        imageUrl: finalImageUrl,
-        imageUrls: purgedGallery,
-        propertyType,
-        numberOfBedrooms: parseInt(bedrooms, 10) || 1,
-        numberOfBathrooms: parseInt(bathrooms, 10) || 1,
-        description: description,
-        isOccupied: false,
-        memberIds: [user.uid]
+        id: propertyId, landlordId: user.uid, addressLine1: address,
+        city, zipCode, rentAmount: parseFloat(rentAmount) || 0,
+        imageUrl: finalImageUrl, imageUrls: purgedGallery, propertyType,
+        numberOfBedrooms: parseInt(bedrooms, 10) || 1, numberOfBathrooms: parseInt(bathrooms, 10) || 1,
+        description: description, isOccupied: false, memberIds: [user.uid]
       };
 
       setDocumentNonBlocking(propertyRef, {
         ...serializableData,
-        tenantIds: [],
-        isActive: true,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        tenantIds: [], isActive: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
       }, { merge: true });
 
       await syncPropertyToDb(serializableData);
@@ -237,7 +209,6 @@ export default function NewPropertyPage() {
                       index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
-                      {/* Standard <img> tag for session stability */}
                       <img 
                         src={item.previewUrl} 
                         alt={`Asset ${index}`} 
@@ -249,26 +220,13 @@ export default function NewPropertyPage() {
                       />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">
                         <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-card/90 text-accent p-2 rounded-xl hover:scale-110 transition-transform shadow-lg border border-border"><Star className={cn("w-3.5 h-3.5", index === 0 && "fill-accent")} /></button>
-                        <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/90 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 backdrop-blur-md transition-all active:scale-90"><X className="w-3.5 h-3.5" /></button>
+                        <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 transition-all active:scale-90"><X className="w-3.5 h-3.5" /></button>
                       </div>
                       
                       {item.status === 'uploading' && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-card/60 backdrop-blur-md gap-2">
                            <Loader2 className="w-6 h-6 animate-spin text-accent" />
                            <span className="text-[8px] font-bold text-accent uppercase tracking-[0.2em]">Synchronizing...</span>
-                        </div>
-                      )}
-
-                      {item.status === 'ready' && (
-                        <div className="absolute bottom-2 right-2 bg-emerald-500 text-white p-1.5 rounded-full shadow-lg animate-in zoom-in duration-300">
-                           <CheckCircle2 className="w-3.5 h-3.5" />
-                        </div>
-                      )}
-
-                      {item.status === 'error' && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-destructive/10 backdrop-blur-sm gap-2">
-                           <AlertTriangle className="w-6 h-6 text-destructive" />
-                           <span className="text-[8px] font-bold text-destructive uppercase tracking-widest px-2 text-center">Sync Error</span>
                         </div>
                       )}
                     </div>
@@ -302,9 +260,7 @@ export default function NewPropertyPage() {
                   <div className="space-y-2">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Asset Class</Label>
                     <Select value={propertyType} onValueChange={setPropertyType}>
-                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground">
-                        <SelectValue />
-                      </SelectTrigger>
+                      <SelectTrigger className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-xl border-border bg-card">
                         <SelectItem value="Apartment">Apartment</SelectItem>
                         <SelectItem value="House">House</SelectItem>
