@@ -61,8 +61,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isSaving, setIsSaving] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   
-  // Track ledger changes for instant Firestore sync
-  const lastSyncRef = useRef<string[]>([]);
+  const latestLedgerRef = useRef<LedgerItem[]>([]);
 
   useEffect(() => {
     if (property && !isInitialized) {
@@ -80,7 +79,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         gallery.unshift(property.imageUrl);
       }
       
-      // Initialize ledger: Keep existing images but mark them as ready
       const initialLedger = gallery
         .filter(url => url && url.startsWith('http'))
         .map(url => ({ 
@@ -92,31 +90,34 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         }));
         
       setLedger(initialLedger);
-      lastSyncRef.current = initialLedger.map(i => i.cloudUrl!);
+      latestLedgerRef.current = initialLedger;
       setIsInitialized(true);
     }
   }, [property, isInitialized]);
 
-  // INSTANT FIRESTORE SYNC: Automatically lock in new cloud URLs as they finish
-  useEffect(() => {
-    const readyCloudUrls = ledger.filter(i => i.status === 'ready' && i.cloudUrl).map(i => i.cloudUrl!);
+  // INSTANT PERSISTENT SYNC: Updates Firestore immediately when an image is ready
+  const syncVisualsToFirestore = (currentLedger: LedgerItem[]) => {
+    if (!propertyRef) return;
     
-    // Only sync if the list of ready URLs has actually changed
-    if (readyCloudUrls.length > 0 && JSON.stringify(readyCloudUrls) !== JSON.stringify(lastSyncRef.current) && propertyRef) {
-      const userUploads = readyCloudUrls.filter(u => isRealUserUpload(u));
-      const purgedGallery = userUploads.length > 0 ? userUploads : readyCloudUrls;
-      const primaryUrl = purgedGallery.length > 0 ? purgedGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
+    const readyCloudUrls = currentLedger
+      .filter(i => i.status === 'ready' && i.cloudUrl)
+      .map(i => i.cloudUrl!);
 
-      updateDocumentNonBlocking(propertyRef, {
-        imageUrl: primaryUrl,
-        imageUrls: purgedGallery,
-        updatedAt: serverTimestamp(),
-      });
-      
-      lastSyncRef.current = readyCloudUrls;
-      console.log("Visual Ledger Synchronized to Firestore.");
-    }
-  }, [ledger, propertyRef]);
+    if (readyCloudUrls.length === 0) return;
+
+    // Storage-First Policy: Purge placeholders if user photography exists
+    const userUploads = readyCloudUrls.filter(u => isRealUserUpload(u));
+    const finalGallery = userUploads.length > 0 ? userUploads : readyCloudUrls;
+    const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
+
+    updateDocumentNonBlocking(propertyRef, {
+      imageUrl: primaryUrl,
+      imageUrls: finalGallery,
+      updatedAt: serverTimestamp(),
+    });
+    
+    console.log("Visual Records Synchronized to Firestore.");
+  };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -124,7 +125,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
-      // INSTANT PREVIEW: Direct blob access for immediate mobile feedback
       const localUrl = URL.createObjectURL(file);
       
       const newItem: LedgerItem = {
@@ -134,13 +134,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         isNew: true
       };
       
-      setLedger(prev => [...prev, newItem]);
+      const updatedLedger = [...latestLedgerRef.current, newItem];
+      setLedger(updatedLedger);
+      latestLedgerRef.current = updatedLedger;
 
       try {
         const optimizedBlob = await compressImage(file);
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
-        // DIRECT SYNC: Standard client avoids header parameter errors
         const publicUrl = await withRetry(async () => {
           const { error: uploadError } = await supabase.storage
             .from('property-images')
@@ -155,31 +156,44 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           return url;
         });
         
-        setLedger(prev => prev.map(item => 
+        const finalizedLedger = latestLedgerRef.current.map(item => 
           item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
-        ));
-        toast({ title: "Binary Synchronized" });
+        );
+        
+        setLedger(finalizedLedger);
+        latestLedgerRef.current = finalizedLedger;
+        
+        // LOCK IN CHANGES IMMEDIATELY
+        syncVisualsToFirestore(finalizedLedger);
+        
+        toast({ title: "Visual Binary Synchronized" });
       } catch (err: any) {
         console.error("Direct Sync Error:", err);
-        setLedger(prev => prev.map(item => 
+        const errorLedger = latestLedgerRef.current.map(item => 
           item.id === tempId ? { ...item, status: 'error' } : item
-        ));
-        toast({ variant: "destructive", title: "Visual Delivery Failed", description: "Binary rejected by storage engine." });
+        );
+        setLedger(errorLedger);
+        latestLedgerRef.current = errorLedger;
+        toast({ variant: "destructive", title: "Sync Failed", description: "Binary delivery interrupted." });
       }
     }
     e.target.value = '';
   };
 
   const removeFromLedger = (id: string) => {
-    const item = ledger.find(i => i.id === id);
-    // Note: revokeObjectURL removed to prevent race conditions on mobile previews
-    setLedger(prev => prev.filter(i => i.id !== id));
+    const updatedLedger = latestLedgerRef.current.filter(i => i.id !== id);
+    setLedger(updatedLedger);
+    latestLedgerRef.current = updatedLedger;
+    syncVisualsToFirestore(updatedLedger);
   };
 
   const setAsPrimary = (id: string) => {
-    const item = ledger.find(i => i.id === id);
+    const item = latestLedgerRef.current.find(i => i.id === id);
     if (!item) return;
-    setLedger(prev => [item, ...prev.filter(i => i.id !== id)]);
+    const updatedLedger = [item, ...latestLedgerRef.current.filter(i => i.id !== id)];
+    setLedger(updatedLedger);
+    latestLedgerRef.current = updatedLedger;
+    syncVisualsToFirestore(updatedLedger);
     toast({ title: "Cover Identity Updated" });
   };
 
@@ -195,9 +209,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     try {
       const finalUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
-      
-      // STORAGE-FIRST SYNC:
-      const userUploads = finalUrls.filter(u => isRealUserUpload(u));
+      const userUploads = finalUrls.filter(isRealUserUpload);
       const purgedGallery = userUploads.length > 0 ? userUploads : finalUrls;
       const primaryUrl = purgedGallery.length > 0 ? purgedGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
 
@@ -225,7 +237,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       await syncPropertyToDb(serializableData);
 
-      toast({ title: "Portfolio Synchronized" });
+      toast({ title: "Portfolio Persistent Sync Complete" });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (err: any) {
       toast({ variant: "destructive", title: "Update Failed", description: err.message });
@@ -248,7 +260,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </div>
         </div>
         <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[9px]">
-          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Persistent Storage Sync
+          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Transactional Sync Active
         </Badge>
       </div>
 
@@ -272,7 +284,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
-                      {/* Using standard img for local blob stability on mobile */}
                       <img 
                         src={item.previewUrl} 
                         alt={`Asset ${index}`} 
@@ -295,7 +306,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       )}
 
                       {item.status === 'ready' && (
-                        <div className="absolute bottom-2 right-2 bg-emerald-500 text-white p-1 rounded-full shadow-lg animate-in zoom-in duration-300">
+                        <div className="absolute bottom-2 right-2 bg-emerald-500 text-white p-1.5 rounded-full shadow-lg animate-in zoom-in duration-300">
                            <CheckCircle2 className="w-3" />
                         </div>
                       )}
@@ -363,7 +374,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
             <Button type="button" variant="ghost" className="w-full md:w-auto rounded-xl h-12 px-8 font-bold font-headline text-muted-foreground" onClick={() => router.back()}>Cancel</Button>
             <Button type="submit" disabled={isSaving || ledger.some(i => i.status === 'uploading')} className="w-full md:w-auto rounded-xl font-bold bg-accent h-12 px-12 shadow-xl shadow-accent/20 font-headline text-white transition-all hover:bg-accent/90 uppercase tracking-widest text-xs border-none">
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-              Save & Synchronize
+              Save & Exit
             </Button>
           </CardFooter>
         </form>

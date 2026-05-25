@@ -30,15 +30,19 @@ export async function withRetry<T>(
 
 /**
  * 🖼️ Resilient Mobile Optimization Engine
+ * Converts HEIC/PNG/TIFF to High-Quality JPEG (1000px max)
+ * SILENT FALLBACK: If RAM is exhausted, returns original file.
  */
-export async function compressImage(file: File, maxWidth = 1200, quality = 0.7): Promise<Blob | File> {
+export async function compressImage(file: File, maxWidth = 1000, quality = 0.6): Promise<Blob | File> {
+  // Bypasses small files or non-images
   if (!file.type.startsWith('image/') || file.size < 1024 * 300) {
     return file;
   }
 
   try {
     return await new Promise((resolve) => {
-      const timeout = setTimeout(() => resolve(file), 4000);
+      // 3-second RAM safety timeout
+      const timeout = setTimeout(() => resolve(file), 3000);
       const objectUrl = URL.createObjectURL(file);
       const img = new Image();
       
@@ -77,8 +81,7 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.7):
           canvas.toBlob(
             (blob) => {
               clearTimeout(timeout);
-              // Clean up memory after processing
-              // Note: Aggressive revocation removed to prevent preview race conditions on mobile
+              // Only return compressed if it actually saved space
               resolve(blob && blob.size < file.size ? blob : file);
             },
             'image/jpeg',
@@ -104,7 +107,7 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.7):
 
 /**
  * 🖼️ User Asset Identifier
- * Strictly identifies assets that were intentionally uploaded (Supabase, Firebase, Blob).
+ * Strictly identifies assets that were intentionally uploaded.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
@@ -128,25 +131,22 @@ export function isValidAssetUrl(url: any): boolean {
  * Prioritizes user-uploaded content over placeholders.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
-  // 1. Priority: User Uploads (Direct image)
   if (isRealUserUpload(imageUrl)) return imageUrl!;
   
-  // 2. Check Gallery for any real uploads
   if (imageUrls && Array.isArray(imageUrls)) {
     const firstReal = imageUrls.find(u => isRealUserUpload(u));
     if (firstReal) return firstReal;
   }
 
-  // 3. Secondary: Remote images (Unsplash seeds etc) that aren't the brand fallback
+  // If no user uploads, show existing valid URL or brand identity
   if (isValidAssetUrl(imageUrl) && imageUrl !== RENTALFLOW_NEUTRAL_FALLBACK) return imageUrl!;
   
-  // 4. Fallback: Neutral professional brand asset
   return RENTALFLOW_NEUTRAL_FALLBACK;
 }
 
 /**
  * 🖼️ Synchronized Gallery Resolver
- * If any user uploads exist, we purge placeholders to satisfy the "replace placeholder" requirement.
+ * If any user uploads exist, we purge ALL placeholders to satisfy the "replace placeholder" requirement.
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
@@ -160,9 +160,8 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
   const allAssets = Array.from(assets);
   const userUploads = allAssets.filter(isRealUserUpload);
   
-  // If user has uploaded any actual images, only show those to purge placeholders
+  // Storage-First Policy: If user has uploaded any actual images, only show those.
   if (userUploads.length > 0) return userUploads;
   
-  // Otherwise show existing valid URLs or the brand identity
   return allAssets.length > 0 ? allAssets : [RENTALFLOW_NEUTRAL_FALLBACK];
 }
