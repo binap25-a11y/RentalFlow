@@ -70,9 +70,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // USER-DATA ONLY: Initialize ledger with ONLY real user uploads
-      const gallery = getResolvedGallery(property.imageUrl, property.imageUrls);
-      const initialLedger = gallery
+      // SANITIZATION: Initialize ledger with ONLY real user uploads
+      // This prevents stock placeholders from being carried into the edit session.
+      const initialLedger = (property.imageUrls || [])
         .filter(url => url && isRealUserUpload(url))
         .map(url => ({ 
           id: Math.random().toString(36).substring(7), 
@@ -89,7 +89,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   /**
    * 🔄 Instant Transactional Persistence
    * Directly updates Firestore the microsecond a binary upload completes.
-   * USER-DATA ONLY: Never writes placeholders to the database.
+   * This ensures visuals are locked in even if the user navigates away.
    */
   const performDirectSync = (currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId || !propertyRef) return;
@@ -98,7 +98,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // TRANSACTIONAL AUTO-SAVE: Identity is locked into Firestore immediately
+    // TRANSACTIONAL AUTO-SAVE: Visual identity is locked in background
     updateDocumentNonBlocking(propertyRef, {
       imageUrl: userOnly.length > 0 ? userOnly[0] : null,
       imageUrls: userOnly,

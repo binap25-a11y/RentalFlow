@@ -110,12 +110,13 @@ export async function compressImage(file: File, maxWidth = 800, quality = 0.75):
 /**
  * 🖼️ User Asset Identifier
  * Strictly identifies assets that were intentionally uploaded by the user to the cloud.
+ * Excludes all stock domains and brand logo.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   const u = url.toLowerCase();
   
-  // Exclude known stock domains and the specific Brand Logo
+  // Strict check: Must not be a placeholder domain
   if (
     u.includes('images.unsplash.com') || 
     u.includes('picsum.photos') || 
@@ -127,7 +128,7 @@ export function isRealUserUpload(url: any): boolean {
     return false;
   }
 
-  // Whitelist: Supabase, Firebase, Blobs, DataURIs
+  // Valid: Supabase storage, Firebase storage, local blob previews, or data URIs
   return u.startsWith('blob:') || u.includes('supabase.co') || u.includes('firebasestorage') || u.startsWith('data:image/');
 }
 
@@ -165,7 +166,7 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
   
-  // Prioritize cover first if it's a real user upload
+  // Add cover if it's a real user upload
   if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) assets.add(imageUrl);
   
   // Add gallery assets that are real user uploads
@@ -175,6 +176,7 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
     });
   }
   
+  // Filter out ephemeral blobs for the detail view
   const userUploads = Array.from(assets).filter(u => !u.startsWith('blob:'));
   
   if (userUploads.length > 0) return userUploads;
