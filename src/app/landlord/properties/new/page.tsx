@@ -61,10 +61,11 @@ export default function NewPropertyPage() {
       setLedger(prev => [...prev, newItem]);
 
       try {
+        // RAM-Safe Optimizer: Silently returns original if RAM is low
         const optimizedBlob = await compressImage(file);
         const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
-        // DIRECT-TO-CLOUD: Bypasses Next.js payload and timeout constraints
+        // DIRECT-TO-CLOUD: Bypasses Next.js limits
         const { error: uploadError } = await supabase.storage
           .from('property-images')
           .upload(path, optimizedBlob, {
@@ -87,7 +88,7 @@ export default function NewPropertyPage() {
         toast({ 
           variant: "destructive", 
           title: "Synchronization Interrupted", 
-          description: "Visual delivery failed. Please check your network." 
+          description: "Network delivery failed. Please check your signal." 
         });
       }
     }

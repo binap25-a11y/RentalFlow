@@ -13,11 +13,11 @@ export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-15
 
 /**
  * 🖼️ Resilient Mobile Optimization Engine
- * Reduces massive 10MB+ mobile photos to ~1MB high-quality versions (1200px, 0.75 quality).
- * Fail-Safe Architecture: If browser memory or format limits are hit (common on iOS), 
- * it returns the original file silently so the sync flow is never interrupted.
+ * Redesigned for 100% reliability on mobile.
+ * If the device hits memory limits or format errors, it SILENTLY returns the original file.
+ * This ensures the user is never blocked by a "Compression Failed" message.
  */
-export async function compressImage(file: File, maxWidth = 1200, quality = 0.75): Promise<Blob | File> {
+export async function compressImage(file: File, maxWidth = 1000, quality = 0.6): Promise<Blob | File> {
   // Skip optimization for non-image files or very small files (< 500KB)
   if (!file.type.startsWith('image/') || file.size < 500000) {
     return file;
@@ -25,6 +25,9 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.75)
 
   try {
     return await new Promise((resolve) => {
+      // Safety timeout: if compression hangs, return original after 3s
+      const timeout = setTimeout(() => resolve(file), 3000);
+
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = (event) => {
@@ -36,7 +39,7 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.75)
             let width = img.width;
             let height = img.height;
 
-            // Maintain Aspect Ratio with 1200px ceiling for mobile stability
+            // Enforce conservative mobile-safe boundaries
             if (width > height) {
               if (width > maxWidth) {
                 height *= maxWidth / width;
@@ -54,21 +57,20 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.75)
 
             const ctx = canvas.getContext('2d');
             if (!ctx) {
-              console.warn("Compression Engine: Canvas context unavailable. Using original.");
+              clearTimeout(timeout);
               resolve(file); 
               return;
             }
 
-            // High-Quality Downsampling
             ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
+            ctx.imageSmoothingQuality = 'medium';
             ctx.drawImage(img, 0, 0, width, height);
 
             canvas.toBlob(
               (blob) => {
-                if (blob) {
-                  // Only use the optimized version if it's actually smaller
-                  resolve(blob.size < file.size ? blob : file);
+                clearTimeout(timeout);
+                if (blob && blob.size < file.size) {
+                  resolve(blob);
                 } else {
                   resolve(file);
                 }
@@ -77,25 +79,21 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.75)
               quality
             );
           } catch (e) {
-            console.warn("Resilient Fallback: Canvas memory failure. Synchronizing original.");
+            clearTimeout(timeout);
             resolve(file);
           }
         };
         img.onerror = () => {
-          console.warn("Compression Engine: Image load error. Using original.");
+          clearTimeout(timeout);
           resolve(file);
         };
       };
       reader.onerror = () => {
-        console.warn("Compression Engine: FileReader error. Using original.");
+        clearTimeout(timeout);
         resolve(file);
       };
-      
-      // Safety timeout: don't block user for more than 4s during compression
-      setTimeout(() => resolve(file), 4000);
     });
   } catch (error) {
-    console.warn("Resilient Fallback: Optimization bypassed due to device constraints.");
     return file;
   }
 }

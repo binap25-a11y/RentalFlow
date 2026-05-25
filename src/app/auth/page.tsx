@@ -43,7 +43,6 @@ export default function AuthPage() {
     setMounted(true);
   }, []);
 
-  // Optimized Redirect Logic: Prioritize speed for existing sessions
   useEffect(() => {
     if (user && db && mounted && !isLoading && !isRedirecting.current) {
       const checkAndRedirect = async () => {
@@ -154,7 +153,7 @@ export default function AuthPage() {
 
   if (!mounted || isUserLoading || (user && !needsProfile && !isRedirecting.current)) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-500 pointer-events-none">
+      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-500">
         <div className="flex flex-col items-center gap-4">
           <div className="relative w-24 h-24 rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5">
              <Image src={RENTALFLOW_NEUTRAL_FALLBACK} alt="RentalFlow" fill className="object-cover" unoptimized priority />
