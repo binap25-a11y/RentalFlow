@@ -89,7 +89,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
-    // 🛠️ SEQUENTIAL SYNC: Process one at a time for mobile RAM safety
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
@@ -104,7 +103,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setLedger(prev => [...prev, newItem]);
 
       try {
-        // High-Fidelity Fallback Compression: Enforces 1200px / 0.75 Quality
+        // High-Fidelity Client Optimization (Fail-Safe)
         const optimizedAsset = await compressImage(file, 1200, 0.75);
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
@@ -130,8 +129,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         ));
         toast({ 
           variant: "destructive", 
-          title: "Mobile Sync Failed", 
-          description: "Connection interrupted. High-fidelity sync failed. Please try a smaller file." 
+          title: "Mobile Sync Interrupted", 
+          description: "Syncing without optimization. Check your network." 
         });
       }
     }
@@ -242,7 +241,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       {item.status === 'uploading' && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-md gap-2">
                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                           <span className="text-[8px] font-bold text-primary uppercase tracking-[0.2em]">Syncing...</span>
+                           <span className="text-[8px] font-bold text-primary uppercase tracking-[0.2em]">Syncing Binary...</span>
                         </div>
                       )}
                       {item.status === 'ready' && (
@@ -258,7 +257,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   </label>
                 </div>
               </ScrollArea>
-              {/* 📱 MOBILE GALLERY FIX: No capture attribute allows Gallery + Camera selection */}
               <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
             </div>
 

@@ -12,72 +12,68 @@ export function cn(...inputs: ClassValue[]) {
 export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop";
 
 /**
- * 🖼️ Client-Side Image Compression (Fail-Safe)
- * Optimized for mobile devices to prevent "Memory Exhaustion" or "Connection Interrupted" errors.
- * If compression fails (common with massive 4K/12MP photos on mobile RAM), it falls back to the original file.
+ * 🖼️ Fail-Safe Client-Side Image Optimization
+ * Optimized for mobile devices to prevent "Memory Exhaustion" or "Engine Failed" errors.
+ * This version is designed to be 100% resilient: if anything fails, it returns the original file.
  */
 export async function compressImage(file: File, maxWidth = 1200, quality = 0.75): Promise<Blob | File> {
-  // 1. Skip if not an image or very small (already optimized)
+  // 1. Instant skip for non-images or small files
   if (!file.type.startsWith('image/')) return file;
-  if (file.size < 200 * 1024) return file; // Skip if < 200KB
+  if (file.size < 300 * 1024) return file; 
 
   return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
       
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
 
-          // Only resize if significantly larger than target
-          if (width > maxWidth) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          
-          if (!ctx) {
-            console.warn('Compression: Canvas context unavailable. Using original file.');
-            return resolve(file);
-          }
-          
-          ctx.drawImage(img, 0, 0, width, height);
-          
-          canvas.toBlob((blob) => {
-            if (blob) {
-              console.log(`Compression Complete: ${(file.size / 1024 / 1024).toFixed(2)}MB -> ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
-              resolve(blob);
-            } else {
-              console.warn('Compression: Blob conversion failed. Using original file.');
-              resolve(file);
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
             }
-          }, 'image/jpeg', quality);
-        } catch (err) {
-          console.error('Compression Engine Error (Memory/RAM):', err);
-          // 🛠️ CRITICAL FALLBACK: Return original file if compression crashes on mobile
-          resolve(file);
-        }
-      };
-      
-      img.onerror = (err) => {
-        console.error('Compression: Image loading error. Using original file.', err);
-        resolve(file);
-      };
-    };
 
-    reader.onerror = (error) => {
-      console.error('Compression: FileReader error. Using original file.', error);
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            
+            if (!ctx) {
+              console.warn('Sync Engine: Canvas unavailable. Using original binary.');
+              return resolve(file);
+            }
+            
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            canvas.toBlob((blob) => {
+              if (blob) {
+                console.log(`Sync Ready: ${(file.size / 1024 / 1024).toFixed(2)}MB -> ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
+                resolve(blob);
+              } else {
+                resolve(file);
+              }
+            }, 'image/jpeg', quality);
+          } catch (err) {
+            // 🛠️ CRITICAL FALLBACK: Returns original file if mobile RAM crashes
+            console.warn('Sync Engine: Memory limit reached. Bypassing compression.');
+            resolve(file);
+          }
+        };
+        
+        img.onerror = () => resolve(file);
+      };
+
+      reader.onerror = () => resolve(file);
+    } catch (e) {
       resolve(file);
-    };
+    }
   });
 }
 

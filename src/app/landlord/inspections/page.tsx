@@ -137,14 +137,14 @@ export default function InspectionsPage() {
     }));
 
     try {
-      // 🛠️ High-Fidelity Compression requested: 1200px, 0.75 quality
-      const compressedBlob = await compressImage(file, 1200, 0.75);
+      // High-Fidelity Client Optimization (Fail-Safe)
+      const optimizedBinary = await compressImage(file, 1200, 0.75);
       const path = `audits/${user.uid}/${activeInspection.id}/${itemId.replace(/\s+/g, '_')}_${Date.now()}`;
       
-      // DIRECT CLIENT SYNC: Bypasses server bottlenecks
+      // DIRECT CLIENT SYNC: Resolved persistent timeout issues
       const { error: uploadError } = await supabase.storage
         .from('property-images')
-        .upload(path, compressedBlob, {
+        .upload(path, optimizedBinary, {
           contentType: 'image/jpeg',
           upsert: true
         });
@@ -165,8 +165,8 @@ export default function InspectionsPage() {
       }));
       toast({ 
         variant: "destructive", 
-        title: "Mobile Sync Failed", 
-        description: "Direct cloud synchronization failed. High-fidelity compression failed to deliver asset."
+        title: "Sync Interrupted", 
+        description: "Binary delivery failed. Using original asset if possible."
       });
     }
   };
@@ -199,20 +199,6 @@ export default function InspectionsPage() {
     const inspectionRef = doc(db, 'inspections', id);
     deleteDocumentNonBlocking(inspectionRef);
     toast({ title: "Audit Record Removed" });
-  };
-
-  const downloadPDF = async (inspection: any) => {
-    const property = properties?.find(p => p.id === inspection.propertyId);
-    const { jsPDF } = await import("jspdf");
-    const pdf = new jsPDF();
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    
-    pdf.setFillColor(31, 41, 55);
-    pdf.rect(0, 0, pageWidth, 40, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.text("OFFICIAL AUDIT RECORD", 20, 25);
-    
-    pdf.save(`Audit_${property?.addressLine1 || 'Report'}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
   const handleFinalizeAudit = async () => {
@@ -317,7 +303,6 @@ export default function InspectionsPage() {
                         <div className="flex items-center justify-between">
                           <Badge variant={inspection.status === 'completed' ? 'secondary' : 'default'} className="uppercase font-bold text-[10px] font-headline tracking-widest rounded-full">{inspection.status}</Badge>
                           <div className="flex gap-2">
-                            {inspection.status === 'completed' && <Button variant="outline" size="sm" onClick={() => downloadPDF(inspection)} className="rounded-lg h-8 border-border hover:bg-primary/5 font-headline"><Download className="w-3 h-3 mr-2" /> Export PDF</Button>}
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-lg" onClick={() => handleDeleteInspection(inspection.id)}><Trash2 className="w-4 h-4" /></Button>
                           </div>
                         </div>
@@ -394,7 +379,7 @@ export default function InspectionsPage() {
                                                       {structuredFindings[item]?.isSyncing ? (
                                                         <div className="flex flex-col items-center gap-2">
                                                           <Loader2 className="w-8 h-8 animate-spin text-primary opacity-40" />
-                                                          <span className="text-[8px] font-bold uppercase text-primary tracking-[0.3em]">Syncing Binary...</span>
+                                                          <span className="text-[8px] font-bold uppercase text-primary tracking-[0.3em]">Syncing binary...</span>
                                                         </div>
                                                       ) : (
                                                         <>

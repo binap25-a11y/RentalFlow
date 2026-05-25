@@ -34,8 +34,8 @@
     --sidebar-ring: 199 89% 48%;
   }
 
-  /* Force Midnight defaults for standard light class as well to ensure consistent premium feel */
-  .light {
+  /* Force Midnight Theme as primary standard */
+  .light, .dark {
     --background: 222 47% 4%;
     --foreground: 210 40% 98%;
     --card: 222 47% 7%;
@@ -45,36 +45,8 @@
     --accent: 199 89% 48%;
     --accent-foreground: 210 40% 98%;
     --border: 222 47% 15%;
-  }
-
-  .dark {
-    --background: 222 47% 4%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 7%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 7%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222 47% 10%;
-    --secondary: 222 47% 12%;
-    --secondary-foreground: 210 40% 98%;
     --muted: 222 47% 12%;
     --muted-foreground: 215 25% 75%;
-    --accent: 199 89% 48%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 222 47% 15%;
-    --input: 222 47% 15%;
-    --ring: 199 89% 48%;
-    --sidebar-background: 222 47% 3%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 199 89% 48%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 222 47% 10%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 222 47% 15%;
-    --sidebar-ring: 199 89% 48%;
   }
 }
 

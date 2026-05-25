@@ -154,7 +154,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     setIsUploadingDoc(true);
     setUploadedDocUrl(null);
 
-    // 🛠️ Direct Cloud Sync: Bypasses Server Action Binary Limits
+    // DIRECT CLIENT SYNC: Bypasses tunnel bottlenecks
     const path = `vault/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
     
     try {
@@ -171,9 +171,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       
       setUploadedDocUrl(publicUrl);
       if (!newDocName) setNewDocName(file.name.split('.')[0]);
-      toast({ title: "Mobile Sync Ready", description: "File synchronized to cloud." });
+      toast({ title: "Sync Ready", description: "Document synchronized to cloud." });
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Sync Failed", description: "Mobile connection interrupted. Please retry." });
+      toast({ variant: "destructive", title: "Sync Interrupted", description: "Please retry." });
     } finally {
       setIsUploadingDoc(false);
     }
@@ -382,7 +382,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                                   {isUploadingDoc ? (
                                     <div className="flex flex-col items-center gap-2">
                                       <Loader2 className="w-10 h-10 animate-spin text-primary opacity-40" />
-                                      <span className="text-[10px] font-bold text-primary uppercase tracking-[0.3em]">Synchronizing...</span>
+                                      <span className="text-[10px] font-bold text-primary uppercase tracking-[0.3em]">Syncing Binary...</span>
                                     </div>
                                   ) : uploadedDocUrl ? (
                                     <div className="flex flex-col items-center gap-2 animate-in zoom-in duration-300">

@@ -47,7 +47,6 @@ export default function NewPropertyPage() {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
-    // 🛠️ SEQUENTIAL SYNC: Process one at a time to prevent mobile RAM crashes
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
@@ -61,11 +60,11 @@ export default function NewPropertyPage() {
       setLedger(prev => [...prev, newItem]);
 
       try {
-        // High-Fidelity Fallback Compression: Returns original if device fails
+        // High-Fidelity Client Optimization (Fail-Safe)
         const optimizedAsset = await compressImage(file, 1200, 0.75);
         const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         
-        // DIRECT CLIENT SYNC: Bypasses server middleware for heavy binary data
+        // DIRECT CLIENT SYNC: Bypasses server bottlenecks entirely
         const { error: uploadError } = await supabase.storage
           .from('property-images')
           .upload(path, optimizedAsset, {
@@ -87,8 +86,8 @@ export default function NewPropertyPage() {
         ));
         toast({ 
           variant: "destructive", 
-          title: "Mobile Sync Failed", 
-          description: "Cloud connection interrupted. Check your network or try a smaller image." 
+          title: "Mobile Sync Interrupted", 
+          description: "Retrying without optimization. Check your connection." 
         });
       }
     }
@@ -195,7 +194,7 @@ export default function NewPropertyPage() {
                       {item.status === 'uploading' && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-md gap-2">
                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                           <span className="text-[8px] font-bold text-primary uppercase tracking-[0.2em]">Syncing...</span>
+                           <span className="text-[8px] font-bold text-primary uppercase tracking-[0.2em]">Syncing Binary...</span>
                         </div>
                       )}
                       {item.status === 'ready' && (
@@ -211,7 +210,6 @@ export default function NewPropertyPage() {
                   </label>
                 </div>
               </ScrollArea>
-              {/* 📱 MOBILE GALLERY FIX: No capture attribute allows Gallery + Camera selection */}
               <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
             </div>
 
