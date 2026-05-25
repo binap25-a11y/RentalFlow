@@ -92,7 +92,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
   }, [property, isInitialized]);
 
-  const syncVisualsToFirestore = useCallback((updatedLedger: LedgerItem[]) => {
+  const syncVisualsToFirestore = (updatedLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
     
     const userOnly = updatedLedger
@@ -104,7 +104,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       imageUrls: userOnly,
       updatedAt: serverTimestamp(),
     });
-  }, [db, propertyRef]);
+  };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -116,10 +116,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       
       const uploadItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
       
-      setLedger(prev => {
-        const next = [...prev, uploadItem];
-        return next;
-      });
+      setLedger(prev => [...prev, uploadItem]);
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -147,21 +144,17 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   };
 
   const removeFromLedger = (id: string) => {
-    setLedger(prev => {
-      const next = prev.filter(i => i.id !== id);
-      syncVisualsToFirestore(next);
-      return next;
-    });
+    const next = ledger.filter(i => i.id !== id);
+    setLedger(next);
+    syncVisualsToFirestore(next);
   };
 
   const setAsPrimary = (id: string) => {
-    setLedger(prev => {
-      const item = prev.find(i => i.id === id);
-      if (!item) return prev;
-      const next = [item, ...prev.filter(i => i.id !== id)];
-      syncVisualsToFirestore(next);
-      return next;
-    });
+    const item = ledger.find(i => i.id === id);
+    if (!item) return;
+    const next = [item, ...ledger.filter(i => i.id !== id)];
+    setLedger(next);
+    syncVisualsToFirestore(next);
     toast({ title: "Identity Updated", description: "Designated primary cover." });
   };
 
@@ -171,7 +164,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
     
-    // Metadata sync only - visuals are handled by atomic transactional sync
+    // Metadata sync only - visuals are handled by atomic transactional sync within event handlers
     const serializableData = {
       id: propertyId, 
       landlordId: user.uid, 

@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * 🏢 Brand Identity Asset
- * Used EXCLUSIVELY for the company logo and authentication branding (House & Keys).
+ * Used EXCLUSIVELY for the company logo and authentication branding.
  */
 export const RENTALFLOW_LOGO_URL = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=512&h=512&auto=format&fit=crop";
 
@@ -117,7 +117,8 @@ export function isRealUserUpload(url: any): boolean {
     'placehold.co',
     'placeholder.com',
     'pexels.com',
-    'photo-1486406146926-c627a92ad1ab'
+    'photo-1486406146926-c627a92ad1ab', // skyscraper
+    'photo-1560518883-ce09059eeffa'   // brand logo
   ];
 
   if (forbiddenKeywords.some(k => u.includes(k))) return false;
