@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from 'react';
-import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
+import { useState, useMemo, useEffect } from 'react';
+import { useUser, useFirestore, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp, collection } from 'firebase/firestore';
 import { Card, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,12 @@ export default function NewPropertyPage() {
   const { toast } = useToast();
   const router = useRouter();
 
+  // 🔐 Identity Isolation: Generate property ID early to support Instant Sync
+  const propertyId = useMemo(() => {
+    if (!db) return '';
+    return doc(collection(db, 'properties')).id;
+  }, [db]);
+
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [zipCode, setZipCode] = useState('');
@@ -42,10 +48,43 @@ export default function NewPropertyPage() {
   
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const latestLedgerRef = useState<LedgerItem[]>([]); // Ref surrogate
+
+  /**
+   * 🔄 Instant Persistent Sync
+   * For new properties, we initialize the document upon the first successful image upload.
+   */
+  const syncVisualsToFirestore = (currentLedger: LedgerItem[]) => {
+    if (!db || !user || !propertyId) return;
+    
+    const readyCloudUrls = currentLedger
+      .filter(i => i.status === 'ready' && i.cloudUrl)
+      .map(i => i.cloudUrl!);
+
+    if (readyCloudUrls.length === 0) return;
+
+    const userUploads = readyCloudUrls.filter(u => isRealUserUpload(u));
+    const finalGallery = userUploads.length > 0 ? userUploads : readyCloudUrls;
+    const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
+
+    const propertyRef = doc(db, 'properties', propertyId);
+    setDocumentNonBlocking(propertyRef, {
+      id: propertyId,
+      landlordId: user.uid,
+      imageUrl: primaryUrl,
+      imageUrls: finalGallery,
+      addressLine1: address || 'New Property Record',
+      city: city || '',
+      zipCode: zipCode || '',
+      updatedAt: serverTimestamp(),
+      isActive: true,
+      memberIds: [user.uid]
+    }, { merge: true });
+  };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (!files.length || !user) return;
+    if (!files.length || !user || !propertyId) return;
 
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
@@ -57,11 +96,15 @@ export default function NewPropertyPage() {
         status: 'uploading'
       };
       
-      setLedger(prev => [...prev, newItem]);
+      setLedger(prev => {
+        const next = [...prev, newItem];
+        // We'll use this closure's next state for instant sync after the await
+        return next;
+      });
 
       try {
         const optimizedBlob = await compressImage(file);
-        const path = `assets/${user.uid}/new_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
         const publicUrl = await withRetry(async () => {
           const { error: uploadError } = await supabase.storage
@@ -77,26 +120,36 @@ export default function NewPropertyPage() {
           return url;
         });
         
-        setLedger(prev => prev.map(item => 
-          item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
-        ));
+        setLedger(prev => {
+          const next = prev.map(item => 
+            item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
+          );
+          syncVisualsToFirestore(next);
+          return next;
+        });
+
+        toast({ title: "Visual Binary Synchronized" });
       } catch (err: any) {
-        console.error("Direct Sync Failure:", err);
         setLedger(prev => prev.map(item => 
           item.id === tempId ? { ...item, status: 'error' } : item
         ));
+        toast({ variant: "destructive", title: "Sync Failed" });
       }
     }
     e.target.value = '';
   };
 
   const removeFromLedger = (id: string) => {
-    setLedger(prev => prev.filter(i => i.id !== id));
+    setLedger(prev => {
+      const next = prev.filter(i => i.id !== id);
+      syncVisualsToFirestore(next);
+      return next;
+    });
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !db) return;
+    if (!user || !db || !propertyId) return;
     
     if (ledger.some(i => i.status === 'uploading')) {
       toast({ title: "Synchronizing Records...", description: "Please wait for background uploads to complete." });
@@ -104,12 +157,9 @@ export default function NewPropertyPage() {
     }
 
     setIsSaving(true);
-    const propertyId = doc(collection(db, 'properties')).id;
     const propertyRef = doc(db, 'properties', propertyId);
 
     const finalImageUrls = ledger.filter(i => i.status === 'ready').map(i => i.cloudUrl!);
-    
-    // Premium Enforcement: Purge all placeholders if user uploads exist.
     const userUploads = finalImageUrls.filter(isRealUserUpload);
     const purgedGallery = userUploads.length > 0 ? userUploads : finalImageUrls;
     const finalImageUrl = purgedGallery.length > 0 ? purgedGallery[0] : RENTALFLOW_NEUTRAL_FALLBACK;
