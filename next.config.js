@@ -15,6 +15,7 @@ const nextConfig = {
         "127.0.0.1:9002",
         "*.cloudworkstations.dev",
         "https://*.cloudworkstations.dev",
+        "http://*.cloudworkstations.dev",
         "*.ngrok-free.app",
         "https://*.ngrok-free.app",
         "*.loca.lt",
