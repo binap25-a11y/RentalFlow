@@ -30,16 +30,16 @@ export async function withRetry<T>(
 
 /**
  * 🖼️ Resilient Mobile Optimization Engine
- * Optimized for high-speed binary delivery (800px max).
+ * Optimized for high-speed binary delivery (800px max) with premium clarity.
  */
-export async function compressImage(file: File, maxWidth = 800, quality = 0.6): Promise<Blob | File> {
-  if (!file.type.startsWith('image/') || file.size < 1024 * 200) {
+export async function compressImage(file: File, maxWidth = 800, quality = 0.75): Promise<Blob | File> {
+  if (!file.type.startsWith('image/') || file.size < 1024 * 100) {
     return file;
   }
 
   try {
     return await new Promise((resolve) => {
-      const timeout = setTimeout(() => resolve(file), 2000);
+      const timeout = setTimeout(() => resolve(file), 2500);
       const objectUrl = URL.createObjectURL(file);
       const img = new Image();
       
@@ -141,9 +141,9 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
 
   if (realUploads.length > 0) return realUploads[0];
   
-  // If no user uploads exist, return first valid URL (if any) or neutral brand fallback
-  const anyValid = allPossible.find(u => isValidAssetUrl(u));
-  return anyValid || RENTALFLOW_NEUTRAL_FALLBACK;
+  // Filter out any known stock domains even if they were passed in as defaults
+  const nonStock = allPossible.filter(u => !u.includes('unsplash') && !u.includes('picsum') && !u.includes('placehold'));
+  return nonStock.length > 0 ? nonStock[0] : RENTALFLOW_NEUTRAL_FALLBACK;
 }
 
 /**

@@ -101,7 +101,6 @@ export default function NewPropertyPage() {
           return url;
         });
         
-        // Update state and fire direct sync
         setLedger(prev => {
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item

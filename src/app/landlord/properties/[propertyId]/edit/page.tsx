@@ -72,11 +72,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      // STORAGE-FIRST: Purge placeholders from initialization
+      // STORAGE-FIRST: Purge placeholders from initialization if any real assets exist
       const gallery = getResolvedGallery(property.imageUrl, property.imageUrls);
       const initialLedger = gallery
-        .filter(url => url && (url.startsWith('http') || url.startsWith('blob:')))
-        .filter(isRealUserUpload) 
+        .filter(url => url && isRealUserUpload(url))
         .map(url => ({ 
           id: Math.random().toString(36).substring(7), 
           previewUrl: url, 
@@ -135,7 +134,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           return url;
         });
         
-        // Finalize state and trigger immediate transactional sync
         setLedger(prev => {
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
