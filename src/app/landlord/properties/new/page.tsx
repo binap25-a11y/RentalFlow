@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useUser, useFirestore, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { useState, useMemo } from 'react';
+import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp, collection } from 'firebase/firestore';
 import { Card, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ type LedgerItem = {
 
 /**
  * 🛠️ Asset Registration Hub
- * Implements Atomic Sync for visuals.
+ * Implements Linear Event-Driven Synchronization for visuals.
  */
 export default function NewPropertyPage() {
   const { user } = useUser();
@@ -52,7 +52,7 @@ export default function NewPropertyPage() {
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
 
   /**
-   * 🔄 Atomic Visual Sync
+   * 🔄 Transactional Visual Sync
    */
   const syncVisualsToFirestore = (updatedLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId) return;
@@ -79,11 +79,15 @@ export default function NewPropertyPage() {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user || !propertyId) return;
 
+    let currentLedger = [...ledger];
+
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
-      setLedger(prev => [...prev, { id: tempId, previewUrl: localUrl, status: 'uploading' }]);
+      const uploadItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
+      currentLedger = [...currentLedger, uploadItem];
+      setLedger(currentLedger);
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -98,34 +102,29 @@ export default function NewPropertyPage() {
           return url;
         });
         
-        setLedger(prev => {
-          const next = prev.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item);
-          syncVisualsToFirestore(next);
-          return next;
-        });
+        currentLedger = currentLedger.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item);
+        setLedger(currentLedger);
+        syncVisualsToFirestore(currentLedger);
       } catch (err) {
-        setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
+        currentLedger = currentLedger.map(item => item.id === tempId ? { ...item, status: 'error' } : item);
+        setLedger(currentLedger);
       }
     }
     e.target.value = '';
   };
 
   const removeFromLedger = (id: string) => {
-    setLedger(prev => {
-      const next = prev.filter(i => i.id !== id);
-      syncVisualsToFirestore(next);
-      return next;
-    });
+    const next = ledger.filter(i => i.id !== id);
+    setLedger(next);
+    syncVisualsToFirestore(next);
   };
 
   const setAsPrimary = (id: string) => {
-    setLedger(prev => {
-      const item = prev.find(i => i.id === id);
-      if (!item) return prev;
-      const next = [item, ...prev.filter(i => i.id !== id)];
-      syncVisualsToFirestore(next);
-      return next;
-    });
+    const item = ledger.find(i => i.id === id);
+    if (!item) return;
+    const next = [item, ...ledger.filter(i => i.id !== id)];
+    setLedger(next);
+    syncVisualsToFirestore(next);
     toast({ title: "Identity Updated", description: "Primary cover designated." });
   };
 
