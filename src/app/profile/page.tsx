@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -56,9 +57,9 @@ export default function ProfilePage() {
       const compressedBlob = await compressImage(file, 400, 0.8);
       const path = `profiles/${user.uid}/avatar_${Date.now()}.jpg`;
       
-      // Standard client to resolve "alg" algorithm errors
+      // Target correct documents/profile bucket
       const { error: uploadError } = await supabase.storage
-        .from('property-documents')
+        .from('property-docs')
         .upload(path, compressedBlob, {
           contentType: 'image/jpeg',
           upsert: true
@@ -66,7 +67,7 @@ export default function ProfilePage() {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage.from('property-documents').getPublicUrl(path);
+      const { data: { publicUrl } } = supabase.storage.from('property-docs').getPublicUrl(path);
 
       await updateProfile(user, { photoURL: publicUrl });
       toast({ title: "Identity Updated" });

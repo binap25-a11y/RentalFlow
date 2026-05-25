@@ -1,3 +1,4 @@
+
 # Supabase Storage Integration Guide
 
 Your RentalFlow app is now connected to Supabase for storing images and documents.
@@ -5,8 +6,8 @@ Your RentalFlow app is now connected to Supabase for storing images and document
 ## Environment Variables
 The following are configured in your `.env` file:
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://vucefokfhdrbgldrimgl.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_fbyGbXPyWG1GepobX4Jeyw_sjbXTTCL
+NEXT_PUBLIC_SUPABASE_URL=https://wgezhbkkhamaawxgcqjf.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
 ```
 
 ## 🛠️ Critical Step: Fix RLS Policy Errors
@@ -24,18 +25,18 @@ CREATE POLICY "Allow Public Insert" ON storage.objects FOR INSERT WITH CHECK (bu
 CREATE POLICY "Allow Public Update" ON storage.objects FOR UPDATE WITH CHECK (bucket_id = 'property-images');
 CREATE POLICY "Allow Public Delete" ON storage.objects FOR DELETE USING (bucket_id = 'property-images');
 
--- Repeat for documents bucket
-CREATE POLICY "Allow Docs Select" ON storage.objects FOR SELECT USING (bucket_id = 'property-documents');
-CREATE POLICY "Allow Docs Insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'property-documents');
-CREATE POLICY "Allow Docs Update" ON storage.objects FOR UPDATE WITH CHECK (bucket_id = 'property-documents');
-CREATE POLICY "Allow Docs Delete" ON storage.objects FOR DELETE USING (bucket_id = 'property-documents');
+-- Repeat for documents bucket (property-docs)
+CREATE POLICY "Allow Docs Select" ON storage.objects FOR SELECT USING (bucket_id = 'property-docs');
+CREATE POLICY "Allow Docs Insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'property-docs');
+CREATE POLICY "Allow Docs Update" ON storage.objects FOR UPDATE WITH CHECK (bucket_id = 'property-docs');
+CREATE POLICY "Allow Docs Delete" ON storage.objects FOR DELETE USING (bucket_id = 'property-docs');
 ```
 
 ## Setup Steps
-1. **Create Buckets**: Log in to your [Supabase Dashboard](https://vucefokfhdrbgldrimgl.supabase.co) and go to **Storage**.
+1. **Create Buckets**: Log in to your [Supabase Dashboard](https://wgezhbkkhamaawxgcqjf.supabase.co) and go to **Storage**.
 2. **Bucket Names**: Create the following buckets:
    - `property-images` (Public: **Yes**)
-   - `property-documents` (Public: **Yes**)
+   - `property-docs` (Public: **Yes**)
 3. **Policies**: Ensure the SQL above is executed. If images are still broken, double check that the buckets are toggled to **"Public"** in the bucket settings.
 
 ## Note on "alg" Errors

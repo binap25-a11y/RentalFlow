@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -9,7 +10,7 @@ import { supabase } from '@/lib/supabase';
 
 export async function uploadToSupabase(
   formData: FormData,
-  bucket: 'property-images' | 'property-documents',
+  bucket: 'property-images' | 'property-docs',
   path: string
 ) {
   try {
@@ -46,7 +47,7 @@ export async function uploadToSupabase(
 }
 
 export async function deleteFromSupabase(
-  bucket: 'property-images' | 'property-documents',
+  bucket: 'property-images' | 'property-docs',
   paths: string | string[]
 ) {
   try {

@@ -158,7 +158,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     
     try {
       const { error: uploadError } = await supabase.storage
-        .from('property-documents')
+        .from('property-docs')
         .upload(path, file, {
           contentType: file.type,
           upsert: true
@@ -166,7 +166,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage.from('property-documents').getPublicUrl(path);
+      const { data: { publicUrl } } = supabase.storage.from('property-docs').getPublicUrl(path);
       
       setUploadedDocUrl(publicUrl);
       if (!newDocName) setNewDocName(file.name.split('.')[0]);
