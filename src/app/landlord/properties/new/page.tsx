@@ -18,8 +18,6 @@ import { supabase } from '@/lib/supabase';
 import { cn, compressImage, withRetry, isRealUserUpload, RENTALFLOW_NEUTRAL_FALLBACK } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-const BRAND_FALLBACK = RENTALFLOW_NEUTRAL_FALLBACK;
-
 type LedgerItem = {
   id: string;
   previewUrl: string; 
@@ -53,23 +51,20 @@ export default function NewPropertyPage() {
 
   /**
    * 🔄 Instant Transactional Persistence
-   * Directly updates Firestore microsecond a binary upload completes or star is pressed.
+   * USER-DATA ONLY: Firestore only stores real photography.
    */
   const performDirectSync = (currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId) return;
 
-    const readyUrls = currentLedger
-      .filter(i => i.status === 'ready' && i.cloudUrl && i.cloudUrl.startsWith('http'))
+    const userOnly = currentLedger
+      .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
-
-    const userOnly = readyUrls.filter(isRealUserUpload);
-    const primaryUrl = userOnly.length > 0 ? userOnly[0] : BRAND_FALLBACK;
 
     const propertyRef = doc(db, 'properties', propertyId);
     setDocumentNonBlocking(propertyRef, {
       id: propertyId,
       landlordId: user.uid,
-      imageUrl: primaryUrl,
+      imageUrl: userOnly.length > 0 ? userOnly[0] : null,
       imageUrls: userOnly,
       updatedAt: serverTimestamp(),
       memberIds: [user.uid]
@@ -105,7 +100,7 @@ export default function NewPropertyPage() {
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
           );
-          // INSTANT SYNC: Perform direct Firestore commit
+          // INSTANT TRANSACTIONAL SYNC
           performDirectSync(updated);
           return updated;
         });
@@ -128,20 +123,15 @@ export default function NewPropertyPage() {
     toast({ title: "Asset Removed" });
   };
 
-  /**
-   * ⭐ Star Coverage Sync
-   * Designated images moved to primary position instantly update cover id.
-   */
   const setAsPrimary = (id: string) => {
     setLedger(prev => {
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
       const updated = [item, ...prev.filter(i => i.id !== id)];
-      // TRANSACTIONAL SYNC: Starred image becomes cover id microsecond it is pressed
       performDirectSync(updated);
       return updated;
     });
-    toast({ title: "Cover Identity Updated", description: "Identity synced across portfolio." });
+    toast({ title: "Cover Identity Updated" });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -151,13 +141,14 @@ export default function NewPropertyPage() {
     const propertyRef = doc(db, 'properties', propertyId);
 
     try {
-      const userOnly = ledger.filter(i => i.status === 'ready' && i.cloudUrl && i.cloudUrl.startsWith('http') && isRealUserUpload(i.cloudUrl)).map(i => i.cloudUrl!);
-      const finalImageUrl = userOnly.length > 0 ? userOnly[0] : BRAND_FALLBACK;
+      const userOnly = ledger.filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl)).map(i => i.cloudUrl!);
 
       const serializableData = {
         id: propertyId, landlordId: user.uid, addressLine1: address,
         city, zipCode, rentAmount: parseFloat(rentAmount) || 0,
-        imageUrl: finalImageUrl, imageUrls: userOnly, propertyType,
+        imageUrl: userOnly.length > 0 ? userOnly[0] : null,
+        imageUrls: userOnly, 
+        propertyType,
         numberOfBedrooms: parseInt(bedrooms, 10) || 1, numberOfBathrooms: parseInt(bathrooms, 10) || 1,
         description: description, isOccupied: false, memberIds: [user.uid]
       };
@@ -219,7 +210,7 @@ export default function NewPropertyPage() {
                         className="absolute inset-0 h-full w-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = BRAND_FALLBACK;
+                          target.src = RENTALFLOW_NEUTRAL_FALLBACK;
                         }}
                       />
                       <div className="absolute top-2 right-2 flex gap-1 z-20">

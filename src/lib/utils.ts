@@ -7,8 +7,8 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * 🖼️ High-Fidelity Professional Fallback
- * Used ONLY when a property has zero user-uploaded photography.
- * This is a neutral architectural shot, NOT the brand logo.
+ * Used ONLY in the UI when a property has zero user-uploaded photography.
+ * This architectural facade is NEVER stored in the database.
  */
 export const RENTALFLOW_NEUTRAL_FALLBACK = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1200&auto=format&fit=crop";
 
@@ -109,20 +109,20 @@ export async function compressImage(file: File, maxWidth = 800, quality = 0.75):
 
 /**
  * 🖼️ User Asset Identifier
- * Strictly identifies assets that were intentionally uploaded by the user.
- * Excludes known stock domains and the specific Brand Logo to prevent identity collision.
+ * Strictly identifies assets that were intentionally uploaded by the user to the cloud.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   const u = url.toLowerCase();
   
-  // Blacklist: Known stock and brand identity sources
+  // Exclude known stock domains and the specific Brand Logo
   if (
     u.includes('images.unsplash.com') || 
     u.includes('picsum.photos') || 
     u.includes('placehold.co') ||
     u.includes('placeholder.com') ||
-    url === RENTALFLOW_LOGO_URL
+    url === RENTALFLOW_LOGO_URL ||
+    url === RENTALFLOW_NEUTRAL_FALLBACK
   ) {
     return false;
   }
@@ -140,7 +140,7 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
- * STORAGE-FIRST POLICY: Prioritizes user uploads and STRICTLY PURGES placeholders/logos if real assets exist.
+ * USER-DATA ONLY POLICY: Prefers user photography. Returns fallback only if no data exists.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
   // 1. If explicit Cover URL is a real user upload, it IS the identity.
@@ -150,37 +150,35 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
 
   // 2. Otherwise, look for the first real upload in the gallery.
   if (imageUrls && Array.isArray(imageUrls)) {
-    const realGallery = imageUrls.filter(isRealUserUpload).filter(u => !u.startsWith('blob:'));
+    const realGallery = imageUrls.filter(isRealUserUpload);
     if (realGallery.length > 0) return realGallery[0];
   }
 
-  // 3. Fallback to Neutral Architecture facade
+  // 3. UI Fallback (Never stored in DB)
   return RENTALFLOW_NEUTRAL_FALLBACK;
 }
 
 /**
  * 🖼️ Synchronized Gallery Resolver
- * STORAGE-FIRST POLICY: If ANY user uploads exist, we strictly purge ALL original stock placeholders.
+ * USER-DATA ONLY POLICY: Returns only real user assets. Returns fallback array if empty.
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
   
-  // Prioritize cover first if valid
-  if (imageUrl && isValidAssetUrl(imageUrl)) assets.add(imageUrl);
+  // Prioritize cover first if it's a real user upload
+  if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) assets.add(imageUrl);
   
-  // Add gallery assets
+  // Add gallery assets that are real user uploads
   if (imageUrls && Array.isArray(imageUrls)) {
     imageUrls.forEach(u => {
-      if (isValidAssetUrl(u)) assets.add(u);
+      if (isValidAssetUrl(u) && isRealUserUpload(u)) assets.add(u);
     });
   }
   
-  const allAssets = Array.from(assets);
-  const userUploads = allAssets.filter(isRealUserUpload).filter(u => !u.startsWith('blob:'));
+  const userUploads = Array.from(assets).filter(u => !u.startsWith('blob:'));
   
-  // Once a user has uploaded any actual images, we strictly purge all stock placeholders and brand logos
   if (userUploads.length > 0) return userUploads;
   
-  // If no real uploads, return neutral fallback only
+  // UI Fallback (Never stored in DB)
   return [RENTALFLOW_NEUTRAL_FALLBACK];
 }

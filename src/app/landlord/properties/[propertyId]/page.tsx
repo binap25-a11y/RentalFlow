@@ -71,6 +71,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
+  // USER-DATA ONLY: Resolve gallery instantly from Firestore
   const gallery = useMemo(() => {
     return getResolvedGallery(property?.imageUrl, property?.imageUrls);
   }, [property]);
@@ -262,10 +263,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 {gallery.map((url: string, index: number) => (
                   <CarouselItem key={`${url}-${index}`}>
                     <div className="relative h-[300px] md:h-[450px] w-full bg-muted cursor-zoom-in group" onClick={() => setLightboxUrl(url)}>
-                      {/* Standard <img> tag for high-fidelity cross-device visibility and instant updates */}
                       <img 
                         src={url} 
-                        alt={`Property ${index}`} 
+                        alt={`Property Asset ${index}`} 
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" 
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
@@ -273,7 +273,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         }}
                       />
                       {index === 0 && (
-                        <div className="absolute top-6 left-6 px-4 py-1.5 bg-accent text-white text-[10px] font-bold uppercase rounded-full shadow-2xl font-headline">Cover Identity</div>
+                        <div className="absolute top-6 left-6 px-4 py-1.5 bg-accent text-white text-[10px] font-bold uppercase rounded-full shadow-2xl font-headline z-10">Cover Identity</div>
                       )}
                     </div>
                   </CarouselItem>
