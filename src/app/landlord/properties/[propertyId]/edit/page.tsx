@@ -56,7 +56,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [bathrooms, setBathrooms] = useState('1');
   
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -162,32 +161,31 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     toast({ title: "Identity Updated", description: "Designated primary cover." });
   };
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !db || !propertyRef) return;
-    setIsSaving(true);
-    try {
-      const userOnly = ledger.filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl)).map(i => i.cloudUrl!);
 
-      const serializableData = {
-        id: propertyId, landlordId: user.uid, addressLine1: address,
-        city, zipCode, rentAmount: parseFloat(rentAmount) || 0,
-        imageUrl: userOnly.length > 0 ? userOnly[0] : null, 
-        imageUrls: userOnly, 
-        propertyType,
-        numberOfBedrooms: parseInt(bedrooms, 10) || 1, numberOfBathrooms: parseInt(bathrooms, 10) || 1,
-        description: description, isOccupied: property?.isOccupied || false,
-        memberIds: property?.memberIds || [user.uid]
-      };
+    const userOnly = ledger.filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl)).map(i => i.cloudUrl!);
 
-      updateDocumentNonBlocking(propertyRef, { ...serializableData, updatedAt: serverTimestamp() });
-      await syncPropertyToDb(serializableData);
-      toast({ title: "Portfolio Sync Complete" });
-      router.push(`/landlord/properties/${propertyId}`);
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "Update Failed", description: err.message });
-      setIsSaving(false);
-    }
+    const serializableData = {
+      id: propertyId, landlordId: user.uid, addressLine1: address,
+      city, zipCode, rentAmount: parseFloat(rentAmount) || 0,
+      imageUrl: userOnly.length > 0 ? userOnly[0] : null, 
+      imageUrls: userOnly, 
+      propertyType,
+      numberOfBedrooms: parseInt(bedrooms, 10) || 1, numberOfBathrooms: parseInt(bathrooms, 10) || 1,
+      description: description, isOccupied: property?.isOccupied || false,
+      memberIds: property?.memberIds || [user.uid]
+    };
+
+    // Instant Persistence Orchestration
+    updateDocumentNonBlocking(propertyRef, { ...serializableData, updatedAt: serverTimestamp() });
+    
+    // Background Server Sync
+    syncPropertyToDb(serializableData);
+    
+    toast({ title: "Portfolio Sync Complete" });
+    router.push(`/landlord/properties/${propertyId}`);
   };
 
   if (isLoading || !isInitialized) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-accent" /></div>;
@@ -215,7 +213,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
             <div className="p-10 bg-white/[0.02] border-r border-white/5">
               <div className="flex justify-between items-center mb-8">
                 <Label className="font-bold text-[10px] uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">Visual Asset Ledger</Label>
-                <label htmlFor="image-input" className="h-11 rounded-2xl font-bold text-[10px] uppercase tracking-[0.1em] font-headline cursor-pointer px-6 bg-accent text-white shadow-2xl shadow-accent/20 flex items-center hover:bg-accent/90 transition-all active:scale-95">
+                <label htmlFor="image-input" className="h-11 rounded-2xl font-bold text-[10px] uppercase font-headline cursor-pointer px-6 bg-accent text-white shadow-2xl shadow-accent/20 flex items-center hover:bg-accent/90 transition-all active:scale-95">
                   <Plus className="w-4 h-4 mr-2" /> Register Assets
                 </label>
               </div>
@@ -226,7 +224,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                     <div key={item.id} className={cn(
                       "relative aspect-square rounded-[2rem] overflow-hidden group shadow-2xl bg-background border-2 transition-all duration-500",
                       item.status === 'uploading' ? 'opacity-50 grayscale scale-[0.95]' : 'opacity-100',
-                      index === 0 ? "border-accent ring-4 ring-accent/10" : "border-transparent",
+                      index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
                       <img 
@@ -308,8 +306,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </div>
           <CardFooter className="p-10 bg-white/[0.01] border-t border-white/5 flex flex-col md:flex-row justify-end gap-5 shrink-0">
             <Button type="button" variant="ghost" className="w-full md:w-auto rounded-2xl h-14 px-10 font-bold font-headline text-muted-foreground hover:bg-white/5 hover:text-foreground border border-white/5 transition-all" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" disabled={isSaving || ledger.some(i => i.status === 'uploading')} className="w-full md:w-auto rounded-2xl font-bold bg-accent h-14 px-14 shadow-2xl shadow-accent/20 font-headline text-white transition-all hover:bg-accent/90 uppercase tracking-[0.2em] text-[11px] border-none hover:scale-[1.02]">
-              {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
+            <Button type="submit" disabled={ledger.some(i => i.status === 'uploading')} className="w-full md:w-auto rounded-2xl font-bold bg-accent h-14 px-14 shadow-2xl shadow-accent/20 font-headline text-white transition-all hover:bg-accent/90 uppercase tracking-[0.2em] text-[11px] border-none hover:scale-[1.02]">
+              <Save className="w-5 h-5 mr-3" />
               Save & Synchronize
             </Button>
           </CardFooter>

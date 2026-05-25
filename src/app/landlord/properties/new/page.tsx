@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -47,7 +46,6 @@ export default function NewPropertyPage() {
   const [bathrooms, setBathrooms] = useState('1');
   
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
 
   /**
    * 🔄 Instant Transactional Persistence (Effect-Based)
@@ -123,41 +121,38 @@ export default function NewPropertyPage() {
     toast({ title: "Identity Updated", description: "Primary cover designated." });
   };
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !db || !propertyId) return;
-    setIsSaving(true);
+
     const propertyRef = doc(db, 'properties', propertyId);
+    const userOnly = ledger.filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl)).map(i => i.cloudUrl!);
 
-    try {
-      const userOnly = ledger.filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl)).map(i => i.cloudUrl!);
+    const serializableData = {
+      id: propertyId, landlordId: user.uid, addressLine1: address,
+      city, zipCode, rentAmount: parseFloat(rentAmount) || 0,
+      imageUrl: userOnly.length > 0 ? userOnly[0] : null,
+      imageUrls: userOnly, 
+      propertyType,
+      numberOfBedrooms: parseInt(bedrooms, 10) || 1, numberOfBathrooms: parseInt(bathrooms, 10) || 1,
+      description: description, isOccupied: false, memberIds: [user.uid]
+    };
 
-      const serializableData = {
-        id: propertyId, landlordId: user.uid, addressLine1: address,
-        city, zipCode, rentAmount: parseFloat(rentAmount) || 0,
-        imageUrl: userOnly.length > 0 ? userOnly[0] : null,
-        imageUrls: userOnly, 
-        propertyType,
-        numberOfBedrooms: parseInt(bedrooms, 10) || 1, numberOfBathrooms: parseInt(bathrooms, 10) || 1,
-        description: description, isOccupied: false, memberIds: [user.uid]
-      };
+    // Instant Submission Orchestration
+    setDocumentNonBlocking(propertyRef, {
+      ...serializableData,
+      tenantIds: [], isActive: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    }, { merge: true });
 
-      setDocumentNonBlocking(propertyRef, {
-        ...serializableData,
-        tenantIds: [], isActive: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
-      }, { merge: true });
-
-      await syncPropertyToDb(serializableData);
-      toast({ title: "Asset Registered" });
-      router.push(`/landlord/properties/${propertyId}`);
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "Registration Failed", description: err.message });
-      setIsSaving(false);
-    }
+    // Secondary Relational Sync (Background)
+    syncPropertyToDb(serializableData);
+    
+    toast({ title: "Asset Registered" });
+    router.push(`/landlord/properties/${propertyId}`);
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left bg-background">
+    <div className="max-w-5xl auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left bg-background">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button onClick={() => router.back()} className="h-10 w-10 rounded-full hover:bg-primary/5 transition-colors flex items-center justify-center">
@@ -268,8 +263,8 @@ export default function NewPropertyPage() {
           </div>
           <CardFooter className="p-10 bg-muted/5 border-t flex flex-col md:flex-row justify-end gap-4">
             <Button type="button" variant="ghost" className="w-full md:w-auto rounded-xl h-12 px-8 font-bold font-headline text-muted-foreground" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" disabled={isSaving || ledger.some(i => i.status === 'uploading')} className="w-full md:w-auto rounded-xl font-bold bg-accent h-12 px-12 shadow-xl shadow-accent/20 font-headline text-white transition-all hover:bg-accent/90 uppercase tracking-widest text-xs border-none">
-              {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+            <Button type="submit" disabled={ledger.some(i => i.status === 'uploading')} className="w-full md:w-auto rounded-xl font-bold bg-accent h-12 px-12 shadow-xl shadow-accent/20 font-headline text-white transition-all hover:bg-accent/90 uppercase tracking-widest text-xs border-none">
+              <Save className="w-4 h-4 mr-2" />
               Synchronize Asset
             </Button>
           </CardFooter>
