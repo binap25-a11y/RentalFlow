@@ -36,7 +36,7 @@ import {
   DialogFooter,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { cn, getResolvedGallery } from "@/lib/utils";
+import { cn, getResolvedGallery, isRealUserUpload } from "@/lib/utils";
 import {
   Carousel,
   CarouselContent,

@@ -197,6 +197,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       memberIds: property?.memberIds || [user.uid]
     };
 
+    // Note: We intentionally DO NOT update imageUrls here to avoid race conditions 
+    // with the atomic visual sync. We only sync text fields.
     updateDocumentNonBlocking(propertyRef, { ...serializableData, updatedAt: serverTimestamp() });
     
     try {
