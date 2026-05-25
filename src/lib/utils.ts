@@ -30,7 +30,8 @@ export async function withRetry<T>(
 
 /**
  * 🖼️ Resilient Mobile Optimization Engine
- * Converts HEIC/PNG/TIFF to High-Quality JPEG (1000px max)
+ * Converts HEIC/PNG/TIFF to High-Quality JPEG (1000px max).
+ * Hardened to ensure blob URLs are not revoked prematurely.
  */
 export async function compressImage(file: File, maxWidth = 1000, quality = 0.6): Promise<Blob | File> {
   if (!file.type.startsWith('image/') || file.size < 1024 * 300) {
@@ -78,6 +79,7 @@ export async function compressImage(file: File, maxWidth = 1000, quality = 0.6):
           canvas.toBlob(
             (blob) => {
               clearTimeout(timeout);
+              // Do NOT revoke objectUrl here as it may be used by UI previews
               resolve(blob && blob.size < file.size ? blob : file);
             },
             'image/jpeg',
@@ -114,9 +116,11 @@ export function isRealUserUpload(url: any): boolean {
     return false;
   }
 
+  // Identify real uploads (Supabase, Firebase, or in-session Blobs)
   return u.startsWith('blob:') || 
          u.includes('supabase') || 
-         u.includes('firebasestorage');
+         u.includes('firebasestorage') ||
+         u.includes('googleapi');
 }
 
 /**
@@ -162,7 +166,7 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
   const allAssets = Array.from(assets);
   const userUploads = allAssets.filter(isRealUserUpload);
   
-  // Premium Enforcement: If user has uploaded any actual images, only show those.
+  // Premium Enforcement: If user has uploaded any actual images, only show those to keep it professional
   if (userUploads.length > 0) return userUploads;
   
   return allAssets.length > 0 ? allAssets : [RENTALFLOW_NEUTRAL_FALLBACK];

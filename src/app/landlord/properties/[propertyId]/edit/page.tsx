@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { supabase } from '@/lib/supabase';
-import { cn, isRealUserUpload, compressImage, withRetry, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
+import { cn, isRealUserUpload, compressImage, withRetry } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -31,6 +31,11 @@ type LedgerItem = {
   cloudUrl?: string;   
   status: 'uploading' | 'ready' | 'error';
 };
+
+/**
+ * Identity local fallback to prevent ReferenceErrors at runtime.
+ */
+const BRAND_FALLBACK = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop";
 
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -59,9 +64,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-
-  // Identity local fallback to prevent ReferenceErrors at runtime
-  const BRAND_FALLBACK = RENTALFLOW_NEUTRAL_FALLBACK;
 
   // Initialize from existing property data
   useEffect(() => {
@@ -96,18 +98,18 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
   /**
    * 🔄 Direct Transactional Persistence
-   * Synchronizes the visual state to Firestore whenever the ledger reaches a stable ready state.
-   * This handles the "divert" case by ensuring placeholders are purged immediately upon upload completion.
+   * Synchronizes the visual state to Firestore immediately upon binary stabilization.
+   * This ensures that images are permanently locked in even if the user navigates away.
    */
   const performDirectSync = (currentLedger: LedgerItem[]) => {
-    if (!propertyRef || currentLedger.some(i => i.status === 'uploading')) return;
+    if (!db || !user || !propertyId || !propertyRef || currentLedger.some(i => i.status === 'uploading')) return;
 
     const readyUrls = currentLedger
       .filter(i => i.status === 'ready' && i.cloudUrl)
       .map(i => i.cloudUrl!);
 
-    const userUploads = readyUrls.filter(isRealUserUpload);
-    const finalGallery = userUploads.length > 0 ? userUploads : readyUrls;
+    const userOnly = readyUrls.filter(isRealUserUpload);
+    const finalGallery = userOnly.length > 0 ? userOnly : readyUrls;
     const primaryUrl = finalGallery.length > 0 ? finalGallery[0] : BRAND_FALLBACK;
 
     updateDocumentNonBlocking(propertyRef, {
@@ -151,7 +153,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
           );
-          // Trigger direct sync with the updated state
+          // Trigger direct transactional sync
           performDirectSync(updated);
           return updated;
         });

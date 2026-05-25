@@ -35,8 +35,7 @@ import {
   DialogFooter,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { cn, getResolvedGallery } from "@/lib/utils";
-import Image from "next/image";
+import { cn, getResolvedGallery, RENTALFLOW_NEUTRAL_FALLBACK } from "@/lib/utils";
 import {
   Carousel,
   CarouselContent,
@@ -154,7 +153,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     setIsUploadingDoc(true);
     setUploadedDocUrl(null);
 
-    // Use standard supabase client to avoid algorithm header collisions
     const path = `vault/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
     
     try {
@@ -264,13 +262,14 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 {gallery.map((url: string, index: number) => (
                   <CarouselItem key={`${url}-${index}`}>
                     <div className="relative h-[300px] md:h-[450px] w-full bg-muted cursor-zoom-in group" onClick={() => setLightboxUrl(url)}>
-                      <Image 
+                      <img 
                         src={url} 
                         alt={`Property ${index}`} 
-                        fill 
-                        className="object-cover transition-transform duration-700 group-hover:scale-105" 
-                        unoptimized 
-                        priority={index === 0}
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = RENTALFLOW_NEUTRAL_FALLBACK;
+                        }}
                       />
                       {index === 0 && (
                         <div className="absolute top-6 left-6 px-4 py-1.5 bg-accent text-white text-[10px] font-bold uppercase rounded-full shadow-2xl font-headline">Cover Identity</div>
@@ -564,13 +563,14 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           <DialogTitle className="sr-only">Visual Asset Preview</DialogTitle>
           {lightboxUrl && (
             <div className="relative w-full h-full flex items-center justify-center">
-              <Image 
+              <img 
                 src={lightboxUrl} 
                 alt="High resolution property asset" 
-                width={1600} 
-                height={1200} 
                 className="object-contain max-w-full max-h-[90vh] rounded-2xl shadow-2xl" 
-                unoptimized 
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = RENTALFLOW_NEUTRAL_FALLBACK;
+                }}
               />
               <button 
                 onClick={() => setLightboxUrl(null)}

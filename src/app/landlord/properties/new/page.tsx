@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { supabase } from '@/lib/supabase';
-import { cn, compressImage, withRetry, isRealUserUpload, RENTALFLOW_NEUTRAL_FALLBACK } from '@/lib/utils';
+import { cn, compressImage, withRetry, isRealUserUpload } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -24,6 +24,11 @@ type LedgerItem = {
   cloudUrl?: string;   
   status: 'uploading' | 'ready' | 'error';
 };
+
+/**
+ * Identity local fallback to prevent ReferenceErrors at runtime.
+ */
+const BRAND_FALLBACK = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop";
 
 export default function NewPropertyPage() {
   const { user } = useUser();
@@ -49,12 +54,10 @@ export default function NewPropertyPage() {
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Identity local fallback to prevent ReferenceErrors at runtime
-  const BRAND_FALLBACK = RENTALFLOW_NEUTRAL_FALLBACK;
-
   /**
    * 🔄 Direct Transactional Persistence
    * Synchronizes the visual state to Firestore immediately upon binary stabilization.
+   * This ensures that images are permanently locked in even if the user navigates away.
    */
   const performDirectSync = (currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId || currentLedger.some(i => i.status === 'uploading')) return;
@@ -112,6 +115,7 @@ export default function NewPropertyPage() {
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
           );
+          // Trigger direct transactional sync
           performDirectSync(updated);
           return updated;
         });
@@ -132,6 +136,7 @@ export default function NewPropertyPage() {
       performDirectSync(updated);
       return updated;
     });
+    toast({ title: "Asset Removed" });
   };
 
   const setAsPrimary = (id: string) => {
@@ -142,6 +147,7 @@ export default function NewPropertyPage() {
       performDirectSync(updated);
       return updated;
     });
+    toast({ title: "Cover Identity Updated" });
   };
 
   const handleSave = async (e: React.FormEvent) => {
