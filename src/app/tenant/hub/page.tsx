@@ -9,7 +9,7 @@ import {
   MapPin, AlertCircle, Wrench, 
   Loader2, Home, Sparkles, Send, Bot, 
   ChevronRight, CheckCircle2, Clock, ReceiptText, Building2,
-  PhoneCall, ShieldAlert,
+  PhoneCall, ShieldAlert, ShieldCheck,
   RefreshCcw,
   Zap
 } from "lucide-react";
@@ -237,7 +237,7 @@ export default function TenantHub() {
                       </p>
                    </div>
                  ))}
-                 <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-primary/10 h-12 rounded-xl mt-2 transition-all border border-transparent hover:border-primary/20">
+                 <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary hover:bg-primary/5 h-12 rounded-xl mt-2 transition-all border border-transparent hover:border-primary/20">
                    <Link href="/tenant/emergency-contacts">View All Authorized Contacts <ChevronRight className="w-3 h-3 ml-2" /></Link>
                  </Button>
                </div>

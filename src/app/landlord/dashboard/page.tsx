@@ -198,11 +198,12 @@ export default function LandlordDashboard() {
     );
   }
 
-  const statItems = [
-    { title: "Gross Annual Potential", val: `£${financialStats?.annualGross.toLocaleString()}`, icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5", indicator: ArrowUpRight },
-    { title: "Portfolio Expenses (YTD)", val: `£${financialStats?.totalExpenses.toLocaleString()}`, icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", indicator: ArrowDownRight },
-    { title: "Net Annual Forecast", val: `£${financialStats?.netAnnualForecast.toLocaleString()}`, icon: TrendingUp, color: "text-primary-foreground", bg: "bg-primary", isPrimary: true },
-    { title: "Current Month Receipt", val: `£${financialStats?.actualCollectedThisMonth.toLocaleString()}`, icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats?.collectionRate }
+  // Proper JSX identifier for mapping to avoid Unexpected Token errors
+  const statConfig = [
+    { title: "Gross Annual Potential", val: `£${financialStats?.annualGross.toLocaleString()}`, Icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5", Indicator: ArrowUpRight },
+    { title: "Portfolio Expenses (YTD)", val: `£${financialStats?.totalExpenses.toLocaleString()}`, Icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", Indicator: ArrowDownRight },
+    { title: "Net Annual Forecast", val: `£${financialStats?.netAnnualForecast.toLocaleString()}`, Icon: TrendingUp, color: "text-primary-foreground", bg: "bg-primary", isPrimary: true },
+    { title: "Current Month Receipt", val: `£${financialStats?.actualCollectedThisMonth.toLocaleString()}`, Icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats?.collectionRate }
   ];
 
   return (
@@ -231,17 +232,16 @@ export default function LandlordDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statItems.map((stat, i) => {
-          const IconComponent = stat.icon;
-          const IndicatorComponent = stat.indicator;
+        {statConfig.map((stat, i) => {
+          const { Icon, Indicator } = stat;
           return (
             <Card key={i} className={cn("border-none shadow-sm rounded-[2.5rem] overflow-hidden group hover:scale-[1.02] transition-all", stat.isPrimary ? "bg-primary text-primary-foreground shadow-2xl shadow-primary/10" : "bg-card ring-1 ring-white/5")}>
               <CardContent className="pt-10 text-left px-10">
                 <div className="flex items-center justify-between mb-8">
                   <div className={cn("p-4 rounded-2xl shadow-inner border border-white/5 transition-transform group-hover:scale-110", stat.bg, !stat.isPrimary && stat.color)}>
-                    <IconComponent className="w-7 h-7" />
+                    <Icon className="w-7 h-7" />
                   </div>
-                  {IndicatorComponent && <IndicatorComponent className={cn("w-6 h-6 opacity-30", stat.color)} />}
+                  {Indicator && <Indicator className={cn("w-6 h-6 opacity-30", stat.color)} />}
                 </div>
                 <div className="space-y-3 min-w-0">
                   <p className="text-4xl font-bold font-headline tracking-tighter truncate">
