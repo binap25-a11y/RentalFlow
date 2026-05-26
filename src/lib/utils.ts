@@ -93,6 +93,7 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
 
 /**
  * 🖼️ Resilient Mobile Optimization Engine
+ * Prevents memory-related crashes on mobile devices by resizing before upload.
  */
 export async function compressImage(file: File, maxWidth = 1200, quality = 0.85): Promise<Blob | File> {
   if (!file.type.startsWith('image/') || file.size < 1024 * 100) {
