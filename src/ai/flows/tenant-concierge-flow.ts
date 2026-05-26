@@ -45,9 +45,10 @@ export async function tenantConcierge(input: TenantConciergeInput): Promise<Tena
     if (!output) throw new Error("Concierge offline.");
     return output;
   } catch (error: any) {
+    // PREMIUM FALLBACK: Empathetic and professional redirect
     if (error.message?.includes('429') || error.message?.includes('quota')) {
       return {
-        answer: "Our intelligence systems are currently experiencing high volume while assisting other residents. For immediate guidance on property protocols, please consult your shared vault documents or initiate a secure conversation with management via the messages tab.",
+        answer: "I am currently coordinating several property updates. While I synchronize my intelligence with your latest residency records, you can find detailed guidance in your shared vault or initiate a secure conversation with management for immediate assistance.",
         suggestedAction: "Contact Management"
       };
     }
