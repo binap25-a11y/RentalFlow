@@ -9,7 +9,7 @@ import {
   MapPin, AlertCircle, Wrench, 
   Loader2, Home, Sparkles, Send, Bot, 
   ChevronRight, CheckCircle2, Clock, ReceiptText, Building2,
-  PhoneCall, ShieldAlert
+  PhoneCall, ShieldAlert, Zap
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -55,7 +55,16 @@ export default function TenantHub() {
     if (!db || !user) return null;
     return getTenantCollectionQuery({ db, collectionName: "emergencyContacts", userId: user.uid });
   }, [db, user]);
-  const { data: contacts } = useCollection(contactsQuery);
+  const { data: contactsData } = useCollection(contactsQuery);
+
+  const sortedContacts = useMemo(() => {
+    if (!contactsData) return [];
+    return [...contactsData].sort((a, b) => {
+      if (a.category === 'standard' && b.category !== 'standard') return -1;
+      if (a.category !== 'standard' && b.category === 'standard') return 1;
+      return 0;
+    });
+  }, [contactsData]);
 
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [chatHistory]);
 
@@ -85,7 +94,7 @@ export default function TenantHub() {
           <h1 className="text-4xl font-headline font-bold text-foreground mb-2 tracking-tight">Resident Portal</h1>
           <p className="text-muted-foreground font-medium font-body">Welcome home to {property.addressLine1.split(',')[0]}</p>
         </div>
-        <Button className="bg-accent hover:bg-accent/90 rounded-2xl shadow-xl shadow-accent/20 font-bold h-12 font-headline text-accent-foreground px-8" asChild><Link href="/tenant/maintenance"><AlertCircle className="w-4 h-4 mr-2" /> Report Repair</Link></Button>
+        <Button className="bg-accent hover:bg-accent/90 text-white rounded-2xl shadow-xl shadow-accent/20 font-bold h-12 font-headline px-8 border-none" asChild><Link href="/tenant/maintenance"><AlertCircle className="w-4 h-4 mr-2" /> Report Repair</Link></Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -118,10 +127,10 @@ export default function TenantHub() {
                 </div>
                 <div className="space-y-4">
                   <h3 className="font-bold font-headline text-xl text-foreground flex items-center border-b border-border pb-3"><ReceiptText className="w-5 h-5 mr-3 text-accent" /> Tenancy Status</h3>
-                  <div className="p-6 bg-muted/20 rounded-[1.75rem] border border-border space-y-4">
+                  <div className="p-6 bg-muted/20 rounded-[1.75rem] border border-border space-y-4 shadow-inner">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest font-headline opacity-60">Monthly Yield Commitment</p>
                     <p className="text-3xl font-bold font-headline text-foreground">£{property.rentAmount?.toLocaleString()}</p>
-                    <Badge className={cn("w-full h-11 flex items-center justify-center font-bold text-xs rounded-2xl shadow-sm uppercase tracking-widest border-none", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white" : "bg-amber-500/10 text-amber-500")}>
+                    <Badge className={cn("w-full h-11 flex items-center justify-center font-bold text-xs rounded-2xl shadow-sm uppercase tracking-widest border-none", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white" : "bg-amber-500 text-white")}>
                       {currentPayment?.status === 'paid' ? "Verified & Collected" : "Collection Pending"}
                     </Badge>
                   </div>
@@ -170,21 +179,38 @@ export default function TenantHub() {
                  <ShieldAlert className="w-5 h-5 mr-3 text-accent" />
                  Property Support
                </CardTitle>
+               <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Authorized emergency protocols</CardDescription>
              </CardHeader>
              <CardContent className="p-8 space-y-6 text-left">
-               {contacts && contacts.length > 0 ? (
+               {sortedContacts.length > 0 ? (
                  <div className="space-y-4">
-                   {contacts.slice(0, 5).map(contact => (
-                     <div key={contact.id} className="p-4 bg-muted/20 rounded-2xl border border-border group hover:border-accent/30 transition-all">
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1 opacity-60">{contact.role}</p>
+                   {sortedContacts.slice(0, 8).map(contact => (
+                     <div key={contact.id} className={cn(
+                       "p-4 rounded-2xl border transition-all group",
+                       contact.category === 'standard' 
+                        ? "bg-red-500/5 border-red-500/20 hover:border-red-500/40" 
+                        : "bg-muted/20 border-border hover:border-accent/30"
+                     )}>
+                        <div className="flex justify-between items-start mb-1">
+                          <p className={cn(
+                            "text-[9px] font-bold uppercase tracking-widest opacity-60",
+                            contact.category === 'standard' ? "text-red-600" : "text-muted-foreground"
+                          )}>{contact.role}</p>
+                          {contact.category === 'standard' && (
+                            <Badge className="bg-red-600 text-white text-[7px] font-bold uppercase py-0.5 px-2 rounded-full border-none shadow-sm">SOS Protocol</Badge>
+                          )}
+                        </div>
                         <p className="text-sm font-bold text-foreground truncate">{contact.name}</p>
-                        <p className="text-sm font-bold text-accent mt-2 flex items-center">
+                        <p className={cn(
+                          "text-sm font-bold mt-2 flex items-center",
+                          contact.category === 'standard' ? "text-red-600" : "text-accent"
+                        )}>
                           <PhoneCall className="w-3.5 h-3.5 mr-2" /> {contact.phone}
                         </p>
                      </div>
                    ))}
                    <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent h-10">
-                     <Link href="/tenant/emergency-contacts">View Full Directory</Link>
+                     <Link href="/tenant/emergency-contacts">Full Directory Directory</Link>
                    </Button>
                  </div>
                ) : (
@@ -203,7 +229,7 @@ export default function TenantHub() {
              <CardContent className="p-8 space-y-4 text-left">
                {activeRequests.length > 0 ? activeRequests.map(req => (
                  <Link key={req.id} href="/tenant/maintenance" className="block group">
-                   <div className="p-4 bg-muted/20 rounded-2xl border border-border hover:bg-muted/40 transition-all">
+                   <div className="p-4 bg-muted/20 rounded-2xl border border-border hover:bg-muted/40 transition-all shadow-sm">
                      <div className="flex justify-between items-start mb-2">
                        <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground border-border px-2 py-0.5">{req.status}</Badge>
                        <Clock className="w-3.5 h-3.5 text-muted-foreground opacity-50" />

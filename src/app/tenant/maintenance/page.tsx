@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, getTenantCollectionQuery } from "@/firebase";
 import { doc, serverTimestamp, collection } from "firebase/firestore";
 import { maintenanceTroubleshoot, type MaintenanceTroubleshootOutput } from "@/ai/flows/maintenance-troubleshooting-flow";
@@ -20,6 +20,9 @@ export default function TenantMaintenancePage() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => { setIsClient(true); }, []);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -99,7 +102,7 @@ export default function TenantMaintenancePage() {
     setIsSubmitting(false);
   };
 
-  if (isProfileLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+  if (!isClient || isProfileLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto pb-12">
@@ -109,7 +112,7 @@ export default function TenantMaintenancePage() {
       </div>
 
       {!activeProfile ? (
-        <Card className="border-2 border-dashed py-24 text-center bg-card rounded-[2.5rem] flex flex-col items-center justify-center">
+        <Card className="border-2 border-dashed py-24 text-center bg-card rounded-[2.5rem] flex flex-col items-center justify-center shadow-inner">
           <AlertCircle className="w-12 h-12 text-primary/10 mb-4" />
           <h3 className="text-xl font-bold font-headline text-primary/40">Awaiting Property Assignment</h3>
           <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">Once your landlord links your profile to a property, you can report issues here.</p>
@@ -122,7 +125,7 @@ export default function TenantMaintenancePage() {
                 <Sparkles className="w-6 h-6 text-accent" /> 
                 Flow Shield
               </CardTitle>
-              <CardDescription className="text-foreground font-bold opacity-80">Automated troubleshooting before reporting.</CardDescription>
+              <CardDescription className="text-foreground font-bold opacity-80 leading-relaxed">Automated troubleshooting before reporting.</CardDescription>
             </CardHeader>
             <CardContent className="p-8 space-y-6 bg-card">
               {troubleshootResult ? (
@@ -149,25 +152,25 @@ export default function TenantMaintenancePage() {
                   )}
                   <div className="flex gap-3 pt-2">
                     <Button variant="outline" className="flex-1 rounded-xl font-bold h-12" onClick={() => setTroubleshootResult(null)}>Try Again</Button>
-                    <Button className="flex-1 rounded-xl font-bold bg-primary text-primary-foreground shadow-xl shadow-primary/20 h-12" onClick={() => handleSubmit()}>Still Need Help</Button>
+                    <Button className="flex-1 rounded-xl font-bold bg-primary text-primary-foreground shadow-xl shadow-primary/20 h-12 border-none" onClick={() => handleSubmit()}>Still Need Help</Button>
                   </div>
                 </div>
               ) : (
                 <form className="space-y-6">
                   <div className="space-y-2">
                     <Label className="font-bold text-xs uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Issue Label</Label>
-                    <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Kitchen tap leak" className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground" />
+                    <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Kitchen tap leak" className="rounded-xl h-12 bg-muted/20 border-none font-bold text-foreground px-6" />
                   </div>
                   <div className="space-y-2">
                     <Label className="font-bold text-xs uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Description</Label>
-                    <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the problem in detail..." className="rounded-xl min-h-[150px] bg-muted/20 border-none font-medium text-foreground leading-relaxed" />
+                    <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the problem in detail..." className="rounded-xl min-h-[150px] bg-muted/20 border-none font-medium text-foreground leading-relaxed px-6 py-4 shadow-inner" />
                   </div>
                   <div className="space-y-3 pt-2">
-                    <Button type="button" className="w-full rounded-xl h-12 bg-accent text-white font-bold shadow-xl shadow-accent/20 hover:scale-[1.02] transition-all" disabled={isTroubleshooting || !description} onClick={handleTroubleshoot}>
+                    <Button type="button" className="w-full rounded-xl h-12 bg-accent text-white font-bold shadow-xl shadow-accent/20 hover:scale-[1.02] transition-all border-none" disabled={isTroubleshooting || !description} onClick={handleTroubleshoot}>
                       {isTroubleshooting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
                       Troubleshoot with AI
                     </Button>
-                    <Button type="button" variant="ghost" className="w-full text-[10px] font-bold text-muted-foreground uppercase tracking-widest hover:bg-muted/50" onClick={() => handleSubmit()} disabled={!title}>Skip & Report Directly</Button>
+                    <Button type="button" variant="ghost" className="w-full text-[10px] font-bold text-muted-foreground uppercase tracking-widest hover:bg-muted/50 h-10" onClick={() => handleSubmit()} disabled={!title}>Skip & Report Directly</Button>
                   </div>
                 </form>
               )}
@@ -183,7 +186,7 @@ export default function TenantMaintenancePage() {
               {isRequestsLoading ? (
                 <div className="flex justify-center py-24"><Loader2 className="animate-spin text-primary" /></div>
               ) : !requests || requests.length === 0 ? (
-                <div className="py-24 text-center bg-card rounded-[2.5rem] border-2 border-dashed border-border opacity-40">
+                <div className="py-24 text-center bg-card rounded-[2.5rem] border-2 border-dashed border-border opacity-40 shadow-inner">
                   <Wrench className="w-12 h-12 text-foreground mx-auto mb-4" />
                   <p className="text-foreground font-bold font-headline uppercase tracking-widest text-[10px]">No active requests on record</p>
                 </div>
@@ -195,7 +198,7 @@ export default function TenantMaintenancePage() {
                         <div className="space-y-1">
                           <div className="flex items-center gap-3">
                             <Badge className={cn(
-                              "uppercase text-[9px] font-bold px-3 py-1 tracking-widest rounded-full",
+                              "uppercase text-[9px] font-bold px-3 py-1 tracking-widest rounded-full border-none",
                               req.status === 'completed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-primary/10 text-primary'
                             )}>
                               {req.status}

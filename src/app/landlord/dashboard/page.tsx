@@ -28,6 +28,7 @@ import {
   DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -39,7 +40,6 @@ export default function LandlordDashboard() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
-  const [isUpgrading, setIsUpgrading] = useState(false);
   const [isAdminEscalated, setIsAdminEscalated] = useState(false);
 
   useEffect(() => {
@@ -87,7 +87,7 @@ export default function LandlordDashboard() {
   }, [db, user]);
   const { data: currentMonthPayments } = useCollection(paymentsQuery);
 
-  // MANAGE LEDGER STATE
+  // LEDGER EDIT STATE
   const [activePaymentEdit, setActivePaymentEdit] = useState<any>(null);
   const [editAmount, setEditAmount] = useState('');
   const [editStatus, setEditStatus] = useState<'paid' | 'pending'>('pending');
@@ -168,7 +168,7 @@ export default function LandlordDashboard() {
       tenantId: 'landlord-direct', 
       memberIds: property?.memberIds || [user.uid],
       title: expTitle, 
-      description: `High-Fidelity Expense Record: ${expTitle}`,
+      description: `Manual Expense: ${expTitle}`,
       status: 'completed', 
       priority: 'routine', 
       category: expCategory,
@@ -202,7 +202,7 @@ export default function LandlordDashboard() {
               <Activity className="w-3.5 h-3.5 mr-2" /> Real-Time Command Hub
            </Badge>
           <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground mb-2 tracking-tight truncate">Portfolio Insights</h1>
-          <p className="text-muted-foreground font-medium font-body max-w-xl opacity-70 truncate">Unified financial command and high-fidelity operational analytics.</p>
+          <p className="text-muted-foreground font-medium font-body max-w-xl opacity-70 truncate">Unified financial command and operational analytics.</p>
         </div>
         <div className="flex items-center gap-4 shrink-0">
           {!isPro && (
@@ -226,7 +226,7 @@ export default function LandlordDashboard() {
           { title: "Net Annual Forecast", val: `£${financialStats?.netAnnualForecast.toLocaleString()}`, icon: TrendingUp, color: "text-primary-foreground", bg: "bg-primary", isPrimary: true },
           { title: "Current Month Receipt", val: `£${financialStats?.actualCollectedThisMonth.toLocaleString()}`, icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats?.collectionRate }
         ].map((stat, i) => (
-          <Card key={i} className={cn("border-none shadow-sm rounded-[2.5rem] overflow-hidden group hover:scale-[1.02] transition-all", stat.isPrimary ? "bg-primary text-primary-foreground shadow-2xl shadow-primary/10" : "bg-card ring-1 ring-white/5 hover:ring-white/10")}>
+          <Card key={i} className={cn("border-none shadow-sm rounded-[2.5rem] overflow-hidden group hover:scale-[1.02] transition-all", stat.isPrimary ? "bg-primary text-primary-foreground shadow-2xl shadow-primary/10" : "bg-card ring-1 ring-white/5")}>
             <CardContent className="pt-10 text-left px-10">
               <div className="flex items-center justify-between mb-8">
                 <div className={cn("p-4 rounded-2xl shadow-inner border border-white/5 transition-transform group-hover:scale-110", stat.bg, !stat.isPrimary && stat.color)}>
@@ -395,7 +395,7 @@ export default function LandlordDashboard() {
                </div>
                
                <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
-                <Button className="w-full rounded-[1.5rem] bg-white text-accent font-bold h-14 hover:bg-white/90 transition-all shadow-2xl shadow-black/20 text-xs uppercase tracking-[0.2em]" onClick={() => setIsExpenseDialogOpen(true)}>
+                <Button className="w-full rounded-[1.5rem] bg-white text-accent font-bold h-14 hover:bg-white/90 transition-all shadow-2xl shadow-black/20 text-xs uppercase tracking-[0.2em] border-none" onClick={() => setIsExpenseDialogOpen(true)}>
                   <Plus className="w-5 h-5 mr-3" /> Log Ledger Entry
                 </Button>
                 <DialogContent className="rounded-[3.5rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh] max-w-[550px] ring-1 ring-white/10">
@@ -435,7 +435,7 @@ export default function LandlordDashboard() {
                       </div>
                     </ScrollArea>
                     <DialogFooter className="p-10 bg-muted/5 border-t border-white/5 shrink-0">
-                      <Button type="submit" className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.3em] text-[11px]" disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
+                      <Button type="submit" className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.3em] text-[11px] border-none" disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
                         {isSavingExpense ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
                         Commit to Ledger
                       </Button>
@@ -448,7 +448,6 @@ export default function LandlordDashboard() {
         </div>
       </div>
 
-      {/* MANAGE LEDGER DIALOG */}
       <Dialog open={!!activePaymentEdit} onOpenChange={() => setActivePaymentEdit(null)}>
         <DialogContent className="rounded-[3.5rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh] max-w-[500px] ring-1 ring-white/10">
            <div className="p-10 bg-primary/5 border-b border-white/5 text-left shrink-0">
@@ -463,7 +462,7 @@ export default function LandlordDashboard() {
               <div className="space-y-3">
                  <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Collection Status</Label>
                  <Tabs value={editStatus} onValueChange={(v) => setEditStatus(v as any)}>
-                    <TabsList className="grid grid-cols-2 h-14 bg-muted/30 rounded-2xl p-1.5">
+                    <TabsList className="grid grid-cols-2 h-14 bg-muted/30 rounded-2xl p-1.5 border-none">
                        <TabsTrigger value="pending" className="rounded-xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-white">Pending</TabsTrigger>
                        <TabsTrigger value="paid" className="rounded-xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-emerald-500 data-[state=active]:text-white">Receipted</TabsTrigger>
                     </TabsList>
@@ -471,7 +470,7 @@ export default function LandlordDashboard() {
               </div>
            </div>
            <DialogFooter className="p-10 bg-muted/5 border-t border-white/5">
-              <Button className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.3em] text-[11px]" onClick={handleSavePayment} disabled={isSavingPayment}>
+              <Button className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.3em] text-[11px] border-none" onClick={handleSavePayment} disabled={isSavingPayment}>
                  {isSavingPayment ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
                  Synchronize Ledger
               </Button>
