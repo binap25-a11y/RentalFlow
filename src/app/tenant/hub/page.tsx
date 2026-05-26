@@ -10,7 +10,7 @@ import {
   Loader2, Building2, Sparkles, Send, Bot, 
   ChevronRight, CheckCircle2, Clock, ReceiptText,
   ShieldCheck, RefreshCcw, Zap, Bed, Bath, Download, Camera,
-  ShieldAlert
+  ShieldAlert, Home
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -178,14 +178,18 @@ export default function TenantHub() {
               Residency Record <br/><span className="text-accent">Synchronizing.</span>
             </h3>
             
-            <div className="grid grid-cols-2 gap-4 w-full max-w-sm mb-12">
-               <div className="p-4 bg-primary/5 rounded-2xl border border-white/5 shadow-inner">
-                  <p className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground opacity-40 mb-1">Standard Spec</p>
-                  <p className="text-xs font-bold text-foreground">2 Bedrooms</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-lg mb-12">
+               <div className="flex items-center gap-3 bg-primary/5 px-4 py-3 rounded-xl border border-white/5 shadow-inner min-w-0">
+                  <Bed className="w-4 h-4 text-accent shrink-0" />
+                  <p className="text-[10px] font-bold text-foreground uppercase tracking-widest truncate">2 Bedrooms</p>
                </div>
-               <div className="p-4 bg-primary/5 rounded-2xl border border-white/5 shadow-inner">
-                  <p className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground opacity-40 mb-1">Standard Spec</p>
-                  <p className="text-xs font-bold text-foreground">1 Bathroom</p>
+               <div className="flex items-center gap-3 bg-primary/5 px-4 py-3 rounded-xl border border-white/5 shadow-inner min-w-0">
+                  <Bath className="w-4 h-4 text-accent shrink-0" />
+                  <p className="text-[10px] font-bold text-foreground uppercase tracking-widest truncate">1 Bathroom</p>
+               </div>
+               <div className="flex items-center gap-3 bg-primary/5 px-4 py-3 rounded-xl border border-white/5 shadow-inner min-w-0">
+                  <Home className="w-4 h-4 text-accent shrink-0" />
+                  <p className="text-[10px] font-bold text-foreground uppercase tracking-widest truncate">Residential</p>
                </div>
             </div>
             
@@ -232,8 +236,8 @@ export default function TenantHub() {
               )}
             </div>
 
-            <div className="p-10 border-b border-border bg-white/[0.01] flex flex-col gap-4">
-               <div className="space-y-4 min-w-0 flex-1">
+            <div className="p-10 border-b border-border bg-white/[0.01] flex flex-col gap-6">
+               <div className="space-y-3 min-w-0 flex-1">
                   <h2 className="text-3xl md:text-4xl font-headline font-bold text-foreground tracking-tight leading-tight">
                     {property.addressLine1}, {property.city}, {property.zipCode}
                   </h2>
@@ -257,15 +261,18 @@ export default function TenantHub() {
                      {property.numberOfBathrooms || 1} {property.numberOfBathrooms === 1 ? 'Bathroom' : 'Bathrooms'}
                    </span>
                 </div>
-                <Badge variant="outline" className="h-12 px-6 rounded-2xl border-border font-bold text-foreground bg-white/5 uppercase text-[11px] tracking-[0.2em] font-headline">
-                   {property.propertyType || "Residential Asset"}
-                </Badge>
+                <div className="flex items-center gap-4 bg-primary/5 px-6 py-3 rounded-2xl border border-border shadow-inner">
+                   <Home className="w-6 h-6 text-accent" />
+                   <span className="text-base font-bold text-foreground font-headline uppercase tracking-widest">
+                     {property.propertyType || "Home"}
+                   </span>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-12 pt-6 border-t border-border">
                 <div className="space-y-6">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
-                  <div className="p-8 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner flex flex-col min-h-[300px]">
+                  <div className="p-8 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner flex flex-col min-h-[350px]">
                     <div className="flex-1 space-y-4">
                        <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.3em] font-headline opacity-50">Verified Ledger</p>
                        <p className="text-5xl font-bold font-headline text-foreground tracking-tighter">£{property.rentAmount?.toLocaleString()}</p>
@@ -334,7 +341,7 @@ export default function TenantHub() {
                   </div>
                 ))}
               </div>
-              <div className="p-6 md:p-6 bg-muted/10 border-t border-border">
+              <div className="p-6 bg-muted/10 border-t border-border">
                 <form onSubmit={handleAskConcierge} className="flex gap-4 items-center">
                   <Input 
                     value={chatQuery} 
