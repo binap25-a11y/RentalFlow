@@ -2,7 +2,7 @@
 
 /**
  * @fileOverview Hardened Cloud Storage Engine.
- * Targeted at the verified hyphenated bucket 'property-images-'.
+ * Targeted at the verified production bucket 'Property-Images-'.
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -22,7 +22,7 @@ function getHardenedClient() {
 
 export async function uploadToSupabase(
   formData: FormData,
-  bucket: 'property-images-' | 'property-docs',
+  bucket: 'Property-Images-' | 'property-docs',
   path: string
 ) {
   try {
@@ -64,7 +64,7 @@ export async function uploadToSupabase(
 }
 
 export async function deleteFromSupabase(
-  bucket: 'property-images-' | 'property-docs',
+  bucket: 'Property-Images-' | 'property-docs',
   paths: string | string[]
 ) {
   try {

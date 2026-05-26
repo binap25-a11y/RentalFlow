@@ -108,7 +108,7 @@ export function isRealUserUpload(url: any): boolean {
   
   const u = url.toLowerCase();
   
-  // Whitelist project infrastructure and browser local blobs
+  // Whitelist production project infrastructure and browser local blobs
   const isTrustedSource = (
     u.includes('wgezhbkkhamaawxgcqjf.supabase.co') || 
     u.includes('firebasestorage') ||

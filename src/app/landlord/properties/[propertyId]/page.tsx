@@ -155,7 +155,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         const formData = new FormData();
         formData.append('file', optimizedBlob, file.name);
         
-        const result = await uploadToSupabase(formData, 'property-images-', path);
+        const result = await uploadToSupabase(formData, 'Property-Images-', path);
         if (!result.success) throw new Error(result.error);
         newUrls.push(result.url!);
       }
