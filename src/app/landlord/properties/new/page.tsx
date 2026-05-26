@@ -55,7 +55,7 @@ export default function NewPropertyPage() {
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // BINARY PRESENCE GUARD: Never destructive overwrite if items are processing
+    // BINARY PRESENCE GUARD: Prevent destructive overwrites during transition
     const isMidUpload = currentLedger.some(i => i.status === 'uploading');
     if (readyUrls.length === 0 && isMidUpload) return;
 

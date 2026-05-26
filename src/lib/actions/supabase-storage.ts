@@ -2,7 +2,7 @@
 
 /**
  * @fileOverview Hardened Cloud Storage Engine.
- * Standardized on hyphenated bucket 'property-images-' as requested by the user.
+ * Targeted at the verified hyphenated bucket 'property-images-'.
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -43,8 +43,8 @@ export async function uploadToSupabase(
       });
 
     if (uploadError) {
-      console.error('Supabase Orchestration Error:', uploadError);
-      throw new Error(`Cloud Storage Error: ${uploadError.message}. Ensure the bucket "${bucket}" is created and set to "Public" in your Supabase dashboard.`);
+      console.error('Supabase Sync Failure:', uploadError);
+      throw new Error(`Storage Error: ${uploadError.message}. Ensure bucket "${bucket}" is initialized and Public-Read RLS is active.`);
     }
 
     const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(path);

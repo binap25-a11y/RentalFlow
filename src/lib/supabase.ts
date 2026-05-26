@@ -1,12 +1,11 @@
 /**
  * @fileOverview Supabase Client Initialization.
  * Synchronized with the verified production project: wgezhbkkhamaawxgcqjf.
- * Resolved "supabaseKey is required" and "signature verification" errors.
  */
 
 import { createClient } from '@supabase/supabase-js';
 
-// Verified production project URL
+// Verified production project URL for wgezhbkkhamaawxgcqjf
 const supabaseUrl = 'https://wgezhbkkhamaawxgcqjf.supabase.co';
 
 /**

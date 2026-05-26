@@ -39,6 +39,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const { toast } = useToast();
   const router = useRouter();
 
+  // State initialization with ReferenceError safeguard
   const [isSaving, setIsSaving] = useState(false);
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
@@ -57,7 +58,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     return doc(db, 'properties', propertyId);
   }, [db, propertyId]);
 
-  const { data: property, isLoading } = useDoc(propertyRef);
+  const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
   useEffect(() => {
     if (property && !isInitialized.current) {
@@ -106,16 +107,16 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // BINARY PRESENCE GUARD: Never destructive overwrite if items are processing
+    // BINARY PRESENCE GUARD: Prevent destructive overwrites during transition
     const isMidUpload = currentLedger.some(i => i.status === 'uploading');
     if (readyUrls.length === 0 && isMidUpload) return;
 
     updateDocumentNonBlocking(propertyRef, {
-      imageUrl: readyUrls.length > 0 ? readyUrls[0] : null,
+      imageUrl: readyUrls.length > 0 ? readyUrls[0] : (property?.imageUrl || null),
       imageUrls: readyUrls,
       updatedAt: serverTimestamp(),
     });
-  }, [db, propertyRef]);
+  }, [db, propertyRef, property?.imageUrl]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -146,7 +147,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         });
       } catch (err: any) {
         setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' as const } : item));
-        toast({ variant: "destructive", title: "Upload Failed", description: err.message });
+        toast({ variant: "destructive", title: "Sync Failed", description: err.message });
       }
     }
     e.target.value = '';
@@ -192,7 +193,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       numberOfBedrooms: parseInt(bedrooms, 10) || 1, 
       numberOfBathrooms: parseInt(bathrooms, 10) || 1,
       description: description, 
-      imageUrl: readyUrls.length > 0 ? readyUrls[0] : null,
+      imageUrl: readyUrls.length > 0 ? readyUrls[0] : (property?.imageUrl || null),
       imageUrls: readyUrls,
       updatedAt: serverTimestamp(),
     };
@@ -210,7 +211,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
   };
 
-  if (isLoading || !isInitialized.current) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-accent" /></div>;
+  if (isPropLoading || !isInitialized.current) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-accent" /></div>;
 
   return (
     <div className="max-w-5xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-16 text-left bg-background">
