@@ -102,19 +102,28 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
   }, [property]);
 
-  const syncVisualsToFirestore = (currentLedger: LedgerItem[]) => {
+  /**
+   * 🛡️ Presence Guard Synchronization
+   * Ensures that background updates only commit when the visual ledger is verified.
+   * Prevents valid photography from being accidentally wiped during upload transitions.
+   */
+  const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
 
     const readyUrls = currentLedger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
+    // PREVENT DESTRUCTIVE OVERWRITE: If we have uploading items, don't clear existing record
+    const hasUploading = currentLedger.some(i => i.status === 'uploading');
+    if (readyUrls.length === 0 && hasUploading) return;
+
     updateDocumentNonBlocking(propertyRef, {
       imageUrl: readyUrls.length > 0 ? readyUrls[0] : (property?.imageUrl || null),
       imageUrls: readyUrls,
       updatedAt: serverTimestamp(),
     });
-  };
+  }, [db, propertyRef, property]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -140,7 +149,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: result.url, status: 'ready' } : item
           );
-          syncVisualsToFirestore(updated);
+          // Isolated Firestore Lock
+          setTimeout(() => syncVisualsToFirestore(updated), 0);
           return updated;
         });
       } catch (err: any) {
@@ -305,7 +315,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   </div>
                   <div className="space-y-3">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Bathrooms</Label>
-                    <Select value={bathrooms} onValueChange={setBathrooms}>
+                    <Select value={bathrooms} onValueChange={setBedrooms}>
                       <SelectTrigger className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner focus:ring-accent text-foreground"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-xl border-white/5 bg-card">
                         {[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={n.toString()} className="font-bold">{n} Bathroom{n > 1 ? 's' : ''}</SelectItem>)}
