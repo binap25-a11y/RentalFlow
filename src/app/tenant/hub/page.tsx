@@ -9,8 +9,7 @@ import {
   MapPin, AlertCircle, Wrench, 
   Loader2, Building2, Sparkles, Send, Bot, 
   ChevronRight, CheckCircle2, Clock, ReceiptText,
-  ShieldAlert, ShieldCheck,
-  RefreshCcw, Zap, Bed, Bath, Download, Camera
+  ShieldCheck, RefreshCcw, Zap, Bed, Bath, Download, Camera
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -221,46 +220,55 @@ export default function TenantHub() {
               )}
             </div>
 
-            <div className="p-10 border-b border-border bg-white/[0.01] flex flex-col md:flex-row md:items-center justify-between gap-8">
-               <div className="space-y-2 min-w-0 flex-1">
-                  <h2 className="text-3xl md:text-4xl font-headline font-bold text-foreground tracking-tight truncate">{property.addressLine1}</h2>
-                  <p className="flex items-center text-lg font-medium text-muted-foreground opacity-60 truncate"><MapPin className="w-5 h-5 mr-2 text-accent shrink-0" /> {property.city}, {property.zipCode}</p>
+            <div className="p-10 border-b border-border bg-white/[0.01] flex flex-col gap-6">
+               <div className="space-y-4 min-w-0 flex-1">
+                  <h2 className="text-3xl md:text-4xl font-headline font-bold text-foreground tracking-tight leading-tight">{property.addressLine1}, {property.city}, {property.zipCode}</h2>
+                  <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold uppercase tracking-[0.2em] text-[10px] py-2.5 px-6 rounded-full shadow-sm font-headline shrink-0 h-fit w-fit">
+                    <ShieldCheck className="w-4 h-4 mr-2" /> Active Tenancy
+                  </Badge>
                </div>
-               <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold uppercase tracking-[0.2em] text-[10px] py-2.5 px-6 rounded-full shadow-sm font-headline shrink-0 h-fit w-fit">
-                  <ShieldCheck className="w-4 h-4 mr-2" /> Active Tenancy
-               </Badge>
             </div>
 
             <CardContent className="p-10 md:p-12 space-y-12">
               <div className="flex flex-wrap gap-6 items-center">
                 <div className="flex items-center gap-4 bg-primary/5 px-6 py-3 rounded-2xl border border-border shadow-inner">
                    <Bed className="w-6 h-6 text-accent" />
-                   <span className="text-base font-bold text-foreground font-headline uppercase tracking-widest">{property.numberOfBedrooms || 0} Bedrooms</span>
+                   <span className="text-base font-bold text-foreground font-headline uppercase tracking-widest">
+                     {property.numberOfBedrooms || 0} {property.numberOfBedrooms === 1 ? 'Bedroom' : 'Bedrooms'}
+                   </span>
                 </div>
                 <div className="flex items-center gap-4 bg-primary/5 px-6 py-3 rounded-2xl border border-border shadow-inner">
                    <Bath className="w-6 h-6 text-accent" />
-                   <span className="text-base font-bold text-foreground font-headline uppercase tracking-widest">{property.numberOfBathrooms || 0} Bathrooms</span>
+                   <span className="text-base font-bold text-foreground font-headline uppercase tracking-widest">
+                     {property.numberOfBathrooms || 0} {property.numberOfBathrooms === 1 ? 'Bathroom' : 'Bathrooms'}
+                   </span>
                 </div>
                 <Badge variant="outline" className="h-12 px-6 rounded-2xl border-border font-bold text-foreground bg-white/5 uppercase text-[11px] tracking-[0.2em] font-headline">
                    {property.propertyType || "Residential Asset"}
                 </Badge>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-16 pt-6 border-t border-border">
-                <div className="space-y-6">
-                  <h3 className="font-bold font-headline text-2xl text-foreground tracking-tight">Your Residence</h3>
-                  <p className="text-base text-muted-foreground leading-relaxed font-body font-medium opacity-80">{property.description || "A premium managed property with high-fidelity visual orchestration and automated maintenance support."}</p>
-                </div>
+              <div className="grid grid-cols-1 gap-12 pt-6 border-t border-border">
                 <div className="space-y-6">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Account & Financials</h3>
-                  <div className="p-8 bg-muted/20 rounded-[2.5rem] border border-border space-y-6 shadow-inner">
-                    <p className="text-4xl font-bold font-headline text-foreground tracking-tighter">£{property.rentAmount?.toLocaleString()}</p>
-                    <Badge className={cn("w-full h-12 flex items-center justify-center font-bold text-[11px] rounded-2xl shadow-sm uppercase tracking-[0.2em] border-none", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white" : "bg-amber-500 text-white")}>
-                      {currentPayment?.status === 'paid' ? "Receipted & Collected" : "Collection Pending"}
-                    </Badge>
-                    <Button variant="outline" className="w-full h-12 rounded-xl border-border bg-card hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all" onClick={handleDownloadStatement}>
+                  <div className="p-8 bg-muted/20 rounded-[2.5rem] border border-border space-y-8 shadow-inner flex flex-col min-h-[300px]">
+                    <div className="flex-1 space-y-4">
+                       <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.3em] font-headline">Verified Ledger</p>
+                       <p className="text-5xl font-bold font-headline text-foreground tracking-tighter">£{property.rentAmount?.toLocaleString()}</p>
+                       <Badge className={cn("w-full h-12 flex items-center justify-center font-bold text-[11px] rounded-2xl shadow-sm uppercase tracking-[0.2em] border-none", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white" : "bg-amber-500 text-white")}>
+                         {currentPayment?.status === 'paid' ? "Receipted & Collected" : "Collection Pending"}
+                       </Badge>
+                    </div>
+                    <Button variant="outline" className="w-full h-14 rounded-2xl border-border bg-card hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all mt-auto" onClick={handleDownloadStatement}>
                        <Download className="w-4 h-4 mr-2 text-accent" /> Download Rent Statement
                     </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <h3 className="font-bold font-headline text-2xl text-foreground tracking-tight">Your Residence</h3>
+                  <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-border">
+                     <p className="text-base text-muted-foreground leading-relaxed font-body font-medium">{property.description || "A premium managed property with high-fidelity visual orchestration and automated maintenance support."}</p>
                   </div>
                 </div>
               </div>
