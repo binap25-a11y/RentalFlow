@@ -73,7 +73,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   /**
    * 🖼️ Optimistic Identity Resolution
-   * Decisively utilizes the hardened resolution engine to resolve storage binaries.
+   * Utilizes a hardened key-based strategy to force carousel re-evaluation
+   * when cloud binaries synchronize.
    */
   const gallery = useMemo(() => {
     if (!property) return [];

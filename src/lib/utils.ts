@@ -102,15 +102,15 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.85)
 /**
  * 🖼️ User Asset Identifier (Hardened & Project-Agnostic)
  * Whitelist-first logic strictly authorizing valid storage binaries.
- * Allows URLs containing 'supabase', 'firebasestorage', 'googleapi', 'blob:', or 'data:'.
+ * Decisively authorizes Supabase and local previews while blacklisting stock IDs.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
   const u = url.toLowerCase();
   
-  // 1. BROAD WHITELIST: Authorize valid cloud and local binaries
-  const isAuthorized = (
+  // 1. BROAD WHITELIST: Authorize valid cloud and local previews
+  const isCloudBinary = (
     u.includes('supabase') || 
     u.includes('firebasestorage') ||
     u.includes('googleapi') ||
@@ -118,16 +118,14 @@ export function isRealUserUpload(url: any): boolean {
     u.startsWith('data:')
   );
 
-  // 2. SPECIFIC SIGNATURE BLACKLIST: Decisively reject known generic stock placeholders
-  const forbidden = [
-    'placehold.co', 
-    'photo-1486406146926-c627a92ad1ab', // corporate skyscraper generic
-    'photo-1560518883-ce09059eeffa'  // logo generic
-  ];
+  // 2. STOCK BLACKLIST: Decisively reject specific known generic placeholders
+  const isStockPlaceholder = (
+    u.includes('placehold.co') || 
+    u.includes('photo-1486406146926-c627a92ad1ab') || // skyscraper
+    u.includes('photo-1560518883-ce09059eeffa')    // logo
+  );
 
-  const hasForbidden = forbidden.some(term => u.includes(term.toLowerCase()));
-
-  return isAuthorized && !hasForbidden;
+  return isCloudBinary && !isStockPlaceholder;
 }
 
 /**
