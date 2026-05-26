@@ -21,6 +21,7 @@ import { format } from "date-fns";
 
 /**
  * 🆘 National SOS Protocols (UK Fallbacks)
+ * Displayed by default if the landlord ledger is empty.
  */
 const SOS_FALLBACKS = [
   { id: 'f1', name: "Emergency Services", phone: "999", role: "Primary SOS", category: 'standard' },
@@ -49,7 +50,12 @@ export default function TenantHub() {
   const paymentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     const now = new Date();
-    return query(collection(db, 'rentPayments'), where('tenantId', '==', user.uid), where('month', '==', now.getMonth() + 1), where('year', '==', now.getFullYear()));
+    return query(
+      collection(db, 'rentPayments'), 
+      where('tenantId', '==', user.uid), 
+      where('month', '==', now.getMonth() + 1), 
+      where('year', '==', now.getFullYear())
+    );
   }, [db, user]);
   const { data: payments } = useCollection(paymentsQuery);
   const currentPayment = payments?.[0];
@@ -80,7 +86,7 @@ export default function TenantHub() {
       if (a.category === 'standard' && b.category !== 'standard') return -1;
       if (a.category !== 'standard' && b.category === 'standard') return 1;
       return 0;
-    }).slice(0, 6);
+    }).slice(0, 5);
   }, [contactsData]);
 
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [chatHistory]);
@@ -105,8 +111,10 @@ export default function TenantHub() {
     const today = format(new Date(), 'PPP');
     const period = format(new Date(), 'MMMM yyyy');
 
+    // Header Background
     doc.setFillColor(15, 23, 42); 
     doc.rect(0, 0, 210, 50, 'F');
+    
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(22);
@@ -197,7 +205,7 @@ export default function TenantHub() {
                   <h2 className="text-3xl md:text-4xl font-headline font-bold text-foreground tracking-tight">{property.addressLine1}</h2>
                   <p className="flex items-center text-lg font-medium text-muted-foreground opacity-60"><MapPin className="w-5 h-5 mr-2 text-accent" /> {property.city}, {property.zipCode}</p>
                </div>
-               <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold uppercase tracking-[0.25em] text-[10px] py-2.5 px-6 rounded-full shadow-sm font-headline shrink-0 h-fit w-fit">
+               <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold uppercase tracking-[0.2em] text-[10px] py-2.5 px-6 rounded-full shadow-sm font-headline shrink-0 h-fit w-fit">
                   <ShieldCheck className="w-4 h-4 mr-2" /> Active Tenancy
                </Badge>
             </div>
@@ -210,7 +218,7 @@ export default function TenantHub() {
                 </div>
                 <div className="flex items-center gap-4 bg-primary/5 px-6 py-3 rounded-2xl border border-border shadow-inner">
                    <Bath className="w-6 h-6 text-accent" />
-                   <span className="text-base font-bold text-foreground font-headline uppercase tracking-widest">{property.numberOfBathrooms || 0} Bathroom{property.numberOfBathrooms !== 1 ? 's' : ''}</span>
+                   <span className="text-base font-bold text-foreground font-headline uppercase tracking-widest">{property.numberOfBathrooms || 0} Bathrooms</span>
                 </div>
                 <Badge variant="outline" className="h-12 px-6 rounded-2xl border-border font-bold text-foreground bg-white/5 uppercase text-[11px] tracking-[0.2em] font-headline">
                    {property.propertyType || "Residential Asset"}
