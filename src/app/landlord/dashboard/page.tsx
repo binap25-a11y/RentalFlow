@@ -2,11 +2,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
-  Building2, Wallet, TrendingUp, ArrowRight, 
+  Building2, TrendingUp, ArrowRight, 
   ShieldAlert, Loader2, CheckCircle2,
-  Zap, Target, Download, Plus, Save, ReceiptText, BellRing,
-  Crown, Sparkles, ShieldCheck, PoundSterling, ArrowUpRight, ArrowDownRight,
-  CalendarDays, Archive, Activity, BarChart3, PieChart
+  Plus, Save, ReceiptText, BellRing,
+  Crown, ShieldCheck, PoundSterling, ArrowUpRight, ArrowDownRight,
+  Activity, BarChart3
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import { format } from "date-fns";
 import { useMemo, useState, useEffect } from "react";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, 
-  ResponsiveContainer, Cell, AreaChart, Area
+  ResponsiveContainer, Cell
 } from 'recharts';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -34,7 +34,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { collection, doc, serverTimestamp, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { sendRentReminderEmail, sendRentReceiptEmail } from "@/lib/actions/email-actions";
+import { sendRentReminderEmail } from "@/lib/actions/email-actions";
 
 export default function LandlordDashboard() {
   const { user } = useUser();
@@ -115,6 +115,14 @@ export default function LandlordDashboard() {
     return { annualGross, totalExpenses, netAnnualForecast, collectionRate, monthlyGrossPotential, occupiedMonthly, actualCollectedThisMonth };
   }, [properties, maintenance, currentMonthPayments, isClient]);
 
+  const chartData = useMemo(() => {
+    if (!isClient || !properties) return [];
+    return properties.map(p => ({
+      name: p.addressLine1 ? p.addressLine1.split(' ')[0] : 'Asset',
+      rent: p.rentAmount || 0,
+    })).slice(0, 8);
+  }, [properties, isClient]);
+
   const upgradeToPro = async () => {
     if (!user) return;
     setIsUpgrading(true);
@@ -139,10 +147,17 @@ export default function LandlordDashboard() {
     const paymentId = `${property.id}_${now.getFullYear()}_${now.getMonth() + 1}`;
     const paymentRef = doc(db, 'rentPayments', paymentId);
     const paymentData = {
-      id: paymentId, propertyId: property.id, landlordId: user.uid,
-      tenantId: property.tenantIds?.[0] || 'manual-entry', amount: property.rentAmount || 0,
-      status: 'paid', month: now.getMonth() + 1, year: now.getFullYear(),
-      memberIds: property.memberIds || [user.uid], paidAt: now.toISOString(), updatedAt: serverTimestamp(),
+      id: paymentId, 
+      propertyId: property.id, 
+      landlordId: user.uid,
+      tenantId: property.tenantIds?.[0] || 'manual-entry', 
+      amount: property.rentAmount || 0,
+      status: 'paid', 
+      month: now.getMonth() + 1, 
+      year: now.getFullYear(),
+      memberIds: property.memberIds || [user.uid], 
+      paidAt: now.toISOString(), 
+      updatedAt: serverTimestamp(),
     };
     setDocumentNonBlocking(paymentRef, paymentData, { merge: true });
     toast({ title: "Receipt Verified", description: `Financial record updated for ${property.addressLine1}` });
@@ -158,8 +173,10 @@ export default function LandlordDashboard() {
     setIsReminding(property.id);
     try {
       await sendRentReminderEmail({
-        tenantEmail: tenant.email, tenantName: `${tenant.firstName} ${tenant.lastName}`,
-        propertyAddress: property.addressLine1, amount: property.rentAmount || 0,
+        tenantEmail: tenant.email, 
+        tenantName: `${tenant.firstName} ${tenant.lastName}`,
+        propertyAddress: property.addressLine1, 
+        amount: property.rentAmount || 0,
         month: format(new Date(), 'MMMM yyyy')
       });
       toast({ title: "Reminder Dispatched" });
@@ -170,14 +187,6 @@ export default function LandlordDashboard() {
     }
   };
 
-  const chartData = useMemo(() => {
-    if (!isClient || !properties) return [];
-    return properties.map(p => ({
-      name: p.addressLine1 ? p.addressLine1.split(' ')[0] : 'Asset',
-      rent: p.rentAmount || 0,
-    })).slice(0, 8);
-  }, [properties, isClient]);
-
   const handleLogManualExpense = () => {
     if (!user || !db || !expAmount || !expPropertyId || !expTitle) return;
     setIsSavingExpense(true);
@@ -185,11 +194,19 @@ export default function LandlordDashboard() {
     const requestRef = doc(db, 'maintenanceRequests', requestId);
     const property = properties?.find(p => p.id === expPropertyId);
     const payload = {
-      id: requestId, propertyId: expPropertyId, landlordId: user.uid,
-      tenantId: 'landlord-direct', memberIds: property?.memberIds || [user.uid],
-      title: expTitle, description: `High-Fidelity Expense Record: ${expTitle}`,
-      status: 'completed', priority: 'routine', category: expCategory,
-      cost: Number(expAmount), createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+      id: requestId, 
+      propertyId: expPropertyId, 
+      landlordId: user.uid,
+      tenantId: 'landlord-direct', 
+      memberIds: property?.memberIds || [user.uid],
+      title: expTitle, 
+      description: `High-Fidelity Expense Record: ${expTitle}`,
+      status: 'completed', 
+      priority: 'routine', 
+      category: expCategory,
+      cost: Number(expAmount), 
+      createdAt: serverTimestamp(), 
+      updatedAt: serverTimestamp(),
     };
     setDocumentNonBlocking(requestRef, payload, { merge: true });
     toast({ title: "Ledger Item Registered" });
@@ -200,17 +217,23 @@ export default function LandlordDashboard() {
     setExpPropertyId('');
   };
 
-  if (!isClient || propLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+  if (!isClient || propLoading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="animate-spin text-primary w-10 h-10 opacity-40" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-16">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 text-left border-b border-white/5 pb-8">
-        <div>
+        <div className="min-w-0">
            <Badge variant="outline" className="bg-accent/5 text-accent border-accent/20 px-4 py-1.5 rounded-full font-bold uppercase tracking-[0.25em] text-[9px] mb-4">
               <Activity className="w-3.5 h-3.5 mr-2" /> Real-Time Command Hub
            </Badge>
-          <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground mb-2 tracking-tight">Portfolio Insights</h1>
-          <p className="text-muted-foreground font-medium font-body max-w-xl opacity-70">Unified financial command and high-fidelity operational analytics.</p>
+          <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground mb-2 tracking-tight truncate">Portfolio Insights</h1>
+          <p className="text-muted-foreground font-medium font-body max-w-xl opacity-70 truncate">Unified financial command and high-fidelity operational analytics.</p>
         </div>
         <div className="flex items-center gap-4 shrink-0">
           {!isPro ? (
@@ -262,7 +285,7 @@ export default function LandlordDashboard() {
                  <CardTitle className="text-2xl font-headline flex items-center text-foreground tracking-tight">
                    <BarChart3 className="w-7 h-7 mr-4 text-accent" />
                    Yield Distribution
-                 </BarChart3>
+                 </CardTitle>
                  <Badge variant="outline" className="border-white/10 text-[9px] font-bold uppercase tracking-[0.2em] font-headline opacity-60 shrink-0">Asset Performance</Badge>
               </div>
             </CardHeader>
@@ -274,7 +297,7 @@ export default function LandlordDashboard() {
                     <YAxis axisLine={false} tickLine={false} tick={{fontSize: 11, fill: 'rgba(255,255,255,0.3)'}} />
                     <Tooltip 
                       cursor={{fill: 'rgba(255,255,255,0.03)', radius: 16}}
-                      contentStyle={{borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)', backgroundColor: 'rgba(10,10,10,0.95)', backdropBlur: '12px', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.5)', padding: '20px'}}
+                      contentStyle={{borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)', backgroundColor: 'rgba(10,10,10,0.95)', backdropFilter: 'blur(12px)', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.5)', padding: '20px'}}
                       itemStyle={{fontWeight: 800, color: 'hsl(var(--accent))'}}
                       labelStyle={{fontWeight: 800, marginBottom: '8px', color: '#fff'}}
                     />
@@ -304,7 +327,7 @@ export default function LandlordDashboard() {
                        <th className="px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-2/5">Property Identity</th>
                        <th className="px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-1/5">Monthly Yield</th>
                        <th className="px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-1/5">Ledger Status</th>
-                       <th className="px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 text-right w-1/5">Actions</th>
+                       <th className="px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground text-right w-1/5">Actions</th>
                      </tr>
                    </thead>
                    <tbody className="divide-y divide-white/5">
