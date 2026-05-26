@@ -165,7 +165,7 @@ export default function TenantHub() {
               <div className="relative h-32 w-32 rounded-[2.5rem] bg-gradient-to-br from-primary/10 to-accent/5 flex items-center justify-center shadow-inner border border-white/10">
                 <Building2 className="w-16 h-16 text-primary opacity-40" />
               </div>
-              <div className="absolute -bottom-2 -right-2 p-3 bg-accent rounded-2xl shadow-2xl border-4 border-card animate-bounce">
+              <div className="absolute -bottom-2 -right-2 p-3 bg-accent rounded-2xl shadow-2xl border-4 border-card">
                  <RefreshCcw className="w-5 h-5 text-white animate-spin" style={{ animationDuration: '3s' }} />
               </div>
             </div>
@@ -177,6 +177,17 @@ export default function TenantHub() {
             <h3 className="text-4xl md:text-5xl font-headline font-bold text-foreground mb-6 tracking-tighter leading-tight text-center">
               Residency Record <br/><span className="text-accent">Synchronizing.</span>
             </h3>
+            
+            <div className="grid grid-cols-2 gap-4 w-full max-w-sm mb-12">
+               <div className="p-4 bg-primary/5 rounded-2xl border border-white/5 shadow-inner">
+                  <p className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground opacity-40 mb-1">Standard Spec</p>
+                  <p className="text-xs font-bold text-foreground">2 Bedrooms</p>
+               </div>
+               <div className="p-4 bg-primary/5 rounded-2xl border border-white/5 shadow-inner">
+                  <p className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground opacity-40 mb-1">Standard Spec</p>
+                  <p className="text-xs font-bold text-foreground">1 Bathroom</p>
+               </div>
+            </div>
             
             <p className="text-lg text-muted-foreground font-medium mb-12 max-w-md leading-relaxed opacity-70 text-center">
               We are currently verifying your official occupancy assets. Access to your high-fidelity portal will be granted instantly upon management verification.
@@ -323,10 +334,23 @@ export default function TenantHub() {
                   </div>
                 ))}
               </div>
-              <div className="p-10 bg-muted/10 border-t border-border">
+              <div className="p-6 md:p-8 bg-muted/10 border-t border-border">
                 <form onSubmit={handleAskConcierge} className="flex gap-4">
-                  <Input value={chatQuery} onChange={(e) => setChatQuery(e.target.value)} placeholder="e.g. How do I reset the thermostat?" className="h-16 rounded-2xl bg-background border-none shadow-inner px-8 text-base text-foreground focus-visible:ring-accent" disabled={isChatting} />
-                  <Button type="submit" size="icon" className="h-16 w-16 rounded-2xl shadow-2xl shadow-primary/20 bg-primary text-primary-foreground transition-all active:scale-95" disabled={isChatting || !chatQuery.trim()}><Send className="w-6 h-6" /></Button>
+                  <Input 
+                    value={chatQuery} 
+                    onChange={(e) => setChatQuery(e.target.value)} 
+                    placeholder="Ask about your property..." 
+                    className="h-14 rounded-2xl bg-background border-none shadow-inner px-6 text-base text-foreground focus-visible:ring-accent" 
+                    disabled={isChatting} 
+                  />
+                  <Button 
+                    type="submit" 
+                    size="icon" 
+                    className="h-14 w-14 rounded-2xl shadow-xl shadow-primary/20 bg-primary text-primary-foreground transition-all active:scale-95 shrink-0" 
+                    disabled={isChatting || !chatQuery.trim()}
+                  >
+                    <Send className="w-5 h-5" />
+                  </Button>
                 </form>
               </div>
             </CardContent>
