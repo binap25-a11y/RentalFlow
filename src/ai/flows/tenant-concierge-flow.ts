@@ -53,13 +53,11 @@ export async function tenantConcierge(input: TenantConciergeInput): Promise<Tena
     if (!output) throw new Error("Concierge synchronization interrupted.");
     return output!;
   } catch (error: any) {
+    console.error("AI Concierge Failure:", error);
     // PREMIUM FALLBACK: Professional redirection
-    if (error.message?.includes('429') || error.message?.includes('quota')) {
-      return {
-        answer: "I am currently coordinating several property updates for our residents. While I synchronize my intelligence with your latest residency records, you can find immediate guidance in your shared vault or initiate a secure conversation with management for personalized assistance.",
-        suggestedAction: "Contact Management"
-      };
-    }
-    throw error;
+    return {
+      answer: "I am currently coordinating several property updates for our residents. While I synchronize my intelligence with your latest residency records, you can find immediate guidance in your shared vault or initiate a secure conversation with management for personalized assistance.",
+      suggestedAction: "Contact Management"
+    };
   }
 }
