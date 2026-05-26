@@ -270,7 +270,7 @@ export default function LandlordCalendarPage() {
             <CardHeader className="bg-muted/10 border-b border-border p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="text-left">
                  <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-60 mb-1 font-headline">Daily Ledger</p>
-                 <CardTitle className="text-2xl font-headline text-foreground tracking-tight truncate max-w-[400px] block">{format(selectedDate, 'PPPP')}</CardTitle>
+                 <CardTitle className="text-2xl font-headline text-foreground tracking-tight">{format(selectedDate, 'PPPP')}</CardTitle>
               </div>
               <Badge className="rounded-full py-1.5 px-4 font-bold bg-primary text-primary-foreground uppercase text-[9px] tracking-widest shadow-sm shrink-0">
                 {selectedDayEvents.length} Active Records

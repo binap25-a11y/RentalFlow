@@ -44,7 +44,6 @@ export default function LandingPage() {
 
   const { data: properties } = useCollection(propertiesQuery);
 
-  // OPTIMISTIC PREVIEW: Ensure designated primary cover mirrors to the landing hero
   const heroImage = useMemo(() => {
     if (properties && properties.length > 0) {
       const sorted = [...properties].sort((a, b) => 
@@ -63,7 +62,7 @@ export default function LandingPage() {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-500">
         <div className="flex flex-col items-center gap-4">
-          <div className="relative w-24 h-24 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-primary/5">
+          <div className="relative w-24 h-24 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 bg-card">
             <Image src={RENTALFLOW_LOGO_URL} alt="RentalFlow" fill className="object-cover" unoptimized priority />
           </div>
           <Loader2 className="w-6 h-6 animate-spin text-accent opacity-40" />
@@ -128,8 +127,8 @@ export default function LandingPage() {
                   <Link href="/auth">Start Tenancy <ArrowRight className="w-6 h-6 ml-3" /></Link>
                 </Button>
               )}
-              <Button size="lg" variant="outline" className="h-16 px-12 rounded-[1.75rem] border-white/10 bg-white/5 hover:bg-white/10 text-foreground font-bold text-lg backdrop-blur-md">
-                 Explore Intelligence
+              <Button size="lg" variant="outline" asChild className="h-16 px-12 rounded-[1.75rem] border-white/10 bg-white/5 hover:bg-white/10 text-foreground font-bold text-lg backdrop-blur-md cursor-pointer">
+                 <Link href="#features">Explore Intelligence</Link>
               </Button>
             </div>
 
