@@ -9,8 +9,8 @@ import {
   MapPin, AlertCircle, Wrench, 
   Loader2, Building2, Sparkles, Send, Bot, 
   ChevronRight, CheckCircle2, Clock, ReceiptText,
-  ShieldCheck, RefreshCcw, Zap, Bed, Bath, Download, Camera,
-  ShieldAlert, Home, Info, BookOpen, CreditCard
+  ShieldCheck, ShieldAlert, RefreshCcw, Zap, Bed, Bath, Download, Camera,
+  Home, Info, BookOpen, CreditCard
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -300,26 +300,6 @@ export default function TenantHub() {
               </div>
             </CardContent>
           </Card>
-
-          {gallery.length > 1 && (
-            <Card className="border-none shadow-2xl rounded-[3rem] bg-card ring-1 ring-border overflow-hidden">
-               <CardHeader className="p-10 pb-6 border-b border-border bg-white/[0.01]">
-                  <CardTitle className="text-2xl font-bold font-headline flex items-center gap-4 text-foreground">
-                    <Camera className="w-7 h-7 text-accent" /> Property Vault Gallery
-                  </CardTitle>
-               </CardHeader>
-               <CardContent className="p-10">
-                  <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-                    {gallery.map((url, i) => (
-                      <div key={i} className="relative h-64 w-96 rounded-[2rem] overflow-hidden shrink-0 shadow-lg border border-border/50 group cursor-zoom-in">
-                        <img src={url} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                    ))}
-                  </div>
-               </CardContent>
-            </Card>
-          )}
 
           <Card className="border-none shadow-2xl rounded-[3rem] bg-card ring-1 ring-border overflow-hidden flex flex-col min-h-[600px]">
             <CardHeader className="bg-primary p-10 text-primary-foreground">

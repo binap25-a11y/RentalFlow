@@ -1,7 +1,7 @@
-
 'use server';
 /**
  * @fileOverview A resident AI concierge agent.
+ * Features a high-fidelity fallback mechanism for premium resident support.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -40,7 +40,7 @@ export async function tenantConcierge(input: TenantConciergeInput): Promise<Tena
   } catch (error: any) {
     if (error.message?.includes('429') || error.message?.includes('quota')) {
       return {
-        answer: "I'm currently assisting many residents. For immediate property questions, please check your shared documents or message management.",
+        answer: "Our intelligence systems are currently experiencing high volume while assisting other residents. For immediate guidance on property protocols, please consult your shared vault documents or initiate a secure conversation with management via the messages tab.",
         suggestedAction: "Contact Management"
       };
     }
