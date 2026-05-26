@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   useUser, 
   useFirestore, 
@@ -18,7 +17,8 @@ import {
   CalendarDays, Loader2, Wrench, ShieldCheck, 
   ChevronRight, Clock, MapPin, 
   LayoutDashboard, Plus,
-  Building2, Save, Activity, ShieldAlert
+  Building2, Save, Activity, ShieldAlert,
+  ArrowRight
 } from "lucide-react";
 import { format, isSameDay, isAfter, startOfDay, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -57,6 +57,8 @@ export default function LandlordCalendarPage() {
   const [isClient, setIsClient] = useState(false);
   const [isAddRepairOpen, setIsAddRepairOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  const ledgerRef = useRef<HTMLDivElement>(null);
 
   const [repairTitle, setRepairTitle] = useState('');
   const [repairDesc, setRepairDesc] = useState('');
@@ -72,7 +74,6 @@ export default function LandlordCalendarPage() {
   }, [db, user]);
   const { data: allProperties } = useCollection(propertiesQuery);
 
-  // Operational Filter: Only include active properties for the calendar
   const properties = useMemo(() => 
     allProperties?.filter(p => !p.isDeleted) || [], 
   [allProperties]);
@@ -132,6 +133,16 @@ export default function LandlordCalendarPage() {
     return allEvents.filter(e => isSameDay(e.date, selectedDate));
   }, [allEvents, selectedDate]);
 
+  const handleDateSelect = (d: Date | undefined) => {
+    if (d) {
+      setSelectedDate(d);
+      // Premium Interaction: Auto-scroll to ledger when date is picked
+      setTimeout(() => {
+        ledgerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  };
+
   const modifiers = useMemo(() => {
     const dates: Record<string, Date[]> = {
       inspection: [],
@@ -146,8 +157,8 @@ export default function LandlordCalendarPage() {
   }, [allEvents]);
 
   const modifierStyles = {
-    inspection: { boxShadow: 'inset 0 -3px 0 0 hsl(var(--accent))' },
-    repair: { boxShadow: 'inset 0 -3px 0 0 #f59e0b' }
+    inspection: { borderBottom: '3px solid hsl(var(--accent))' },
+    repair: { borderBottom: '3px solid #f59e0b' }
   };
 
   const handleAddRepair = async (e: React.FormEvent) => {
@@ -213,7 +224,7 @@ export default function LandlordCalendarPage() {
               <Calendar
                 mode="single"
                 selected={selectedDate}
-                onSelect={(d) => d && setSelectedDate(d)}
+                onSelect={handleDateSelect}
                 className="w-full border-none shadow-none ring-0 p-0 bg-transparent"
                 modifiers={modifiers}
                 modifiersStyles={modifierStyles}
@@ -251,7 +262,7 @@ export default function LandlordCalendarPage() {
           </Card>
         </div>
 
-        <div className="lg:col-span-8 space-y-8">
+        <div className="lg:col-span-8 space-y-8" ref={ledgerRef}>
           <Card className="border-none shadow-sm rounded-[2.5rem] bg-card overflow-hidden min-h-[500px] ring-1 ring-border">
             <CardHeader className="bg-muted/10 border-b border-border p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="text-left">
@@ -346,43 +357,46 @@ function EventCard({ event, compact = false }: { event: PortfolioEvent, compact?
   const linkHref = event.type === 'inspection' ? `/landlord/inspections` : `/landlord/maintenance`;
 
   return (
-    <Link href={linkHref} className="group block">
-      <div className={cn(
-        "flex items-center justify-between transition-all hover:bg-muted/10 hover:shadow-md hover:scale-[1.01] bg-card ring-1 ring-border",
-        compact ? "p-4 rounded-2xl" : "p-6 rounded-[1.75rem]"
-      )}>
-        <div className="flex items-center gap-5 text-left">
-          <div className={cn(
-            "rounded-xl flex items-center justify-center transform group-hover:scale-105 transition-transform shrink-0 shadow-sm",
-            compact ? "w-10 h-10" : "w-14 h-14",
-            colorClass
-          )}>
-             <Icon className={compact ? "w-5 h-5" : "w-7 h-7"} />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-               <Badge variant="outline" className="uppercase text-[7px] font-bold tracking-[0.2em] text-muted-foreground border-border font-headline px-2 py-0.5">
-                {event.type === 'inspection' ? 'AUDIT' : 'REPAIR'}
-               </Badge>
-               {compact && (
-                 <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-40 font-headline">{format(event.date, 'MMM dd')}</span>
-               )}
-            </div>
-            <h4 className={cn(
-              "font-bold font-headline leading-tight mb-1 tracking-tight text-foreground group-hover:text-accent transition-colors truncate",
-              compact ? "text-sm" : "text-xl"
-            )}>{event.title}</h4>
-            <div className="flex flex-wrap items-center gap-3">
-              <p className="text-[9px] text-muted-foreground font-bold flex items-center font-body opacity-60 uppercase tracking-widest font-headline">
-                <MapPin className="w-3 h-3 mr-1 text-accent" /> {event.subtitle}
-              </p>
-            </div>
-          </div>
+    <div className={cn(
+      "flex items-center justify-between transition-all bg-card ring-1 ring-border group",
+      compact ? "p-4 rounded-2xl" : "p-6 rounded-[1.75rem]"
+    )}>
+      <div className="flex items-center gap-5 text-left">
+        <div className={cn(
+          "rounded-xl flex items-center justify-center transform group-hover:scale-105 transition-transform shrink-0 shadow-sm",
+          compact ? "w-10 h-10" : "w-14 h-14",
+          colorClass
+        )}>
+           <Icon className={compact ? "w-5 h-5" : "w-7 h-7"} />
         </div>
-        <div className="flex items-center gap-2 text-muted-foreground/30 group-hover:text-accent transition-all shrink-0">
-           <ChevronRight className={compact ? "w-4 h-4" : "w-6 h-6"} />
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+             <Badge variant="outline" className="uppercase text-[7px] font-bold tracking-[0.2em] text-muted-foreground border-border font-headline px-2 py-0.5">
+              {event.type === 'inspection' ? 'AUDIT' : 'REPAIR'}
+             </Badge>
+             {compact && (
+               <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-40 font-headline">{format(event.date, 'MMM dd')}</span>
+             )}
+          </div>
+          <h4 className={cn(
+            "font-bold font-headline leading-tight mb-1 tracking-tight text-foreground truncate",
+            compact ? "text-sm" : "text-xl"
+          )}>{event.title}</h4>
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-[9px] text-muted-foreground font-bold flex items-center font-body opacity-60 uppercase tracking-widest font-headline">
+              <MapPin className="w-3 h-3 mr-1 text-accent" /> {event.subtitle}
+            </p>
+          </div>
         </div>
       </div>
-    </Link>
+      <div className="flex items-center gap-3 shrink-0">
+         <Button variant="outline" size="sm" asChild className="rounded-xl h-10 font-bold border-border bg-card shadow-sm hover:bg-primary hover:text-primary-foreground text-[10px] uppercase tracking-widest px-4 transition-all">
+            <Link href={linkHref}>
+               {event.type === 'inspection' ? 'Jump to Audit' : 'Jump to Repair'}
+               <ArrowRight className="w-3 h-3 ml-2" />
+            </Link>
+         </Button>
+      </div>
+    </div>
   );
 }

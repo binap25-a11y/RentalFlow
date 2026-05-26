@@ -36,7 +36,7 @@ function Calendar({
         week: "flex w-full mt-2 justify-between",
         day: "h-11 w-11 text-center text-sm p-0 relative focus-within:relative focus-within:z-20 shrink-0 flex items-center justify-center",
         day_button: cn(
-          "h-10 w-10 p-0 font-bold aria-selected:opacity-100 rounded-xl transition-all flex flex-col items-center justify-center font-body hover:bg-accent/10 hover:text-accent relative cursor-pointer border-none bg-transparent text-foreground"
+          "h-10 w-10 p-0 font-bold aria-selected:opacity-100 rounded-xl transition-all flex flex-col items-center justify-center font-body relative cursor-pointer border-none bg-transparent text-foreground hover:bg-primary hover:text-primary-foreground"
         ),
         selected:
           "bg-accent text-white hover:bg-accent hover:text-white focus:bg-accent focus:text-white shadow-xl scale-105 rounded-xl border-none",
