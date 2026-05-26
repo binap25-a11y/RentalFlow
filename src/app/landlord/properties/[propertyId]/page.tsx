@@ -73,7 +73,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   /**
    * 🖼️ Optimistic Identity Resolution
-   * Utilizes a hardened key-based strategy to force carousel re-evaluation
+   * Utilizes a Reactive Key strategy to force carousel re-evaluation
    * when cloud binaries synchronize from Firestore.
    */
   const gallery = useMemo(() => {
@@ -275,8 +275,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           alt="" 
                           className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105" 
                           onError={(e) => {
-                            // If Supabase binary hasn't propagated, the UI will attempt a fallback logic in resolution.
-                            // This ensures broken links don't disrupt the detail experience.
+                            // High-Fidelity Fallback logic: ensures broken URLs from propagation latency don't break the UI
                             (e.target as HTMLImageElement).style.opacity = '0.5';
                           }}
                         />
