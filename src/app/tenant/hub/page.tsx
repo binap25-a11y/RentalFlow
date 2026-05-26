@@ -10,12 +10,12 @@ import {
   Loader2, Home, Sparkles, Send, Bot, 
   ChevronRight, CheckCircle2, Clock, ReceiptText, Building2,
   PhoneCall, ShieldAlert, ShieldCheck,
-  RefreshCcw, Zap, Bed, Bath, Download, FileText
+  RefreshCcw, Zap, Bed, Bath, Download, FileText, Camera
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { tenantConcierge } from "@/ai/flows/tenant-concierge-flow";
-import { cn, getResolvedImageUrl } from "@/lib/utils";
+import { cn, getResolvedImageUrl, getResolvedGallery } from "@/lib/utils";
 import { query, collection, where } from "firebase/firestore";
 import { format } from "date-fns";
 
@@ -46,6 +46,11 @@ export default function TenantHub() {
   }, [db, user]);
   const { data: properties, isLoading: isPropLoading } = useCollection(propertiesQuery);
   const property = properties?.[0];
+
+  const gallery = useMemo(() => {
+    if (!property) return [];
+    return getResolvedGallery(property.imageUrl, property.imageUrls);
+  }, [property]);
 
   const paymentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -174,7 +179,7 @@ export default function TenantHub() {
     </div>
   );
 
-  const imageUrl = getResolvedImageUrl(property?.imageUrl, property?.imageUrls);
+  const primaryImageUrl = getResolvedImageUrl(property?.imageUrl, property?.imageUrls);
 
   return (
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-32 text-left">
@@ -187,9 +192,9 @@ export default function TenantHub() {
         <div className="lg:col-span-8 space-y-12">
           <Card className="border-none shadow-2xl overflow-hidden rounded-[3rem] bg-card group ring-1 ring-border">
             <div className="relative h-[450px] md:h-[550px] w-full bg-muted overflow-hidden">
-              {imageUrl ? (
+              {primaryImageUrl ? (
                 <img 
-                  src={imageUrl} 
+                  src={primaryImageUrl} 
                   alt={property.addressLine1} 
                   className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105" 
                 />
@@ -201,9 +206,9 @@ export default function TenantHub() {
             </div>
 
             <div className="p-10 border-b border-border bg-white/[0.01] flex flex-col md:flex-row md:items-center justify-between gap-8">
-               <div className="space-y-2">
-                  <h2 className="text-3xl md:text-4xl font-headline font-bold text-foreground tracking-tight">{property.addressLine1}</h2>
-                  <p className="flex items-center text-lg font-medium text-muted-foreground opacity-60"><MapPin className="w-5 h-5 mr-2 text-accent" /> {property.city}, {property.zipCode}</p>
+               <div className="space-y-2 min-w-0 flex-1">
+                  <h2 className="text-3xl md:text-4xl font-headline font-bold text-foreground tracking-tight truncate">{property.addressLine1}</h2>
+                  <p className="flex items-center text-lg font-medium text-muted-foreground opacity-60 truncate"><MapPin className="w-5 h-5 mr-2 text-accent shrink-0" /> {property.city}, {property.zipCode}</p>
                </div>
                <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold uppercase tracking-[0.2em] text-[10px] py-2.5 px-6 rounded-full shadow-sm font-headline shrink-0 h-fit w-fit">
                   <ShieldCheck className="w-4 h-4 mr-2" /> Active Tenancy
@@ -248,6 +253,26 @@ export default function TenantHub() {
               </div>
             </CardContent>
           </Card>
+
+          {gallery.length > 1 && (
+            <Card className="border-none shadow-2xl rounded-[3rem] bg-card ring-1 ring-border overflow-hidden">
+               <CardHeader className="p-10 pb-6 border-b border-border bg-white/[0.01]">
+                  <CardTitle className="text-2xl font-bold font-headline flex items-center gap-4 text-foreground">
+                    <Camera className="w-7 h-7 text-accent" /> Property Vault Gallery
+                  </CardTitle>
+               </CardHeader>
+               <CardContent className="p-10">
+                  <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+                    {gallery.map((url, i) => (
+                      <div key={i} className="relative h-64 w-96 rounded-[2rem] overflow-hidden shrink-0 shadow-lg border border-border/50 group cursor-zoom-in">
+                        <img src={url} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    ))}
+                  </div>
+               </CardContent>
+            </Card>
+          )}
 
           <Card className="border-none shadow-2xl rounded-[3rem] bg-card ring-1 ring-border overflow-hidden flex flex-col h-[600px]">
             <CardHeader className="bg-primary p-10 text-primary-foreground">
