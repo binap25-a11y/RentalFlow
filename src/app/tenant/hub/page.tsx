@@ -117,7 +117,6 @@ export default function TenantHub() {
     const today = format(new Date(), 'PPP');
     const period = format(new Date(), 'MMMM yyyy');
 
-    // Header Background
     doc.setFillColor(15, 23, 42); 
     doc.rect(0, 0, 210, 55, 'F');
     
@@ -239,10 +238,7 @@ export default function TenantHub() {
                 <div className="space-y-6">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Account & Financials</h3>
                   <div className="p-8 bg-muted/20 rounded-[2.5rem] border border-border space-y-6 shadow-inner">
-                    <div>
-                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] font-headline opacity-60 mb-2">Monthly Yield Registry</p>
-                       <p className="text-4xl font-bold font-headline text-foreground tracking-tighter">£{property.rentAmount?.toLocaleString()}</p>
-                    </div>
+                    <p className="text-4xl font-bold font-headline text-foreground tracking-tighter">£{property.rentAmount?.toLocaleString()}</p>
                     <Badge className={cn("w-full h-12 flex items-center justify-center font-bold text-[11px] rounded-2xl shadow-sm uppercase tracking-[0.2em] border-none", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white" : "bg-amber-500 text-white")}>
                       {currentPayment?.status === 'paid' ? "Receipted & Collected" : "Collection Pending"}
                     </Badge>
