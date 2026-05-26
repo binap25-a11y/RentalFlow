@@ -100,30 +100,30 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.85)
 }
 
 /**
- * 🖼️ User Asset Identifier (Hardened)
- * Whitelist-first logic targeting specifically project wgezhbkkhamaawxgcqjf.
- * Decisively REJECTS placeholders while allowing all Supabase binaries and local blobs.
+ * 🖼️ User Asset Identifier (Resilient)
+ * Whitelist-first logic targeting cloud providers and local binaries.
+ * Decisively REJECTS placeholders while allowing all Supabase/Firebase binaries.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
   const u = url.toLowerCase();
   
-  // 1. PROJECT WHITELIST: Strictly authorize project-specific binaries
+  // 1. PROJECT WHITELIST: Authorize valid cloud and local binaries
   const isAuthorized = (
-    u.includes('wgezhbkkhamaawxgcqjf') || 
     u.includes('supabase.co') || 
     u.includes('firebasestorage') ||
+    u.includes('googleapi') ||
     u.startsWith('blob:') ||
     u.startsWith('data:')
   );
 
-  // 2. FORBIDDEN SIGNATURE BLACKLIST: Decisively reject known placeholders
+  // 2. FORBIDDEN SIGNATURE BLACKLIST: Decisively reject known generic stock placeholders
   const forbidden = [
-    'unsplash.com', 'picsum.photos', 'placehold.co', 'placeholder', 
-    'pexels.com', 'images.unsplash.com',
-    'photo-1486406146926-c627a92ad1ab', // skyscraper
-    'photo-1560518883-ce09059eeffa'  // blue house logo
+    'placehold.co', 
+    'placeholder',
+    'photo-1486406146926-c627a92ad1ab', // skyscraper generic
+    'photo-1560518883-ce09059eeffa'  // logo generic
   ];
 
   const hasForbidden = forbidden.some(term => u.includes(term.toLowerCase()));

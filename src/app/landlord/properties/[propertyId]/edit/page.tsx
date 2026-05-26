@@ -96,7 +96,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   /**
    * 🔄 Transactional Visual Sync
    * Visual modifications are committed to Firestore microsecond-instantly.
-   * This is strictly isolated from the manual Save button.
+   * This is strictly isolated from the manual Save button logic to prevent reverts.
    */
   const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
@@ -164,7 +164,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       syncVisualsToFirestore(updated);
       return updated;
     });
-    toast({ title: "Designated Primary Cover" });
+    toast({ title: "Designated Primary Cover", description: "Identity updated microsecond-instantly." });
   };
 
   const handleImageError = (id: string) => {
@@ -181,7 +181,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     setIsSaving(true);
     
     // TRANSACTIONAL PROTECTION: Exclude visual fields from manual Save payload.
-    // They are handled atomically by syncVisualsToFirestore.
+    // They are handled atomically by syncVisualsToFirestore during the event cycle.
     const serializableData = {
       id: propertyId, 
       landlordId: user.uid, 
@@ -243,8 +243,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
               <ScrollArea className="h-[600px] pr-4">
                 <div className="grid grid-cols-2 gap-5">
                   {ledger.map((item, index) => {
-                    // Self-Healing Source: fallback to local preview if cloud binary isn't ready
-                    const displayUrl = (item.status === 'ready' && item.cloudUrl && !item.isBroken) ? item.cloudUrl : item.previewUrl;
+                    // Self-Healing Source: fallback to local preview if cloud binary isn't ready or filtered
+                    const displayUrl = (item.status === 'ready' && item.cloudUrl && !item.isBroken && isRealUserUpload(item.cloudUrl)) ? item.cloudUrl : item.previewUrl;
                     
                     return (
                       <div key={item.id} className={cn(
