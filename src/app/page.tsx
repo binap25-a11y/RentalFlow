@@ -236,7 +236,7 @@ export default function LandingPage() {
               <div className="relative z-10 space-y-8 md:space-y-10">
                  <h2 className="text-4xl md:text-7xl font-headline font-bold text-white tracking-tighter leading-tight">Ready to orchestrate?</h2>
                  <p className="text-lg md:text-xl text-white/80 font-medium max-w-2xl mx-auto">Initialize your professional portfolio identity today and join the leading property managers.</p>
-                 <Button size="lg" asChild className="h-14 md:h-16 px-8 md:px-16 rounded-xl md:rounded-2xl bg-white text-accent hover:bg-white/90 text-lg md:text-xl font-bold shadow-2xl transition-all hover:scale-105 active:scale-95 border-none w-full md:w-auto">
+                 <Button size="lg" asChild className="h-14 md:h-16 px-10 md:px-16 rounded-xl md:rounded-2xl bg-white text-accent hover:bg-white/90 text-lg md:text-xl font-bold shadow-2xl transition-all hover:scale-105 active:scale-95 border-none w-fit mx-auto">
                     <Link href="/auth">Access Portfolio Vault</Link>
                  </Button>
               </div>

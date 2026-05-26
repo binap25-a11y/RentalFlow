@@ -268,7 +268,7 @@ export default function LandlordDashboard() {
   return (
     <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-16">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 text-left border-b border-white/5 pb-8">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
            <Badge variant="outline" className="bg-accent/5 text-accent border-accent/20 px-4 py-1.5 rounded-full font-bold uppercase tracking-[0.25em] text-[9px] mb-4">
               <Activity className="w-3.5 h-3.5 mr-2" /> Real-Time Command Hub
            </Badge>

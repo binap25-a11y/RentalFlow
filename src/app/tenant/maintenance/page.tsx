@@ -122,7 +122,7 @@ export default function TenantMaintenancePage() {
                 <Sparkles className="w-6 h-6 text-accent" /> 
                 Flow Shield
               </CardTitle>
-              <CardDescription className="text-primary/70 dark:text-white/70 font-medium">Automated troubleshooting before reporting.</CardDescription>
+              <CardDescription className="text-foreground font-bold opacity-80">Automated troubleshooting before reporting.</CardDescription>
             </CardHeader>
             <CardContent className="p-8 space-y-6 bg-card">
               {troubleshootResult ? (
@@ -201,7 +201,7 @@ export default function TenantMaintenancePage() {
                               {req.status}
                             </Badge>
                             <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest flex items-center">
-                              <Clock className="w-3 h-3 mr-1 opacity-40" />
+                              <Clock className="w-3.5 h-3.5 mr-1 opacity-40" />
                               {req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'PPp') : 'Just now'}
                             </span>
                           </div>

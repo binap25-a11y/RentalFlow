@@ -11,7 +11,7 @@ import {
   deleteDocumentNonBlocking, 
   getLandlordCollectionQuery 
 } from '@/firebase';
-import { collection, doc, serverTimestamp, arrayUnion } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, arrayUnion, query, where, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -89,10 +89,11 @@ export default function TenantsPage() {
 
     setIsSubmitting(true);
     try {
+      const emailLower = email.toLowerCase().trim();
       const tenantPayload = { 
         firstName, 
         lastName, 
-        email: email.toLowerCase().trim(), 
+        email: emailLower, 
         phoneNumber: phone, 
         leaseEndDate: leaseEndDate || null, 
         propertyId: selectedPropertyId, 
@@ -104,7 +105,9 @@ export default function TenantsPage() {
         toast({ title: "Resident Record Updated" });
       } else {
         const tenantId = doc(collection(db, 'tenantProfiles')).id;
-        const placeholderUserId = email.toLowerCase().trim();
+        // Placeholder strategy: use email as partial ID if they don't have a UID yet
+        // In a real flow, they login and it syncs, but for now we grant access based on email/uid
+        const placeholderUserId = emailLower;
         
         setDocumentNonBlocking(doc(db, 'tenantProfiles', tenantId), { 
           id: tenantId, 
@@ -117,6 +120,7 @@ export default function TenantsPage() {
           createdAt: serverTimestamp() 
         }, { merge: true });
 
+        // Update Property Membership
         updateDocumentNonBlocking(doc(db, 'properties', selectedPropertyId), { 
           isOccupied: true, 
           tenantIds: arrayUnion(placeholderUserId), 
@@ -124,7 +128,24 @@ export default function TenantsPage() {
           updatedAt: serverTimestamp() 
         });
 
-        toast({ title: "Resident Successfully Assigned" });
+        // 🏠 SYNC EMERGENCY CONTACTS: Proactively add tenant to relevant contact memberIds
+        const contactsRef = collection(db, 'emergencyContacts');
+        
+        // 1. Property Specific Contacts
+        const pq = query(contactsRef, where('propertyId', '==', selectedPropertyId));
+        const pSnaps = await getDocs(pq);
+        pSnaps.docs.forEach(cDoc => {
+          updateDocumentNonBlocking(cDoc.ref, { memberIds: arrayUnion(placeholderUserId) });
+        });
+
+        // 2. Landlord Standard SOS Services
+        const sq = query(contactsRef, where('landlordId', '==', user.uid), where('category', '==', 'standard'));
+        const sSnaps = await getDocs(sq);
+        sSnaps.docs.forEach(sDoc => {
+          updateDocumentNonBlocking(sDoc.ref, { memberIds: arrayUnion(placeholderUserId) });
+        });
+
+        toast({ title: "Resident Successfully Assigned", description: "Security and Support permissions synchronized." });
       }
       setIsDialogOpen(false); 
       resetForm();
