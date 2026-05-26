@@ -11,7 +11,7 @@ import {
   deleteDocumentNonBlocking, 
   getLandlordCollectionQuery 
 } from '@/firebase';
-import { collection, doc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, getDocs, query, where, arrayUnion } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

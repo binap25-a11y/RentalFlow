@@ -186,7 +186,7 @@ export default function TenantEmergencyContactsPage() {
              <CardContent className="pt-10 px-8 pb-10 space-y-8">
                 {isLoading ? (
                   <div className="py-12 flex flex-col items-center justify-center gap-4">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary opacity-20" />
+                    <RefreshCcw className="w-8 h-8 animate-spin text-primary opacity-20" />
                     <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground font-headline">Synchronizing Safety Protocols...</span>
                   </div>
                 ) : standardServices.map((service, i) => (
