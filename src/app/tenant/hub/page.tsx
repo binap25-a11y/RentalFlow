@@ -251,7 +251,10 @@ export default function TenantHub() {
                      <p className="text-sm font-bold font-headline text-foreground group-hover:text-accent transition-colors truncate">{req.title}</p>
                    </div>
                  </Link>
-               )) : <div className="text-center py-10 opacity-30"><CheckCircle2 className="w-10 h-10 mx-auto mb-3 text-foreground" /><p className="text-[10px] font-bold uppercase tracking-widest font-headline text-foreground">No active repairs</p></div>}
+               )) : <div className="text-center py-10 opacity-30 flex flex-col items-center justify-center space-y-3">
+                    <div className="p-4 bg-muted rounded-full animate-pulse"><CheckCircle2 className="w-8 h-8 text-foreground opacity-20" /></div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] font-headline text-foreground text-center">Monitoring ledger in real-time</p>
+                 </div>}
              </CardContent>
            </Card>
         </div>
