@@ -155,7 +155,7 @@ export default function TenantHub() {
   if (!isClient || isPropLoading || isRequestsLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary w-12 h-12 opacity-60" /></div>;
 
   if (!property) return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 animate-in fade-in duration-1000">
+    <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 animate-in fade-in duration-1000 text-left">
       <div className="relative w-full max-w-2xl">
         <div className="absolute -inset-4 bg-primary/5 rounded-[4rem] blur-3xl opacity-50 animate-pulse" />
         <Card className="relative border-none shadow-2xl rounded-[3.5rem] overflow-hidden bg-card/80 backdrop-blur-xl ring-1 ring-white/10">
@@ -209,7 +209,7 @@ export default function TenantHub() {
   const primaryImageUrl = getResolvedImageUrl(property?.imageUrl, property?.imageUrls);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-32 text-left">
+    <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-32 text-left bg-background">
       <div className="space-y-4">
         <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground tracking-tighter">Resident Portal</h1>
         <p className="text-muted-foreground font-medium font-body text-xl opacity-70">Welcome home.</p>
@@ -232,7 +232,7 @@ export default function TenantHub() {
               )}
             </div>
 
-            <div className="p-10 border-b border-border bg-white/[0.01] flex flex-col gap-6">
+            <div className="p-10 border-b border-border bg-white/[0.01] flex flex-col gap-4">
                <div className="space-y-4 min-w-0 flex-1">
                   <h2 className="text-3xl md:text-4xl font-headline font-bold text-foreground tracking-tight leading-tight">
                     {property.addressLine1}, {property.city}, {property.zipCode}
@@ -264,8 +264,8 @@ export default function TenantHub() {
 
               <div className="grid grid-cols-1 gap-12 pt-6 border-t border-border">
                 <div className="space-y-6">
-                  <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Account & Financials</h3>
-                  <div className="p-8 bg-muted/20 rounded-[2.5rem] border border-border space-y-8 shadow-inner flex flex-col min-h-[300px]">
+                  <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
+                  <div className="p-8 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner flex flex-col min-h-[300px]">
                     <div className="flex-1 space-y-4">
                        <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.3em] font-headline opacity-50">Verified Ledger</p>
                        <p className="text-5xl font-bold font-headline text-foreground tracking-tighter">£{property.rentAmount?.toLocaleString()}</p>
@@ -334,13 +334,13 @@ export default function TenantHub() {
                   </div>
                 ))}
               </div>
-              <div className="p-6 md:p-8 bg-muted/10 border-t border-border">
-                <form onSubmit={handleAskConcierge} className="flex gap-4">
+              <div className="p-6 md:p-6 bg-muted/10 border-t border-border">
+                <form onSubmit={handleAskConcierge} className="flex gap-4 items-center">
                   <Input 
                     value={chatQuery} 
                     onChange={(e) => setChatQuery(e.target.value)} 
                     placeholder="Ask about your property..." 
-                    className="h-14 rounded-2xl bg-background border-none shadow-inner px-6 text-base text-foreground focus-visible:ring-accent" 
+                    className="h-14 rounded-2xl bg-background border-none shadow-inner px-6 text-base text-foreground focus-visible:ring-accent flex-1" 
                     disabled={isChatting} 
                   />
                   <Button 
