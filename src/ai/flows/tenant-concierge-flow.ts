@@ -1,8 +1,9 @@
+
 'use server';
 /**
  * @fileOverview A resident AI concierge agent.
  * Features a high-fidelity fallback mechanism for premium resident support.
- * Enhanced to handle renting and repair inquiries with authoritative context.
+ * Enhanced to handle renting, repair statuses, and authoritative home guides.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -10,7 +11,7 @@ import { z } from 'zod';
 
 const TenantConciergeInputSchema = z.object({
   query: z.string().describe("The resident's question."),
-  propertyContext: z.string().describe("Description and guides for the property."),
+  propertyContext: z.string().describe("Description and guides for the property, including current rental and repair ledger states."),
 });
 export type TenantConciergeInput = z.infer<typeof TenantConciergeInputSchema>;
 
@@ -25,15 +26,16 @@ const conciergePrompt = ai.definePrompt({
   model: googleAI.model('gemini-2.0-flash'),
   input: { schema: TenantConciergeInputSchema },
   output: { schema: TenantConciergeOutputSchema },
-  prompt: `You are 'Flow', the elite AI Concierge for a modern rental property.
+  prompt: `You are 'Flow', the elite AI Concierge for a modern luxury rental property.
 Your goal is to answer resident questions using ONLY the provided property context.
 
-You must be highly responsive to questions regarding:
-1. RENTING: Rent amounts, payment status, and lease obligations mentioned in the context.
-2. REPAIRS: How to report issues and the importance of maintenance upkeep.
-3. GUIDES: Specific details about bedrooms, bathrooms, and property narratives.
+You must be highly responsive to:
+1. RENTING: Clarify rent amounts and current payment status (e.g., if rent is receipted or pending).
+2. REPAIRS: Confirm active repair statuses and explain how to report new issues via the primary CTA.
+3. HOME GUIDES: Provide detailed room specs, rules (pets/smoking), and property narratives from the context.
 
-If the information is not in the context, politely suggest they message management directly via the secure messaging tab.
+TONE: Professional, sophisticated, yet warm. Call yourself "Flow Assistant" occasionally.
+FALLBACK: If the information is not in the context, politely suggest they message management directly via the secure messaging tab.
 
 Property Context: {{{propertyContext}}}
 Resident Query: {{{query}}}`,
@@ -45,7 +47,7 @@ export async function tenantConcierge(input: TenantConciergeInput): Promise<Tena
     if (!output) throw new Error("Concierge offline.");
     return output;
   } catch (error: any) {
-    // PREMIUM FALLBACK: Empathetic and professional redirect
+    // PREMIUM FALLBACK: Empathetic and professional redirection
     if (error.message?.includes('429') || error.message?.includes('quota')) {
       return {
         answer: "I am currently coordinating several property updates. While I synchronize my intelligence with your latest residency records, you can find detailed guidance in your shared vault or initiate a secure conversation with management for immediate assistance.",

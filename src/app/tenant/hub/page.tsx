@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
@@ -87,19 +88,25 @@ export default function TenantHub() {
 
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [chatHistory]);
 
-  const handleAskConcierge = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatQuery.trim() || !property) return;
-    const queryText = chatQuery.trim();
-    setChatQuery(""); setChatHistory(prev => [...prev, { role: 'user', text: queryText }]); setIsChatting(true);
+  const handleAskConcierge = async (text?: string) => {
+    const queryText = text || chatQuery.trim();
+    if (!queryText || !property) return;
+    
+    setChatQuery(""); 
+    setChatHistory(prev => [...prev, { role: 'user', text: queryText }]); 
+    setIsChatting(true);
+
+    const activeRequestsContext = activeRequests.map(r => `${r.title} (${r.status})`).join(', ');
+    const paymentContext = currentPayment ? `Payment for ${format(new Date(), 'MMMM')} is ${currentPayment.status}.` : "No current payment record found.";
+
     try {
       const response = await tenantConcierge({ 
         query: queryText, 
-        propertyContext: `Property: ${property.addressLine1}. Specs: ${property.numberOfBedrooms} bedrooms, ${property.numberOfBathrooms} bathrooms. Narrative: ${property.description || 'N/A'}. Rent: £${property.rentAmount}.` 
+        propertyContext: `Property: ${property.addressLine1}. Specs: ${property.numberOfBedrooms} bedrooms, ${property.numberOfBathrooms} bathrooms. Narrative: ${property.description || 'N/A'}. Rent: £${property.rentAmount}. Financials: ${paymentContext} Repairs: ${activeRequestsContext}` 
       });
       setChatHistory(prev => [...prev, { role: 'bot', text: response.answer }]);
     } catch (error) {
-      setChatHistory(prev => [...prev, { role: 'bot', text: "Service temporarily unavailable." }]);
+      setChatHistory(prev => [...prev, { role: 'bot', text: "Service temporarily unavailable. Please try again shortly." }]);
     } finally { setIsChatting(false); }
   };
 
@@ -174,7 +181,7 @@ export default function TenantHub() {
                System Orchestration Active
             </Badge>
             
-            <h3 className="text-4xl md:text-5xl font-headline font-bold text-foreground mb-6 tracking-tighter leading-tight text-center">
+            <h3 className="text-4xl md:text-5xl font-headline font-bold text-foreground mb-10 tracking-tighter leading-tight text-center">
               Residency Record <br/><span className="text-accent">Synchronizing.</span>
             </h3>
             
@@ -197,10 +204,6 @@ export default function TenantHub() {
               We are currently verifying your official occupancy assets. Access to your high-fidelity portal will be granted instantly upon management verification.
             </p>
             
-            <div className="w-full max-w-sm h-1.5 bg-muted rounded-full overflow-hidden mb-12 shadow-inner">
-               <div className="h-full bg-accent w-2/3 rounded-full animate-pulse" />
-            </div>
-
             <Button asChild size="lg" className="rounded-[1.75rem] font-bold bg-primary hover:bg-primary/90 text-primary-foreground h-16 px-16 shadow-2xl shadow-primary/20 border-none transition-all hover:scale-[1.05] active:scale-95 text-lg">
               <Link href="/tenant/messages">Inquire with Management</Link>
             </Button>
@@ -236,8 +239,8 @@ export default function TenantHub() {
               )}
             </div>
 
-            <div className="p-10 border-b border-border bg-white/[0.01] flex flex-col gap-6">
-               <div className="space-y-3 min-w-0 flex-1">
+            <div className="p-10 border-b border-border bg-white/[0.01] flex flex-col gap-4">
+               <div className="space-y-4 min-w-0 flex-1">
                   <h2 className="text-3xl md:text-4xl font-headline font-bold text-foreground tracking-tight leading-tight">
                     {property.addressLine1}, {property.city}, {property.zipCode}
                   </h2>
@@ -298,7 +301,7 @@ export default function TenantHub() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-2xl rounded-[3rem] bg-card ring-1 ring-border overflow-hidden flex flex-col min-h-[600px]">
+          <Card className="border-none shadow-2xl rounded-[3rem] bg-card ring-1 ring-border overflow-hidden flex flex-col min-h-[650px]">
             <CardHeader className="bg-primary p-10 text-primary-foreground">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-6">
@@ -319,34 +322,50 @@ export default function TenantHub() {
                   <div className="h-full flex flex-col gap-10">
                     <div className="flex flex-col items-center justify-center text-center space-y-6 opacity-30 py-10">
                       <Bot className="w-16 h-16 text-foreground" />
-                      <p className="text-base font-bold font-headline text-foreground uppercase tracking-[0.3em]">Ask me about home guides.</p>
+                      <p className="text-base font-bold font-headline text-foreground uppercase tracking-[0.3em]">How can I assist your residency today?</p>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                        {[
-                         { title: "Property Rules", desc: "Pets, smoking, and noise protocols.", icon: BookOpen },
-                         { title: "Repairs", desc: "How to report and track maintenance.", icon: Wrench },
-                         { title: "Financials", desc: "Rent amounts and payment status.", icon: CreditCard },
-                         { title: "Guides", desc: "Asset specs and room information.", icon: Info }
+                         { title: "Property Rules", desc: "Pets, smoking, and noise protocols.", icon: BookOpen, query: "What are the property rules and protocols?" },
+                         { title: "Repairs", desc: "How to report and track maintenance.", icon: Wrench, query: "How do I report a repair or track status?" },
+                         { title: "Financials", desc: "Rent amounts and payment status.", icon: CreditCard, query: "What is my current rent and payment status?" },
+                         { title: "Guides", desc: "Asset specs and room information.", icon: Info, query: "Tell me about my property specifications and guides." }
                        ].map((topic, i) => (
-                         <div key={i} className="p-6 bg-primary/5 rounded-[2rem] border border-border flex items-start gap-4">
-                            <div className="p-3 bg-white rounded-xl shadow-sm text-accent"><topic.icon className="w-5 h-5" /></div>
+                         <button 
+                            key={i} 
+                            onClick={() => handleAskConcierge(topic.query)}
+                            className="p-6 bg-primary/5 rounded-[2rem] border border-border flex items-start gap-4 hover:bg-primary/10 transition-all text-left group"
+                          >
+                            <div className="p-3 bg-white rounded-xl shadow-sm text-accent group-hover:scale-110 transition-transform"><topic.icon className="w-5 h-5" /></div>
                             <div className="text-left">
                                <p className="font-bold text-sm text-foreground">{topic.title}</p>
                                <p className="text-xs text-muted-foreground font-medium leading-relaxed">{topic.desc}</p>
                             </div>
-                         </div>
+                         </button>
                        ))}
                     </div>
                   </div>
-                ) : chatHistory.map((msg, i) => (
-                  <div key={i} className={cn("flex flex-col max-w-[85%] animate-in slide-in-from-bottom-2", msg.role === 'user' ? "ml-auto items-end" : "items-start")}>
-                    <div className={cn("p-6 rounded-[2rem] text-sm md:text-base font-bold leading-relaxed shadow-sm", msg.role === 'user' ? "bg-primary text-primary-foreground rounded-tr-none" : "bg-muted text-foreground rounded-tl-none")}>{msg.text}</div>
-                  </div>
-                ))}
+                ) : (
+                  <>
+                    {chatHistory.map((msg, i) => (
+                      <div key={i} className={cn("flex flex-col max-w-[85%] animate-in slide-in-from-bottom-2", msg.role === 'user' ? "ml-auto items-end" : "items-start")}>
+                        <div className={cn("p-6 rounded-[2rem] text-sm md:text-base font-bold leading-relaxed shadow-sm", msg.role === 'user' ? "bg-primary text-primary-foreground rounded-tr-none" : "bg-muted text-foreground rounded-tl-none")}>{msg.text}</div>
+                      </div>
+                    ))}
+                    {isChatting && (
+                      <div className="flex items-center gap-2 p-6 bg-muted/30 rounded-2xl w-fit animate-pulse">
+                         <div className="w-1.5 h-1.5 bg-primary/40 rounded-full" />
+                         <div className="w-1.5 h-1.5 bg-primary/40 rounded-full" />
+                         <div className="w-1.5 h-1.5 bg-primary/40 rounded-full" />
+                         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-2">Orchestrating...</span>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
               <div className="p-6 bg-muted/10 border-t border-border">
-                <form onSubmit={handleAskConcierge} className="flex gap-4 items-center">
+                <form onSubmit={(e) => { e.preventDefault(); handleAskConcierge(); }} className="flex gap-4 items-center">
                   <Input 
                     value={chatQuery} 
                     onChange={(e) => setChatQuery(e.target.value)} 
@@ -354,14 +373,13 @@ export default function TenantHub() {
                     className="h-14 rounded-2xl bg-background border-none shadow-inner px-6 text-base text-foreground focus-visible:ring-accent flex-1" 
                     disabled={isChatting} 
                   />
-                  <Button 
+                  <button 
                     type="submit" 
-                    size="icon" 
-                    className="h-14 w-14 rounded-2xl shadow-xl shadow-primary/20 bg-primary text-primary-foreground transition-all active:scale-95 shrink-0" 
+                    className="h-14 w-14 rounded-2xl shadow-xl shadow-primary/20 bg-primary text-primary-foreground transition-all active:scale-95 shrink-0 flex items-center justify-center hover:opacity-90 disabled:opacity-50" 
                     disabled={isChatting || !chatQuery.trim()}
                   >
-                    <Send className="w-5 h-5" />
-                  </Button>
+                    {isChatting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                  </button>
                 </form>
               </div>
             </CardContent>
@@ -403,7 +421,7 @@ export default function TenantHub() {
                         "text-lg font-bold mt-4 flex items-center",
                         contact.category === 'standard' ? "text-red-600" : "text-accent"
                       )}>
-                        <RefreshCcw className="w-5 h-5 mr-3" /> {contact.phone}
+                        <Phone className="w-5 h-5 mr-3 opacity-40" /> {contact.phone}
                       </p>
                    </div>
                  ))}
