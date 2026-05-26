@@ -28,6 +28,70 @@ export async function withRetry<T>(
 }
 
 /**
+ * 🖼️ User Asset Identifier (Source-Positive Logic)
+ * Strictly whitelists your Supabase project (wgezhbkkhamaawxgcqjf)
+ */
+export function isRealUserUpload(url: any): boolean {
+  if (!url || typeof url !== 'string' || url.trim() === '') return false;
+  
+  const u = url.toLowerCase();
+  
+  // Whitelist production project infrastructure and browser local blobs
+  const isTrustedSource = (
+    u.includes('wgezhbkkhamaawxgcqjf.supabase.co') || 
+    u.includes('firebasestorage') ||
+    u.includes('googleapi') ||
+    u.startsWith('blob:') ||
+    u.startsWith('data:')
+  );
+
+  return isTrustedSource;
+}
+
+/**
+ * 🖼️ Asset Validation Engine
+ */
+export function isValidAssetUrl(url: any): boolean {
+  return !!(url && typeof url === 'string' && url.trim() !== '' && (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')));
+}
+
+/**
+ * 🖼️ Robust Asset Resolution Engine
+ */
+export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string | null {
+  if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
+    return imageUrl;
+  }
+  if (imageUrls && Array.isArray(imageUrls)) {
+    const realGallery = imageUrls.filter(u => isValidAssetUrl(u) && isRealUserUpload(u));
+    if (realGallery.length > 0) return realGallery[0];
+  }
+  return null;
+}
+
+/**
+ * 🖼️ Synchronized Gallery Resolver
+ */
+export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
+  const assets = new Set<string>();
+  
+  const primary = getResolvedImageUrl(imageUrl, imageUrls);
+  if (primary) {
+    assets.add(primary);
+  }
+  
+  if (imageUrls && Array.isArray(imageUrls)) {
+    imageUrls.forEach(u => {
+      if (isValidAssetUrl(u) && isRealUserUpload(u)) {
+        assets.add(u);
+      }
+    });
+  }
+  
+  return Array.from(assets);
+}
+
+/**
  * 🖼️ Resilient Mobile Optimization Engine
  */
 export async function compressImage(file: File, maxWidth = 1200, quality = 0.85): Promise<Blob | File> {
@@ -97,68 +161,4 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.85)
   } catch (error) {
     return file;
   }
-}
-
-/**
- * 🖼️ User Asset Identifier (Source-Positive Logic)
- * Strictly whitelists your Supabase project (wgezhbkkhamaawxgcqjf)
- */
-export function isRealUserUpload(url: any): boolean {
-  if (!url || typeof url !== 'string' || url.trim() === '') return false;
-  
-  const u = url.toLowerCase();
-  
-  // Whitelist production project infrastructure and browser local blobs
-  const isTrustedSource = (
-    u.includes('wgezhbkkhamaawxgcqjf.supabase.co') || 
-    u.includes('firebasestorage') ||
-    u.includes('googleapi') ||
-    u.startsWith('blob:') ||
-    u.startsWith('data:')
-  );
-
-  return isTrustedSource;
-}
-
-/**
- * 🖼️ Asset Validation Engine
- */
-export function isValidAssetUrl(url: any): boolean {
-  return !!(url && typeof url === 'string' && url.trim() !== '' && (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')));
-}
-
-/**
- * 🖼️ Robust Asset Resolution Engine
- */
-export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string | null {
-  if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
-    return imageUrl;
-  }
-  if (imageUrls && Array.isArray(imageUrls)) {
-    const realGallery = imageUrls.filter(u => isValidAssetUrl(u) && isRealUserUpload(u));
-    if (realGallery.length > 0) return realGallery[0];
-  }
-  return null;
-}
-
-/**
- * 🖼️ Synchronized Gallery Resolver
- */
-export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
-  const assets = new Set<string>();
-  
-  const primary = getResolvedImageUrl(imageUrl, imageUrls);
-  if (primary) {
-    assets.add(primary);
-  }
-  
-  if (imageUrls && Array.isArray(imageUrls)) {
-    imageUrls.forEach(u => {
-      if (isValidAssetUrl(u) && isRealUserUpload(u)) {
-        assets.add(u);
-      }
-    });
-  }
-  
-  return Array.from(assets);
 }

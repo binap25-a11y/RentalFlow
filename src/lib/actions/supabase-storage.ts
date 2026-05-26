@@ -35,7 +35,7 @@ export async function uploadToSupabase(
     
     const supabase = getHardenedClient();
 
-    // TARGETING VERIFIED BUCKET: Case-sensitive and hyphenated identity.
+    // TARGETING VERIFIED BUCKET: Case-sensitive identity Property-Images-
     const { data, error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(path, buffer, {
@@ -49,8 +49,6 @@ export async function uploadToSupabase(
       throw new Error(`Storage Error: ${uploadError.message}. Ensure bucket "${bucket}" is initialized.`);
     }
 
-    // Since the bucket is private, standard public URLs won't work in <img> tags.
-    // However, the resolution logic in utils.ts expects a standard URL.
     const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(path);
 
     return { 

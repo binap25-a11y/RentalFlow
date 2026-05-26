@@ -39,7 +39,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const { toast } = useToast();
   const router = useRouter();
 
-  // Explicit state definition to resolve ReferenceError
+  // HIGH-FIDELITY STATE INITIALIZATION
   const [isSaving, setIsSaving] = useState(false);
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
@@ -107,7 +107,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // BINARY PRESENCE GUARD: Prevent destructive overwrites
+    // BINARY PRESENCE GUARD: Prevent destructive overwrites during transitions
     const isMidUpload = currentLedger.some(i => i.status === 'uploading');
     if (readyUrls.length === 0 && isMidUpload) return;
 
@@ -130,12 +130,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       try {
         const optimizedBlob = await compressImage(file);
-        const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        // RECOMMENDED PATH: private/<uid>/<propertyId>/<filename>
+        const filename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        const path = `private/${user.uid}/${propertyId}/${filename}`;
         
         const formData = new FormData();
         formData.append('file', optimizedBlob, file.name);
         
-        // TARGETING EXACT CASE-SENSITIVE BUCKET: Property-Images-
         const result = await uploadToSupabase(formData, 'Property-Images-', path);
         if (!result.success) throw new Error(result.error);
         

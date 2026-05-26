@@ -55,7 +55,7 @@ export default function NewPropertyPage() {
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // BINARY PRESENCE GUARD: Prevent destructive overwrites during transition
+    // BINARY PRESENCE GUARD: Prevent destructive overwrites during transitions
     const isMidUpload = currentLedger.some(i => i.status === 'uploading');
     if (readyUrls.length === 0 && isMidUpload) return;
 
@@ -82,7 +82,9 @@ export default function NewPropertyPage() {
 
       try {
         const optimizedBlob = await compressImage(file);
-        const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        // RECOMMENDED PATH: private/<uid>/<propertyId>/<filename>
+        const filename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        const path = `private/${user.uid}/${propertyId}/${filename}`;
         
         const formData = new FormData();
         formData.append('file', optimizedBlob, file.name);
