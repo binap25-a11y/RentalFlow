@@ -1,7 +1,7 @@
 /**
  * @fileOverview Supabase Client Initialization.
  * Synchronized with the verified production project: wgezhbkkhamaawxgcqjf.
- * Resolved "supabaseKey is required" and "bucket not found" errors.
+ * Resolved "supabaseKey is required" and "signature verification" errors.
  */
 
 import { createClient } from '@supabase/supabase-js';

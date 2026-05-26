@@ -198,6 +198,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       const formData = new FormData();
       formData.append('file', file);
       
+      // Target high-fidelity property-docs bucket
       const result = await uploadToSupabase(formData, 'property-docs', path);
       if (!result.success) throw new Error(result.error);
       

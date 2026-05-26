@@ -109,7 +109,7 @@ export function isRealUserUpload(url: any): boolean {
   
   const u = url.toLowerCase();
   
-  // Whitelist our infrastructure and high-fidelity sources
+  // Whitelist our project infrastructure and high-fidelity sources
   const isTrustedSource = (
     u.includes('wgezhbkkhamaawxgcqjf.supabase.co') || 
     u.includes('firebasestorage') ||

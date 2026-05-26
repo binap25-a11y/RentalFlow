@@ -39,7 +39,7 @@ export async function uploadToSupabase(
     const { data, error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(path, buffer, {
-        contentType: file.type || 'image/jpeg',
+        contentType: file.type || 'application/octet-stream',
         upsert: true,
         cacheControl: '3600',
       });
