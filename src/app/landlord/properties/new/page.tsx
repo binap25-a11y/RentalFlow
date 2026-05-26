@@ -87,8 +87,7 @@ export default function NewPropertyPage() {
         const formData = new FormData();
         formData.append('file', optimizedBlob, file.name);
         
-        // Target high-fidelity property-images bucket
-        const result = await uploadToSupabase(formData, 'property-images', path);
+        const result = await uploadToSupabase(formData, 'property-images-', path);
         if (!result.success) throw new Error(result.error);
         
         setLedger(prev => {

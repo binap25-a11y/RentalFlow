@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -145,7 +144,7 @@ export default function InspectionsPage() {
         const formData = new FormData();
         formData.append('file', optimizedBlob, file.name);
         
-        const result = await uploadToSupabase(formData, 'property-images', path);
+        const result = await uploadToSupabase(formData, 'property-images-', path);
         if (!result.success) throw new Error(result.error);
         return result.url!;
       });

@@ -2,8 +2,7 @@
 
 /**
  * @fileOverview Hardened Cloud Storage Engine.
- * Resolved "bucket not found" and "signature verification" errors by enforcing 
- * isolated client creation using the verified production project: wgezhbkkhamaawxgcqjf.
+ * Standardized on hyphenated bucket 'property-images-' as requested by the user.
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -23,7 +22,7 @@ function getHardenedClient() {
 
 export async function uploadToSupabase(
   formData: FormData,
-  bucket: 'property-images' | 'property-docs',
+  bucket: 'property-images-' | 'property-docs',
   path: string
 ) {
   try {
@@ -33,7 +32,6 @@ export async function uploadToSupabase(
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     
-    // Create clean client using verified project credentials
     const supabase = getHardenedClient();
 
     const { data, error: uploadError } = await supabase.storage
@@ -66,7 +64,7 @@ export async function uploadToSupabase(
 }
 
 export async function deleteFromSupabase(
-  bucket: 'property-images' | 'property-docs',
+  bucket: 'property-images-' | 'property-docs',
   paths: string | string[]
 ) {
   try {
