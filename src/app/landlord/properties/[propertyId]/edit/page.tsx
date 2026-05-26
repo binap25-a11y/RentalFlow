@@ -95,8 +95,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
   /**
    * 🔄 Transactional Visual Sync
-   * This is the microsecond-instant sync layer.
-   * Visual choices are committed to Firestore immediately within their own transactional lifecycle.
+   * Visual modifications are committed to Firestore microsecond-instantly.
+   * This is strictly isolated from the manual Save button.
    */
   const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
@@ -161,7 +161,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
       const updated = [item, ...prev.filter(i => i.id !== id)];
-      // Atomic sync inside the state update to ensure Firestore mirrors the choice instantly
       syncVisualsToFirestore(updated);
       return updated;
     });
@@ -181,8 +180,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
     
-    // DECISIVE ACTION: Exclude visual binary fields from this payload.
-    // They are handled atomically by syncVisualsToFirestore to prevent stale state overwrites.
+    // TRANSACTIONAL PROTECTION: Exclude visual fields from manual Save payload.
+    // They are handled atomically by syncVisualsToFirestore.
     const serializableData = {
       id: propertyId, 
       landlordId: user.uid, 
@@ -244,7 +243,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
               <ScrollArea className="h-[600px] pr-4">
                 <div className="grid grid-cols-2 gap-5">
                   {ledger.map((item, index) => {
-                    // Self-Healing Source: Priority 1 is cloudUrl if verified, otherwise high-fidelity local preview.
+                    // Self-Healing Source: fallback to local preview if cloud binary isn't ready
                     const displayUrl = (item.status === 'ready' && item.cloudUrl && !item.isBroken) ? item.cloudUrl : item.previewUrl;
                     
                     return (

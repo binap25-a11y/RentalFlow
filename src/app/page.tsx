@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, getLandlordCollectionQuery } from '@/firebase';
@@ -45,6 +44,7 @@ export default function LandingPage() {
 
   const { data: properties } = useCollection(propertiesQuery);
 
+  // OPTIMISTIC PREVIEW: Ensure designated primary cover mirrors to the landing hero
   const heroImage = useMemo(() => {
     if (properties && properties.length > 0) {
       const sorted = [...properties].sort((a, b) => 

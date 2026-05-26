@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -131,6 +130,7 @@ export default function PropertiesPage() {
               </div>
             ) : (
               activeProperties.map((property) => {
+                // OPTIMISTIC PREVIEW: Prioritize user-designated cover
                 const imageUrl = getResolvedImageUrl(property.imageUrl, property.imageUrls);
                 return (
                   <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-2xl transition-all duration-500 rounded-[2.5rem] bg-card ring-1 ring-border">

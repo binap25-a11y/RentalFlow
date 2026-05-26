@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useMemo, useEffect } from 'react';
@@ -36,7 +35,7 @@ import {
   DialogFooter,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { cn, getResolvedGallery, isRealUserUpload, isValidAssetUrl } from "@/lib/utils";
+import { cn, getResolvedGallery, isRealUserUpload, isValidAssetUrl, getResolvedImageUrl } from "@/lib/utils";
 import {
   Carousel,
   CarouselContent,
@@ -72,6 +71,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
+  // OPTIMISTIC IDENTITY RESOLUTION: Strictly prioritize designated cover
   const gallery = useMemo(() => {
     if (!property) return [];
     return getResolvedGallery(property.imageUrl, property.imageUrls);
@@ -270,6 +270,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           src={url} 
                           alt="" 
                           className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105" 
+                          onError={(e) => {
+                            // SELF-HEALING FALLBACK: If CDN fails, attempt to hide broken image
+                            (e.target as HTMLImageElement).style.opacity = '0.5';
+                          }}
                         />
                         {index === 0 && (
                           <div className="absolute top-8 left-8 px-5 py-2 bg-accent text-white text-[11px] font-bold uppercase rounded-full shadow-2xl font-headline z-10 tracking-[0.1em]">Verified Primary Identity</div>

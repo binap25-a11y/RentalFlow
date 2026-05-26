@@ -32,7 +32,6 @@ export default function NewPropertyPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  // Stable Property ID Generation
   const propertyId = useMemo(() => {
     if (!db) return '';
     return doc(collection(db, 'properties')).id;
@@ -52,8 +51,7 @@ export default function NewPropertyPage() {
 
   /**
    * 🔄 Transactional Visual Sync
-   * This is the microsecond-instant sync layer.
-   * Designated primary cover is committed to Firestore immediately so it mirrors across the app.
+   * Designated primary cover is committed to Firestore immediately.
    */
   const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId) return;
@@ -142,7 +140,7 @@ export default function NewPropertyPage() {
     setIsSaving(true);
     const propertyRef = doc(db, 'properties', propertyId);
     
-    // Note: strictly excluding visual fields to prevent state-sync overwrites.
+    // DECISIVE PROTECTION: Exclude visual fields from manual Save payload.
     const serializableData = {
       id: propertyId, 
       landlordId: user.uid, 
@@ -208,7 +206,6 @@ export default function NewPropertyPage() {
               <ScrollArea className="h-[450px] pr-4">
                 <div className="grid grid-cols-2 gap-4">
                   {ledger.map((item, index) => {
-                    // Optimized Preview: prioritizes verified cloud URLs but falls back to local blobs to prevent "broken image" state.
                     const displayUrl = (item.status === 'ready' && item.cloudUrl && !item.isBroken) ? item.cloudUrl : item.previewUrl;
                     
                     return (
