@@ -12,19 +12,22 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  PhoneCall, Download, Phone, Mail, Building2, 
-  Wrench, ShieldAlert, Loader2, AlertCircle, ShieldCheck, Zap,
-  Globe, ExternalLink
+  PhoneCall, Download, Phone, Mail, 
+  Wrench, ShieldAlert, Loader2, AlertCircle, ShieldCheck,
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 
 /**
- * @fileOverview Premium Support Directory for Residents.
- * Features real-time SOS protocols and assigned professional partners.
- * Optimized for professional visibility and official documentation export.
+ * 🆘 National SOS Protocols (UK Fallbacks)
+ * Displayed in absolute real-time if landlord ledger is empty.
  */
+const SOS_FALLBACKS = [
+  { name: "Emergency Services", phone: "999 or 112", role: "Primary Emergency" },
+  { name: "NHS Medical Advice", phone: "111", role: "Medical Advice (24/7)" },
+  { name: "National Gas Emergency", phone: "0800 111 999", role: "Gas Leaks Only" },
+  { name: "Police Non-Emergency", phone: "101", role: "Non-Urgent Records" },
+];
 
 export default function TenantEmergencyContactsPage() {
   const { user } = useUser();
@@ -46,9 +49,10 @@ export default function TenantEmergencyContactsPage() {
 
   const { data: contacts, loading: isLoading } = useCollection(contactsQuery);
 
-  const standardServices = useMemo(() => 
-    contacts?.filter(c => c.category === 'standard') || [], 
-  [contacts]);
+  const standardServices = useMemo(() => {
+    const list = contacts?.filter(c => c.category === 'standard') || [];
+    return list.length > 0 ? list : SOS_FALLBACKS;
+  }, [contacts]);
 
   const professionalPartners = useMemo(() => 
     contacts?.filter(c => !c.category || c.category === 'professional') || [], 
@@ -60,7 +64,6 @@ export default function TenantEmergencyContactsPage() {
     const pageWidth = doc.internal.pageSize.getWidth();
     const today = format(new Date(), 'PPP');
     
-    // Header Style: Deep Navy Professional
     doc.setFillColor(15, 23, 42); 
     doc.rect(0, 0, pageWidth, 55, 'F');
     doc.setTextColor(255, 255, 255);
@@ -72,44 +75,32 @@ export default function TenantEmergencyContactsPage() {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.text(`Official Portfolio Safety Record | Generated: ${today}`, 20, 35);
-    doc.text("High-Fidelity Support Network for Your Residency", 20, 42);
     
     doc.setTextColor(0, 0, 0);
     let y = 75;
 
-    // 1. SOS PROTOCOLS
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.text("1. PRIMARY SOS PROTOCOLS (UK)", 20, y);
     y += 12;
     
-    if (standardServices.length > 0) {
-      standardServices.forEach(service => {
-        if (y > 270) { doc.addPage(); y = 20; }
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(11);
-        doc.text(service.name.toUpperCase(), 20, y);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(185, 28, 28); // SOS Red
-        doc.text(`TEL: ${service.phone}`, pageWidth - 20, y, { align: 'right' });
-        
-        y += 7;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(100, 100, 100);
-        doc.text(service.role, 20, y);
-        doc.setTextColor(0, 0, 0);
-        y += 15;
-      });
-    } else {
-      doc.setFont("helvetica", "italic");
-      doc.text("Standard SOS protocols active via national services.", 20, y);
+    standardServices.forEach(service => {
+      if (y > 270) { doc.addPage(); y = 20; }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text(service.name.toUpperCase(), 20, y);
+      doc.setTextColor(185, 28, 28);
+      doc.text(`TEL: ${service.phone}`, pageWidth - 20, y, { align: 'right' });
+      y += 7;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.text(service.role, 20, y);
+      doc.setTextColor(0, 0, 0);
       y += 15;
-    }
+    });
 
     y += 10;
-
-    // 2. AUTHORIZED TRADE PARTNERS
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.text("2. AUTHORIZED TRADE PARTNERS", 20, y);
@@ -118,21 +109,16 @@ export default function TenantEmergencyContactsPage() {
     if (professionalPartners.length > 0) {
       professionalPartners.forEach((contact) => {
         if (y > 250) { doc.addPage(); y = 20; }
-        
         doc.setDrawColor(229, 231, 235);
         doc.line(20, y - 5, pageWidth - 20, y - 5);
-
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
         doc.text(contact.name, 20, y);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(30, 58, 138); // Primary Navy
+        doc.setTextColor(30, 58, 138);
         doc.text(contact.role.toUpperCase(), pageWidth - 20, y, { align: 'right' });
-        
         y += 8;
         doc.setTextColor(0, 0, 0);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
         doc.text(`Direct Contact: ${contact.phone}`, 20, y);
         if (contact.email) {
           y += 6;
@@ -140,25 +126,12 @@ export default function TenantEmergencyContactsPage() {
         }
         y += 20;
       });
-    } else {
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(10);
-      doc.text("No specific property partners assigned to this registry.", 20, y);
-    }
-
-    // Footer
-    const pageCount = (doc as any).internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setTextColor(150, 150, 150);
-      doc.text(`Page ${i} of ${pageCount} | RentalFlow High-Fidelity Infrastructure`, pageWidth / 2, 285, { align: 'center' });
     }
 
     doc.save(`Safety_Guide_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
-  if (!isClient || isLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+  if (!isClient || (isLoading && !contacts)) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-7xl mx-auto text-left pb-16">
@@ -203,24 +176,17 @@ export default function TenantEmergencyContactsPage() {
                <p className="text-xs opacity-70 font-bold uppercase tracking-widest font-headline">National Emergency Lines</p>
              </CardHeader>
              <CardContent className="pt-10 px-8 pb-10 space-y-8">
-                {standardServices.length > 0 ? (
-                  standardServices.map((service, i) => (
-                    <div key={i} className="flex justify-between items-start gap-6 group">
-                      <div className="space-y-1.5 min-w-0">
-                        <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest font-headline opacity-80">{service.role}</p>
-                        <p className="text-base font-bold leading-tight text-foreground font-headline group-hover:text-primary transition-colors">{service.name}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                         <p className="text-lg font-bold text-primary bg-primary/5 px-4 py-1.5 rounded-xl border border-primary/10 shadow-sm">{service.phone}</p>
-                      </div>
+                {standardServices.map((service, i) => (
+                  <div key={i} className="flex justify-between items-start gap-6 group">
+                    <div className="space-y-1.5 min-w-0 text-left">
+                      <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest font-headline opacity-80">{service.role}</p>
+                      <p className="text-base font-bold leading-tight text-foreground font-headline group-hover:text-primary transition-colors">{service.name}</p>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-16 opacity-30">
-                    <div className="p-6 bg-muted rounded-full w-fit mx-auto mb-6"><PhoneCall className="w-12 h-12" /></div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest font-headline">Protocols Synchronizing</p>
+                    <div className="text-right shrink-0">
+                       <p className="text-lg font-bold text-primary bg-primary/5 px-4 py-1.5 rounded-xl border border-primary/10 shadow-sm">{service.phone}</p>
+                    </div>
                   </div>
-                )}
+                ))}
              </CardContent>
            </Card>
         </div>
@@ -230,13 +196,13 @@ export default function TenantEmergencyContactsPage() {
              {professionalPartners.length === 0 ? (
                <Card className="col-span-full border-2 border-dashed py-32 flex flex-col items-center justify-center bg-muted/5 rounded-[3rem]">
                  <div className="p-8 bg-muted rounded-[2.5rem] mb-8"><Wrench className="w-16 h-16 text-primary/10" /></div>
-                 <h3 className="text-2xl font-bold font-headline text-primary/40 uppercase tracking-widest">No assigned partners</h3>
-                 <p className="text-sm text-muted-foreground font-medium mt-3">Authorized contractors for this asset will appear here.</p>
+                 <h3 className="text-2xl font-bold font-headline text-primary/40 uppercase tracking-widest text-center">No property partners assigned</h3>
+                 <p className="text-sm text-muted-foreground font-medium mt-3 text-center">Authorized contractors for your asset will appear here.</p>
                </Card>
              ) : (
                professionalPartners.map((contact) => (
                  <Card key={contact.id} className="border-none shadow-sm hover:shadow-2xl transition-all duration-500 rounded-[3rem] group overflow-hidden bg-card border border-transparent hover:border-accent/10 ring-1 ring-border">
-                   <CardHeader className="pb-4 bg-accent/5 p-10">
+                   <CardHeader className="pb-4 bg-accent/5 p-10 text-left">
                      <div className="flex justify-between items-start mb-6">
                        <div className="p-5 bg-white rounded-2xl shadow-xl text-accent border border-accent/10 transition-transform group-hover:scale-110 duration-500">
                          <Wrench className="w-8 h-8" />
@@ -250,7 +216,7 @@ export default function TenantEmergencyContactsPage() {
                        {contact.role}
                      </p>
                    </CardHeader>
-                   <CardContent className="pt-10 px-10 pb-2 space-y-8">
+                   <CardContent className="pt-10 px-10 pb-2 space-y-8 text-left">
                      <div className="space-y-1 text-left">
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest font-headline opacity-40">Direct Support Line</p>
                         <div className="flex items-center gap-4 text-3xl font-bold text-primary font-headline tracking-tighter">

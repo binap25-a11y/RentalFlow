@@ -9,13 +9,23 @@ import {
   MapPin, AlertCircle, Wrench, 
   Loader2, Home, Sparkles, Send, Bot, 
   ChevronRight, CheckCircle2, Clock, ReceiptText, Building2,
-  PhoneCall, ShieldAlert, Zap
+  PhoneCall, ShieldAlert,
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { tenantConcierge } from "@/ai/flows/tenant-concierge-flow";
 import { cn, getResolvedImageUrl } from "@/lib/utils";
 import { query, collection, where } from "firebase/firestore";
+
+/**
+ * 🆘 National SOS Protocols (UK Fallbacks)
+ * Displayed in absolute real-time if landlord ledger is empty.
+ */
+const SOS_FALLBACKS = [
+  { id: 'f1', name: "Emergency Services", phone: "999", role: "Primary SOS", category: 'standard' },
+  { id: 'f2', name: "NHS Advice", phone: "111", role: "Medical SOS", category: 'standard' },
+  { id: 'f3', name: "Gas Emergency", phone: "0800 111 999", role: "Leak SOS", category: 'standard' },
+];
 
 export default function TenantHub() {
   const { user } = useUser();
@@ -58,13 +68,19 @@ export default function TenantHub() {
   const { data: contactsData } = useCollection(contactsQuery);
 
   const sortedContacts = useMemo(() => {
-    if (!contactsData) return [];
-    // SOS FIRST PROTOCOL: standard category (999, NHS, etc) always anchored at top
-    return [...contactsData].sort((a, b) => {
+    let list = contactsData ? [...contactsData] : [];
+    const standards = list.filter(c => c.category === 'standard');
+    
+    // If no standard SOS contacts exist in DB, push fallbacks
+    if (standards.length === 0) {
+      list = [...SOS_FALLBACKS, ...list];
+    }
+
+    return list.sort((a, b) => {
       if (a.category === 'standard' && b.category !== 'standard') return -1;
       if (a.category !== 'standard' && b.category === 'standard') return 1;
       return 0;
-    });
+    }).slice(0, 6);
   }, [contactsData]);
 
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [chatHistory]);
@@ -183,43 +199,36 @@ export default function TenantHub() {
                <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Authorized SOS protocols</CardDescription>
              </CardHeader>
              <CardContent className="p-8 space-y-6 text-left">
-               {sortedContacts.length > 0 ? (
-                 <div className="space-y-4">
-                   {sortedContacts.slice(0, 8).map(contact => (
-                     <div key={contact.id} className={cn(
-                       "p-5 rounded-2xl border transition-all group",
-                       contact.category === 'standard' 
-                        ? "bg-red-500/5 border-red-500/20 hover:border-red-500/40" 
-                        : "bg-muted/20 border-border hover:border-accent/30"
-                     )}>
-                        <div className="flex justify-between items-start mb-2">
-                          <p className={cn(
-                            "text-[9px] font-bold uppercase tracking-widest",
-                            contact.category === 'standard' ? "text-red-600" : "text-muted-foreground opacity-60"
-                          )}>{contact.role}</p>
-                          {contact.category === 'standard' && (
-                            <Badge className="bg-red-600 text-white text-[8px] font-bold uppercase py-0.5 px-3 rounded-full border-none shadow-sm animate-pulse">SOS PROTOCOL</Badge>
-                          )}
-                        </div>
-                        <p className="text-sm font-bold text-foreground truncate font-headline">{contact.name}</p>
+               <div className="space-y-4">
+                 {sortedContacts.map(contact => (
+                   <div key={contact.id} className={cn(
+                     "p-5 rounded-2xl border transition-all group text-left",
+                     contact.category === 'standard' 
+                      ? "bg-red-500/5 border-red-500/20 hover:border-red-500/40" 
+                      : "bg-muted/20 border-border hover:border-accent/30"
+                   )}>
+                      <div className="flex justify-between items-start mb-2">
                         <p className={cn(
-                          "text-base font-bold mt-3 flex items-center",
-                          contact.category === 'standard' ? "text-red-600" : "text-accent"
-                        )}>
-                          <PhoneCall className="w-4 h-4 mr-2" /> {contact.phone}
-                        </p>
-                     </div>
-                   ))}
-                   <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent h-12 rounded-xl mt-2">
-                     <Link href="/tenant/emergency-contacts">View All Authorized Contacts <ChevronRight className="w-3 h-3 ml-2" /></Link>
-                   </Button>
-                 </div>
-               ) : (
-                 <div className="text-center py-10 opacity-30">
-                    <PhoneCall className="w-10 h-10 mx-auto mb-3 text-foreground" />
-                    <p className="text-[10px] font-bold uppercase tracking-widest font-headline text-foreground">Support sync pending</p>
-                 </div>
-               )}
+                          "text-[9px] font-bold uppercase tracking-widest",
+                          contact.category === 'standard' ? "text-red-600" : "text-muted-foreground opacity-60"
+                        )}>{contact.role}</p>
+                        {contact.category === 'standard' && (
+                          <Badge className="bg-red-600 text-white text-[8px] font-bold uppercase py-0.5 px-3 rounded-full border-none shadow-sm animate-pulse">SOS PROTOCOL</Badge>
+                        )}
+                      </div>
+                      <p className="text-sm font-bold text-foreground truncate font-headline">{contact.name}</p>
+                      <p className={cn(
+                        "text-base font-bold mt-3 flex items-center",
+                        contact.category === 'standard' ? "text-red-600" : "text-accent"
+                      )}>
+                        <PhoneCall className="w-4 h-4 mr-2" /> {contact.phone}
+                      </p>
+                   </div>
+                 ))}
+                 <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent h-12 rounded-xl mt-2">
+                   <Link href="/tenant/emergency-contacts">View All Authorized Contacts <ChevronRight className="w-3 h-3 ml-2" /></Link>
+                 </Button>
+               </div>
              </CardContent>
            </Card>
 

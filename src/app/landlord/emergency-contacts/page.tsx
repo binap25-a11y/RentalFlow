@@ -11,8 +11,8 @@ import {
   deleteDocumentNonBlocking, 
   getLandlordCollectionQuery 
 } from '@/firebase';
-import { collection, doc, serverTimestamp } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { collection, doc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,14 +27,13 @@ import {
   DialogTrigger 
 } from "@/components/ui/dialog";
 import { 
-  PhoneCall, Plus, Trash2, Edit3, Loader2, Download, 
+  Plus, Trash2, Edit3, Loader2, Download, 
   Phone, Mail, Building2, Wrench, ShieldAlert, Save, Globe,
   Filter, HardHat
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 
 const DEFAULT_UK_SERVICES = [
   { name: "Emergency Services (Police, Fire, Ambulance)", phone: "999 or 112", role: "Primary Emergency" },
@@ -113,8 +112,15 @@ export default function LandlordEmergencyContactsPage() {
     setIsDialogOpen(true);
   };
 
-  const handleSeedStandardServices = () => {
+  const handleSeedStandardServices = async () => {
     if (!user || !db) return;
+    
+    // Fetch all tenant IDs to grant immediate visibility
+    const tenantsQuery = query(collection(db, 'tenantProfiles'), where('landlordId', '==', user.uid));
+    const tenantSnaps = await getDocs(tenantsQuery);
+    const tenantUserIds = tenantSnaps.docs.map(d => d.data().userId).filter(Boolean);
+    const memberIds = [user.uid, ...tenantUserIds];
+
     DEFAULT_UK_SERVICES.forEach(service => {
       const contactId = doc(collection(db, 'emergencyContacts')).id;
       const contactRef = doc(db, 'emergencyContacts', contactId);
@@ -123,7 +129,7 @@ export default function LandlordEmergencyContactsPage() {
         ...service,
         category: 'standard',
         landlordId: user.uid,
-        memberIds: [user.uid],
+        memberIds: memberIds,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       }, { merge: true });
@@ -135,8 +141,18 @@ export default function LandlordEmergencyContactsPage() {
     e.preventDefault();
     if (!user || !db) return;
 
-    const property = properties?.find(p => p.id === assignToPropertyId);
-    const memberIds = property?.memberIds ? [...new Set([...property.memberIds, user.uid])] : [user.uid];
+    let memberIds = [user.uid];
+    
+    if (category === 'standard') {
+      const tenantsQuery = query(collection(db, 'tenantProfiles'), where('landlordId', '==', user.uid));
+      const tenantSnaps = await getDocs(tenantsQuery);
+      memberIds = [user.uid, ...tenantSnaps.docs.map(d => d.data().userId).filter(Boolean)];
+    } else if (assignToPropertyId) {
+      const property = properties?.find(p => p.id === assignToPropertyId);
+      if (property?.memberIds) {
+        memberIds = [...new Set([...property.memberIds, user.uid])];
+      }
+    }
 
     const payload = {
       name,
@@ -153,7 +169,7 @@ export default function LandlordEmergencyContactsPage() {
     if (editingContact) {
       const contactRef = doc(db, 'emergencyContacts', editingContact.id);
       updateDocumentNonBlocking(contactRef, payload);
-      toast({ title: "Partner Updated", description: "Changes synchronized." });
+      toast({ title: "Partner Updated" });
     } else {
       const contactId = doc(collection(db, 'emergencyContacts')).id;
       const contactRef = doc(db, 'emergencyContacts', contactId);
