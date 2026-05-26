@@ -50,6 +50,7 @@ import { supabase } from '@/lib/supabase';
 import { syncDocumentToDb } from '@/lib/actions/db-sync';
 import { format } from 'date-fns';
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Image from "next/image";
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -72,9 +73,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
   /**
-   * 🖼️ Optimistic Identity Resolution
-   * Utilizes a Reactive Key strategy to force carousel re-evaluation
-   * when cloud binaries synchronize from Firestore.
+   * 🖼️ Forced Reactive Identity Resolution
+   * Uses a reactive key strategy to ensure the carousel refreshes the moment
+   * a new 'Star' cover is designated or a new upload is verified.
    */
   const gallery = useMemo(() => {
     if (!property) return [];
@@ -270,12 +271,14 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                   {gallery.map((url: string, index: number) => (
                     <CarouselItem key={`${url}-${index}`}>
                       <div className="relative h-[400px] md:h-[550px] w-full bg-muted cursor-zoom-in overflow-hidden" onClick={() => setLightboxUrl(url)}>
-                        <img 
+                        <Image 
                           src={url} 
                           alt="" 
-                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105" 
+                          fill
+                          className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                          unoptimized
+                          priority={index === 0}
                           onError={(e) => {
-                            // High-Fidelity Fallback logic: ensures broken URLs from propagation latency don't break the UI
                             (e.target as HTMLImageElement).style.opacity = '0.5';
                           }}
                         />
@@ -612,10 +615,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           <DialogTitle className="sr-only">Visual Asset Preview</DialogTitle>
           {lightboxUrl && (
             <div className="relative w-full h-full flex items-center justify-center">
-              <img 
+              <Image 
                 src={lightboxUrl} 
                 alt="" 
-                className="object-contain max-w-full max-h-[90vh] rounded-[2.5rem] shadow-[0_0_100px_-12px_rgba(0,0,0,0.8)]" 
+                fill
+                className="object-contain"
+                unoptimized
               />
               <button 
                 onClick={() => setLightboxUrl(null)}

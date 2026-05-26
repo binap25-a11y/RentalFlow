@@ -109,12 +109,12 @@ export function isRealUserUpload(url: any): boolean {
   
   const u = url.toLowerCase();
   
-  // 1. DYNAMIC WHITELIST: Authorize valid cloud patterns and local binaries
+  // 1. DYNAMIC WHITELIST: Authorize any Supabase or Google binary
   const isAuthorizedSource = (
     u.includes('supabase') || 
     u.includes('firebasestorage') ||
     u.includes('googleapi') ||
-    u.includes('storage.googleapis') ||
+    u.includes('googleapis') ||
     u.startsWith('blob:') ||
     u.startsWith('data:')
   );
@@ -122,8 +122,8 @@ export function isRealUserUpload(url: any): boolean {
   // 2. STOCK BLACKLIST: Reject specific known placeholder signatures
   const isBlacklistedStock = (
     u.includes('placehold.co') || 
-    u.includes('photo-1486406146926-c627a92ad1ab') || // Corporate skyscraper
-    u.includes('photo-1560518883-ce09059eeffa')    // Brand logo
+    u.includes('photo-1486406146926-c627a92ad1ab') || // Stock Skyscraper
+    u.includes('photo-1560518883-ce09059eeffa')    // Stock Logo
   );
 
   return isAuthorizedSource && !isBlacklistedStock;
