@@ -100,43 +100,32 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.85)
 }
 
 /**
- * 🖼️ User Asset Identifier
- * Strictly identifies assets that were intentionally uploaded by the user to cloud storage.
- * DECISIVELY REJECTS all known stock image and placeholder domains while favoring authorized projects.
+ * 🖼️ User Asset Identifier (Hardened)
+ * Whitelist-first logic targeting project wgezhbkkhamaawxgcqjf.
+ * Decisively REJECTS placeholders including skyscraper stock photo (photo-1486406146926-c627a92ad1ab) and brand logos.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
   const u = url.toLowerCase();
   
-  // 1. WHITELIST: Authorized Project & Binary States
-  const isAuthorizedStorage = (
+  // 1. PROJECT WHITELIST: Strictly authorize project wgezhbkkhamaawxgcqjf binaries
+  const isAuthorizedProject = (
     u.includes('wgezhbkkhamaawxgcqjf') || 
     u.includes('supabase.co') || 
     u.includes('firebasestorage') ||
     u.startsWith('blob:')
   );
 
-  // 2. BLACKLIST: Forbidden Stock & Placeholder Domains
-  const forbiddenDomains = [
-    'unsplash.com',
-    'picsum.photos',
-    'placehold.co',
-    'placeholder',
-    'pexels.com'
-  ];
+  // 2. FORBIDDEN SIGNATURE BLACKLIST: High-fidelity rejection of corporate skyscrapers and stock domains
+  const forbiddenDomains = ['unsplash.com', 'picsum.photos', 'placehold.co', 'placeholder', 'pexels.com'];
+  const forbiddenIds = ['photo-1486406146926-c627a92ad1ab', 'photo-1560518883-ce09059eeffa'];
 
-  // Specific Stock Identifiers that trigger fallback logic
-  const forbiddenIds = [
-    'photo-1486406146926-c627a92ad1ab', 
-    'photo-1560518883-ce09059eeffa'
-  ];
+  const hasForbiddenDomain = forbiddenDomains.some(d => u.includes(d));
+  const hasForbiddenId = forbiddenIds.some(id => u.includes(id));
 
-  const containsForbiddenDomain = forbiddenDomains.some(d => u.includes(d));
-  const containsForbiddenId = forbiddenIds.some(id => u.includes(id));
-
-  // A real upload is authorized storage AND does not contain forbidden signatures
-  return isAuthorizedStorage && !containsForbiddenDomain && !containsForbiddenId;
+  // A binary is "Real" only if it originates from an authorized partition AND lacks forbidden signatures
+  return isAuthorizedProject && !hasForbiddenDomain && !hasForbiddenId;
 }
 
 /**
@@ -148,7 +137,7 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
- * DECISIVELY PRIORITIZES the designated primary cover.
+ * DECISIVELY PRIORITIZES the designated primary cover from Firestore.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string | null {
   // Priority 1: Specifically designated primary cover (imageUrl field)
@@ -169,7 +158,7 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
   
-  // Primary cover ALWAYS goes first if valid
+  // Primary cover ALWAYS goes first
   if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
     assets.add(imageUrl);
   }
