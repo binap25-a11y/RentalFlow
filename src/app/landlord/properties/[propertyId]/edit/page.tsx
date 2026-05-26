@@ -39,13 +39,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const { toast } = useToast();
   const router = useRouter();
 
-  const propertyRef = useMemoFirebase(() => {
-    if (!db) return null;
-    return doc(db, 'properties', propertyId);
-  }, [db, propertyId]);
-
-  const { data: property, isLoading } = useDoc(propertyRef);
-
+  const [isSaving, setIsSaving] = useState(false);
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [zipCode, setZipCode] = useState('');
@@ -56,8 +50,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [bathrooms, setBathrooms] = useState('1');
   
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
   const isInitialized = useRef(false);
+
+  const propertyRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return doc(db, 'properties', propertyId);
+  }, [db, propertyId]);
+
+  const { data: property, isLoading } = useDoc(propertyRef);
 
   useEffect(() => {
     if (property && !isInitialized.current) {
@@ -125,10 +125,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
-      setLedger(prev => {
-        const next = [...prev, { id: tempId, previewUrl: localUrl, status: 'uploading' }];
-        return next;
-      });
+      setLedger(prev => [...prev, { id: tempId, previewUrl: localUrl, status: 'uploading' }]);
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -144,7 +141,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: result.url, status: 'ready' as const } : item
           );
-          // Isolated Firestore Commit
           setTimeout(() => syncVisualsToFirestore(updated), 0);
           return updated;
         });
@@ -169,7 +165,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const item = prev.find(i => i.id === id);
       if (!item || item.status !== 'ready') return prev;
       const updated = [item, ...prev.filter(i => i.id !== id)];
-      // Transactional Identity Lock
       setTimeout(() => syncVisualsToFirestore(updated), 0);
       return updated;
     });
