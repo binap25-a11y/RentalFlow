@@ -160,40 +160,40 @@ export default function TenantsPage() {
               Assign New Resident
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[550px] rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden flex flex-col h-[750px] max-h-[90vh] bg-card ring-1 ring-white/10">
+          <DialogContent className="sm:max-w-[550px] rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden flex flex-col max-h-[90vh] bg-card ring-1 ring-white/10">
             <form onSubmit={handleSaveTenant} className="flex flex-col h-full overflow-hidden">
-              <DialogHeader className="p-10 text-left bg-primary/5 border-b shrink-0">
+              <DialogHeader className="p-8 text-left bg-primary/5 border-b shrink-0">
                 <DialogTitle className="text-2xl font-bold font-headline text-foreground tracking-tight">{editingTenant ? "Update Resident" : "Assign Resident"}</DialogTitle>
                 <DialogDescription className="font-medium text-muted-foreground mt-2">Initialize a resident profile for your professional portfolio.</DialogDescription>
               </DialogHeader>
               
-              <div className="flex-1 overflow-y-auto min-h-0 bg-white/[0.01]">
-                <div className="p-10 space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <ScrollArea className="flex-1">
+                <div className="p-8 space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
                       <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">First Name</Label>
-                      <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/5" placeholder="e.g. John" />
+                      <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/10 text-foreground" placeholder="e.g. John" />
                     </div>
                     <div className="space-y-3">
                       <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Last Name</Label>
-                      <Input value={lastName} onChange={(e) => setLastName(e.target.value)} required className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/5" placeholder="e.g. Doe" />
+                      <Input value={lastName} onChange={(e) => setLastName(e.target.value)} required className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/10 text-foreground" placeholder="e.g. Doe" />
                     </div>
                   </div>
                   
                   <div className="space-y-3">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Contact Electronic Mail</Label>
-                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/5" placeholder="tenant@example.com" />
+                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/10 text-foreground" placeholder="tenant@example.com" />
                   </div>
                   
                   <div className="space-y-3">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Mobile Number</Label>
-                    <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/5" placeholder="+44 ..." />
+                    <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/10 text-foreground" placeholder="+44 ..." />
                   </div>
 
                   <div className="space-y-3">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Target Inventory Asset</Label>
                     <select 
-                      className="flex h-14 w-full rounded-2xl border-none bg-muted/40 px-6 py-2 text-base focus:ring-2 focus:ring-primary outline-none font-bold text-foreground shadow-inner ring-1 ring-white/5" 
+                      className="flex h-14 w-full rounded-2xl border-none bg-muted/40 px-6 py-2 text-base focus:ring-2 focus:ring-primary outline-none font-bold text-foreground shadow-inner ring-1 ring-white/10" 
                       value={selectedPropertyId} 
                       onChange={(e) => setSelectedPropertyId(e.target.value)} 
                       required
@@ -203,10 +203,10 @@ export default function TenantsPage() {
                     </select>
                   </div>
                 </div>
-              </div>
+              </ScrollArea>
 
-              <DialogFooter className="p-10 bg-muted/5 border-t shrink-0">
-                <Button type="submit" disabled={isSubmitting} className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 font-headline text-sm uppercase tracking-widest hover:opacity-90 hover:scale-[1.01] transition-transform">
+              <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
+                <Button type="submit" disabled={isSubmitting || !selectedPropertyId} className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 font-headline text-sm uppercase tracking-widest hover:opacity-90 hover:scale-[1.01] transition-transform">
                   {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
                   {editingTenant ? "Update Resident Record" : "Confirm Assignment"}
                 </Button>
