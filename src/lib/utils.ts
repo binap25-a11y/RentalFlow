@@ -110,7 +110,8 @@ export function isRealUserUpload(url: any): boolean {
   const u = url.toLowerCase();
   
   // AUTHORIZE: Project infrastructure and high-fidelity binaries
-  const isAuthorizedSource = (
+  // Removes aggressive blacklisting to ensure valid photography is never rejected.
+  return (
     u.includes('supabase.co') || 
     u.includes('firebasestorage') ||
     u.includes('googleapi') ||
@@ -118,14 +119,6 @@ export function isRealUserUpload(url: any): boolean {
     u.startsWith('blob:') ||
     u.startsWith('data:')
   );
-
-  // REJECT: Explicit placeholders to prevent identity confusion
-  const isPlaceholder = (
-    u.includes('picsum.photos/seed/') ||
-    u.includes('placeholder')
-  );
-
-  return isAuthorizedSource && !isPlaceholder;
 }
 
 /**

@@ -57,26 +57,23 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [bathrooms, setBathrooms] = useState('1');
   
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const isUpdatingLedger = useRef(false);
+  const isInitialized = useRef(false);
 
-  // Synchronize Ledger with Firestore updates (to keep star/primary in sync)
+  // High-Fidelity Ledger Mirroring
   useEffect(() => {
-    if (property && !isUpdatingLedger.current) {
-      if (!isInitialized) {
-        setAddress(property.addressLine1 || '');
-        setCity(property.city || '');
-        setZipCode(property.zipCode || '');
-        setRentAmount(property.rentAmount?.toString() || '');
-        setDescription(property.description || '');
-        setPropertyType(property.propertyType || 'Apartment');
-        setBedrooms(property.numberOfBedrooms?.toString() || '1');
-        setBathrooms(property.numberOfBathrooms?.toString() || '1');
-        setIsInitialized(true);
-      }
+    if (property && !isInitialized.current) {
+      setAddress(property.addressLine1 || '');
+      setCity(property.city || '');
+      setZipCode(property.zipCode || '');
+      setRentAmount(property.rentAmount?.toString() || '');
+      setDescription(property.description || '');
+      setPropertyType(property.propertyType || 'Apartment');
+      setBedrooms(property.numberOfBedrooms?.toString() || '1');
+      setBathrooms(property.numberOfBathrooms?.toString() || '1');
+      isInitialized.current = true;
+    }
 
-      // Sync ledger photography
+    if (property) {
       const urls = Array.isArray(property.imageUrls) ? property.imageUrls : [];
       const primary = property.imageUrl;
       
@@ -88,19 +85,21 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const syncedLedger = sortedUrls
         .filter(url => url && isValidAssetUrl(url))
         .map(url => ({ 
-          id: url, // Use URL as ID for stable mapping
+          id: url, 
           previewUrl: url, 
           cloudUrl: url, 
           status: 'ready' as const
         }));
         
       setLedger(prev => {
-        // Keep currently uploading items, merge in ready ones from cloud
         const uploadingItems = prev.filter(item => item.status === 'uploading');
-        return [...syncedLedger, ...uploadingItems];
+        // Deduplicate synced items against themselves and uploading items
+        const existingIds = new Set(uploadingItems.map(i => i.id));
+        const filteredSynced = syncedLedger.filter(i => !existingIds.has(i.id));
+        return [...filteredSynced, ...uploadingItems];
       });
     }
-  }, [property, isInitialized]);
+  }, [property]);
 
   const syncVisualsToFirestore = (currentLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
@@ -110,7 +109,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .map(i => i.cloudUrl!);
 
     updateDocumentNonBlocking(propertyRef, {
-      imageUrl: readyUrls.length > 0 ? readyUrls[0] : null,
+      imageUrl: readyUrls.length > 0 ? readyUrls[0] : (property?.imageUrl || null),
       imageUrls: readyUrls,
       updatedAt: serverTimestamp(),
     });
@@ -119,8 +118,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
-
-    isUpdatingLedger.current = true;
 
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
@@ -150,23 +147,18 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         toast({ variant: "destructive", title: "Upload Failed", description: err.message });
       }
     }
-    
-    isUpdatingLedger.current = false;
     e.target.value = '';
   };
 
   const removeFromLedger = (id: string) => {
-    isUpdatingLedger.current = true;
     setLedger(prev => {
       const updated = prev.filter(i => i.id !== id);
       syncVisualsToFirestore(updated);
       return updated;
     });
-    isUpdatingLedger.current = false;
   };
 
   const setAsPrimary = (id: string) => {
-    isUpdatingLedger.current = true;
     setLedger(prev => {
       const item = prev.find(i => i.id === id);
       if (!item || item.status !== 'ready') return prev;
@@ -174,7 +166,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       syncVisualsToFirestore(updated);
       return updated;
     });
-    isUpdatingLedger.current = false;
     toast({ title: "Designated Primary Cover" });
   };
 
@@ -184,6 +175,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
     
+    const readyUrls = ledger
+      .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
+      .map(i => i.cloudUrl!);
+
     const serializableData = {
       id: propertyId, 
       landlordId: user.uid, 
@@ -195,17 +190,15 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       numberOfBedrooms: parseInt(bedrooms, 10) || 1, 
       numberOfBathrooms: parseInt(bathrooms, 10) || 1,
       description: description, 
+      imageUrl: readyUrls.length > 0 ? readyUrls[0] : (property?.imageUrl || null),
+      imageUrls: readyUrls,
       updatedAt: serverTimestamp(),
     };
 
     updateDocumentNonBlocking(propertyRef, serializableData);
     
     try {
-      await syncPropertyToDb({
-        ...serializableData,
-        imageUrl: property?.imageUrl || '',
-        imageUrls: property?.imageUrls || []
-      } as any);
+      await syncPropertyToDb(serializableData as any);
       toast({ title: "Portfolio Sync Complete" });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (e) {
@@ -213,7 +206,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
   };
 
-  if (isLoading || !isInitialized) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-accent" /></div>;
+  if (isLoading || !isInitialized.current) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-accent" /></div>;
 
   return (
     <div className="max-w-5xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-16 text-left bg-background">

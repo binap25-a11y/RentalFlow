@@ -336,7 +336,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                   <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline mb-4">No Visual Identity Recorded</p>
                   <label htmlFor="empty-state-upload" className="cursor-pointer">
                     <Button variant="outline" className="rounded-[1.25rem] font-bold h-12 px-8 border-accent/20 text-accent bg-accent/5 hover:bg-accent/10 transition-all pointer-events-none">
-                      {isUploadingImage ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Camera className="w-4 h-4 mr-2" />}
+                      {isUploadingImage ? <Loader2 className="w-4 h-4 animate-spin mr-2 text-accent" /> : <Camera className="w-4 h-4 mr-2 text-accent" />}
                       Initialize Identity
                     </Button>
                   </label>
