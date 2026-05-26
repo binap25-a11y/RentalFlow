@@ -148,27 +148,27 @@ export default function TenantsPage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto pb-12 text-left">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
+        <div className="min-w-0 flex-1">
           <h1 className="text-3xl font-headline font-bold text-foreground mb-2 tracking-tight">Portfolio Residents</h1>
-          <p className="text-muted-foreground font-medium font-body text-sm">Managing tenant identities and high-fidelity lease assignments.</p>
+          <p className="text-muted-foreground font-medium font-body text-sm truncate opacity-70">Managing tenant identities and high-fidelity lease assignments.</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20 font-headline text-primary-foreground px-6 transition-all hover:scale-[1.02] shrink-0">
+            <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20 font-headline text-primary-foreground px-6 transition-all hover:scale-[1.02] shrink-0 text-xs uppercase tracking-widest">
               <Plus className="w-4 h-4 mr-2" />
               Assign New Resident
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[550px] rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden flex flex-col max-h-[90vh] bg-card ring-1 ring-white/10">
+          <DialogContent className="sm:max-w-[550px] rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden flex flex-col h-[750px] max-h-[90vh] bg-card ring-1 ring-white/10">
             <form onSubmit={handleSaveTenant} className="flex flex-col h-full overflow-hidden">
-              <DialogHeader className="p-8 text-left bg-primary/5 border-b shrink-0">
-                <DialogTitle className="text-2xl font-bold font-headline text-foreground tracking-tight">{editingTenant ? "Update Resident" : "Assign Resident"}</DialogTitle>
-                <DialogDescription className="font-medium text-muted-foreground mt-2">Initialize a resident profile for your professional portfolio.</DialogDescription>
+              <DialogHeader className="p-10 text-left bg-primary/5 border-b border-white/5 shrink-0">
+                <DialogTitle className="text-3xl font-bold font-headline text-foreground tracking-tight">{editingTenant ? "Update Resident" : "Assign Resident"}</DialogTitle>
+                <DialogDescription className="font-medium text-muted-foreground mt-2 text-base">Initialize a resident profile for your professional portfolio.</DialogDescription>
               </DialogHeader>
               
-              <ScrollArea className="flex-1">
-                <div className="p-8 space-y-8">
+              <ScrollArea className="flex-1 min-h-0 bg-white/[0.01]">
+                <div className="p-10 space-y-10 pb-20">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
                       <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">First Name</Label>
@@ -205,7 +205,7 @@ export default function TenantsPage() {
                 </div>
               </ScrollArea>
 
-              <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
+              <DialogFooter className="p-10 bg-muted/5 border-t border-white/5 shrink-0">
                 <Button type="submit" disabled={isSubmitting || !selectedPropertyId} className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 font-headline text-sm uppercase tracking-widest hover:opacity-90 hover:scale-[1.01] transition-transform">
                   {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
                   {editingTenant ? "Update Resident Record" : "Confirm Assignment"}
@@ -240,7 +240,7 @@ export default function TenantsPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse table-fixed">
+              <table className="w-full text-left border-collapse table-fixed min-w-[800px]">
                 <thead>
                   <tr className="bg-muted/30 border-b border-border">
                     <th className="px-10 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground font-headline w-1/2">Identity</th>
