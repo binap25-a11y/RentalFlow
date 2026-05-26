@@ -24,7 +24,7 @@ export type TenantConciergeOutput = z.infer<typeof TenantConciergeOutputSchema>;
 
 const conciergePrompt = ai.definePrompt({
   name: 'tenantConciergePrompt',
-  model: googleAI.model('gemini-2.0-flash'),
+  model: googleAI.model('gemini-1.5-flash'),
   input: { schema: TenantConciergeInputSchema },
   output: { schema: TenantConciergeOutputSchema },
   prompt: `You are 'Flow', the elite digital concierge for a high-fidelity luxury rental property.
