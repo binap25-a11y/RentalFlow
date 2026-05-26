@@ -29,6 +29,7 @@ import {
 import { Users, Plus, Mail, Phone, Trash2, Search, Loader2, UserX, Edit3, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 export default function TenantsPage() {
   const { user } = useUser();
@@ -76,7 +77,7 @@ export default function TenantsPage() {
     setFirstName(tenant.firstName); 
     setLastName(tenant.lastName); 
     setEmail(tenant.email); 
-    setPhone(tenant.phoneNumber);
+    setPhone(tenant.phoneNumber || '');
     setLeaseEndDate(tenant.leaseEndDate || ''); 
     setSelectedPropertyId(tenant.propertyId); 
     setIsDialogOpen(true);
