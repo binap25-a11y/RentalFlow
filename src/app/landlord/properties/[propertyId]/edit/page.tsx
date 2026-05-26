@@ -30,7 +30,6 @@ type LedgerItem = {
   previewUrl: string; 
   cloudUrl?: string;   
   status: 'uploading' | 'ready' | 'error';
-  isBroken?: boolean;
 };
 
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
@@ -102,10 +101,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
   }, [property]);
 
-  /**
-   * 🛡️ Presence Guard Synchronization
-   * Prevents valid photography from being accidentally wiped during upload transitions.
-   */
   const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
 
@@ -113,16 +108,17 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // PREVENT DESTRUCTIVE OVERWRITE: Only update if we have meaningful changes or a valid ready set
-    const hasUploading = currentLedger.some(i => i.status === 'uploading');
-    if (readyUrls.length === 0 && hasUploading) return;
+    // NON-DESTRUCTIVE SYNC GUARD: 
+    // If we are currently uploading, don't clear the Firestore record.
+    const isMidUpload = currentLedger.some(i => i.status === 'uploading');
+    if (readyUrls.length === 0 && isMidUpload) return;
 
     updateDocumentNonBlocking(propertyRef, {
-      imageUrl: readyUrls.length > 0 ? readyUrls[0] : (property?.imageUrl || null),
+      imageUrl: readyUrls.length > 0 ? readyUrls[0] : null,
       imageUrls: readyUrls,
       updatedAt: serverTimestamp(),
     });
-  }, [db, propertyRef, property]);
+  }, [db, propertyRef]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -132,10 +128,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
-      setLedger(prev => {
-        const updated = [...prev, { id: tempId, previewUrl: localUrl, status: 'uploading' as const }];
-        return updated;
-      });
+      setLedger(prev => [...prev, { id: tempId, previewUrl: localUrl, status: 'uploading' }]);
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -151,6 +144,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: result.url, status: 'ready' as const } : item
           );
+          // Atomic background sync
           setTimeout(() => syncVisualsToFirestore(updated), 0);
           return updated;
         });
@@ -165,7 +159,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const removeFromLedger = (id: string) => {
     setLedger(prev => {
       const updated = prev.filter(i => i.id !== id);
-      syncVisualsToFirestore(updated);
+      setTimeout(() => syncVisualsToFirestore(updated), 0);
       return updated;
     });
   };
@@ -175,7 +169,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const item = prev.find(i => i.id === id);
       if (!item || item.status !== 'ready') return prev;
       const updated = [item, ...prev.filter(i => i.id !== id)];
-      syncVisualsToFirestore(updated);
+      setTimeout(() => syncVisualsToFirestore(updated), 0);
       return updated;
     });
     toast({ title: "Designated Primary Cover" });
@@ -202,7 +196,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       numberOfBedrooms: parseInt(bedrooms, 10) || 1, 
       numberOfBathrooms: parseInt(bathrooms, 10) || 1,
       description: description, 
-      imageUrl: readyUrls.length > 0 ? readyUrls[0] : (property?.imageUrl || null),
+      imageUrl: readyUrls.length > 0 ? readyUrls[0] : null,
       imageUrls: readyUrls,
       updatedAt: serverTimestamp(),
     };
@@ -316,7 +310,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   </div>
                   <div className="space-y-3">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Bathrooms</Label>
-                    <Select value={bathrooms} onValueChange={setBathrooms}>
+                    <Select value={bathrooms} onValueChange={setBedrooms}>
                       <SelectTrigger className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner focus:ring-accent text-foreground"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-xl border-white/5 bg-card">
                         {[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={n.toString()} className="font-bold">{n} Bathroom{n > 1 ? 's' : ''}</SelectItem>)}

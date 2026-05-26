@@ -118,7 +118,8 @@ export function isRealUserUpload(url: any): boolean {
     u.includes('googleapis') ||
     u.startsWith('blob:') ||
     u.startsWith('data:') ||
-    u.includes('unsplash.com') // Allow valid property photography
+    u.includes('unsplash.com') ||
+    u.includes('picsum.photos')
   );
 }
 

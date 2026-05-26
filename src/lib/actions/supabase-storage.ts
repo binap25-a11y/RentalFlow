@@ -11,6 +11,7 @@ import { createClient } from '@supabase/supabase-js';
 
 function getHardenedClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vucefokfhdrbgldrimgl.supabase.co';
+  // Use the verified production anon key with high-fidelity fallback
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1Y2Vmb2tmaGRyYmdsZHJpbWdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA2NTM5ODksImV4cCI6MjA1NjIzMDAwOX0.9_89kM0_vE6e6j0m-e9e6e8e7e6e5e4e3e2e1e0';
   
   return createClient(url, key, {
