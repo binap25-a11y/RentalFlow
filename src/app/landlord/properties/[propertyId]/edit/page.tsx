@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, use, useCallback, useRef } from 'react';
@@ -60,7 +59,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isSaving, setIsSaving] = useState(false);
   const isInitialized = useRef(false);
 
-  // High-Fidelity Ledger Mirroring
   useEffect(() => {
     if (property && !isInitialized.current) {
       setAddress(property.addressLine1 || '');
@@ -108,8 +106,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // NON-DESTRUCTIVE SYNC GUARD: 
-    // If we are currently uploading, don't clear the Firestore record.
+    // BINARY PRESENCE GUARD: Never zero-out if items are processing
     const isMidUpload = currentLedger.some(i => i.status === 'uploading');
     if (readyUrls.length === 0 && isMidUpload) return;
 
@@ -128,7 +125,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
-      setLedger(prev => [...prev, { id: tempId, previewUrl: localUrl, status: 'uploading' }]);
+      setLedger(prev => {
+        const next = [...prev, { id: tempId, previewUrl: localUrl, status: 'uploading' }];
+        return next;
+      });
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -310,7 +310,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   </div>
                   <div className="space-y-3">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Bathrooms</Label>
-                    <Select value={bathrooms} onValueChange={setBedrooms}>
+                    <Select value={bathrooms} onValueChange={setBathrooms}>
                       <SelectTrigger className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner focus:ring-accent text-foreground"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-xl border-white/5 bg-card">
                         {[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={n.toString()} className="font-bold">{n} Bathroom{n > 1 ? 's' : ''}</SelectItem>)}

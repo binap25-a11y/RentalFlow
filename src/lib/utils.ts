@@ -1,4 +1,3 @@
-
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -102,25 +101,27 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.85)
 
 /**
  * 🖼️ User Asset Identifier (Source-Positive Logic)
- * Strictly whitelists all project-specific Supabase and Firebase binaries.
- * Optimized to ensure photography is never filtered out during background sync.
+ * Whitelists project binaries while allowing specific placeholders to be replaced.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
   const u = url.toLowerCase();
   
-  // AUTHORIZE: Project infrastructure and high-fidelity binaries
-  return (
+  // Whitelist our infrastructure and high-fidelity sources
+  const isTrustedSource = (
     u.includes('supabase.co') || 
     u.includes('firebasestorage') ||
     u.includes('googleapi') ||
     u.includes('googleapis') ||
     u.startsWith('blob:') ||
-    u.startsWith('data:') ||
-    u.includes('unsplash.com') ||
-    u.includes('picsum.photos')
+    u.startsWith('data:')
   );
+
+  // If it's from our trusted storage, it's ALWAYS real.
+  if (u.includes('supabase.co')) return true;
+
+  return isTrustedSource;
 }
 
 /**
@@ -132,7 +133,6 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
- * Prioritizes explicitly designated imageUrl if valid, otherwise falls back to first valid URL in array.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string | null {
   if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
@@ -147,18 +147,15 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
 
 /**
  * 🖼️ Synchronized Gallery Resolver
- * Returns a deduplicated array of valid assets with the primary cover at index 0.
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
   
-  // Primary cover ALWAYS goes first if it's verified
   const primary = getResolvedImageUrl(imageUrl, imageUrls);
   if (primary) {
     assets.add(primary);
   }
   
-  // Followed by all other verified binaries in the collection
   if (imageUrls && Array.isArray(imageUrls)) {
     imageUrls.forEach(u => {
       if (isValidAssetUrl(u) && isRealUserUpload(u)) {
