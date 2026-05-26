@@ -229,14 +229,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-40 relative">
+      <section className="py-24 md:py-40 relative">
         <div className="max-w-7xl mx-auto px-6">
-           <Card className="rounded-[4rem] bg-accent p-20 text-center relative overflow-hidden border-none shadow-2xl">
+           <Card className="rounded-[2.5rem] md:rounded-[4rem] bg-accent p-10 md:p-24 text-center relative overflow-hidden border-none shadow-2xl">
               <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
-              <div className="relative z-10 space-y-10">
-                 <h2 className="text-5xl md:text-7xl font-headline font-bold text-white tracking-tighter">Ready to orchestrate?</h2>
-                 <p className="text-xl text-white/80 font-medium max-w-2xl mx-auto">Initialize your professional portfolio identity today and join the leading property managers.</p>
-                 <Button size="lg" asChild className="h-16 px-16 rounded-2xl bg-white text-accent hover:bg-white/90 text-xl font-bold shadow-2xl transition-all hover:scale-105 active:scale-95 border-none">
+              <div className="relative z-10 space-y-8 md:space-y-10">
+                 <h2 className="text-4xl md:text-7xl font-headline font-bold text-white tracking-tighter leading-tight">Ready to orchestrate?</h2>
+                 <p className="text-lg md:text-xl text-white/80 font-medium max-w-2xl mx-auto">Initialize your professional portfolio identity today and join the leading property managers.</p>
+                 <Button size="lg" asChild className="h-14 md:h-16 px-8 md:px-16 rounded-xl md:rounded-2xl bg-white text-accent hover:bg-white/90 text-lg md:text-xl font-bold shadow-2xl transition-all hover:scale-105 active:scale-95 border-none w-full md:w-auto">
                     <Link href="/auth">Access Portfolio Vault</Link>
                  </Button>
               </div>

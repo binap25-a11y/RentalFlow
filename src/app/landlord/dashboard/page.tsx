@@ -6,7 +6,7 @@ import {
   ShieldAlert, Loader2, CheckCircle2,
   Plus, Save, ReceiptText, BellRing,
   Crown, ShieldCheck, PoundSterling, ArrowUpRight, ArrowDownRight,
-  Activity, BarChart3, Edit3, Settings2
+  Activity, BarChart3, Settings2
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
@@ -26,8 +26,7 @@ import {
   DialogDescription, 
   DialogFooter, 
   DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
+  DialogTitle 
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -95,7 +94,6 @@ export default function LandlordDashboard() {
   }, [db, user]);
   const { data: currentMonthPayments } = useCollection(paymentsQuery);
 
-  // States for Manage Ledger (Edit Actions)
   const [activePaymentEdit, setActivePaymentEdit] = useState<any>(null);
   const [editAmount, setEditAmount] = useState('');
   const [editStatus, setEditStatus] = useState<'paid' | 'pending'>('pending');
@@ -478,13 +476,11 @@ export default function LandlordDashboard() {
                </div>
                
                <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="w-full rounded-[1.5rem] bg-white text-accent font-bold h-14 hover:bg-white/90 transition-all shadow-2xl shadow-black/20 text-xs uppercase tracking-[0.2em]">
-                    <Plus className="w-5 h-5 mr-3" /> Log Ledger Entry
-                  </Button>
-                </DialogTrigger>
+                <Button className="w-full rounded-[1.5rem] bg-white text-accent font-bold h-14 hover:bg-white/90 transition-all shadow-2xl shadow-black/20 text-xs uppercase tracking-[0.2em]" onClick={() => setIsExpenseDialogOpen(true)}>
+                  <Plus className="w-5 h-5 mr-3" /> Log Ledger Entry
+                </Button>
                 <DialogContent className="rounded-[3.5rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh] max-w-[550px] ring-1 ring-white/10">
-                  <form className="flex flex-col h-full overflow-hidden" onSubmit={(e) => e.preventDefault()}>
+                  <form className="flex flex-col h-full overflow-hidden" onSubmit={(e) => { e.preventDefault(); handleLogManualExpense(); }}>
                     <div className="p-10 bg-primary/5 border-b border-white/5 text-left shrink-0">
                       <DialogTitle className="text-2xl font-bold font-headline text-foreground tracking-tight">Register Expense</DialogTitle>
                       <DialogDescription className="text-sm font-medium text-muted-foreground mt-2">Record insurance, maintenance, or high-value portfolio costs.</DialogDescription>
@@ -520,7 +516,7 @@ export default function LandlordDashboard() {
                       </div>
                     </ScrollArea>
                     <DialogFooter className="p-10 bg-muted/5 border-t border-white/5 shrink-0">
-                      <Button type="button" className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.3em] text-[11px]" onClick={handleLogManualExpense} disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
+                      <Button type="submit" className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.3em] text-[11px]" disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
                         {isSavingExpense ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
                         Commit to Portfolio Ledger
                       </Button>
@@ -533,7 +529,6 @@ export default function LandlordDashboard() {
         </div>
       </div>
 
-      {/* MANAGE LEDGER (Action Management) DIALOG */}
       <Dialog open={!!activePaymentEdit} onOpenChange={(open) => !open && setActivePaymentEdit(null)}>
         <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[80vh] max-w-[500px] ring-1 ring-white/10">
           <div className="p-10 bg-primary/5 border-b border-white/5 text-left shrink-0">
