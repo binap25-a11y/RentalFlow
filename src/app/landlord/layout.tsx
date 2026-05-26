@@ -7,7 +7,7 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { Loader2 } from "lucide-react";
 import { doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { RENTALFLOW_LOGO_URL } from "@/lib/utils";
 
@@ -36,11 +36,10 @@ export default function LandlordLayout({
   useEffect(() => {
     if (!isClient || isUserLoading) return;
 
+    // ATOMIC REDIRECT: Zero-latency auth check
     if (!user) {
-      const timer = setTimeout(() => {
-        if (!user) router.replace('/auth');
-      }, 300); // Reduced delay for snappier redirect
-      return () => clearTimeout(timer);
+      router.replace('/auth');
+      return;
     }
 
     if (!isProfileLoading && profile) {

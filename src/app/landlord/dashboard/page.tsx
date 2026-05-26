@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +8,7 @@ import {
   Crown, ShieldCheck, PoundSterling, ArrowUpRight, ArrowDownRight,
   Activity, BarChart3, Settings2
 } from "lucide-react";
-import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking } from "@/firebase";
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -34,7 +33,6 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { collection, doc, serverTimestamp, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { sendRentReminderEmail } from "@/lib/actions/email-actions";
 
 export default function LandlordDashboard() {
   const { user } = useUser();
@@ -77,12 +75,6 @@ export default function LandlordDashboard() {
   }, [db, user]);
   const { data: maintenance } = useCollection(maintenanceQuery);
 
-  const tenantsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return getLandlordCollectionQuery(db, "tenantProfiles", user.uid);
-  }, [db, user]);
-  const { data: tenants } = useCollection(tenantsQuery);
-
   const paymentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     const now = new Date();
@@ -95,18 +87,19 @@ export default function LandlordDashboard() {
   }, [db, user]);
   const { data: currentMonthPayments } = useCollection(paymentsQuery);
 
+  // MANAGE LEDGER STATE
   const [activePaymentEdit, setActivePaymentEdit] = useState<any>(null);
   const [editAmount, setEditAmount] = useState('');
   const [editStatus, setEditStatus] = useState<'paid' | 'pending'>('pending');
   const [isSavingPayment, setIsSavingPayment] = useState(false);
 
+  // EXPENSE STATE
   const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
   const [isSavingExpense, setIsSavingExpense] = useState(false);
   const [expAmount, setExpAmount] = useState('');
   const [expCategory, setExpCategory] = useState('other');
   const [expPropertyId, setExpPropertyId] = useState('');
   const [expTitle, setExpTitle] = useState('');
-  const [isReminding, setIsReminding] = useState<string | null>(null);
 
   const financialStats = useMemo(() => {
     if (!isClient || !properties || !maintenance) return null;
@@ -127,22 +120,38 @@ export default function LandlordDashboard() {
     })).slice(0, 8);
   }, [properties, isClient]);
 
-  const upgradeToPro = async () => {
-    if (!user) return;
-    setIsUpgrading(true);
-    try {
-      const res = await fetch("/api/create-checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.uid, email: user.email }),
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else throw new Error(data.error);
-    } catch (e: any) {
-      toast({ variant: "destructive", title: "Checkout Error", description: e.message });
-      setIsUpgrading(false);
-    }
+  const handleOpenLedgerEdit = (prop: any, payment: any) => {
+    setActivePaymentEdit({ prop, payment });
+    setEditAmount(payment?.amount?.toString() || prop.rentAmount?.toString() || '');
+    setEditStatus(payment?.status || 'pending');
+  };
+
+  const handleSavePayment = async () => {
+    if (!user || !db || !activePaymentEdit) return;
+    setIsSavingPayment(true);
+    const { prop, payment } = activePaymentEdit;
+    const now = new Date();
+    const paymentId = payment?.id || `${prop.id}-${now.getMonth() + 1}-${now.getFullYear()}`;
+    const paymentRef = doc(db, 'rentPayments', paymentId);
+
+    const payload = {
+      id: paymentId,
+      propertyId: prop.id,
+      landlordId: user.uid,
+      tenantId: prop.tenantIds?.[0] || 'landlord-direct',
+      amount: Number(editAmount),
+      status: editStatus,
+      month: now.getMonth() + 1,
+      year: now.getFullYear(),
+      memberIds: prop.memberIds || [user.uid],
+      updatedAt: serverTimestamp(),
+      paidAt: editStatus === 'paid' ? new Date().toISOString() : null
+    };
+
+    setDocumentNonBlocking(paymentRef, payload, { merge: true });
+    toast({ title: "Ledger Updated" });
+    setActivePaymentEdit(null);
+    setIsSavingPayment(false);
   };
 
   const handleLogManualExpense = () => {
@@ -151,6 +160,7 @@ export default function LandlordDashboard() {
     const requestId = doc(collection(db, 'maintenanceRequests')).id;
     const requestRef = doc(db, 'maintenanceRequests', requestId);
     const property = properties?.find(p => p.id === expPropertyId);
+    
     const payload = {
       id: requestId, 
       propertyId: expPropertyId, 
@@ -166,6 +176,7 @@ export default function LandlordDashboard() {
       createdAt: serverTimestamp(), 
       updatedAt: serverTimestamp(),
     };
+    
     setDocumentNonBlocking(requestRef, payload, { merge: true });
     toast({ title: "Ledger Item Registered" });
     setIsExpenseDialogOpen(false);
@@ -194,12 +205,12 @@ export default function LandlordDashboard() {
           <p className="text-muted-foreground font-medium font-body max-w-xl opacity-70 truncate">Unified financial command and high-fidelity operational analytics.</p>
         </div>
         <div className="flex items-center gap-4 shrink-0">
-          {!isPro ? (
-            <Button variant="outline" className="rounded-2xl h-12 px-8 font-bold border-accent/30 text-accent bg-accent/5 hover:bg-accent/10 transition-all shadow-xl shadow-accent/5" onClick={upgradeToPro} disabled={isUpgrading}>
-              {isUpgrading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Crown className="w-4 h-4 mr-2" />}
-              Upgrade to Premium
+          {!isPro && (
+            <Button variant="outline" className="rounded-2xl h-12 px-8 font-bold border-accent/30 text-accent bg-accent/5 hover:bg-accent/10 transition-all shadow-xl shadow-accent/5">
+              <Crown className="w-4 h-4 mr-2" /> Upgrade to Premium
             </Button>
-          ) : (
+          )}
+          {isPro && (
             <div className="flex items-center gap-3 px-6 py-3 bg-emerald-500/10 text-emerald-500 rounded-full border border-emerald-500/20 shadow-2xl">
                {isAdminEscalated ? <ShieldCheck className="w-5 h-5" /> : <Crown className="w-5 h-5" />}
                <span className="text-[11px] font-bold uppercase tracking-[0.2em] font-headline">Premium Plan Active</span>
@@ -255,7 +266,7 @@ export default function LandlordDashboard() {
                     <YAxis axisLine={false} tickLine={false} tick={{fontSize: 11, fill: 'rgba(255,255,255,0.3)'}} />
                     <Tooltip 
                       cursor={{fill: 'rgba(255,255,255,0.03)', radius: 16}}
-                      contentStyle={{borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)', backgroundColor: 'rgba(10,10,10,0.95)', backdropFilter: 'blur(12px)', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.5)', padding: '20px'}}
+                      contentStyle={{borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)', backgroundColor: 'rgba(10,10,10,0.95)', backdropFilter: 'blur(12px)', padding: '20px'}}
                       itemStyle={{fontWeight: 800, color: 'hsl(var(--accent))'}}
                       labelStyle={{fontWeight: 800, marginBottom: '8px', color: '#fff'}}
                     />
@@ -299,11 +310,7 @@ export default function LandlordDashboard() {
                              <div className="flex items-center gap-5">
                                <div className="relative h-14 w-14 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/5 group-hover:scale-110 transition-transform bg-muted shrink-0 flex items-center justify-center">
                                  {imageUrl ? (
-                                   <img 
-                                     src={imageUrl} 
-                                     alt="" 
-                                     className="absolute inset-0 h-full w-full object-cover"
-                                   />
+                                   <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
                                  ) : (
                                    <Building2 className="w-6 h-6 text-muted-foreground/30" />
                                  )}
@@ -322,11 +329,11 @@ export default function LandlordDashboard() {
                            </td>
                            <td className="px-12 py-8 text-right shrink-0">
                               <div className="flex items-center justify-end gap-3">
-                                <Button variant="ghost" size="icon" className="rounded-xl h-11 w-11 hover:bg-white/5 border border-white/5 shrink-0" onClick={() => setActivePaymentEdit({ prop, payment })}>
+                                <Button variant="ghost" size="icon" className="rounded-xl h-11 w-11 hover:bg-white/5 border border-white/5 shrink-0" onClick={() => handleOpenLedgerEdit(prop, payment)}>
                                   <Settings2 className="w-4 h-4 text-muted-foreground" />
                                 </Button>
                                 {!isPaid && (
-                                  <Button size="sm" className="rounded-xl h-11 px-5 font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-xl shadow-primary/10 shrink-0" onClick={() => setActivePaymentEdit({ prop, payment })}>
+                                  <Button size="sm" className="rounded-xl h-11 px-5 font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-xl shadow-primary/10 shrink-0" onClick={() => handleOpenLedgerEdit(prop, payment)}>
                                     Process
                                   </Button>
                                 )}
@@ -440,6 +447,37 @@ export default function LandlordDashboard() {
           </Card>
         </div>
       </div>
+
+      {/* MANAGE LEDGER DIALOG */}
+      <Dialog open={!!activePaymentEdit} onOpenChange={() => setActivePaymentEdit(null)}>
+        <DialogContent className="rounded-[3.5rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh] max-w-[500px] ring-1 ring-white/10">
+           <div className="p-10 bg-primary/5 border-b border-white/5 text-left shrink-0">
+             <DialogTitle className="text-2xl font-bold font-headline text-foreground tracking-tight">Manage Ledger</DialogTitle>
+             <DialogDescription className="text-sm font-medium text-muted-foreground mt-2">Adjust monthly yield and collection state.</DialogDescription>
+           </div>
+           <div className="p-10 space-y-8 text-left">
+              <div className="space-y-3">
+                 <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Monthly Rent Amount (£)</Label>
+                 <Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className="rounded-2xl h-14 bg-muted/30 border-none font-bold px-6 text-base" />
+              </div>
+              <div className="space-y-3">
+                 <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Collection Status</Label>
+                 <Tabs value={editStatus} onValueChange={(v) => setEditStatus(v as any)}>
+                    <TabsList className="grid grid-cols-2 h-14 bg-muted/30 rounded-2xl p-1.5">
+                       <TabsTrigger value="pending" className="rounded-xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-white">Pending</TabsTrigger>
+                       <TabsTrigger value="paid" className="rounded-xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-emerald-500 data-[state=active]:text-white">Receipted</TabsTrigger>
+                    </TabsList>
+                 </Tabs>
+              </div>
+           </div>
+           <DialogFooter className="p-10 bg-muted/5 border-t border-white/5">
+              <Button className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.3em] text-[11px]" onClick={handleSavePayment} disabled={isSavingPayment}>
+                 {isSavingPayment ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
+                 Synchronize Ledger
+              </Button>
+           </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

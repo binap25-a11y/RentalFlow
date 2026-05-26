@@ -43,6 +43,7 @@ export default function AuthPage() {
     setMounted(true);
   }, []);
 
+  // HYPER-ACCELERATED REDIRECTION
   useEffect(() => {
     if (user && db && mounted && !isLoading && !isRedirecting.current) {
       const checkAndRedirect = async () => {
@@ -61,6 +62,8 @@ export default function AuthPage() {
 
             if (isRedirecting.current) return;
             isRedirecting.current = true;
+            
+            // ATOMIC REDIRECT: Jump to hub immediately
             router.replace(userData.role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
           } else {
             setNeedsProfile(true);

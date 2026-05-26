@@ -256,7 +256,7 @@ export default function LandlordCalendarPage() {
               <p className="text-xs opacity-80 leading-relaxed font-body font-medium">Select a date to view current site visits or log a new repair directly to the roadmap.</p>
               <Button 
                 variant="outline"
-                className="w-full rounded-xl bg-white text-primary hover:bg-white hover:text-primary font-bold h-12 shadow-lg transition-all hover:scale-[1.02] text-xs uppercase tracking-widest font-headline border-none" 
+                className="w-full rounded-xl bg-white text-primary hover:bg-white/90 hover:text-primary font-bold h-12 shadow-lg transition-all hover:scale-[1.02] text-xs uppercase tracking-widest font-headline border-none" 
                 onClick={() => setIsAddRepairOpen(true)}
               >
                  <Plus className="w-4 h-4 mr-2" /> Schedule Task
@@ -295,7 +295,7 @@ export default function LandlordCalendarPage() {
             </CardContent>
           </Card>
 
-          <div className="space-y-6">
+          <div className="space-y-6 text-left">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold font-headline flex items-center text-foreground tracking-tight">
                 <ChevronRight className="w-5 h-5 mr-1 text-accent" /> Portfolio Future State
@@ -303,10 +303,10 @@ export default function LandlordCalendarPage() {
               <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 font-headline shrink-0">Upcoming Roadmap</p>
             </div>
             <div className="grid grid-cols-1 gap-6">
-               {allEvents.filter(e => isAfter(e.date, startOfDay(new Date()))).slice(0, 6).length === 0 ? (
-                  <p className="col-span-full text-center py-16 text-muted-foreground italic text-xs font-medium bg-muted/5 rounded-[2rem] border-2 border-dashed border-border">No future operations synchronized.</p>
+               {allEvents.filter(e => isAfter(e.date, startOfDay(new Date()))).slice(0, 8).length === 0 ? (
+                  <p className="text-center py-16 text-muted-foreground italic text-xs font-medium bg-muted/5 rounded-[2rem] border-2 border-dashed border-border">No future operations synchronized.</p>
                ) : (
-                 allEvents.filter(e => isAfter(e.date, startOfDay(new Date()))).slice(0, 6).map(event => (
+                 allEvents.filter(e => isAfter(e.date, startOfDay(new Date()))).slice(0, 8).map(event => (
                     <EventCard key={event.id} event={event} compact />
                  ))
                )}

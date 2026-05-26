@@ -36,11 +36,10 @@ export default function TenantLayout({
   useEffect(() => {
     if (!isClient || isUserLoading) return;
 
+    // ATOMIC REDIRECT: Zero-latency session check
     if (!user) {
-      const timer = setTimeout(() => {
-        if (!user) router.replace('/auth');
-      }, 300);
-      return () => clearTimeout(timer);
+      router.replace('/auth');
+      return;
     }
 
     if (!isProfileLoading && profile) {
