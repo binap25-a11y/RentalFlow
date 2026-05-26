@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   MapPin, AlertCircle, Wrench, 
-  Loader2, Home, Sparkles, Send, Bot, 
-  ChevronRight, CheckCircle2, Clock, ReceiptText, Building2,
+  Loader2, Building2, Sparkles, Send, Bot, 
+  ChevronRight, CheckCircle2, Clock, ReceiptText,
   PhoneCall, ShieldAlert, ShieldCheck,
   RefreshCcw, Zap, Bed, Bath, Download, FileText, Camera
 } from "lucide-react";
@@ -21,7 +21,7 @@ import { format } from "date-fns";
 
 /**
  * 🆘 National SOS Protocols (UK Fallbacks)
- * Displayed by default if the landlord ledger is empty.
+ * Proactively displayed by default if management ledger is empty.
  */
 const SOS_FALLBACKS = [
   { id: 'f1', name: "Emergency Services", phone: "999", role: "Primary SOS", category: 'standard' },
@@ -44,6 +44,7 @@ export default function TenantHub() {
     if (!db || !user) return null;
     return getTenantCollectionQuery({ db, collectionName: "properties", userId: user.uid });
   }, [db, user]);
+  
   const { data: properties, isLoading: isPropLoading } = useCollection(propertiesQuery);
   const property = properties?.[0];
 
@@ -102,7 +103,7 @@ export default function TenantHub() {
     const queryText = chatQuery.trim();
     setChatQuery(""); setChatHistory(prev => [...prev, { role: 'user', text: queryText }]); setIsChatting(true);
     try {
-      const response = await tenantConcierge({ query: queryText, propertyContext: `Property: ${property.addressLine1}.` });
+      const response = await tenantConcierge({ query: queryText, propertyContext: `Property: ${property.addressLine1}. Specs: ${property.numberOfBedrooms} bedrooms, ${property.numberOfBathrooms} bathrooms.` });
       setChatHistory(prev => [...prev, { role: 'bot', text: response.answer }]);
     } catch (error) {
       setChatHistory(prev => [...prev, { role: 'bot', text: "Service temporarily unavailable." }]);
@@ -118,11 +119,11 @@ export default function TenantHub() {
 
     // Header Background
     doc.setFillColor(15, 23, 42); 
-    doc.rect(0, 0, 210, 50, 'F');
+    doc.rect(0, 0, 210, 55, 'F');
     
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(22);
+    doc.setFontSize(24);
     doc.text("RENTAL STATEMENT", 20, 25);
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
@@ -131,33 +132,33 @@ export default function TenantHub() {
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text("Property Identity", 20, 70);
+    doc.text("Property Identity", 20, 75);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
-    doc.text(property.addressLine1, 20, 80);
-    doc.text(`${property.city}, ${property.zipCode}`, 20, 86);
+    doc.text(property.addressLine1, 20, 85);
+    doc.text(`${property.city}, ${property.zipCode}`, 20, 91);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Statement Period", 140, 70);
+    doc.text("Statement Period", 140, 75);
     doc.setFont("helvetica", "normal");
-    doc.text(period, 140, 80);
+    doc.text(period, 140, 85);
 
     doc.setDrawColor(229, 231, 235);
-    doc.line(20, 100, 190, 100);
+    doc.line(20, 105, 190, 105);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Ledger Item", 20, 115);
-    doc.text("Amount", 140, 115);
-    doc.text("Status", 170, 115);
+    doc.text("Ledger Item", 20, 120);
+    doc.text("Amount", 140, 120);
+    doc.text("Status", 170, 120);
 
     doc.setFont("helvetica", "normal");
-    doc.text(`Monthly Rent - ${period}`, 20, 125);
-    doc.text(`£${property.rentAmount?.toLocaleString()}`, 140, 125);
-    doc.text(currentPayment?.status === 'paid' ? "COLLECTED" : "PENDING", 170, 125);
+    doc.text(`Monthly Rent - ${period}`, 20, 130);
+    doc.text(`£${property.rentAmount?.toLocaleString()}`, 140, 130);
+    doc.text(currentPayment?.status === 'paid' ? "COLLECTED" : "PENDING", 170, 130);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Total Outstanding", 20, 150);
-    doc.text(`£${currentPayment?.status === 'paid' ? '0.00' : property.rentAmount?.toLocaleString()}`, 140, 150);
+    doc.text("Total Outstanding", 20, 155);
+    doc.text(`£${currentPayment?.status === 'paid' ? '0.00' : property.rentAmount?.toLocaleString()}`, 140, 155);
 
     doc.save(`Statement_${property.addressLine1.replace(/\s+/g, '_')}_${period.replace(/\s+/g, '_')}.pdf`);
   };
