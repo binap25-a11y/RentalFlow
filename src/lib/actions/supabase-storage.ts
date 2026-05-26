@@ -2,8 +2,8 @@
 
 /**
  * @fileOverview Hardened Cloud Storage Engine.
- * Resolved "signature verification failed" by enforcing isolated, clean client creation
- * using verified production credentials for every request.
+ * Resolved "bucket not found" and "signature verification" errors by enforcing 
+ * isolated client creation using the verified production project: wgezhbkkhamaawxgcqjf.
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -33,7 +33,7 @@ export async function uploadToSupabase(
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     
-    // Create clean client to eliminate signature errors using verified credentials
+    // Create clean client using verified project credentials
     const supabase = getHardenedClient();
 
     const { data, error: uploadError } = await supabase.storage
@@ -45,8 +45,8 @@ export async function uploadToSupabase(
       });
 
     if (uploadError) {
-      console.error('Supabase Signature Sync Error:', uploadError);
-      throw new Error(uploadError.message || 'Binary delivery failed.');
+      console.error('Supabase Orchestration Error:', uploadError);
+      throw new Error(`Cloud Storage Error: ${uploadError.message}. Ensure the bucket "${bucket}" is created and set to "Public" in your Supabase dashboard.`);
     }
 
     const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(path);

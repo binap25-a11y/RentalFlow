@@ -101,7 +101,8 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.85)
 
 /**
  * 🖼️ User Asset Identifier (Source-Positive Logic)
- * Whitelists project binaries while allowing specific placeholders to be replaced.
+ * Strictly whitelists your Supabase project (wgezhbkkhamaawxgcqjf) while allowing 
+ * local previews and valid cloud infrastructure.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
@@ -110,16 +111,13 @@ export function isRealUserUpload(url: any): boolean {
   
   // Whitelist our infrastructure and high-fidelity sources
   const isTrustedSource = (
-    u.includes('supabase.co') || 
+    u.includes('wgezhbkkhamaawxgcqjf.supabase.co') || 
     u.includes('firebasestorage') ||
     u.includes('googleapi') ||
     u.includes('googleapis') ||
     u.startsWith('blob:') ||
     u.startsWith('data:')
   );
-
-  // If it's from our trusted storage, it's ALWAYS real.
-  if (u.includes('supabase.co')) return true;
 
   return isTrustedSource;
 }

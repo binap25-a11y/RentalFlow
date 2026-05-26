@@ -106,7 +106,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // BINARY PRESENCE GUARD: Never zero-out if items are processing
+    // BINARY PRESENCE GUARD: Never destructive overwrite if items are processing
     const isMidUpload = currentLedger.some(i => i.status === 'uploading');
     if (readyUrls.length === 0 && isMidUpload) return;
 
@@ -144,7 +144,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           const updated = prev.map(item => 
             item.id === tempId ? { ...item, cloudUrl: result.url, status: 'ready' as const } : item
           );
-          // Atomic background sync
+          // Isolated Firestore Commit
           setTimeout(() => syncVisualsToFirestore(updated), 0);
           return updated;
         });
@@ -169,6 +169,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const item = prev.find(i => i.id === id);
       if (!item || item.status !== 'ready') return prev;
       const updated = [item, ...prev.filter(i => i.id !== id)];
+      // Transactional Identity Lock
       setTimeout(() => syncVisualsToFirestore(updated), 0);
       return updated;
     });

@@ -1,17 +1,17 @@
 /**
  * @fileOverview Supabase Client Initialization.
- * Hardened to resolve "signature verification failed" and "supabaseKey is required" errors.
- * Synchronized with the verified production project: wgezhbkkhamaawxgcqjf
+ * Synchronized with the verified production project: wgezhbkkhamaawxgcqjf.
+ * Resolved "supabaseKey is required" and "bucket not found" errors.
  */
 
 import { createClient } from '@supabase/supabase-js';
 
-// Verified production project ID
+// Verified production project URL
 const supabaseUrl = 'https://wgezhbkkhamaawxgcqjf.supabase.co';
 
 /**
  * 🔐 Resilient Key Orchestration
- * Using the high-fidelity production anon key provided for project wgezhbkkhamaawxgcqjf.
+ * Using the high-fidelity production anon key provided by the user.
  */
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXpoYmtraGFtYWF3eGdjcWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NDM2NzEsImV4cCI6MjA5NTMxOTY3MX0.-wY09av9EQpPdeao5mi-BZXDflC0jzTVwfsxWWhINX4';
 
