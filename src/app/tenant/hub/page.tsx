@@ -92,7 +92,7 @@ export default function TenantHub() {
 
   const handleAskConcierge = async (text?: string) => {
     const queryText = text || chatQuery.trim();
-    if (!queryText || !property) return;
+    if (!queryText) return;
     
     setChatQuery(""); 
     setChatHistory(prev => [...prev, { role: 'user', text: queryText }]); 
@@ -100,17 +100,18 @@ export default function TenantHub() {
 
     const activeRequestsContext = activeRequests.map(r => `${r.title} (${r.status})`).join(', ');
     const paymentContext = currentPayment ? `Payment for ${format(new Date(), 'MMMM')} is ${currentPayment.status}.` : "No current payment record found.";
+    const propertyInfo = property ? `Property: ${property.addressLine1}. Specs: ${property.numberOfBedrooms} bedrooms, ${property.numberOfBathrooms} bathrooms. Narrative: ${property.description || 'N/A'}. Rent: £${property.rentAmount}. Financials: ${paymentContext} Repairs: ${activeRequestsContext}` : "Property details are currently synchronizing.";
 
     try {
       const response = await tenantConcierge({ 
         query: queryText, 
         residentName: user?.displayName || user?.email?.split('@')[0],
-        propertyAddress: property.addressLine1,
-        propertyContext: `Property: ${property.addressLine1}. Specs: ${property.numberOfBedrooms} bedrooms, ${property.numberOfBathrooms} bathrooms. Narrative: ${property.description || 'N/A'}. Rent: £${property.rentAmount}. Financials: ${paymentContext} Repairs: ${activeRequestsContext}` 
+        propertyAddress: property?.addressLine1 || "your home",
+        propertyContext: propertyInfo 
       });
       setChatHistory(prev => [...prev, { role: 'bot', text: response.answer }]);
     } catch (error) {
-      setChatHistory(prev => [...prev, { role: 'bot', text: "Service temporarily unavailable. Please try again shortly." }]);
+      setChatHistory(prev => [...prev, { role: 'bot', text: "I'm currently recalibrating my property intelligence. Please try again in a moment." }]);
     } finally { setIsChatting(false); }
   };
 
@@ -177,19 +178,15 @@ export default function TenantHub() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-8 space-y-10">
-          <Card className="border-none shadow-2xl rounded-[3rem] overflow-hidden bg-card/50 backdrop-blur-xl ring-1 ring-border">
-            <div className="relative h-[350px] w-full bg-muted/40 animate-pulse flex items-center justify-center">
+          <Card className="border-none shadow-2xl rounded-[3rem] overflow-hidden bg-card ring-1 ring-border">
+            <div className="relative h-[400px] w-full bg-muted/40 animate-pulse flex items-center justify-center">
               <Building2 className="w-20 h-20 text-foreground/10" />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
             </div>
             
-            <CardContent className="p-12 space-y-10">
+            <CardContent className="p-12 space-y-12">
               {/* RESIZED MONTHLY RENT PLACEHOLDER */}
               <div className="space-y-6">
-                <div className="flex items-center gap-3">
-                  <ReceiptText className="w-6 h-6 text-accent opacity-20" />
-                  <div className="h-6 w-32 bg-muted rounded-lg animate-pulse" />
-                </div>
+                <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight opacity-20"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
                 <div className="p-10 bg-muted/10 rounded-[2.5rem] border border-border/50 shadow-inner space-y-6">
                   <div className="h-2 w-20 bg-muted rounded animate-pulse opacity-40" />
                   <div className="h-10 w-48 bg-muted rounded-xl animate-pulse" />
@@ -199,10 +196,7 @@ export default function TenantHub() {
 
               {/* YOUR RESIDENCE PLACEHOLDER (BELOW RENT) */}
               <div className="space-y-6">
-                <div className="flex items-center gap-3">
-                  <Home className="w-6 h-6 text-accent opacity-20" />
-                  <div className="h-6 w-40 bg-muted rounded-lg animate-pulse" />
-                </div>
+                <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight opacity-20"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
                 <div className="p-10 bg-primary/5 rounded-[2.5rem] border border-border/50 space-y-4">
                   <div className="h-3 w-full bg-muted rounded animate-pulse opacity-30" />
                   <div className="h-3 w-5/6 bg-muted rounded animate-pulse opacity-30" />
@@ -287,7 +281,6 @@ export default function TenantHub() {
             </div>
 
             <CardContent className="p-10 md:p-12 space-y-12">
-              {/* VERTICAL HIERARCHY: RENT -> RESIDENCE -> ACTION */}
               <div className="space-y-12">
                 <div className="space-y-6">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
