@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -47,7 +46,7 @@ export async function uploadToSupabase(
 
     if (uploadError) {
       console.error('Supabase Sync Failure:', uploadError);
-      throw new Error(`Storage Error: ${uploadError.message}. Ensure bucket "${bucket}" is initialized.`);
+      throw new Error(`Storage Error: ${uploadError.message}. Ensure bucket "${bucket}" is initialized and set to Public Select.`);
     }
 
     const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(path);
