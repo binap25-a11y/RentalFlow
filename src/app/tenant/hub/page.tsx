@@ -40,7 +40,7 @@ export default function TenantHub() {
 
   useEffect(() => { setIsClient(true); }, []);
 
-  const propertyQuery = useMemoFirebase(() => {
+  const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return getTenantCollectionQuery({ db, collectionName: "properties", userId: user.uid });
   }, [db, user]);
