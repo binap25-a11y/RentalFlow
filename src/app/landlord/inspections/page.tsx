@@ -138,8 +138,8 @@ export default function InspectionsPage() {
 
     try {
       const optimizedBlob = await compressImage(file);
-      // ATOMIC PATH PROTOCOL: uid/timestamp-filename
-      const path = `${user.uid}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      // ATOMIC PATH PROTOCOL: uid/propertyId/timestamp-filename
+      const path = `${user.uid}/${activeInspection.propertyId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       
       const publicUrl = await withRetry(async () => {
         const formData = new FormData();

@@ -3,7 +3,7 @@
 /**
  * @fileOverview Hardened Cloud Storage Engine.
  * Targeted at the verified production project: wgezhbkkhamaawxgcqjf.
- * Standardized on atomic path protocol: ${uid}/${timestamp}-${filename}
+ * Standardized on property-isolated path protocol: ${uid}/${propertyId}/${timestamp}-${filename}
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -35,7 +35,7 @@ export async function uploadToSupabase(
     
     const supabase = getHardenedClient();
 
-    // TARGETING VERIFIED BUCKET: Case-sensitive identity Property-Images-
+    // TARGETING VERIFIED BUCKET: Case-sensitive identity
     const { data, error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(path, buffer, {
@@ -46,7 +46,7 @@ export async function uploadToSupabase(
 
     if (uploadError) {
       console.error('Supabase Sync Failure:', uploadError);
-      throw new Error(`Storage Error: ${uploadError.message}. Ensure bucket "${bucket}" is initialized and set to Public Select.`);
+      throw new Error(`Storage Error: ${uploadError.message}. Ensure bucket "${bucket}" is initialized and set to Public.`);
     }
 
     const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(path);

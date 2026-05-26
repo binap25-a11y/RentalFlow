@@ -82,8 +82,8 @@ export default function NewPropertyPage() {
 
       try {
         const optimizedBlob = await compressImage(file);
-        // ATOMIC PATH PROTOCOL: uid/timestamp-filename
-        const path = `${user.uid}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        // ATOMIC PATH PROTOCOL: uid/propertyId/timestamp-filename
+        const path = `${user.uid}/${propertyId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
         
         const formData = new FormData();
         formData.append('file', optimizedBlob, file.name);
