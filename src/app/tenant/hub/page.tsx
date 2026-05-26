@@ -229,7 +229,7 @@ export default function TenantHub() {
                       </p>
                    </div>
                  ))}
-                 <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent h-12 rounded-xl mt-2">
+                 <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary hover:bg-primary/5 h-12 rounded-xl mt-2 transition-all">
                    <Link href="/tenant/emergency-contacts">View All Authorized Contacts <ChevronRight className="w-3 h-3 ml-2" /></Link>
                  </Button>
                </div>
