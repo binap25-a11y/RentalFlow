@@ -10,7 +10,6 @@ import {
   Loader2, Home, Sparkles, Send, Bot, 
   ChevronRight, CheckCircle2, Clock, ReceiptText, Building2,
   PhoneCall, ShieldAlert,
-  ShieldCheck,
   RefreshCcw
 } from "lucide-react";
 import Link from "next/link";

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Building2, TrendingUp, ArrowRight, 
   ShieldAlert, Loader2, CheckCircle2,
-  Plus, Save, ReceiptText, BellRing,
+  Plus, Save, ReceiptText,
   Crown, ShieldCheck, PoundSterling, ArrowUpRight, ArrowDownRight,
   Activity, BarChart3, Settings2
 } from "lucide-react";

@@ -21,11 +21,9 @@ import { format } from "date-fns";
 import Link from "next/link";
 
 /**
- * @fileOverview High-Fidelity Support Directory.
- * Populates real-time SOS protocols and authorized trade partners via Firestore listeners.
- * Features an Atomic Fallback Engine for national SOS standards.
+ * 🆘 National SOS Protocols (UK Fallbacks)
+ * Proactively displayed by default if landlord ledger is empty.
  */
-
 const SOS_FALLBACKS = [
   { id: 'f1', name: "Emergency Services", phone: "999 or 112", role: "Primary Emergency", category: 'standard' },
   { id: 'f2', name: "NHS Medical Advice", phone: "111", role: "Medical Advice (24/7)", category: 'standard' },
@@ -51,16 +49,16 @@ export default function TenantEmergencyContactsPage() {
     });
   }, [db, user]);
 
-  const { data: contacts, loading: isLoading } = useCollection(contactsQuery);
+  const { data: contactsData, loading: isLoading } = useCollection(contactsQuery);
 
   const standardServices = useMemo(() => {
-    const list = contacts?.filter(c => c.category === 'standard') || [];
+    const list = contactsData?.filter(c => c.category === 'standard') || [];
     return list.length > 0 ? list : SOS_FALLBACKS;
-  }, [contacts]);
+  }, [contactsData]);
 
   const professionalPartners = useMemo(() => 
-    contacts?.filter(c => !c.category || c.category === 'professional') || [], 
-  [contacts]);
+    contactsData?.filter(c => !c.category || c.category === 'professional') || [], 
+  [contactsData]);
 
   const downloadPDF = () => {
     if (!isClient) return;
