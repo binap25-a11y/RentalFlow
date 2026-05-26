@@ -61,6 +61,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isInitialized, setIsInitialized] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Synchronized Visual Ledger initialization
   useEffect(() => {
     if (property && !isInitialized) {
       setAddress(property.addressLine1 || '');
@@ -94,14 +95,15 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
   }, [property, isInitialized]);
 
-  const syncVisualsToFirestore = (currentLedger: LedgerItem[]) => {
+  // Transactional Visual Synchronization
+  const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
 
     const readyUrls = currentLedger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // Transactional Guard: Only sync if we have a valid non-empty state or explicit clear
+    // Non-destructive check: Only sync if we have a valid state to prevent accidental wipes.
     if (readyUrls.length > 0 || currentLedger.length === 0) {
       updateDocumentNonBlocking(propertyRef, {
         imageUrl: readyUrls.length > 0 ? readyUrls[0] : null,
@@ -109,18 +111,21 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         updatedAt: serverTimestamp(),
       });
     }
-  };
+  }, [db, propertyRef]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
+
+    let updatedLedger = [...ledger];
 
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
       const uploadItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
-      setLedger(prev => [...prev, uploadItem]);
+      updatedLedger = [...updatedLedger, uploadItem];
+      setLedger(updatedLedger);
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -134,11 +139,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         
         const publicUrl = result.url!;
         
-        setLedger(prev => {
-          const updated = prev.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item);
-          syncVisualsToFirestore(updated);
-          return updated;
-        });
+        updatedLedger = updatedLedger.map(item => 
+          item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
+        );
+        setLedger(updatedLedger);
+        syncVisualsToFirestore(updatedLedger);
       } catch (err) {
         setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
       }
@@ -147,21 +152,17 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   };
 
   const removeFromLedger = (id: string) => {
-    setLedger(prev => {
-      const updated = prev.filter(i => i.id !== id);
-      syncVisualsToFirestore(updated);
-      return updated;
-    });
+    const updated = ledger.filter(i => i.id !== id);
+    setLedger(updated);
+    syncVisualsToFirestore(updated);
   };
 
   const setAsPrimary = (id: string) => {
-    setLedger(prev => {
-      const item = prev.find(i => i.id === id);
-      if (!item) return prev;
-      const updated = [item, ...prev.filter(i => i.id !== id)];
-      syncVisualsToFirestore(updated);
-      return updated;
-    });
+    const item = ledger.find(i => i.id === id);
+    if (!item) return;
+    const updated = [item, ...ledger.filter(i => i.id !== id)];
+    setLedger(updated);
+    syncVisualsToFirestore(updated);
     toast({ title: "Designated Primary Cover" });
   };
 

@@ -111,6 +111,7 @@ export function isRealUserUpload(url: any): boolean {
   const u = url.toLowerCase();
   
   // AUTHORIZE: Project infrastructure, valid image providers, and high-fidelity previews
+  // Standardized on project-agnostic Supabase checks to ensure persistence.
   const isAuthorizedSource = (
     u.includes('supabase.co') || 
     u.includes('firebasestorage') ||

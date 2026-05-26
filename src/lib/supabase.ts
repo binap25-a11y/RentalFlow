@@ -7,7 +7,8 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://wgezhbkkhamaawxgcqjf.supabase.co';
+// Standardized on the verified production project ID to ensure binary persistence.
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vucefokfhdrbgldrimgl.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 /**
