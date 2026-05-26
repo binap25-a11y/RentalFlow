@@ -10,7 +10,8 @@ import {
   Loader2, Home, Sparkles, Send, Bot, 
   ChevronRight, CheckCircle2, Clock, ReceiptText, Building2,
   PhoneCall, ShieldAlert,
-  RefreshCcw
+  RefreshCcw,
+  Zap
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -118,6 +119,7 @@ export default function TenantHub() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-8">
           <Card className="border-none shadow-sm overflow-hidden rounded-[2.5rem] bg-card group ring-1 ring-border">
+            {/* HERO IMAGE: FULLY VISIBLE */}
             <div className="relative h-[450px] w-full bg-muted overflow-hidden">
               {imageUrl ? (
                 <img 
@@ -130,13 +132,19 @@ export default function TenantHub() {
                   <Building2 className="w-24 h-24 text-muted-foreground/10" />
                 </div>
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
-              <div className="absolute bottom-10 left-10 text-foreground text-left space-y-4 max-w-2xl bg-background/40 backdrop-blur-md p-6 rounded-2xl border border-border">
-                <Badge className="bg-emerald-500 text-white border-none font-bold uppercase tracking-[0.2em] text-[10px] py-1.5 px-4 rounded-full shadow-lg font-headline">Active Tenancy</Badge>
-                <h2 className="text-4xl font-headline font-bold leading-tight tracking-tight text-foreground">{property.addressLine1}</h2>
-                <p className="flex items-center text-lg opacity-80 font-medium font-body text-foreground"><MapPin className="w-5 h-5 mr-2 text-accent" /> {property.city}, {property.zipCode}</p>
-              </div>
             </div>
+
+            {/* PROPERTY IDENTITY BAR: BELOW IMAGE FOR PREMIUM VISIBILITY */}
+            <div className="bg-muted/10 border-b border-border p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 text-left">
+               <div className="space-y-1">
+                  <h2 className="text-3xl font-headline font-bold text-foreground tracking-tight">{property.addressLine1}</h2>
+                  <p className="flex items-center text-sm font-medium text-muted-foreground"><MapPin className="w-4 h-4 mr-1.5 text-accent" /> {property.city}, {property.zipCode}</p>
+               </div>
+               <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold uppercase tracking-[0.2em] text-[10px] py-2 px-5 rounded-full shadow-sm font-headline h-fit w-fit shrink-0">
+                  <ShieldCheck className="w-3.5 h-3.5 mr-2" /> Active Tenancy
+               </Badge>
+            </div>
+
             <CardContent className="pt-10 text-left p-10 space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div className="space-y-4">
@@ -229,7 +237,7 @@ export default function TenantHub() {
                       </p>
                    </div>
                  ))}
-                 <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary hover:bg-primary/5 h-12 rounded-xl mt-2 transition-all">
+                 <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-primary/10 h-12 rounded-xl mt-2 transition-all border border-transparent hover:border-primary/20">
                    <Link href="/tenant/emergency-contacts">View All Authorized Contacts <ChevronRight className="w-3 h-3 ml-2" /></Link>
                  </Button>
                </div>
