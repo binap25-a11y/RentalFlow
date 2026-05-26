@@ -100,14 +100,16 @@ export default function TenantsPage() {
         updatedAt: serverTimestamp() 
       };
 
+      let targetTenantId = '';
+
       if (editingTenant) {
+        targetTenantId = editingTenant.userId || emailLower;
         updateDocumentNonBlocking(doc(db, 'tenantProfiles', editingTenant.id), tenantPayload);
         toast({ title: "Resident Record Updated" });
       } else {
         const tenantId = doc(collection(db, 'tenantProfiles')).id;
-        // Placeholder strategy: use email as partial ID if they don't have a UID yet
-        // In a real flow, they login and it syncs, but for now we grant access based on email/uid
         const placeholderUserId = emailLower;
+        targetTenantId = placeholderUserId;
         
         setDocumentNonBlocking(doc(db, 'tenantProfiles', tenantId), { 
           id: tenantId, 
@@ -127,26 +129,27 @@ export default function TenantsPage() {
           memberIds: arrayUnion(placeholderUserId), 
           updatedAt: serverTimestamp() 
         });
-
-        // 🏠 SYNC EMERGENCY CONTACTS: Proactively add tenant to relevant contact memberIds
-        const contactsRef = collection(db, 'emergencyContacts');
-        
-        // 1. Property Specific Contacts
-        const pq = query(contactsRef, where('propertyId', '==', selectedPropertyId));
-        const pSnaps = await getDocs(pq);
-        pSnaps.docs.forEach(cDoc => {
-          updateDocumentNonBlocking(cDoc.ref, { memberIds: arrayUnion(placeholderUserId) });
-        });
-
-        // 2. Landlord Standard SOS Services
-        const sq = query(contactsRef, where('landlordId', '==', user.uid), where('category', '==', 'standard'));
-        const sSnaps = await getDocs(sq);
-        sSnaps.docs.forEach(sDoc => {
-          updateDocumentNonBlocking(sDoc.ref, { memberIds: arrayUnion(placeholderUserId) });
-        });
-
-        toast({ title: "Resident Successfully Assigned", description: "Security and Support permissions synchronized." });
       }
+
+      // 🏠 SOS & PARTNER SYNC: Proactively grant visibility to relevant contacts
+      const contactsRef = collection(db, 'emergencyContacts');
+      
+      // 1. Property Specific Contacts
+      const pq = query(contactsRef, where('propertyId', '==', selectedPropertyId));
+      const pSnaps = await getDocs(pq);
+      pSnaps.docs.forEach(cDoc => {
+        updateDocumentNonBlocking(cDoc.ref, { memberIds: arrayUnion(targetTenantId) });
+      });
+
+      // 2. Landlord Standard SOS Services
+      const sq = query(contactsRef, where('landlordId', '==', user.uid), where('category', '==', 'standard'));
+      const sSnaps = await getDocs(sq);
+      sSnaps.docs.forEach(sDoc => {
+        updateDocumentNonBlocking(sDoc.ref, { memberIds: arrayUnion(targetTenantId) });
+      });
+
+      toast({ title: "Resident Permissions Synchronized", description: "Support directory access granted." });
+      
       setIsDialogOpen(false); 
       resetForm();
     } catch (e: any) {

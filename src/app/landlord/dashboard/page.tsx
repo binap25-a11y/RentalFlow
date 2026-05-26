@@ -26,8 +26,7 @@ import {
   DialogDescription, 
   DialogFooter, 
   DialogHeader, 
-  DialogTitle,
-  DialogTrigger
+  DialogTitle 
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -406,11 +405,9 @@ export default function LandlordDashboard() {
                </div>
                
                <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="w-full rounded-[1.5rem] bg-white text-accent font-bold h-14 hover:bg-white/90 transition-all shadow-2xl shadow-black/20 text-xs uppercase tracking-[0.2em] border-none">
-                    <Plus className="w-5 h-5 mr-3" /> Log Ledger Entry
-                  </Button>
-                </DialogTrigger>
+                <Button className="w-full rounded-[1.5rem] bg-white text-accent font-bold h-14 hover:bg-white/90 transition-all shadow-2xl shadow-black/20 text-xs uppercase tracking-[0.2em] border-none" onClick={() => setIsExpenseDialogOpen(true)}>
+                  <Plus className="w-5 h-5 mr-3" /> Log Ledger Entry
+                </Button>
                 <DialogContent className="rounded-[3.5rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh] max-w-[550px] ring-1 ring-white/10">
                   <form className="flex flex-col h-full overflow-hidden" onSubmit={(e) => { e.preventDefault(); handleLogManualExpense(); }}>
                     <div className="p-10 bg-primary/5 border-b border-white/5 text-left shrink-0">
@@ -461,7 +458,7 @@ export default function LandlordDashboard() {
         </div>
       </div>
 
-      <Dialog open={!!activePaymentEdit} onOpenChange={() => setActivePaymentEdit(null)}>
+      <Dialog open={!!activePaymentEdit} onOpenChange={(o) => !o && setActivePaymentEdit(null)}>
         <DialogContent className="rounded-[3.5rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh] max-w-[500px] ring-1 ring-white/10">
            <div className="p-10 bg-primary/5 border-b border-white/5 text-left shrink-0">
              <DialogTitle className="text-2xl font-bold font-headline text-foreground tracking-tight">Manage Ledger</DialogTitle>
