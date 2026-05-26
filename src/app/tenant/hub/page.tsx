@@ -145,11 +145,11 @@ export default function TenantHub() {
               <div className="flex flex-wrap gap-4 items-center">
                 <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl border border-border shadow-inner">
                    <Bed className="w-4 h-4 text-accent" />
-                   <span className="text-[11px] font-bold text-foreground uppercase tracking-widest">{property.numberOfBedrooms || 1} Bedrooms</span>
+                   <span className="text-[11px] font-bold text-foreground uppercase tracking-widest">{property.numberOfBedrooms || 0} Bedrooms</span>
                 </div>
                 <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl border border-border shadow-inner">
                    <Bath className="w-4 h-4 text-accent" />
-                   <span className="text-[11px] font-bold text-foreground uppercase tracking-widest">{property.numberOfBathrooms || 1} Bathrooms</span>
+                   <span className="text-[11px] font-bold text-foreground uppercase tracking-widest">{property.numberOfBathrooms || 0} Bathrooms</span>
                 </div>
                 <Badge variant="outline" className="h-9 px-4 rounded-xl border-border font-bold text-foreground bg-white/5 uppercase text-[9px] tracking-widest">
                    {property.propertyType || "Residential"}
