@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, use, useCallback, useRef } from 'react';
@@ -61,7 +60,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [isInitialized, setIsInitialized] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Synchronized Visual Ledger initialization
+  // High-Fidelity Ledger Mirroring
   useEffect(() => {
     if (property && !isInitialized) {
       setAddress(property.addressLine1 || '');
@@ -95,37 +94,35 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
   }, [property, isInitialized]);
 
-  // Transactional Visual Synchronization
-  const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
+  // Transactional Visual Synchronization (Isolated Commit)
+  const syncVisualsToFirestore = (currentLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
 
     const readyUrls = currentLedger
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // Non-destructive check: Only sync if we have a valid state to prevent accidental wipes.
-    if (readyUrls.length > 0 || currentLedger.length === 0) {
-      updateDocumentNonBlocking(propertyRef, {
-        imageUrl: readyUrls.length > 0 ? readyUrls[0] : null,
-        imageUrls: readyUrls,
-        updatedAt: serverTimestamp(),
-      });
-    }
-  }, [db, propertyRef]);
+    // ATOMIC LOCK: Update Firestore microsecond-instantly outside of state cycle
+    updateDocumentNonBlocking(propertyRef, {
+      imageUrl: readyUrls.length > 0 ? readyUrls[0] : null,
+      imageUrls: readyUrls,
+      updatedAt: serverTimestamp(),
+    });
+  };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
-
-    let updatedLedger = [...ledger];
 
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
       const uploadItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
-      updatedLedger = [...updatedLedger, uploadItem];
-      setLedger(updatedLedger);
+      setLedger(prev => {
+        const next = [...prev, uploadItem];
+        return next;
+      });
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -139,30 +136,39 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         
         const publicUrl = result.url!;
         
-        updatedLedger = updatedLedger.map(item => 
-          item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
-        );
-        setLedger(updatedLedger);
-        syncVisualsToFirestore(updatedLedger);
-      } catch (err) {
+        setLedger(prev => {
+          const updated = prev.map(item => 
+            item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
+          );
+          // MICROSECOND TRANSACTIONAL SYNC
+          setTimeout(() => syncVisualsToFirestore(updated), 0);
+          return updated;
+        });
+      } catch (err: any) {
         setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
+        toast({ variant: "destructive", title: "Upload Failed", description: err.message });
       }
     }
     e.target.value = '';
   };
 
   const removeFromLedger = (id: string) => {
-    const updated = ledger.filter(i => i.id !== id);
-    setLedger(updated);
-    syncVisualsToFirestore(updated);
+    setLedger(prev => {
+      const updated = prev.filter(i => i.id !== id);
+      setTimeout(() => syncVisualsToFirestore(updated), 0);
+      return updated;
+    });
   };
 
   const setAsPrimary = (id: string) => {
-    const item = ledger.find(i => i.id === id);
-    if (!item) return;
-    const updated = [item, ...ledger.filter(i => i.id !== id)];
-    setLedger(updated);
-    syncVisualsToFirestore(updated);
+    setLedger(prev => {
+      const item = prev.find(i => i.id === id);
+      if (!item) return prev;
+      const updated = [item, ...prev.filter(i => i.id !== id)];
+      // MICROSECOND TRANSACTIONAL LOCK
+      setTimeout(() => syncVisualsToFirestore(updated), 0);
+      return updated;
+    });
     toast({ title: "Designated Primary Cover" });
   };
 

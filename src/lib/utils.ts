@@ -1,4 +1,3 @@
-
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -103,15 +102,14 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.85)
 /**
  * 🖼️ User Asset Identifier (Hardened Source-Positive Logic)
  * Strictly authorizes all valid cloud storage sources and local previews.
- * Removed aggressive blacklisting to prevent valid images from disappearing.
+ * Optimized to ensure photography is never filtered out during resolution.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
   const u = url.toLowerCase();
   
-  // AUTHORIZE: Project infrastructure, valid image providers, and high-fidelity previews
-  // Standardized on project-agnostic Supabase checks to ensure persistence.
+  // AUTHORIZE: Project infrastructure and high-fidelity binaries
   const isAuthorizedSource = (
     u.includes('supabase.co') || 
     u.includes('firebasestorage') ||
