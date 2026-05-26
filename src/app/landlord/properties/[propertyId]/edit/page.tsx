@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, use, useCallback } from 'react';
+import { useState, useEffect, use, useCallback, useRef } from 'react';
 import { 
   useUser, 
   useFirestore, 
@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { cn, isRealUserUpload, compressImage, withRetry } from "@/lib/utils";
+import { cn, isRealUserUpload, compressImage, isValidAssetUrl } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -81,7 +81,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       }
 
       const initialLedger = sortedUrls
-        .filter(url => url && isRealUserUpload(url))
+        .filter(url => url && isValidAssetUrl(url))
         .map(url => ({ 
           id: Math.random().toString(36).substring(7), 
           previewUrl: url, 
@@ -94,7 +94,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
   }, [property, isInitialized]);
 
-  const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
+  const syncVisualsToFirestore = (currentLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
 
     const readyUrls = currentLedger
@@ -106,7 +106,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       imageUrls: readyUrls,
       updatedAt: serverTimestamp(),
     });
-  }, [db, propertyRef]);
+  };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -123,15 +123,18 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         const optimizedBlob = await compressImage(file);
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
-        const result = await uploadToSupabase(formDataFromBlob(optimizedBlob, file.name), 'property-images', path);
+        const formData = new FormData();
+        formData.append('file', optimizedBlob, file.name);
+        
+        const result = await uploadToSupabase(formData, 'property-images', path);
         if (!result.success) throw new Error(result.error);
         
         const publicUrl = result.url!;
         
         setLedger(prev => {
           const updated = prev.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item);
-          // Atomic sync after state transition
-          setTimeout(() => syncVisualsToFirestore(updated), 0);
+          // Transactional sync outside state loop
+          syncVisualsToFirestore(updated);
           return updated;
         });
       } catch (err) {
@@ -141,16 +144,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     e.target.value = '';
   };
 
-  const formDataFromBlob = (blob: Blob | File, name: string) => {
-    const fd = new FormData();
-    fd.append('file', blob, name);
-    return fd;
-  };
-
   const removeFromLedger = (id: string) => {
     setLedger(prev => {
       const updated = prev.filter(i => i.id !== id);
-      setTimeout(() => syncVisualsToFirestore(updated), 0);
+      syncVisualsToFirestore(updated);
       return updated;
     });
   };
@@ -160,8 +157,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
       const updated = [item, ...prev.filter(i => i.id !== id)];
-      // MICROSECOND TRANSACTIONAL SYNC
-      setTimeout(() => syncVisualsToFirestore(updated), 0);
+      // Atomic transactional sync
+      syncVisualsToFirestore(updated);
       return updated;
     });
     toast({ title: "Designated Primary Cover" });
@@ -248,7 +245,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
               <ScrollArea className="h-[600px] pr-4">
                 <div className="grid grid-cols-2 gap-5">
                   {ledger.map((item, index) => {
-                    const displayUrl = (item.status === 'ready' && item.cloudUrl && !item.isBroken && isRealUserUpload(item.cloudUrl)) ? item.cloudUrl : item.previewUrl;
+                    const displayUrl = (item.status === 'ready' && item.cloudUrl && !item.isBroken) ? item.cloudUrl : item.previewUrl;
                     
                     return (
                       <div key={item.id} className={cn(

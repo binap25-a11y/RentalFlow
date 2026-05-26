@@ -111,8 +111,9 @@ export function isRealUserUpload(url: any): boolean {
   const u = url.toLowerCase();
   
   // 1. DYNAMIC WHITELIST: Authorize any Supabase or Google binary
+  // We check for .supabase.co to be project-agnostic.
   const isAuthorizedSource = (
-    u.includes('supabase') || 
+    u.includes('supabase.co') || 
     u.includes('firebasestorage') ||
     u.includes('googleapi') ||
     u.includes('googleapis') ||
