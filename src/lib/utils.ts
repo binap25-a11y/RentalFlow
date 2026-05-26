@@ -100,9 +100,9 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.85)
 }
 
 /**
- * 🖼️ User Asset Identifier (Hardened Source-Positive Logic)
- * Strictly authorizes all valid cloud storage sources and local previews.
- * Optimized to ensure photography is never filtered out during resolution.
+ * 🖼️ User Asset Identifier (Source-Positive Logic)
+ * Strictly whitelists all project-specific Supabase and Firebase binaries.
+ * Optimized to ensure photography is never filtered out during background sync.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
@@ -115,13 +115,17 @@ export function isRealUserUpload(url: any): boolean {
     u.includes('firebasestorage') ||
     u.includes('googleapi') ||
     u.includes('googleapis') ||
-    u.includes('unsplash.com') || 
-    u.includes('picsum.photos') ||
     u.startsWith('blob:') ||
     u.startsWith('data:')
   );
 
-  return isAuthorizedSource;
+  // REJECT: Explicit placeholders to prevent identity confusion
+  const isPlaceholder = (
+    u.includes('picsum.photos/seed/') ||
+    u.includes('placeholder')
+  );
+
+  return isAuthorizedSource && !isPlaceholder;
 }
 
 /**

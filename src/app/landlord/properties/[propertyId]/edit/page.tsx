@@ -59,19 +59,24 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const isUpdatingLedger = useRef(false);
 
-  // High-Fidelity Ledger Mirroring
+  // Synchronize Ledger with Firestore updates (to keep star/primary in sync)
   useEffect(() => {
-    if (property && !isInitialized) {
-      setAddress(property.addressLine1 || '');
-      setCity(property.city || '');
-      setZipCode(property.zipCode || '');
-      setRentAmount(property.rentAmount?.toString() || '');
-      setDescription(property.description || '');
-      setPropertyType(property.propertyType || 'Apartment');
-      setBedrooms(property.numberOfBedrooms?.toString() || '1');
-      setBathrooms(property.numberOfBathrooms?.toString() || '1');
-      
+    if (property && !isUpdatingLedger.current) {
+      if (!isInitialized) {
+        setAddress(property.addressLine1 || '');
+        setCity(property.city || '');
+        setZipCode(property.zipCode || '');
+        setRentAmount(property.rentAmount?.toString() || '');
+        setDescription(property.description || '');
+        setPropertyType(property.propertyType || 'Apartment');
+        setBedrooms(property.numberOfBedrooms?.toString() || '1');
+        setBathrooms(property.numberOfBathrooms?.toString() || '1');
+        setIsInitialized(true);
+      }
+
+      // Sync ledger photography
       const urls = Array.isArray(property.imageUrls) ? property.imageUrls : [];
       const primary = property.imageUrl;
       
@@ -80,21 +85,23 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         sortedUrls = [primary, ...urls.filter(u => u !== primary)];
       }
 
-      const initialLedger = sortedUrls
+      const syncedLedger = sortedUrls
         .filter(url => url && isValidAssetUrl(url))
         .map(url => ({ 
-          id: Math.random().toString(36).substring(7), 
+          id: url, // Use URL as ID for stable mapping
           previewUrl: url, 
           cloudUrl: url, 
           status: 'ready' as const
         }));
         
-      setLedger(initialLedger);
-      setIsInitialized(true);
+      setLedger(prev => {
+        // Keep currently uploading items, merge in ready ones from cloud
+        const uploadingItems = prev.filter(item => item.status === 'uploading');
+        return [...syncedLedger, ...uploadingItems];
+      });
     }
   }, [property, isInitialized]);
 
-  // Transactional Visual Synchronization (Isolated Commit)
   const syncVisualsToFirestore = (currentLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
 
@@ -102,7 +109,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // ATOMIC LOCK: Update Firestore microsecond-instantly outside of state cycle
     updateDocumentNonBlocking(propertyRef, {
       imageUrl: readyUrls.length > 0 ? readyUrls[0] : null,
       imageUrls: readyUrls,
@@ -114,15 +120,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
 
+    isUpdatingLedger.current = true;
+
     for (const file of files) {
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
-      const uploadItem: LedgerItem = { id: tempId, previewUrl: localUrl, status: 'uploading' };
-      setLedger(prev => {
-        const next = [...prev, uploadItem];
-        return next;
-      });
+      setLedger(prev => [...prev, { id: tempId, previewUrl: localUrl, status: 'uploading' }]);
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -134,14 +138,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         const result = await uploadToSupabase(formData, 'property-images', path);
         if (!result.success) throw new Error(result.error);
         
-        const publicUrl = result.url!;
-        
         setLedger(prev => {
           const updated = prev.map(item => 
-            item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item
+            item.id === tempId ? { ...item, cloudUrl: result.url, status: 'ready' } : item
           );
-          // MICROSECOND TRANSACTIONAL SYNC
-          setTimeout(() => syncVisualsToFirestore(updated), 0);
+          syncVisualsToFirestore(updated);
           return updated;
         });
       } catch (err: any) {
@@ -149,34 +150,32 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         toast({ variant: "destructive", title: "Upload Failed", description: err.message });
       }
     }
+    
+    isUpdatingLedger.current = false;
     e.target.value = '';
   };
 
   const removeFromLedger = (id: string) => {
+    isUpdatingLedger.current = true;
     setLedger(prev => {
       const updated = prev.filter(i => i.id !== id);
-      setTimeout(() => syncVisualsToFirestore(updated), 0);
+      syncVisualsToFirestore(updated);
       return updated;
     });
+    isUpdatingLedger.current = false;
   };
 
   const setAsPrimary = (id: string) => {
+    isUpdatingLedger.current = true;
     setLedger(prev => {
       const item = prev.find(i => i.id === id);
-      if (!item) return prev;
+      if (!item || item.status !== 'ready') return prev;
       const updated = [item, ...prev.filter(i => i.id !== id)];
-      // MICROSECOND TRANSACTIONAL LOCK
-      setTimeout(() => syncVisualsToFirestore(updated), 0);
+      syncVisualsToFirestore(updated);
       return updated;
     });
+    isUpdatingLedger.current = false;
     toast({ title: "Designated Primary Cover" });
-  };
-
-  const handleImageError = (id: string) => {
-    setLedger(prev => prev.map(item => {
-      if (item.id === id) return { ...item, isBroken: true };
-      return item;
-    }));
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -184,10 +183,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     if (!user || !db || !propertyRef) return;
 
     setIsSaving(true);
-
-    const readyUrls = ledger
-      .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
-      .map(i => i.cloudUrl!);
     
     const serializableData = {
       id: propertyId, 
@@ -200,24 +195,23 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       numberOfBedrooms: parseInt(bedrooms, 10) || 1, 
       numberOfBathrooms: parseInt(bathrooms, 10) || 1,
       description: description, 
-      isOccupied: property?.isOccupied || false,
-      memberIds: property?.memberIds || [user.uid],
-      imageUrl: readyUrls.length > 0 ? readyUrls[0] : (property?.imageUrl || null),
-      imageUrls: readyUrls.length > 0 ? readyUrls : (property?.imageUrls || [])
+      updatedAt: serverTimestamp(),
     };
 
-    updateDocumentNonBlocking(propertyRef, { ...serializableData, updatedAt: serverTimestamp() });
+    updateDocumentNonBlocking(propertyRef, serializableData);
     
     try {
-      await syncPropertyToDb(serializableData);
+      await syncPropertyToDb({
+        ...serializableData,
+        imageUrl: property?.imageUrl || '',
+        imageUrls: property?.imageUrls || []
+      } as any);
       toast({ title: "Portfolio Sync Complete" });
       router.push(`/landlord/properties/${propertyId}`);
     } catch (e) {
       router.push(`/landlord/properties/${propertyId}`);
     }
   };
-
-  const isUploading = ledger.some(i => i.status === 'uploading');
 
   if (isLoading || !isInitialized) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-accent" /></div>;
 
@@ -251,43 +245,33 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
               <ScrollArea className="h-[600px] pr-4">
                 <div className="grid grid-cols-2 gap-5">
-                  {ledger.map((item, index) => {
-                    const displayUrl = (item.status === 'ready' && item.cloudUrl && !item.isBroken) ? item.cloudUrl : item.previewUrl;
-                    
-                    return (
-                      <div key={item.id} className={cn(
-                        "relative aspect-square rounded-[2rem] overflow-hidden group shadow-2xl bg-background border-2 transition-all duration-500",
-                        item.status === 'uploading' ? 'opacity-50 grayscale scale-[0.95]' : 'opacity-100',
-                        index === 0 ? "border-accent" : "border-transparent",
-                        (item.status === 'error' || item.isBroken) && "border-destructive"
-                      )}>
-                        <img 
-                          src={displayUrl} 
-                          alt="" 
-                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                          onError={() => handleImageError(item.id)}
-                        />
-                        
-                        <div className="absolute top-3 right-3 flex gap-2 z-20">
-                          <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-black/60 backdrop-blur-xl text-accent p-2.5 rounded-2xl hover:scale-110 transition-transform shadow-2xl border border-white/10">
-                            <Star className={cn("w-4 h-4", index === 0 && "fill-accent")} />
-                          </button>
-                          <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/80 backdrop-blur-xl text-white p-2.5 rounded-2xl shadow-2xl hover:bg-red-600 transition-all active:scale-90 border border-white/10"><X className="w-4 h-4" /></button>
-                        </div>
-                        
-                        {index === 0 && (
-                          <div className="absolute bottom-3 left-3 px-3 py-1 bg-accent text-white text-[8px] font-bold uppercase rounded-full shadow-2xl font-headline z-20 tracking-widest">Cover</div>
-                        )}
-
-                        {item.status === 'uploading' && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-xl gap-3">
-                             <Loader2 className="w-8 h-8 animate-spin text-primary opacity-60" />
-                             <span className="text-[9px] font-bold text-primary uppercase tracking-[0.4em]">Syncing...</span>
-                          </div>
-                        )}
+                  {ledger.map((item, index) => (
+                    <div key={item.id} className={cn(
+                      "relative aspect-square rounded-[2rem] overflow-hidden group shadow-2xl bg-background border-2 transition-all duration-500",
+                      item.status === 'uploading' ? 'opacity-50 grayscale scale-[0.95]' : 'opacity-100',
+                      index === 0 ? "border-accent" : "border-transparent",
+                      item.status === 'error' && "border-destructive"
+                    )}>
+                      <img 
+                        src={item.cloudUrl || item.previewUrl} 
+                        alt="" 
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                      <div className="absolute top-3 right-3 flex gap-2 z-20">
+                        <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-black/60 backdrop-blur-xl text-accent p-2.5 rounded-2xl hover:scale-110 transition-transform shadow-2xl border border-white/10">
+                          <Star className={cn("w-4 h-4", index === 0 && "fill-accent")} />
+                        </button>
+                        <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/80 backdrop-blur-xl text-white p-2.5 rounded-2xl shadow-2xl hover:bg-red-600 transition-all active:scale-90 border border-white/10"><X className="w-4 h-4" /></button>
                       </div>
-                    );
-                  })}
+                      {index === 0 && <div className="absolute bottom-3 left-3 px-3 py-1 bg-accent text-white text-[8px] font-bold uppercase rounded-full shadow-2xl font-headline z-20 tracking-widest">Cover</div>}
+                      {item.status === 'uploading' && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-xl gap-3">
+                           <Loader2 className="w-8 h-8 animate-spin text-primary opacity-60" />
+                           <span className="text-[9px] font-bold text-primary uppercase tracking-[0.4em]">Syncing...</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                   <label htmlFor="image-input" className="aspect-square rounded-[2rem] border-2 border-dashed border-white/5 hover:border-accent/40 transition-all duration-500 bg-white/[0.01] flex flex-col items-center justify-center gap-4 group cursor-pointer shadow-inner">
                     <div className="p-5 bg-white/5 rounded-full group-hover:scale-110 transition-transform duration-500"><Plus className="w-8 h-8 text-white/10 group-hover:text-accent/40" /></div>
                     <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-30">Gallery Select</span>
@@ -313,7 +297,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                     <Input value={zipCode} onChange={(e) => setZipCode(e.target.value)} required className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner" placeholder="Postcode" />
                   </div>
                 </div>
-                
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-3">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Bedrooms</Label>
@@ -334,7 +317,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                     </Select>
                   </div>
                 </div>
-
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-3">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Asset Classification</Label>
@@ -361,7 +343,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </div>
           <CardFooter className="p-10 bg-white/[0.01] border-t border-white/5 flex flex-col md:flex-row justify-end gap-5 shrink-0">
             <Button type="button" variant="ghost" className="w-full md:w-auto rounded-2xl h-14 px-10 font-bold font-headline text-muted-foreground hover:bg-white/5 hover:text-foreground border border-white/5 transition-all" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" disabled={isUploading || isSaving} className="w-full md:w-auto rounded-2xl font-bold bg-accent h-14 px-14 shadow-2xl shadow-accent/20 font-headline text-white transition-all hover:bg-accent/90 uppercase tracking-[0.2em] text-[11px] border-none hover:scale-[1.02]">
+            <Button type="submit" disabled={isSaving} className="w-full md:w-auto rounded-2xl font-bold bg-accent h-14 px-14 shadow-2xl shadow-accent/20 font-headline text-white transition-all hover:bg-accent/90 uppercase tracking-[0.2em] text-[11px] border-none hover:scale-[1.02]">
               {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
               Save & Synchronize
             </Button>

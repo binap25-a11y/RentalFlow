@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useMemo, useEffect } from 'react';
@@ -153,16 +152,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         const optimizedBlob = await compressImage(file);
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
-        const publicUrl = await withRetry(async () => {
-          const formData = new FormData();
-          formData.append('file', optimizedBlob, file.name);
-          
-          const result = await uploadToSupabase(formData, 'property-images', path);
-          if (!result.success) throw new Error(result.error);
-          return result.url!;
-        });
+        const formData = new FormData();
+        formData.append('file', optimizedBlob, file.name);
         
-        newUrls.push(publicUrl);
+        const result = await uploadToSupabase(formData, 'property-images', path);
+        if (!result.success) throw new Error(result.error);
+        newUrls.push(result.url!);
       }
 
       updateDocumentNonBlocking(propertyRef, {
@@ -319,9 +314,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           className="object-cover transition-transform duration-1000 group-hover:scale-105"
                           unoptimized
                           priority={index === 0}
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.opacity = '0.5';
-                          }}
                         />
                         {index === 0 && (
                           <div className="absolute top-8 left-8 px-5 py-2 bg-accent text-white text-[11px] font-bold uppercase rounded-full shadow-2xl font-headline z-10 tracking-[0.1em] flex items-center gap-2">

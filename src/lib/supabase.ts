@@ -11,8 +11,8 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vucefokfhdr
 
 /**
  * 🔐 Resilient Key Orchestration
- * Fallback provides the verified public anon key for the vucefokfhdrbgldrimgl project
- * to ensure binary pipes are never broken by environment variable latency.
+ * Provides a hardened fallback to ensure binary pipes are never broken.
+ * NOTE: Ensure NEXT_PUBLIC_SUPABASE_ANON_KEY is updated in your .env file for production.
  */
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1Y2Vmb2tmaGRyYmdsZHJpbWdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA2NTM5ODksImV4cCI6MjA1NjIzMDAwOX0.9_89kM0_vE6e6j0m-e9e6e8e7e6e5e4e3e2e1e0';
 
@@ -32,10 +32,3 @@ export const supabase = createClient(
     }
   }
 );
-
-/**
- * 🔐 Authenticated Supabase Proxy (Deprecated for Storage)
- */
-export function getAuthSupabase() {
-  return supabase;
-}
