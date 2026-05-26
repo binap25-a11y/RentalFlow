@@ -4,6 +4,41 @@
 
 @layer base {
   :root {
+    /* High-Fidelity Light Mode Defaults */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 4%;
+    --primary: 222 47% 4%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 10%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 199 89% 48%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 199 89% 48%;
+    --radius: 1.5rem;
+    
+    /* Sidebar specific */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 222 47% 10%;
+    --sidebar-primary: 222 47% 4%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 210 40% 94%;
+    --sidebar-accent-foreground: 222 47% 10%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 199 89% 48%;
+  }
+
+  .dark {
+    /* Cinematic Midnight Theme */
     --background: 222 47% 4%;
     --foreground: 210 40% 98%;
     --card: 222 47% 6%;
@@ -23,7 +58,7 @@
     --border: 222 47% 14%;
     --input: 222 47% 14%;
     --ring: 199 89% 48%;
-    --radius: 1.5rem;
+    
     --sidebar-background: 222 47% 3%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 199 89% 48%;
@@ -44,7 +79,7 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-background text-foreground font-body antialiased selection:bg-accent/30 selection:text-white;
+    @apply bg-background text-foreground font-body antialiased selection:bg-accent/30 transition-colors duration-300;
     overscroll-behavior-y: none;
   }
   h1, h2, h3, h4, h5, h6 {
@@ -71,10 +106,10 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-white/10 rounded-full;
+  @apply bg-foreground/10 rounded-full;
 }
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-white/20;
+  @apply bg-foreground/20;
 }
 
 .no-scrollbar::-webkit-scrollbar {

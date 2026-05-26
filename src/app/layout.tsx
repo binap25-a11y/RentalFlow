@@ -38,28 +38,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className="bg-background">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        {/* Zero-Flicker Theme Engine: Blocking script to apply colors before initial paint */}
+        {/* Zero-Flicker Theme Engine: Defaults to light, honors saved user preference */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
                   var theme = localStorage.getItem('theme');
-                  var supportDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  var isDark = theme === 'dark' || (!theme && supportDark);
+                  // Default to Light Mode unless explicitly set to 'dark'
+                  var isDark = theme === 'dark';
                   if (isDark) {
                     document.documentElement.classList.add('dark');
                     document.documentElement.style.backgroundColor = '#020617';
                   } else {
                     document.documentElement.classList.remove('dark');
-                    document.documentElement.style.backgroundColor = '#f8fafc';
+                    document.documentElement.style.backgroundColor = '#ffffff';
                   }
                 } catch (e) {}
               })();
