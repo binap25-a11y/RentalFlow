@@ -11,7 +11,7 @@ import {
   Loader2, Building2, Sparkles, Send, Bot, 
   ChevronRight, CheckCircle2, Clock, ReceiptText,
   ShieldCheck, ShieldAlert, RefreshCcw, Zap, Bed, Bath, Download, 
-  Home, Info, BookOpen, CreditCard, RotateCcw
+  Home, Info, BookOpen, CreditCard, RotateCcw, Phone
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
