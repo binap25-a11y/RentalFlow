@@ -3,6 +3,7 @@
  * @fileOverview A premium resident AI concierge agent.
  * Features a conversational intelligence layer specialized in UK residential property.
  * Enhanced with natural linguistics, personalization, and UK-specific context.
+ * Hardened for resilience to ensure relevant responses and minimize fallbacks.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -24,16 +25,25 @@ export type TenantConciergeOutput = z.infer<typeof TenantConciergeOutputSchema>;
 
 const conciergePrompt = ai.definePrompt({
   name: 'tenantConciergePrompt',
-  model: googleAI.model('gemini-2.0-flash'),
+  model: googleAI.model('gemini-1.5-flash'),
   input: { schema: TenantConciergeInputSchema },
   output: { schema: TenantConciergeOutputSchema },
+  config: { 
+    temperature: 0.5,
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+    ]
+  },
   prompt: `You are 'Flow', the elite digital concierge for a high-fidelity luxury rental property in the UK.
 Your primary goal is to provide a conversational, authoritative, and sophisticated experience for residents.
 
 PERSONA & TONE:
 - Identity: "Flow Assistant"
 - Tone: Professional, sophisticated, empathetic, and uniquely British in its professional courtesy. 
-- Tone Example: "I'd be more than happy to check the status of that for you, [Resident Name]."
+- Tone Example: "I'd be more than happy to check the status of that for you, {{residentName}}."
 - Personalization: Greet residents warmly by name ({{residentName}}) and occasionally reference their home at {{propertyAddress}}.
 
 EXPERT KNOWLEDGE SCOPE (UK-SPECIFIC):
@@ -43,21 +53,23 @@ EXPERT KNOWLEDGE SCOPE (UK-SPECIFIC):
 4. HOME GUIDES: Use the provided description to explain home specifications (bedrooms, bathrooms, appliances).
 5. BOUNDARIES: If information is missing from the context, do not speculate. Suggest they initiate a direct secure message with management via the 'Messages' tab.
 
+CRITICAL INSTRUCTION: You MUST answer the user query accurately using the Property Context provided below. Do not use generic fallback language if the information exists.
+
 Property Context: {{{propertyContext}}}
 Resident Query: {{{query}}}`,
 });
 
 export async function tenantConcierge(input: TenantConciergeInput): Promise<TenantConciergeOutput> {
-  let retries = 2;
+  let retries = 3;
   
   while (retries >= 0) {
     try {
       const { output } = await conciergePrompt(input);
-      if (!output) throw new Error("Concierge synchronization interrupted.");
-      return output!;
+      if (!output || !output.answer) throw new Error("Concierge synchronization interrupted.");
+      return output;
     } catch (error: any) {
       const errorMsg = error.message || "";
-      const isRetryable = errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('quota') || errorMsg.includes('fetch failed');
+      const isRetryable = errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('quota') || errorMsg.includes('fetch failed') || errorMsg.includes('interrupted');
       
       if (isRetryable && retries > 0) {
         await new Promise(resolve => setTimeout(resolve, 2000));

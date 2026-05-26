@@ -166,7 +166,7 @@ export default function TenantHub() {
 
   /**
    * 💎 PREMIUM SYSTEM ORCHESTRATION VIEW
-   * Displayed during asset verification to maintain elite high-fidelity standards.
+   * Optimized vertical hierarchy for Financials -> Residence Narrative -> Actions.
    */
   if (!property) return (
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-1000 pb-32 text-left bg-background">
