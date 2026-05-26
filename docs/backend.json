@@ -31,7 +31,9 @@
         "numberOfBathrooms": { "type": "number" },
         "isOccupied": { "type": "boolean" },
         "tenantIds": { "type": "array", "items": { "type": "string" } },
-        "memberIds": { "type": "array", "items": { "type": "string" } }
+        "memberIds": { "type": "array", "items": { "type": "string" } },
+        "connectivityStatus": { "type": "string", "description": "Real-time internet status (e.g. Ultra-Fast Fiber Enabled)" },
+        "complianceStatus": { "type": "string", "description": "Real-time certification status (e.g. EPC Grade B / Certified)" }
       }
     },
     "PropertyDocument": {

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
@@ -100,7 +101,7 @@ export default function TenantHub() {
 
     const activeRequestsContext = activeRequests.map(r => `${r.title} (${r.status})`).join(', ');
     const paymentContext = currentPayment ? `Payment for ${format(new Date(), 'MMMM')} is ${currentPayment.status}.` : "No current payment record found.";
-    const propertyInfo = property ? `Property: ${property.addressLine1}. Specs: ${property.numberOfBedrooms} bedrooms, ${property.numberOfBathrooms} bathrooms. Narrative: ${property.description || 'N/A'}. Rent: £${property.rentAmount}. Financials: ${paymentContext} Repairs: ${activeRequestsContext}` : "Property details are currently synchronizing.";
+    const propertyInfo = property ? `Property: ${property.addressLine1}. Specs: ${property.numberOfBedrooms} bedrooms, ${property.numberOfBathrooms} bathrooms. Narrative: ${property.description || 'N/A'}. Rent: £${property.rentAmount}. Connectivity: ${property.connectivityStatus || 'Synchronizing'}. Compliance: ${property.complianceStatus || 'Verified'}. Financials: ${paymentContext} Repairs: ${activeRequestsContext}` : "Property details are currently synchronizing.";
 
     try {
       const response = await tenantConcierge({ 
@@ -183,30 +184,24 @@ export default function TenantHub() {
               <Building2 className="w-20 h-20 text-foreground/10" />
             </div>
             
-            <CardContent className="p-12 space-y-12">
-              {/* RESIZED MONTHLY RENT PLACEHOLDER */}
+            <CardContent className="p-12 space-y-10">
               <div className="space-y-6">
                 <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight opacity-20"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
                 <div className="p-10 bg-muted/10 rounded-[2.5rem] border border-border/50 shadow-inner space-y-6">
-                  <div className="h-2 w-20 bg-muted rounded animate-pulse opacity-40" />
-                  <div className="h-10 w-48 bg-muted rounded-xl animate-pulse" />
+                  <div className="h-8 w-48 bg-muted rounded-xl animate-pulse" />
                   <div className="h-12 w-full bg-muted/30 rounded-xl animate-pulse" />
                 </div>
               </div>
 
-              {/* YOUR RESIDENCE PLACEHOLDER (BELOW RENT) */}
               <div className="space-y-6">
                 <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight opacity-20"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
                 <div className="p-10 bg-primary/5 rounded-[2.5rem] border border-border/50 space-y-4">
                   <div className="h-3 w-full bg-muted rounded animate-pulse opacity-30" />
-                  <div className="h-3 w-5/6 bg-muted rounded animate-pulse opacity-30" />
                   <div className="h-3 w-4/6 bg-muted rounded animate-pulse opacity-30" />
+                  <div className="pt-6">
+                    <div className="h-14 w-full bg-muted rounded-2xl animate-pulse opacity-20" />
+                  </div>
                 </div>
-              </div>
-
-              {/* FITTED DOWNLOAD ACTION (BELOW RESIDENCE) */}
-              <div className="pt-6 border-t border-border/50">
-                <div className="h-16 w-full bg-muted rounded-2xl animate-pulse opacity-20" />
               </div>
             </CardContent>
           </Card>
@@ -307,14 +302,14 @@ export default function TenantHub() {
                        <div className="p-3 bg-white rounded-xl shadow-sm text-accent"><Wifi className="w-5 h-5" /></div>
                        <div>
                           <p className="text-[10px] font-bold uppercase opacity-40">Connectivity</p>
-                          <p className="text-sm font-bold">Ultra-Fast Fiber Enabled</p>
+                          <p className="text-sm font-bold truncate">{property.connectivityStatus || 'Standard Broadband'}</p>
                        </div>
                     </div>
                     <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4">
                        <div className="p-3 bg-white rounded-xl shadow-sm text-accent"><Shield className="w-5 h-5" /></div>
                        <div>
                           <p className="text-[10px] font-bold uppercase opacity-40">Compliance</p>
-                          <p className="text-sm font-bold">EPC Grade B / Certified</p>
+                          <p className="text-sm font-bold truncate">{property.complianceStatus || 'Safety Certified'}</p>
                        </div>
                     </div>
                   </div>
@@ -476,7 +471,7 @@ export default function TenantHub() {
 
             <div className="p-6 bg-muted/10 border-t border-border">
               <form onSubmit={(e) => { e.preventDefault(); handleAskConcierge(); }} className="flex gap-3 items-center">
-                <Input value={chatQuery} onChange={(e) => setChatQuery(e.target.value)} placeholder="Ask Flow..." className="h-12 rounded-2xl bg-background border-none shadow-inner px-5 text-sm text-foreground focus-visible:ring-accent flex-1" disabled={isChatting} />
+                <Input value={chatQuery} onChange={(e) => setChatQuery(e.target.value)} placeholder="Ask Flow..." className="h-12 rounded-2xl bg-background border-none shadow-inner px-5 text-sm text-foreground focus-visible:ring-primary flex-1" disabled={isChatting} />
                 <button type="submit" className="h-12 w-12 rounded-2xl shadow-xl shadow-primary/20 bg-primary text-primary-foreground transition-all active:scale-95 shrink-0 flex items-center justify-center disabled:opacity-50" disabled={isChatting || !chatQuery.trim()}>
                   {isChatting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </button>
