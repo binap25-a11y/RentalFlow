@@ -165,7 +165,7 @@ export default function TenantHub() {
   if (!isClient || isPropLoading || isRequestsLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary w-12 h-12 opacity-60" /></div>;
 
   /**
-   * 💎 PREMIUM PLACEHOLDER INTERFACE
+   * 💎 PREMIUM SYSTEM ORCHESTRATION VIEW
    * Displayed during asset verification to maintain elite high-fidelity standards.
    */
   if (!property) return (
@@ -184,18 +184,18 @@ export default function TenantHub() {
             </div>
             
             <CardContent className="p-12 space-y-12">
-              {/* MONTHLY RENT PLACEHOLDER (RESIZED & PREMIUM) */}
+              {/* RESIZED MONTHLY RENT PLACEHOLDER */}
               <div className="space-y-6">
                 <div className="flex items-center gap-3">
                   <ReceiptText className="w-6 h-6 text-accent opacity-20" />
                   <div className="h-6 w-32 bg-muted rounded-lg animate-pulse" />
                 </div>
-                <div className="p-10 bg-muted/20 rounded-[2.5rem] border border-border/50 shadow-inner space-y-6">
+                <div className="p-8 bg-muted/10 rounded-[2.5rem] border border-border/50 shadow-inner space-y-6">
                   <div className="space-y-3">
-                    <div className="h-3 w-24 bg-muted rounded animate-pulse opacity-40" />
-                    <div className="h-14 w-48 bg-muted rounded-2xl animate-pulse" />
+                    <div className="h-2 w-20 bg-muted rounded animate-pulse opacity-40" />
+                    <div className="h-10 w-40 bg-muted rounded-xl animate-pulse" />
                   </div>
-                  <div className="h-10 w-full bg-muted/40 rounded-xl animate-pulse" />
+                  <div className="h-10 w-full bg-muted/30 rounded-xl animate-pulse" />
                 </div>
               </div>
 
@@ -205,16 +205,16 @@ export default function TenantHub() {
                   <Home className="w-6 h-6 text-accent opacity-20" />
                   <div className="h-6 w-40 bg-muted rounded-lg animate-pulse" />
                 </div>
-                <div className="p-10 bg-primary/5 rounded-[2.5rem] border border-border/50 space-y-4">
-                  <div className="h-4 w-full bg-muted rounded animate-pulse opacity-40" />
-                  <div className="h-4 w-5/6 bg-muted rounded animate-pulse opacity-40" />
-                  <div className="h-4 w-4/6 bg-muted rounded animate-pulse opacity-40" />
+                <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-border/50 space-y-4">
+                  <div className="h-3 w-full bg-muted rounded animate-pulse opacity-30" />
+                  <div className="h-3 w-5/6 bg-muted rounded animate-pulse opacity-30" />
+                  <div className="h-3 w-4/6 bg-muted rounded animate-pulse opacity-30" />
                 </div>
               </div>
 
               {/* FITTED DOWNLOAD ACTION */}
               <div className="pt-6 border-t border-border/50">
-                <div className="h-14 w-full bg-muted rounded-2xl animate-pulse" />
+                <div className="h-14 w-full bg-muted rounded-2xl animate-pulse opacity-20" />
               </div>
             </CardContent>
           </Card>

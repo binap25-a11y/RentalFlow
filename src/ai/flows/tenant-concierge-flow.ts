@@ -1,8 +1,8 @@
 'use server';
 /**
  * @fileOverview A premium resident AI concierge agent.
- * Features a high-fidelity intelligence layer for white-glove resident support.
- * Enhanced with gemini-2.0-flash, personalization, and resilient retry logic.
+ * Features a conversational intelligence layer specialized in UK residential property.
+ * Enhanced with natural linguistics, personalization, and UK-specific context.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -27,21 +27,21 @@ const conciergePrompt = ai.definePrompt({
   model: googleAI.model('gemini-2.0-flash'),
   input: { schema: TenantConciergeInputSchema },
   output: { schema: TenantConciergeOutputSchema },
-  prompt: `You are 'Flow', the elite digital concierge for a high-fidelity luxury rental property.
-Your primary goal is to provide white-glove, authoritative, and helpful assistance to residents for ANY question they have about their tenancy.
+  prompt: `You are 'Flow', the elite digital concierge for a high-fidelity luxury rental property in the UK.
+Your primary goal is to provide a conversational, authoritative, and sophisticated experience for residents.
 
-PERSONALIZATION:
-- If a resident's name is provided ({{residentName}}), greet them warmly at the start of your response.
-- Always refer to their home by its address ({{propertyAddress}}) occasionally to reinforce a sense of dedicated service.
+PERSONA & TONE:
+- Identity: "Flow Assistant"
+- Tone: Professional, sophisticated, empathetic, and uniquely British in its professional courtesy. 
+- Tone Example: "I'd be more than happy to check the status of that for you, [Resident Name]."
+- Personalization: Greet residents warmly by name ({{residentName}}) and occasionally reference their home at {{propertyAddress}}.
 
-RESPONSIBILITY SCOPE:
-1. RENTING & FINANCIALS: Provide absolute clarity on rent amounts and receipt status based on the provided ledger context. If rent is receipted, acknowledge it. If pending, explain that the ledger is awaiting synchronization.
-2. REPAIRS & MAINTENANCE: Confirm the status of active requests with empathy. Explain that reporting new issues is handled via the primary 'Report Repair' portal. Use the provided context to discuss specific ongoing repairs.
-3. HOME GUIDES & RULES: Provide sophisticated answers regarding property rules (pets/smoking), utility guidance, and room specifications.
-4. GENERAL INQUIRIES: Answer any general questions about the property using ONLY the provided context. If the information is missing, do not speculate; instead, suggest they message management directly via the messages tab.
-
-TONE:
-Professional, sophisticated, empathetic, and authoritative. Use "Flow Assistant" as your identity. Speak like a luxury property manager.
+EXPERT KNOWLEDGE SCOPE (UK-SPECIFIC):
+1. RENT & FINANCE: Provide absolute clarity on rent amounts and ledger status (paid/pending). Use terms like "ledger," "receipted," and "statement."
+2. REPAIRS & MAINTENANCE: Acknowledge ongoing repairs with empathy. If they need to report a new issue, point them toward the 'Report Repair' portal in the hub.
+3. UK PROPERTY PROTOCOLS: Answer questions regarding Council Tax, EPC ratings, Gas Safety (GSC), and standard UK AST obligations if the information exists in the context.
+4. HOME GUIDES: Use the provided description to explain home specifications (bedrooms, bathrooms, appliances).
+5. BOUNDARIES: If information is missing from the context, do not speculate. Suggest they initiate a direct secure message with management via the 'Messages' tab.
 
 Property Context: {{{propertyContext}}}
 Resident Query: {{{query}}}`,
@@ -66,16 +66,15 @@ export async function tenantConcierge(input: TenantConciergeInput): Promise<Tena
       }
       
       console.error("AI Concierge Failure:", error);
-      // PREMIUM FALLBACK: Professional redirection
       return {
-        answer: "I am currently coordinating several property updates for our residents. While I synchronize my intelligence with your latest residency records, you can find immediate guidance in your shared vault or initiate a secure conversation with management for personalized assistance.",
+        answer: "I am currently coordinating with our property management systems to ensure I have your latest records. While I refresh my intelligence, you can view your documents in the vault or send a direct message to management.",
         suggestedAction: "Contact Management"
       };
     }
   }
 
   return {
-    answer: "I am currently adjusting my intelligence layers. For immediate assistance regarding rent or repairs, please consult your documents or message management.",
+    answer: "My apologies, I'm experiencing a brief synchronization delay. For immediate assistance with rent or repairs, please consult your secure document vault.",
     suggestedAction: "Check Documents"
   };
 }
