@@ -24,7 +24,7 @@ import {
   Bed, Bath, X, FileText, Wrench, 
   ClipboardList, Plus, Download, Trash2,
   ShieldCheck, AlertCircle, Clock,
-  CheckCircle2, FileUp, Users, Building2, Sparkles
+  CheckCircle2, FileUp, Users, Building2, Sparkles, Camera
 } from "lucide-react";
 import { 
   Dialog, 
@@ -35,7 +35,7 @@ import {
   DialogFooter,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { cn, getResolvedGallery, isRealUserUpload, isValidAssetUrl, getResolvedImageUrl } from "@/lib/utils";
+import { cn, getResolvedGallery, isRealUserUpload, isValidAssetUrl, getResolvedImageUrl, compressImage, withRetry } from "@/lib/utils";
 import {
   Carousel,
   CarouselContent,
@@ -142,6 +142,52 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const [newDocType, setNewDocType] = useState('Certificate');
   const [uploadedDocUrl, setUploadedDocUrl] = useState<string | null>(null);
   const [isDocDialogOpen, setIsDocDialogOpen] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  /**
+   * 📸 Transactional Image Upload
+   * Allows direct gallery expansion from the details hub.
+   */
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length || !user || !property || !propertyRef) return;
+
+    setIsUploadingImage(true);
+    const existingUrls = Array.isArray(property.imageUrls) ? property.imageUrls : [];
+    const newUrls = [...existingUrls];
+
+    try {
+      for (const file of files) {
+        const optimizedBlob = await compressImage(file);
+        const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        
+        const publicUrl = await withRetry(async () => {
+          const { error: uploadError } = await supabase.storage
+            .from('property-images')
+            .upload(path, optimizedBlob, { contentType: 'image/jpeg', upsert: true });
+          if (uploadError) throw uploadError;
+          const { data: { publicUrl: url } } = supabase.storage.from('property-images').getPublicUrl(path);
+          return url;
+        });
+        
+        newUrls.push(publicUrl);
+      }
+
+      // ATOMIC UPDATE: Commit to Firestore microsecond-instantly
+      updateDocumentNonBlocking(propertyRef, {
+        imageUrl: property.imageUrl || newUrls[0], // Designate as primary if none exists
+        imageUrls: newUrls,
+        updatedAt: serverTimestamp(),
+      });
+
+      toast({ title: "Visual Assets Synchronized" });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Upload Failed", description: err.message });
+    } finally {
+      setIsUploadingImage(false);
+      e.target.value = '';
+    }
+  };
 
   const handleUpdateRent = () => {
     if (!propertyRef) return;
@@ -254,6 +300,15 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           <Button variant="outline" onClick={downloadRentStatement} className="rounded-xl font-bold h-11 border-border bg-card shadow-lg font-headline text-[10px] uppercase tracking-widest px-8 hover:bg-white/5 transition-all">
             <Download className="w-4 h-4 mr-2 text-accent" /> Rent Statement
           </Button>
+          
+          <label htmlFor="direct-gallery-upload" className="cursor-pointer">
+            <Button variant="outline" className="rounded-xl font-bold h-11 border-border bg-card shadow-lg font-headline text-[10px] uppercase tracking-widest px-8 hover:bg-white/5 transition-all pointer-events-none">
+              {isUploadingImage ? <Loader2 className="w-4 h-4 animate-spin mr-2 text-accent" /> : <Camera className="w-4 h-4 mr-2 text-accent" />}
+              Add Photos
+            </Button>
+          </label>
+          <input id="direct-gallery-upload" type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isUploadingImage} />
+
           <Button variant="outline" className="rounded-xl font-bold h-11 border-border bg-card shadow-lg font-headline text-[10px] uppercase tracking-widest px-8 hover:bg-white/5 transition-all" asChild>
             <Link href={`/landlord/properties/${propertyId}/edit`}>
               <Edit3 className="w-4 h-4 mr-2 text-accent" /> Modify Specs
@@ -297,11 +352,17 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             ) : (
               <div className="relative h-[400px] md:h-[550px] w-full bg-gradient-to-br from-primary/10 to-accent/5 flex flex-col items-center justify-center gap-4">
                 <div className="p-8 bg-white/5 rounded-[2rem] border border-white/5 shadow-inner">
-                   <Building2 className="w-16 h-16 text-muted-foreground/30" />
+                   {isUploadingImage ? <Loader2 className="w-16 h-16 animate-spin text-accent opacity-40" /> : <Building2 className="w-16 h-16 text-muted-foreground/30" />}
                 </div>
                 <div className="text-center px-8">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline mb-2">No Visual Identity Recorded</p>
-                  <p className="text-xs text-muted-foreground font-medium opacity-60">Upload photography in 'Modify Specs' to initialize identity.</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline mb-4">No Visual Identity Recorded</p>
+                  <label htmlFor="empty-state-upload" className="cursor-pointer">
+                    <Button variant="outline" className="rounded-[1.25rem] font-bold h-12 px-8 border-accent/20 text-accent bg-accent/5 hover:bg-accent/10 transition-all pointer-events-none">
+                      {isUploadingImage ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Camera className="w-4 h-4 mr-2" />}
+                      Initialize Identity
+                    </Button>
+                  </label>
+                  <input id="empty-state-upload" type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isUploadingImage} />
                 </div>
               </div>
             )}
