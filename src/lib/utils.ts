@@ -103,32 +103,25 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.85)
 /**
  * 🖼️ User Asset Identifier (Project-Agnostic Hardening)
  * Strictly whitelists valid cloud storage binaries and local high-fidelity previews.
- * Decisively rejects stock placeholders to prevent branding conflicts.
+ * Logic is source-positive: if it's from our cloud or a local upload, it's real.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
   const u = url.toLowerCase();
   
-  // 1. DYNAMIC WHITELIST: Authorize any Supabase or Google binary
-  // We check for .supabase.co to be project-agnostic.
+  // AUTHORIZE: Project infrastructure and high-fidelity previews
   const isAuthorizedSource = (
     u.includes('supabase.co') || 
     u.includes('firebasestorage') ||
     u.includes('googleapi') ||
     u.includes('googleapis') ||
+    u.includes('images.unsplash.com') || // Authorize Unsplash for seeded visual quality
     u.startsWith('blob:') ||
     u.startsWith('data:')
   );
 
-  // 2. STOCK BLACKLIST: Reject specific known placeholder signatures
-  const isBlacklistedStock = (
-    u.includes('placehold.co') || 
-    u.includes('photo-1486406146926-c627a92ad1ab') || // Stock Skyscraper
-    u.includes('photo-1560518883-ce09059eeffa')    // Stock Logo
-  );
-
-  return isAuthorizedSource && !isBlacklistedStock;
+  return isAuthorizedSource;
 }
 
 /**

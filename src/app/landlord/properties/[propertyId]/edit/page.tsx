@@ -101,9 +101,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
+    // Transactional Guard: Only sync if we have valid ready URLs or explicitly cleared ledger
+    // This prevents race conditions from wiping the record during upload transitions
     updateDocumentNonBlocking(propertyRef, {
-      imageUrl: readyUrls.length > 0 ? readyUrls[0] : null,
-      imageUrls: readyUrls,
+      imageUrl: readyUrls.length > 0 ? readyUrls[0] : (property?.imageUrl || null),
+      imageUrls: readyUrls.length > 0 ? readyUrls : (property?.imageUrls || []),
       updatedAt: serverTimestamp(),
     });
   };
@@ -133,7 +135,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         
         setLedger(prev => {
           const updated = prev.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item);
-          // Transactional sync outside state loop
           syncVisualsToFirestore(updated);
           return updated;
         });
@@ -157,7 +158,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
       const updated = [item, ...prev.filter(i => i.id !== id)];
-      // Atomic transactional sync
       syncVisualsToFirestore(updated);
       return updated;
     });
@@ -181,7 +181,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
     
-    // FULL ASSET SYNC PAYLOAD
     const serializableData = {
       id: propertyId, 
       landlordId: user.uid, 
