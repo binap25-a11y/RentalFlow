@@ -8,7 +8,7 @@ import {
   Crown, ShieldCheck, PoundSterling, ArrowUpRight, ArrowDownRight,
   Activity, BarChart3, Settings2
 } from "lucide-react";
-import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -87,13 +87,11 @@ export default function LandlordDashboard() {
   }, [db, user]);
   const { data: currentMonthPayments } = useCollection(paymentsQuery);
 
-  // LEDGER EDIT STATE
   const [activePaymentEdit, setActivePaymentEdit] = useState<any>(null);
   const [editAmount, setEditAmount] = useState('');
   const [editStatus, setEditStatus] = useState<'paid' | 'pending'>('pending');
   const [isSavingPayment, setIsSavingPayment] = useState(false);
 
-  // EXPENSE STATE
   const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
   const [isSavingExpense, setIsSavingExpense] = useState(false);
   const [expAmount, setExpAmount] = useState('');

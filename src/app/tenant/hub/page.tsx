@@ -59,6 +59,7 @@ export default function TenantHub() {
 
   const sortedContacts = useMemo(() => {
     if (!contactsData) return [];
+    // SOS FIRST PROTOCOL: standard category (999, NHS, etc) always anchored at top
     return [...contactsData].sort((a, b) => {
       if (a.category === 'standard' && b.category !== 'standard') return -1;
       if (a.category !== 'standard' && b.category === 'standard') return 1;
