@@ -189,7 +189,7 @@ export default function TenantHub() {
                </div>
                <div className="flex items-center gap-3 bg-primary/5 px-4 py-3 rounded-xl border border-white/5 shadow-inner min-w-0">
                   <Home className="w-4 h-4 text-accent shrink-0" />
-                  <p className="text-[10px] font-bold text-foreground uppercase tracking-widest truncate">Residential</p>
+                  <p className="text-[10px] font-bold text-foreground uppercase tracking-widest truncate">Residential Home</p>
                </div>
             </div>
             
@@ -276,7 +276,7 @@ export default function TenantHub() {
                     <div className="flex-1 space-y-4">
                        <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.3em] font-headline opacity-50">Verified Ledger</p>
                        <p className="text-5xl font-bold font-headline text-foreground tracking-tighter">£{property.rentAmount?.toLocaleString()}</p>
-                       <Badge className={cn("w-full h-12 flex items-center justify-center font-bold text-[11px] rounded-2xl shadow-sm uppercase tracking-[0.2em] border-none", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white" : "bg-amber-500 text-white")}>
+                       <Badge className={cn("w-full h-12 flex items-center justify-center font-bold text-[11px] rounded-2xl shadow-sm uppercase tracking-[0.2em] border shadow-inner", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white border-transparent" : "bg-amber-500/10 text-amber-600 border-amber-500/20")}>
                          {currentPayment?.status === 'paid' ? "Receipted & Collected" : "Collection Pending"}
                        </Badge>
                     </div>
@@ -437,7 +437,7 @@ export default function TenantHub() {
       </div>
 
       <div className="pt-24 flex justify-center">
-        <Button size="lg" className="bg-accent hover:bg-accent/90 text-white rounded-[2rem] shadow-2xl shadow-accent/20 font-bold h-20 font-headline px-24 border-none transition-all hover:scale-[1.05] active:scale-95 text-lg uppercase tracking-[0.2em]" asChild>
+        <Button size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-[2rem] shadow-2xl shadow-primary/20 font-bold h-20 font-headline px-24 border-none transition-all hover:scale-[1.05] active:scale-95 text-lg uppercase tracking-[0.2em]" asChild>
           <Link href="/tenant/maintenance"><AlertCircle className="w-6 h-6 mr-4" /> Report Repair</Link>
         </Button>
       </div>
