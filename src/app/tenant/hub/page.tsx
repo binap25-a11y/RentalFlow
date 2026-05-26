@@ -9,13 +9,13 @@ import {
   MapPin, AlertCircle, Wrench, 
   Loader2, Building2, Sparkles, Send, Bot, 
   ChevronRight, CheckCircle2, Clock, ReceiptText,
-  ShieldCheck, ShieldAlert, RefreshCcw, Zap, Bed, Bath, Download, Camera,
-  Home, Info, BookOpen, CreditCard
+  ShieldCheck, ShieldAlert, RefreshCcw, Zap, Bed, Bath, Download, 
+  Home, Info, BookOpen, CreditCard, RotateCcw
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { tenantConcierge } from "@/ai/flows/tenant-concierge-flow";
-import { cn, getResolvedImageUrl, getResolvedGallery } from "@/lib/utils";
+import { cn, getResolvedImageUrl } from "@/lib/utils";
 import { query, collection, where } from "firebase/firestore";
 import { format } from "date-fns";
 
@@ -46,11 +46,6 @@ export default function TenantHub() {
   
   const { data: properties, isLoading: isPropLoading } = useCollection(propertiesQuery);
   const property = properties?.[0];
-
-  const gallery = useMemo(() => {
-    if (!property) return [];
-    return getResolvedGallery(property.imageUrl, property.imageUrls);
-  }, [property]);
 
   const paymentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -107,6 +102,8 @@ export default function TenantHub() {
       setChatHistory(prev => [...prev, { role: 'bot', text: "Service temporarily unavailable." }]);
     } finally { setIsChatting(false); }
   };
+
+  const handleClearChat = () => setChatHistory([]);
 
   const handleDownloadStatement = async () => {
     if (!property) return;
@@ -303,12 +300,17 @@ export default function TenantHub() {
 
           <Card className="border-none shadow-2xl rounded-[3rem] bg-card ring-1 ring-border overflow-hidden flex flex-col min-h-[600px]">
             <CardHeader className="bg-primary p-10 text-primary-foreground">
-              <div className="flex items-center gap-6">
-                <div className="h-14 w-14 bg-white/10 rounded-2xl flex items-center justify-center shadow-inner"><Sparkles className="w-8 h-8 text-white" /></div>
-                <div className="text-left">
-                  <CardTitle className="text-3xl font-headline font-bold tracking-tight">Property Assistant</CardTitle>
-                  <CardDescription className="text-primary-foreground/70 font-medium text-base">Instant intelligence on your residency protocols.</CardDescription>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-6">
+                  <div className="h-14 w-14 bg-white/10 rounded-2xl flex items-center justify-center shadow-inner"><Sparkles className="w-8 h-8 text-white" /></div>
+                  <div className="text-left">
+                    <CardTitle className="text-3xl font-headline font-bold tracking-tight">Property Assistant</CardTitle>
+                    <CardDescription className="text-primary-foreground/70 font-medium text-base">Instant intelligence on your residency protocols.</CardDescription>
+                  </div>
                 </div>
+                <Button variant="ghost" onClick={handleClearChat} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl font-bold font-headline text-xs uppercase tracking-widest">
+                  <RotateCcw className="w-4 h-4 mr-2" /> Clear Chat
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col p-0">
