@@ -100,12 +100,25 @@ export default function TenantHub() {
 
   if (!isClient || isPropLoading || isRequestsLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
-  if (!property) return <div className="flex flex-col items-center justify-center h-[70vh] text-center space-y-8"><Home className="w-20 h-20 text-muted-foreground/20" /><h2 className="text-3xl font-bold font-headline text-foreground">Lease Registration Pending</h2><Button asChild className="rounded-2xl h-12 px-10 font-bold"><Link href="/tenant/messages">Contact Management</Link></Button></div>;
+  if (!property) return (
+    <div className="flex flex-col items-center justify-center h-[70vh] px-6 text-center">
+      <div className="max-w-xl w-full py-24 text-center flex flex-col items-center justify-center bg-card rounded-[2.5rem] border-2 border-dashed border-border group hover:border-primary/20 transition-all shadow-sm">
+        <div className="p-8 bg-primary/5 rounded-[2rem] mb-6 group-hover:scale-110 transition-transform">
+           <Building2 className="w-16 h-16 text-primary opacity-20" />
+        </div>
+        <h3 className="text-2xl font-headline font-bold text-foreground mb-2">Lease Registration Pending</h3>
+        <p className="text-sm text-muted-foreground font-medium mb-8 max-w-xs mx-auto">Your official residency record is being synchronized by management. Access will be granted once verification is complete.</p>
+        <Button asChild className="rounded-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground h-12 px-10 shadow-lg shadow-primary/20 border-none transition-all hover:scale-[1.02]">
+          <Link href="/tenant/messages">Contact Management</Link>
+        </Button>
+      </div>
+    </div>
+  );
 
   const imageUrl = getResolvedImageUrl(property?.imageUrl, property?.imageUrls);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-12">
+    <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-24">
       <div className="space-y-4 text-left">
         <div className="space-y-2">
           <h1 className="text-4xl font-headline font-bold text-foreground tracking-tight">Resident Portal</h1>
@@ -135,7 +148,7 @@ export default function TenantHub() {
                   <h2 className="text-3xl font-headline font-bold text-foreground tracking-tight">{property.addressLine1}</h2>
                   <p className="flex items-center text-sm font-medium text-muted-foreground"><MapPin className="w-4 h-4 mr-1.5 text-accent" /> {property.city}, {property.zipCode}</p>
                </div>
-               <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold uppercase tracking-[0.2em] text-[10px] py-2 px-5 rounded-full shadow-sm font-headline h-fit w-fit shrink-0">
+               <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold uppercase tracking-[0.2em] text-[9px] py-2 px-5 rounded-full shadow-sm font-headline h-fit w-fit shrink-0">
                   <ShieldCheck className="w-3.5 h-3.5 mr-2" /> Active Tenancy
                </Badge>
             </div>
@@ -156,11 +169,11 @@ export default function TenantHub() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-4">
-                <div className="space-y-4">
+                <div className="space-y-4 text-left">
                   <h3 className="font-bold font-headline text-xl text-foreground border-b border-border pb-3">Your Residence</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed font-body font-medium">{property.description || "A premium managed property with professional maintenance and visual orchestration."}</p>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-4 text-left">
                   <h3 className="font-bold font-headline text-xl text-foreground flex items-center border-b border-border pb-3"><ReceiptText className="w-5 h-5 mr-3 text-accent" /> Account & Financials</h3>
                   <div className="p-6 bg-muted/20 rounded-[1.75rem] border border-border space-y-4 shadow-inner">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest font-headline opacity-60">Monthly Rental Yield</p>
@@ -268,16 +281,18 @@ export default function TenantHub() {
                      <p className="text-sm font-bold font-headline text-foreground group-hover:text-accent transition-colors truncate">{req.title}</p>
                    </div>
                  </Link>
-               )) : <div className="text-center py-10 opacity-30 flex flex-col items-center justify-center space-y-3">
+               )) : (
+                 <div className="text-center py-10 opacity-30 flex flex-col items-center justify-center space-y-3">
                     <div className="p-4 bg-muted rounded-full animate-pulse"><CheckCircle2 className="w-8 h-8 text-foreground opacity-20" /></div>
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] font-headline text-foreground text-center">Monitoring ledger in real-time</p>
-                 </div>}
+                 </div>
+               )}
              </CardContent>
            </Card>
         </div>
       </div>
 
-      <div className="pt-10 flex justify-center">
+      <div className="pt-16 flex justify-center">
         <Button size="lg" className="bg-accent hover:bg-accent/90 text-white rounded-2xl shadow-2xl shadow-accent/20 font-bold h-16 font-headline px-16 border-none transition-all hover:scale-[1.05] active:scale-95" asChild>
           <Link href="/tenant/maintenance"><AlertCircle className="w-6 h-6 mr-3" /> Report Repair</Link>
         </Button>
