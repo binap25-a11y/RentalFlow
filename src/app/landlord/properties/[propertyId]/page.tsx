@@ -150,7 +150,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     try {
       for (const file of files) {
         const optimizedBlob = await compressImage(file);
-        // ATOMIC PATH PROTOCOL: uid/propertyId/timestamp-filename
         const path = `${user.uid}/${propertyId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
         
         const formData = new FormData();
@@ -193,7 +192,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     setIsUploadingDoc(true);
     setUploadedDocUrl(null);
 
-    // ATOMIC PATH PROTOCOL: uid/propertyId/timestamp-filename
     const path = `${user.uid}/${propertyId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
     
     try {
@@ -433,14 +431,15 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                       <Plus className="w-4 h-4 mr-2" /> Register Record
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh] max-w-[550px] ring-1 ring-white/10">
+                  <DialogContent className="rounded-[3.5rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col h-[750px] max-h-[90vh] max-w-[550px] ring-1 ring-white/10">
                     <form onSubmit={handleFinalizeDocument} className="flex flex-col h-full overflow-hidden">
                       <div className="p-10 bg-primary/5 border-b border-white/5 text-left shrink-0">
                         <DialogTitle className="text-2xl font-bold font-headline text-foreground tracking-tight">Vault Orchestration</DialogTitle>
                         <DialogDescription className="text-sm font-medium text-muted-foreground mt-2">Add compliance documents or high-fidelity property guides.</DialogDescription>
                       </div>
-                      <ScrollArea className="flex-1">
-                        <div className="p-10 space-y-8 text-left">
+                      
+                      <div className="flex-1 overflow-y-auto min-h-0 bg-white/[0.01]">
+                        <div className="p-10 space-y-10">
                           <div className="space-y-3">
                             <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Visual Asset Ledger</Label>
                             <div className="relative group">
@@ -468,12 +467,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
                           <div className="space-y-3 animate-in slide-in-from-top-4 duration-700">
                             <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Record Identity</Label>
-                            <Input value={newDocName} onChange={(e) => setNewDocName(e.target.value)} placeholder="e.g. Gas Safety Record 2025" required className="rounded-2xl h-14 bg-muted/30 border-none font-bold px-6 text-base" />
+                            <Input value={newDocName} onChange={(e) => setNewDocName(e.target.value)} placeholder="e.g. Gas Safety Record 2025" required className="rounded-2xl h-14 bg-muted/40 border-none font-bold px-6 text-base shadow-inner ring-1 ring-white/5" />
                           </div>
                           
                           <div className="space-y-3">
                             <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Asset Classification</Label>
-                            <select className="flex h-14 w-full rounded-2xl border-none bg-muted/30 px-6 py-2 text-base focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" value={newDocType} onChange={(e) => setNewDocType(e.target.value)}>
+                            <select className="flex h-14 w-full rounded-2xl border-none bg-muted/40 px-6 py-2 text-base focus:ring-2 focus:ring-accent outline-none font-bold text-foreground shadow-inner ring-1 ring-white/5" value={newDocType} onChange={(e) => setNewDocType(e.target.value)}>
                               <option value="Certificate">Compliance Certificate</option>
                               <option value="Lease">Lease Agreement</option>
                               <option value="Manual">Property Manual</option>
@@ -481,7 +480,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                             </select>
                           </div>
                         </div>
-                      </ScrollArea>
+                      </div>
+                      
                       <DialogFooter className="p-10 bg-muted/5 border-t border-white/5 shrink-0">
                         <Button type="submit" disabled={isUploadingDoc || !uploadedDocUrl || !newDocName} className="w-full rounded-[1.75rem] h-16 font-bold bg-accent text-white shadow-2xl shadow-accent/20 font-headline text-[11px] uppercase tracking-[0.3em] hover:scale-[1.01] transition-transform border-none">
                           <ShieldCheck className="w-5 h-5 mr-3" />
@@ -630,24 +630,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 ))}
              </CardContent>
            </Card>
-
-           <Card className="border-none shadow-2xl rounded-[3rem] bg-card overflow-hidden text-left ring-1 ring-white/5 p-10">
-              <h3 className="font-bold font-headline text-xl mb-6 text-foreground tracking-tight">Portfolio Roadmap</h3>
-              <div className="space-y-4">
-                 <div className="relative pl-6 border-l-2 border-accent/20 space-y-10">
-                    <div className="relative">
-                       <div className="absolute -left-[33px] top-1 w-4 h-4 rounded-full bg-accent ring-4 ring-background" />
-                       <p className="text-[10px] font-bold uppercase text-accent tracking-widest font-headline">Currently Managing</p>
-                       <p className="text-sm font-bold text-foreground mt-1">Active Tenancy Orchestration</p>
-                    </div>
-                    <div className="relative">
-                       <div className="absolute -left-[33px] top-1 w-4 h-4 rounded-full bg-white/10 ring-4 ring-background" />
-                       <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest font-headline">Future State</p>
-                       <p className="text-sm font-bold text-muted-foreground mt-1 opacity-60">Lease Renewal Audit</p>
-                    </div>
-                 </div>
-              </div>
-           </Card>
         </div>
       </div>
 
@@ -656,19 +638,8 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           <DialogTitle className="sr-only">Visual Asset Preview</DialogTitle>
           {lightboxUrl && (
             <div className="relative w-full h-full flex items-center justify-center">
-              <Image 
-                src={lightboxUrl} 
-                alt="" 
-                fill
-                className="object-contain"
-                unoptimized
-              />
-              <button 
-                onClick={() => setLightboxUrl(null)}
-                className="absolute top-8 right-8 bg-black/60 backdrop-blur-xl text-white p-4 rounded-full hover:bg-black transition-all hover:scale-110 active:scale-95 shadow-2xl"
-              >
-                <X className="w-7 h-7" />
-              </button>
+              <Image src={lightboxUrl} alt="" fill className="object-contain" unoptimized />
+              <button onClick={() => setLightboxUrl(null)} className="absolute top-8 right-8 bg-black/60 backdrop-blur-xl text-white p-4 rounded-full hover:bg-black transition-all hover:scale-110 active:scale-95 shadow-2xl"><X className="w-7 h-7" /></button>
             </div>
           )}
         </DialogContent>

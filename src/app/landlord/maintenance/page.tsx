@@ -324,35 +324,42 @@ export default function MaintenancePage() {
       </div>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card max-w-[650px] flex flex-col max-h-[90vh]">
+        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card max-w-[650px] flex flex-col h-[700px] max-h-[90vh] ring-1 ring-white/10">
           <form onSubmit={handleCreateRequest} className="flex flex-col h-full overflow-hidden">
             <div className="p-10 bg-primary/5 border-b text-left shrink-0">
               <DialogTitle className="font-headline text-2xl font-bold text-foreground tracking-tight">Log Maintenance Event</DialogTitle>
               <DialogDescription className="font-medium text-muted-foreground mt-1 text-sm">Initialize a maintenance event for your professional roadmap.</DialogDescription>
             </div>
-            <ScrollArea className="flex-1">
-              <div className="grid gap-6 p-10 text-left">
-                <div className="space-y-2">
-                  <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Target Inventory Asset</Label>
-                  <select className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-foreground" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
+            
+            <div className="flex-1 overflow-y-auto min-h-0 bg-white/[0.01]">
+              <div className="grid gap-8 p-10 text-left">
+                <div className="space-y-3">
+                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Target Inventory Asset</Label>
+                  <select 
+                    className="flex h-14 w-full rounded-2xl border-none bg-muted/40 px-6 py-2 text-base focus:ring-2 focus:ring-primary outline-none font-bold text-foreground shadow-inner ring-1 ring-white/5" 
+                    value={selectedPropertyId} 
+                    onChange={(e) => setSelectedPropertyId(e.target.value)} 
+                    required
+                  >
                     <option value="">Choose an inventory item...</option>
                     {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
                   </select>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Repair Identifier</Label>
-                  <Input value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="e.g. Electrical Fault" className="rounded-xl h-12 bg-muted/20 border-none font-bold text-sm px-4" />
+                <div className="space-y-3">
+                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Repair Identifier</Label>
+                  <Input value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="e.g. Electrical Fault discovery" className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/5" />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Context</Label>
-                  <Textarea value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Details for triage..." className="rounded-xl min-h-[140px] bg-muted/20 border-none font-medium px-4 py-4 text-sm leading-relaxed" />
+                <div className="space-y-3">
+                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Context</Label>
+                  <Textarea value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Details for triage and fix strategy..." className="rounded-2xl min-h-[160px] bg-muted/40 border-none font-medium px-6 py-5 text-base leading-relaxed shadow-inner ring-1 ring-white/5" />
                 </div>
               </div>
-            </ScrollArea>
+            </div>
+
             <DialogFooter className="p-10 bg-muted/5 border-t shrink-0">
-              <Button type="submit" className="w-full rounded-xl h-14 font-bold bg-primary shadow-lg text-primary-foreground font-headline text-sm hover:bg-primary/90 transition-all active:scale-95" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                Register Task
+              <Button type="submit" className="w-full rounded-2xl h-16 font-bold bg-primary shadow-2xl text-primary-foreground font-headline text-sm hover:bg-primary/90 transition-all hover:scale-[1.01]" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
+                Register Roadmap Task
               </Button>
             </DialogFooter>
           </form>
