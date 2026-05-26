@@ -105,17 +105,19 @@ export default function TenantHub() {
   const imageUrl = getResolvedImageUrl(property?.imageUrl, property?.imageUrls);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-12">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 text-left">
-        <div>
-          <h1 className="text-4xl font-headline font-bold text-foreground mb-2 tracking-tight">Resident Portal</h1>
-          <p className="text-muted-foreground font-medium font-body">Welcome home to {property.addressLine1.split(',')[0]}</p>
+    <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-12">
+      <div className="space-y-6 text-left">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-headline font-bold text-foreground tracking-tight">Resident Portal</h1>
+          <p className="text-muted-foreground font-medium font-body text-lg">Welcome home to {property.addressLine1.split(',')[0]}</p>
         </div>
-        <Button className="bg-accent hover:bg-accent/90 text-white rounded-2xl shadow-xl shadow-accent/20 font-bold h-12 font-headline px-8 border-none" asChild><Link href="/tenant/maintenance"><AlertCircle className="w-4 h-4 mr-2" /> Report Repair</Link></Button>
+        <Button className="bg-accent hover:bg-accent/90 text-white rounded-2xl shadow-xl shadow-accent/20 font-bold h-14 font-headline px-10 border-none w-fit transition-all hover:scale-[1.02] active:scale-95" asChild>
+          <Link href="/tenant/maintenance"><AlertCircle className="w-5 h-5 mr-3" /> Report Repair</Link>
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-8 space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="lg:col-span-8 space-y-10">
           <Card className="border-none shadow-sm overflow-hidden rounded-[2.5rem] bg-card group ring-1 ring-border">
             <div className="relative h-[450px] w-full bg-muted overflow-hidden">
               {imageUrl ? (
@@ -142,21 +144,21 @@ export default function TenantHub() {
             </div>
 
             <CardContent className="pt-10 text-left p-10 space-y-10">
-              <div className="flex flex-wrap gap-4 items-center">
-                <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl border border-border shadow-inner">
-                   <Bed className="w-4 h-4 text-accent" />
-                   <span className="text-[11px] font-bold text-foreground uppercase tracking-widest">{property.numberOfBedrooms || 0} Bedrooms</span>
+              <div className="flex flex-wrap gap-6 items-center">
+                <div className="flex items-center gap-3 bg-primary/5 px-5 py-2.5 rounded-2xl border border-border shadow-inner">
+                   <Bed className="w-5 h-5 text-accent" />
+                   <span className="text-sm font-bold text-foreground font-headline uppercase tracking-widest">{property.numberOfBedrooms || 0} Bedrooms</span>
                 </div>
-                <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl border border-border shadow-inner">
-                   <Bath className="w-4 h-4 text-accent" />
-                   <span className="text-[11px] font-bold text-foreground uppercase tracking-widest">{property.numberOfBathrooms || 0} Bathrooms</span>
+                <div className="flex items-center gap-3 bg-primary/5 px-5 py-2.5 rounded-2xl border border-border shadow-inner">
+                   <Bath className="w-5 h-5 text-accent" />
+                   <span className="text-sm font-bold text-foreground font-headline uppercase tracking-widest">{property.numberOfBathrooms || 0} Bathroom</span>
                 </div>
-                <Badge variant="outline" className="h-9 px-4 rounded-xl border-border font-bold text-foreground bg-white/5 uppercase text-[9px] tracking-widest">
+                <Badge variant="outline" className="h-10 px-5 rounded-2xl border-border font-bold text-foreground bg-white/5 uppercase text-[10px] tracking-widest font-headline">
                    {property.propertyType || "Residential"}
                 </Badge>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-4">
                 <div className="space-y-4">
                   <h3 className="font-bold font-headline text-xl text-foreground border-b border-border pb-3">Your Residence</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed font-body font-medium">{property.description || "A premium managed property with professional maintenance and visual orchestration."}</p>
