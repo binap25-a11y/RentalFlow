@@ -110,9 +110,10 @@ export function isRealUserUpload(url: any): boolean {
   const u = url.toLowerCase();
   
   // AUTHORIZE: Project infrastructure and high-fidelity binaries
-  // Removes aggressive blacklisting to ensure valid photography is never rejected.
+  // Explicitly whitelists the user's Supabase project binaries.
   return (
     u.includes('supabase.co') || 
+    u.includes('vucefokfhdrbgldrimgl') ||
     u.includes('firebasestorage') ||
     u.includes('googleapi') ||
     u.includes('googleapis') ||

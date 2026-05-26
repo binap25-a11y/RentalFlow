@@ -57,6 +57,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const [bathrooms, setBathrooms] = useState('1');
   
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
   const isInitialized = useRef(false);
 
   // High-Fidelity Ledger Mirroring
@@ -203,6 +204,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       router.push(`/landlord/properties/${propertyId}`);
     } catch (e) {
       router.push(`/landlord/properties/${propertyId}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
