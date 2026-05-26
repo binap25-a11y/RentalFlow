@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -14,22 +15,23 @@ import { Badge } from "@/components/ui/badge";
 import { 
   PhoneCall, Download, Phone, Mail, 
   Wrench, ShieldAlert, Loader2, AlertCircle, ShieldCheck,
-  Zap, CloudSync
+  Zap, CloudSync, ChevronRight, MessageSquare
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
+import Link from "next/link";
 
 /**
  * @fileOverview High-Fidelity Support Directory.
  * Populates real-time SOS protocols and authorized trade partners via Firestore listeners.
- * Optimized for cinematic visibility and hardware-accelerated UX.
+ * Features an Atomic Fallback Engine for national SOS standards.
  */
 
 const SOS_FALLBACKS = [
-  { name: "Emergency Services", phone: "999 or 112", role: "Primary Emergency", category: 'standard' },
-  { name: "NHS Medical Advice", phone: "111", role: "Medical Advice (24/7)", category: 'standard' },
-  { name: "National Gas Emergency", phone: "0800 111 999", role: "Gas Leaks Only", category: 'standard' },
-  { name: "Police Non-Emergency", phone: "101", role: "Non-Urgent Records", category: 'standard' },
+  { id: 'f1', name: "Emergency Services", phone: "999 or 112", role: "Primary Emergency", category: 'standard' },
+  { id: 'f2', name: "NHS Medical Advice", phone: "111", role: "Medical Advice (24/7)", category: 'standard' },
+  { id: 'f3', name: "National Gas Emergency", phone: "0800 111 999", role: "Gas Leaks Only", category: 'standard' },
+  { id: 'f4', name: "Police Non-Emergency", phone: "101", role: "Non-Urgent Records", category: 'standard' },
 ];
 
 export default function TenantEmergencyContactsPage() {
@@ -189,7 +191,7 @@ export default function TenantEmergencyContactsPage() {
                     <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground font-headline">Synchronizing Safety Protocols...</span>
                   </div>
                 ) : standardServices.map((service, i) => (
-                  <div key={i} className="flex justify-between items-start gap-6 group">
+                  <div key={service.id || i} className="flex justify-between items-start gap-6 group">
                     <div className="space-y-1.5 min-w-0 text-left">
                       <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest font-headline opacity-80">{service.role}</p>
                       <p className="text-base font-bold leading-tight text-foreground font-headline group-hover:text-primary transition-colors">{service.name}</p>
@@ -214,7 +216,10 @@ export default function TenantEmergencyContactsPage() {
                <Card className="col-span-full border-2 border-dashed py-32 flex flex-col items-center justify-center bg-muted/5 rounded-[3rem] ring-1 ring-border/10">
                  <div className="p-8 bg-muted rounded-[2.5rem] mb-8"><Zap className="w-16 h-16 text-primary/10" /></div>
                  <h3 className="text-2xl font-bold font-headline text-primary/40 uppercase tracking-widest text-center">No property partners assigned</h3>
-                 <p className="text-sm text-muted-foreground font-medium mt-3 text-center max-w-sm">Authorized contractors for your asset will appear here in real-time as management confirms them.</p>
+                 <p className="text-sm text-muted-foreground font-medium mt-3 text-center max-w-sm mb-8">Authorized contractors for your asset will appear here in real-time as management confirms them.</p>
+                 <Button variant="outline" asChild className="rounded-xl font-bold h-12 border-primary/20 hover:bg-primary/5 transition-all text-primary">
+                    <Link href="/tenant/messages"><MessageSquare className="w-4 h-4 mr-2" /> Inquire with Management</Link>
+                 </Button>
                </Card>
              ) : (
                professionalPartners.map((contact) => (

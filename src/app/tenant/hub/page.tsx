@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
@@ -205,8 +206,8 @@ export default function TenantHub() {
              </CardHeader>
              <CardContent className="p-8 space-y-6 text-left">
                <div className="space-y-4">
-                 {sortedContacts.map(contact => (
-                   <div key={contact.id} className={cn(
+                 {sortedContacts.map((contact, idx) => (
+                   <div key={contact.id || idx} className={cn(
                      "p-5 rounded-2xl border transition-all group text-left",
                      contact.category === 'standard' 
                       ? "bg-red-500/5 border-red-500/20 hover:border-red-500/40" 
