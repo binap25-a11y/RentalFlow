@@ -11,7 +11,7 @@ import {
   ChevronRight, CheckCircle2, Clock, ReceiptText,
   ShieldCheck, ShieldAlert, RefreshCcw, Zap, Bed, Bath, Download, 
   Home, Info, BookOpen, CreditCard, RotateCcw, Phone,
-  MessageCircle, X
+  MessageCircle, X, Wifi, Shield
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -19,6 +19,7 @@ import { tenantConcierge } from "@/ai/flows/tenant-concierge-flow";
 import { cn, getResolvedImageUrl } from "@/lib/utils";
 import { query, collection, where } from "firebase/firestore";
 import { format } from "date-fns";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 /**
  * 🆘 National SOS Protocols (UK Fallbacks)
@@ -165,8 +166,7 @@ export default function TenantHub() {
   if (!isClient || isPropLoading || isRequestsLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary w-12 h-12 opacity-60" /></div>;
 
   /**
-   * 💎 PREMIUM SYSTEM ORCHESTRATION VIEW
-   * Optimized vertical hierarchy for Financials -> Residence Narrative -> Actions.
+   * 💎 PREMIUM SYSTEM ORCHESTRATION VIEW (Placeholder State)
    */
   if (!property) return (
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-1000 pb-32 text-left bg-background">
@@ -176,36 +176,34 @@ export default function TenantHub() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        <div className="lg:col-span-8 space-y-12">
+        <div className="lg:col-span-8 space-y-10">
           <Card className="border-none shadow-2xl rounded-[3rem] overflow-hidden bg-card/50 backdrop-blur-xl ring-1 ring-border">
             <div className="relative h-[350px] w-full bg-muted/40 animate-pulse flex items-center justify-center">
               <Building2 className="w-20 h-20 text-foreground/10" />
               <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
             </div>
             
-            <CardContent className="p-12 space-y-12">
+            <CardContent className="p-12 space-y-10">
               {/* RESIZED MONTHLY RENT PLACEHOLDER */}
               <div className="space-y-6">
                 <div className="flex items-center gap-3">
                   <ReceiptText className="w-6 h-6 text-accent opacity-20" />
                   <div className="h-6 w-32 bg-muted rounded-lg animate-pulse" />
                 </div>
-                <div className="p-8 bg-muted/10 rounded-[2.5rem] border border-border/50 shadow-inner space-y-6">
-                  <div className="space-y-3">
-                    <div className="h-2 w-20 bg-muted rounded animate-pulse opacity-40" />
-                    <div className="h-10 w-40 bg-muted rounded-xl animate-pulse" />
-                  </div>
-                  <div className="h-10 w-full bg-muted/30 rounded-xl animate-pulse" />
+                <div className="p-10 bg-muted/10 rounded-[2.5rem] border border-border/50 shadow-inner space-y-6">
+                  <div className="h-2 w-20 bg-muted rounded animate-pulse opacity-40" />
+                  <div className="h-10 w-48 bg-muted rounded-xl animate-pulse" />
+                  <div className="h-12 w-full bg-muted/30 rounded-xl animate-pulse" />
                 </div>
               </div>
 
-              {/* YOUR RESIDENCE PLACEHOLDER (BELOW RENT) */}
+              {/* YOUR RESIDENCE PLACEHOLDER */}
               <div className="space-y-6">
                 <div className="flex items-center gap-3">
                   <Home className="w-6 h-6 text-accent opacity-20" />
                   <div className="h-6 w-40 bg-muted rounded-lg animate-pulse" />
                 </div>
-                <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-border/50 space-y-4">
+                <div className="p-10 bg-primary/5 rounded-[2.5rem] border border-border/50 space-y-4">
                   <div className="h-3 w-full bg-muted rounded animate-pulse opacity-30" />
                   <div className="h-3 w-5/6 bg-muted rounded animate-pulse opacity-30" />
                   <div className="h-3 w-4/6 bg-muted rounded animate-pulse opacity-30" />
@@ -214,7 +212,7 @@ export default function TenantHub() {
 
               {/* FITTED DOWNLOAD ACTION */}
               <div className="pt-6 border-t border-border/50">
-                <div className="h-14 w-full bg-muted rounded-2xl animate-pulse opacity-20" />
+                <div className="h-16 w-full bg-muted rounded-2xl animate-pulse opacity-20" />
               </div>
             </CardContent>
           </Card>
@@ -242,7 +240,7 @@ export default function TenantHub() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        <div className="lg:col-span-8 space-y-12">
+        <div className="lg:col-span-8 space-y-10">
           <Card className="border-none shadow-2xl overflow-hidden rounded-[3rem] bg-card group ring-1 ring-border">
             <div className="relative h-[450px] md:h-[550px] w-full bg-muted overflow-hidden">
               {primaryImageUrl ? (
@@ -289,7 +287,7 @@ export default function TenantHub() {
             </div>
 
             <CardContent className="p-10 md:p-12 space-y-12">
-              {/* VERTICAL HIERARCHY: RENT -> RESIDENCE -> ACTION */}
+              {/* VERTICAL HIERARCHY: RENT -> RESIDENCE DNA -> ACTION */}
               <div className="space-y-12">
                 <div className="space-y-6">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
@@ -304,10 +302,28 @@ export default function TenantHub() {
 
                 <div className="space-y-6">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
-                  <div className="p-10 bg-primary/5 rounded-[2.5rem] border border-border">
-                     <p className="text-base text-muted-foreground leading-relaxed font-body font-medium">
-                       {property.description || "A premium managed property with high-fidelity visual orchestration and automated maintenance support."}
-                     </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="p-8 bg-primary/5 rounded-[2rem] border border-border col-span-1 md:col-span-2">
+                       <p className="text-[9px] font-bold uppercase text-accent tracking-[0.3em] mb-4">Official Narrative</p>
+                       <p className="text-base text-muted-foreground leading-relaxed font-body font-medium">
+                         {property.description || "A premium managed property with high-fidelity visual orchestration and automated maintenance support."}
+                       </p>
+                    </div>
+                    
+                    <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4">
+                       <div className="p-3 bg-white rounded-xl shadow-sm text-accent"><Wifi className="w-5 h-5" /></div>
+                       <div>
+                          <p className="text-[10px] font-bold uppercase opacity-40">Connectivity</p>
+                          <p className="text-sm font-bold">Ultra-Fast Fiber Enabled</p>
+                       </div>
+                    </div>
+                    <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4">
+                       <div className="p-3 bg-white rounded-xl shadow-sm text-accent"><Shield className="w-5 h-5" /></div>
+                       <div>
+                          <p className="text-[10px] font-bold uppercase opacity-40">Compliance</p>
+                          <p className="text-sm font-bold">EPC Grade B / Certified</p>
+                       </div>
+                    </div>
                   </div>
                 </div>
 
@@ -321,7 +337,7 @@ export default function TenantHub() {
           </Card>
         </div>
 
-        <div className="lg:col-span-4 space-y-12">
+        <div className="lg:col-span-4 space-y-10">
            <Card className="border-none shadow-sm rounded-[3rem] bg-card ring-1 ring-border overflow-hidden">
              <CardHeader className="p-10 pb-4 border-b border-border bg-muted/5">
                <div className="flex justify-between items-center mb-2">
