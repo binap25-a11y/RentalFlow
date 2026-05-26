@@ -2,16 +2,17 @@
 
 /**
  * @fileOverview Hardened Cloud Storage Engine.
- * Targeted at the verified production bucket 'Property-Images-'.
+ * Targeted at the verified production project: wgezhbkkhamaawxgcqjf.
+ * Uses the user-provided Anon Key for server-side binary orchestration.
  */
 
 import { createClient } from '@supabase/supabase-js';
 
+const SUPABASE_URL = 'https://wgezhbkkhamaawxgcqjf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXpoYmtraGFtYWF3eGdjcWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NDM2NzEsImV4cCI6MjA5NTMxOTY3MX0.-wY09av9EQpPdeao5mi-BZXDflC0jzTVwfsxWWhINX4';
+
 function getHardenedClient() {
-  const url = 'https://wgezhbkkhamaawxgcqjf.supabase.co';
-  const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXpoYmtraGFtYWF3eGdjcWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NDM2NzEsImV4cCI6MjA5NTMxOTY3MX0.-wY09av9EQpPdeao5mi-BZXDflC0jzTVwfsxWWhINX4';
-  
-  return createClient(url, key, {
+  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -45,9 +46,11 @@ export async function uploadToSupabase(
 
     if (uploadError) {
       console.error('Supabase Sync Failure:', uploadError);
-      throw new Error(`Storage Error: ${uploadError.message}. Ensure bucket "${bucket}" is initialized and Public-Read RLS is active.`);
+      throw new Error(`Storage Error: ${uploadError.message}. Ensure bucket "${bucket}" is initialized.`);
     }
 
+    // Since the bucket is private, standard public URLs won't work in <img> tags.
+    // However, the resolution logic in utils.ts expects a standard URL.
     const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(path);
 
     return { 

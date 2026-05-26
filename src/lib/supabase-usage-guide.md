@@ -30,5 +30,5 @@ CREATE POLICY "Allow Docs Delete" ON storage.objects FOR DELETE USING (bucket_id
 ## Setup Verification
 1. **Buckets**: Log in to [Supabase Dashboard](https://wgezhbkkhamaawxgcqjf.supabase.co) and go to **Storage**.
 2. **Identity Check**: Ensure `Property-Images-` and `property-docs` are created exactly as cased here.
-3. **Public Toggle**: Ensure `Property-Images-` is toggled to **"Public"** in the bucket settings. This is the most common cause of broken URLs.
+3. **Public Toggle**: Go to Bucket Settings and ensure the bucket is set to **"Public"**. This is the most common cause of broken URLs.
 4. **Policies**: Confirm the SQL above has been executed to grant the application permission to orchestrate binaries.
