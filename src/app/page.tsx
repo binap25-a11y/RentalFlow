@@ -25,6 +25,12 @@ import {
 import { useEffect, useState, useMemo } from 'react';
 import { doc } from 'firebase/firestore';
 
+/**
+ * @fileOverview High-Fidelity Portfolio Entry Point.
+ * Optimized for cinematic landing and zero-latency redirection.
+ * Synchronized with professional visual assets and AI feature matrix.
+ */
+
 export default function LandingPage() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
@@ -124,17 +130,17 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row gap-6 pt-4">
               {user && profile ? (
-                <Button size="lg" asChild className="h-16 px-12 rounded-[1.75rem] bg-accent hover:bg-accent/90 text-white text-lg font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95 border-none">
+                <Button size="lg" asChild className="h-16 px-10 md:px-16 rounded-[1.75rem] bg-accent hover:bg-accent/90 text-white text-lg md:text-xl font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95 border-none">
                   <Link href={profile.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
-                      Return to Command <ArrowRight className="w-6 h-6 ml-3" />
+                      Access Portfolio Vault <ArrowRight className="w-6 h-6 ml-3" />
                   </Link>
                 </Button>
               ) : (
-                <Button size="lg" asChild className="h-16 px-12 rounded-[1.75rem] bg-accent hover:bg-accent/90 text-white text-lg font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95 border-none">
-                  <Link href="/auth">Start Tenancy <ArrowRight className="w-6 h-6 ml-3" /></Link>
+                <Button size="lg" asChild className="h-16 px-10 md:px-16 rounded-[1.75rem] bg-accent hover:bg-accent/90 text-white text-lg md:text-xl font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95 border-none">
+                  <Link href="/auth">Access Portfolio Vault <ArrowRight className="w-6 h-6 ml-3" /></Link>
                 </Button>
               )}
-              <Button size="lg" variant="outline" className="h-16 px-12 rounded-[1.75rem] border-white/10 bg-white/5 hover:bg-white/10 text-foreground font-bold text-lg backdrop-blur-md cursor-pointer" onClick={scrollToFeatures}>
+              <Button size="lg" variant="outline" className="h-16 px-8 md:px-12 rounded-[1.75rem] border-white/10 bg-white/5 hover:bg-white/10 text-foreground font-bold text-lg backdrop-blur-md cursor-pointer transition-all" onClick={scrollToFeatures}>
                  Explore Intelligence
               </Button>
             </div>

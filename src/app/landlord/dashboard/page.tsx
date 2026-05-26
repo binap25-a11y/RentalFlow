@@ -26,7 +26,8 @@ import {
   DialogDescription, 
   DialogFooter, 
   DialogHeader, 
-  DialogTitle 
+  DialogTitle,
+  DialogTrigger
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -198,7 +199,7 @@ export default function LandlordDashboard() {
     );
   }
 
-  const statCards = [
+  const statItems = [
     { title: "Gross Annual Potential", val: `£${financialStats?.annualGross.toLocaleString()}`, icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5", indicator: ArrowUpRight },
     { title: "Portfolio Expenses (YTD)", val: `£${financialStats?.totalExpenses.toLocaleString()}`, icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", indicator: ArrowDownRight },
     { title: "Net Annual Forecast", val: `£${financialStats?.netAnnualForecast.toLocaleString()}`, icon: TrendingUp, color: "text-primary-foreground", bg: "bg-primary", isPrimary: true },
@@ -231,17 +232,17 @@ export default function LandlordDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((stat, i) => {
-          const Icon = stat.icon;
-          const Indicator = stat.indicator;
+        {statItems.map((stat, i) => {
+          const IconComponent = stat.icon;
+          const IndicatorComponent = stat.indicator;
           return (
             <Card key={i} className={cn("border-none shadow-sm rounded-[2.5rem] overflow-hidden group hover:scale-[1.02] transition-all", stat.isPrimary ? "bg-primary text-primary-foreground shadow-2xl shadow-primary/10" : "bg-card ring-1 ring-white/5")}>
               <CardContent className="pt-10 text-left px-10">
                 <div className="flex items-center justify-between mb-8">
                   <div className={cn("p-4 rounded-2xl shadow-inner border border-white/5 transition-transform group-hover:scale-110", stat.bg, !stat.isPrimary && stat.color)}>
-                    <Icon className="w-7 h-7" />
+                    <IconComponent className="w-7 h-7" />
                   </div>
-                  {Indicator && <Indicator className={cn("w-6 h-6 opacity-30", stat.color)} />}
+                  {IndicatorComponent && <IndicatorComponent className={cn("w-6 h-6 opacity-30", stat.color)} />}
                 </div>
                 <div className="space-y-3 min-w-0">
                   <p className="text-4xl font-bold font-headline tracking-tighter truncate">
@@ -405,9 +406,11 @@ export default function LandlordDashboard() {
                </div>
                
                <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
-                <Button className="w-full rounded-[1.5rem] bg-white text-accent font-bold h-14 hover:bg-white/90 transition-all shadow-2xl shadow-black/20 text-xs uppercase tracking-[0.2em] border-none" onClick={() => setIsExpenseDialogOpen(true)}>
-                  <Plus className="w-5 h-5 mr-3" /> Log Ledger Entry
-                </Button>
+                <DialogTrigger asChild>
+                  <Button className="w-full rounded-[1.5rem] bg-white text-accent font-bold h-14 hover:bg-white/90 transition-all shadow-2xl shadow-black/20 text-xs uppercase tracking-[0.2em] border-none">
+                    <Plus className="w-5 h-5 mr-3" /> Log Ledger Entry
+                  </Button>
+                </DialogTrigger>
                 <DialogContent className="rounded-[3.5rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh] max-w-[550px] ring-1 ring-white/10">
                   <form className="flex flex-col h-full overflow-hidden" onSubmit={(e) => { e.preventDefault(); handleLogManualExpense(); }}>
                     <div className="p-10 bg-primary/5 border-b border-white/5 text-left shrink-0">

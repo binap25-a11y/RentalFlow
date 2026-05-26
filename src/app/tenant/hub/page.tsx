@@ -10,6 +10,8 @@ import {
   Loader2, Home, Sparkles, Send, Bot, 
   ChevronRight, CheckCircle2, Clock, ReceiptText, Building2,
   PhoneCall, ShieldAlert,
+  ShieldCheck,
+  CloudSync
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -65,7 +67,7 @@ export default function TenantHub() {
     if (!db || !user) return null;
     return getTenantCollectionQuery({ db, collectionName: "emergencyContacts", userId: user.uid });
   }, [db, user]);
-  const { data: contactsData } = useCollection(contactsQuery);
+  const { data: contactsData, loading: isContactsLoading } = useCollection(contactsQuery);
 
   const sortedContacts = useMemo(() => {
     let list = contactsData ? [...contactsData] : [];
@@ -192,10 +194,13 @@ export default function TenantHub() {
         <div className="lg:col-span-4 space-y-8">
            <Card className="border-none shadow-sm rounded-[2.5rem] bg-card ring-1 ring-border overflow-hidden">
              <CardHeader className="p-8 pb-4 border-b border-border text-left bg-muted/5">
-               <CardTitle className="text-lg font-headline font-bold flex items-center text-foreground">
-                 <ShieldAlert className="w-5 h-5 mr-3 text-accent" />
-                 Property Support
-               </CardTitle>
+               <div className="flex justify-between items-center mb-2">
+                 <CardTitle className="text-lg font-headline font-bold flex items-center text-foreground">
+                   <ShieldAlert className="w-5 h-5 mr-3 text-accent" />
+                   Real-Time Support
+                 </CardTitle>
+                 {isContactsLoading && <CloudSync className="w-4 h-4 animate-spin text-accent/40" />}
+               </div>
                <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Authorized SOS protocols</CardDescription>
              </CardHeader>
              <CardContent className="p-8 space-y-6 text-left">

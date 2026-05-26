@@ -14,14 +14,14 @@ import { Badge } from "@/components/ui/badge";
 import { 
   PhoneCall, Download, Phone, Mail, 
   Wrench, ShieldAlert, Loader2, AlertCircle, ShieldCheck,
-  Zap
+  Zap, CloudSync
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
 
 /**
  * @fileOverview High-Fidelity Support Directory.
- * Populates real-time SOS protocols and authorized trade partners.
+ * Populates real-time SOS protocols and authorized trade partners via Firestore listeners.
  * Optimized for cinematic visibility and hardware-accelerated UX.
  */
 
@@ -63,75 +63,79 @@ export default function TenantEmergencyContactsPage() {
 
   const downloadPDF = () => {
     if (!isClient) return;
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
+    const pdfDoc = new jsPDF();
+    const pageWidth = pdfDoc.internal.pageSize.getWidth();
     const today = format(new Date(), 'PPP');
     
-    doc.setFillColor(15, 23, 42); 
-    doc.rect(0, 0, pageWidth, 55, 'F');
-    doc.setTextColor(255, 255, 255);
+    pdfDoc.setFillColor(15, 23, 42); 
+    pdfDoc.rect(0, 0, pageWidth, 55, 'F');
+    pdfDoc.setTextColor(255, 255, 255);
     
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(24);
-    doc.text("TENANCY SAFETY GUIDE", 20, 25);
+    pdfDoc.setFont("helvetica", "bold");
+    pdfDoc.setFontSize(24);
+    pdfDoc.text("TENANCY SAFETY GUIDE", 20, 25);
     
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(`Official Portfolio Safety Record | Generated: ${today}`, 20, 35);
+    pdfDoc.setFont("helvetica", "normal");
+    pdfDoc.setFontSize(10);
+    pdfDoc.text(`Official Portfolio Safety Record | Generated: ${today}`, 20, 35);
     
-    doc.setTextColor(0, 0, 0);
+    pdfDoc.setTextColor(0, 0, 0);
     let y = 75;
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("1. PRIMARY SOS PROTOCOLS (UK)", 20, y);
+    pdfDoc.setFont("helvetica", "bold");
+    pdfDoc.setFontSize(16);
+    pdfDoc.text("1. PRIMARY SOS PROTOCOLS (UK)", 20, y);
     y += 12;
     
     standardServices.forEach(service => {
-      if (y > 270) { doc.addPage(); y = 20; }
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.text(service.name.toUpperCase(), 20, y);
-      doc.setTextColor(185, 28, 28);
-      doc.text(`TEL: ${service.phone}`, pageWidth - 20, y, { align: 'right' });
+      if (y > 270) { pdfDoc.addPage(); y = 20; }
+      pdfDoc.setFont("helvetica", "bold");
+      pdfDoc.setFontSize(11);
+      pdfDoc.text(service.name.toUpperCase(), 20, y);
+      pdfDoc.setTextColor(185, 28, 28);
+      pdfDoc.text(`TEL: ${service.phone}`, pageWidth - 20, y, { align: 'right' });
       y += 7;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(100, 100, 100);
-      doc.text(service.role, 20, y);
-      doc.setTextColor(0, 0, 0);
+      pdfDoc.setFont("helvetica", "normal");
+      pdfDoc.setFontSize(9);
+      pdfDoc.setTextColor(100, 100, 100);
+      pdfDoc.text(service.role, 20, y);
+      pdfDoc.setTextColor(0, 0, 0);
       y += 15;
     });
 
     y += 10;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("2. AUTHORIZED TRADE PARTNERS", 20, y);
+    pdfDoc.setFont("helvetica", "bold");
+    pdfDoc.setFontSize(16);
+    pdfDoc.text("2. AUTHORIZED TRADE PARTNERS", 20, y);
     y += 12;
 
     if (professionalPartners.length > 0) {
       professionalPartners.forEach((contact) => {
-        if (y > 250) { doc.addPage(); y = 20; }
-        doc.setDrawColor(229, 231, 235);
-        doc.line(20, y - 5, pageWidth - 20, y - 5);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.text(contact.name, 20, y);
-        doc.setTextColor(30, 58, 138);
-        doc.text(contact.role.toUpperCase(), pageWidth - 20, y, { align: 'right' });
+        if (y > 250) { pdfDoc.addPage(); y = 20; }
+        pdfDoc.setDrawColor(229, 231, 235);
+        pdfDoc.line(20, y - 5, pageWidth - 20, y - 5);
+        pdfDoc.setFont("helvetica", "bold");
+        pdfDoc.setFontSize(12);
+        pdfDoc.text(contact.name, 20, y);
+        pdfDoc.setTextColor(30, 58, 138);
+        pdfDoc.text(contact.role.toUpperCase(), pageWidth - 20, y, { align: 'right' });
         y += 8;
-        doc.setTextColor(0, 0, 0);
-        doc.setFont("helvetica", "normal");
-        doc.text(`Direct Contact: ${contact.phone}`, 20, y);
+        pdfDoc.setTextColor(0, 0, 0);
+        pdfDoc.setFont("helvetica", "normal");
+        pdfDoc.text(`Direct Contact: ${contact.phone}`, 20, y);
         if (contact.email) {
           y += 6;
-          doc.text(`Email Support: ${contact.email}`, 20, y);
+          pdfDoc.text(`Email Support: ${contact.email}`, 20, y);
         }
         y += 20;
       });
+    } else {
+       pdfDoc.setFont("helvetica", "italic");
+       pdfDoc.setFontSize(10);
+       pdfDoc.text("No specific property partners assigned yet. Standard UK protocols apply.", 20, y);
     }
 
-    doc.save(`Safety_Guide_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    pdfDoc.save(`Safety_Guide_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
   if (!isClient) return null;
@@ -179,8 +183,11 @@ export default function TenantEmergencyContactsPage() {
                <p className="text-xs opacity-70 font-bold uppercase tracking-widest font-headline">National Emergency Lines</p>
              </CardHeader>
              <CardContent className="pt-10 px-8 pb-10 space-y-8">
-                {isLoading && standardServices.length === 0 ? (
-                  <div className="py-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary opacity-20" /></div>
+                {isLoading ? (
+                  <div className="py-12 flex flex-col items-center justify-center gap-4">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary opacity-20" />
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground font-headline">Synchronizing Safety Protocols...</span>
+                  </div>
                 ) : standardServices.map((service, i) => (
                   <div key={i} className="flex justify-between items-start gap-6 group">
                     <div className="space-y-1.5 min-w-0 text-left">
@@ -200,14 +207,14 @@ export default function TenantEmergencyContactsPage() {
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
              {isLoading ? (
                <div className="col-span-full py-32 flex flex-col items-center justify-center gap-4 opacity-40">
-                  <Loader2 className="w-12 h-12 animate-spin text-primary" />
-                  <p className="text-[10px] font-bold uppercase tracking-[0.4em] font-headline">Syncing Partners...</p>
+                  <CloudSync className="w-12 h-12 animate-pulse text-primary" />
+                  <p className="text-[10px] font-bold uppercase tracking-[0.4em] font-headline">Synchronizing Real-Time Ledger...</p>
                </div>
              ) : professionalPartners.length === 0 ? (
-               <Card className="col-span-full border-2 border-dashed py-32 flex flex-col items-center justify-center bg-muted/5 rounded-[3rem]">
+               <Card className="col-span-full border-2 border-dashed py-32 flex flex-col items-center justify-center bg-muted/5 rounded-[3rem] ring-1 ring-border/10">
                  <div className="p-8 bg-muted rounded-[2.5rem] mb-8"><Zap className="w-16 h-16 text-primary/10" /></div>
                  <h3 className="text-2xl font-bold font-headline text-primary/40 uppercase tracking-widest text-center">No property partners assigned</h3>
-                 <p className="text-sm text-muted-foreground font-medium mt-3 text-center">Authorized contractors for your asset will appear here in real-time.</p>
+                 <p className="text-sm text-muted-foreground font-medium mt-3 text-center max-w-sm">Authorized contractors for your asset will appear here in real-time as management confirms them.</p>
                </Card>
              ) : (
                professionalPartners.map((contact) => (
