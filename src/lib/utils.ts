@@ -102,18 +102,19 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.85)
 /**
  * 🖼️ User Asset Identifier (Hardened & Project-Agnostic)
  * Whitelist-first logic strictly authorizing valid storage binaries.
- * Decisively authorizes Supabase and local previews while blacklisting stock IDs.
+ * Decisively authorizes Supabase, Firebase, and local previews while blacklisting stock signatures.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
   const u = url.toLowerCase();
   
-  // 1. BROAD WHITELIST: Authorize valid cloud and local previews
+  // 1. BROAD WHITELIST: Authorize valid cloud storage patterns and local previews
   const isCloudBinary = (
     u.includes('supabase') || 
     u.includes('firebasestorage') ||
     u.includes('googleapi') ||
+    u.includes('storage.googleapis') ||
     u.startsWith('blob:') ||
     u.startsWith('data:')
   );
@@ -121,8 +122,8 @@ export function isRealUserUpload(url: any): boolean {
   // 2. STOCK BLACKLIST: Decisively reject specific known generic placeholders
   const isStockPlaceholder = (
     u.includes('placehold.co') || 
-    u.includes('photo-1486406146926-c627a92ad1ab') || // skyscraper
-    u.includes('photo-1560518883-ce09059eeffa')    // logo
+    u.includes('photo-1486406146926-c627a92ad1ab') || // Corporate skyscraper
+    u.includes('photo-1560518883-ce09059eeffa')    // Brand logo
   );
 
   return isCloudBinary && !isStockPlaceholder;
@@ -132,18 +133,19 @@ export function isRealUserUpload(url: any): boolean {
  * 🖼️ Asset Validation Engine
  */
 export function isValidAssetUrl(url: any): boolean {
-  return !!(url && typeof url === 'string' && url.trim() !== '' && (url.startsWith('http') || url.startsWith('blob:')));
+  return !!(url && typeof url === 'string' && url.trim() !== '' && (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')));
 }
 
 /**
  * 🖼️ Robust Asset Resolution Engine
+ * Prioritizes explicitly designated imageUrl if valid, otherwise falls back to first valid URL in array.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string | null {
   if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
     return imageUrl;
   }
   if (imageUrls && Array.isArray(imageUrls)) {
-    const realGallery = imageUrls.filter(isRealUserUpload);
+    const realGallery = imageUrls.filter(u => isValidAssetUrl(u) && isRealUserUpload(u));
     if (realGallery.length > 0) return realGallery[0];
   }
   return null;
@@ -151,16 +153,18 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
 
 /**
  * 🖼️ Synchronized Gallery Resolver
+ * Returns a deduplicated array of valid assets with the primary cover at index 0.
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
   
-  // Primary cover ALWAYS goes first
-  if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
-    assets.add(imageUrl);
+  // Primary cover ALWAYS goes first if it's verified
+  const primary = getResolvedImageUrl(imageUrl, imageUrls);
+  if (primary) {
+    assets.add(primary);
   }
   
-  // Followed by all other verified binaries
+  // Followed by all other verified binaries in the collection
   if (imageUrls && Array.isArray(imageUrls)) {
     imageUrls.forEach(u => {
       if (isValidAssetUrl(u) && isRealUserUpload(u)) {

@@ -24,7 +24,7 @@ import {
   Bed, Bath, X, FileText, Wrench, 
   ClipboardList, Plus, Download, Trash2,
   ShieldCheck, AlertCircle, Clock,
-  CheckCircle2, FileUp, Users, Building2
+  CheckCircle2, FileUp, Users, Building2, Sparkles
 } from "lucide-react";
 import { 
   Dialog, 
@@ -74,7 +74,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   /**
    * 🖼️ Optimistic Identity Resolution
    * Utilizes a hardened key-based strategy to force carousel re-evaluation
-   * when cloud binaries synchronize.
+   * when cloud binaries synchronize from Firestore.
    */
   const gallery = useMemo(() => {
     if (!property) return [];
@@ -275,11 +275,15 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           alt="" 
                           className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105" 
                           onError={(e) => {
+                            // If Supabase binary hasn't propagated, the UI will attempt a fallback logic in resolution.
+                            // This ensures broken links don't disrupt the detail experience.
                             (e.target as HTMLImageElement).style.opacity = '0.5';
                           }}
                         />
                         {index === 0 && (
-                          <div className="absolute top-8 left-8 px-5 py-2 bg-accent text-white text-[11px] font-bold uppercase rounded-full shadow-2xl font-headline z-10 tracking-[0.1em]">Verified Primary Identity</div>
+                          <div className="absolute top-8 left-8 px-5 py-2 bg-accent text-white text-[11px] font-bold uppercase rounded-full shadow-2xl font-headline z-10 tracking-[0.1em] flex items-center gap-2">
+                             <Sparkles className="w-4 h-4" /> Primary Asset Identity
+                          </div>
                         )}
                       </div>
                     </CarouselItem>
@@ -293,7 +297,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                 <div className="p-8 bg-white/5 rounded-[2rem] border border-white/5 shadow-inner">
                    <Building2 className="w-16 h-16 text-muted-foreground/30" />
                 </div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">No Visual Identity Recorded</p>
+                <div className="text-center px-8">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline mb-2">No Visual Identity Recorded</p>
+                  <p className="text-xs text-muted-foreground font-medium opacity-60">Upload photography in 'Modify Specs' to initialize identity.</p>
+                </div>
               </div>
             )}
             
