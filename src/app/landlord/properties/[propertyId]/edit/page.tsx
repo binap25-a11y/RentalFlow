@@ -255,6 +255,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                         src={item.cloudUrl || item.previewUrl} 
                         alt="" 
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        onError={(e) => {
+                          e.currentTarget.src = RENTALFLOW_LOGO_URL;
+                          e.currentTarget.classList.add('opacity-20');
+                        }}
                       />
                       <div className="absolute top-3 right-3 flex gap-2 z-20">
                         <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-black/60 backdrop-blur-xl text-accent p-2.5 rounded-2xl hover:scale-110 transition-transform shadow-2xl border border-white/10">

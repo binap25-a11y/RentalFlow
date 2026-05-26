@@ -30,6 +30,7 @@ export async function withRetry<T>(
 /**
  * 🖼️ User Asset Identifier (Source-Positive Logic)
  * Strictly whitelists your Supabase project (wgezhbkkhamaawxgcqjf)
+ * Updated to be case-insensitive for domain checks but precise for project identity.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
