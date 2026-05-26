@@ -164,54 +164,70 @@ export default function TenantHub() {
 
   if (!isClient || isPropLoading || isRequestsLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary w-12 h-12 opacity-60" /></div>;
 
+  /**
+   * 💎 PREMIUM PLACEHOLDER INTERFACE
+   * Displayed during asset verification to maintain elite high-fidelity standards.
+   */
   if (!property) return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 animate-in fade-in duration-1000 text-left">
-      <div className="relative w-full max-w-2xl">
-        <div className="absolute -inset-4 bg-primary/5 rounded-[4rem] blur-3xl opacity-50 animate-pulse" />
-        <Card className="relative border-none shadow-2xl rounded-[3.5rem] overflow-hidden bg-card/80 backdrop-blur-xl ring-1 ring-white/10">
-          <CardContent className="p-12 md:p-20 text-center flex flex-col items-center">
-            <div className="relative mb-12">
-              <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full scale-150 opacity-20 animate-pulse" />
-              <div className="relative h-32 w-32 rounded-[2.5rem] bg-gradient-to-br from-primary/10 to-accent/5 flex items-center justify-center shadow-inner border border-white/10">
-                <Building2 className="w-16 h-16 text-primary opacity-40" />
-              </div>
-              <div className="absolute -bottom-2 -right-2 p-3 bg-accent rounded-2xl shadow-2xl border-4 border-card">
-                 <RefreshCcw className="w-5 h-5 text-white animate-spin" style={{ animationDuration: '3s' }} />
-              </div>
+    <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-1000 pb-32 text-left bg-background">
+      <div className="space-y-4">
+        <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground tracking-tighter">System Orchestration</h1>
+        <p className="text-muted-foreground font-medium font-body text-xl opacity-70">Verifying official residency records...</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="lg:col-span-8 space-y-12">
+          <Card className="border-none shadow-2xl rounded-[3rem] overflow-hidden bg-card/50 backdrop-blur-xl ring-1 ring-border">
+            <div className="relative h-[350px] w-full bg-muted/40 animate-pulse flex items-center justify-center">
+              <Building2 className="w-20 h-20 text-foreground/10" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
             </div>
             
-            <Badge variant="outline" className="mb-6 py-2 px-6 rounded-full border-primary/10 bg-primary/5 text-primary font-bold uppercase tracking-[0.3em] text-[10px] font-headline">
-               System Orchestration Active
-            </Badge>
-            
-            <h3 className="text-4xl md:text-5xl font-headline font-bold text-foreground mb-10 tracking-tighter leading-tight text-center">
-              Residency Record <br/><span className="text-accent">Synchronizing.</span>
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-lg mb-12">
-               <div className="flex items-center gap-3 bg-primary/5 px-4 py-3 rounded-xl border border-white/5 shadow-inner min-w-0">
-                  <Bed className="w-4 h-4 text-accent shrink-0" />
-                  <p className="text-[10px] font-bold text-foreground uppercase tracking-widest truncate">2 Bedrooms</p>
-               </div>
-               <div className="flex items-center gap-3 bg-primary/5 px-4 py-3 rounded-xl border border-white/5 shadow-inner min-w-0">
-                  <Bath className="w-4 h-4 text-accent shrink-0" />
-                  <p className="text-[10px] font-bold text-foreground uppercase tracking-widest truncate">1 Bathroom</p>
-               </div>
-               <div className="flex items-center gap-3 bg-primary/5 px-4 py-3 rounded-xl border border-white/5 shadow-inner min-w-0">
-                  <Home className="w-4 h-4 text-accent shrink-0" />
-                  <p className="text-[10px] font-bold text-foreground uppercase tracking-widest truncate">Residential Home</p>
-               </div>
+            <CardContent className="p-12 space-y-12">
+              {/* MONTHLY RENT PLACEHOLDER (RESIZED & PREMIUM) */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <ReceiptText className="w-6 h-6 text-accent opacity-20" />
+                  <div className="h-6 w-32 bg-muted rounded-lg animate-pulse" />
+                </div>
+                <div className="p-10 bg-muted/20 rounded-[2.5rem] border border-border/50 shadow-inner space-y-6">
+                  <div className="space-y-3">
+                    <div className="h-3 w-24 bg-muted rounded animate-pulse opacity-40" />
+                    <div className="h-14 w-48 bg-muted rounded-2xl animate-pulse" />
+                  </div>
+                  <div className="h-10 w-full bg-muted/40 rounded-xl animate-pulse" />
+                </div>
+              </div>
+
+              {/* YOUR RESIDENCE PLACEHOLDER (BELOW RENT) */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <Home className="w-6 h-6 text-accent opacity-20" />
+                  <div className="h-6 w-40 bg-muted rounded-lg animate-pulse" />
+                </div>
+                <div className="p-10 bg-primary/5 rounded-[2.5rem] border border-border/50 space-y-4">
+                  <div className="h-4 w-full bg-muted rounded animate-pulse opacity-40" />
+                  <div className="h-4 w-5/6 bg-muted rounded animate-pulse opacity-40" />
+                  <div className="h-4 w-4/6 bg-muted rounded animate-pulse opacity-40" />
+                </div>
+              </div>
+
+              {/* FITTED DOWNLOAD ACTION */}
+              <div className="pt-6 border-t border-border/50">
+                <div className="h-14 w-full bg-muted rounded-2xl animate-pulse" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="lg:col-span-4 space-y-12">
+          <Card className="border-none shadow-sm rounded-[3rem] bg-card ring-1 ring-border overflow-hidden opacity-50 grayscale">
+            <div className="p-10 h-[400px] flex flex-col items-center justify-center gap-6">
+              <RefreshCcw className="w-12 h-12 text-primary/20 animate-spin" />
+              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-center">Syncing Hub...</p>
             </div>
-            
-            <p className="text-lg text-muted-foreground font-medium mb-12 max-w-md leading-relaxed opacity-70 text-center">
-              We are currently verifying your official occupancy assets. Access to your high-fidelity portal will be granted instantly upon management verification.
-            </p>
-            
-            <Button asChild size="lg" className="rounded-[1.75rem] font-bold bg-primary hover:bg-primary/90 text-primary-foreground h-16 px-16 shadow-2xl shadow-primary/20 border-none transition-all hover:scale-[1.05] active:scale-95 text-lg">
-              <Link href="/tenant/messages">Inquire with Management</Link>
-            </Button>
-          </CardContent>
-        </Card>
+          </Card>
+        </div>
       </div>
     </div>
   );
@@ -273,30 +289,32 @@ export default function TenantHub() {
             </div>
 
             <CardContent className="p-10 md:p-12 space-y-12">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              {/* VERTICAL HIERARCHY: RENT -> RESIDENCE -> ACTION */}
+              <div className="space-y-12">
                 <div className="space-y-6">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
-                  <div className="p-8 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner flex flex-col h-full min-h-[350px]">
-                    <div className="flex-1 space-y-4">
-                       <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.3em] font-headline opacity-50">Verified Ledger</p>
-                       <p className="text-5xl font-bold font-headline text-foreground tracking-tighter">£{property.rentAmount?.toLocaleString()}</p>
-                       <Badge className={cn("w-full h-12 flex items-center justify-center font-bold text-[11px] rounded-2xl shadow-sm uppercase tracking-[0.2em] border shadow-inner", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white border-transparent" : "bg-amber-500/10 text-amber-600 border-amber-500/20")}>
-                         {currentPayment?.status === 'paid' ? "Receipted & Collected" : "Collection Pending"}
-                       </Badge>
-                    </div>
-                    <Button variant="outline" className="w-full h-14 rounded-2xl border-border bg-card hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all mt-auto" onClick={handleDownloadStatement}>
-                       <Download className="w-4 h-4 mr-2 text-accent" /> Download Rent Statement
-                    </Button>
+                  <div className="p-10 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner">
+                     <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.3em] font-headline opacity-50 mb-3">Verified Ledger</p>
+                     <p className="text-6xl font-bold font-headline text-foreground tracking-tighter mb-6">£{property.rentAmount?.toLocaleString()}</p>
+                     <Badge className={cn("w-full h-12 flex items-center justify-center font-bold text-[11px] rounded-2xl shadow-sm uppercase tracking-[0.2em] border shadow-inner", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white border-transparent" : "bg-amber-500/10 text-amber-600 border-amber-500/20")}>
+                       {currentPayment?.status === 'paid' ? "Receipted & Collected" : "Collection Pending"}
+                     </Badge>
                   </div>
                 </div>
 
                 <div className="space-y-6">
-                  <h3 className="font-bold font-headline text-2xl text-foreground tracking-tight">Your Residence</h3>
-                  <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-border h-full">
+                  <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
+                  <div className="p-10 bg-primary/5 rounded-[2.5rem] border border-border">
                      <p className="text-base text-muted-foreground leading-relaxed font-body font-medium">
                        {property.description || "A premium managed property with high-fidelity visual orchestration and automated maintenance support."}
                      </p>
                   </div>
+                </div>
+
+                <div className="pt-8 border-t border-border/50">
+                  <Button variant="outline" className="w-full h-16 rounded-[1.75rem] border-border bg-card hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all" onClick={handleDownloadStatement}>
+                     <Download className="w-5 h-5 mr-3 text-accent" /> Download Rent Statement
+                  </Button>
                 </div>
               </div>
             </CardContent>
