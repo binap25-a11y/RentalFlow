@@ -9,8 +9,8 @@ import {
   MapPin, AlertCircle, Wrench, 
   Loader2, Building2, Sparkles, Send, Bot, 
   ChevronRight, CheckCircle2, Clock, ReceiptText,
-  PhoneCall, ShieldAlert, ShieldCheck,
-  RefreshCcw, Zap, Bed, Bath, Download, FileText, Camera
+  ShieldAlert, ShieldCheck,
+  RefreshCcw, Zap, Bed, Bath, Download, Camera
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -21,7 +21,6 @@ import { format } from "date-fns";
 
 /**
  * 🆘 National SOS Protocols (UK Fallbacks)
- * Proactively displayed by default if management ledger is empty.
  */
 const SOS_FALLBACKS = [
   { id: 'f1', name: "Emergency Services", phone: "999", role: "Primary SOS", category: 'standard' },
@@ -83,11 +82,7 @@ export default function TenantHub() {
   const sortedContacts = useMemo(() => {
     let list = contactsData ? [...contactsData] : [];
     const standards = list.filter(c => c.category === 'standard');
-    
-    if (standards.length === 0) {
-      list = [...SOS_FALLBACKS, ...list];
-    }
-
+    if (standards.length === 0) list = [...SOS_FALLBACKS, ...list];
     return list.sort((a, b) => {
       if (a.category === 'standard' && b.category !== 'standard') return -1;
       if (a.category !== 'standard' && b.category === 'standard') return 1;
@@ -119,7 +114,6 @@ export default function TenantHub() {
 
     doc.setFillColor(15, 23, 42); 
     doc.rect(0, 0, 210, 55, 'F');
-    
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(24);
@@ -155,26 +149,48 @@ export default function TenantHub() {
     doc.text(`£${property.rentAmount?.toLocaleString()}`, 140, 130);
     doc.text(currentPayment?.status === 'paid' ? "COLLECTED" : "PENDING", 170, 130);
 
-    doc.setFont("helvetica", "bold");
-    doc.text("Total Outstanding", 20, 155);
-    doc.text(`£${currentPayment?.status === 'paid' ? '0.00' : property.rentAmount?.toLocaleString()}`, 140, 155);
-
     doc.save(`Statement_${property.addressLine1.replace(/\s+/g, '_')}_${period.replace(/\s+/g, '_')}.pdf`);
   };
 
   if (!isClient || isPropLoading || isRequestsLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary w-12 h-12 opacity-60" /></div>;
 
   if (!property) return (
-    <div className="flex flex-col items-center justify-center h-[70vh] px-6 text-center">
-      <div className="max-w-xl w-full py-24 text-center flex flex-col items-center justify-center bg-card rounded-[2.5rem] border-2 border-dashed border-border group hover:border-primary/20 transition-all shadow-sm">
-        <div className="p-8 bg-primary/5 rounded-[2rem] mb-8 group-hover:scale-110 transition-transform">
-           <Building2 className="w-16 h-16 text-primary opacity-20" />
-        </div>
-        <h3 className="text-3xl font-headline font-bold text-foreground mb-3 tracking-tight">Lease Registration Pending</h3>
-        <p className="text-base text-muted-foreground font-medium mb-10 max-w-sm mx-auto leading-relaxed">Your official residency record is being synchronized by management. Access will be granted once verification is complete.</p>
-        <Button asChild className="rounded-[1.5rem] font-bold bg-primary hover:bg-primary/90 text-primary-foreground h-14 px-12 shadow-2xl shadow-primary/20 border-none transition-all hover:scale-[1.02]">
-          <Link href="/tenant/messages">Contact Management</Link>
-        </Button>
+    <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 animate-in fade-in duration-1000">
+      <div className="relative w-full max-w-2xl">
+        <div className="absolute -inset-4 bg-primary/5 rounded-[4rem] blur-3xl opacity-50 animate-pulse" />
+        <Card className="relative border-none shadow-2xl rounded-[3.5rem] overflow-hidden bg-card/80 backdrop-blur-xl ring-1 ring-white/10">
+          <CardContent className="p-12 md:p-20 text-center flex flex-col items-center">
+            <div className="relative mb-12">
+              <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full scale-150 opacity-20 animate-pulse" />
+              <div className="relative h-32 w-32 rounded-[2.5rem] bg-gradient-to-br from-primary/10 to-accent/5 flex items-center justify-center shadow-inner border border-white/10">
+                <Building2 className="w-16 h-16 text-primary opacity-40" />
+              </div>
+              <div className="absolute -bottom-2 -right-2 p-3 bg-accent rounded-2xl shadow-2xl border-4 border-card animate-bounce">
+                 <RefreshCcw className="w-5 h-5 text-white animate-spin" style={{ animationDuration: '3s' }} />
+              </div>
+            </div>
+            
+            <Badge variant="outline" className="mb-6 py-2 px-6 rounded-full border-primary/10 bg-primary/5 text-primary font-bold uppercase tracking-[0.3em] text-[10px] font-headline">
+               System Orchestration Active
+            </Badge>
+            
+            <h3 className="text-4xl md:text-5xl font-headline font-bold text-foreground mb-6 tracking-tighter leading-tight">
+              Residency Record <br/><span className="text-accent">Synchronizing.</span>
+            </h3>
+            
+            <p className="text-lg text-muted-foreground font-medium mb-12 max-w-md leading-relaxed opacity-70">
+              We are currently verifying your official occupancy assets. Access to your high-fidelity portal will be granted instantly upon management verification.
+            </p>
+            
+            <div className="w-full max-w-sm h-1.5 bg-muted rounded-full overflow-hidden mb-12 shadow-inner">
+               <div className="h-full bg-accent w-2/3 rounded-full animate-pulse" />
+            </div>
+
+            <Button asChild size="lg" className="rounded-[1.75rem] font-bold bg-primary hover:bg-primary/90 text-primary-foreground h-16 px-16 shadow-2xl shadow-primary/20 border-none transition-all hover:scale-[1.05] active:scale-95 text-lg">
+              <Link href="/tenant/messages">Inquire with Management</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
@@ -339,7 +355,7 @@ export default function TenantHub() {
                         "text-lg font-bold mt-4 flex items-center",
                         contact.category === 'standard' ? "text-red-600" : "text-accent"
                       )}>
-                        <PhoneCall className="w-5 h-5 mr-3" /> {contact.phone}
+                        <RefreshCcw className="w-5 h-5 mr-3" /> {contact.phone}
                       </p>
                    </div>
                  ))}
