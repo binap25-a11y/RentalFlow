@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, use, useCallback, useRef } from 'react';
@@ -94,7 +95,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         
       setLedger(prev => {
         const uploadingItems = prev.filter(item => item.status === 'uploading');
-        // Deduplicate synced items against themselves and uploading items
         const existingIds = new Set(uploadingItems.map(i => i.id));
         const filteredSynced = syncedLedger.filter(i => !existingIds.has(i.id));
         return [...filteredSynced, ...uploadingItems];
@@ -104,7 +104,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
   /**
    * 🛡️ Presence Guard Synchronization
-   * Ensures that background updates only commit when the visual ledger is verified.
    * Prevents valid photography from being accidentally wiped during upload transitions.
    */
   const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
@@ -114,7 +113,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // PREVENT DESTRUCTIVE OVERWRITE: If we have uploading items, don't clear existing record
+    // PREVENT DESTRUCTIVE OVERWRITE: Only update if we have meaningful changes or a valid ready set
     const hasUploading = currentLedger.some(i => i.status === 'uploading');
     if (readyUrls.length === 0 && hasUploading) return;
 
@@ -133,7 +132,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const tempId = Math.random().toString(36).substring(7);
       const localUrl = URL.createObjectURL(file);
       
-      setLedger(prev => [...prev, { id: tempId, previewUrl: localUrl, status: 'uploading' }]);
+      setLedger(prev => {
+        const updated = [...prev, { id: tempId, previewUrl: localUrl, status: 'uploading' as const }];
+        return updated;
+      });
 
       try {
         const optimizedBlob = await compressImage(file);
@@ -147,14 +149,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         
         setLedger(prev => {
           const updated = prev.map(item => 
-            item.id === tempId ? { ...item, cloudUrl: result.url, status: 'ready' } : item
+            item.id === tempId ? { ...item, cloudUrl: result.url, status: 'ready' as const } : item
           );
-          // Isolated Firestore Lock
           setTimeout(() => syncVisualsToFirestore(updated), 0);
           return updated;
         });
       } catch (err: any) {
-        setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
+        setLedger(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' as const } : item));
         toast({ variant: "destructive", title: "Upload Failed", description: err.message });
       }
     }
@@ -315,7 +316,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   </div>
                   <div className="space-y-3">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Bathrooms</Label>
-                    <Select value={bathrooms} onValueChange={setBedrooms}>
+                    <Select value={bathrooms} onValueChange={setBathrooms}>
                       <SelectTrigger className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner focus:ring-accent text-foreground"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-xl border-white/5 bg-card">
                         {[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={n.toString()} className="font-bold">{n} Bathroom{n > 1 ? 's' : ''}</SelectItem>)}

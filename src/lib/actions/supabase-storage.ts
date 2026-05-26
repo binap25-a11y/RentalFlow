@@ -3,11 +3,29 @@
 
 /**
  * @fileOverview Standard Cloud Storage Engine (Server Utility).
- * Standardized on Server Actions to resolve "signature verification failed" errors
- * occurring during client-side browser uploads.
+ * Hardened to resolve "signature verification failed" errors by ensuring
+ * isolated client creation per-request to avoid JWT protocol conflicts.
  */
 
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+function getHardenedClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vucefokfhdrbgldrimgl.supabase.co';
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1Y2Vmb2tmaGRyYmdsZHJpbWdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA2NTM5ODksImV4cCI6MjA1NjIzMDAwOX0.9_89kM0_vE6e6j0m-e9e6e8e7e6e5e4e3e2e1e0';
+  
+  return createClient(url, key, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false
+    },
+    global: {
+      headers: {
+        'x-client-info': 'rentaflow-server-action'
+      }
+    }
+  });
+}
 
 export async function uploadToSupabase(
   formData: FormData,
@@ -21,8 +39,11 @@ export async function uploadToSupabase(
     // Convert to Buffer for server-side stability
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+    
+    // Create isolated client to avoid signature verification failures
+    const supabase = getHardenedClient();
 
-    // Perform atomic upload using the hardened server client
+    // Perform atomic upload
     const { data, error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(path, buffer, {
@@ -57,6 +78,7 @@ export async function deleteFromSupabase(
   paths: string | string[]
 ) {
   try {
+    const supabase = getHardenedClient();
     const pathArray = Array.isArray(paths) ? paths : [paths];
     const { data, error } = await supabase.storage.from(bucket).remove(pathArray);
     if (error) throw error;

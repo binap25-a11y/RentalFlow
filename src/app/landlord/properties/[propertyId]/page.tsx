@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, use, useMemo, useEffect } from 'react';
@@ -35,7 +36,7 @@ import {
   DialogFooter,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { cn, getResolvedGallery, isRealUserUpload, getResolvedImageUrl, compressImage, withRetry } from "@/lib/utils";
+import { cn, getResolvedGallery, isRealUserUpload, getResolvedImageUrl, compressImage } from "@/lib/utils";
 import {
   Carousel,
   CarouselContent,

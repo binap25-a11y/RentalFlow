@@ -1,3 +1,4 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -110,15 +111,14 @@ export function isRealUserUpload(url: any): boolean {
   const u = url.toLowerCase();
   
   // AUTHORIZE: Project infrastructure and high-fidelity binaries
-  // Explicitly whitelists the user's Supabase project binaries.
   return (
     u.includes('supabase.co') || 
-    u.includes('vucefokfhdrbgldrimgl') ||
     u.includes('firebasestorage') ||
     u.includes('googleapi') ||
     u.includes('googleapis') ||
     u.startsWith('blob:') ||
-    u.startsWith('data:')
+    u.startsWith('data:') ||
+    u.includes('unsplash.com') // Allow valid property photography
   );
 }
 
