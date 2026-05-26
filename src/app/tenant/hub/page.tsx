@@ -10,8 +10,7 @@ import {
   Loader2, Home, Sparkles, Send, Bot, 
   ChevronRight, CheckCircle2, Clock, ReceiptText, Building2,
   PhoneCall, ShieldAlert, ShieldCheck,
-  RefreshCcw,
-  Zap
+  RefreshCcw, Zap, Bed, Bath
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -73,7 +72,6 @@ export default function TenantHub() {
     let list = contactsData ? [...contactsData] : [];
     const standards = list.filter(c => c.category === 'standard');
     
-    // If no standard SOS contacts exist in DB, push fallbacks
     if (standards.length === 0) {
       list = [...SOS_FALLBACKS, ...list];
     }
@@ -119,7 +117,6 @@ export default function TenantHub() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-8">
           <Card className="border-none shadow-sm overflow-hidden rounded-[2.5rem] bg-card group ring-1 ring-border">
-            {/* HERO IMAGE: FULLY VISIBLE */}
             <div className="relative h-[450px] w-full bg-muted overflow-hidden">
               {imageUrl ? (
                 <img 
@@ -134,7 +131,6 @@ export default function TenantHub() {
               )}
             </div>
 
-            {/* PROPERTY IDENTITY BAR: BELOW IMAGE FOR PREMIUM VISIBILITY */}
             <div className="bg-muted/10 border-b border-border p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 text-left">
                <div className="space-y-1">
                   <h2 className="text-3xl font-headline font-bold text-foreground tracking-tight">{property.addressLine1}</h2>
@@ -145,19 +141,33 @@ export default function TenantHub() {
                </Badge>
             </div>
 
-            <CardContent className="pt-10 text-left p-10 space-y-8">
+            <CardContent className="pt-10 text-left p-10 space-y-10">
+              <div className="flex flex-wrap gap-4 items-center">
+                <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl border border-border shadow-inner">
+                   <Bed className="w-4 h-4 text-accent" />
+                   <span className="text-[11px] font-bold text-foreground uppercase tracking-widest">{property.numberOfBedrooms || 1} Bedrooms</span>
+                </div>
+                <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl border border-border shadow-inner">
+                   <Bath className="w-4 h-4 text-accent" />
+                   <span className="text-[11px] font-bold text-foreground uppercase tracking-widest">{property.numberOfBathrooms || 1} Bathrooms</span>
+                </div>
+                <Badge variant="outline" className="h-9 px-4 rounded-xl border-border font-bold text-foreground bg-white/5 uppercase text-[9px] tracking-widest">
+                   {property.propertyType || "Residential"}
+                </Badge>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div className="space-y-4">
-                  <h3 className="font-bold font-headline text-xl text-foreground border-b border-border pb-3">Property Narrative</h3>
+                  <h3 className="font-bold font-headline text-xl text-foreground border-b border-border pb-3">Your Residence</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed font-body font-medium">{property.description || "A premium managed property with professional maintenance and visual orchestration."}</p>
                 </div>
                 <div className="space-y-4">
-                  <h3 className="font-bold font-headline text-xl text-foreground flex items-center border-b border-border pb-3"><ReceiptText className="w-5 h-5 mr-3 text-accent" /> Tenancy Status</h3>
+                  <h3 className="font-bold font-headline text-xl text-foreground flex items-center border-b border-border pb-3"><ReceiptText className="w-5 h-5 mr-3 text-accent" /> Account & Financials</h3>
                   <div className="p-6 bg-muted/20 rounded-[1.75rem] border border-border space-y-4 shadow-inner">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest font-headline opacity-60">Monthly Yield Commitment</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest font-headline opacity-60">Monthly Rental Yield</p>
                     <p className="text-3xl font-bold font-headline text-foreground">£{property.rentAmount?.toLocaleString()}</p>
                     <Badge className={cn("w-full h-11 flex items-center justify-center font-bold text-xs rounded-2xl shadow-sm uppercase tracking-widest border-none", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white" : "bg-amber-500 text-white")}>
-                      {currentPayment?.status === 'paid' ? "Verified & Collected" : "Collection Pending"}
+                      {currentPayment?.status === 'paid' ? "Receipted & Collected" : "Collection Pending"}
                     </Badge>
                   </div>
                 </div>

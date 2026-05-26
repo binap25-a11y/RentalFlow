@@ -37,8 +37,7 @@ import { useToast } from "@/hooks/use-toast";
 
 /**
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
- * Unified financial command and operational analytics for management accounts.
- * Hardened for zero-error execution and real-time ledger control.
+ * Resolved structural syntax instability for zero-error execution.
  */
 
 export default function LandlordDashboard() {
@@ -106,7 +105,7 @@ export default function LandlordDashboard() {
   const [expTitle, setExpTitle] = useState('');
 
   const financialStats = useMemo(() => {
-    if (!isClient || !properties || !maintenance) return null;
+    if (!isClient || !properties || !maintenance) return { annualGross: 0, totalExpenses: 0, netAnnualForecast: 0, collectionRate: 0, actualCollectedThisMonth: 0 };
     const monthlyGrossPotential = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
     const annualGross = monthlyGrossPotential * 12;
     const actualCollectedThisMonth = currentMonthPayments?.filter(p => p.status === 'paid').reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
@@ -198,12 +197,11 @@ export default function LandlordDashboard() {
     );
   }
 
-  // Proper JSX identifier for mapping to avoid Unexpected Token errors
   const statConfig = [
-    { title: "Gross Annual Potential", val: `£${financialStats?.annualGross.toLocaleString()}`, Icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5", Indicator: ArrowUpRight },
-    { title: "Portfolio Expenses (YTD)", val: `£${financialStats?.totalExpenses.toLocaleString()}`, Icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", Indicator: ArrowDownRight },
-    { title: "Net Annual Forecast", val: `£${financialStats?.netAnnualForecast.toLocaleString()}`, Icon: TrendingUp, color: "text-primary-foreground", bg: "bg-primary", isPrimary: true },
-    { title: "Current Month Receipt", val: `£${financialStats?.actualCollectedThisMonth.toLocaleString()}`, Icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats?.collectionRate }
+    { title: "Gross Annual Potential", val: `£${financialStats.annualGross.toLocaleString()}`, Icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5", Indicator: ArrowUpRight },
+    { title: "Portfolio Expenses (YTD)", val: `£${financialStats.totalExpenses.toLocaleString()}`, Icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", Indicator: ArrowDownRight },
+    { title: "Net Annual Forecast", val: `£${financialStats.netAnnualForecast.toLocaleString()}`, Icon: TrendingUp, color: "text-primary-foreground", bg: "bg-primary", isPrimary: true },
+    { title: "Current Month Receipt", val: `£${financialStats.actualCollectedThisMonth.toLocaleString()}`, Icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats.collectionRate }
   ];
 
   return (

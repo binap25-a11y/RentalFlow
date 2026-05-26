@@ -28,7 +28,6 @@ import { doc } from 'firebase/firestore';
 /**
  * @fileOverview High-Fidelity Portfolio Entry Point.
  * Optimized for cinematic landing and zero-latency redirection.
- * Synchronized with professional visual assets and AI feature matrix.
  */
 
 export default function LandingPage() {
