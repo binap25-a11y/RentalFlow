@@ -2,7 +2,7 @@
 /**
  * @fileOverview A premium resident AI concierge agent.
  * Features a high-fidelity intelligence layer for white-glove resident support.
- * Enhanced with personalization, sophisticated empathy, and resilient retry logic.
+ * Enhanced with gemini-2.0-flash, personalization, and resilient retry logic.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -24,7 +24,7 @@ export type TenantConciergeOutput = z.infer<typeof TenantConciergeOutputSchema>;
 
 const conciergePrompt = ai.definePrompt({
   name: 'tenantConciergePrompt',
-  model: googleAI.model('gemini-1.5-flash'),
+  model: googleAI.model('gemini-2.0-flash'),
   input: { schema: TenantConciergeInputSchema },
   output: { schema: TenantConciergeOutputSchema },
   prompt: `You are 'Flow', the elite digital concierge for a high-fidelity luxury rental property.
@@ -57,7 +57,7 @@ export async function tenantConcierge(input: TenantConciergeInput): Promise<Tena
       return output!;
     } catch (error: any) {
       const errorMsg = error.message || "";
-      const isRetryable = errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('quota');
+      const isRetryable = errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('quota') || errorMsg.includes('fetch failed');
       
       if (isRetryable && retries > 0) {
         await new Promise(resolve => setTimeout(resolve, 2000));
