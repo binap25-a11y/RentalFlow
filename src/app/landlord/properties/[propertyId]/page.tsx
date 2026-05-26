@@ -71,7 +71,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
-  // OPTIMISTIC IDENTITY RESOLUTION: Strictly prioritize designated cover
+  // OPTIMISTIC IDENTITY RESOLUTION: strictly prioritized for real-time sync
   const gallery = useMemo(() => {
     if (!property) return [];
     return getResolvedGallery(property.imageUrl, property.imageUrls);
@@ -271,7 +271,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           alt="" 
                           className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105" 
                           onError={(e) => {
-                            // SELF-HEALING FALLBACK: If CDN fails, attempt to hide broken image
                             (e.target as HTMLImageElement).style.opacity = '0.5';
                           }}
                         />

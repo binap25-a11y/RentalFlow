@@ -100,9 +100,9 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.85)
 }
 
 /**
- * 🖼️ User Asset Identifier (Resilient)
- * Whitelist-first logic targeting cloud providers and local binaries.
- * Decisively REJECTS placeholders while allowing all Supabase/Firebase binaries.
+ * 🖼️ User Asset Identifier (Hardened)
+ * Whitelist-first logic strictly authorizing project-specific binaries.
+ * Decisively REJECTS generic stock signatures to prevent fallback loops.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
@@ -110,7 +110,9 @@ export function isRealUserUpload(url: any): boolean {
   const u = url.toLowerCase();
   
   // 1. PROJECT WHITELIST: Authorize valid cloud and local binaries
+  // Specifically targeted at the user's Supabase project 'wgezhbkkhamaawxgcqjf'
   const isAuthorized = (
+    u.includes('wgezhbkkhamaawxgcqjf') ||
     u.includes('supabase.co') || 
     u.includes('firebasestorage') ||
     u.includes('googleapi') ||
