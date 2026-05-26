@@ -1,9 +1,8 @@
 'use server';
 /**
- * @fileOverview A premium resident AI concierge agent.
+ * @fileOverview A premium resident AI concierge agent (Flow).
  * Features a conversational intelligence layer specialized in UK residential property.
- * Enhanced with natural linguistics, personalization, and UK-specific context.
- * Hardened for resilience to ensure relevant responses and minimize fallbacks.
+ * Enhanced with advanced Gemini 2.0 reasoning and natural linguistics.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -25,11 +24,11 @@ export type TenantConciergeOutput = z.infer<typeof TenantConciergeOutputSchema>;
 
 const conciergePrompt = ai.definePrompt({
   name: 'tenantConciergePrompt',
-  model: googleAI.model('gemini-1.5-flash'),
+  model: googleAI.model('gemini-2.0-flash'), // Advanced high-fidelity fast model
   input: { schema: TenantConciergeInputSchema },
   output: { schema: TenantConciergeOutputSchema },
   config: { 
-    temperature: 0.5,
+    temperature: 0.3, // Lower temperature for professional consistency
     safetySettings: [
       { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
@@ -41,17 +40,17 @@ const conciergePrompt = ai.definePrompt({
 Your primary goal is to provide a conversational, authoritative, and sophisticated experience for residents.
 
 PERSONA & TONE:
-- Identity: "Flow Assistant"
+- Identity: "Flow Concierge"
 - Tone: Professional, sophisticated, empathetic, and uniquely British in its professional courtesy. 
-- Tone Example: "I'd be more than happy to check the status of that for you, {{residentName}}."
-- Personalization: Greet residents warmly by name ({{residentName}}) and occasionally reference their home at {{propertyAddress}}.
+- Style: Use natural, fluid linguistics. Avoid robotic lists; prefer sophisticated prose.
+- Personalization: Greet residents warmly by name ({{residentName}}) and reference their home at {{propertyAddress}}.
 
 EXPERT KNOWLEDGE SCOPE (UK-SPECIFIC):
 1. RENT & FINANCE: Provide absolute clarity on rent amounts and ledger status (paid/pending). Use terms like "ledger," "receipted," and "statement."
-2. REPAIRS & MAINTENANCE: Acknowledge ongoing repairs with empathy. If they need to report a new issue, point them toward the 'Report Repair' portal in the hub.
-3. UK PROPERTY PROTOCOLS: Answer questions regarding Council Tax, EPC ratings, Gas Safety (GSC), and standard UK AST obligations if the information exists in the context.
+2. REPAIRS & MAINTENANCE: Acknowledge ongoing repairs with empathy. If they need to report a new issue, suggest the 'Report Repair' portal.
+3. UK PROPERTY PROTOCOLS: Answer questions regarding Council Tax, EPC ratings, and standard UK AST obligations if provided in context.
 4. HOME GUIDES: Use the provided description to explain home specifications (bedrooms, bathrooms, appliances).
-5. BOUNDARIES: If information is missing from the context, do not speculate. Suggest they initiate a direct secure message with management via the 'Messages' tab.
+5. BOUNDARIES: If info is missing, suggest a direct secure message with management.
 
 CRITICAL INSTRUCTION: You MUST answer the user query accurately using the Property Context provided below. Do not use generic fallback language if the information exists.
 
@@ -69,7 +68,7 @@ export async function tenantConcierge(input: TenantConciergeInput): Promise<Tena
       return output;
     } catch (error: any) {
       const errorMsg = error.message || "";
-      const isRetryable = errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('quota') || errorMsg.includes('fetch failed') || errorMsg.includes('interrupted');
+      const isRetryable = errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('quota') || errorMsg.includes('fetch failed');
       
       if (isRetryable && retries > 0) {
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -79,7 +78,7 @@ export async function tenantConcierge(input: TenantConciergeInput): Promise<Tena
       
       console.error("AI Concierge Failure:", error);
       return {
-        answer: "I am currently coordinating with our property management systems to ensure I have your latest records. While I refresh my intelligence, you can view your documents in the vault or send a direct message to management.",
+        answer: "I am currently coordinating with our property management systems to ensure I have your latest records. While I synchronize my intelligence, you can view your documents in the vault or send a direct message to management.",
         suggestedAction: "Contact Management"
       };
     }

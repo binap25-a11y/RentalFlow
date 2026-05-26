@@ -166,7 +166,7 @@ export default function TenantHub() {
   if (!isClient || isPropLoading || isRequestsLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary w-12 h-12 opacity-60" /></div>;
 
   /**
-   * 💎 PREMIUM SYSTEM ORCHESTRATION VIEW (Placeholder State)
+   * 💎 PREMIUM SYSTEM ORCHESTRATION VIEW (Loading State)
    */
   if (!property) return (
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-1000 pb-32 text-left bg-background">
@@ -197,7 +197,7 @@ export default function TenantHub() {
                 </div>
               </div>
 
-              {/* YOUR RESIDENCE PLACEHOLDER */}
+              {/* YOUR RESIDENCE PLACEHOLDER (BELOW RENT) */}
               <div className="space-y-6">
                 <div className="flex items-center gap-3">
                   <Home className="w-6 h-6 text-accent opacity-20" />
@@ -210,7 +210,7 @@ export default function TenantHub() {
                 </div>
               </div>
 
-              {/* FITTED DOWNLOAD ACTION */}
+              {/* FITTED DOWNLOAD ACTION (BELOW RESIDENCE) */}
               <div className="pt-6 border-t border-border/50">
                 <div className="h-16 w-full bg-muted rounded-2xl animate-pulse opacity-20" />
               </div>
@@ -241,7 +241,7 @@ export default function TenantHub() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-8 space-y-10">
-          <Card className="border-none shadow-2xl overflow-hidden rounded-[3rem] bg-card group ring-1 ring-border">
+          <Card className="border-none shadow-2xl rounded-[3rem] overflow-hidden bg-card group ring-1 ring-border">
             <div className="relative h-[450px] md:h-[550px] w-full bg-muted overflow-hidden">
               {primaryImageUrl ? (
                 <img 
@@ -268,7 +268,7 @@ export default function TenantHub() {
                 <div className="flex items-center gap-4 bg-primary/5 px-6 py-3 rounded-2xl border border-border shadow-inner">
                    <Bed className="w-6 h-6 text-accent" />
                    <span className="text-base font-bold text-foreground font-headline uppercase tracking-widest">
-                     {property.numberOfBedrooms || 2} {property.numberOfBedrooms === 1 ? 'Bedroom' : 'Bedrooms'}
+                     {property.numberOfBedrooms || 1} {property.numberOfBedrooms === 1 ? 'Bedroom' : 'Bedrooms'}
                    </span>
                 </div>
                 <div className="flex items-center gap-4 bg-primary/5 px-6 py-3 rounded-2xl border border-border shadow-inner">
@@ -287,7 +287,7 @@ export default function TenantHub() {
             </div>
 
             <CardContent className="p-10 md:p-12 space-y-12">
-              {/* VERTICAL HIERARCHY: RENT -> RESIDENCE DNA -> ACTION */}
+              {/* VERTICAL HIERARCHY: RENT -> RESIDENCE -> ACTION */}
               <div className="space-y-12">
                 <div className="space-y-6">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
