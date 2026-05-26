@@ -101,22 +101,23 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.85)
 }
 
 /**
- * 🖼️ User Asset Identifier (Project-Agnostic Hardening)
- * Strictly whitelists valid cloud storage binaries and local high-fidelity previews.
- * Logic is source-positive: if it's from our cloud or a local upload, it's real.
+ * 🖼️ User Asset Identifier (Hardened Source-Positive Logic)
+ * Strictly authorizes all valid cloud storage sources and local previews.
+ * Removed aggressive blacklisting to prevent valid images from disappearing.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
   const u = url.toLowerCase();
   
-  // AUTHORIZE: Project infrastructure and high-fidelity previews
+  // AUTHORIZE: Project infrastructure, valid image providers, and high-fidelity previews
   const isAuthorizedSource = (
     u.includes('supabase.co') || 
     u.includes('firebasestorage') ||
     u.includes('googleapi') ||
     u.includes('googleapis') ||
-    u.includes('images.unsplash.com') || // Authorize Unsplash for seeded visual quality
+    u.includes('unsplash.com') || 
+    u.includes('picsum.photos') ||
     u.startsWith('blob:') ||
     u.startsWith('data:')
   );

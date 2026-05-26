@@ -72,7 +72,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       setBedrooms(property.numberOfBedrooms?.toString() || '1');
       setBathrooms(property.numberOfBathrooms?.toString() || '1');
       
-      const urls = property.imageUrls || [];
+      const urls = Array.isArray(property.imageUrls) ? property.imageUrls : [];
       const primary = property.imageUrl;
       
       let sortedUrls = [...urls];
@@ -101,13 +101,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // Transactional Guard: Only sync if we have valid ready URLs or explicitly cleared ledger
-    // This prevents race conditions from wiping the record during upload transitions
-    updateDocumentNonBlocking(propertyRef, {
-      imageUrl: readyUrls.length > 0 ? readyUrls[0] : (property?.imageUrl || null),
-      imageUrls: readyUrls.length > 0 ? readyUrls : (property?.imageUrls || []),
-      updatedAt: serverTimestamp(),
-    });
+    // Transactional Guard: Only sync if we have a valid non-empty state or explicit clear
+    if (readyUrls.length > 0 || currentLedger.length === 0) {
+      updateDocumentNonBlocking(propertyRef, {
+        imageUrl: readyUrls.length > 0 ? readyUrls[0] : null,
+        imageUrls: readyUrls,
+        updatedAt: serverTimestamp(),
+      });
+    }
   };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
