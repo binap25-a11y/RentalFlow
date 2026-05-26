@@ -16,6 +16,12 @@ import { format } from "date-fns";
 import { notifyLandlordOfRequest } from "@/lib/actions/email-actions";
 import { cn } from "@/lib/utils";
 
+/**
+ * @fileOverview Professional Tenant Maintenance Interface.
+ * Features the "Flow Shield" AI troubleshooting engine and real-time history.
+ * Optimized for high-contrast visibility and intuitive reporting.
+ */
+
 export default function TenantMaintenancePage() {
   const { user } = useUser();
   const db = useFirestore();
@@ -125,7 +131,9 @@ export default function TenantMaintenancePage() {
                 <Sparkles className="w-6 h-6 text-accent" /> 
                 Flow Shield
               </CardTitle>
-              <CardDescription className="text-foreground font-bold opacity-80 leading-relaxed">Automated troubleshooting before reporting.</CardDescription>
+              <CardDescription className="text-foreground font-bold opacity-80 leading-relaxed">
+                Automated troubleshooting before reporting.
+              </CardDescription>
             </CardHeader>
             <CardContent className="p-8 space-y-6 bg-card">
               {troubleshootResult ? (

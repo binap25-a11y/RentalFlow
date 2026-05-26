@@ -35,6 +35,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { collection, doc, serverTimestamp, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
+/**
+ * @fileOverview High-Fidelity Portfolio Insights Dashboard.
+ * Unified financial command and operational analytics for management accounts.
+ */
+
 export default function LandlordDashboard() {
   const { user } = useUser();
   const db = useFirestore();

@@ -13,11 +13,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   PhoneCall, Download, Phone, Mail, Building2, 
-  Wrench, ShieldAlert, Loader2, AlertCircle, ShieldCheck, Zap 
+  Wrench, ShieldAlert, Loader2, AlertCircle, ShieldCheck, Zap,
+  Globe, ExternalLink
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+
+/**
+ * @fileOverview Premium Support Directory for Residents.
+ * Features real-time SOS protocols and assigned professional partners.
+ * Optimized for professional visibility and official documentation export.
+ */
 
 export default function TenantEmergencyContactsPage() {
   const { user } = useUser();
@@ -53,9 +60,9 @@ export default function TenantEmergencyContactsPage() {
     const pageWidth = doc.internal.pageSize.getWidth();
     const today = format(new Date(), 'PPP');
     
-    // Header Style: Deep Navy
+    // Header Style: Deep Navy Professional
     doc.setFillColor(15, 23, 42); 
-    doc.rect(0, 0, pageWidth, 50, 'F');
+    doc.rect(0, 0, pageWidth, 55, 'F');
     doc.setTextColor(255, 255, 255);
     
     doc.setFont("helvetica", "bold");
@@ -65,16 +72,16 @@ export default function TenantEmergencyContactsPage() {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.text(`Official Portfolio Safety Record | Generated: ${today}`, 20, 35);
-    doc.text("Managed via RentalFlow Operational Hub", 20, 40);
+    doc.text("High-Fidelity Support Network for Your Residency", 20, 42);
     
     doc.setTextColor(0, 0, 0);
-    let y = 70;
+    let y = 75;
 
     // 1. SOS PROTOCOLS
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.text("1. PRIMARY SOS PROTOCOLS (UK)", 20, y);
-    y += 15;
+    y += 12;
     
     if (standardServices.length > 0) {
       standardServices.forEach(service => {
@@ -96,17 +103,17 @@ export default function TenantEmergencyContactsPage() {
       });
     } else {
       doc.setFont("helvetica", "italic");
-      doc.text("Standard SOS protocols are active via local authorities.", 20, y);
+      doc.text("Standard SOS protocols active via national services.", 20, y);
       y += 15;
     }
 
     y += 10;
 
-    // 2. PROFESSIONAL PARTNERS
+    // 2. AUTHORIZED TRADE PARTNERS
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.text("2. AUTHORIZED TRADE PARTNERS", 20, y);
-    y += 15;
+    y += 12;
 
     if (professionalPartners.length > 0) {
       professionalPartners.forEach((contact) => {
@@ -126,17 +133,17 @@ export default function TenantEmergencyContactsPage() {
         doc.setTextColor(0, 0, 0);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(10);
-        doc.text(`Emergency Number: ${contact.phone}`, 20, y);
+        doc.text(`Direct Contact: ${contact.phone}`, 20, y);
         if (contact.email) {
           y += 6;
-          doc.text(`Direct Mail: ${contact.email}`, 20, y);
+          doc.text(`Email Support: ${contact.email}`, 20, y);
         }
         y += 20;
       });
     } else {
       doc.setFont("helvetica", "italic");
       doc.setFontSize(10);
-      doc.text("No specific property partners have been assigned to this registry.", 20, y);
+      doc.text("No specific property partners assigned to this registry.", 20, y);
     }
 
     // Footer

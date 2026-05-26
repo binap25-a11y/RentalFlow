@@ -17,6 +17,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { RENTALFLOW_LOGO_URL } from '@/lib/utils';
 
+/**
+ * @fileOverview Accelerated Authentication Pipeline.
+ * Optimized for zero-latency redirection and atomic profile resolution.
+ */
+
 export default function AuthPage() {
   const router = useRouter();
   const auth = useAuth();
@@ -43,7 +48,7 @@ export default function AuthPage() {
     setMounted(true);
   }, []);
 
-  // HYPER-ACCELERATED REDIRECTION
+  // HYPER-ACCELERATED REDIRECTION: Jump to target the microsecond session resolves
   useEffect(() => {
     if (user && db && mounted && !isLoading && !isRedirecting.current) {
       const checkAndRedirect = async () => {
@@ -63,7 +68,7 @@ export default function AuthPage() {
             if (isRedirecting.current) return;
             isRedirecting.current = true;
             
-            // ATOMIC REDIRECT: Jump to hub immediately
+            // ATOMIC REDIRECT: Bypass session check screens
             router.replace(userData.role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
           } else {
             setNeedsProfile(true);
@@ -154,7 +159,7 @@ export default function AuthPage() {
     }
   };
 
-  // HYDRATION GUARD: Strictly show overlay until auth state is resolved and mounted
+  // HYDRATION GUARD: Strictly show overlay until auth state is resolved
   if (!mounted || isUserLoading || (user && !needsProfile)) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background z-[100]">
