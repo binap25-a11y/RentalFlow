@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { cn, isRealUserUpload, compressImage, isValidAssetUrl } from "@/lib/utils";
+import { cn, isRealUserUpload, compressImage, isValidAssetUrl, RENTALFLOW_LOGO_URL } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {

@@ -2,8 +2,8 @@
 
 /**
  * @fileOverview Hardened Cloud Storage Engine.
- * Targeted at the verified production project: wgezhbkkhamaawxgcqjf.
- * Standardized on property-isolated path protocol: ${uid}/${propertyId}/${timestamp}-${filename}
+ * Optimized for Private Buckets using Signed URL Orchestration.
+ * Standardized on atomic path protocol: ${uid}/${propertyId}/${timestamp}-${filename}
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -35,7 +35,7 @@ export async function uploadToSupabase(
     
     const supabase = getHardenedClient();
 
-    // TARGETING VERIFIED BUCKET: Case-sensitive identity
+    // 1. Binary Transmission
     const { data, error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(path, buffer, {
@@ -46,14 +46,21 @@ export async function uploadToSupabase(
 
     if (uploadError) {
       console.error('Supabase Sync Failure:', uploadError);
-      throw new Error(`Storage Error: ${uploadError.message}. Ensure bucket "${bucket}" is initialized and set to Public.`);
+      throw new Error(`Storage Error: ${uploadError.message}.`);
     }
 
-    const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(path);
+    // 2. Private Access Orchestration: Use Signed URL for 1 Week
+    const { data: signedData, error: signedError } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(path, 60 * 60 * 24 * 7);
+
+    if (signedError) {
+      throw new Error(`Signature Error: ${signedError.message}`);
+    }
 
     return { 
       success: true, 
-      url: publicData.publicUrl,
+      url: signedData.signedUrl,
       path: data.path 
     };
   } catch (error: any) {
