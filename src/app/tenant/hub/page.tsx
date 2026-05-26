@@ -10,7 +10,8 @@ import {
   Loader2, Building2, Sparkles, Send, Bot, 
   ChevronRight, CheckCircle2, Clock, ReceiptText,
   ShieldCheck, ShieldAlert, RefreshCcw, Zap, Bed, Bath, Download, 
-  Home, Info, BookOpen, CreditCard, RotateCcw, Phone
+  Home, Info, BookOpen, CreditCard, RotateCcw, Phone,
+  MessageCircle, X
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -34,6 +35,7 @@ export default function TenantHub() {
   const [chatQuery, setChatQuery] = useState("");
   const [isChatting, setIsChatting] = useState(false);
   const [chatHistory, setChatHistory] = useState<{role: 'user' | 'bot', text: string}[]>([]);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
 
@@ -85,7 +87,7 @@ export default function TenantHub() {
     }).slice(0, 5);
   }, [contactsData]);
 
-  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [chatHistory]);
+  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [chatHistory, isChatOpen]);
 
   const handleAskConcierge = async (text?: string) => {
     const queryText = text || chatQuery.trim();
@@ -217,7 +219,7 @@ export default function TenantHub() {
   const primaryImageUrl = getResolvedImageUrl(property?.imageUrl, property?.imageUrls);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-32 text-left bg-background">
+    <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-32 text-left bg-background relative">
       <div className="space-y-4">
         <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground tracking-tighter">Resident Portal</h1>
         <p className="text-muted-foreground font-medium font-body text-xl opacity-70">Welcome home.</p>
@@ -240,19 +242,15 @@ export default function TenantHub() {
               )}
             </div>
 
-            <div className="p-10 border-b border-border bg-white/[0.01] flex flex-col gap-4">
-               <div className="space-y-4 min-w-0 flex-1">
-                  <h2 className="text-3xl md:text-4xl font-headline font-bold text-foreground tracking-tight leading-tight">
-                    {property.addressLine1}, {property.city}, {property.zipCode}
-                  </h2>
-                  <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold uppercase tracking-[0.2em] text-[10px] py-2.5 px-6 rounded-full shadow-sm font-headline shrink-0 h-fit w-fit">
-                    <ShieldCheck className="w-4 h-4 mr-2" /> Active Tenancy
-                  </Badge>
-               </div>
-            </div>
-
-            <CardContent className="p-10 md:p-12 space-y-12">
-              <div className="flex flex-wrap gap-6 items-center">
+            <div className="p-10 border-b border-border bg-white/[0.01] space-y-4">
+               <h2 className="text-3xl md:text-4xl font-headline font-bold text-foreground tracking-tight leading-tight">
+                 {property.addressLine1}, {property.city}, {property.zipCode}
+               </h2>
+               <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold uppercase tracking-[0.2em] text-[10px] py-2.5 px-6 rounded-full shadow-sm font-headline shrink-0 h-fit w-fit">
+                 <ShieldCheck className="w-4 h-4 mr-2" /> Active Tenancy
+               </Badge>
+               
+               <div className="flex flex-wrap gap-6 items-center pt-6 border-t border-border/50">
                 <div className="flex items-center gap-4 bg-primary/5 px-6 py-3 rounded-2xl border border-border shadow-inner">
                    <Bed className="w-6 h-6 text-accent" />
                    <span className="text-base font-bold text-foreground font-headline uppercase tracking-widest">
@@ -272,11 +270,13 @@ export default function TenantHub() {
                    </span>
                 </div>
               </div>
+            </div>
 
-              <div className="grid grid-cols-1 gap-12 pt-6 border-t border-border">
+            <CardContent className="p-10 md:p-12 space-y-12">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div className="space-y-6">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
-                  <div className="p-8 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner flex flex-col min-h-[350px]">
+                  <div className="p-8 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner flex flex-col h-full min-h-[350px]">
                     <div className="flex-1 space-y-4">
                        <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.3em] font-headline opacity-50">Verified Ledger</p>
                        <p className="text-5xl font-bold font-headline text-foreground tracking-tighter">£{property.rentAmount?.toLocaleString()}</p>
@@ -292,96 +292,12 @@ export default function TenantHub() {
 
                 <div className="space-y-6">
                   <h3 className="font-bold font-headline text-2xl text-foreground tracking-tight">Your Residence</h3>
-                  <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-border">
+                  <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-border h-full">
                      <p className="text-base text-muted-foreground leading-relaxed font-body font-medium">
                        {property.description || "A premium managed property with high-fidelity visual orchestration and automated maintenance support."}
                      </p>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-none shadow-2xl rounded-[3rem] bg-card ring-1 ring-border overflow-hidden flex flex-col min-h-[650px]">
-            <CardHeader className="bg-primary p-10 text-primary-foreground">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-6">
-                  <div className="h-14 w-14 bg-white/10 rounded-2xl flex items-center justify-center shadow-inner"><Sparkles className="w-8 h-8 text-white" /></div>
-                  <div className="text-left">
-                    <CardTitle className="text-3xl font-headline font-bold tracking-tight">Property Assistant</CardTitle>
-                    <CardDescription className="text-primary-foreground/70 font-medium text-base">Instant intelligence on your residency protocols.</CardDescription>
-                  </div>
-                </div>
-                <Button variant="ghost" onClick={handleClearChat} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl font-bold font-headline text-xs uppercase tracking-widest">
-                  <RotateCcw className="w-4 h-4 mr-2" /> Clear Chat
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col p-0">
-              <div className="flex-1 overflow-y-auto p-10 space-y-8 no-scrollbar" ref={scrollRef}>
-                {chatHistory.length === 0 ? (
-                  <div className="h-full flex flex-col gap-10">
-                    <div className="flex flex-col items-center justify-center text-center space-y-6 opacity-30 py-10">
-                      <Bot className="w-16 h-16 text-foreground" />
-                      <p className="text-base font-bold font-headline text-foreground uppercase tracking-[0.3em]">How can I assist your residency today?</p>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       {[
-                         { title: "Property Rules", desc: "Pets, smoking, and noise protocols.", icon: BookOpen, query: "What are the property rules and protocols?" },
-                         { title: "Repairs", desc: "How to report and track maintenance.", icon: Wrench, query: "How do I report a repair or track status?" },
-                         { title: "Financials", desc: "Rent amounts and payment status.", icon: CreditCard, query: "What is my current rent and payment status?" },
-                         { title: "Guides", desc: "Asset specs and room information.", icon: Info, query: "Tell me about my property specifications and guides." }
-                       ].map((topic, i) => (
-                         <button 
-                            key={i} 
-                            onClick={() => handleAskConcierge(topic.query)}
-                            className="p-6 bg-primary/5 rounded-[2rem] border border-border flex items-start gap-4 hover:bg-primary/10 transition-all text-left group"
-                          >
-                            <div className="p-3 bg-white rounded-xl shadow-sm text-accent group-hover:scale-110 transition-transform"><topic.icon className="w-5 h-5" /></div>
-                            <div className="text-left">
-                               <p className="font-bold text-sm text-foreground">{topic.title}</p>
-                               <p className="text-xs text-muted-foreground font-medium leading-relaxed">{topic.desc}</p>
-                            </div>
-                         </button>
-                       ))}
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {chatHistory.map((msg, i) => (
-                      <div key={i} className={cn("flex flex-col max-w-[85%] animate-in slide-in-from-bottom-2", msg.role === 'user' ? "ml-auto items-end" : "items-start")}>
-                        <div className={cn("p-6 rounded-[2rem] text-sm md:text-base font-bold leading-relaxed shadow-sm", msg.role === 'user' ? "bg-primary text-primary-foreground rounded-tr-none" : "bg-muted text-foreground rounded-tl-none")}>{msg.text}</div>
-                      </div>
-                    ))}
-                    {isChatting && (
-                      <div className="flex items-center gap-2 p-6 bg-muted/30 rounded-2xl w-fit animate-pulse">
-                         <div className="w-1.5 h-1.5 bg-primary/40 rounded-full" />
-                         <div className="w-1.5 h-1.5 bg-primary/40 rounded-full" />
-                         <div className="w-1.5 h-1.5 bg-primary/40 rounded-full" />
-                         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-2">Orchestrating...</span>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-              <div className="p-6 bg-muted/10 border-t border-border">
-                <form onSubmit={(e) => { e.preventDefault(); handleAskConcierge(); }} className="flex gap-4 items-center">
-                  <Input 
-                    value={chatQuery} 
-                    onChange={(e) => setChatQuery(e.target.value)} 
-                    placeholder="Ask about your property..." 
-                    className="h-14 rounded-2xl bg-background border-none shadow-inner px-6 text-base text-foreground focus-visible:ring-accent flex-1" 
-                    disabled={isChatting} 
-                  />
-                  <button 
-                    type="submit" 
-                    className="h-14 w-14 rounded-2xl shadow-xl shadow-primary/20 bg-primary text-primary-foreground transition-all active:scale-95 shrink-0 flex items-center justify-center hover:opacity-90 disabled:opacity-50" 
-                    disabled={isChatting || !chatQuery.trim()}
-                  >
-                    {isChatting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-                  </button>
-                </form>
               </div>
             </CardContent>
           </Card>
@@ -463,6 +379,90 @@ export default function TenantHub() {
         <Button size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-[2rem] shadow-2xl shadow-primary/20 font-bold h-20 font-headline px-24 border-none transition-all hover:scale-[1.05] active:scale-95 text-lg uppercase tracking-[0.2em]" asChild>
           <Link href="/tenant/maintenance"><AlertCircle className="w-6 h-6 mr-4" /> Report Repair</Link>
         </Button>
+      </div>
+
+      {/* 🤖 ELITE AI CONCIERGE FLOATING INTERFACE */}
+      <div className="fixed bottom-10 right-10 z-[100] flex flex-col items-end gap-6">
+        {isChatOpen && (
+          <Card className="w-[400px] h-[600px] border-none shadow-2xl rounded-[3rem] bg-card ring-1 ring-border overflow-hidden flex flex-col animate-in slide-in-from-bottom-10 fade-in duration-500">
+            <CardHeader className="bg-primary p-8 text-primary-foreground">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center shadow-inner"><Sparkles className="w-6 h-6 text-white" /></div>
+                  <div className="text-left">
+                    <CardTitle className="text-xl font-headline font-bold tracking-tight">Flow Concierge</CardTitle>
+                    <p className="text-xs opacity-70 font-bold uppercase tracking-widest">Digital Assistant</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon" onClick={handleClearChat} className="text-white/40 hover:text-white hover:bg-white/10 rounded-xl h-10 w-10"><RotateCcw className="w-4 h-4" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(false)} className="text-white/40 hover:text-white hover:bg-white/10 rounded-xl h-10 w-10"><X className="w-5 h-5" /></Button>
+                </div>
+              </div>
+            </CardHeader>
+            
+            <div className="flex-1 overflow-y-auto p-8 space-y-6 no-scrollbar" ref={scrollRef}>
+              {chatHistory.length === 0 ? (
+                <div className="h-full flex flex-col gap-8">
+                  <div className="text-center space-y-4 opacity-40 py-6">
+                    <Bot className="w-12 h-12 mx-auto text-foreground" />
+                    <p className="text-[10px] font-bold font-headline uppercase tracking-[0.3em]">How can I assist your residency?</p>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3">
+                    {[
+                      { title: "Property Rules", icon: BookOpen, query: "What are the property rules?" },
+                      { title: "Rent Status", icon: CreditCard, query: "What is my rent status?" },
+                      { title: "Report Repair", icon: Wrench, query: "How do I report a repair?" },
+                      { title: "Home Guides", icon: Info, query: "Tell me about my home specs." }
+                    ].map((topic, i) => (
+                      <button key={i} onClick={() => handleAskConcierge(topic.query)} className="p-5 bg-primary/5 rounded-[1.5rem] border border-border flex items-center gap-4 hover:bg-primary/10 transition-all text-left group">
+                        <topic.icon className="w-4 h-4 text-accent" />
+                        <span className="font-bold text-xs text-foreground">{topic.title}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {chatHistory.map((msg, i) => (
+                    <div key={i} className={cn("flex flex-col max-w-[85%] animate-in slide-in-from-bottom-2", msg.role === 'user' ? "ml-auto items-end" : "items-start")}>
+                      <div className={cn("p-5 rounded-[1.75rem] text-sm font-bold leading-relaxed shadow-sm", msg.role === 'user' ? "bg-primary text-primary-foreground rounded-tr-none" : "bg-muted text-foreground rounded-tl-none")}>{msg.text}</div>
+                    </div>
+                  ))}
+                  {isChatting && (
+                    <div className="flex items-center gap-2 p-4 bg-muted/30 rounded-2xl w-fit animate-pulse">
+                      <div className="w-1.5 h-1.5 bg-primary/40 rounded-full" />
+                      <div className="w-1.5 h-1.5 bg-primary/40 rounded-full" />
+                      <div className="w-1.5 h-1.5 bg-primary/40 rounded-full" />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="p-6 bg-muted/10 border-t border-border">
+              <form onSubmit={(e) => { e.preventDefault(); handleAskConcierge(); }} className="flex gap-3 items-center">
+                <Input value={chatQuery} onChange={(e) => setChatQuery(e.target.value)} placeholder="Ask Flow..." className="h-12 rounded-2xl bg-background border-none shadow-inner px-5 text-sm text-foreground focus-visible:ring-accent flex-1" disabled={isChatting} />
+                <button type="submit" className="h-12 w-12 rounded-2xl shadow-xl shadow-primary/20 bg-primary text-primary-foreground transition-all active:scale-95 shrink-0 flex items-center justify-center disabled:opacity-50" disabled={isChatting || !chatQuery.trim()}>
+                  {isChatting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                </button>
+              </form>
+            </div>
+          </Card>
+        )}
+
+        <button 
+          onClick={() => setIsChatOpen(!isChatOpen)}
+          className={cn(
+            "h-20 w-20 rounded-[2.5rem] shadow-2xl flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 group",
+            isChatOpen ? "bg-card text-foreground ring-1 ring-border" : "bg-primary text-primary-foreground"
+          )}
+        >
+          {isChatOpen ? <X className="w-8 h-8" /> : <MessageCircle className="w-10 h-10 group-hover:rotate-12 transition-transform" />}
+          {!isChatOpen && (
+            <div className="absolute -top-1 -right-1 h-6 w-6 bg-accent rounded-full border-4 border-background animate-pulse" />
+          )}
+        </button>
       </div>
     </div>
   );
