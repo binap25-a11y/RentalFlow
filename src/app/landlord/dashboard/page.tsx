@@ -6,7 +6,7 @@ import {
   ShieldAlert, Loader2, CheckCircle2,
   Plus, Save, ReceiptText, BellRing,
   Crown, ShieldCheck, PoundSterling, ArrowUpRight, ArrowDownRight,
-  Activity, BarChart3
+  Activity, BarChart3, Edit3, Settings2
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
@@ -95,6 +95,12 @@ export default function LandlordDashboard() {
   }, [db, user]);
   const { data: currentMonthPayments } = useCollection(paymentsQuery);
 
+  // States for Manage Ledger (Edit Actions)
+  const [activePaymentEdit, setActivePaymentEdit] = useState<any>(null);
+  const [editAmount, setEditAmount] = useState('');
+  const [editStatus, setEditStatus] = useState<'paid' | 'pending'>('pending');
+  const [isSavingPayment, setIsSavingPayment] = useState(false);
+
   const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
   const [isSavingExpense, setIsSavingExpense] = useState(false);
   const [expAmount, setExpAmount] = useState('');
@@ -139,6 +145,42 @@ export default function LandlordDashboard() {
       toast({ variant: "destructive", title: "Checkout Error", description: e.message });
       setIsUpgrading(false);
     }
+  };
+
+  const openPaymentEdit = (prop: any, payment: any) => {
+    setActivePaymentEdit({ prop, payment });
+    setEditAmount(payment?.amount?.toString() || prop.rentAmount?.toString() || '');
+    setEditStatus(payment?.status || 'pending');
+  };
+
+  const handleSavePaymentEdit = async () => {
+    if (!user || !db || !activePaymentEdit) return;
+    setIsSavingPayment(true);
+    
+    const { prop, payment } = activePaymentEdit;
+    const now = new Date();
+    const paymentId = payment?.id || `${prop.id}_${now.getFullYear()}_${now.getMonth() + 1}`;
+    const paymentRef = doc(db, 'rentPayments', paymentId);
+    
+    const payload = {
+      id: paymentId,
+      propertyId: prop.id,
+      landlordId: user.uid,
+      tenantId: prop.tenantIds?.[0] || 'manual-entry',
+      amount: parseFloat(editAmount) || 0,
+      status: editStatus,
+      month: now.getMonth() + 1,
+      year: now.getFullYear(),
+      memberIds: prop.memberIds || [user.uid],
+      updatedAt: serverTimestamp(),
+      paidAt: editStatus === 'paid' ? now.toISOString() : null,
+    };
+
+    setDocumentNonBlocking(paymentRef, payload, { merge: true });
+    toast({ title: "Ledger Synchronized", description: `Financial record updated for ${prop.addressLine1}` });
+    
+    setIsSavingPayment(false);
+    setActivePaymentEdit(null);
   };
 
   const handleMarkAsPaid = async (property: any) => {
@@ -332,7 +374,8 @@ export default function LandlordDashboard() {
                    </thead>
                    <tbody className="divide-y divide-white/5">
                      {properties?.filter(p => p.isOccupied).map(prop => {
-                       const isPaid = currentMonthPayments?.find(pm => pm.propertyId === prop.id)?.status === 'paid';
+                       const payment = currentMonthPayments?.find(pm => pm.propertyId === prop.id);
+                       const isPaid = payment?.status === 'paid';
                        const imageUrl = getResolvedImageUrl(prop.imageUrl, prop.imageUrls);
                        return (
                          <tr key={prop.id} className="hover:bg-white/[0.02] transition-colors group">
@@ -374,7 +417,9 @@ export default function LandlordDashboard() {
                                     </Button>
                                   </>
                                 )}
-                                {isPaid && <div className="p-2.5 bg-emerald-500/10 rounded-full shrink-0"><CheckCircle2 className="w-6 h-6 text-emerald-500 shadow-emerald-500/20" /></div>}
+                                <Button variant="ghost" size="icon" className="rounded-xl h-11 w-11 hover:bg-white/5 border border-white/5 shrink-0" onClick={() => openPaymentEdit(prop, payment)}>
+                                  <Settings2 className="w-4 h-4 text-muted-foreground" />
+                                </Button>
                               </div>
                            </td>
                          </tr>
@@ -487,6 +532,52 @@ export default function LandlordDashboard() {
           </Card>
         </div>
       </div>
+
+      {/* MANAGE LEDGER (Action Management) DIALOG */}
+      <Dialog open={!!activePaymentEdit} onOpenChange={(open) => !open && setActivePaymentEdit(null)}>
+        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[80vh] max-w-[500px] ring-1 ring-white/10">
+          <div className="p-10 bg-primary/5 border-b border-white/5 text-left shrink-0">
+            <DialogTitle className="text-2xl font-bold font-headline text-foreground tracking-tight">Manage Ledger</DialogTitle>
+            <DialogDescription className="text-sm font-medium text-muted-foreground mt-2">Adjust financial details for {activePaymentEdit?.prop?.addressLine1}</DialogDescription>
+          </div>
+          <div className="p-10 space-y-8 text-left flex-1 overflow-y-auto">
+            <div className="space-y-3">
+              <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Monthly Rent Amount (£)</Label>
+              <Input 
+                type="number" 
+                value={editAmount} 
+                onChange={(e) => setEditAmount(e.target.value)} 
+                className="rounded-2xl h-14 bg-muted/30 border-none font-bold px-6 text-base" 
+              />
+            </div>
+            <div className="space-y-3">
+              <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Collection Status</Label>
+              <select 
+                className="flex h-14 w-full rounded-2xl border-none bg-muted/30 px-6 py-2 text-base focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" 
+                value={editStatus} 
+                onChange={(e) => setEditStatus(e.target.value as any)}
+              >
+                <option value="pending">Collection Pending</option>
+                <option value="paid">Receipted / Collected</option>
+              </select>
+            </div>
+            <div className="p-6 bg-accent/5 rounded-2xl border border-accent/10">
+               <p className="text-[9px] font-bold text-accent uppercase tracking-widest font-headline mb-2">Operational Insight</p>
+               <p className="text-xs text-muted-foreground leading-relaxed font-medium">Changing the status here will immediately update your yield analytics for {format(new Date(), 'MMMM')}.</p>
+            </div>
+          </div>
+          <DialogFooter className="p-10 bg-muted/5 border-t border-white/5 shrink-0">
+            <Button 
+              className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl hover:opacity-90 font-headline uppercase tracking-[0.3em] text-[11px]" 
+              onClick={handleSavePaymentEdit} 
+              disabled={isSavingPayment || !editAmount}
+            >
+              {isSavingPayment ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
+              Synchronize Record
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -58,6 +58,13 @@ export default function LandingPage() {
     setMounted(true);
   }, []);
 
+  const scrollToFeatures = () => {
+    const section = document.getElementById('features');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   if (!mounted || isUserLoading || (user && isProfileLoading)) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-500">
@@ -127,8 +134,8 @@ export default function LandingPage() {
                   <Link href="/auth">Start Tenancy <ArrowRight className="w-6 h-6 ml-3" /></Link>
                 </Button>
               )}
-              <Button size="lg" variant="outline" asChild className="h-16 px-12 rounded-[1.75rem] border-white/10 bg-white/5 hover:bg-white/10 text-foreground font-bold text-lg backdrop-blur-md cursor-pointer">
-                 <Link href="#features">Explore Intelligence</Link>
+              <Button size="lg" variant="outline" className="h-16 px-12 rounded-[1.75rem] border-white/10 bg-white/5 hover:bg-white/10 text-foreground font-bold text-lg backdrop-blur-md cursor-pointer" onClick={scrollToFeatures}>
+                 Explore Intelligence
               </Button>
             </div>
 
