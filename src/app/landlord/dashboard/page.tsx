@@ -38,6 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 /**
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
  * Unified financial command and operational analytics for management accounts.
+ * Hardened for zero-error execution and real-time ledger control.
  */
 
 export default function LandlordDashboard() {
@@ -197,6 +198,13 @@ export default function LandlordDashboard() {
     );
   }
 
+  const statCards = [
+    { title: "Gross Annual Potential", val: `£${financialStats?.annualGross.toLocaleString()}`, icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5", indicator: ArrowUpRight },
+    { title: "Portfolio Expenses (YTD)", val: `£${financialStats?.totalExpenses.toLocaleString()}`, icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", indicator: ArrowDownRight },
+    { title: "Net Annual Forecast", val: `£${financialStats?.netAnnualForecast.toLocaleString()}`, icon: TrendingUp, color: "text-primary-foreground", bg: "bg-primary", isPrimary: true },
+    { title: "Current Month Receipt", val: `£${financialStats?.actualCollectedThisMonth.toLocaleString()}`, icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats?.collectionRate }
+  ];
+
   return (
     <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-16">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 text-left border-b border-white/5 pb-8">
@@ -223,30 +231,29 @@ export default function LandlordDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { title: "Gross Annual Potential", val: `£${financialStats?.annualGross.toLocaleString()}`, icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5", indicator: ArrowUpRight },
-          { title: "Portfolio Expenses (YTD)", val: `£${financialStats?.totalExpenses.toLocaleString()}`, icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", indicator: ArrowDownRight },
-          { title: "Net Annual Forecast", val: `£${financialStats?.netAnnualForecast.toLocaleString()}`, icon: TrendingUp, color: "text-primary-foreground", bg: "bg-primary", isPrimary: true },
-          { title: "Current Month Receipt", val: `£${financialStats?.actualCollectedThisMonth.toLocaleString()}`, icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats?.collectionRate }
-        ].map((stat, i) => (
-          <Card key={i} className={cn("border-none shadow-sm rounded-[2.5rem] overflow-hidden group hover:scale-[1.02] transition-all", stat.isPrimary ? "bg-primary text-primary-foreground shadow-2xl shadow-primary/10" : "bg-card ring-1 ring-white/5")}>
-            <CardContent className="pt-10 text-left px-10">
-              <div className="flex items-center justify-between mb-8">
-                <div className={cn("p-4 rounded-2xl shadow-inner border border-white/5 transition-transform group-hover:scale-110", stat.bg, !stat.isPrimary && stat.color)}>
-                  <stat.icon className="w-7 h-7" />
+        {statCards.map((stat, i) => {
+          const Icon = stat.icon;
+          const Indicator = stat.indicator;
+          return (
+            <Card key={i} className={cn("border-none shadow-sm rounded-[2.5rem] overflow-hidden group hover:scale-[1.02] transition-all", stat.isPrimary ? "bg-primary text-primary-foreground shadow-2xl shadow-primary/10" : "bg-card ring-1 ring-white/5")}>
+              <CardContent className="pt-10 text-left px-10">
+                <div className="flex items-center justify-between mb-8">
+                  <div className={cn("p-4 rounded-2xl shadow-inner border border-white/5 transition-transform group-hover:scale-110", stat.bg, !stat.isPrimary && stat.color)}>
+                    <Icon className="w-7 h-7" />
+                  </div>
+                  {Indicator && <Indicator className={cn("w-6 h-6 opacity-30", stat.color)} />}
                 </div>
-                {stat.indicator && <stat.indicator className={cn("w-6 h-6 opacity-30", stat.color)} />}
-              </div>
-              <div className="space-y-3 min-w-0">
-                <p className="text-4xl font-bold font-headline tracking-tighter truncate">
-                   {stat.val}
-                </p>
-                {stat.progress !== undefined && <Progress value={stat.progress} className="h-2 bg-white/10" />}
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline opacity-50 truncate">{stat.title}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                <div className="space-y-3 min-w-0">
+                  <p className="text-4xl font-bold font-headline tracking-tighter truncate">
+                     {stat.val}
+                  </p>
+                  {stat.progress !== undefined && <Progress value={stat.progress} className="h-2 bg-white/10" />}
+                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline opacity-50 truncate">{stat.title}</p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">

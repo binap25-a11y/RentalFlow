@@ -14,19 +14,22 @@ import { Badge } from "@/components/ui/badge";
 import { 
   PhoneCall, Download, Phone, Mail, 
   Wrench, ShieldAlert, Loader2, AlertCircle, ShieldCheck,
+  Zap
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
 
 /**
- * 🆘 National SOS Protocols (UK Fallbacks)
- * Displayed in absolute real-time if landlord ledger is empty.
+ * @fileOverview High-Fidelity Support Directory.
+ * Populates real-time SOS protocols and authorized trade partners.
+ * Optimized for cinematic visibility and hardware-accelerated UX.
  */
+
 const SOS_FALLBACKS = [
-  { name: "Emergency Services", phone: "999 or 112", role: "Primary Emergency" },
-  { name: "NHS Medical Advice", phone: "111", role: "Medical Advice (24/7)" },
-  { name: "National Gas Emergency", phone: "0800 111 999", role: "Gas Leaks Only" },
-  { name: "Police Non-Emergency", phone: "101", role: "Non-Urgent Records" },
+  { name: "Emergency Services", phone: "999 or 112", role: "Primary Emergency", category: 'standard' },
+  { name: "NHS Medical Advice", phone: "111", role: "Medical Advice (24/7)", category: 'standard' },
+  { name: "National Gas Emergency", phone: "0800 111 999", role: "Gas Leaks Only", category: 'standard' },
+  { name: "Police Non-Emergency", phone: "101", role: "Non-Urgent Records", category: 'standard' },
 ];
 
 export default function TenantEmergencyContactsPage() {
@@ -131,7 +134,7 @@ export default function TenantEmergencyContactsPage() {
     doc.save(`Safety_Guide_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
-  if (!isClient || (isLoading && !contacts)) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+  if (!isClient) return null;
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-7xl mx-auto text-left pb-16">
@@ -176,7 +179,9 @@ export default function TenantEmergencyContactsPage() {
                <p className="text-xs opacity-70 font-bold uppercase tracking-widest font-headline">National Emergency Lines</p>
              </CardHeader>
              <CardContent className="pt-10 px-8 pb-10 space-y-8">
-                {standardServices.map((service, i) => (
+                {isLoading && standardServices.length === 0 ? (
+                  <div className="py-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary opacity-20" /></div>
+                ) : standardServices.map((service, i) => (
                   <div key={i} className="flex justify-between items-start gap-6 group">
                     <div className="space-y-1.5 min-w-0 text-left">
                       <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest font-headline opacity-80">{service.role}</p>
@@ -193,11 +198,16 @@ export default function TenantEmergencyContactsPage() {
 
         <div className="lg:col-span-8">
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             {professionalPartners.length === 0 ? (
+             {isLoading ? (
+               <div className="col-span-full py-32 flex flex-col items-center justify-center gap-4 opacity-40">
+                  <Loader2 className="w-12 h-12 animate-spin text-primary" />
+                  <p className="text-[10px] font-bold uppercase tracking-[0.4em] font-headline">Syncing Partners...</p>
+               </div>
+             ) : professionalPartners.length === 0 ? (
                <Card className="col-span-full border-2 border-dashed py-32 flex flex-col items-center justify-center bg-muted/5 rounded-[3rem]">
-                 <div className="p-8 bg-muted rounded-[2.5rem] mb-8"><Wrench className="w-16 h-16 text-primary/10" /></div>
+                 <div className="p-8 bg-muted rounded-[2.5rem] mb-8"><Zap className="w-16 h-16 text-primary/10" /></div>
                  <h3 className="text-2xl font-bold font-headline text-primary/40 uppercase tracking-widest text-center">No property partners assigned</h3>
-                 <p className="text-sm text-muted-foreground font-medium mt-3 text-center">Authorized contractors for your asset will appear here.</p>
+                 <p className="text-sm text-muted-foreground font-medium mt-3 text-center">Authorized contractors for your asset will appear here in real-time.</p>
                </Card>
              ) : (
                professionalPartners.map((contact) => (

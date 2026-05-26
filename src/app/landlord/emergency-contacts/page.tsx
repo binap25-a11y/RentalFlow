@@ -35,6 +35,12 @@ import { useToast } from "@/hooks/use-toast";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
 
+/**
+ * @fileOverview Professional Trade Partner Database.
+ * Orchestrates authorized contractors and standard UK SOS protocols.
+ * Hardened for real-time resident synchronization.
+ */
+
 const DEFAULT_UK_SERVICES = [
   { name: "Emergency Services (Police, Fire, Ambulance)", phone: "999 or 112", role: "Primary Emergency" },
   { name: "Police Non-Emergency", phone: "101", role: "Non-Urgent Police" },
@@ -115,7 +121,6 @@ export default function LandlordEmergencyContactsPage() {
   const handleSeedStandardServices = async () => {
     if (!user || !db) return;
     
-    // Fetch all tenant IDs to grant immediate visibility
     const tenantsQuery = query(collection(db, 'tenantProfiles'), where('landlordId', '==', user.uid));
     const tenantSnaps = await getDocs(tenantsQuery);
     const tenantUserIds = tenantSnaps.docs.map(d => d.data().userId).filter(Boolean);
@@ -143,7 +148,8 @@ export default function LandlordEmergencyContactsPage() {
 
     let memberIds = [user.uid];
     
-    if (category === 'standard') {
+    // Proactively grant visibility to relevant residents
+    if (category === 'standard' || !assignToPropertyId) {
       const tenantsQuery = query(collection(db, 'tenantProfiles'), where('landlordId', '==', user.uid));
       const tenantSnaps = await getDocs(tenantsQuery);
       memberIds = [user.uid, ...tenantSnaps.docs.map(d => d.data().userId).filter(Boolean)];
