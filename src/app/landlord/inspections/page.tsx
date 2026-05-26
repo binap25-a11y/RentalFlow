@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -24,14 +25,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { 
-  Calendar as CalendarIcon, Loader2, Download, 
+  Calendar as CalendarIcon, Loader2, 
   CheckCircle2, ClipboardList, ShieldAlert, Home, Wrench, 
   Check, X, AlertTriangle, Info, Trash2, Edit3, PlayCircle, Camera, Clock
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn, compressImage, withRetry } from "@/lib/utils";
 import { generateInspectionReport } from "@/ai/flows/generate-inspection-report";
-import { supabase } from '@/lib/supabase';
+import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 import Image from 'next/image';
 
 const INSPECTION_SECTIONS = [
@@ -140,19 +141,13 @@ export default function InspectionsPage() {
       const optimizedBlob = await compressImage(file);
       const path = `audits/${user.uid}/${activeInspection.id}/${itemId.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`;
       
-      // Use standard supabase client to bypass JWT "alg" header parameter validation errors
       const publicUrl = await withRetry(async () => {
-        const { error: uploadError } = await supabase.storage
-          .from('property-images')
-          .upload(path, optimizedBlob, {
-            contentType: 'image/jpeg',
-            upsert: true
-          });
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl: url } } = supabase.storage.from('property-images').getPublicUrl(path);
-        return url;
+        const formData = new FormData();
+        formData.append('file', optimizedBlob, file.name);
+        
+        const result = await uploadToSupabase(formData, 'property-images', path);
+        if (!result.success) throw new Error(result.error);
+        return result.url!;
       });
       
       setStructuredFindings(prev => ({
@@ -169,7 +164,7 @@ export default function InspectionsPage() {
       toast({ 
         variant: "destructive", 
         title: "Synchronization Interrupted", 
-        description: "Visual delivery failed. Please check your signal."
+        description: err.message || "Visual delivery failed."
       });
     }
   };

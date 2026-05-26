@@ -3,7 +3,8 @@
 
 /**
  * @fileOverview Standard Cloud Storage Engine (Server Utility).
- * Standardized on the Anon client to resolve "alg" algorithm rejection errors.
+ * Standardized on Server Actions to resolve "signature verification failed" errors
+ * occurring during client-side browser uploads.
  */
 
 import { supabase } from '@/lib/supabase';
@@ -17,26 +18,31 @@ export async function uploadToSupabase(
     const file = formData.get('file') as File;
     if (!file) throw new Error('No valid binary payload detected.');
 
+    // Convert to Buffer for server-side stability
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Using the standard client resolves algorithm header parameter conflicts
-    const { error: uploadError } = await supabase.storage
+    // Perform atomic upload using the hardened server client
+    const { data, error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(path, buffer, {
-        contentType: file.type,
+        contentType: file.type || 'image/jpeg',
         upsert: true,
         cacheControl: '3600',
       });
 
     if (uploadError) {
-      console.error('Supabase Core Sync Error:', uploadError);
+      console.error('Supabase Server Sync Error:', uploadError);
       throw new Error(uploadError.message || 'Binary delivery failed.');
     }
 
     const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(path);
 
-    return { success: true, url: publicData.publicUrl };
+    return { 
+      success: true, 
+      url: publicData.publicUrl,
+      path: data.path 
+    };
   } catch (error: any) {
     console.error('Storage Orchestration Failure:', error.message);
     return { 

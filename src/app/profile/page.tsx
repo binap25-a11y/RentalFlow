@@ -11,14 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
-  User, Mail, Phone, ShieldCheck, 
-  Loader2, Save, Camera
+  User, Mail, Phone, Loader2, Save, Camera
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 import { Header } from "@/components/dashboard/header";
-import { supabase } from '@/lib/supabase';
+import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 import { compressImage } from '@/lib/utils';
 
 export default function ProfilePage() {
@@ -53,23 +52,16 @@ export default function ProfilePage() {
 
     setIsUploading(true);
     try {
-      // Direct compression: small avatar size
       const compressedBlob = await compressImage(file, 400, 0.8);
       const path = `profiles/${user.uid}/avatar_${Date.now()}.jpg`;
       
-      // Target correct documents/profile bucket
-      const { error: uploadError } = await supabase.storage
-        .from('property-docs')
-        .upload(path, compressedBlob, {
-          contentType: 'image/jpeg',
-          upsert: true
-        });
+      const formData = new FormData();
+      formData.append('file', compressedBlob, 'avatar.jpg');
+      
+      const result = await uploadToSupabase(formData, 'property-docs', path);
+      if (!result.success) throw new Error(result.error);
 
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage.from('property-docs').getPublicUrl(path);
-
-      await updateProfile(user, { photoURL: publicUrl });
+      await updateProfile(user, { photoURL: result.url });
       toast({ title: "Identity Updated" });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Sync Failed", description: error.message });

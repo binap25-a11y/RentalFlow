@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, use, useMemo, useEffect } from 'react';
@@ -35,7 +36,7 @@ import {
   DialogFooter,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { cn, getResolvedGallery, isRealUserUpload, isValidAssetUrl, getResolvedImageUrl, compressImage, withRetry } from "@/lib/utils";
+import { cn, getResolvedGallery, isRealUserUpload, getResolvedImageUrl, compressImage, withRetry } from "@/lib/utils";
 import {
   Carousel,
   CarouselContent,
@@ -46,7 +47,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from '@/lib/supabase';
+import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 import { syncDocumentToDb } from '@/lib/actions/db-sync';
 import { format } from 'date-fns';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -72,11 +73,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
-  /**
-   * 🖼️ Forced Reactive Identity Resolution
-   * Uses a reactive key strategy to ensure the carousel refreshes the moment
-   * a new 'Star' cover is designated or a new upload is verified.
-   */
   const gallery = useMemo(() => {
     if (!property) return [];
     return getResolvedGallery(property.imageUrl, property.imageUrls);
@@ -144,10 +140,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const [isDocDialogOpen, setIsDocDialogOpen] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-  /**
-   * 📸 Transactional Image Upload
-   * Allows direct gallery expansion from the details hub.
-   */
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user || !property || !propertyRef) return;
@@ -162,20 +154,19 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
         const publicUrl = await withRetry(async () => {
-          const { error: uploadError } = await supabase.storage
-            .from('property-images')
-            .upload(path, optimizedBlob, { contentType: 'image/jpeg', upsert: true });
-          if (uploadError) throw uploadError;
-          const { data: { publicUrl: url } } = supabase.storage.from('property-images').getPublicUrl(path);
-          return url;
+          const formData = new FormData();
+          formData.append('file', optimizedBlob, file.name);
+          
+          const result = await uploadToSupabase(formData, 'property-images', path);
+          if (!result.success) throw new Error(result.error);
+          return result.url!;
         });
         
         newUrls.push(publicUrl);
       }
 
-      // ATOMIC UPDATE: Commit to Firestore microsecond-instantly
       updateDocumentNonBlocking(propertyRef, {
-        imageUrl: property.imageUrl || newUrls[0], // Designate as primary if none exists
+        imageUrl: property.imageUrl || newUrls[0],
         imageUrls: newUrls,
         updatedAt: serverTimestamp(),
       });
@@ -209,22 +200,17 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     const path = `vault/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
     
     try {
-      const { error: uploadError } = await supabase.storage
-        .from('property-docs')
-        .upload(path, file, {
-          contentType: file.type,
-          upsert: true
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage.from('property-docs').getPublicUrl(path);
+      const formData = new FormData();
+      formData.append('file', file);
       
-      setUploadedDocUrl(publicUrl);
+      const result = await uploadToSupabase(formData, 'property-docs', path);
+      if (!result.success) throw new Error(result.error);
+      
+      setUploadedDocUrl(result.url!);
       if (!newDocName) setNewDocName(file.name.split('.')[0]);
       toast({ title: "Sync Ready" });
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Sync Interrupted" });
+      toast({ variant: "destructive", title: "Sync Interrupted", description: err.message });
     } finally {
       setIsUploadingDoc(false);
     }

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, use, useCallback } from 'react';
@@ -20,7 +21,7 @@ import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star } from "lucide-react"
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
-import { supabase } from '@/lib/supabase';
+import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 import { cn, isRealUserUpload, compressImage, withRetry } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -93,11 +94,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     }
   }, [property, isInitialized]);
 
-  /**
-   * 🔄 Transactional Visual Sync
-   * Visual modifications are committed to Firestore microsecond-instantly.
-   * This is strictly isolated from the manual Save button logic to prevent reverts.
-   */
   const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !propertyRef) return;
 
@@ -128,12 +124,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
         const publicUrl = await withRetry(async () => {
-          const { error: uploadError } = await supabase.storage
-            .from('property-images')
-            .upload(path, optimizedBlob, { contentType: 'image/jpeg', upsert: true });
-          if (uploadError) throw uploadError;
-          const { data: { publicUrl: url } } = supabase.storage.from('property-images').getPublicUrl(path);
-          return url;
+          const formData = new FormData();
+          formData.append('file', optimizedBlob, file.name);
+          
+          const result = await uploadToSupabase(formData, 'property-images', path);
+          if (!result.success) throw new Error(result.error);
+          return result.url!;
         });
         
         setLedger(prev => {
@@ -164,7 +160,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       syncVisualsToFirestore(updated);
       return updated;
     });
-    toast({ title: "Designated Primary Cover", description: "Identity updated microsecond-instantly." });
+    toast({ title: "Designated Primary Cover" });
   };
 
   const handleImageError = (id: string) => {
@@ -180,8 +176,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
     setIsSaving(true);
     
-    // TRANSACTIONAL PROTECTION: Exclude visual fields from manual Save payload.
-    // They are handled atomically by syncVisualsToFirestore during the event cycle.
     const serializableData = {
       id: propertyId, 
       landlordId: user.uid, 
@@ -243,7 +237,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
               <ScrollArea className="h-[600px] pr-4">
                 <div className="grid grid-cols-2 gap-5">
                   {ledger.map((item, index) => {
-                    // Self-Healing Source: fallback to local preview if cloud binary isn't ready or filtered
                     const displayUrl = (item.status === 'ready' && item.cloudUrl && !item.isBroken && isRealUserUpload(item.cloudUrl)) ? item.cloudUrl : item.previewUrl;
                     
                     return (
