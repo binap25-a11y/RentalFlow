@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, getLandlordCollectionQuery } from '@/firebase';
@@ -131,13 +130,13 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row gap-6 pt-4">
               {user && profile ? (
-                <Button size="lg" asChild className="h-16 px-10 md:px-16 rounded-[1.75rem] bg-accent hover:bg-accent/90 text-white text-lg md:text-xl font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95 border-none">
+                <Button size="lg" asChild className="h-16 px-8 md:px-16 rounded-[1.75rem] bg-accent hover:bg-accent/90 text-white text-lg md:text-xl font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95 border-none">
                   <Link href={profile.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
                       Access Portfolio Vault <ArrowRight className="w-6 h-6 ml-3" />
                   </Link>
                 </Button>
               ) : (
-                <Button size="lg" asChild className="h-16 px-10 md:px-16 rounded-[1.75rem] bg-accent hover:bg-accent/90 text-white text-lg md:text-xl font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95 border-none">
+                <Button size="lg" asChild className="h-16 px-8 md:px-16 rounded-[1.75rem] bg-accent hover:bg-accent/90 text-white text-lg md:text-xl font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95 border-none">
                   <Link href="/auth">Access Portfolio Vault <ArrowRight className="w-6 h-6 ml-3" /></Link>
                 </Button>
               )}

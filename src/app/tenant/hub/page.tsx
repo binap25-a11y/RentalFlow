@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
@@ -12,7 +11,7 @@ import {
   ChevronRight, CheckCircle2, Clock, ReceiptText, Building2,
   PhoneCall, ShieldAlert,
   ShieldCheck,
-  CloudSync
+  RefreshCcw
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -200,7 +199,7 @@ export default function TenantHub() {
                    <ShieldAlert className="w-5 h-5 mr-3 text-accent" />
                    Real-Time Support
                  </CardTitle>
-                 {isContactsLoading && <CloudSync className="w-4 h-4 animate-spin text-accent/40" />}
+                 {isContactsLoading && <RefreshCcw className="w-4 h-4 animate-spin text-accent/40" />}
                </div>
                <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Authorized SOS protocols</CardDescription>
              </CardHeader>

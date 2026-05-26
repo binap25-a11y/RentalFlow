@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -15,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { 
   PhoneCall, Download, Phone, Mail, 
   Wrench, ShieldAlert, Loader2, AlertCircle, ShieldCheck,
-  Zap, CloudSync, ChevronRight, MessageSquare
+  Zap, RefreshCcw, ChevronRight, MessageSquare
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
@@ -209,7 +208,7 @@ export default function TenantEmergencyContactsPage() {
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
              {isLoading ? (
                <div className="col-span-full py-32 flex flex-col items-center justify-center gap-4 opacity-40">
-                  <CloudSync className="w-12 h-12 animate-pulse text-primary" />
+                  <RefreshCcw className="w-12 h-12 animate-pulse text-primary" />
                   <p className="text-[10px] font-bold uppercase tracking-[0.4em] font-headline">Synchronizing Real-Time Ledger...</p>
                </div>
              ) : professionalPartners.length === 0 ? (
