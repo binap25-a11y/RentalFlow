@@ -10,7 +10,7 @@ import {
   Loader2, Building2, Sparkles, Send, Bot, 
   ChevronRight, CheckCircle2, Clock, ReceiptText,
   ShieldCheck, RefreshCcw, Zap, Bed, Bath, Download, Camera,
-  ShieldAlert, Home
+  ShieldAlert, Home, Info, BookOpen, CreditCard
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -98,7 +98,10 @@ export default function TenantHub() {
     const queryText = chatQuery.trim();
     setChatQuery(""); setChatHistory(prev => [...prev, { role: 'user', text: queryText }]); setIsChatting(true);
     try {
-      const response = await tenantConcierge({ query: queryText, propertyContext: `Property: ${property.addressLine1}. Specs: ${property.numberOfBedrooms} bedrooms, ${property.numberOfBathrooms} bathrooms.` });
+      const response = await tenantConcierge({ 
+        query: queryText, 
+        propertyContext: `Property: ${property.addressLine1}. Specs: ${property.numberOfBedrooms} bedrooms, ${property.numberOfBathrooms} bathrooms. Narrative: ${property.description || 'N/A'}. Rent: £${property.rentAmount}.` 
+      });
       setChatHistory(prev => [...prev, { role: 'bot', text: response.answer }]);
     } catch (error) {
       setChatHistory(prev => [...prev, { role: 'bot', text: "Service temporarily unavailable." }]);
@@ -264,7 +267,7 @@ export default function TenantHub() {
                 <div className="flex items-center gap-4 bg-primary/5 px-6 py-3 rounded-2xl border border-border shadow-inner">
                    <Home className="w-6 h-6 text-accent" />
                    <span className="text-base font-bold text-foreground font-headline uppercase tracking-widest">
-                     {property.propertyType || "Home"}
+                     {property.propertyType || "Residential Home"}
                    </span>
                 </div>
               </div>
@@ -318,7 +321,7 @@ export default function TenantHub() {
             </Card>
           )}
 
-          <Card className="border-none shadow-2xl rounded-[3rem] bg-card ring-1 ring-border overflow-hidden flex flex-col h-[600px]">
+          <Card className="border-none shadow-2xl rounded-[3rem] bg-card ring-1 ring-border overflow-hidden flex flex-col min-h-[600px]">
             <CardHeader className="bg-primary p-10 text-primary-foreground">
               <div className="flex items-center gap-6">
                 <div className="h-14 w-14 bg-white/10 rounded-2xl flex items-center justify-center shadow-inner"><Sparkles className="w-8 h-8 text-white" /></div>
@@ -331,9 +334,28 @@ export default function TenantHub() {
             <CardContent className="flex-1 flex flex-col p-0">
               <div className="flex-1 overflow-y-auto p-10 space-y-8 no-scrollbar" ref={scrollRef}>
                 {chatHistory.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center space-y-6 opacity-30 py-20">
-                    <Bot className="w-16 h-16 text-foreground" />
-                    <p className="text-base font-bold font-headline text-foreground uppercase tracking-[0.3em]">Ask me about home guides.</p>
+                  <div className="h-full flex flex-col gap-10">
+                    <div className="flex flex-col items-center justify-center text-center space-y-6 opacity-30 py-10">
+                      <Bot className="w-16 h-16 text-foreground" />
+                      <p className="text-base font-bold font-headline text-foreground uppercase tracking-[0.3em]">Ask me about home guides.</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       {[
+                         { title: "Property Rules", desc: "Pets, smoking, and noise protocols.", icon: BookOpen },
+                         { title: "Repairs", desc: "How to report and track maintenance.", icon: Wrench },
+                         { title: "Financials", desc: "Rent amounts and payment status.", icon: CreditCard },
+                         { title: "Guides", desc: "Asset specs and room information.", icon: Info }
+                       ].map((topic, i) => (
+                         <div key={i} className="p-6 bg-primary/5 rounded-[2rem] border border-border flex items-start gap-4">
+                            <div className="p-3 bg-white rounded-xl shadow-sm text-accent"><topic.icon className="w-5 h-5" /></div>
+                            <div className="text-left">
+                               <p className="font-bold text-sm text-foreground">{topic.title}</p>
+                               <p className="text-xs text-muted-foreground font-medium leading-relaxed">{topic.desc}</p>
+                            </div>
+                         </div>
+                       ))}
+                    </div>
                   </div>
                 ) : chatHistory.map((msg, i) => (
                   <div key={i} className={cn("flex flex-col max-w-[85%] animate-in slide-in-from-bottom-2", msg.role === 'user' ? "ml-auto items-end" : "items-start")}>
