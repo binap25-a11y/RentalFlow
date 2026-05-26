@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
@@ -102,6 +101,8 @@ export default function TenantHub() {
     try {
       const response = await tenantConcierge({ 
         query: queryText, 
+        residentName: user?.displayName || user?.email?.split('@')[0],
+        propertyAddress: property.addressLine1,
         propertyContext: `Property: ${property.addressLine1}. Specs: ${property.numberOfBedrooms} bedrooms, ${property.numberOfBathrooms} bathrooms. Narrative: ${property.description || 'N/A'}. Rent: £${property.rentAmount}. Financials: ${paymentContext} Repairs: ${activeRequestsContext}` 
       });
       setChatHistory(prev => [...prev, { role: 'bot', text: response.answer }]);
