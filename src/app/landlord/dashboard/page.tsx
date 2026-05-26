@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -111,12 +112,11 @@ export default function LandlordDashboard() {
     if (!isClient || !properties || !maintenance) return null;
     const monthlyGrossPotential = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
     const annualGross = monthlyGrossPotential * 12;
-    const occupiedMonthly = properties.filter(p => p.isOccupied).reduce((acc, p) => acc + (p.rentAmount || 0), 0);
     const actualCollectedThisMonth = currentMonthPayments?.filter(p => p.status === 'paid').reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
     const totalExpenses = maintenance.reduce((acc, r) => acc + (Number(r.cost) || 0), 0);
     const netAnnualForecast = annualGross - totalExpenses;
-    const collectionRate = occupiedMonthly > 0 ? (actualCollectedThisMonth / occupiedMonthly) * 100 : 0;
-    return { annualGross, totalExpenses, netAnnualForecast, collectionRate, monthlyGrossPotential, occupiedMonthly, actualCollectedThisMonth };
+    const collectionRate = monthlyGrossPotential > 0 ? (actualCollectedThisMonth / monthlyGrossPotential) * 100 : 0;
+    return { annualGross, totalExpenses, netAnnualForecast, collectionRate, actualCollectedThisMonth };
   }, [properties, maintenance, currentMonthPayments, isClient]);
 
   const chartData = useMemo(() => {
@@ -142,88 +142,6 @@ export default function LandlordDashboard() {
     } catch (e: any) {
       toast({ variant: "destructive", title: "Checkout Error", description: e.message });
       setIsUpgrading(false);
-    }
-  };
-
-  const openPaymentEdit = (prop: any, payment: any) => {
-    setActivePaymentEdit({ prop, payment });
-    setEditAmount(payment?.amount?.toString() || prop.rentAmount?.toString() || '');
-    setEditStatus(payment?.status || 'pending');
-  };
-
-  const handleSavePaymentEdit = async () => {
-    if (!user || !db || !activePaymentEdit) return;
-    setIsSavingPayment(true);
-    
-    const { prop, payment } = activePaymentEdit;
-    const now = new Date();
-    const paymentId = payment?.id || `${prop.id}_${now.getFullYear()}_${now.getMonth() + 1}`;
-    const paymentRef = doc(db, 'rentPayments', paymentId);
-    
-    const payload = {
-      id: paymentId,
-      propertyId: prop.id,
-      landlordId: user.uid,
-      tenantId: prop.tenantIds?.[0] || 'manual-entry',
-      amount: parseFloat(editAmount) || 0,
-      status: editStatus,
-      month: now.getMonth() + 1,
-      year: now.getFullYear(),
-      memberIds: prop.memberIds || [user.uid],
-      updatedAt: serverTimestamp(),
-      paidAt: editStatus === 'paid' ? now.toISOString() : null,
-    };
-
-    setDocumentNonBlocking(paymentRef, payload, { merge: true });
-    toast({ title: "Ledger Synchronized", description: `Financial record updated for ${prop.addressLine1}` });
-    
-    setIsSavingPayment(false);
-    setActivePaymentEdit(null);
-  };
-
-  const handleMarkAsPaid = async (property: any) => {
-    if (!user || !db) return;
-    const now = new Date();
-    const paymentId = `${property.id}_${now.getFullYear()}_${now.getMonth() + 1}`;
-    const paymentRef = doc(db, 'rentPayments', paymentId);
-    const paymentData = {
-      id: paymentId, 
-      propertyId: property.id, 
-      landlordId: user.uid,
-      tenantId: property.tenantIds?.[0] || 'manual-entry', 
-      amount: property.rentAmount || 0,
-      status: 'paid', 
-      month: now.getMonth() + 1, 
-      year: now.getFullYear(),
-      memberIds: property.memberIds || [user.uid], 
-      paidAt: now.toISOString(), 
-      updatedAt: serverTimestamp(),
-    };
-    setDocumentNonBlocking(paymentRef, paymentData, { merge: true });
-    toast({ title: "Receipt Verified", description: `Financial record updated for ${property.addressLine1}` });
-  };
-
-  const handleSendReminder = async (property: any) => {
-    if (!user || !db) return;
-    const tenant = tenants?.find(t => property.tenantIds?.includes(t.userId));
-    if (!tenant?.email) {
-      toast({ variant: "destructive", title: "Missing Identity", description: "No contact electronic mail on file." });
-      return;
-    }
-    setIsReminding(property.id);
-    try {
-      await sendRentReminderEmail({
-        tenantEmail: tenant.email, 
-        tenantName: `${tenant.firstName} ${tenant.lastName}`,
-        propertyAddress: property.addressLine1, 
-        amount: property.rentAmount || 0,
-        month: format(new Date(), 'MMMM yyyy')
-      });
-      toast({ title: "Reminder Dispatched" });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Reminder Error" });
-    } finally {
-      setIsReminding(null);
     }
   };
 
@@ -404,20 +322,14 @@ export default function LandlordDashboard() {
                            </td>
                            <td className="px-12 py-8 text-right shrink-0">
                               <div className="flex items-center justify-end gap-3">
-                                {!isPaid && (
-                                  <>
-                                    <Button variant="ghost" size="sm" className="rounded-xl h-11 px-5 font-bold text-muted-foreground hover:bg-white/5 hover:text-foreground border border-white/5 shrink-0" onClick={() => handleSendReminder(prop)} disabled={isReminding === prop.id}>
-                                      {isReminding === prop.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <BellRing className="w-4 h-4 mr-2" />}
-                                      Remind
-                                    </Button>
-                                    <Button size="sm" className="rounded-xl h-11 px-5 font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-xl shadow-primary/10 shrink-0" onClick={() => handleMarkAsPaid(prop)}>
-                                      Confirm
-                                    </Button>
-                                  </>
-                                )}
-                                <Button variant="ghost" size="icon" className="rounded-xl h-11 w-11 hover:bg-white/5 border border-white/5 shrink-0" onClick={() => openPaymentEdit(prop, payment)}>
+                                <Button variant="ghost" size="icon" className="rounded-xl h-11 w-11 hover:bg-white/5 border border-white/5 shrink-0" onClick={() => setActivePaymentEdit({ prop, payment })}>
                                   <Settings2 className="w-4 h-4 text-muted-foreground" />
                                 </Button>
+                                {!isPaid && (
+                                  <Button size="sm" className="rounded-xl h-11 px-5 font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-xl shadow-primary/10 shrink-0" onClick={() => setActivePaymentEdit({ prop, payment })}>
+                                    Process
+                                  </Button>
+                                )}
                               </div>
                            </td>
                          </tr>
@@ -483,7 +395,7 @@ export default function LandlordDashboard() {
                   <form className="flex flex-col h-full overflow-hidden" onSubmit={(e) => { e.preventDefault(); handleLogManualExpense(); }}>
                     <div className="p-10 bg-primary/5 border-b border-white/5 text-left shrink-0">
                       <DialogTitle className="text-2xl font-bold font-headline text-foreground tracking-tight">Register Expense</DialogTitle>
-                      <DialogDescription className="text-sm font-medium text-muted-foreground mt-2">Record insurance, maintenance, or high-value portfolio costs.</DialogDescription>
+                      <DialogDescription className="text-sm font-medium text-muted-foreground mt-2">Record insurance, maintenance, or portfolio costs.</DialogDescription>
                     </div>
                     <ScrollArea className="flex-1">
                       <div className="p-10 space-y-8 text-left">
@@ -509,7 +421,7 @@ export default function LandlordDashboard() {
                         <div className="space-y-3">
                           <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Target Inventory Asset</Label>
                           <select className="flex h-14 w-full rounded-2xl border-none bg-muted/30 px-6 py-2 text-base focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" value={expPropertyId} onChange={(e) => setExpPropertyId(e.target.value)} required>
-                            <option value="">Select Asset Registry Item...</option>
+                            <option value="">Select Asset...</option>
                             {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
                           </select>
                         </div>
@@ -518,7 +430,7 @@ export default function LandlordDashboard() {
                     <DialogFooter className="p-10 bg-muted/5 border-t border-white/5 shrink-0">
                       <Button type="submit" className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.3em] text-[11px]" disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
                         {isSavingExpense ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
-                        Commit to Portfolio Ledger
+                        Commit to Ledger
                       </Button>
                     </DialogFooter>
                   </form>
@@ -528,51 +440,6 @@ export default function LandlordDashboard() {
           </Card>
         </div>
       </div>
-
-      <Dialog open={!!activePaymentEdit} onOpenChange={(open) => !open && setActivePaymentEdit(null)}>
-        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[80vh] max-w-[500px] ring-1 ring-white/10">
-          <div className="p-10 bg-primary/5 border-b border-white/5 text-left shrink-0">
-            <DialogTitle className="text-2xl font-bold font-headline text-foreground tracking-tight">Manage Ledger</DialogTitle>
-            <DialogDescription className="text-sm font-medium text-muted-foreground mt-2">Adjust financial details for {activePaymentEdit?.prop?.addressLine1}</DialogDescription>
-          </div>
-          <div className="p-10 space-y-8 text-left flex-1 overflow-y-auto">
-            <div className="space-y-3">
-              <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Monthly Rent Amount (£)</Label>
-              <Input 
-                type="number" 
-                value={editAmount} 
-                onChange={(e) => setEditAmount(e.target.value)} 
-                className="rounded-2xl h-14 bg-muted/30 border-none font-bold px-6 text-base" 
-              />
-            </div>
-            <div className="space-y-3">
-              <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Collection Status</Label>
-              <select 
-                className="flex h-14 w-full rounded-2xl border-none bg-muted/30 px-6 py-2 text-base focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" 
-                value={editStatus} 
-                onChange={(e) => setEditStatus(e.target.value as any)}
-              >
-                <option value="pending">Collection Pending</option>
-                <option value="paid">Receipted / Collected</option>
-              </select>
-            </div>
-            <div className="p-6 bg-accent/5 rounded-2xl border border-accent/10">
-               <p className="text-[9px] font-bold text-accent uppercase tracking-widest font-headline mb-2">Operational Insight</p>
-               <p className="text-xs text-muted-foreground leading-relaxed font-medium">Changing the status here will immediately update your yield analytics for {format(new Date(), 'MMMM')}.</p>
-            </div>
-          </div>
-          <DialogFooter className="p-10 bg-muted/5 border-t border-white/5 shrink-0">
-            <Button 
-              className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl hover:opacity-90 font-headline uppercase tracking-[0.3em] text-[11px]" 
-              onClick={handleSavePaymentEdit} 
-              disabled={isSavingPayment || !editAmount}
-            >
-              {isSavingPayment ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
-              Synchronize Record
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
