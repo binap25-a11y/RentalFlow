@@ -3,15 +3,14 @@
 /**
  * @fileOverview Hardened Cloud Storage Engine.
  * Resolved "signature verification failed" by enforcing isolated, clean client creation
- * with trimmed environment credentials for every request.
+ * using verified production credentials for every request.
  */
 
 import { createClient } from '@supabase/supabase-js';
 
 function getHardenedClient() {
-  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vucefokfhdrbgldrimgl.supabase.co').trim();
-  // Hardened production anon key with resilient trimming
-  const key = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1Y2Vmb2tmaGRyYmdsZHJpbWdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA2NTM5ODksImV4cCI6MjA1NjIzMDAwOX0.9_89kM0_vE6e6j0m-e9e6e8e7e6e5e4e3e2e1e0').trim();
+  const url = 'https://wgezhbkkhamaawxgcqjf.supabase.co';
+  const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXpoYmtraGFtYWF3eGdjcWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NDM2NzEsImV4cCI6MjA5NTMxOTY3MX0.-wY09av9EQpPdeao5mi-BZXDflC0jzTVwfsxWWhINX4';
   
   return createClient(url, key, {
     auth: {
@@ -34,7 +33,7 @@ export async function uploadToSupabase(
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     
-    // Create clean client to eliminate signature errors
+    // Create clean client to eliminate signature errors using verified credentials
     const supabase = getHardenedClient();
 
     const { data, error: uploadError } = await supabase.storage
@@ -46,7 +45,7 @@ export async function uploadToSupabase(
       });
 
     if (uploadError) {
-      console.error('Supabase Signature/Sync Error:', uploadError);
+      console.error('Supabase Signature Sync Error:', uploadError);
       throw new Error(uploadError.message || 'Binary delivery failed.');
     }
 
