@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -53,12 +52,13 @@ export default function ProfilePage() {
     setIsUploading(true);
     try {
       const compressedBlob = await compressImage(file, 400, 0.8);
-      const path = `profiles/${user.uid}/avatar_${Date.now()}.jpg`;
+      // ATOMIC PATH PROTOCOL: uid/timestamp-filename
+      const path = `${user.uid}/${Date.now()}-avatar.jpg`;
       
       const formData = new FormData();
       formData.append('file', compressedBlob, 'avatar.jpg');
       
-      const result = await uploadToSupabase(formData, 'property-docs', path);
+      const result = await uploadToSupabase(formData, 'Property-Images-', path);
       if (!result.success) throw new Error(result.error);
 
       await updateProfile(user, { photoURL: result.url });

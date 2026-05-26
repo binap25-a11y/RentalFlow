@@ -130,9 +130,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       try {
         const optimizedBlob = await compressImage(file);
-        // RECOMMENDED PATH: private/<uid>/<propertyId>/<filename>
-        const filename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
-        const path = `private/${user.uid}/${propertyId}/${filename}`;
+        // ATOMIC PATH PROTOCOL: uid/timestamp-filename
+        const path = `${user.uid}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
         
         const formData = new FormData();
         formData.append('file', optimizedBlob, file.name);

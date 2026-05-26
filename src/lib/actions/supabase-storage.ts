@@ -3,7 +3,7 @@
 /**
  * @fileOverview Hardened Cloud Storage Engine.
  * Targeted at the verified production project: wgezhbkkhamaawxgcqjf.
- * Uses the user-provided Anon Key for server-side binary orchestration.
+ * Standardized on atomic path protocol: ${uid}/${timestamp}-${filename}
  */
 
 import { createClient } from '@supabase/supabase-js';

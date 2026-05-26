@@ -21,7 +21,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/tabs";
 import { format } from "date-fns";
 import { 
   Calendar as CalendarIcon, Loader2, 
@@ -138,7 +138,8 @@ export default function InspectionsPage() {
 
     try {
       const optimizedBlob = await compressImage(file);
-      const path = `audits/${user.uid}/${activeInspection.id}/${itemId.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`;
+      // ATOMIC PATH PROTOCOL: uid/timestamp-filename
+      const path = `${user.uid}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       
       const publicUrl = await withRetry(async () => {
         const formData = new FormData();
