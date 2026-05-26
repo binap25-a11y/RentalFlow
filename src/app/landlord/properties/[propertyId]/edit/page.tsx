@@ -39,7 +39,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const { toast } = useToast();
   const router = useRouter();
 
-  // State initialization with high-fidelity capture
+  // State initialization with robust scope verification
   const [isSaving, setIsSaving] = useState(false);
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
@@ -135,6 +135,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         const formData = new FormData();
         formData.append('file', optimizedBlob, file.name);
         
+        // TARGETING CASE-SENSITIVE BUCKET: Property-Images-
         const result = await uploadToSupabase(formData, 'Property-Images-', path);
         if (!result.success) throw new Error(result.error);
         

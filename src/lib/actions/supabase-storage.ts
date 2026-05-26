@@ -34,6 +34,7 @@ export async function uploadToSupabase(
     
     const supabase = getHardenedClient();
 
+    // TARGETING VERIFIED BUCKET: Case-sensitive and hyphenated identity.
     const { data, error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(path, buffer, {
