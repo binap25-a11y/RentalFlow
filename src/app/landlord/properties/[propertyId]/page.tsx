@@ -71,7 +71,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
-  // OPTIMISTIC IDENTITY RESOLUTION: strictly prioritized for real-time sync
+  /**
+   * 🖼️ Optimistic Identity Resolution
+   * Decisively utilizes the hardened resolution engine to resolve Supabase binaries.
+   */
   const gallery = useMemo(() => {
     if (!property) return [];
     return getResolvedGallery(property.imageUrl, property.imageUrls);

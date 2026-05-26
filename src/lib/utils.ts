@@ -109,10 +109,9 @@ export function isRealUserUpload(url: any): boolean {
   
   const u = url.toLowerCase();
   
-  // 1. PROJECT WHITELIST: Authorize valid cloud and local binaries
-  // Specifically targeted at the user's Supabase project 'wgezhbkkhamaawxgcqjf'
+  // 1. DYNAMIC WHITELIST: Authorize valid cloud and local binaries
+  // Broadens the check to all supabase.co subdomains to resolve ID mismatches
   const isAuthorized = (
-    u.includes('wgezhbkkhamaawxgcqjf') ||
     u.includes('supabase.co') || 
     u.includes('firebasestorage') ||
     u.includes('googleapi') ||
@@ -124,7 +123,7 @@ export function isRealUserUpload(url: any): boolean {
   const forbidden = [
     'placehold.co', 
     'placeholder',
-    'photo-1486406146926-c627a92ad1ab', // skyscraper generic
+    'photo-1486406146926-c627a92ad1ab', // corporate skyscraper generic
     'photo-1560518883-ce09059eeffa'  // logo generic
   ];
 
