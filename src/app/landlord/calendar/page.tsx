@@ -254,7 +254,11 @@ export default function LandlordCalendarPage() {
                  <Clock className="w-5 h-5" /> Quick Actions
               </h3>
               <p className="text-xs opacity-80 leading-relaxed font-body font-medium">Select a date to view current site visits or log a new repair directly to the roadmap.</p>
-              <Button className="w-full rounded-xl bg-primary-foreground text-primary font-bold h-12 shadow-lg hover:opacity-90 transition-all text-xs uppercase tracking-widest font-headline" onClick={() => setIsAddRepairOpen(true)}>
+              <Button 
+                variant="outline"
+                className="w-full rounded-xl bg-white text-primary hover:bg-white/90 border-none font-bold h-12 shadow-lg transition-all hover:scale-[1.02] text-xs uppercase tracking-widest font-headline" 
+                onClick={() => setIsAddRepairOpen(true)}
+              >
                  <Plus className="w-4 h-4 mr-2" /> Schedule Task
               </Button>
             </div>
@@ -357,7 +361,7 @@ function EventCard({ event, compact = false }: { event: PortfolioEvent, compact?
 
   return (
     <div className={cn(
-      "flex transition-all bg-card ring-1 ring-border group min-w-0",
+      "flex transition-all bg-card ring-1 ring-border group min-w-0 shadow-sm",
       compact ? "flex-col p-6 rounded-[2.5rem] gap-6" : "flex-row items-center justify-between p-8 rounded-[3rem]"
     )}>
       <div className={cn("flex items-start gap-5 text-left min-w-0", compact ? "w-full" : "flex-1 items-center")}>
