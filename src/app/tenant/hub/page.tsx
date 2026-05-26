@@ -179,38 +179,38 @@ export default function TenantHub() {
                  <ShieldAlert className="w-5 h-5 mr-3 text-accent" />
                  Property Support
                </CardTitle>
-               <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Authorized emergency protocols</CardDescription>
+               <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Authorized SOS protocols</CardDescription>
              </CardHeader>
              <CardContent className="p-8 space-y-6 text-left">
                {sortedContacts.length > 0 ? (
                  <div className="space-y-4">
                    {sortedContacts.slice(0, 8).map(contact => (
                      <div key={contact.id} className={cn(
-                       "p-4 rounded-2xl border transition-all group",
+                       "p-5 rounded-2xl border transition-all group",
                        contact.category === 'standard' 
                         ? "bg-red-500/5 border-red-500/20 hover:border-red-500/40" 
                         : "bg-muted/20 border-border hover:border-accent/30"
                      )}>
-                        <div className="flex justify-between items-start mb-1">
+                        <div className="flex justify-between items-start mb-2">
                           <p className={cn(
-                            "text-[9px] font-bold uppercase tracking-widest opacity-60",
-                            contact.category === 'standard' ? "text-red-600" : "text-muted-foreground"
+                            "text-[9px] font-bold uppercase tracking-widest",
+                            contact.category === 'standard' ? "text-red-600" : "text-muted-foreground opacity-60"
                           )}>{contact.role}</p>
                           {contact.category === 'standard' && (
-                            <Badge className="bg-red-600 text-white text-[7px] font-bold uppercase py-0.5 px-2 rounded-full border-none shadow-sm">SOS Protocol</Badge>
+                            <Badge className="bg-red-600 text-white text-[8px] font-bold uppercase py-0.5 px-3 rounded-full border-none shadow-sm animate-pulse">SOS PROTOCOL</Badge>
                           )}
                         </div>
-                        <p className="text-sm font-bold text-foreground truncate">{contact.name}</p>
+                        <p className="text-sm font-bold text-foreground truncate font-headline">{contact.name}</p>
                         <p className={cn(
-                          "text-sm font-bold mt-2 flex items-center",
+                          "text-base font-bold mt-3 flex items-center",
                           contact.category === 'standard' ? "text-red-600" : "text-accent"
                         )}>
-                          <PhoneCall className="w-3.5 h-3.5 mr-2" /> {contact.phone}
+                          <PhoneCall className="w-4 h-4 mr-2" /> {contact.phone}
                         </p>
                      </div>
                    ))}
-                   <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent h-10">
-                     <Link href="/tenant/emergency-contacts">Full Directory Directory</Link>
+                   <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent h-12 rounded-xl mt-2">
+                     <Link href="/tenant/emergency-contacts">View All Authorized Contacts <ChevronRight className="w-3 h-3 ml-2" /></Link>
                    </Button>
                  </div>
                ) : (
