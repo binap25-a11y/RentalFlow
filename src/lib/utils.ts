@@ -100,29 +100,27 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.85)
 }
 
 /**
- * 🖼️ User Asset Identifier (Hardened)
- * Whitelist-first logic strictly authorizing project-specific binaries.
- * Decisively REJECTS generic stock signatures to prevent fallback loops.
+ * 🖼️ User Asset Identifier (Hardened & Project-Agnostic)
+ * Whitelist-first logic strictly authorizing valid storage binaries.
+ * Allows URLs containing 'supabase', 'firebasestorage', 'googleapi', 'blob:', or 'data:'.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
   const u = url.toLowerCase();
   
-  // 1. DYNAMIC WHITELIST: Authorize valid cloud and local binaries
-  // Broadens the check to all supabase.co subdomains to resolve ID mismatches
+  // 1. BROAD WHITELIST: Authorize valid cloud and local binaries
   const isAuthorized = (
-    u.includes('supabase.co') || 
+    u.includes('supabase') || 
     u.includes('firebasestorage') ||
     u.includes('googleapi') ||
     u.startsWith('blob:') ||
     u.startsWith('data:')
   );
 
-  // 2. FORBIDDEN SIGNATURE BLACKLIST: Decisively reject known generic stock placeholders
+  // 2. SPECIFIC SIGNATURE BLACKLIST: Decisively reject known generic stock placeholders
   const forbidden = [
     'placehold.co', 
-    'placeholder',
     'photo-1486406146926-c627a92ad1ab', // corporate skyscraper generic
     'photo-1560518883-ce09059eeffa'  // logo generic
   ];
@@ -141,14 +139,11 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
- * DECISIVELY PRIORITIZES the designated primary cover from Firestore.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string | null {
-  // Priority 1: Specifically designated primary cover (imageUrl field)
   if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
     return imageUrl;
   }
-  // Priority 2: First available verified cloud binary in the array
   if (imageUrls && Array.isArray(imageUrls)) {
     const realGallery = imageUrls.filter(isRealUserUpload);
     if (realGallery.length > 0) return realGallery[0];

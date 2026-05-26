@@ -73,7 +73,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   /**
    * 🖼️ Optimistic Identity Resolution
-   * Decisively utilizes the hardened resolution engine to resolve Supabase binaries.
+   * Decisively utilizes the hardened resolution engine to resolve storage binaries.
    */
   const gallery = useMemo(() => {
     if (!property) return [];
@@ -264,7 +264,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         <div className="lg:col-span-2 space-y-10">
           <Card className="border-none shadow-2xl overflow-hidden bg-card rounded-[3rem] ring-1 ring-white/5">
             {gallery.length > 0 ? (
-              <Carousel className="w-full group">
+              <Carousel key={gallery.join(',')} className="w-full group">
                 <CarouselContent>
                   {gallery.map((url: string, index: number) => (
                     <CarouselItem key={`${url}-${index}`}>
