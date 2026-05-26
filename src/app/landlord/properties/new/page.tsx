@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
@@ -14,7 +15,7 @@ import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star } from "lucide-react"
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
-import { supabase } from '@/lib/supabase';
+import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 import { cn, compressImage, withRetry, isRealUserUpload } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -49,10 +50,6 @@ export default function NewPropertyPage() {
   const [ledger, setLedger] = useState<LedgerItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
-  /**
-   * 🔄 Transactional Visual Sync
-   * Designated primary cover is committed to Firestore immediately.
-   */
   const syncVisualsToFirestore = useCallback((currentLedger: LedgerItem[]) => {
     if (!db || !user || !propertyId) return;
 
@@ -86,18 +83,18 @@ export default function NewPropertyPage() {
         const optimizedBlob = await compressImage(file);
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
-        const publicUrl = await withRetry(async () => {
-          const { error: uploadError } = await supabase.storage
-            .from('property-images')
-            .upload(path, optimizedBlob, { contentType: 'image/jpeg', upsert: true });
-          if (uploadError) throw uploadError;
-          const { data: { publicUrl: url } } = supabase.storage.from('property-images').getPublicUrl(path);
-          return url;
-        });
+        const formData = new FormData();
+        formData.append('file', optimizedBlob, file.name);
+        
+        const result = await uploadToSupabase(formData, 'property-images', path);
+        if (!result.success) throw new Error(result.error);
+        
+        const publicUrl = result.url!;
         
         setLedger(prev => {
           const updated = prev.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item);
-          syncVisualsToFirestore(updated);
+          // Atomic sync after transition
+          setTimeout(() => syncVisualsToFirestore(updated), 0);
           return updated;
         });
       } catch (err) {
@@ -110,7 +107,7 @@ export default function NewPropertyPage() {
   const removeFromLedger = (id: string) => {
     setLedger(prev => {
       const updated = prev.filter(i => i.id !== id);
-      syncVisualsToFirestore(updated);
+      setTimeout(() => syncVisualsToFirestore(updated), 0);
       return updated;
     });
   };
@@ -120,7 +117,8 @@ export default function NewPropertyPage() {
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
       const updated = [item, ...prev.filter(i => i.id !== id)];
-      syncVisualsToFirestore(updated);
+      // MICROSECOND TRANSACTIONAL SYNC
+      setTimeout(() => syncVisualsToFirestore(updated), 0);
       return updated;
     });
     toast({ title: "Designated Primary Cover" });
@@ -139,8 +137,12 @@ export default function NewPropertyPage() {
 
     setIsSaving(true);
     const propertyRef = doc(db, 'properties', propertyId);
+
+    const readyUrls = ledger
+      .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
+      .map(i => i.cloudUrl!);
     
-    // DECISIVE PROTECTION: Exclude visual fields from manual Save payload.
+    // FULL ASSET SYNC PAYLOAD
     const serializableData = {
       id: propertyId, 
       landlordId: user.uid, 
@@ -153,7 +155,9 @@ export default function NewPropertyPage() {
       numberOfBathrooms: parseInt(bathrooms, 10) || 1,
       description: description, 
       isOccupied: false, 
-      memberIds: [user.uid]
+      memberIds: [user.uid],
+      imageUrl: readyUrls.length > 0 ? readyUrls[0] : null,
+      imageUrls: readyUrls
     };
 
     setDocumentNonBlocking(propertyRef, {

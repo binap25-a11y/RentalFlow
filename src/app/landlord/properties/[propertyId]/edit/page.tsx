@@ -123,18 +123,15 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         const optimizedBlob = await compressImage(file);
         const path = `assets/${user.uid}/${propertyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         
-        const publicUrl = await withRetry(async () => {
-          const formData = new FormData();
-          formData.append('file', optimizedBlob, file.name);
-          
-          const result = await uploadToSupabase(formData, 'property-images', path);
-          if (!result.success) throw new Error(result.error);
-          return result.url!;
-        });
+        const result = await uploadToSupabase(formDataFromBlob(optimizedBlob, file.name), 'property-images', path);
+        if (!result.success) throw new Error(result.error);
+        
+        const publicUrl = result.url!;
         
         setLedger(prev => {
           const updated = prev.map(item => item.id === tempId ? { ...item, cloudUrl: publicUrl, status: 'ready' } : item);
-          syncVisualsToFirestore(updated);
+          // Atomic sync after state transition
+          setTimeout(() => syncVisualsToFirestore(updated), 0);
           return updated;
         });
       } catch (err) {
@@ -144,10 +141,16 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     e.target.value = '';
   };
 
+  const formDataFromBlob = (blob: Blob | File, name: string) => {
+    const fd = new FormData();
+    fd.append('file', blob, name);
+    return fd;
+  };
+
   const removeFromLedger = (id: string) => {
     setLedger(prev => {
       const updated = prev.filter(i => i.id !== id);
-      syncVisualsToFirestore(updated);
+      setTimeout(() => syncVisualsToFirestore(updated), 0);
       return updated;
     });
   };
@@ -157,7 +160,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
       const updated = [item, ...prev.filter(i => i.id !== id)];
-      syncVisualsToFirestore(updated);
+      // MICROSECOND TRANSACTIONAL SYNC
+      setTimeout(() => syncVisualsToFirestore(updated), 0);
       return updated;
     });
     toast({ title: "Designated Primary Cover" });
@@ -175,7 +179,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
     if (!user || !db || !propertyRef) return;
 
     setIsSaving(true);
+
+    const readyUrls = ledger
+      .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
+      .map(i => i.cloudUrl!);
     
+    // FULL ASSET SYNC PAYLOAD
     const serializableData = {
       id: propertyId, 
       landlordId: user.uid, 
@@ -188,7 +197,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       numberOfBathrooms: parseInt(bathrooms, 10) || 1,
       description: description, 
       isOccupied: property?.isOccupied || false,
-      memberIds: property?.memberIds || [user.uid]
+      memberIds: property?.memberIds || [user.uid],
+      imageUrl: readyUrls.length > 0 ? readyUrls[0] : (property?.imageUrl || null),
+      imageUrls: readyUrls.length > 0 ? readyUrls : (property?.imageUrls || [])
     };
 
     updateDocumentNonBlocking(propertyRef, { ...serializableData, updatedAt: serverTimestamp() });
