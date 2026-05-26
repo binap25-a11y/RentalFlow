@@ -298,7 +298,7 @@ export default function LandlordCalendarPage() {
               </h3>
               <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 font-headline shrink-0">Upcoming Roadmap</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                {allEvents.filter(e => isAfter(e.date, startOfDay(new Date()))).slice(0, 6).length === 0 ? (
                   <p className="col-span-full text-center py-16 text-muted-foreground italic text-xs font-medium bg-muted/5 rounded-[2rem] border-2 border-dashed border-border">No future operations synchronized.</p>
                ) : (
@@ -357,39 +357,42 @@ function EventCard({ event, compact = false }: { event: PortfolioEvent, compact?
 
   return (
     <div className={cn(
-      "flex items-center justify-between transition-all bg-card ring-1 ring-border group min-w-0",
-      compact ? "p-4 rounded-2xl" : "p-6 rounded-[1.75rem]"
+      "flex transition-all bg-card ring-1 ring-border group min-w-0",
+      compact ? "flex-col p-6 rounded-[2.5rem] gap-6" : "flex-row items-center justify-between p-8 rounded-[3rem]"
     )}>
-      <div className="flex items-center gap-5 text-left min-w-0 flex-1">
+      <div className={cn("flex items-start gap-5 text-left min-w-0", compact ? "w-full" : "flex-1 items-center")}>
         <div className={cn(
           "rounded-xl flex items-center justify-center transform group-hover:scale-105 transition-transform shrink-0 shadow-sm",
-          compact ? "w-10 h-10" : "w-14 h-14",
+          compact ? "w-12 h-12" : "w-16 h-16",
           colorClass
         )}>
-           <Icon className={compact ? "w-5 h-5" : "w-7 h-7"} />
+           <Icon className={compact ? "w-6 h-6" : "w-8 h-8"} />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-1">
              <Badge variant="outline" className="uppercase text-[7px] font-bold tracking-[0.2em] text-muted-foreground border-border font-headline px-2 py-0.5 shrink-0">
               {event.type === 'inspection' ? 'AUDIT' : 'REPAIR'}
              </Badge>
-             {compact && (
-               <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-40 font-headline truncate">{format(event.date, 'MMM dd')}</span>
-             )}
+             <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-40 font-headline truncate">
+                {format(event.date, 'MMM dd')}
+             </span>
           </div>
           <h4 className={cn(
             "font-bold font-headline leading-tight mb-1 tracking-tight text-foreground truncate block",
-            compact ? "text-sm" : "text-xl"
+            compact ? "text-base" : "text-xl"
           )}>{event.title}</h4>
           <div className="flex flex-wrap items-center gap-3 min-w-0">
-            <p className="text-[9px] text-muted-foreground font-bold flex items-center font-body opacity-60 uppercase tracking-widest font-headline truncate">
+            <p className="text-[10px] text-muted-foreground font-bold flex items-center font-body opacity-60 uppercase tracking-widest font-headline truncate">
               <MapPin className="w-3 h-3 mr-1 text-accent shrink-0" /> {event.subtitle}
             </p>
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-3 shrink-0 ml-4">
-         <Button variant="outline" size="sm" asChild className="rounded-xl h-10 font-bold border-border bg-card shadow-sm hover:bg-primary hover:text-primary-foreground text-[10px] uppercase tracking-widest px-4 transition-all">
+      <div className={cn("shrink-0", compact ? "w-full" : "ml-6")}>
+         <Button variant="outline" size="sm" asChild className={cn(
+           "rounded-xl font-bold border-border bg-card shadow-sm hover:bg-primary hover:text-primary-foreground text-[10px] uppercase tracking-widest transition-all",
+           compact ? "w-full h-12" : "h-12 px-8"
+         )}>
             <Link href={linkHref}>
                {event.type === 'inspection' ? 'Jump to Audit' : 'Jump to Repair'}
                <ArrowRight className="w-3 h-3 ml-2" />
