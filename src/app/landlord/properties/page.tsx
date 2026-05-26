@@ -130,7 +130,6 @@ export default function PropertiesPage() {
               </div>
             ) : (
               activeProperties.map((property) => {
-                // OPTIMISTIC PREVIEW: Prioritize user-designated cover
                 const imageUrl = getResolvedImageUrl(property.imageUrl, property.imageUrls);
                 return (
                   <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-2xl transition-all duration-500 rounded-[2.5rem] bg-card ring-1 ring-border">
@@ -151,30 +150,30 @@ export default function PropertiesPage() {
                         {property.isOccupied ? 'Occupied' : 'Vacant'}
                       </Badge>
                     </div>
-                    <CardHeader className="pb-2 text-left space-y-2 p-8">
+                    <CardHeader className="pb-2 text-left space-y-2 p-8 min-w-0">
                       <Badge variant="outline" className="text-[8px] uppercase font-bold text-accent border-accent/20 w-fit tracking-widest py-0.5 px-2 font-headline bg-accent/5">
                         {property.propertyType}
                       </Badge>
-                      <CardTitle className="text-xl font-bold font-headline truncate tracking-tight text-foreground group-hover:text-accent transition-colors">{property.addressLine1}</CardTitle>
-                      <p className="text-xs text-muted-foreground flex items-center font-medium font-body opacity-60"><MapPin className="w-3.5 h-3.5 mr-1.5 text-accent" /> {property.city}, {property.zipCode}</p>
+                      <CardTitle className="text-xl font-bold font-headline truncate tracking-tight text-foreground group-hover:text-accent transition-colors block w-full">{property.addressLine1}</CardTitle>
+                      <p className="text-xs text-muted-foreground flex items-center font-medium font-body opacity-60 truncate w-full"><MapPin className="w-3.5 h-3.5 mr-1.5 text-accent shrink-0" /> {property.city}, {property.zipCode}</p>
                     </CardHeader>
                     <CardContent className="pb-6 text-left px-8">
-                      <div className="flex gap-6 items-center mb-6 py-4 border-y border-border/50">
-                        <span className="flex items-center text-[10px] font-bold text-muted-foreground font-headline uppercase tracking-widest"><Bed className="w-4 h-4 mr-2 text-primary opacity-40" /> {property.numberOfBedrooms || 1} Bed</span>
-                        <span className="flex items-center text-[10px] font-bold text-muted-foreground font-headline uppercase tracking-widest"><Bath className="w-4 h-4 mr-2 text-primary opacity-40" /> {property.numberOfBathrooms || 1} Bath</span>
+                      <div className="flex gap-6 items-center mb-6 py-4 border-y border-border/50 overflow-hidden">
+                        <span className="flex items-center text-[10px] font-bold text-muted-foreground font-headline uppercase tracking-widest whitespace-nowrap"><Bed className="w-4 h-4 mr-2 text-primary opacity-40" /> {property.numberOfBedrooms || 1} Bed</span>
+                        <span className="flex items-center text-[10px] font-bold text-muted-foreground font-headline uppercase tracking-widest whitespace-nowrap"><Bath className="w-4 h-4 mr-2 text-primary opacity-40" /> {property.numberOfBathrooms || 1} Bath</span>
                       </div>
-                      <div className="flex items-end justify-between">
-                         <p className="text-2xl font-bold text-foreground font-headline tracking-tighter">£{property.rentAmount?.toLocaleString()}<span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest ml-2 opacity-40">/ mo</span></p>
+                      <div className="flex items-end justify-between min-w-0">
+                         <p className="text-2xl font-bold text-foreground font-headline tracking-tighter truncate">£{property.rentAmount?.toLocaleString()}<span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest ml-2 opacity-40">/ mo</span></p>
                       </div>
                     </CardContent>
                     <CardFooter className="flex gap-2 p-6 pt-2 bg-muted/5 border-t border-border">
                       <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-11 font-headline uppercase tracking-widest text-[9px] border-border bg-card hover:bg-primary/5 transition-all" asChild>
                         <Link href={`/landlord/properties/${property.id}`}>Command Hub</Link>
                       </Button>
-                      <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl border-border bg-card text-muted-foreground hover:text-accent hover:bg-accent/5" asChild>
+                      <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl border-border bg-card text-muted-foreground hover:text-accent hover:bg-accent/5 shrink-0" asChild>
                          <Link href={`/landlord/properties/${property.id}/edit`}><Plus className="w-4 h-4" /></Link>
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl text-destructive/40 hover:text-destructive hover:bg-destructive/10 transition-all" onClick={() => handleArchiveProperty(property.id)}>
+                      <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl text-destructive/40 hover:text-white hover:bg-red-500 transition-all shrink-0" onClick={() => handleArchiveProperty(property.id)}>
                         <Archive className="w-4 h-4" />
                       </Button>
                     </CardFooter>
@@ -207,7 +206,7 @@ export default function PropertiesPage() {
                   return (
                     <Card key={property.id} className="border-none shadow-sm rounded-2xl bg-card ring-1 ring-border overflow-hidden">
                       <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="flex items-center gap-5 w-full text-left">
+                        <div className="flex items-center gap-5 w-full text-left min-w-0">
                           <div className="relative h-16 w-24 rounded-xl overflow-hidden bg-muted shrink-0">
                             {imageUrl ? (
                               <img 
@@ -221,12 +220,12 @@ export default function PropertiesPage() {
                               </div>
                             )}
                           </div>
-                          <div className="min-w-0">
-                             <h4 className="font-bold text-base font-headline text-foreground truncate">{property.addressLine1}</h4>
-                             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Archived: {property.deletedAt ? new Date(property.deletedAt.seconds * 1000).toLocaleDateString() : 'Recently'}</p>
+                          <div className="min-w-0 flex-1">
+                             <h4 className="font-bold text-base font-headline text-foreground truncate block">{property.addressLine1}</h4>
+                             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1 truncate">Archived: {property.deletedAt ? new Date(property.deletedAt.seconds * 1000).toLocaleDateString() : 'Recently'}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 w-full md:w-auto">
+                        <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
                           <Button variant="outline" className="flex-1 md:flex-none rounded-xl font-bold h-11 px-6 border-border text-foreground hover:bg-accent/10 hover:text-accent" onClick={() => handleRestoreProperty(property.id)}>
                             <RotateCcw className="w-4 h-4 mr-2" /> Restore
                           </Button>

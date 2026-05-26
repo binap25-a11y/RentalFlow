@@ -76,10 +76,10 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
       <SidebarHeader className="p-6">
         <Link 
           href={dashboardHref} 
-          className="flex items-center gap-3 group" 
+          className="flex items-center gap-3 group min-w-0" 
           onClick={handleItemClick}
         >
-          <div className="relative h-10 w-10 rounded-xl overflow-hidden shadow-lg transition-transform group-hover:scale-110">
+          <div className="relative h-10 w-10 rounded-xl overflow-hidden shadow-lg transition-transform group-hover:scale-110 shrink-0">
             <Image 
               src={LOGO_URL} 
               alt="RentalFlow" 
@@ -89,7 +89,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
               priority
             />
           </div>
-          <span className="font-headline font-bold text-xl tracking-tight text-sidebar-foreground">RentalFlow</span>
+          <span className="font-headline font-bold text-xl tracking-tight text-sidebar-foreground truncate block">RentalFlow</span>
         </Link>
       </SidebarHeader>
       <SidebarContent className="px-3">
@@ -107,8 +107,8 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
                 )}
               >
                 <Link href={item.href} onClick={handleItemClick}>
-                  <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
+                  <item.icon className="w-5 h-5 shrink-0" />
+                  <span className="font-medium truncate">{item.label}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -116,14 +116,14 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-6 border-t border-sidebar-border">
-        <div className="flex items-center gap-3 mb-6">
-          <Avatar className="h-10 w-10 border-2 border-sidebar-primary ring-2 ring-sidebar-background shadow-lg">
+        <div className="flex items-center gap-3 mb-6 min-w-0">
+          <Avatar className="h-10 w-10 border-2 border-sidebar-primary ring-2 ring-sidebar-background shadow-lg shrink-0">
             <AvatarImage src={userAvatar} />
             <AvatarFallback className="bg-sidebar-primary/20 text-sidebar-foreground font-bold">{userName[0]}</AvatarFallback>
           </Avatar>
-          <div className="flex flex-col min-w-0">
-            <span className="text-sm font-semibold truncate text-sidebar-foreground font-body">{userName}</span>
-            <span className="text-xs text-sidebar-foreground/60 capitalize font-headline font-bold">{role} Account</span>
+          <div className="flex flex-col min-w-0 overflow-hidden">
+            <span className="text-sm font-semibold truncate text-sidebar-foreground font-body block">{userName}</span>
+            <span className="text-xs text-sidebar-foreground/60 capitalize font-headline font-bold truncate block">{role} Account</span>
           </div>
         </div>
         <SidebarMenu>
@@ -132,7 +132,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
               onClick={handleLogout}
               className="w-full justify-start h-10 rounded-lg hover:bg-destructive/10 hover:text-destructive text-sidebar-foreground/60 transition-colors font-headline font-bold"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-4 h-4 shrink-0" />
               <span>Logout</span>
             </SidebarMenuButton>
           </SidebarMenuItem>

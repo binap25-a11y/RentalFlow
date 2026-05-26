@@ -180,7 +180,7 @@ export default function MaintenancePage() {
         </div>
         <Button 
           onClick={() => setIsCreateDialogOpen(true)} 
-          className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-12 px-8 shadow-lg shadow-primary/20 text-primary-foreground text-sm transition-all hover:scale-[1.02] w-fit"
+          className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-12 px-8 shadow-lg shadow-primary/20 text-primary-foreground text-sm transition-all hover:scale-[1.02] w-fit shrink-0"
         >
           <Plus className="w-4 h-4 mr-2" /> Log New Request
         </Button>
@@ -194,46 +194,46 @@ export default function MaintenancePage() {
           </Card>
         ) : (
           requests.slice().sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).map((request) => (
-            <Card key={request.id} className="border-none shadow-sm overflow-hidden bg-card rounded-[2.5rem] group ring-1 ring-border transition-all hover:shadow-md relative">
+            <Card key={request.id} className="border-none shadow-sm overflow-hidden bg-card rounded-[2.5rem] group ring-1 ring-border transition-all hover:shadow-md relative min-w-0">
               <CardContent className="p-8">
-                <div className="flex justify-between items-start mb-6 pr-10">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Badge className={cn("uppercase text-[8px] font-bold px-3 py-1 tracking-[0.1em] rounded-full", request.status === 'completed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-primary/10 text-primary')}>
+                <div className="flex justify-between items-start mb-6 pr-10 min-w-0">
+                  <div className="flex flex-wrap items-center gap-3 min-w-0">
+                    <Badge className={cn("uppercase text-[8px] font-bold px-3 py-1 tracking-[0.1em] rounded-full shrink-0", request.status === 'completed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-primary/10 text-primary')}>
                       {request.status}
                     </Badge>
-                    <Badge className={cn("capitalize font-bold text-[8px] px-3 py-1 tracking-[0.1em] rounded-full", request.priority === 'critical' ? 'bg-red-600 text-white' : 'bg-primary text-primary-foreground')}>
+                    <Badge className={cn("capitalize font-bold text-[8px] px-3 py-1 tracking-[0.1em] rounded-full shrink-0", request.priority === 'critical' ? 'bg-red-600 text-white' : 'bg-primary text-primary-foreground')}>
                       {request.priority}
                     </Badge>
-                    <span className="text-[9px] text-muted-foreground font-bold uppercase flex items-center tracking-widest opacity-60 font-headline">
-                      <Clock className="w-3.5 h-3.5 mr-1.5" /> {request.createdAt ? format(new Date(request.createdAt.seconds * 1000), 'p') : 'Just now'}
+                    <span className="text-[9px] text-muted-foreground font-bold uppercase flex items-center tracking-widest opacity-60 font-headline truncate">
+                      <Clock className="w-3.5 h-3.5 mr-1.5 shrink-0" /> {request.createdAt ? format(new Date(request.createdAt.seconds * 1000), 'p') : 'Just now'}
                     </span>
                   </div>
                 </div>
 
-                <div className="absolute top-8 right-8">
+                <div className="absolute top-8 right-8 shrink-0">
                   <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 text-muted-foreground hover:bg-primary/5 hover:text-foreground" asChild>
                     <Link href={`/landlord/properties/${request.propertyId}`}><Settings className="w-4 h-4" /></Link>
                   </Button>
                 </div>
                 
-                <div className="space-y-4">
-                  <h3 className="text-xl font-bold font-headline group-hover:text-primary transition-colors tracking-tight leading-tight text-foreground">{request.title}</h3>
-                  <p className="text-sm text-muted-foreground font-body leading-relaxed font-medium max-w-4xl">{request.description}</p>
+                <div className="space-y-4 min-w-0">
+                  <h3 className="text-xl font-bold font-headline group-hover:text-primary transition-colors tracking-tight leading-tight text-foreground truncate block w-full">{request.title}</h3>
+                  <p className="text-sm text-muted-foreground font-body leading-relaxed font-medium max-w-4xl block truncate md:line-clamp-2 md:whitespace-normal">{request.description}</p>
                   
-                  <div className="flex flex-wrap items-center gap-8 pt-6 border-t border-border">
-                    <div className="flex items-center gap-3">
-                       <div className="p-2 bg-primary/5 rounded-xl text-accent"><Building2 className="w-4 h-4" /></div>
-                       <div className="text-left">
+                  <div className="flex flex-wrap items-center gap-8 pt-6 border-t border-border min-w-0">
+                    <div className="flex items-center gap-3 min-w-0">
+                       <div className="p-2 bg-primary/5 rounded-xl text-accent shrink-0"><Building2 className="w-4 h-4" /></div>
+                       <div className="text-left min-w-0 flex-1">
                           <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest font-headline">Asset</p>
-                          <p className="text-xs font-bold text-foreground">{properties?.find(p => p.id === request.propertyId)?.addressLine1 || "Portfolio Item"}</p>
+                          <p className="text-xs font-bold text-foreground truncate block">{properties?.find(p => p.id === request.propertyId)?.addressLine1 || "Portfolio Item"}</p>
                        </div>
                     </div>
                     {request.scheduledDate && (
-                      <div className="flex items-center gap-3">
-                         <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500"><CalendarIcon className="w-4 h-4" /></div>
-                         <div className="text-left">
+                      <div className="flex items-center gap-3 min-w-0">
+                         <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500 shrink-0"><CalendarIcon className="w-4 h-4" /></div>
+                         <div className="text-left min-w-0 flex-1">
                             <p className="text-[8px] font-bold text-emerald-500/60 uppercase tracking-widest font-headline">Target</p>
-                            <p className="text-xs font-bold text-emerald-500">{format(new Date(request.scheduledDate), 'PPP')}</p>
+                            <p className="text-xs font-bold text-emerald-500 truncate block">{format(new Date(request.scheduledDate), 'PPP')}</p>
                          </div>
                       </div>
                     )}
@@ -242,24 +242,24 @@ export default function MaintenancePage() {
 
                 {request.aiTriageNotes && (
                   <div className="space-y-8 mt-10 animate-in fade-in duration-700 border-t border-border pt-10">
-                    <div className="bg-primary/5 border border-border rounded-[1.75rem] p-8 flex gap-6 shadow-inner">
+                    <div className="bg-primary/5 border border-border rounded-[1.75rem] p-8 flex gap-6 shadow-inner min-w-0">
                       <BrainCircuit className="w-10 h-10 text-primary shrink-0 opacity-40" />
-                      <div className="flex-1 text-left">
+                      <div className="flex-1 text-left min-w-0">
                         <p className="text-[9px] font-bold text-muted-foreground uppercase mb-3 tracking-[0.2em] font-headline">Fix Strategy</p>
                         <p className="text-sm text-foreground font-bold font-body leading-relaxed">{request.aiTriageNotes}</p>
                       </div>
                     </div>
 
                     {request.aiSuggestions && request.aiSuggestions.length > 0 && (
-                      <div className="flex flex-col gap-6 text-left pl-2">
+                      <div className="flex flex-col gap-6 text-left pl-2 min-w-0">
                         <div className="flex items-center gap-3">
-                          <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-500"><Lightbulb className="w-5 h-5" /></div>
+                          <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-500 shrink-0"><Lightbulb className="w-5 h-5" /></div>
                           <p className="text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.2em] font-headline">Recommendations</p>
                         </div>
-                        <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-3 min-w-0">
                           {request.aiSuggestions.map((s: string, idx: number) => (
-                            <div key={idx} className="flex gap-3 p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 text-[11px] font-bold text-foreground shadow-sm w-full md:w-fit min-w-[300px]">
-                              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" /> {s}
+                            <div key={idx} className="flex gap-3 p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 text-[11px] font-bold text-foreground shadow-sm w-full md:w-fit min-w-0">
+                              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" /> <span className="truncate block">{s}</span>
                             </div>
                           ))}
                         </div>

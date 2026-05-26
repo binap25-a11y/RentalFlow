@@ -212,7 +212,7 @@ export default function LandlordDashboard() {
           <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground mb-2 tracking-tight">Portfolio Insights</h1>
           <p className="text-muted-foreground font-medium font-body max-w-xl opacity-70">Unified financial command and high-fidelity operational analytics.</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 shrink-0">
           {!isPro ? (
             <Button variant="outline" className="rounded-2xl h-12 px-8 font-bold border-accent/30 text-accent bg-accent/5 hover:bg-accent/10 transition-all shadow-xl shadow-accent/5" onClick={upgradeToPro} disabled={isUpgrading}>
               {isUpgrading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Crown className="w-4 h-4 mr-2" />}
@@ -242,10 +242,12 @@ export default function LandlordDashboard() {
                 </div>
                 {stat.indicator && <stat.indicator className={cn("w-6 h-6 opacity-30", stat.color)} />}
               </div>
-              <div className="space-y-3">
-                <p className="text-4xl font-bold font-headline tracking-tighter">{stat.val}</p>
+              <div className="space-y-3 min-w-0">
+                <p className="text-4xl font-bold font-headline tracking-tighter truncate">
+                   {stat.val}
+                </p>
                 {stat.progress !== undefined && <Progress value={stat.progress} className="h-2 bg-white/10" />}
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline opacity-50">{stat.title}</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline opacity-50 truncate">{stat.title}</p>
               </div>
             </CardContent>
           </Card>
@@ -260,8 +262,8 @@ export default function LandlordDashboard() {
                  <CardTitle className="text-2xl font-headline flex items-center text-foreground tracking-tight">
                    <BarChart3 className="w-7 h-7 mr-4 text-accent" />
                    Yield Distribution
-                 </CardTitle>
-                 <Badge variant="outline" className="border-white/10 text-[9px] font-bold uppercase tracking-[0.2em] font-headline opacity-60">Asset Performance</Badge>
+                 </BarChart3>
+                 <Badge variant="outline" className="border-white/10 text-[9px] font-bold uppercase tracking-[0.2em] font-headline opacity-60 shrink-0">Asset Performance</Badge>
               </div>
             </CardHeader>
             <CardContent className="h-[450px] p-12">
@@ -292,17 +294,17 @@ export default function LandlordDashboard() {
                 <ReceiptText className="w-7 h-7 mr-4 text-accent" />
                 Collection Suite
               </CardTitle>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] font-headline opacity-40">{format(new Date(), 'MMMM yyyy')} Ledger</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] font-headline opacity-40 shrink-0">{format(new Date(), 'MMMM yyyy')} Ledger</p>
             </CardHeader>
             <CardContent className="p-0">
                <div className="overflow-x-auto">
-                 <table className="w-full text-left">
+                 <table className="w-full text-left table-fixed min-w-[800px]">
                    <thead>
                      <tr className="bg-white/[0.02]">
-                       <th className="px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50">Property Identity</th>
-                       <th className="px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50">Monthly Yield</th>
-                       <th className="px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50">Ledger Status</th>
-                       <th className="px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 text-right">Actions</th>
+                       <th className="px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-2/5">Property Identity</th>
+                       <th className="px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-1/5">Monthly Yield</th>
+                       <th className="px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-1/5">Ledger Status</th>
+                       <th className="px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 text-right w-1/5">Actions</th>
                      </tr>
                    </thead>
                    <tbody className="divide-y divide-white/5">
@@ -311,7 +313,7 @@ export default function LandlordDashboard() {
                        const imageUrl = getResolvedImageUrl(prop.imageUrl, prop.imageUrls);
                        return (
                          <tr key={prop.id} className="hover:bg-white/[0.02] transition-colors group">
-                           <td className="px-12 py-8">
+                           <td className="px-12 py-8 min-w-0">
                              <div className="flex items-center gap-5">
                                <div className="relative h-14 w-14 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/5 group-hover:scale-110 transition-transform bg-muted shrink-0 flex items-center justify-center">
                                  {imageUrl ? (
@@ -324,32 +326,32 @@ export default function LandlordDashboard() {
                                    <Building2 className="w-6 h-6 text-muted-foreground/30" />
                                  )}
                                </div>
-                               <div className="min-w-0">
+                               <div className="min-w-0 flex-1">
                                  <span className="font-bold text-base text-foreground truncate block">{prop.addressLine1}</span>
-                                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-40">{prop.city}</span>
+                                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 truncate block">{prop.city}</span>
                                </div>
                              </div>
                            </td>
-                           <td className="px-12 py-8 font-bold text-base text-foreground tracking-tight">£{prop.rentAmount?.toLocaleString()}</td>
+                           <td className="px-12 py-8 font-bold text-base text-foreground tracking-tight truncate">£{prop.rentAmount?.toLocaleString()}</td>
                            <td className="px-12 py-8">
-                             <Badge className={cn("rounded-full px-5 py-1.5 font-bold text-[9px] uppercase tracking-[0.1em] border-none shadow-sm", isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500")}>
+                             <Badge className={cn("rounded-full px-5 py-1.5 font-bold text-[9px] uppercase tracking-[0.1em] border-none shadow-sm block text-center truncate", isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500")}>
                                {isPaid ? "Receipted" : "Collection Pending"}
                              </Badge>
                            </td>
-                           <td className="px-12 py-8 text-right">
+                           <td className="px-12 py-8 text-right shrink-0">
                               <div className="flex items-center justify-end gap-3">
                                 {!isPaid && (
                                   <>
-                                    <Button variant="ghost" size="sm" className="rounded-xl h-11 px-5 font-bold text-muted-foreground hover:bg-white/5 hover:text-foreground border border-white/5" onClick={() => handleSendReminder(prop)} disabled={isReminding === prop.id}>
+                                    <Button variant="ghost" size="sm" className="rounded-xl h-11 px-5 font-bold text-muted-foreground hover:bg-white/5 hover:text-foreground border border-white/5 shrink-0" onClick={() => handleSendReminder(prop)} disabled={isReminding === prop.id}>
                                       {isReminding === prop.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <BellRing className="w-4 h-4 mr-2" />}
                                       Remind
                                     </Button>
-                                    <Button size="sm" className="rounded-xl h-11 px-5 font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-xl shadow-primary/10" onClick={() => handleMarkAsPaid(prop)}>
-                                      Confirm Receipt
+                                    <Button size="sm" className="rounded-xl h-11 px-5 font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-xl shadow-primary/10 shrink-0" onClick={() => handleMarkAsPaid(prop)}>
+                                      Confirm
                                     </Button>
                                   </>
                                 )}
-                                {isPaid && <div className="p-2.5 bg-emerald-500/10 rounded-full"><CheckCircle2 className="w-6 h-6 text-emerald-500 shadow-emerald-500/20" /></div>}
+                                {isPaid && <div className="p-2.5 bg-emerald-500/10 rounded-full shrink-0"><CheckCircle2 className="w-6 h-6 text-emerald-500 shadow-emerald-500/20" /></div>}
                               </div>
                            </td>
                          </tr>
@@ -373,12 +375,12 @@ export default function LandlordDashboard() {
             <CardContent className="space-y-6 p-10">
                <div className="space-y-4">
                   {maintenance?.filter(m => m.status !== 'completed').slice(0, 6).map(req => (
-                    <div key={req.id} className="p-5 bg-white/[0.02] rounded-[2rem] border border-white/5 flex items-center justify-between text-left group hover:border-accent/30 transition-all">
-                       <div className="min-w-0 pr-4">
-                          <p className="font-bold text-sm text-foreground truncate group-hover:text-accent transition-colors">{req.title}</p>
-                          <div className="flex items-center gap-3 mt-1.5">
-                             <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-[0.2em] text-muted-foreground border-white/10 px-3 py-0.5 rounded-full">{req.priority}</Badge>
-                             <span className="text-[9px] font-bold text-muted-foreground opacity-30 uppercase tracking-widest">{req.category}</span>
+                    <div key={req.id} className="p-5 bg-white/[0.02] rounded-[2rem] border border-white/5 flex items-center justify-between text-left group hover:border-accent/30 transition-all min-w-0">
+                       <div className="min-w-0 flex-1 pr-4">
+                          <p className="font-bold text-sm text-foreground truncate group-hover:text-accent transition-colors block">{req.title}</p>
+                          <div className="flex items-center gap-3 mt-1.5 overflow-hidden">
+                             <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-[0.2em] text-muted-foreground border-white/10 px-3 py-0.5 rounded-full shrink-0">{req.priority}</Badge>
+                             <span className="text-[9px] font-bold text-muted-foreground opacity-30 uppercase tracking-widest truncate">{req.category}</span>
                           </div>
                        </div>
                        <Button variant="ghost" size="icon" className="rounded-2xl h-11 w-11 hover:bg-white/5 border border-white/5 shrink-0" asChild>

@@ -155,7 +155,7 @@ export default function TenantsPage() {
         
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20 font-headline text-primary-foreground px-6 transition-all hover:scale-[1.02]">
+            <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20 font-headline text-primary-foreground px-6 transition-all hover:scale-[1.02] shrink-0">
               <Plus className="w-4 h-4 mr-2" />
               Assign New Resident
             </Button>
@@ -240,37 +240,37 @@ export default function TenantsPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-collapse table-fixed">
                 <thead>
                   <tr className="bg-muted/30 border-b border-border">
-                    <th className="px-10 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground font-headline">Identity</th>
-                    <th className="px-10 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground font-headline">Asset Assignment</th>
-                    <th className="px-10 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground text-right font-headline">Actions</th>
+                    <th className="px-10 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground font-headline w-1/2">Identity</th>
+                    <th className="px-10 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground font-headline w-1/3">Asset Assignment</th>
+                    <th className="px-10 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground text-right font-headline w-1/6">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {filteredTenants.map(tenant => (
                     <tr key={tenant.id} className="hover:bg-muted/10 transition-colors group">
-                      <td className="px-10 py-8">
+                      <td className="px-10 py-8 min-w-0">
                         <div className="flex items-center gap-5">
-                          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold shadow-inner font-headline text-xl border border-primary/5">
+                          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold shadow-inner font-headline text-xl border border-primary/5 shrink-0">
                             {tenant.firstName?.[0]}{tenant.lastName?.[0]}
                           </div>
-                          <div className="text-left min-w-0">
-                            <p className="font-bold text-lg font-headline text-foreground leading-tight truncate">{tenant.firstName} {tenant.lastName}</p>
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1 opacity-60 truncate">{tenant.email}</p>
+                          <div className="text-left min-w-0 flex-1">
+                            <p className="font-bold text-lg font-headline text-foreground leading-tight truncate block">{tenant.firstName} {tenant.lastName}</p>
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1 opacity-60 truncate block">{tenant.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-10 py-8 text-left">
-                        <Badge variant="secondary" className="bg-accent/10 text-accent border-none text-[10px] font-bold px-5 py-2 font-headline tracking-widest rounded-full shadow-inner">
+                      <td className="px-10 py-8 text-left min-w-0">
+                        <Badge variant="secondary" className="bg-accent/10 text-accent border-none text-[10px] font-bold px-5 py-2 font-headline tracking-widest rounded-full shadow-inner truncate max-w-full block text-center">
                           {properties?.find(p => p.id === tenant.propertyId)?.addressLine1 || 'Pending Migration'}
                         </Badge>
                       </td>
-                      <td className="px-10 py-8 text-right">
+                      <td className="px-10 py-8 text-right shrink-0">
                         <div className="flex justify-end gap-3">
                           <Button variant="ghost" size="icon" className="h-11 w-11 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-xl transition-all" onClick={() => handleEditClick(tenant)}><Edit3 className="w-5 h-5" /></Button>
-                          <Button variant="ghost" size="icon" className="h-11 w-11 text-destructive/40 hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all" onClick={() => handleDeleteTenant(tenant)}><Trash2 className="w-5 h-5" /></Button>
+                          <Button variant="ghost" size="icon" className="h-11 w-11 text-destructive/40 hover:text-white hover:bg-red-500 rounded-xl transition-all" onClick={() => handleDeleteTenant(tenant)}><Trash2 className="w-5 h-5" /></Button>
                         </div>
                       </td>
                     </tr>

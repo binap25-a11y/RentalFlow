@@ -136,7 +136,6 @@ export default function LandlordCalendarPage() {
   const handleDateSelect = (d: Date | undefined) => {
     if (d) {
       setSelectedDate(d);
-      // Premium Interaction: Auto-scroll to ledger when date is picked
       setTimeout(() => {
         ledgerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
@@ -267,9 +266,9 @@ export default function LandlordCalendarPage() {
             <CardHeader className="bg-muted/10 border-b border-border p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="text-left">
                  <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-60 mb-1 font-headline">Daily Ledger</p>
-                 <CardTitle className="text-2xl font-headline text-foreground tracking-tight">{format(selectedDate, 'PPPP')}</CardTitle>
+                 <CardTitle className="text-2xl font-headline text-foreground tracking-tight truncate max-w-[400px] block">{format(selectedDate, 'PPPP')}</CardTitle>
               </div>
-              <Badge className="rounded-full py-1.5 px-4 font-bold bg-primary text-primary-foreground uppercase text-[9px] tracking-widest shadow-sm">
+              <Badge className="rounded-full py-1.5 px-4 font-bold bg-primary text-primary-foreground uppercase text-[9px] tracking-widest shadow-sm shrink-0">
                 {selectedDayEvents.length} Active Records
               </Badge>
             </CardHeader>
@@ -297,7 +296,7 @@ export default function LandlordCalendarPage() {
               <h3 className="text-xl font-bold font-headline flex items-center text-foreground tracking-tight">
                 <ChevronRight className="w-5 h-5 mr-1 text-accent" /> Portfolio Future State
               </h3>
-              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 font-headline">Upcoming Roadmap</p>
+              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 font-headline shrink-0">Upcoming Roadmap</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                {allEvents.filter(e => isAfter(e.date, startOfDay(new Date()))).slice(0, 6).length === 0 ? (
@@ -358,10 +357,10 @@ function EventCard({ event, compact = false }: { event: PortfolioEvent, compact?
 
   return (
     <div className={cn(
-      "flex items-center justify-between transition-all bg-card ring-1 ring-border group",
+      "flex items-center justify-between transition-all bg-card ring-1 ring-border group min-w-0",
       compact ? "p-4 rounded-2xl" : "p-6 rounded-[1.75rem]"
     )}>
-      <div className="flex items-center gap-5 text-left">
+      <div className="flex items-center gap-5 text-left min-w-0 flex-1">
         <div className={cn(
           "rounded-xl flex items-center justify-center transform group-hover:scale-105 transition-transform shrink-0 shadow-sm",
           compact ? "w-10 h-10" : "w-14 h-14",
@@ -369,27 +368,27 @@ function EventCard({ event, compact = false }: { event: PortfolioEvent, compact?
         )}>
            <Icon className={compact ? "w-5 h-5" : "w-7 h-7"} />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-1">
-             <Badge variant="outline" className="uppercase text-[7px] font-bold tracking-[0.2em] text-muted-foreground border-border font-headline px-2 py-0.5">
+             <Badge variant="outline" className="uppercase text-[7px] font-bold tracking-[0.2em] text-muted-foreground border-border font-headline px-2 py-0.5 shrink-0">
               {event.type === 'inspection' ? 'AUDIT' : 'REPAIR'}
              </Badge>
              {compact && (
-               <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-40 font-headline">{format(event.date, 'MMM dd')}</span>
+               <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-40 font-headline truncate">{format(event.date, 'MMM dd')}</span>
              )}
           </div>
           <h4 className={cn(
-            "font-bold font-headline leading-tight mb-1 tracking-tight text-foreground truncate",
+            "font-bold font-headline leading-tight mb-1 tracking-tight text-foreground truncate block",
             compact ? "text-sm" : "text-xl"
           )}>{event.title}</h4>
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="text-[9px] text-muted-foreground font-bold flex items-center font-body opacity-60 uppercase tracking-widest font-headline">
-              <MapPin className="w-3 h-3 mr-1 text-accent" /> {event.subtitle}
+          <div className="flex flex-wrap items-center gap-3 min-w-0">
+            <p className="text-[9px] text-muted-foreground font-bold flex items-center font-body opacity-60 uppercase tracking-widest font-headline truncate">
+              <MapPin className="w-3 h-3 mr-1 text-accent shrink-0" /> {event.subtitle}
             </p>
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-3 shrink-0 ml-4">
          <Button variant="outline" size="sm" asChild className="rounded-xl h-10 font-bold border-border bg-card shadow-sm hover:bg-primary hover:text-primary-foreground text-[10px] uppercase tracking-widest px-4 transition-all">
             <Link href={linkHref}>
                {event.type === 'inspection' ? 'Jump to Audit' : 'Jump to Repair'}
