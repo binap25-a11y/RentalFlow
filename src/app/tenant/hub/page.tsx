@@ -395,8 +395,12 @@ export default function TenantHub() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={handleClearChat} className="text-white/40 hover:text-white hover:bg-white/10 rounded-xl h-10 w-10"><RotateCcw className="w-4 h-4" /></Button>
-                  <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(false)} className="text-white/40 hover:text-white hover:bg-white/10 rounded-xl h-10 w-10"><X className="w-5 h-5" /></Button>
+                  <Button variant="ghost" size="icon" onClick={handleClearChat} title="Clear Chat" className="text-white/40 hover:text-white hover:bg-white/10 rounded-xl h-10 w-10">
+                    <RotateCcw className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(false)} className="text-white/40 hover:text-white hover:bg-white/10 rounded-xl h-10 w-10">
+                    <X className="w-5 h-5" />
+                  </Button>
                 </div>
               </div>
             </CardHeader>
@@ -430,10 +434,13 @@ export default function TenantHub() {
                     </div>
                   ))}
                   {isChatting && (
-                    <div className="flex items-center gap-2 p-4 bg-muted/30 rounded-2xl w-fit animate-pulse">
-                      <div className="w-1.5 h-1.5 bg-primary/40 rounded-full" />
-                      <div className="w-1.5 h-1.5 bg-primary/40 rounded-full" />
-                      <div className="w-1.5 h-1.5 bg-primary/40 rounded-full" />
+                    <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl w-fit">
+                      <div className="flex gap-1.5">
+                        <div className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <div className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <div className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                      <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary/40">Orchestrating</span>
                     </div>
                   )}
                 </>
@@ -460,7 +467,7 @@ export default function TenantHub() {
         >
           {isChatOpen ? <X className="w-8 h-8" /> : <MessageCircle className="w-10 h-10 group-hover:rotate-12 transition-transform" />}
           {!isChatOpen && (
-            <div className="absolute -top-1 -right-1 h-6 w-6 bg-accent rounded-full border-4 border-background animate-pulse" />
+            <div className="absolute -top-1 -right-1 h-6 w-6 bg-accent rounded-full border-4 border-background animate-pulse shadow-lg" />
           )}
         </button>
       </div>

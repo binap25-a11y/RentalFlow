@@ -2,7 +2,7 @@
 /**
  * @fileOverview A premium resident AI concierge agent.
  * Features a high-fidelity intelligence layer for white-glove resident support.
- * Enhanced with personalization (name/address) and sophisticated empathy.
+ * Enhanced with personalization, sophisticated empathy, and resilient retry logic.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -35,7 +35,7 @@ PERSONALIZATION:
 - Always refer to their home by its address ({{propertyAddress}}) occasionally to reinforce a sense of dedicated service.
 
 RESPONSIBILITY SCOPE:
-1. RENTING & FINANCIALS: Provide absolute clarity on rent amounts and receipt status. If rent is receipted, acknowledge it with professional courtesy. If pending, explain that the ledger is awaiting synchronization.
+1. RENTING & FINANCIALS: Provide absolute clarity on rent amounts and receipt status based on the provided ledger context. If rent is receipted, acknowledge it. If pending, explain that the ledger is awaiting synchronization.
 2. REPAIRS & MAINTENANCE: Confirm the status of active requests with empathy. Explain that reporting new issues is handled via the primary 'Report Repair' portal. Use the provided context to discuss specific ongoing repairs.
 3. HOME GUIDES & RULES: Provide sophisticated answers regarding property rules (pets/smoking), utility guidance, and room specifications.
 4. GENERAL INQUIRIES: Answer any general questions about the property using ONLY the provided context. If the information is missing, do not speculate; instead, suggest they message management directly via the messages tab.
@@ -48,16 +48,34 @@ Resident Query: {{{query}}}`,
 });
 
 export async function tenantConcierge(input: TenantConciergeInput): Promise<TenantConciergeOutput> {
-  try {
-    const { output } = await conciergePrompt(input);
-    if (!output) throw new Error("Concierge synchronization interrupted.");
-    return output!;
-  } catch (error: any) {
-    console.error("AI Concierge Failure:", error);
-    // PREMIUM FALLBACK: Professional redirection
-    return {
-      answer: "I am currently coordinating several property updates for our residents. While I synchronize my intelligence with your latest residency records, you can find immediate guidance in your shared vault or initiate a secure conversation with management for personalized assistance.",
-      suggestedAction: "Contact Management"
-    };
+  let retries = 2;
+  
+  while (retries >= 0) {
+    try {
+      const { output } = await conciergePrompt(input);
+      if (!output) throw new Error("Concierge synchronization interrupted.");
+      return output!;
+    } catch (error: any) {
+      const errorMsg = error.message || "";
+      const isRetryable = errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('quota');
+      
+      if (isRetryable && retries > 0) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        retries--;
+        continue;
+      }
+      
+      console.error("AI Concierge Failure:", error);
+      // PREMIUM FALLBACK: Professional redirection
+      return {
+        answer: "I am currently coordinating several property updates for our residents. While I synchronize my intelligence with your latest residency records, you can find immediate guidance in your shared vault or initiate a secure conversation with management for personalized assistance.",
+        suggestedAction: "Contact Management"
+      };
+    }
   }
+
+  return {
+    answer: "I am currently adjusting my intelligence layers. For immediate assistance regarding rent or repairs, please consult your documents or message management.",
+    suggestedAction: "Check Documents"
+  };
 }
