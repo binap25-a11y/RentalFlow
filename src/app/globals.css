@@ -79,7 +79,7 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-background text-foreground font-body antialiased selection:bg-accent/30 transition-colors duration-300;
+    @apply bg-background text-foreground font-body antialiased transition-colors duration-300;
     overscroll-behavior-y: none;
   }
   h1, h2, h3, h4, h5, h6 {

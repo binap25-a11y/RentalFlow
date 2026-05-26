@@ -151,14 +151,18 @@ export default function AuthPage() {
     }
   };
 
-  if (!mounted || isUserLoading || (user && !needsProfile && !isRedirecting.current)) {
+  // HYDRATION GUARD: Strictly show overlay until auth state is resolved and mounted
+  if (!mounted || isUserLoading || (user && !needsProfile)) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-500">
-        <div className="flex flex-col items-center gap-4">
-          <div className="relative w-24 h-24 rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5">
+      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100]">
+        <div className="flex flex-col items-center gap-4 animate-in fade-in duration-500">
+          <div className="relative w-24 h-24 rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 bg-card">
              <Image src={RENTALFLOW_LOGO_URL} alt="RentalFlow" fill className="object-cover" unoptimized priority />
           </div>
-          <Loader2 className="w-6 h-6 animate-spin text-accent opacity-40" />
+          <div className="flex items-center gap-3">
+            <Loader2 className="w-4 h-4 animate-spin text-accent opacity-40" />
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Authenticating</p>
+          </div>
         </div>
       </div>
     );
@@ -166,7 +170,7 @@ export default function AuthPage() {
 
   if (needsProfile && user) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-left">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-left animate-in fade-in duration-700">
         <Card className="w-full max-w-xl border-none shadow-2xl bg-card overflow-hidden rounded-[3rem]">
           <CardHeader className="text-center bg-primary/5 pb-10 pt-12">
             <CardTitle className="text-3xl font-headline font-bold text-foreground tracking-tight">Identity Establishment</CardTitle>
@@ -206,13 +210,13 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative animate-in fade-in duration-1000">
       <div className="absolute top-8 left-8">
          <Button variant="ghost" asChild className="rounded-xl font-bold text-foreground hover:bg-primary/5"><Link href="/"><ArrowLeft className="w-4 h-4 mr-2" /> Home</Link></Button>
       </div>
       <div className="max-w-xl w-full text-center">
         <div className="mb-12 inline-flex flex-col items-center">
-          <div className="relative h-24 w-24 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 mb-6">
+          <div className="relative h-24 w-24 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 mb-6 bg-card">
             <Image src={RENTALFLOW_LOGO_URL} alt="Logo" fill className="object-cover" unoptimized priority />
           </div>
           <h1 className="text-5xl font-headline font-bold text-foreground tracking-tighter">RentalFlow</h1>

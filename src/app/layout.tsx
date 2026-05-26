@@ -52,14 +52,13 @@ export default function RootLayout({
               (function() {
                 try {
                   var theme = localStorage.getItem('theme');
-                  // Default to Light Mode unless explicitly set to 'dark'
                   var isDark = theme === 'dark';
                   if (isDark) {
                     document.documentElement.classList.add('dark');
-                    document.documentElement.style.backgroundColor = '#020617';
+                    document.documentElement.style.background = '#020617';
                   } else {
                     document.documentElement.classList.remove('dark');
-                    document.documentElement.style.backgroundColor = '#ffffff';
+                    document.documentElement.style.background = '#ffffff';
                   }
                 } catch (e) {}
               })();
@@ -67,7 +66,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="font-body antialiased min-h-screen bg-background text-foreground transition-colors duration-300">
+      <body className="font-body antialiased min-h-screen bg-background text-foreground">
         <FirebaseClientProvider>
           <div className="relative flex min-h-screen flex-col">
             {children}

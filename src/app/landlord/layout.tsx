@@ -6,7 +6,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { Loader2 } from "lucide-react";
 import { doc } from "firebase/firestore";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { RENTALFLOW_LOGO_URL } from "@/lib/utils";
@@ -19,9 +19,8 @@ export default function LandlordLayout({
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
-  const pathname = usePathname();
   const [isClient, setIsClient] = useState(false);
-  const hasCheckedSession = useRef(false);
+  const [isFullyAuthorized, setIsFullyAuthorized] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -34,36 +33,34 @@ export default function LandlordLayout({
 
   const { data: profile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
-  // High-Fidelity Session Persistence Logic
   useEffect(() => {
     if (!isClient || isUserLoading) return;
 
     if (!user) {
-      // Allow a split second for re-hydration if tab was in background
       const timer = setTimeout(() => {
         if (!user) router.replace('/auth');
-      }, 500);
+      }, 300); // Reduced delay for snappier redirect
       return () => clearTimeout(timer);
     }
 
-    if (!isProfileLoading && profile && profile.role !== 'landlord') {
-      router.replace(profile.role === 'tenant' ? '/tenant/hub' : '/auth');
+    if (!isProfileLoading && profile) {
+      if (profile.role !== 'landlord') {
+        router.replace(profile.role === 'tenant' ? '/tenant/hub' : '/auth');
+      } else {
+        setIsFullyAuthorized(true);
+      }
     }
-    
-    hasCheckedSession.current = true;
   }, [user, isUserLoading, profile, isProfileLoading, router, isClient]);
 
-  const BRAND_LOGO_URL = RENTALFLOW_LOGO_URL;
-
-  if (!isClient || isUserLoading || isProfileLoading || (user && !profile)) {
+  if (!isClient || !isFullyAuthorized) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-500">
+      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-300">
         <div className="relative flex flex-col items-center">
-          <div className="relative w-24 h-24 mb-10 animate-in fade-in zoom-in duration-1000">
+          <div className="relative w-24 h-24 mb-10 animate-in fade-in zoom-in duration-700">
             <div className="absolute inset-0 bg-primary/10 rounded-[2rem] blur-3xl animate-pulse" />
-            <div className="relative z-10 w-full h-full rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5">
+            <div className="relative z-10 w-full h-full rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 bg-card">
               <Image 
-                src={BRAND_LOGO_URL} 
+                src={RENTALFLOW_LOGO_URL} 
                 alt="RentalFlow" 
                 fill 
                 className="object-cover" 
@@ -75,7 +72,7 @@ export default function LandlordLayout({
           <div className="flex flex-col items-center gap-3">
             <div className="flex items-center gap-3">
               <Loader2 className="w-4 h-4 animate-spin text-primary opacity-60" />
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Authorizing Access</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Synchronizing Workspace</p>
             </div>
           </div>
         </div>
@@ -83,19 +80,15 @@ export default function LandlordLayout({
     );
   }
 
-  if (!profile || profile.role !== 'landlord') {
-    return null;
-  }
-
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-screen w-full bg-background font-body">
+      <div className="flex min-h-screen w-full bg-background font-body animate-in fade-in duration-700">
         <SidebarNav 
           role="landlord" 
           userName={user?.displayName || user?.email?.split('@')[0] || 'Landlord'} 
           userAvatar={user?.photoURL || undefined} 
         />
-        <SidebarInset className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <SidebarInset className="flex-1 flex flex-col min-w-0 overflow-hidden bg-background">
           <Header role="landlord" />
           <main className="flex-1 overflow-y-auto p-4 md:p-8">
             {children}
