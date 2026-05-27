@@ -98,9 +98,8 @@ export default function TenantHub() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        // REAL LOGGING
-        console.error("AI API CRITICAL ERROR:", errorData);
-        setChatHistory(prev => [...prev, { role: 'bot', text: "[SYSTEM]: AI is temporarily busy. Please try again in a moment." }]);
+        console.error("AI API ERROR:", errorData);
+        setChatHistory(prev => [...prev, { role: 'bot', text: "[SYSTEM]: AI is temporarily busy. Please try again." }]);
         return;
       }
 
@@ -110,7 +109,6 @@ export default function TenantHub() {
       let botText = "";
       setChatHistory(prev => [...prev, { role: 'bot', text: "" }]);
 
-      // DEFINITIVE FIX: Using TextDecoder (not encoder) for binary-to-string conversion
       const decoder = new TextDecoder();
       while (true) {
         const { done, value } = await reader.read();
@@ -127,7 +125,7 @@ export default function TenantHub() {
       }
     } catch (error: any) {
       console.error('CONCIERGE RUNTIME ERROR:', error);
-      setChatHistory(prev => [...prev, { role: 'bot', text: "[SYSTEM]: Communication interrupted. Please try your request once more." }]);
+      setChatHistory(prev => [...prev, { role: 'bot', text: "[SYSTEM]: Communication interrupted. Please try again." }]);
     } finally { 
       setIsChatting(false); 
     }
@@ -155,20 +153,7 @@ export default function TenantHub() {
             <div className="relative h-[400px] w-full bg-muted/40 animate-pulse flex items-center justify-center">
               <Building2 className="w-20 h-20 text-foreground/10" />
             </div>
-            <CardContent className="p-12 space-y-12">
-              <div className="h-32 w-full bg-muted/20 rounded-[2.5rem] animate-pulse" />
-              <div className="space-y-6">
-                <div className="h-24 w-full bg-muted/10 rounded-[1.5rem] animate-pulse" />
-                <div className="grid grid-cols-2 gap-6">
-                   <div className="h-24 bg-muted/10 rounded-[1.5rem] animate-pulse" />
-                   <div className="h-24 bg-muted/10 rounded-[1.5rem] animate-pulse" />
-                </div>
-              </div>
-            </CardContent>
           </Card>
-        </div>
-        <div className="lg:col-span-4 space-y-12">
-          <div className="h-[400px] bg-muted/5 rounded-[3rem] animate-pulse" />
         </div>
       </div>
     </div>
@@ -209,7 +194,7 @@ export default function TenantHub() {
               )}
             </div>
 
-            {/* 2. IDENTITY IDENTITY BAR */}
+            {/* 2. IDENTITY BAR */}
             <div className="p-10 border-b border-border bg-white/[0.01] space-y-4">
                <h2 className="text-3xl md:text-4xl font-headline font-bold text-foreground tracking-tight leading-tight">
                  {property.addressLine1}, {property.city}, {property.zipCode}
@@ -226,171 +211,129 @@ export default function TenantHub() {
             </div>
 
             <CardContent className="p-10 md:p-12 space-y-12">
-              <div className="space-y-12">
-                {/* 3. MONTHLY RENT LEDGER */}
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
-                    <Button variant="ghost" asChild className="rounded-xl font-bold text-[10px] uppercase tracking-widest text-muted-foreground hover:text-accent">
-                      <Link href="/tenant/payments">View history <ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
-                    </Button>
-                  </div>
-                  <div className="p-10 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner relative overflow-hidden group">
-                     <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:rotate-12 transition-transform duration-1000">
-                        <PoundSterling className="w-32 h-32" />
-                     </div>
-                     <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.3em] font-headline opacity-50 mb-3">Verified Ledger</p>
-                     <p className="text-6xl font-bold font-headline text-foreground tracking-tighter mb-4">£{property.rentAmount?.toLocaleString()}</p>
-                     <div className="flex items-center gap-2 mb-6">
-                        <Clock className="w-3.5 h-3.5 text-muted-foreground opacity-40" />
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40">
-                          {currentPayment?.status === 'paid' ? `Verified: ${format(new Date(currentPayment.paidAt || Date.now()), 'PPP')}` : `Waiting for ${format(new Date(), 'MMMM')} receipt`}
-                        </span>
-                     </div>
-                     <Badge className={cn("w-full h-14 flex items-center justify-center font-bold text-[11px] rounded-2xl shadow-sm uppercase tracking-[0.2em] border shadow-inner transition-all duration-700", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white border-transparent" : "bg-amber-500/10 text-amber-600 border-amber-500/20")}>
-                       {currentPayment?.status === 'paid' ? "Receipted & Collected" : "Collection Pending"}
-                     </Badge>
-                  </div>
-                </div>
-
-                {/* 4. YOUR RESIDENCE NARRATIVE */}
-                <div className="space-y-6">
-                  <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="p-8 bg-primary/5 rounded-[2rem] border border-border col-span-1 md:col-span-2">
-                       <p className="text-[9px] font-bold uppercase text-accent tracking-[0.3em] mb-4">Official Narrative</p>
-                       <p className="text-base text-muted-foreground leading-relaxed font-body font-medium">
-                         {property.description || "A premium managed property with high-fidelity visual orchestration and automated maintenance support."}
-                       </p>
-                    </div>
-                    
-                    {/* 🧬 PROPERTY DNA - FIT-FIRST ARCHITECTURE (NO TRUNCATE) */}
-                    <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
-                       <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Wifi className="w-5 h-5" /></div>
-                       <div className="min-w-0 flex-1">
-                          <p className="text-[10px] font-bold uppercase opacity-40">Connectivity</p>
-                          <p className="text-sm font-bold leading-tight whitespace-normal break-words">{property.connectivityStatus || 'Ultra-Fast Fiber Enabled'}</p>
-                       </div>
-                    </div>
-                    <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
-                       <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Shield className="w-5 h-5" /></div>
-                       <div className="min-w-0 flex-1">
-                          <p className="text-[10px] font-bold uppercase opacity-40">Compliance</p>
-                          <p className="text-sm font-bold leading-tight whitespace-normal break-words">{property.complianceStatus || 'EPC Grade B / Certified'}</p>
-                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 5. FITTED ACTIONS */}
-                <div className="pt-8 border-t border-border/50">
-                  <Button variant="outline" className="w-full h-16 rounded-[1.75rem] border-border bg-card hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all shadow-sm" onClick={handleDownloadStatement}>
-                     <Download className="w-5 h-5 mr-3 text-accent" /> Download Rent Statement
+              {/* 3. MONTHLY RENT LEDGER */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
+                  <Button variant="ghost" asChild className="rounded-xl font-bold text-[10px] uppercase tracking-widest text-muted-foreground hover:text-accent">
+                    <Link href="/tenant/payments">View history <ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
                   </Button>
                 </div>
+                <div className="p-10 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner relative overflow-hidden group">
+                   <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:rotate-12 transition-transform duration-1000">
+                      <PoundSterling className="w-32 h-32" />
+                   </div>
+                   <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.3em] font-headline opacity-50 mb-3">Verified Ledger</p>
+                   <p className="text-6xl font-bold font-headline text-foreground tracking-tighter mb-4">£{property.rentAmount?.toLocaleString()}</p>
+                   <Badge className={cn("w-full h-14 flex items-center justify-center font-bold text-[11px] rounded-2xl shadow-sm uppercase tracking-[0.2em] border transition-all duration-700", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white border-transparent" : "bg-amber-500/10 text-amber-600 border-amber-500/20")}>
+                     {currentPayment?.status === 'paid' ? "Receipted & Collected" : "Collection Pending"}
+                   </Badge>
+                </div>
+              </div>
+
+              {/* 4. RESIDENCE NARRATIVE */}
+              <div className="space-y-6">
+                <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
+                <div className="p-8 bg-primary/5 rounded-[2rem] border border-border">
+                   <p className="text-[9px] font-bold uppercase text-accent tracking-[0.3em] mb-4">Official Narrative</p>
+                   <p className="text-base text-muted-foreground leading-relaxed font-body font-medium">
+                     {property.description || "A premium managed property with high-fidelity visual orchestration and automated maintenance support."}
+                   </p>
+                </div>
+              </div>
+
+              {/* 5. PROPERTY DNA */}
+              <div className="space-y-6">
+                <h3 className="font-bold font-headline text-xl text-foreground flex items-center tracking-tight"><ShieldCheck className="w-5 h-5 mr-3 text-accent" /> Property DNA</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
+                     <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Wifi className="w-5 h-5" /></div>
+                     <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-bold uppercase opacity-40">Connectivity</p>
+                        <p className="text-sm font-bold leading-tight whitespace-normal break-words">{property.connectivityStatus || 'Ultra-Fast Fiber Enabled'}</p>
+                     </div>
+                  </div>
+                  <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
+                     <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Shield className="w-5 h-5" /></div>
+                     <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-bold uppercase opacity-40">Compliance</p>
+                        <p className="text-sm font-bold leading-tight whitespace-normal break-words">{property.complianceStatus || 'EPC Grade B / Certified'}</p>
+                     </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-8 border-t border-border/50">
+                <Button variant="outline" className="w-full h-16 rounded-[1.75rem] border-border bg-card hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all" onClick={handleDownloadStatement}>
+                   <Download className="w-5 h-5 mr-3 text-accent" /> Download Rent Statement
+                </Button>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* SIDEBAR WIDGETS */}
+        {/* SIDEBAR */}
         <div className="lg:col-span-4 space-y-10">
            <Card className="border-none shadow-sm rounded-[3rem] bg-card ring-1 ring-border overflow-hidden">
              <CardHeader className="p-10 pb-4 border-b border-border bg-muted/5">
-               <div className="flex justify-between items-center mb-2">
-                 <CardTitle className="text-xl font-headline font-bold flex items-center text-foreground">
-                   <AlertCircle className="w-6 h-6 mr-4 text-accent" />
-                   Real-Time Support
-                 </CardTitle>
-                 <RefreshCcw className="w-4 h-4 animate-spin text-accent/40" />
-               </div>
-               <CardDescription className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-50">Authorized SOS protocols</CardDescription>
+               <CardTitle className="text-xl font-headline font-bold flex items-center text-foreground">
+                 <AlertCircle className="w-6 h-6 mr-4 text-accent" />
+                 Real-Time Support
+               </CardTitle>
              </CardHeader>
              <CardContent className="p-10 space-y-8">
-               <div className="space-y-4">
-                  <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/10 hover:border-red-500/30 transition-all group">
-                      <div className="flex justify-between items-start mb-3">
-                        <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-red-600">Primary SOS</p>
-                        <Badge className="bg-red-600 text-white text-[8px] font-bold uppercase py-0.5 px-3 rounded-full border-none shadow-sm animate-pulse">Live Protocol</Badge>
-                      </div>
-                      <p className="text-base font-bold text-foreground truncate font-headline">Emergency Services</p>
-                      <p className="text-lg font-bold mt-4 flex items-center text-red-600">
-                        <Phone className="w-5 h-5 mr-3 opacity-40" /> 999
-                      </p>
-                  </div>
-                  <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground hover:text-primary hover:bg-primary/5 h-12 rounded-xl mt-4 transition-all border border-transparent hover:border-primary/20">
+                <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/10">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-red-600 mb-3">Primary SOS</p>
+                    <p className="text-base font-bold text-foreground font-headline">Emergency Services</p>
+                    <p className="text-lg font-bold mt-4 flex items-center text-red-600">
+                      <Phone className="w-5 h-5 mr-3 opacity-40" /> 999
+                    </p>
+                </div>
+                <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground hover:text-primary hover:bg-primary/5 h-12 rounded-xl transition-all">
                    <Link href="/tenant/emergency-contacts">View Support Network <ChevronRight className="w-4 h-4 ml-2" /></Link>
-                 </Button>
-               </div>
+                </Button>
              </CardContent>
            </Card>
 
            <Card className="border-none shadow-sm rounded-[3rem] bg-accent text-white overflow-hidden text-left relative group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl rounded-full group-hover:scale-150 transition-transform duration-1000" />
               <CardHeader className="p-10 pb-4">
                  <CardTitle className="text-xl font-bold font-headline flex items-center gap-4">
-                    <Bot className="w-8 h-8 text-white/90" /> Flow Status
+                    <Bot className="w-8 h-8 text-white/90" /> Flow Concierge
                  </CardTitle>
               </CardHeader>
-              <CardContent className="p-10 pt-0 space-y-6">
+              <CardContent className="p-10 pt-0">
                  <div className="p-6 bg-white/10 rounded-[2rem] border border-white/10 shadow-inner">
-                    <p className="text-[9px] font-bold uppercase opacity-60 tracking-[0.3em] mb-2">Concierge Awareness</p>
-                    <p className="text-sm font-medium leading-relaxed">I am monitoring your "Live Ledger" and repair records in real-time. Ask me anything about your residency.</p>
+                    <p className="text-sm font-medium leading-relaxed">Ask me anything about your residency, rent, or maintenance status.</p>
                  </div>
               </CardContent>
            </Card>
         </div>
       </div>
 
-      <div className="pt-24 flex justify-center">
-        <Button size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-[2rem] shadow-2xl shadow-primary/20 font-bold h-20 font-headline px-24 border-none transition-all hover:scale-[1.05] active:scale-95 text-lg uppercase tracking-[0.2em]" asChild>
-          <Link href="/tenant/maintenance"><AlertCircle className="w-6 h-6 mr-4" /> Report Repair</Link>
-        </Button>
-      </div>
-
-      {/* 🤖 FLOATING CHAT ORCHESTRATION */}
+      {/* CHAT BOT */}
       <div className="fixed bottom-10 right-10 z-[100] flex flex-col items-end gap-6">
         {isChatOpen && (
           <Card className="w-[400px] h-[600px] border-none shadow-2xl rounded-[3rem] bg-card ring-1 ring-border overflow-hidden flex flex-col animate-in slide-in-from-bottom-10 fade-in duration-500">
             <CardHeader className="bg-primary p-8 text-primary-foreground">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center shadow-inner"><Sparkles className="w-6 h-6 text-white" /></div>
+                  <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center"><Sparkles className="w-6 h-6 text-white" /></div>
                   <div className="text-left">
-                    <CardTitle className="text-xl font-headline font-bold tracking-tight">Flow Concierge</CardTitle>
+                    <CardTitle className="text-xl font-headline font-bold">Flow Concierge</CardTitle>
                     <p className="text-xs opacity-70 font-bold uppercase tracking-widest">Real-Time Intelligence</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={handleClearChat} title="Clear Ledger" className="text-white/40 hover:text-white hover:bg-white/10 rounded-xl h-10 w-10">
-                    <RotateCcw className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(false)} className="text-white/40 hover:text-white hover:bg-white/10 rounded-xl h-10 w-10">
-                    <X className="w-5 h-5" />
-                  </Button>
-                </div>
+                <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(false)} className="text-white/40 hover:text-white hover:bg-white/10 rounded-xl h-10 w-10">
+                  <X className="w-5 h-5" />
+                </Button>
               </div>
             </CardHeader>
             
-            <div className="flex-1 overflow-y-auto p-8 space-y-6 no-scrollbar" ref={scrollRef}>
+            <div className="flex-1 overflow-y-auto p-8 space-y-6" ref={scrollRef}>
               {chatHistory.length === 0 ? (
-                <div className="h-full flex flex-col gap-8">
-                  <div className="text-center space-y-4 opacity-40 py-6">
-                    <Bot className="w-12 h-12 mx-auto text-foreground" />
-                    <p className="text-[10px] font-bold font-headline uppercase tracking-[0.3em]">How can I assist your residency?</p>
-                  </div>
-                  <div className="grid grid-cols-1 gap-3">
-                    {[
-                      { title: "Rent Status", icon: ReceiptText, query: "What is my rent status?" },
-                      { title: "Active Repairs", icon: AlertCircle, query: "Show me the status of my repairs." },
-                      { title: "Property DNA", icon: ShieldCheck, query: "Tell me about my home connectivity." }
-                    ].map((topic, i) => (
-                      <button key={i} onClick={() => handleAskConcierge(topic.query)} className="p-5 bg-primary/5 rounded-[1.5rem] border border-border flex items-center gap-4 hover:bg-primary/10 transition-all text-left group">
-                        <topic.icon className="w-4 h-4 text-accent" />
-                        <span className="font-bold text-xs text-foreground">{topic.title}</span>
-                      </button>
-                    ))}
-                  </div>
+                <div className="h-full flex flex-col justify-center items-center text-center space-y-4 opacity-40">
+                  <Bot className="w-12 h-12 mx-auto text-foreground" />
+                  <p className="text-[10px] font-bold font-headline uppercase tracking-[0.3em]">How can I assist your residency?</p>
                 </div>
               ) : (
                 <>
@@ -411,7 +354,6 @@ export default function TenantHub() {
                         <div className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                         <div className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                       </div>
-                      <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary/40">Synchronizing</span>
                     </div>
                   )}
                 </>
@@ -437,9 +379,6 @@ export default function TenantHub() {
           )}
         >
           {isChatOpen ? <X className="w-8 h-8" /> : <MessageCircle className="w-10 h-10 group-hover:rotate-12 transition-transform" />}
-          {!isChatOpen && (
-            <div className="absolute -top-1 -right-1 h-6 w-6 bg-accent rounded-full border-4 border-background animate-pulse shadow-lg" />
-          )}
         </button>
       </div>
     </div>

@@ -4,9 +4,8 @@ import { ai } from '@/ai/genkit';
 import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 
 /**
- * @fileOverview Hardened Streaming Concierge Endpoint.
- * Optimized for Gemini 2.0 Flash and Genkit 1.x synchronous streaming.
- * Replaced masked error messages with real logging for professional debugging.
+ * 🤖 Hardened Streaming Concierge Endpoint
+ * Optimized for Genkit 1.x synchronous stream initialization and real error logging.
  */
 
 export const dynamic = 'force-dynamic';
@@ -26,7 +25,7 @@ export async function POST(req: NextRequest) {
     const encoder = new TextEncoder();
 
     try {
-      // GENKIT 1.x ORCHESTRATION: stream object is returned synchronously.
+      // GENKIT 1.x ORCHESTRATION: generateStream returns the stream object synchronously.
       const { stream } = ai.generateStream(
         conciergePrompt({
           query,
@@ -48,13 +47,13 @@ export async function POST(req: NextRequest) {
             controller.close();
           } catch (streamError: any) {
             // REAL LOGGING: Hitting the server console with actual error data
-            console.error('AI STREAM ITERATION ERROR:', streamError);
+            console.error('AI STREAM ERROR:', streamError);
             
             const errorMsg = streamError.message || "";
             if (errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED')) {
-              controller.enqueue(encoder.encode("\n\n[SYSTEM]: AI is temporarily busy due to high volume. Please try your request once more in a moment."));
+              controller.enqueue(encoder.encode("\n\n[SYSTEM]: AI is temporarily busy. Please try again."));
             } else {
-              controller.enqueue(encoder.encode("\n\n[SYSTEM]: A synchronization delay occurred. Please try again or contact management."));
+              controller.enqueue(encoder.encode("\n\n[SYSTEM]: Connection interrupted. Please try again."));
             }
             controller.close();
           }
@@ -70,19 +69,16 @@ export async function POST(req: NextRequest) {
       });
 
     } catch (initError: any) {
-      console.error('AI STREAM INITIALIZATION ERROR:', initError);
-      return new Response(JSON.stringify({ 
-        error: 'Intelligence engine initialization failed.',
-        details: initError.message
-      }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      console.error('AI INIT ERROR:', initError);
+      return new Response(JSON.stringify({ error: initError.message }), { 
+        status: 500, 
+        headers: { 'Content-Type': 'application/json' } 
+      });
     }
 
   } catch (error: any) {
     console.error('CONCIERGE API RUNTIME ERROR:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Intelligence Engine Offline',
-      details: error.message
-    }), {
+    return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });

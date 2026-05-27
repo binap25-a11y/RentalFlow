@@ -24,8 +24,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * @fileOverview High-Fidelity Resident Rent & Finance Ledger.
- * Provides a verified historical audit trail of all tenancy payments.
- * Realigned Hierarchy: Header -> Tenancy Total Paid -> Audit Trail.
+ * Sequence: Header -> Tenancy Total Paid -> Audit Trail.
  */
 
 export default function TenantPaymentsPage() {
@@ -103,16 +102,10 @@ export default function TenantPaymentsPage() {
         {/* 3. AUDIT TRAIL */}
         <div className="lg:col-span-8 space-y-10">
           <div className="flex items-center justify-between px-2">
-            <div className="flex items-center gap-3">
-              <h3 className="text-2xl font-bold font-headline flex items-center text-foreground tracking-tight">
-                <History className="w-7 h-7 mr-4 text-accent" />
-                Payment History
-              </h3>
-              <Badge variant="outline" className="h-6 border-emerald-500/20 bg-emerald-500/5 text-emerald-600 text-[8px] font-bold uppercase tracking-widest px-3 flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live Sync
-              </Badge>
-            </div>
+            <h3 className="text-2xl font-bold font-headline flex items-center text-foreground tracking-tight">
+              <History className="w-7 h-7 mr-4 text-accent" />
+              Payment History
+            </h3>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] opacity-40 font-headline hidden sm:block">Audit Trail</p>
           </div>
 
@@ -130,8 +123,6 @@ export default function TenantPaymentsPage() {
             ) : (
               sortedPayments.map(payment => {
                 const isPaid = payment.status === 'paid';
-                const paidAtDate = payment.paidAt ? new Date(payment.paidAt) : null;
-                
                 return (
                   <Card key={payment.id} className="border-none shadow-sm group bg-card rounded-[2.5rem] overflow-hidden ring-1 ring-border transition-all hover:shadow-2xl hover:ring-accent/10">
                     <CardContent className="p-10">
@@ -149,20 +140,12 @@ export default function TenantPaymentsPage() {
                           
                           <div className="space-y-2 flex-1 min-w-0 text-left">
                             <h4 className="text-2xl font-bold font-headline text-foreground tracking-tight">Monthly Rent Receipt</h4>
-                            <div className="flex flex-wrap items-center gap-4">
-                              <Badge className={cn(
-                                "uppercase text-[9px] font-bold px-4 py-1 tracking-[0.2em] rounded-full border-none shadow-sm font-headline",
-                                isPaid ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'
-                              )}>
-                                {isPaid ? 'Receipted' : 'Pending Verification'}
-                              </Badge>
-                              {isPaid && paidAtDate && isValid(paidAtDate) && (
-                                <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center tracking-widest opacity-40">
-                                  <Clock className="w-3.5 h-3.5 mr-1.5" /> 
-                                  Verified: {format(paidAtDate, 'PP')}
-                                </span>
-                              )}
-                            </div>
+                            <Badge className={cn(
+                              "uppercase text-[9px] font-bold px-4 py-1 tracking-[0.2em] rounded-full border-none shadow-sm font-headline",
+                              isPaid ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'
+                            )}>
+                              {isPaid ? 'Receipted' : 'Pending Verification'}
+                            </Badge>
                           </div>
                         </div>
                         
@@ -191,12 +174,8 @@ export default function TenantPaymentsPage() {
                 <div className="p-6 bg-white/10 rounded-[2rem] border border-white/10 shadow-inner space-y-3">
                    <p className="text-[10px] font-bold uppercase opacity-60 tracking-[0.3em] font-headline">Real-Time Verification</p>
                    <p className="text-sm font-medium leading-relaxed opacity-90">
-                     This ledger is synchronized in real-time. Status transitions from pending to collected occur the moment your management verifies fund receipt in their vault.
+                     This ledger is synchronized in real-time. Status transitions occur the moment your management verifies fund receipt in their vault.
                    </p>
-                </div>
-                <div className="flex items-center gap-3 px-2">
-                   <AlertCircle className="w-5 h-5 text-white/60" />
-                   <span className="text-[10px] font-bold uppercase tracking-widest text-white/70">Live Firestore Listener Active</span>
                 </div>
              </CardContent>
           </Card>
@@ -211,9 +190,6 @@ export default function TenantPaymentsPage() {
              <CardContent className="p-10 space-y-4">
                 <Button variant="outline" className="w-full h-14 rounded-2xl border-border bg-background hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all shadow-sm">
                    Download Annual Statement (PDF)
-                </Button>
-                <Button variant="outline" className="w-full h-14 rounded-2xl border-border bg-background hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all shadow-sm">
-                   Export Ledger to CSV
                 </Button>
              </CardContent>
           </Card>
