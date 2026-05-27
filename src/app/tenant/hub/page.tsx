@@ -58,7 +58,7 @@ import Image from "next/image";
 /**
  * @fileOverview High-Fidelity Resident Hub.
  * Optimized for cinematic asset resolution and hardware-aligned stability.
- * Corrected returning expression to prevent JSX identifier collisions.
+ * Fixed JSX identifier collision and enhanced hover visibility.
  */
 
 export default function TenantHub() {

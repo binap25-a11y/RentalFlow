@@ -179,18 +179,18 @@ export default function TenantMaintenancePage() {
             </div>
             
             <Card className="border-none shadow-2xl rounded-[3rem] overflow-hidden bg-card ring-1 ring-border">
-              <div className="flex flex-col md:flex-row">
-                <div className="md:w-1/3 bg-primary p-12 text-primary-foreground flex flex-col justify-center gap-6 shrink-0">
-                   <div className="p-5 bg-white/10 rounded-[2.5rem] w-fit shadow-inner">
-                      <Sparkles className="w-12 h-12 text-accent" />
-                   </div>
-                   <div className="space-y-2">
-                     <h4 className="text-3xl font-headline font-bold tracking-tight">Diagnostic Command</h4>
-                     <p className="text-sm opacity-70 leading-relaxed font-medium">Orchestrate safe troubleshooting steps before notifying management.</p>
-                   </div>
+              {/* Premium Header Panel */}
+              <div className="bg-primary p-10 text-primary-foreground flex items-center gap-8 border-b border-white/5">
+                <div className="p-4 bg-white/10 rounded-[2rem] shadow-inner shrink-0">
+                  <Sparkles className="w-10 h-10 text-accent" />
                 </div>
-                
-                <div className="flex-1 p-12 bg-card min-w-0">
+                <div className="space-y-2 text-left">
+                  <h4 className="text-3xl font-headline font-bold tracking-tight">Diagnostic Command</h4>
+                  <p className="text-sm opacity-70 leading-relaxed font-medium">Orchestrate safe troubleshooting steps before notifying management.</p>
+                </div>
+              </div>
+              
+              <div className="p-10 bg-card min-w-0">
                    {troubleshootResult ? (
                     <div className="space-y-8 animate-in zoom-in-95 duration-500 text-left">
                       <div className="bg-emerald-500/5 border border-emerald-500/10 p-10 rounded-[2.5rem] shadow-inner">
@@ -225,7 +225,7 @@ export default function TenantMaintenancePage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                         <div className="space-y-3">
                           <Label className="font-bold text-[10px] uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">Issue Identifier</Label>
-                          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Kitchen Tap Leak" className="rounded-2xl h-14 bg-muted/20 border-none font-bold text-foreground px-6 shadow-inner ring-1 ring-white/5" />
+                          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Kitchen Tap Leak" className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-foreground px-6 shadow-inner ring-1 ring-white/10" />
                         </div>
                         <div className="space-y-3">
                            <Label className="font-bold text-[10px] uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">Status Verification</Label>
@@ -237,7 +237,7 @@ export default function TenantMaintenancePage() {
                       </div>
                       <div className="space-y-3">
                         <Label className="font-bold text-[10px] uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">Detailed Narrative</Label>
-                        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Provide full context for management..." className="rounded-3xl min-h-[180px] bg-muted/20 border-none font-medium text-foreground leading-relaxed px-6 py-5 shadow-inner ring-1 ring-white/5" />
+                        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Provide full context for management..." className="rounded-3xl min-h-[180px] bg-muted/30 border-none font-medium text-foreground leading-relaxed px-6 py-5 shadow-inner ring-1 ring-white/10" />
                       </div>
                       <div className="flex flex-col sm:flex-row gap-4 pt-2">
                         <Button type="button" className="rounded-2xl h-16 bg-accent text-white font-bold shadow-2xl shadow-accent/20 transition-all hover:scale-[1.02] border-none font-headline uppercase tracking-widest text-[11px] px-12" disabled={isTroubleshooting || !description} onClick={handleTroubleshoot}>
@@ -249,7 +249,6 @@ export default function TenantMaintenancePage() {
                     </form>
                   )}
                 </div>
-              </div>
             </Card>
           </section>
 
