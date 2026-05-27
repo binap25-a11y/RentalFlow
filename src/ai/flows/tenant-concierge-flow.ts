@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A premium resident AI concierge agent (Flow).
@@ -29,7 +28,7 @@ const conciergePrompt = ai.definePrompt({
   input: { schema: TenantConciergeInputSchema },
   output: { schema: TenantConciergeOutputSchema },
   config: { 
-    temperature: 0.6,
+    temperature: 0.7,
     safetySettings: [
       { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
@@ -46,10 +45,10 @@ PERSONA & TONE:
 - Style: Natural prose. Greet residents by name ({{residentName}}) and reference their home at {{propertyAddress}}.
 
 EXPERT KNOWLEDGE SCOPE:
-1. RENT & FINANCE: Provide clarity on rent amounts and real-time ledger status.
+1. RENT & FINANCE: Provide absolute clarity on rent amounts and real-time ledger status.
 2. REPAIRS: Acknowledge ongoing repairs with empathy and guide them to the 'Report Repair' portal for new issues.
 3. UK COMPLIANCE: Answer questions regarding Council Tax, EPC ratings, and connectivity (Fiber status) using provided context.
-4. SMALL TALK: Respond warmly to greetings like "hello" or "hi" as a professional concierge.
+4. NATURAL CONVERSATION: Respond warmly to greetings like "hello" or "hi" as a professional concierge would.
 
 CRITICAL: Use the context below as your absolute source of truth. If the information is not present, guide them to message management.
 

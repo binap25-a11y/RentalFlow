@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
@@ -184,7 +183,7 @@ export default function TenantHub() {
               <Building2 className="w-20 h-20 text-foreground/10" />
             </div>
             
-            <CardContent className="p-12 space-y-10">
+            <CardContent className="p-12 space-y-12">
               <div className="space-y-6">
                 <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight opacity-20"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
                 <div className="p-10 bg-muted/10 rounded-[2.5rem] border border-border/50 shadow-inner space-y-6">
@@ -198,10 +197,11 @@ export default function TenantHub() {
                 <div className="p-10 bg-primary/5 rounded-[2.5rem] border border-border/50 space-y-4">
                   <div className="h-3 w-full bg-muted rounded animate-pulse opacity-30" />
                   <div className="h-3 w-4/6 bg-muted rounded animate-pulse opacity-30" />
-                  <div className="pt-6">
-                    <div className="h-14 w-full bg-muted rounded-2xl animate-pulse opacity-20" />
-                  </div>
                 </div>
+              </div>
+
+              <div className="pt-4">
+                <div className="h-14 w-full bg-muted/20 rounded-2xl animate-pulse opacity-20" />
               </div>
             </CardContent>
           </Card>
