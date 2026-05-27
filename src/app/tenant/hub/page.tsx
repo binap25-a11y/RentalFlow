@@ -216,7 +216,7 @@ export default function TenantHub() {
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-32 text-left bg-background relative">
       <div className="space-y-4">
         <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground tracking-tighter">Welcome home, {residentName}</h1>
-        <p className="text-muted-foreground font-medium font-body text-xl opacity-70">Your residency hub is active and synchronized.</p>
+        <p className="text-muted-foreground font-medium font-body text-xl opacity-70 leading-relaxed">Your residency hub is active and synchronized.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
