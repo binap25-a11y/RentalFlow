@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { ai, googleAI } from '@/ai/genkit';
+import { ai } from '@/ai/genkit';
 import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 
 /**
@@ -19,19 +19,16 @@ export async function POST(req: NextRequest) {
       return new Response(JSON.stringify({ error: 'Query is required' }), { status: 400 });
     }
 
-    // Correct Genkit 1.x streaming orchestration with explicit model for stability
-    const { stream } = ai.generateStream({
-      model: googleAI.model('gemini-1.5-flash'),
-      prompt: conciergePrompt({
+    // ATOMIC FIX: Await the generateStream call (Genkit 1.x requirement)
+    // pattern: ai.generateStream(prompt(input))
+    const { stream } = await ai.generateStream(
+      conciergePrompt({
         query,
         residentName,
         propertyAddress,
         propertyContext
-      }),
-      config: {
-        temperature: 0.7
-      }
-    });
+      })
+    );
 
     const responseStream = new ReadableStream({
       async start(controller) {

@@ -95,7 +95,11 @@ export default function TenantHub() {
         }),
       });
 
-      if (!response.ok) throw new Error('Intelligence Engine Offline');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("AI API CRITICAL ERROR:", errorData);
+        throw new Error(errorData.error || 'Intelligence Engine Offline');
+      }
 
       const reader = response.body?.getReader();
       if (!reader) throw new Error('Stream reading failed');
@@ -118,7 +122,7 @@ export default function TenantHub() {
         });
       }
     } catch (error: any) {
-      console.error('Concierge Fetch Error:', error);
+      console.error('Concierge Fetch Error Handled:', error);
       setChatHistory(prev => [...prev, { role: 'bot', text: "My apologies, I'm identifying a brief synchronization delay with the property ledger. Please try your request once more in a moment." }]);
     } finally { 
       setIsChatting(false); 
