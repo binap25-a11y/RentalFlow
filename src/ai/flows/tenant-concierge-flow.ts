@@ -1,13 +1,12 @@
-
 'use server';
 /**
  * @fileOverview A premium resident AI concierge agent (Flow).
  * Features a real-time streaming intelligence layer specialized in UK residential property.
- * Enhanced with Gemini 1.5 Flash for maximum availability and stability.
+ * Enhanced with Gemini 2.0 Flash for maximum availability and stability.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
-import { z } from 'zod';
+import { z } from 'genkit';
 
 const TenantConciergeInputSchema = z.object({
   query: z.string().describe("The resident's question."),
@@ -25,7 +24,7 @@ export type TenantConciergeOutput = z.infer<typeof TenantConciergeOutputSchema>;
 
 export const conciergePrompt = ai.definePrompt({
   name: 'tenantConciergePrompt',
-  model: googleAI.model('gemini-1.5-flash'),
+  model: googleAI.model('gemini-2.0-flash'),
   input: { schema: TenantConciergeInputSchema },
   config: { 
     temperature: 0.7,
@@ -36,7 +35,7 @@ export const conciergePrompt = ai.definePrompt({
       { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
     ]
   },
-  prompt: `You are 'RentalFlow Gemini Assistant', the elite digital concierge for high-fidelity luxury rental properties in the UK.
+  prompt: `You are 'RentalFlow Gemini Assistant', the elite digital concierge for luxury rental properties in the UK.
 Your goal is to provide a conversational, authoritative, and deeply personalized experience.
 
 CONVERSATIONAL PROTOCOLS:

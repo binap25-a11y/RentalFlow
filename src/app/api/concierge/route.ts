@@ -1,4 +1,3 @@
-
 import { ai } from '@/ai/genkit';
 import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 
@@ -15,7 +14,7 @@ export async function POST(req: Request) {
     const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GEMINI_API_KEY;
     if (!apiKey) {
       console.error("AI CONFIG ERROR: Gemini API Key is missing from environment.");
-      return new Response(JSON.stringify({ error: 'System intelligence is currently offline. Please contact support.' }), { 
+      return new Response(JSON.stringify({ error: 'System intelligence is currently offline. Please configure API credentials.' }), { 
         status: 503,
         headers: { 'Content-Type': 'application/json' }
       });
@@ -34,7 +33,7 @@ export async function POST(req: Request) {
     const encoder = new TextEncoder();
 
     try {
-      // GENKIT 1.x STREAMING: Definitive iteration pattern
+      // GENKIT 1.x STREAMING: Definitive iteration pattern for defined prompts
       const { stream } = ai.generateStream({
         prompt: conciergePrompt,
         input: {
@@ -56,14 +55,14 @@ export async function POST(req: Request) {
             }
             controller.close();
           } catch (streamError: any) {
-            // EXPOSING THE TRUTH: Identify actual cause (Quota vs Key)
+            // EXPOSING THE TRUTH: Identify actual cause in server logs
             console.error('REAL AI STREAM ERROR:', streamError);
             
             const errorMsg = streamError.message || "";
             if (errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED')) {
               controller.enqueue(encoder.encode("\n\n[GEMINI ALERT]: AI is temporarily busy due to high demand. Please try again in 60 seconds."));
             } else {
-              controller.enqueue(encoder.encode("\n\n[GEMINI ERROR]: Service synchronization lost. Please refresh the page."));
+              controller.enqueue(encoder.encode("\n\n[GEMINI ERROR]: Service interrupted. Please refresh the page and verify your API key status."));
             }
             controller.close();
           }
