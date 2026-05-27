@@ -35,7 +35,7 @@ export async function POST(req: Request) {
 
     try {
       // GENKIT 1.x STREAMING: Definitive iteration pattern using evaluated prompt
-      // Evaluated prompt ensure the model is supplied automatically
+      // This pattern ensures the model is correctly supplied to the engine.
       const { stream } = ai.generateStream(conciergePrompt({
         query,
         residentName,

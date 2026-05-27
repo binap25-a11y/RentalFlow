@@ -37,7 +37,7 @@ import { useToast } from "@/hooks/use-toast";
 
 /**
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
- * Resolved structural syntax instability for zero-error execution.
+ * Optimized for cinematic visualization and real-time financial command.
  */
 
 export default function LandlordDashboard() {
@@ -92,11 +92,13 @@ export default function LandlordDashboard() {
   }, [db, user]);
   const { data: currentMonthPayments } = useCollection(paymentsQuery);
 
+  // LEDGER EDIT STATE
   const [activePaymentEdit, setActivePaymentEdit] = useState<any>(null);
   const [editAmount, setEditAmount] = useState('');
   const [editStatus, setEditStatus] = useState<'paid' | 'pending'>('pending');
   const [isSavingPayment, setIsSavingPayment] = useState(false);
 
+  // EXPENSE ORCHESTRATION STATE
   const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
   const [isSavingExpense, setIsSavingExpense] = useState(false);
   const [expAmount, setExpAmount] = useState('');
