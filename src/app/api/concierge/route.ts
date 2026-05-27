@@ -5,6 +5,7 @@ import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 /**
  * @fileOverview High-Fidelity Streaming Concierge Endpoint.
  * Enables zero-latency AI responses by streaming Gemini 2.0 Flash chunks directly to the client.
+ * Optimized for Genkit 1.x streaming protocols.
  */
 
 export async function POST(req: NextRequest) {
@@ -12,22 +13,31 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { query, residentName, propertyAddress, propertyContext } = body;
 
-    const { stream } = ai.generateStream(conciergePrompt({
-      query,
-      residentName,
-      propertyAddress,
-      propertyContext
-    }));
+    // Use the definitive streaming syntax for defined prompts in Genkit 1.x
+    const { stream } = ai.generateStream({
+      prompt: conciergePrompt,
+      input: {
+        query,
+        residentName,
+        propertyAddress,
+        propertyContext
+      }
+    });
 
     const responseStream = new ReadableStream({
       async start(controller) {
-        for await (const chunk of stream) {
-          const text = chunk.text;
-          if (text) {
-            controller.enqueue(new TextEncoder().encode(text));
+        try {
+          for await (const chunk of stream) {
+            const text = chunk.text;
+            if (text) {
+              controller.enqueue(new TextEncoder().encode(text));
+            }
           }
+          controller.close();
+        } catch (streamError) {
+          console.error('Stream iteration error:', streamError);
+          controller.error(streamError);
         }
-        controller.close();
       },
     });
 

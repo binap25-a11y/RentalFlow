@@ -22,6 +22,7 @@ import { format } from "date-fns";
 /**
  * @fileOverview High-Fidelity Resident Hub.
  * Optimized for real-time data orchestration and advanced Streaming AI responsiveness.
+ * Features Fit-First architecture for Property DNA visibility.
  */
 
 export default function TenantHub() {
@@ -83,7 +84,7 @@ export default function TenantHub() {
     const propertyInfo = property ? `Property: ${property.addressLine1}. Rent: £${property.rentAmount}. Connectivity: ${property.connectivityStatus || 'Synchronizing'}. Compliance: ${property.complianceStatus || 'Verified'}. Financials: ${paymentContext} Repairs: ${maintenanceContext}` : "Property details are synchronizing.";
 
     try {
-      // 🚀 Initiate Real-Time Streaming Fetch
+      // 🚀 Initiate Real-Time Streaming Fetch via API Route
       const response = await fetch('/api/concierge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -95,10 +96,10 @@ export default function TenantHub() {
         }),
       });
 
-      if (!response.ok) throw new Error('Network error');
+      if (!response.ok) throw new Error('Intelligence Engine Offline');
 
       const reader = response.body?.getReader();
-      if (!reader) throw new Error('No reader');
+      if (!reader) throw new Error('Stream reading failed');
 
       let botText = "";
       setChatHistory(prev => [...prev, { role: 'bot', text: "" }]);
@@ -117,8 +118,8 @@ export default function TenantHub() {
         });
       }
     } catch (error) {
-      console.error('Chat Error:', error);
-      setChatHistory(prev => [...prev, { role: 'bot', text: "I'm currently recalibrating my property intelligence. Please try again in a moment." }]);
+      console.error('Concierge Error:', error);
+      setChatHistory(prev => [...prev, { role: 'bot', text: "My apologies, I encountered a connection issue while synchronized with the property ledger. Please try your request once more." }]);
     } finally { 
       setIsChatting(false); 
     }
@@ -147,10 +148,13 @@ export default function TenantHub() {
               <Building2 className="w-20 h-20 text-foreground/10" />
             </div>
             <CardContent className="p-12 space-y-12">
-              <div className="h-32 w-full bg-muted/20 rounded-[2.5rem] animate-pulse" />
-              <div className="grid grid-cols-2 gap-6">
-                <div className="h-24 bg-muted/10 rounded-[1.5rem] animate-pulse" />
-                <div className="h-24 bg-muted/10 rounded-[1.5rem] animate-pulse" />
+              <div className="h-40 w-full bg-muted/20 rounded-[2.5rem] animate-pulse" />
+              <div className="space-y-6">
+                <div className="h-24 w-full bg-muted/10 rounded-[1.5rem] animate-pulse" />
+                <div className="grid grid-cols-2 gap-6">
+                   <div className="h-24 bg-muted/10 rounded-[1.5rem] animate-pulse" />
+                   <div className="h-24 bg-muted/10 rounded-[1.5rem] animate-pulse" />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -271,19 +275,19 @@ export default function TenantHub() {
                        </p>
                     </div>
                     
-                    {/* 🧬 PROPERTY DNA - FIT-FIRST ARCHITECTURE */}
+                    {/* 🧬 PROPERTY DNA - FIT-FIRST ARCHITECTURE (FULLY VISIBLE TEXT) */}
                     <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
                        <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Wifi className="w-5 h-5" /></div>
                        <div className="min-w-0 flex-1">
-                          <p className="text-[10px] font-bold uppercase opacity-40 truncate">Connectivity</p>
-                          <p className="text-sm font-bold truncate leading-tight">{property.connectivityStatus || 'Ultra-Fast Fiber Enabled'}</p>
+                          <p className="text-[10px] font-bold uppercase opacity-40">Connectivity</p>
+                          <p className="text-sm font-bold leading-tight whitespace-normal break-words">{property.connectivityStatus || 'Ultra-Fast Fiber Enabled'}</p>
                        </div>
                     </div>
                     <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
                        <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Shield className="w-5 h-5" /></div>
                        <div className="min-w-0 flex-1">
-                          <p className="text-[10px] font-bold uppercase opacity-40 truncate">Compliance</p>
-                          <p className="text-sm font-bold truncate leading-tight">{property.complianceStatus || 'EPC Grade B / Certified'}</p>
+                          <p className="text-[10px] font-bold uppercase opacity-40">Compliance</p>
+                          <p className="text-sm font-bold leading-tight whitespace-normal break-words">{property.complianceStatus || 'EPC Grade B / Certified'}</p>
                        </div>
                     </div>
                   </div>
