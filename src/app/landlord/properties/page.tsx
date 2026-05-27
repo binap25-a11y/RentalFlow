@@ -43,7 +43,7 @@ export default function PropertiesPage() {
   [allProperties, searchQuery]);
 
   const archivedProperties = useMemo(() => 
-    allProperties?.filter(p => p.isDeleted) || [], 
+    allProperties?.filter(p => !p.isDeleted) || [], 
   [allProperties]);
 
   const handleArchiveProperty = (propertyId: string) => {
@@ -230,7 +230,7 @@ export default function PropertiesPage() {
                             <RotateCcw className="w-4 h-4 mr-2" /> Restore
                           </Button>
                           <Button variant="ghost" className="flex-1 md:flex-none rounded-xl font-bold h-11 px-6 text-destructive/60 hover:text-white hover:bg-red-500" onClick={() => handlePermanentDelete(property.id)}>
-                            <Trash2 className="w-4 h-4 mr-2" /> Delete
+                            <Trash2 className="w-4 h-4 mr-2" /> Permanently Delete
                           </Button>
                         </div>
                       </CardContent>

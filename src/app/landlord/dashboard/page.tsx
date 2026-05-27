@@ -249,7 +249,7 @@ export default function LandlordDashboard() {
                      {stat.val}
                   </p>
                   {stat.progress !== undefined && <Progress value={stat.progress} className="h-2 bg-white/10" />}
-                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline opacity-50 truncate">{stat.title}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline opacity-50 whitespace-normal">{stat.title}</p>
                 </div>
               </CardContent>
             </Card>
