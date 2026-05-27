@@ -96,14 +96,9 @@ export default function TenantHub() {
       });
 
       if (!response.ok) {
-        const errorText = await response.text().catch(() => "Unknown server error");
-        let errorJson = { error: "Intelligence Engine Offline" };
-        try {
-          errorJson = JSON.parse(errorText);
-        } catch (e) {}
-        
-        console.error("AI API CRITICAL ERROR:", errorJson);
-        throw new Error(errorJson.error || 'Intelligence Engine Offline');
+        const errorData = await response.json().catch(() => ({}));
+        console.error("AI API CRITICAL ERROR:", errorData);
+        throw new Error(errorData.error || 'Intelligence Engine Offline');
       }
 
       const reader = response.body?.getReader();
@@ -238,7 +233,7 @@ export default function TenantHub() {
                   </div>
                   <div className="p-10 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner relative overflow-hidden group">
                      <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:rotate-12 transition-transform duration-1000">
-                        <PoundSterling className="w-32 h-32 text-foreground" />
+                        <PoundSterling className="w-32 h-32" />
                      </div>
                      <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.3em] font-headline opacity-50 mb-3">Verified Ledger</p>
                      <p className="text-6xl font-bold font-headline text-foreground tracking-tighter mb-4">£{property.rentAmount?.toLocaleString()}</p>
