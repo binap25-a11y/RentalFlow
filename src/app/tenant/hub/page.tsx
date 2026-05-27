@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
@@ -261,7 +262,7 @@ export default function TenantHub() {
                        </p>
                     </div>
                     
-                    {/* 🧬 PROPERTY DNA - FIT-FIRST ARCHITECTURE (FULLY VISIBLE TEXT) */}
+                    {/* 🧬 PROPERTY DNA - FIT-FIRST ARCHITECTURE */}
                     <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
                        <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Wifi className="w-5 h-5" /></div>
                        <div className="min-w-0 flex-1">
