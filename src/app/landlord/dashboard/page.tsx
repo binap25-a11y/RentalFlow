@@ -38,7 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 /**
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
  * Optimized for real-time financial tracking and total text visibility.
- * Labels refined: Yield -> Rent. Status indicators optimized for no-truncation.
+ * Refined for Elite UX: No truncation, expanded identifiers, premium interactions.
  */
 
 export default function LandlordDashboard() {
@@ -263,7 +263,7 @@ export default function LandlordDashboard() {
               <div className="flex justify-between items-center">
                  <CardTitle className="text-2xl font-headline flex items-center text-foreground tracking-tight">
                    <BarChart3 className="w-7 h-7 mr-4 text-accent" />
-                   Yield Distribution
+                   Rent Distribution
                  </CardTitle>
                  <Badge variant="outline" className="border-white/10 text-[9px] font-bold uppercase tracking-[0.2em] font-headline opacity-60 shrink-0">Asset Performance</Badge>
               </div>
@@ -333,7 +333,7 @@ export default function LandlordDashboard() {
                            </td>
                            <td className="px-8 py-8 font-bold text-base text-foreground tracking-tight truncate">£{prop.rentAmount?.toLocaleString()}</td>
                            <td className="px-8 py-8">
-                             <Badge className={cn("rounded-full px-5 py-2 font-bold text-[9px] uppercase tracking-[0.08em] border-none shadow-sm w-fit min-w-[120px] inline-flex items-center justify-center whitespace-normal text-center", isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500")}>
+                             <Badge className={cn("rounded-full px-5 py-2 font-bold text-[9px] uppercase tracking-[0.1em] border-none shadow-sm min-w-[130px] inline-flex items-center justify-center whitespace-normal text-center h-9", isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500")}>
                                {isPaid ? "Receipted" : "Collection Pending"}
                              </Badge>
                            </td>
@@ -460,28 +460,31 @@ export default function LandlordDashboard() {
 
       <Dialog open={!!activePaymentEdit} onOpenChange={(o) => !o && setActivePaymentEdit(null)}>
         <DialogContent className="rounded-[3.5rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh] max-w-[500px] ring-1 ring-white/10">
-           <div className="p-10 bg-primary/5 border-b border-white/5 text-left shrink-0">
-             <DialogTitle className="text-2xl font-bold font-headline text-foreground tracking-tight">Manage Ledger</DialogTitle>
-             <DialogDescription className="text-sm font-medium text-muted-foreground mt-2">Adjust monthly rent and collection state.</DialogDescription>
+           <div className="p-10 bg-primary text-primary-foreground border-b border-white/10 text-left shrink-0 relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-10 opacity-10"><PoundSterling className="w-24 h-24" /></div>
+             <DialogHeader>
+                <DialogTitle className="text-3xl font-bold font-headline tracking-tighter">Manage Ledger</DialogTitle>
+                <DialogDescription className="text-primary-foreground/70 font-medium text-base mt-2">Adjust monthly rent and collection state.</DialogDescription>
+             </DialogHeader>
            </div>
-           <div className="p-10 space-y-8 text-left">
-              <div className="space-y-3">
-                 <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Monthly Rent Amount (£)</Label>
-                 <Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className="rounded-2xl h-14 bg-muted/30 border-none font-bold px-6 text-base" />
+           <div className="p-10 space-y-10 text-left bg-white/[0.01]">
+              <div className="space-y-4">
+                 <Label className="font-bold text-[11px] uppercase text-muted-foreground font-headline tracking-[0.4em] opacity-50">Monthly Rent Amount (£)</Label>
+                 <Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className="rounded-2xl h-16 bg-muted/40 border-none font-bold px-8 text-xl shadow-inner ring-1 ring-white/10" placeholder="0.00" />
               </div>
-              <div className="space-y-3">
-                 <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Collection Status</Label>
+              <div className="space-y-4">
+                 <Label className="font-bold text-[11px] uppercase text-muted-foreground font-headline tracking-[0.4em] opacity-50">Collection Status</Label>
                  <Tabs value={editStatus} onValueChange={(v) => setEditStatus(v as any)}>
-                    <TabsList className="grid grid-cols-2 h-14 bg-muted/30 rounded-2xl p-1.5 border-none">
-                       <TabsTrigger value="pending" className="rounded-xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-white">Pending</TabsTrigger>
-                       <TabsTrigger value="paid" className="rounded-xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-emerald-500 data-[state=active]:text-white">Receipted</TabsTrigger>
+                    <TabsList className="grid grid-cols-2 h-16 bg-muted/40 rounded-2xl p-2 border-none ring-1 ring-white/10">
+                       <TabsTrigger value="pending" className="rounded-xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-white shadow-sm">Pending</TabsTrigger>
+                       <TabsTrigger value="paid" className="rounded-xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-emerald-500 data-[state=active]:text-white shadow-sm">Receipted</TabsTrigger>
                     </TabsList>
                  </Tabs>
               </div>
            </div>
            <DialogFooter className="p-10 bg-muted/5 border-t border-white/5">
-              <Button className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.3em] text-[11px] border-none" onClick={handleSavePayment} disabled={isSavingPayment}>
-                 {isSavingPayment ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
+              <Button className="w-full rounded-[2rem] h-20 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:opacity-90 font-headline uppercase tracking-[0.3em] text-[12px] border-none transition-all hover:scale-[1.01]" onClick={handleSavePayment} disabled={isSavingPayment}>
+                 {isSavingPayment ? <Loader2 className="w-6 h-6 animate-spin mr-4" /> : <Save className="w-6 h-6 mr-4" />}
                  Synchronize Ledger
               </Button>
            </DialogFooter>
