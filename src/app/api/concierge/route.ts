@@ -27,7 +27,6 @@ export async function POST(req: NextRequest) {
 
     try {
       // GENKIT 1.x ORCHESTRATION: Stream initialization is synchronous.
-      // chunks are awaited during iteration.
       const { stream } = ai.generateStream(
         conciergePrompt({
           query,
@@ -51,7 +50,6 @@ export async function POST(req: NextRequest) {
             console.error('API Stream Iteration Failure:', streamError);
             const errorMsg = streamError.message || "";
             
-            // Handle high-volume or quota scenarios gracefully within the stream
             if (errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED')) {
               controller.enqueue(encoder.encode("\n\n[SYSTEM NOTIFICATION]: The high-fidelity property intelligence engine is currently handling a high volume of requests. Please try your query again in a moment—your residency ledger remains secure."));
             } else if (errorMsg.includes('API_KEY_INVALID') || errorMsg.includes('403')) {

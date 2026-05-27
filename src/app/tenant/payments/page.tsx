@@ -15,7 +15,6 @@ import {
   ArrowLeft,
   Download,
   PoundSterling,
-  RefreshCcw,
   ShieldCheck
 } from "lucide-react";
 import { format, isValid } from "date-fns";
