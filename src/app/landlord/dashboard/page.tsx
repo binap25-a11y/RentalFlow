@@ -38,7 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 /**
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
  * Optimized for real-time financial tracking and total text visibility.
- * Refined for Elite UX: No truncation, expanded identifiers, theme-consistent headers.
+ * Refined for Elite UX: No truncation, theme-consistent headers, and fitted placeholders.
  */
 
 export default function LandlordDashboard() {
@@ -241,14 +241,14 @@ export default function LandlordDashboard() {
                   <div className={cn("p-4 rounded-2xl shadow-inner border border-white/5 transition-transform group-hover:scale-110", stat.bg, !stat.isPrimary && stat.color)}>
                     <IconComp className="w-7 h-7" />
                   </div>
-                  {IndicatorComp && <IndicatorComp className={cn("w-6 h-6 opacity-30", stat.color)} />}
+                  {IndicatorComp && <IndicatorComp className={cn("w-6 h-6", stat.color)} />}
                 </div>
                 <div className="space-y-3 min-w-0">
                   <p className="text-4xl font-bold font-headline tracking-tighter">
                      {stat.val}
                   </p>
                   {stat.progress !== undefined && <Progress value={stat.progress} className="h-2 bg-white/10" />}
-                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline opacity-50 whitespace-normal leading-tight h-auto min-h-[2.5em] flex items-center">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline opacity-50 whitespace-normal leading-tight">
                     {stat.title}
                   </p>
                 </div>
@@ -302,7 +302,7 @@ export default function LandlordDashboard() {
             </CardHeader>
             <CardContent className="p-0">
                <div className="overflow-x-auto">
-                 <table className="w-full text-left border-collapse table-fixed min-w-[900px]">
+                 <table className="w-full text-left border-collapse table-fixed min-w-[950px]">
                    <thead>
                      <tr className="bg-white/[0.02]">
                        <th className="px-8 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-2/5">Property Identity</th>
@@ -336,7 +336,7 @@ export default function LandlordDashboard() {
                            <td className="px-8 py-8 font-bold text-base text-foreground tracking-tight truncate">£{prop.rentAmount?.toLocaleString()}</td>
                            <td className="px-8 py-8">
                              <Badge className={cn(
-                               "rounded-full px-5 py-2 font-bold text-[9px] uppercase tracking-[0.1em] border-none shadow-sm min-w-[145px] inline-flex items-center justify-center whitespace-nowrap text-center h-9", 
+                               "rounded-full px-6 py-2.5 font-bold text-[10px] uppercase tracking-[0.1em] border-none shadow-sm min-w-[170px] inline-flex items-center justify-center whitespace-nowrap text-center h-10", 
                                isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
                              )}>
                                {isPaid ? "Receipted" : "Collection Pending"}
@@ -348,7 +348,7 @@ export default function LandlordDashboard() {
                                   <Settings2 className="w-4 h-4 text-muted-foreground" />
                                 </Button>
                                 {!isPaid && (
-                                  <Button size="sm" className="rounded-xl h-11 px-5 font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-xl shadow-primary/10 shrink-0" onClick={() => handleOpenLedgerEdit(prop, payment)}>
+                                  <Button size="sm" className="rounded-xl h-11 px-6 font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-xl shadow-primary/10 shrink-0 uppercase tracking-widest text-[10px]" onClick={() => handleOpenLedgerEdit(prop, payment)}>
                                     Process
                                   </Button>
                                 )}
@@ -470,13 +470,13 @@ export default function LandlordDashboard() {
              <div className="absolute top-0 right-0 p-10 opacity-5"><PoundSterling className="w-24 h-24" /></div>
              <DialogHeader>
                 <DialogTitle className="text-3xl font-bold font-headline tracking-tighter">Manage Ledger</DialogTitle>
-                <DialogDescription className="text-muted-foreground font-medium text-base mt-2">Adjust monthly rent and collection state.</DialogDescription>
+                <DialogDescription className="text-secondary-foreground/70 font-bold text-base mt-2">Adjust monthly rent and collection state.</DialogDescription>
              </DialogHeader>
            </div>
            <div className="p-10 space-y-10 text-left bg-white/[0.01]">
               <div className="space-y-4">
                  <Label className="font-bold text-[11px] uppercase text-muted-foreground font-headline tracking-[0.4em] opacity-50">Monthly Rent Amount (£)</Label>
-                 <Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className="rounded-2xl h-16 bg-muted/40 border-none font-bold px-8 text-xl shadow-inner ring-1 ring-white/10" placeholder="0.00" />
+                 <Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className="rounded-2xl h-16 bg-muted/40 border-none font-bold px-8 text-xl shadow-inner ring-1 ring-white/10 text-foreground" placeholder="0.00" />
               </div>
               <div className="space-y-4">
                  <Label className="font-bold text-[11px] uppercase text-muted-foreground font-headline tracking-[0.4em] opacity-50">Collection Status</Label>
