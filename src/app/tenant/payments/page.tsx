@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * @fileOverview High-Fidelity Resident Rent & Finance Ledger.
- * Sequence: Header -> Tenancy Total Paid (Summary Card) -> Audit Trail.
+ * Realigned Sequence: Header -> Tenancy Total Paid (Summary Card) -> Audit Trail.
  */
 
 export default function TenantPaymentsPage() {

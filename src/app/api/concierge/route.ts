@@ -23,8 +23,8 @@ export async function POST(req: Request) {
 
     const encoder = new TextEncoder();
 
+    // GENKIT 1.x ORCHESTRATION: Correct streaming syntax
     try {
-      // GENKIT 1.x ORCHESTRATION: Correct streaming syntax for defined prompts
       const { stream } = ai.generateStream({
         prompt: conciergePrompt,
         input: {
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
             controller.close();
           } catch (streamError: any) {
             // REAL LOGGING: Identify the actual root cause (Quota vs Credential)
-            console.error('AI STREAM ITERATION ERROR:', streamError);
+            console.error('REAL AI STREAM ERROR:', streamError);
             
             const errorMsg = streamError.message || "";
             if (errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED')) {

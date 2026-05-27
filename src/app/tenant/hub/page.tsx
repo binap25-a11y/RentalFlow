@@ -20,9 +20,10 @@ import { format } from "date-fns";
 
 /**
  * @fileOverview High-Fidelity Resident Hub.
- * Sequence: Hero -> Identity Bar -> Rent Ledger -> Narrative -> Property DNA -> Actions.
- * Resolved Visibility: Break-words implementation for DNA cards.
- * Resolved References: Fixed missing icon imports.
+ * Optimized Sequence: Hero -> Identity Bar -> Rent Ledger -> Narrative -> Property DNA -> Actions.
+ * Fixed: ReferenceError for Phone icon.
+ * Fixed: DNA text fitting with break-words.
+ * Hardened: AI error logging and request guards.
  */
 
 export default function TenantHub() {
@@ -66,7 +67,8 @@ export default function TenantHub() {
   
   const maintenanceContext = useMemo(() => {
     if (!requests) return "No maintenance records on file.";
-    return requests.map(r => `${r.title}: ${r.description} (Status: ${r.status}, Priority: ${r.priority})`).join(' | ');
+    // LIMIT CONTEXT: Prevent token burn
+    return requests.slice(-5).map(r => `${r.title}: ${r.status}`).join(' | ');
   }, [requests]);
 
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [chatHistory, isChatOpen]);
@@ -79,7 +81,7 @@ export default function TenantHub() {
     
     setChatQuery(""); 
     const newUserMsg = { role: 'user' as const, text: queryText };
-    setChatHistory(prev => [...prev, newUserMsg]); 
+    setChatHistory(prev => [...prev, newUserMsg].slice(-10)); // SLICE: Prevent massive context
     setIsChatting(true);
 
     const paymentContext = currentPayment ? `Payment for ${format(new Date(), 'MMMM')} is ${currentPayment.status}.` : "No current payment record found.";
@@ -97,7 +99,10 @@ export default function TenantHub() {
         }),
       });
 
-      if (!response.ok) throw new Error('API route failed to respond.');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'AI service route failed.');
+      }
 
       const reader = response.body?.getReader();
       if (!reader) throw new Error('Stream reader initialization failed.');
@@ -120,10 +125,10 @@ export default function TenantHub() {
         });
       }
     } catch (error: any) {
-      console.error('AI STREAM ERROR:', error);
+      console.error('REAL CHAT ERROR:', error);
       setChatHistory(prev => {
         const newHistory = [...prev];
-        const errorMessage = "[SYSTEM]: Connection interrupted. Please try again.";
+        const errorMessage = `[SYSTEM]: AI is temporarily busy. (${error.message || 'Interrupted'})`;
         const lastMsg = newHistory[newHistory.length - 1];
         if (lastMsg && lastMsg.role === 'bot' && !lastMsg.text) {
            newHistory[newHistory.length - 1] = { role: 'bot', text: errorMessage };
