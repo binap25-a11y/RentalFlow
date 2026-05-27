@@ -70,7 +70,7 @@ export default function TenantHub() {
   
   const maintenanceContext = useMemo(() => {
     if (!requests) return "No maintenance records on file.";
-    return requests.map(r => `${r.title} (Status: ${r.status}, Priority: ${r.priority}, Scheduled: ${r.scheduledDate || 'TBC'})`).join(', ');
+    return requests.map(r => `${r.title}: ${r.description} (Status: ${r.status}, Priority: ${r.priority}, Scheduled: ${r.scheduledDate || 'TBC'})`).join(' | ');
   }, [requests]);
 
   const contactsQuery = useMemoFirebase(() => {
