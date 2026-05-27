@@ -22,7 +22,7 @@ const TenantConciergeOutputSchema = z.object({
 });
 export type TenantConciergeOutput = z.infer<typeof TenantConciergeOutputSchema>;
 
-const conciergePrompt = ai.definePrompt({
+export const conciergePrompt = ai.definePrompt({
   name: 'tenantConciergePrompt',
   model: googleAI.model('gemini-2.0-flash'),
   input: { schema: TenantConciergeInputSchema },
@@ -61,35 +61,11 @@ Resident Query: {{{query}}}`,
 });
 
 /**
- * 🚀 Real-Time Streaming Orchestrator
- * Returns a ReadableStream for zero-latency UI updates.
- */
-export async function streamTenantConcierge(input: TenantConciergeInput) {
-  const { stream } = ai.generateStream({
-    prompt: conciergePrompt(input),
-  });
-
-  return new ReadableStream({
-    async start(controller) {
-      for await (const chunk of stream) {
-        const text = chunk.text;
-        if (text) {
-          controller.enqueue(new TextEncoder().encode(text));
-        }
-      }
-      controller.close();
-    },
-  });
-}
-
-/**
  * 🚀 Standard Wrapper (Non-Streaming)
  */
 export async function tenantConcierge(input: TenantConciergeInput): Promise<TenantConciergeOutput> {
   try {
-    const { text } = await ai.generate({
-      prompt: conciergePrompt(input),
-    });
+    const { text } = await ai.generate(conciergePrompt(input));
     return { answer: text || "I am currently coordinating several property updates. Please try again in a moment." };
   } catch (error) {
     console.error("AI Concierge Failure:", error);

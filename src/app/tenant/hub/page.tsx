@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
-import { streamTenantConcierge } from "@/ai/flows/tenant-concierge-flow";
 import { cn, getResolvedImageUrl } from "@/lib/utils";
 import { query, collection, where } from "firebase/firestore";
 import { format } from "date-fns";
@@ -84,19 +83,24 @@ export default function TenantHub() {
     const propertyInfo = property ? `Property: ${property.addressLine1}. Rent: £${property.rentAmount}. Connectivity: ${property.connectivityStatus || 'Synchronizing'}. Compliance: ${property.complianceStatus || 'Verified'}. Financials: ${paymentContext} Repairs: ${maintenanceContext}` : "Property details are synchronizing.";
 
     try {
-      // 🚀 Initiate Streaming Response
-      const stream = await streamTenantConcierge({ 
-        query: queryText, 
-        residentName: user?.displayName || user?.email?.split('@')[0],
-        propertyAddress: property?.addressLine1 || "your home",
-        propertyContext: propertyInfo 
+      // 🚀 Initiate Real-Time Streaming Fetch
+      const response = await fetch('/api/concierge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: queryText,
+          residentName: user?.displayName || user?.email?.split('@')[0],
+          propertyAddress: property?.addressLine1 || "your home",
+          propertyContext: propertyInfo
+        }),
       });
 
-      const reader = stream.getReader();
-      const decoder = new TextEncoder().decode();
+      if (!response.ok) throw new Error('Network error');
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No reader');
+
       let botText = "";
-      
-      // Initialize empty bot message
       setChatHistory(prev => [...prev, { role: 'bot', text: "" }]);
 
       while (true) {
@@ -106,7 +110,6 @@ export default function TenantHub() {
         const chunk = new TextDecoder().decode(value);
         botText += chunk;
         
-        // Update the last message in history with the new chunk
         setChatHistory(prev => {
           const newHistory = [...prev];
           newHistory[newHistory.length - 1] = { role: 'bot', text: botText };
@@ -114,8 +117,11 @@ export default function TenantHub() {
         });
       }
     } catch (error) {
+      console.error('Chat Error:', error);
       setChatHistory(prev => [...prev, { role: 'bot', text: "I'm currently recalibrating my property intelligence. Please try again in a moment." }]);
-    } finally { setIsChatting(false); }
+    } finally { 
+      setIsChatting(false); 
+    }
   };
 
   const handleClearChat = () => setChatHistory([]);
@@ -128,45 +134,39 @@ export default function TenantHub() {
     doc.save(`Statement_${property.addressLine1.replace(/\s+/g, '_')}_${format(new Date(), 'MMM_yyyy')}.pdf`);
   };
 
-  if (!isClient || isPropLoading || isRequestsLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary w-12 h-12 opacity-60" /></div>;
-
-  if (!property) return (
+  if (!isClient || isPropLoading || isRequestsLoading) return (
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-1000 pb-32 text-left bg-background">
       <div className="space-y-4">
-        <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground tracking-tighter">System Orchestration</h1>
-        <p className="text-muted-foreground font-medium font-body text-xl opacity-70">Verifying official residency records...</p>
+        <div className="h-10 w-64 bg-muted rounded-full animate-pulse" />
+        <div className="h-6 w-48 bg-muted/40 rounded-full animate-pulse" />
       </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-8 space-y-10">
           <Card className="border-none shadow-2xl rounded-[3rem] overflow-hidden bg-card ring-1 ring-border">
             <div className="relative h-[400px] w-full bg-muted/40 animate-pulse flex items-center justify-center">
               <Building2 className="w-20 h-20 text-foreground/10" />
             </div>
-            
             <CardContent className="p-12 space-y-12">
-              <div className="space-y-6">
-                <div className="h-4 w-48 bg-muted rounded-full animate-pulse" />
-                <div className="h-32 w-full bg-muted/20 rounded-[2.5rem] animate-pulse" />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="h-32 w-full bg-muted/20 rounded-[2.5rem] animate-pulse" />
+              <div className="grid grid-cols-2 gap-6">
                 <div className="h-24 bg-muted/10 rounded-[1.5rem] animate-pulse" />
                 <div className="h-24 bg-muted/10 rounded-[1.5rem] animate-pulse" />
               </div>
             </CardContent>
           </Card>
         </div>
-
         <div className="lg:col-span-4 space-y-12">
-          <Card className="border-none shadow-sm rounded-[3rem] bg-card ring-1 ring-border overflow-hidden opacity-50">
-            <div className="p-10 h-[400px] flex flex-col items-center justify-center gap-6">
-              <RefreshCcw className="w-12 h-12 text-primary/20 animate-spin" />
-              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-center">Syncing Real-Time Hub...</p>
-            </div>
-          </Card>
+          <div className="h-[400px] bg-muted/5 rounded-[3rem] animate-pulse" />
         </div>
       </div>
+    </div>
+  );
+
+  if (!property) return (
+    <div className="max-w-7xl mx-auto space-y-12 py-32 text-center">
+      <Building2 className="w-16 h-16 mx-auto text-muted-foreground/20 mb-6" />
+      <h1 className="text-3xl font-headline font-bold text-foreground">Registry Verification</h1>
+      <p className="text-muted-foreground max-w-sm mx-auto">Once your landlord links your residency to a property, your hub will be initialized here.</p>
     </div>
   );
 
@@ -225,7 +225,7 @@ export default function TenantHub() {
                 </div>
                 <div className="flex items-center gap-4 bg-primary/5 px-6 py-3 rounded-2xl border border-border shadow-inner">
                    <Home className="w-6 h-6 text-accent" />
-                   <span className="text-base font-bold text-foreground font-headline uppercase tracking-widest">
+                   <span className="text-base font-bold text-foreground font-headline uppercase tracking-widest truncate">
                      {property.propertyType || "Residential Home"}
                    </span>
                 </div>
@@ -239,7 +239,7 @@ export default function TenantHub() {
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
                     <Button variant="ghost" asChild className="rounded-xl font-bold text-[10px] uppercase tracking-widest text-muted-foreground hover:text-accent">
-                      <Link href="/tenant/payments">View Full history <ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
+                      <Link href="/tenant/payments">View history <ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
                     </Button>
                   </div>
                   <div className="p-10 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner relative overflow-hidden group">
@@ -251,7 +251,7 @@ export default function TenantHub() {
                      <div className="flex items-center gap-2 mb-6">
                         <Clock className="w-3.5 h-3.5 text-muted-foreground opacity-40" />
                         <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40">
-                          {currentPayment?.status === 'paid' && currentPayment?.paidAt ? `Verification Receipted: ${format(new Date(currentPayment.paidAt), 'PPP')}` : `Waiting for verification for ${format(new Date(), 'MMMM yyyy')}`}
+                          {currentPayment?.status === 'paid' ? `Verified: ${format(new Date(currentPayment.paidAt || Date.now()), 'PPP')}` : `Waiting for ${format(new Date(), 'MMMM')} receipt`}
                         </span>
                      </div>
                      <Badge className={cn("w-full h-14 flex items-center justify-center font-bold text-[11px] rounded-2xl shadow-sm uppercase tracking-[0.2em] border shadow-inner transition-all duration-700", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white border-transparent" : "bg-amber-500/10 text-amber-600 border-amber-500/20")}>
@@ -355,7 +355,7 @@ export default function TenantHub() {
         </Button>
       </div>
 
-      {/* 🤖 FLOATING CHAT ORCHESTRATION - ENHANCED REAL-TIME */}
+      {/* 🤖 FLOATING CHAT ORCHESTRATION - STREAMING ENHANCED */}
       <div className="fixed bottom-10 right-10 z-[100] flex flex-col items-end gap-6">
         {isChatOpen && (
           <Card className="w-[400px] h-[600px] border-none shadow-2xl rounded-[3rem] bg-card ring-1 ring-border overflow-hidden flex flex-col animate-in slide-in-from-bottom-10 fade-in duration-500">

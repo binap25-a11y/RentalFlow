@@ -82,7 +82,7 @@ export default function TenantPaymentsPage() {
           </p>
         </div>
 
-        {/* FINANCIAL SUMMARY STRATEGICALLY PLACED BELOW HEADING */}
+        {/* FINANCIAL SUMMARY STRATEGICALLY PLACED BELOW HEADING AND TEXT */}
         <div className="flex flex-wrap gap-4 pt-4">
            <div className="p-8 bg-card rounded-[2.5rem] border border-border shadow-sm flex flex-col gap-1 min-w-[280px] relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:rotate-12 transition-transform duration-700">
