@@ -4,7 +4,7 @@ import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 /**
  * 🤖 Hardened Streaming Concierge Endpoint
  * Optimized for Genkit 1.x zero-latency streaming and real professional logging.
- * Exposes actual root causes (like quota limits) to server logs while maintaining elite UX.
+ * Replaced masked fallback messages with real error logs to expose actual root causes.
  */
 
 export const dynamic = 'force-dynamic';

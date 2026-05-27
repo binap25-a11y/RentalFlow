@@ -21,7 +21,7 @@ import { format } from "date-fns";
 /**
  * @fileOverview High-Fidelity Resident Hub.
  * Optimized Sequence: Hero -> Identity Bar -> Rent Ledger -> Narrative -> Property DNA -> Actions.
- * Fixed: ReferenceError for Phone icon.
+ * Fixed: Phone icon ReferenceError.
  * Fixed: DNA text fitting with break-words.
  * Hardened: AI error logging and request guards.
  */
@@ -67,8 +67,7 @@ export default function TenantHub() {
   
   const maintenanceContext = useMemo(() => {
     if (!requests) return "No maintenance records on file.";
-    // LIMIT CONTEXT: Prevent token burn
-    return requests.slice(-5).map(r => `${r.title}: ${r.status}`).join(' | ');
+    return requests.slice(-10).map(r => `${r.title}: ${r.status}`).join(' | ');
   }, [requests]);
 
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [chatHistory, isChatOpen]);
@@ -81,7 +80,7 @@ export default function TenantHub() {
     
     setChatQuery(""); 
     const newUserMsg = { role: 'user' as const, text: queryText };
-    setChatHistory(prev => [...prev, newUserMsg].slice(-10)); // SLICE: Prevent massive context
+    setChatHistory(prev => [...prev, newUserMsg].slice(-10));
     setIsChatting(true);
 
     const paymentContext = currentPayment ? `Payment for ${format(new Date(), 'MMMM')} is ${currentPayment.status}.` : "No current payment record found.";
@@ -128,7 +127,7 @@ export default function TenantHub() {
       console.error('REAL CHAT ERROR:', error);
       setChatHistory(prev => {
         const newHistory = [...prev];
-        const errorMessage = `[SYSTEM]: AI is temporarily busy. (${error.message || 'Interrupted'})`;
+        const errorMessage = `[SYSTEM]: AI is temporarily busy. Please try again. (${error.message || 'Connection Interrupted'})`;
         const lastMsg = newHistory[newHistory.length - 1];
         if (lastMsg && lastMsg.role === 'bot' && !lastMsg.text) {
            newHistory[newHistory.length - 1] = { role: 'bot', text: errorMessage };
