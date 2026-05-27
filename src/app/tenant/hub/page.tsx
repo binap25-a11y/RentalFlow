@@ -73,6 +73,7 @@ export default function TenantHub() {
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [chatHistory, isChatOpen]);
 
   const handleAskConcierge = async (text?: string) => {
+    // 🛡️ SPAM GUARD: Prevent duplicate calls during active generation
     if (isChatting) return;
 
     const queryText = text || chatQuery.trim();
@@ -80,6 +81,7 @@ export default function TenantHub() {
     
     setChatQuery(""); 
     const newUserMsg = { role: 'user' as const, text: queryText };
+    // 🛡️ TOKEN OPTIMIZATION: Slice history to prevent context bloat
     setChatHistory(prev => [...prev, newUserMsg].slice(-10));
     setIsChatting(true);
 
@@ -128,6 +130,7 @@ export default function TenantHub() {
       setChatHistory(prev => {
         const newHistory = [...prev];
         const errorMessage = `[SYSTEM]: AI is temporarily busy. Please try again. (${error.message || 'Connection Interrupted'})`;
+        // Replace empty trailing message if it exists, otherwise push
         const lastMsg = newHistory[newHistory.length - 1];
         if (lastMsg && lastMsg.role === 'bot' && !lastMsg.text) {
            newHistory[newHistory.length - 1] = { role: 'bot', text: errorMessage };
