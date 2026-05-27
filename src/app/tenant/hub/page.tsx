@@ -38,7 +38,7 @@ import Image from "next/image";
 /**
  * @fileOverview High-Fidelity Resident Hub (Optimized).
  * Hierarchy: Cinematic Hero -> Identity -> Rent Ledger -> Narrative -> Property DNA -> Actions.
- * Features an integrated repair reporting suite with visual evidence capture.
+ * Features a premium "Maintenance Command" center for an elite user experience.
  */
 
 type ImageLedger = {
@@ -303,15 +303,15 @@ export default function TenantHub() {
               </div>
 
               {/* 6. ORCHESTRATED ACTIONS */}
-              <div className="pt-8 border-t border-border/50 flex flex-col sm:flex-row gap-4">
-                <Button variant="outline" className="flex-1 h-16 rounded-[1.75rem] border-border bg-card hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all" onClick={handleDownloadStatement}>
-                   <Download className="w-5 h-5 mr-3 text-accent" /> Download Statement
-                </Button>
+              <div className="pt-8 border-t border-border/50 flex flex-col sm:flex-row gap-6">
+                <Button variant="outline" className="flex-1 h-20 rounded-[2rem] border-border bg-card hover:bg-primary/5 font-bold text-[11px] uppercase tracking-widest font-headline transition-all shadow-sm" onClick={handleDownloadStatement}>
+                   <Download className="w-6 h-6 mr-3 text-accent" /> Download Statement
+                </Download>
                 
                 <Dialog open={isRepairOpen} onOpenChange={setIsRepairOpen}>
                   <DialogTrigger asChild>
-                    <Button className="flex-1 h-16 rounded-[1.75rem] bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-[10px] uppercase tracking-widest font-headline shadow-2xl shadow-primary/20 transition-all border-none">
-                       <Wrench className="w-5 h-5 mr-3 text-accent" /> Report a Repair
+                    <Button className="flex-[1.5] h-20 rounded-[2rem] bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-[11px] uppercase tracking-widest font-headline shadow-2xl shadow-primary/20 transition-all border-none hover:scale-[1.01] active:scale-[0.98]">
+                       <Wrench className="w-6 h-6 mr-3 text-accent" /> Report a Repair Request
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[650px] p-0 rounded-[3rem] border-none shadow-2xl flex flex-col h-[85vh] overflow-hidden bg-card ring-1 ring-white/10">
@@ -414,6 +414,29 @@ export default function TenantHub() {
         </div>
 
         <div className="lg:col-span-4 space-y-10">
+           {/* PREMIUM MAINTENANCE COMMAND CARD */}
+           <Card className="border-none shadow-2xl rounded-[3rem] bg-primary text-primary-foreground overflow-hidden text-left relative group">
+             <div className="absolute top-0 right-0 w-32 h-32 bg-accent/20 blur-3xl rounded-full" />
+             <CardHeader className="pb-6 p-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-4 bg-white/10 rounded-2xl shadow-inner border border-white/10">
+                    <Sparkles className="w-8 h-8 text-accent" />
+                  </div>
+                  <Badge variant="outline" className="border-accent/30 text-accent uppercase text-[9px] font-bold px-4 py-1 rounded-full">Intelligent Sync</Badge>
+                </div>
+                <CardTitle className="text-2xl font-bold font-headline tracking-tight">Maintenance Command</CardTitle>
+                <p className="text-sm text-primary-foreground/70 font-medium leading-relaxed mt-2">Report issues with high-fidelity visual triage and immediate management alerts.</p>
+             </CardHeader>
+             <CardContent className="px-10 pb-12">
+                <Button 
+                   className="w-full rounded-2xl font-bold h-16 bg-accent hover:bg-accent/90 text-white shadow-2xl shadow-black/20 transition-all hover:scale-[1.02] border-none font-headline uppercase tracking-widest text-[11px]"
+                   onClick={() => setIsRepairOpen(true)}
+                >
+                   Initiate Repair Request
+                </Button>
+             </CardContent>
+           </Card>
+
            <Card className="border-none shadow-sm rounded-[3rem] bg-card ring-1 ring-border overflow-hidden">
              <CardHeader className="p-10 pb-4 border-b border-border bg-muted/5 text-left">
                <CardTitle className="text-xl font-headline font-bold flex items-center text-foreground">
