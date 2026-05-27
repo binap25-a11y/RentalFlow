@@ -5,7 +5,7 @@ import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 
 /**
  * @fileOverview Hardened Streaming Concierge Endpoint.
- * Optimized for Gemini 2.0 Flash and Genkit 1.x zero-latency streaming.
+ * Optimized for Gemini 2.0 Flash and Genkit 1.x synchronous streaming.
  * Handles quota limits and credential errors word-by-word with professional fallback notifications.
  */
 
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     const encoder = new TextEncoder();
 
     try {
-      // GENKIT 1.x ORCHESTRATION: Stream initialization is synchronous.
+      // GENKIT 1.x ORCHESTRATION: initialization is synchronous.
       const { stream } = ai.generateStream(
         conciergePrompt({
           query,

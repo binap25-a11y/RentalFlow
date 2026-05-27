@@ -6,16 +6,15 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
  * Verifies the GEMINI_API_KEY configuration and model accessibility.
  */
 
-const genAI = new GoogleGenerativeAI(
-  process.env.GEMINI_API_KEY!
-);
-
 export async function GET() {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY;
+
   try {
-    if (!process.env.GEMINI_API_KEY) {
+    if (!apiKey) {
       throw new Error("GEMINI_API_KEY is not defined in environment.");
     }
 
+    const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
       model: "gemini-2.0-flash",
     });

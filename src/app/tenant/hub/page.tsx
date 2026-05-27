@@ -99,7 +99,7 @@ export default function TenantHub() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("AI API CRITICAL ERROR:", errorData);
-        setChatHistory(prev => [...prev, { role: 'bot', text: "My apologies, I'm identifying a brief synchronization delay with the property intelligence engine. Please try your request once more in a few moments." }]);
+        setChatHistory(prev => [...prev, { role: 'bot', text: "[SYSTEM NOTIFICATION]: I am identifying a brief synchronization delay with the property intelligence engine. Please try your request once more in a few moments." }]);
         return;
       }
 
@@ -125,7 +125,7 @@ export default function TenantHub() {
       }
     } catch (error: any) {
       console.error('Concierge Runtime Error:', error);
-      setChatHistory(prev => [...prev, { role: 'bot', text: "My apologies, I'm experiencing a temporary delay. Please try your query once more in a moment." }]);
+      setChatHistory(prev => [...prev, { role: 'bot', text: "[SYSTEM ERROR]: Communication interrupted due to a synchronization delay. Please try your query again in a moment." }]);
     } finally { 
       setIsChatting(false); 
     }
@@ -225,7 +225,7 @@ export default function TenantHub() {
 
             <CardContent className="p-10 md:p-12 space-y-12">
               <div className="space-y-12">
-                {/* 3. RESIZED MONTHLY RENT LEDGER */}
+                {/* 3. MONTHLY RENT LEDGER */}
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
