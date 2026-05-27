@@ -21,7 +21,7 @@ import {
   CardTitle, 
   CardDescription, 
   CardFooter 
-} from "@/card";
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,11 +35,10 @@ import {
   AlertCircle, 
   Sparkles, 
   ShieldAlert, 
-  ChevronRight,
-  Activity,
   History,
   CalendarDays,
-  HardHat
+  HardHat,
+  Activity
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, isValid } from "date-fns";
@@ -178,14 +177,14 @@ export default function TenantMaintenancePage() {
             
             <Card className="border-none shadow-2xl rounded-[3.5rem] overflow-hidden bg-card ring-1 ring-border">
               {/* PREMIUM HEADER panel: NOW AT THE TOP */}
-              <div className="bg-primary p-12 text-primary-foreground flex flex-col md:flex-row items-center gap-10 border-b border-white/10 relative overflow-hidden">
+              <div className="bg-primary p-10 text-primary-foreground flex flex-col md:flex-row items-center gap-8 border-b border-white/10 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-10 opacity-5"><Sparkles className="w-48 h-48" /></div>
-                <div className="p-6 bg-white/10 rounded-[2.5rem] shadow-inner shrink-0 backdrop-blur-xl">
-                  <Sparkles className="w-12 h-12 text-accent" />
+                <div className="p-4 bg-white/10 rounded-2xl shadow-inner shrink-0 backdrop-blur-xl">
+                  <Sparkles className="w-10 h-10 text-accent" />
                 </div>
-                <div className="space-y-2 text-left relative z-10">
-                  <h4 className="text-3xl font-headline font-bold tracking-tight leading-none">AI Maintenance Assistant</h4>
-                  <p className="text-base opacity-70 leading-relaxed font-medium max-w-xl">Orchestrate safe, professional troubleshooting steps before notifying management to ensure high-fidelity residency performance.</p>
+                <div className="space-y-1 text-left relative z-10">
+                  <h4 className="text-2xl font-headline font-bold tracking-tight leading-none">AI Maintenance Assistant</h4>
+                  <p className="text-sm opacity-70 leading-relaxed font-medium max-w-xl">Orchestrate safe, professional troubleshooting steps before notifying management to ensure high-fidelity residency performance.</p>
                 </div>
               </div>
               

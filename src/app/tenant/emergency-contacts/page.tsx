@@ -12,9 +12,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  PhoneCall, Download, Phone, Mail, 
-  Wrench, ShieldAlert, Loader2, AlertCircle, ShieldCheck,
-  Zap, RefreshCcw, ChevronRight, MessageSquare
+  Download, Phone, Mail, 
+  Wrench, ShieldAlert, RefreshCcw, AlertCircle, ShieldCheck,
+  Zap, MessageSquare
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
@@ -174,7 +174,6 @@ export default function TenantEmergencyContactsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        {/* UK SOS PROTOCOLS: LIGHT IN LIGHT MODE */}
         <div className="lg:col-span-4 space-y-10">
            <Card className="border-none shadow-sm rounded-[3.5rem] overflow-hidden bg-card ring-1 ring-border">
              <CardHeader className="bg-muted/10 border-b border-border p-10 text-left">
@@ -206,7 +205,6 @@ export default function TenantEmergencyContactsPage() {
            </Card>
         </div>
 
-        {/* TRADE PARTNER DIRECTORY */}
         <div className="lg:col-span-8">
            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
              {isLoading ? (
@@ -244,7 +242,6 @@ export default function TenantEmergencyContactsPage() {
                      <div className="space-y-2 text-left">
                         <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline opacity-40">Direct Support Line</p>
                         <div className="flex items-center gap-5 text-4xl font-bold text-foreground font-headline tracking-tighter">
-                          <Phone className="w-10 h-10 text-accent/20" />
                           {contact.phone}
                         </div>
                      </div>

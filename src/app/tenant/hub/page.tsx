@@ -15,8 +15,6 @@ import {
   Wifi, 
   Shield, 
   PoundSterling, 
-  Phone,
-  AlertCircle,
   X,
   Sparkles,
   Wrench,
@@ -322,7 +320,7 @@ export default function TenantHub() {
            <Card className="border-none shadow-sm rounded-[3rem] bg-card ring-1 ring-border overflow-hidden">
              <CardHeader className="p-10 pb-4 border-b border-border bg-muted/5 text-left">
                <CardTitle className="text-xl font-headline font-bold flex items-center gap-4 text-foreground">
-                 <AlertCircle className="w-7 h-7 text-red-500" />
+                 <ShieldCheck className="w-7 h-7 text-red-500" />
                  Emergency Support
                </CardTitle>
              </CardHeader>
@@ -331,7 +329,7 @@ export default function TenantHub() {
                     <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-600 dark:text-red-400 mb-4 font-headline">National SOS Protocol</p>
                     <p className="text-xl font-bold text-foreground font-headline">Emergency Services</p>
                     <p className="text-3xl font-bold mt-6 flex items-center text-red-600 dark:text-red-400 tracking-tighter">
-                      <Phone className="w-7 h-7 mr-4 opacity-40" /> 999
+                       999
                     </p>
                 </div>
                 <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground hover:text-primary hover:bg-primary/5 h-14 rounded-2xl transition-all border border-transparent hover:border-primary/10">
