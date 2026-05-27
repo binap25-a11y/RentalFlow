@@ -10,7 +10,7 @@ import {
   Loader2, Building2, Sparkles, Send, Bot, 
   ChevronRight, ReceiptText,
   ShieldCheck, RefreshCcw, Bed, Bath, Download, 
-  Home, Info, BookOpen, CreditCard, RotateCcw, Phone,
+  Home, Info, RotateCcw, Phone,
   MessageCircle, X, Wifi, Shield, Clock, PoundSterling
 } from "lucide-react";
 import Link from "next/link";
@@ -18,7 +18,7 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { tenantConcierge } from "@/ai/flows/tenant-concierge-flow";
 import { cn, getResolvedImageUrl } from "@/lib/utils";
 import { query, collection, where } from "firebase/firestore";
-import { format, isValid } from "date-fns";
+import { format } from "date-fns";
 
 /**
  * @fileOverview High-Fidelity Resident Hub.
@@ -68,12 +68,6 @@ export default function TenantHub() {
     if (!requests) return "No maintenance records on file.";
     return requests.map(r => `${r.title}: ${r.description} (Status: ${r.status}, Priority: ${r.priority}, Scheduled: ${r.scheduledDate || 'TBC'})`).join(' | ');
   }, [requests]);
-
-  const contactsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return getTenantCollectionQuery({ db, collectionName: "emergencyContacts", userId: user.uid });
-  }, [db, user]);
-  const { data: contactsData } = useCollection(contactsQuery);
 
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [chatHistory, isChatOpen]);
 
@@ -133,9 +127,9 @@ export default function TenantHub() {
                 <div className="h-32 w-full bg-muted/20 rounded-[2.5rem] animate-pulse" />
               </div>
 
-              <div className="space-y-6">
-                <div className="h-4 w-32 bg-muted rounded-full animate-pulse" />
-                <div className="h-48 w-full bg-muted/10 rounded-[2.5rem] animate-pulse" />
+              <div className="grid grid-cols-2 gap-6">
+                <div className="h-24 bg-muted/10 rounded-[1.5rem] animate-pulse" />
+                <div className="h-24 bg-muted/10 rounded-[1.5rem] animate-pulse" />
               </div>
             </CardContent>
           </Card>
@@ -164,7 +158,7 @@ export default function TenantHub() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-8 space-y-10">
-          <Card className="border-none shadow-2xl rounded-[3rem] overflow-hidden bg-card group ring-1 ring-border">
+          <Card className="border-none shadow-2xl overflow-hidden bg-card group ring-1 ring-border">
             <div className="relative h-[450px] md:h-[550px] w-full bg-muted overflow-hidden">
               {primaryImageUrl ? (
                 <img 
@@ -217,7 +211,7 @@ export default function TenantHub() {
 
             <CardContent className="p-10 md:p-12 space-y-12">
               <div className="space-y-12">
-                {/* 1. FINANCIAL LEDGER (Primary Focused) */}
+                {/* 1. FINANCIAL LEDGER */}
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
@@ -227,7 +221,7 @@ export default function TenantHub() {
                   </div>
                   <div className="p-10 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner relative overflow-hidden group">
                      <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:rotate-12 transition-transform duration-1000">
-                        <PoundSterling className="w-32 h-32" />
+                        <PoundSterling className="w-32 h-32 text-foreground" />
                      </div>
                      <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.3em] font-headline opacity-50 mb-3">Verified Ledger</p>
                      <p className="text-6xl font-bold font-headline text-foreground tracking-tighter mb-4">£{property.rentAmount?.toLocaleString()}</p>
@@ -243,7 +237,7 @@ export default function TenantHub() {
                   </div>
                 </div>
 
-                {/* 2. YOUR RESIDENCE (Secondary Focused) */}
+                {/* 2. YOUR RESIDENCE */}
                 <div className="space-y-6">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -370,9 +364,9 @@ export default function TenantHub() {
                   </div>
                   <div className="grid grid-cols-1 gap-3">
                     {[
-                      { title: "Rent Status", icon: CreditCard, query: "What is my rent status?" },
-                      { title: "Active Repairs", icon: Info, query: "Show me the status of my repairs." },
-                      { title: "Property DNA", icon: Info, query: "Tell me about my home connectivity." }
+                      { title: "Rent Status", icon: ReceiptText, query: "What is my rent status?" },
+                      { title: "Active Repairs", icon: AlertCircle, query: "Show me the status of my repairs." },
+                      { title: "Property DNA", icon: ShieldCheck, query: "Tell me about my home connectivity." }
                     ].map((topic, i) => (
                       <button key={i} onClick={() => handleAskConcierge(topic.query)} className="p-5 bg-primary/5 rounded-[1.5rem] border border-border flex items-center gap-4 hover:bg-primary/10 transition-all text-left group">
                         <topic.icon className="w-4 h-4 text-accent" />
