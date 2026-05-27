@@ -11,7 +11,7 @@ import {
   ChevronRight, CheckCircle2, Clock, ReceiptText,
   ShieldCheck, ShieldAlert, RefreshCcw, Zap, Bed, Bath, Download, 
   Home, Info, BookOpen, CreditCard, RotateCcw, Phone,
-  MessageCircle, X, Wifi, Shield
+  MessageCircle, X, Wifi, Shield, LayoutDashboard, Settings
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -69,7 +69,7 @@ export default function TenantHub() {
   }, [db, user]);
   const { data: requests, isLoading: isRequestsLoading } = useCollection(requestsQuery);
   
-  const activeRequests = useMemo(() => requests?.filter(r => r.status !== 'completed').slice(0, 3) || [], [requests]);
+  const activeRequests = useMemo(() => requests?.filter(r => r.status !== 'completed').slice(0, 5) || [], [requests]);
 
   const contactsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -168,7 +168,6 @@ export default function TenantHub() {
 
   /**
    * 💎 PREMIUM SYSTEM ORCHESTRATION VIEW (Loading State)
-   * All placeholders resized and reordered to follow requested professional hierarchy.
    */
   if (!property) return (
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-1000 pb-32 text-left bg-background">
@@ -185,7 +184,6 @@ export default function TenantHub() {
             </div>
             
             <CardContent className="p-12 space-y-12">
-              {/* 1. Monthly Rent Ledger Placeholder */}
               <div className="space-y-6">
                 <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight opacity-20"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
                 <div className="p-10 bg-muted/10 rounded-[2.5rem] border border-border/50 shadow-inner space-y-6">
@@ -194,7 +192,6 @@ export default function TenantHub() {
                 </div>
               </div>
 
-              {/* 2. Your Residence Placeholder (Moved Below Rent) */}
               <div className="space-y-6">
                 <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight opacity-20"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
                 <div className="p-10 bg-primary/5 rounded-[2.5rem] border border-border/50 space-y-4">
@@ -203,7 +200,6 @@ export default function TenantHub() {
                 </div>
               </div>
 
-              {/* 3. Fitted Download Action (Bottom of Stack) */}
               <div className="pt-4">
                 <div className="h-14 w-full bg-muted/20 rounded-2xl animate-pulse opacity-20" />
               </div>
@@ -293,7 +289,7 @@ export default function TenantHub() {
                   </div>
                 </div>
 
-                {/* 2. Your Residence Narrative (Order Reordered) */}
+                {/* 2. Your Residence Narrative + Connectivity/Compliance */}
                 <div className="space-y-6">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -304,26 +300,52 @@ export default function TenantHub() {
                        </p>
                     </div>
                     
-                    <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4">
-                       <div className="p-3 bg-white rounded-xl shadow-sm text-accent"><Wifi className="w-5 h-5" /></div>
-                       <div>
-                          <p className="text-[10px] font-bold uppercase opacity-40">Connectivity</p>
-                          <p className="text-sm font-bold truncate">{property.connectivityStatus || 'Standard Broadband'}</p>
+                    <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
+                       <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Wifi className="w-5 h-5" /></div>
+                       <div className="min-w-0 flex-1">
+                          <p className="text-[10px] font-bold uppercase opacity-40 truncate">Connectivity</p>
+                          <p className="text-sm font-bold truncate leading-tight">{property.connectivityStatus || 'Synchronizing Fiber Status...'}</p>
                        </div>
                     </div>
-                    <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4">
-                       <div className="p-3 bg-white rounded-xl shadow-sm text-accent"><Shield className="w-5 h-5" /></div>
-                       <div>
-                          <p className="text-[10px] font-bold uppercase opacity-40">Compliance</p>
-                          <p className="text-sm font-bold truncate">{property.complianceStatus || 'Safety Certified'}</p>
+                    <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
+                       <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Shield className="w-5 h-5" /></div>
+                       <div className="min-w-0 flex-1">
+                          <p className="text-[10px] font-bold uppercase opacity-40 truncate">Compliance</p>
+                          <p className="text-sm font-bold truncate leading-tight">{property.complianceStatus || 'Verifying Safety Certs...'}</p>
                        </div>
                     </div>
                   </div>
                 </div>
 
-                {/* 3. Fitted Action (Bottom of Suite) */}
+                {/* 3. Maintenance Snapshot (NEW) */}
+                <div className="space-y-6">
+                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><Wrench className="w-6 h-6 mr-4 text-accent" /> Maintenance History</h3>
+                   <div className="space-y-4">
+                      {activeRequests.length > 0 ? activeRequests.map(req => (
+                        <div key={req.id} className="p-6 bg-muted/10 rounded-[1.75rem] border border-border/50 flex items-center justify-between group hover:border-accent/30 transition-all">
+                           <div className="min-w-0 flex-1 pr-4">
+                              <p className="font-bold text-base text-foreground truncate group-hover:text-accent transition-colors">{req.title}</p>
+                              <div className="flex items-center gap-3 mt-1.5">
+                                 <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-[0.2em] text-muted-foreground border-border px-3 py-0.5 rounded-full">{req.status}</Badge>
+                                 <span className="text-[9px] font-bold text-muted-foreground opacity-30 uppercase tracking-widest">{req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'MMM dd') : 'Recently'}</span>
+                              </div>
+                           </div>
+                           <Button variant="ghost" size="icon" asChild className="rounded-xl h-10 w-10 text-muted-foreground border border-border/50 group-hover:text-accent group-hover:border-accent/30 transition-all">
+                              <Link href="/tenant/maintenance"><ChevronRight className="w-5 h-5" /></Link>
+                           </Button>
+                        </div>
+                      )) : (
+                        <div className="p-10 text-center bg-muted/5 rounded-[2rem] border-2 border-dashed border-border flex flex-col items-center gap-3">
+                           <CheckCircle2 className="w-10 h-10 text-emerald-500/20" />
+                           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-40">No ongoing repairs reported</p>
+                        </div>
+                      )}
+                   </div>
+                </div>
+
+                {/* 4. Fitted Download Action */}
                 <div className="pt-8 border-t border-border/50">
-                  <Button variant="outline" className="w-full h-16 rounded-[1.75rem] border-border bg-card hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all" onClick={handleDownloadStatement}>
+                  <Button variant="outline" className="w-full h-16 rounded-[1.75rem] border-border bg-card hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all shadow-sm" onClick={handleDownloadStatement}>
                      <Download className="w-5 h-5 mr-3 text-accent" /> Download Rent Statement
                   </Button>
                 </div>
@@ -378,28 +400,20 @@ export default function TenantHub() {
              </CardContent>
            </Card>
 
-           <Card className="border-none shadow-sm rounded-[3rem] bg-card ring-1 ring-border overflow-hidden">
-             <CardHeader className="p-10 pb-4 border-b border-border">
-               <CardTitle className="text-xl font-headline font-bold flex items-center text-foreground"><Wrench className="w-6 h-6 mr-4 text-accent" /> Active Requests</CardTitle>
-             </CardHeader>
-             <CardContent className="p-10 space-y-6">
-               {activeRequests.length > 0 ? activeRequests.map(req => (
-                 <Link key={req.id} href="/tenant/maintenance" className="block group">
-                   <div className="p-6 bg-muted/20 rounded-2xl border border-border hover:bg-muted/40 transition-all shadow-sm">
-                     <div className="flex justify-between items-start mb-3">
-                       <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground border-border px-3 py-1">{req.status}</Badge>
-                       <Clock className="w-4 h-4 text-muted-foreground opacity-40" />
-                     </div>
-                     <p className="text-base font-bold font-headline text-foreground group-hover:text-accent transition-colors truncate">{req.title}</p>
-                   </div>
-                 </Link>
-               )) : (
-                 <div className="text-center py-16 opacity-30 flex flex-col items-center justify-center space-y-4">
-                    <div className="p-6 bg-muted rounded-full animate-pulse shadow-inner"><CheckCircle2 className="w-10 h-10 text-foreground opacity-20" /></div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline text-foreground text-center">Monitoring ledger in real-time</p>
+           {/* AI Hub Stats or secondary info */}
+           <Card className="border-none shadow-sm rounded-[3rem] bg-accent text-white overflow-hidden text-left relative group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl rounded-full group-hover:scale-150 transition-transform duration-1000" />
+              <CardHeader className="p-10 pb-4">
+                 <CardTitle className="text-xl font-bold font-headline flex items-center gap-4">
+                    <Bot className="w-8 h-8 text-white/90" /> Flow Status
+                 </CardTitle>
+              </CardHeader>
+              <CardContent className="p-10 pt-0 space-y-6">
+                 <div className="p-6 bg-white/10 rounded-[2rem] border border-white/10 shadow-inner">
+                    <p className="text-[9px] font-bold uppercase opacity-60 tracking-[0.3em] mb-2">Concierge Awareness</p>
+                    <p className="text-sm font-medium leading-relaxed">I am currently monitoring your rent ledger and {activeRequests.length} active repair {activeRequests.length === 1 ? 'record' : 'records'}. Ask me anything.</p>
                  </div>
-               )}
-             </CardContent>
+              </CardContent>
            </Card>
         </div>
       </div>
