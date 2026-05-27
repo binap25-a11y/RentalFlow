@@ -74,7 +74,6 @@ export default function TenantHub() {
   }, [chatHistory, isChatOpen]);
 
   const handleAskConcierge = async (text?: string) => {
-    // Spam Guard
     if (isChatting) return;
 
     const queryText = text || chatQuery.trim();
@@ -127,7 +126,7 @@ export default function TenantHub() {
       }
     } catch (error: any) {
       console.error('CHATBOT ERROR:', error);
-      const errorMessage = `[GEMINI ERROR]: ${error.message || 'Service interrupted. Please refresh and try again.'}`;
+      const errorMessage = `[GEMINI ALERT]: ${error.message || 'Service synchronization lost. Please refresh the page.'}`;
       setChatHistory(prev => {
         const newHistory = [...prev];
         const lastMsg = newHistory[newHistory.length - 1];
@@ -221,7 +220,7 @@ export default function TenantHub() {
                     <Link href="/tenant/payments">View history <ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
                   </Button>
                 </div>
-                <div className="p-10 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner relative overflow-hidden group">
+                <div className="p-10 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner relative overflow-hidden group text-left">
                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:rotate-12 transition-transform duration-1000">
                       <PoundSterling className="w-32 h-32" />
                    </div>
@@ -236,7 +235,7 @@ export default function TenantHub() {
               {/* 4. RESIDENCE NARRATIVE */}
               <div className="space-y-6">
                 <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
-                <div className="p-8 bg-primary/5 rounded-[2rem] border border-border">
+                <div className="p-8 bg-primary/5 rounded-[2rem] border border-border text-left">
                    <p className="text-[9px] font-bold uppercase text-accent tracking-[0.3em] mb-4">Official Narrative</p>
                    <p className="text-base text-muted-foreground leading-relaxed font-body font-medium">
                      {property.description || "A premium managed property with high-fidelity visual orchestration and automated maintenance support."}
@@ -250,14 +249,14 @@ export default function TenantHub() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
                      <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Wifi className="w-5 h-5" /></div>
-                     <div className="min-w-0 flex-1">
+                     <div className="min-w-0 flex-1 overflow-hidden">
                         <p className="text-[10px] font-bold uppercase opacity-40">Connectivity</p>
                         <p className="text-sm font-bold leading-tight whitespace-normal break-words">{property.connectivityStatus || 'Ultra-Fast Fiber Enabled'}</p>
                      </div>
                   </div>
                   <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
                      <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Shield className="w-5 h-5" /></div>
-                     <div className="min-w-0 flex-1">
+                     <div className="min-w-0 flex-1 overflow-hidden">
                         <p className="text-[10px] font-bold uppercase opacity-40">Compliance</p>
                         <p className="text-sm font-bold leading-tight whitespace-normal break-words">{property.complianceStatus || 'EPC Grade B / Certified'}</p>
                      </div>
@@ -277,13 +276,13 @@ export default function TenantHub() {
 
         <div className="lg:col-span-4 space-y-10">
            <Card className="border-none shadow-sm rounded-[3rem] bg-card ring-1 ring-border overflow-hidden">
-             <CardHeader className="p-10 pb-4 border-b border-border bg-muted/5">
+             <CardHeader className="p-10 pb-4 border-b border-border bg-muted/5 text-left">
                <CardTitle className="text-xl font-headline font-bold flex items-center text-foreground">
                  <AlertCircle className="w-6 h-6 mr-4 text-accent" />
                  Real-Time Support
                </CardTitle>
              </CardHeader>
-             <CardContent className="p-10 space-y-8">
+             <CardContent className="p-10 space-y-8 text-left">
                 <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/10 text-left">
                     <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-red-600 mb-3">Primary SOS</p>
                     <p className="text-base font-bold text-foreground font-headline">Emergency Services</p>
@@ -331,7 +330,7 @@ export default function TenantHub() {
               </div>
             </CardHeader>
             
-            <div className="flex-1 overflow-y-auto p-8 space-y-6" ref={scrollRef}>
+            <div className="flex-1 overflow-y-auto p-8 space-y-6 text-left" ref={scrollRef}>
               {chatHistory.length === 0 ? (
                 <div className="h-full flex flex-col justify-center items-center text-center space-y-4 opacity-40">
                   <Bot className="w-12 h-12 mx-auto text-foreground" />

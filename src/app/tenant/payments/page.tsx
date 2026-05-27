@@ -79,7 +79,7 @@ export default function TenantPaymentsPage() {
 
       {/* 2. FINANCIAL SUMMARY (STRATEGICALLY BELOW HEADER) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="p-8 bg-card rounded-[2.5rem] border border-border shadow-sm flex flex-col gap-1 relative overflow-hidden group">
+          <div className="p-8 bg-card rounded-[2.5rem] border border-border shadow-sm flex flex-col gap-1 relative overflow-hidden group text-left">
             <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:rotate-12 transition-transform duration-700">
                 <ShieldCheck className="w-16 h-16 text-emerald-500" />
             </div>
