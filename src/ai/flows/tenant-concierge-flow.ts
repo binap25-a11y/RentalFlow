@@ -1,9 +1,8 @@
 'use server';
 /**
  * @fileOverview A premium resident AI concierge agent (Flow).
- * Features a conversational intelligence layer specialized in UK residential property.
- * Enhanced with Gemini 2.0 Flash reasoning and natural, sophisticated UK linguistics.
- * Specialized in handling greetings and grounding responses in the real-time Operational Ledger.
+ * Features a real-time streaming intelligence layer specialized in UK residential property.
+ * Enhanced with Gemini 2.0 Flash reasoning and sophisticated UK linguistics.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -27,7 +26,6 @@ const conciergePrompt = ai.definePrompt({
   name: 'tenantConciergePrompt',
   model: googleAI.model('gemini-2.0-flash'),
   input: { schema: TenantConciergeInputSchema },
-  output: { schema: TenantConciergeOutputSchema },
   config: { 
     temperature: 0.7,
     safetySettings: [
@@ -62,34 +60,42 @@ Property Context: {{{propertyContext}}}
 Resident Query: {{{query}}}`,
 });
 
-export async function tenantConcierge(input: TenantConciergeInput): Promise<TenantConciergeOutput> {
-  let retries = 3;
-  
-  while (retries >= 0) {
-    try {
-      const { output } = await conciergePrompt(input);
-      if (!output || !output.answer) throw new Error("Concierge synchronization interrupted.");
-      return output;
-    } catch (error: any) {
-      const errorMsg = error.message || "";
-      const isRetryable = errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('quota') || errorMsg.includes('fetch failed');
-      
-      if (isRetryable && retries > 0) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        retries--;
-        continue;
-      }
-      
-      console.error("AI Concierge Failure:", error);
-      return {
-        answer: "I am currently coordinating several property updates for our residents. While I synchronize my intelligence with your latest residency records, you can find immediate guidance in your shared vault or initiate a secure conversation with management for personalized assistance.",
-        suggestedAction: "Contact Management"
-      };
-    }
-  }
+/**
+ * 🚀 Real-Time Streaming Orchestrator
+ * Returns a ReadableStream for zero-latency UI updates.
+ */
+export async function streamTenantConcierge(input: TenantConciergeInput) {
+  const { stream } = ai.generateStream({
+    prompt: conciergePrompt(input),
+  });
 
-  return {
-    answer: "My apologies, I'm experiencing a brief synchronization delay. I'm ready to assist with your residency—please try your query once more in a moment.",
-    suggestedAction: "Try Again"
-  };
+  return new ReadableStream({
+    async start(controller) {
+      for await (const chunk of stream) {
+        const text = chunk.text;
+        if (text) {
+          controller.enqueue(new TextEncoder().encode(text));
+        }
+      }
+      controller.close();
+    },
+  });
+}
+
+/**
+ * 🚀 Standard Wrapper (Non-Streaming)
+ */
+export async function tenantConcierge(input: TenantConciergeInput): Promise<TenantConciergeOutput> {
+  try {
+    const { text } = await ai.generate({
+      prompt: conciergePrompt(input),
+    });
+    return { answer: text || "I am currently coordinating several property updates. Please try again in a moment." };
+  } catch (error) {
+    console.error("AI Concierge Failure:", error);
+    return {
+      answer: "My apologies, I'm experiencing a brief synchronization delay. I'm ready to assist with your residency—please try your query once more in a moment.",
+      suggestedAction: "Try Again"
+    };
+  }
 }

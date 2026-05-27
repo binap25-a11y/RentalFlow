@@ -15,14 +15,14 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
-import { tenantConcierge } from "@/ai/flows/tenant-concierge-flow";
+import { streamTenantConcierge } from "@/ai/flows/tenant-concierge-flow";
 import { cn, getResolvedImageUrl } from "@/lib/utils";
 import { query, collection, where } from "firebase/firestore";
 import { format } from "date-fns";
 
 /**
  * @fileOverview High-Fidelity Resident Hub.
- * Optimized for real-time data orchestration and advanced AI responsiveness.
+ * Optimized for real-time data orchestration and advanced Streaming AI responsiveness.
  */
 
 export default function TenantHub() {
@@ -76,20 +76,43 @@ export default function TenantHub() {
     if (!queryText) return;
     
     setChatQuery(""); 
-    setChatHistory(prev => [...prev, { role: 'user', text: queryText }]); 
+    const newUserMsg = { role: 'user' as const, text: queryText };
+    setChatHistory(prev => [...prev, newUserMsg]); 
     setIsChatting(true);
 
     const paymentContext = currentPayment ? `Payment for ${format(new Date(), 'MMMM')} is ${currentPayment.status}.` : "No current payment record found.";
     const propertyInfo = property ? `Property: ${property.addressLine1}. Rent: £${property.rentAmount}. Connectivity: ${property.connectivityStatus || 'Synchronizing'}. Compliance: ${property.complianceStatus || 'Verified'}. Financials: ${paymentContext} Repairs: ${maintenanceContext}` : "Property details are synchronizing.";
 
     try {
-      const response = await tenantConcierge({ 
+      // 🚀 Initiate Streaming Response
+      const stream = await streamTenantConcierge({ 
         query: queryText, 
         residentName: user?.displayName || user?.email?.split('@')[0],
         propertyAddress: property?.addressLine1 || "your home",
         propertyContext: propertyInfo 
       });
-      setChatHistory(prev => [...prev, { role: 'bot', text: response.answer }]);
+
+      const reader = stream.getReader();
+      const decoder = new TextEncoder().decode();
+      let botText = "";
+      
+      // Initialize empty bot message
+      setChatHistory(prev => [...prev, { role: 'bot', text: "" }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = new TextDecoder().decode(value);
+        botText += chunk;
+        
+        // Update the last message in history with the new chunk
+        setChatHistory(prev => {
+          const newHistory = [...prev];
+          newHistory[newHistory.length - 1] = { role: 'bot', text: botText };
+          return newHistory;
+        });
+      }
     } catch (error) {
       setChatHistory(prev => [...prev, { role: 'bot', text: "I'm currently recalibrating my property intelligence. Please try again in a moment." }]);
     } finally { setIsChatting(false); }
@@ -127,7 +150,7 @@ export default function TenantHub() {
                 <div className="h-32 w-full bg-muted/20 rounded-[2.5rem] animate-pulse" />
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="h-24 bg-muted/10 rounded-[1.5rem] animate-pulse" />
                 <div className="h-24 bg-muted/10 rounded-[1.5rem] animate-pulse" />
               </div>
@@ -248,6 +271,7 @@ export default function TenantHub() {
                        </p>
                     </div>
                     
+                    {/* 🧬 PROPERTY DNA - FIT-FIRST ARCHITECTURE */}
                     <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
                        <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Wifi className="w-5 h-5" /></div>
                        <div className="min-w-0 flex-1">
@@ -331,7 +355,7 @@ export default function TenantHub() {
         </Button>
       </div>
 
-      {/* FLOATING CHAT ORCHESTRATION */}
+      {/* 🤖 FLOATING CHAT ORCHESTRATION - ENHANCED REAL-TIME */}
       <div className="fixed bottom-10 right-10 z-[100] flex flex-col items-end gap-6">
         {isChatOpen && (
           <Card className="w-[400px] h-[600px] border-none shadow-2xl rounded-[3rem] bg-card ring-1 ring-border overflow-hidden flex flex-col animate-in slide-in-from-bottom-10 fade-in duration-500">
@@ -341,11 +365,11 @@ export default function TenantHub() {
                   <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center shadow-inner"><Sparkles className="w-6 h-6 text-white" /></div>
                   <div className="text-left">
                     <CardTitle className="text-xl font-headline font-bold tracking-tight">Flow Concierge</CardTitle>
-                    <p className="text-xs opacity-70 font-bold uppercase tracking-widest">Digital Assistant</p>
+                    <p className="text-xs opacity-70 font-bold uppercase tracking-widest">Real-Time Intelligence</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={handleClearChat} title="Clear Chat" className="text-white/40 hover:text-white hover:bg-white/10 rounded-xl h-10 w-10">
+                  <Button variant="ghost" size="icon" onClick={handleClearChat} title="Clear Ledger" className="text-white/40 hover:text-white hover:bg-white/10 rounded-xl h-10 w-10">
                     <RotateCcw className="w-4 h-4" />
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(false)} className="text-white/40 hover:text-white hover:bg-white/10 rounded-xl h-10 w-10">
@@ -379,7 +403,12 @@ export default function TenantHub() {
                 <>
                   {chatHistory.map((msg, i) => (
                     <div key={i} className={cn("flex flex-col max-w-[85%] animate-in slide-in-from-bottom-2", msg.role === 'user' ? "ml-auto items-end" : "items-start")}>
-                      <div className={cn("p-5 rounded-[1.75rem] text-sm font-bold leading-relaxed shadow-sm", msg.role === 'user' ? "bg-primary text-primary-foreground rounded-tr-none" : "bg-muted text-foreground rounded-tl-none")}>{msg.text}</div>
+                      <div className={cn(
+                        "p-5 rounded-[1.75rem] text-sm font-bold leading-relaxed shadow-sm", 
+                        msg.role === 'user' ? "bg-primary text-primary-foreground rounded-tr-none" : "bg-muted text-foreground rounded-tl-none border border-border/50"
+                      )}>
+                        {msg.text || (isChatting && i === chatHistory.length - 1 ? "..." : "")}
+                      </div>
                     </div>
                   ))}
                   {isChatting && (
@@ -389,7 +418,7 @@ export default function TenantHub() {
                         <div className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                         <div className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                       </div>
-                      <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary/40">Orchestrating</span>
+                      <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary/40">Synchronizing</span>
                     </div>
                   )}
                 </>
