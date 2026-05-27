@@ -39,7 +39,7 @@ import { useToast } from "@/hooks/use-toast";
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
  * Optimized for real-time financial tracking and total text visibility.
  * Refined for Elite UX: No truncation, theme-consistent headers, and fitted placeholders.
- * Updated: Manage Ledger now includes a professional scrollable region.
+ * Updated: Manage Ledger layout optimized with zero-overlap logic and high-contrast spacing.
  */
 
 export default function LandlordDashboard() {
@@ -476,12 +476,12 @@ export default function LandlordDashboard() {
            </div>
            
            <ScrollArea className="flex-1">
-             <div className="p-10 space-y-10 text-left bg-white/[0.01]">
-                <div className="space-y-4">
+             <div className="p-10 space-y-14 text-left bg-white/[0.01] pb-24">
+                <div className="space-y-6 bg-white/[0.02] p-8 rounded-[2rem] ring-1 ring-white/5">
                    <Label className="font-bold text-[11px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-50">Monthly Rent Amount (£)</Label>
-                   <Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className="rounded-2xl h-16 bg-muted/40 border-none font-bold px-8 text-xl shadow-inner ring-1 ring-white/10 text-foreground" placeholder="e.g. 1500.00" />
+                   <Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className="rounded-2xl h-20 bg-muted/40 border-none font-bold px-8 text-2xl shadow-inner ring-1 ring-white/10 text-foreground" placeholder="e.g. 1500.00" />
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-6 bg-white/[0.02] p-8 rounded-[2rem] ring-1 ring-white/5">
                    <Label className="font-bold text-[11px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-50">Collection Status</Label>
                    <Tabs value={editStatus} onValueChange={(v) => setEditStatus(v as any)}>
                       <TabsList className="grid grid-cols-2 h-16 bg-muted/40 rounded-2xl p-2 border-none ring-1 ring-white/10">
