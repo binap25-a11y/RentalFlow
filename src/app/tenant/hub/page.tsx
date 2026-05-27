@@ -126,7 +126,7 @@ export default function TenantHub() {
       }
     } catch (error: any) {
       console.error('CHATBOT ERROR:', error);
-      const errorMessage = `[GEMINI ALERT]: ${error.message || 'Service synchronization lost. Please refresh the page.'}`;
+      const errorMessage = `[GEMINI ERROR]: ${error.message || 'Service synchronization lost. Please refresh the page.'}`;
       setChatHistory(prev => {
         const newHistory = [...prev];
         const lastMsg = newHistory[newHistory.length - 1];

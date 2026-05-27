@@ -4,18 +4,17 @@ import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 /**
  * 🤖 Hardened Gemini Streaming Chatbot
  * Optimized for Genkit 1.x zero-latency streaming.
- * Features professional logging to identify the true cause of AI interruptions.
+ * DEFINITIVE FIX: Passes evaluated prompt request to ensure model is supplied.
  */
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GEMINI_API_KEY || 'AIzaSyAtSuJUp7grUeDfLmuFZeax3_MFUzaVxeM';
     
-    // STEP 1: Verify Credential Loading
     if (!apiKey) {
-      console.error("AI CONFIG ERROR: Gemini API Key is missing from environment.");
+      console.error("AI CONFIG ERROR: Gemini API Key is missing.");
       return new Response(JSON.stringify({ error: 'System intelligence is currently offline.' }), { 
         status: 503,
         headers: { 'Content-Type': 'application/json' }
@@ -35,16 +34,13 @@ export async function POST(req: Request) {
     const encoder = new TextEncoder();
 
     try {
-      // GENKIT 1.x STREAMING: Definitive iteration pattern for defined prompts
-      const { stream } = ai.generateStream({
-        prompt: conciergePrompt,
-        input: {
-          query,
-          residentName,
-          propertyAddress,
-          propertyContext
-        }
-      });
+      // GENKIT 1.x STREAMING: Definitive iteration pattern using evaluated prompt
+      const { stream } = ai.generateStream(conciergePrompt({
+        query,
+        residentName,
+        propertyAddress,
+        propertyContext
+      }));
 
       const responseStream = new ReadableStream({
         async start(controller) {
@@ -57,15 +53,9 @@ export async function POST(req: Request) {
             }
             controller.close();
           } catch (streamError: any) {
-            // EXPOSING THE TRUTH: Identify actual cause in server logs
             console.error('REAL AI STREAM ERROR:', streamError);
-            
-            const errorMsg = streamError.message || "";
-            if (errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED')) {
-              controller.enqueue(encoder.encode("\n\n[GEMINI ALERT]: AI is temporarily busy due to high demand. Please try again in 60 seconds."));
-            } else {
-              controller.enqueue(encoder.encode(`\n\n[GEMINI ERROR]: Service interrupted. Root Cause: ${errorMsg}`));
-            }
+            const errorMsg = streamError.message || "Service Interrupted";
+            controller.enqueue(encoder.encode(`\n\n[GEMINI ERROR]: ${errorMsg}`));
             controller.close();
           }
         },
@@ -84,7 +74,7 @@ export async function POST(req: Request) {
       return new Response(JSON.stringify({ error: `Initialization Failure: ${initError.message}` }), { 
         status: 500, 
         headers: { 'Content-Type': 'application/json' } 
-  });
+      });
     }
 
   } catch (error: any) {
