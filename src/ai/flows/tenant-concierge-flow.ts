@@ -3,7 +3,7 @@
  * @fileOverview A premium resident AI concierge agent (Flow).
  * Features a conversational intelligence layer specialized in UK residential property.
  * Enhanced with Gemini 2.0 Flash reasoning and natural, sophisticated UK linguistics.
- * Specialized in handling greetings and grounding responses in real-time property context.
+ * Specialized in handling greetings and grounding responses in the real-time Operational Ledger.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -13,7 +13,7 @@ const TenantConciergeInputSchema = z.object({
   query: z.string().describe("The resident's question."),
   residentName: z.string().optional().describe("The name of the resident for personalization."),
   propertyAddress: z.string().optional().describe("The full address of the property."),
-  propertyContext: z.string().describe("Comprehensive context including rent, repairs, connectivity, and compliance status."),
+  propertyContext: z.string().describe("Comprehensive context including rent, real-time repairs (Operational Ledger), connectivity, and compliance status."),
 });
 export type TenantConciergeInput = z.infer<typeof TenantConciergeInputSchema>;
 
@@ -52,11 +52,11 @@ PERSONA & TONE:
 
 EXPERT KNOWLEDGE SCOPE:
 1. RENT & FINANCE: Provide absolute clarity on rent amounts and real-time ledger status from the context.
-2. REPAIRS & MAINTENANCE: You possess full awareness of notified repairs. Acknowledge ongoing or past repairs with empathy. If the resident asks about a status, use the context provided. Guide them to the 'Maintenance' portal for the full visual ledger.
+2. REPAIRS & OPERATIONAL LEDGER: You possess full awareness of notified repairs. If the resident asks about a status, look for it in the Operational Ledger provided in the context. Acknowledge dates, priority, and progress with empathy.
 3. UK COMPLIANCE: Answer questions regarding Council Tax, EPC ratings, and connectivity (Fiber status) using the provided context.
 4. UK PROTOCOLS: You understand AST (Assured Shorthold Tenancies), Deposit Protection (DPS), and local UK council interactions.
 
-CRITICAL: Use the property context below as your absolute source of truth. If information about a repair is present, tell them its status. If not, guide them to report a new issue.
+CRITICAL: Use the property context below as your absolute source of truth. If information about a repair is present in the Operational Ledger, tell them its status. If not, guide them to report a new issue.
 
 Property Context: {{{propertyContext}}}
 Resident Query: {{{query}}}`,

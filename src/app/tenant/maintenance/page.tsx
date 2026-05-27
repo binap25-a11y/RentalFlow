@@ -38,17 +38,18 @@ import {
   ShieldAlert, 
   ChevronRight,
   Activity,
-  History
+  History,
+  CalendarDays,
+  HardHat
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { notifyLandlordOfRequest } from "@/lib/actions/email-actions";
 import { cn } from "@/lib/utils";
 
 /**
  * @fileOverview High-Fidelity Resident Maintenance Hub.
- * Features the "Flow Shield" AI troubleshooting engine and a Real-Time Operational Ledger.
- * Optimized for professional visibility of all notified work and in-progress updates.
+ * Features an Enriched Operational Ledger and "Flow Shield" AI Triage.
  */
 
 export default function TenantMaintenancePage() {
@@ -80,14 +81,11 @@ export default function TenantMaintenancePage() {
 
   const { data: requests, isLoading: isRequestsLoading } = useCollection(requestsQuery);
 
-  // Sorting: Work in progress first, then by date
   const sortedRequests = useMemo(() => {
     if (!requests) return [];
     return [...requests].sort((a, b) => {
-      // Completed items go to bottom
       if (a.status === 'completed' && b.status !== 'completed') return 1;
       if (a.status !== 'completed' && b.status === 'completed') return -1;
-      // Otherwise sort by most recent
       return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
     });
   }, [requests]);
@@ -139,10 +137,10 @@ export default function TenantMaintenancePage() {
         description
       });
     } catch (e) {
-      console.warn('Email dispatch skipped or failed.');
+      console.warn('Email dispatch skipped.');
     }
 
-    toast({ title: "Work Notified", description: "The maintenance record has been synchronized with management." });
+    toast({ title: "Work Notified", description: "The maintenance record has been synchronized." });
     setTitle('');
     setDescription('');
     setTroubleshootResult(null);
@@ -159,7 +157,7 @@ export default function TenantMaintenancePage() {
         </Badge>
         <h1 className="text-4xl font-headline font-bold text-foreground tracking-tight">Maintenance Hub</h1>
         <p className="text-muted-foreground font-medium font-body text-xl opacity-70 leading-relaxed max-w-3xl">
-          Report new issues with AI-driven troubleshooting or track the real-time progress of existing property repairs.
+          Report issues with AI triage or track the real-time progress of existing property repairs.
         </p>
       </div>
 
@@ -215,11 +213,11 @@ export default function TenantMaintenancePage() {
                   <form className="space-y-8">
                     <div className="space-y-3">
                       <Label className="font-bold text-[10px] uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">Issue Identifier</Label>
-                      <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Master Bedroom Radiator Leak" className="rounded-2xl h-14 bg-muted/20 border-none font-bold text-foreground px-6 shadow-inner ring-1 ring-white/5" />
+                      <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Kitchen Tap Leak" className="rounded-2xl h-14 bg-muted/20 border-none font-bold text-foreground px-6 shadow-inner ring-1 ring-white/5" />
                     </div>
                     <div className="space-y-3">
                       <Label className="font-bold text-[10px] uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">Detailed Narrative</Label>
-                      <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Provide full context for our maintenance team..." className="rounded-2xl min-h-[200px] bg-muted/20 border-none font-medium text-foreground leading-relaxed px-6 py-5 shadow-inner ring-1 ring-white/5" />
+                      <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Provide full context for management..." className="rounded-2xl min-h-[200px] bg-muted/20 border-none font-medium text-foreground leading-relaxed px-6 py-5 shadow-inner ring-1 ring-white/5" />
                     </div>
                     <div className="space-y-4 pt-4">
                       <Button type="button" className="w-full rounded-2xl h-16 bg-accent text-white font-bold shadow-2xl shadow-accent/20 transition-all hover:scale-[1.02] border-none font-headline uppercase tracking-widest text-[11px]" disabled={isTroubleshooting || !description} onClick={handleTroubleshoot}>
@@ -241,7 +239,7 @@ export default function TenantMaintenancePage() {
                 <History className="w-7 h-7 mr-4 text-accent" />
                 Operational Ledger
               </h3>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] opacity-40 font-headline">Live Feed</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] opacity-40 font-headline">Verified Source of Truth</p>
             </div>
             
             <div className="grid gap-6">
@@ -256,39 +254,75 @@ export default function TenantMaintenancePage() {
                   <p className="text-foreground font-bold font-headline uppercase tracking-[0.3em] text-xs">No maintenance records initialized</p>
                 </Card>
               ) : (
-                sortedRequests.map(req => (
-                  <Card key={req.id} className="border-none shadow-sm group bg-card rounded-[2.5rem] overflow-hidden ring-1 ring-border transition-all hover:shadow-2xl hover:ring-accent/10">
-                    <CardContent className="p-10">
-                      <div className="flex flex-col md:flex-row justify-between items-start gap-8">
-                        <div className="space-y-4 flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-4">
-                            <Badge className={cn(
-                              "uppercase text-[10px] font-bold px-5 py-1.5 tracking-[0.2em] rounded-full border-none shadow-sm font-headline",
-                              req.status === 'completed' ? 'bg-emerald-500 text-white' : 
-                              req.status === 'in-progress' ? 'bg-accent text-white animate-pulse' :
-                              'bg-primary/10 text-primary'
-                            )}>
-                              {req.status}
-                            </Badge>
-                            <span className="text-[11px] text-muted-foreground font-bold uppercase tracking-widest flex items-center opacity-60 font-headline">
-                              <Clock className="w-4 h-4 mr-2" />
-                              {req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'PPp') : 'Just now'}
-                            </span>
+                sortedRequests.map(req => {
+                  const scheduledDate = req.scheduledDate ? new Date(req.scheduledDate) : null;
+                  return (
+                    <Card key={req.id} className="border-none shadow-sm group bg-card rounded-[2.5rem] overflow-hidden ring-1 ring-border transition-all hover:shadow-2xl hover:ring-accent/10">
+                      <CardContent className="p-10">
+                        <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+                          <div className="space-y-6 flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-3">
+                              <Badge className={cn(
+                                "uppercase text-[9px] font-bold px-4 py-1 tracking-[0.2em] rounded-full border-none shadow-sm font-headline",
+                                req.status === 'completed' ? 'bg-emerald-500 text-white' : 
+                                req.status === 'in-progress' ? 'bg-accent text-white animate-pulse' :
+                                'bg-primary/10 text-primary'
+                              )}>
+                                {req.status}
+                              </Badge>
+                              <Badge variant="outline" className={cn(
+                                "uppercase text-[9px] font-bold border-border font-headline tracking-[0.2em] px-4 py-1 rounded-full",
+                                req.priority === 'critical' ? 'border-red-500/50 text-red-600 bg-red-500/5' : 'text-muted-foreground opacity-60'
+                              )}>
+                                {req.priority}
+                              </Badge>
+                              <Badge variant="secondary" className="uppercase text-[8px] font-bold tracking-[0.1em] px-3 py-1 rounded-full bg-muted/50 text-muted-foreground">
+                                {req.category || 'General'}
+                              </Badge>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <h4 className="text-2xl font-bold font-headline text-foreground group-hover:text-accent transition-colors leading-tight tracking-tight truncate block">{req.title}</h4>
+                              <p className="text-base text-muted-foreground leading-relaxed font-body font-medium opacity-80 line-clamp-2">{req.description}</p>
+                            </div>
+
+                            <div className="flex flex-wrap gap-6 pt-6 border-t border-border/50">
+                               <div className="flex items-center gap-3">
+                                  <Clock className="w-4 h-4 text-muted-foreground opacity-40" />
+                                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest font-headline">
+                                    Notified: {req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'PPp') : 'Just now'}
+                                  </span>
+                               </div>
+                               {scheduledDate && isValid(scheduledDate) && (
+                                 <div className="flex items-center gap-3 text-accent">
+                                    <CalendarDays className="w-4 h-4" />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest font-headline">
+                                      Scheduled: {format(scheduledDate, 'PPP')}
+                                    </span>
+                                 </div>
+                               )}
+                               {req.assignedContractorId && (
+                                 <div className="flex items-center gap-3 text-emerald-600">
+                                    <HardHat className="w-4 h-4" />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest font-headline">
+                                      Trade Partner Assigned
+                                    </span>
+                                 </div>
+                               )}
+                            </div>
                           </div>
-                          <h4 className="text-2xl font-bold font-headline text-foreground group-hover:text-accent transition-colors leading-tight tracking-tight truncate block">{req.title}</h4>
-                          <p className="text-base text-muted-foreground leading-relaxed font-body font-medium opacity-80">{req.description}</p>
+                          
+                          <div className={cn(
+                            "p-6 rounded-[2rem] shadow-inner transition-transform group-hover:scale-110 shrink-0",
+                            req.status === 'completed' ? "bg-emerald-500/5 text-emerald-500" : "bg-primary/5 text-primary"
+                          )}>
+                            {req.status === 'completed' ? <CheckCircle2 className="w-10 h-10" /> : <Wrench className="w-10 h-10" />}
+                          </div>
                         </div>
-                        
-                        <div className={cn(
-                          "p-6 rounded-[2rem] shadow-inner transition-transform group-hover:scale-110 shrink-0",
-                          req.status === 'completed' ? "bg-emerald-500/5 text-emerald-500" : "bg-primary/5 text-primary"
-                        )}>
-                          {req.status === 'completed' ? <CheckCircle2 className="w-10 h-10" /> : <Wrench className="w-10 h-10" />}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                      </CardContent>
+                    </Card>
+                  );
+                })
               )}
             </div>
           </div>

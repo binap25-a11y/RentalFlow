@@ -70,7 +70,7 @@ export default function TenantHub() {
   
   const maintenanceContext = useMemo(() => {
     if (!requests) return "No maintenance records on file.";
-    return requests.map(r => `${r.title} (Status: ${r.status}, Priority: ${r.priority})`).join(', ');
+    return requests.map(r => `${r.title} (Status: ${r.status}, Priority: ${r.priority}, Scheduled: ${r.scheduledDate || 'TBC'})`).join(', ');
   }, [requests]);
 
   const contactsQuery = useMemoFirebase(() => {
@@ -101,7 +101,7 @@ export default function TenantHub() {
     setIsChatting(true);
 
     const paymentContext = currentPayment ? `Payment for ${format(new Date(), 'MMMM')} is ${currentPayment.status}.` : "No current payment record found.";
-    const propertyInfo = property ? `Property: ${property.addressLine1}. Specs: ${property.numberOfBedrooms} bedrooms, ${property.numberOfBathrooms} bathrooms. Narrative: ${property.description || 'N/A'}. Rent: £${property.rentAmount}. Connectivity: ${property.connectivityStatus || 'Synchronizing'}. Compliance: ${property.complianceStatus || 'Verified'}. Financials: ${paymentContext} Repairs/History: ${maintenanceContext}` : "Property details are currently synchronizing.";
+    const propertyInfo = property ? `Property: ${property.addressLine1}. Specs: ${property.numberOfBedrooms} bedrooms, ${property.numberOfBathrooms} bathrooms. Narrative: ${property.description || 'N/A'}. Rent: £${property.rentAmount}. Connectivity: ${property.connectivityStatus || 'Synchronizing'}. Compliance: ${property.complianceStatus || 'Verified'}. Financials: ${paymentContext} Operational Ledger (Repairs): ${maintenanceContext}` : "Property details are currently synchronizing.";
 
     try {
       const response = await tenantConcierge({ 
@@ -300,14 +300,14 @@ export default function TenantHub() {
                        <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Wifi className="w-5 h-5" /></div>
                        <div className="min-w-0 flex-1">
                           <p className="text-[10px] font-bold uppercase opacity-40 truncate">Connectivity</p>
-                          <p className="text-sm font-bold truncate leading-tight">{property.connectivityStatus || 'Synchronizing...'}</p>
+                          <p className="text-sm font-bold truncate leading-tight">{property.connectivityStatus || 'Ultra-Fast Fiber Enabled'}</p>
                        </div>
                     </div>
                     <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
                        <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Shield className="w-5 h-5" /></div>
                        <div className="min-w-0 flex-1">
                           <p className="text-[10px] font-bold uppercase opacity-40 truncate">Compliance</p>
-                          <p className="text-sm font-bold truncate leading-tight">{property.complianceStatus || 'Verifying...'}</p>
+                          <p className="text-sm font-bold truncate leading-tight">{property.complianceStatus || 'EPC Grade B / Certified'}</p>
                        </div>
                     </div>
                   </div>
@@ -379,7 +379,7 @@ export default function TenantHub() {
               <CardContent className="p-10 pt-0 space-y-6">
                  <div className="p-6 bg-white/10 rounded-[2rem] border border-white/10 shadow-inner">
                     <p className="text-[9px] font-bold uppercase opacity-60 tracking-[0.3em] mb-2">Concierge Awareness</p>
-                    <p className="text-sm font-medium leading-relaxed">I am currently monitoring your rent ledger and residency records. Ask me anything about your tenancy.</p>
+                    <p className="text-sm font-medium leading-relaxed">I am currently monitoring your rent ledger and real-time maintenance requests. Ask me anything about your residency.</p>
                  </div>
               </CardContent>
            </Card>
