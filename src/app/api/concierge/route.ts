@@ -12,6 +12,10 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: Request) {
   try {
     const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GEMINI_API_KEY;
+    
+    // STEP 1: Verify Credential Loading
+    console.log("GEMINI KEY STATUS:", !!apiKey);
+    
     if (!apiKey) {
       console.error("AI CONFIG ERROR: Gemini API Key is missing from environment.");
       return new Response(JSON.stringify({ error: 'System intelligence is currently offline. Please configure API credentials.' }), { 
@@ -62,7 +66,7 @@ export async function POST(req: Request) {
             if (errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED')) {
               controller.enqueue(encoder.encode("\n\n[GEMINI ALERT]: AI is temporarily busy due to high demand. Please try again in 60 seconds."));
             } else {
-              controller.enqueue(encoder.encode("\n\n[GEMINI ERROR]: Service interrupted. Please refresh the page and verify your API key status."));
+              controller.enqueue(encoder.encode(`\n\n[GEMINI ERROR]: Service interrupted. Root Cause: ${errorMsg}`));
             }
             controller.close();
           }

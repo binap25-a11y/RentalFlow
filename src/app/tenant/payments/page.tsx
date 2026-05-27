@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
@@ -21,7 +20,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * @fileOverview High-Fidelity Resident Rent & Finance Ledger.
- * Realigned Sequence: Header -> Tenancy Total Paid (Summary Card) -> Audit Trail.
+ * Sequence: Header -> Tenancy Total Paid (Summary Card) -> Audit Trail.
  */
 
 export default function TenantPaymentsPage() {

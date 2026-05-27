@@ -20,8 +20,7 @@ import { format } from "date-fns";
 
 /**
  * @fileOverview High-Fidelity Gemini Resident Hub.
- * Optimized Sequence: Hero -> Identity Bar -> Rent Ledger -> Narrative -> Property DNA -> Gemini Chatbot.
- * Fixed: Phone ReferenceError and Stream Decoder synchronization.
+ * Sequence: Hero -> Identity Bar -> Rent Ledger -> Narrative -> Property DNA -> Gemini Chatbot.
  */
 
 export default function TenantHub() {
@@ -75,6 +74,7 @@ export default function TenantHub() {
   }, [chatHistory, isChatOpen]);
 
   const handleAskConcierge = async (text?: string) => {
+    // Spam Guard
     if (isChatting) return;
 
     const queryText = text || chatQuery.trim();
@@ -127,7 +127,7 @@ export default function TenantHub() {
       }
     } catch (error: any) {
       console.error('CHATBOT ERROR:', error);
-      const errorMessage = `[GEMINI ALERT]: ${error.message || 'The intelligence engine is temporarily busy. Please refresh and try again.'}`;
+      const errorMessage = `[GEMINI ERROR]: ${error.message || 'Service interrupted. Please refresh and try again.'}`;
       setChatHistory(prev => {
         const newHistory = [...prev];
         const lastMsg = newHistory[newHistory.length - 1];
@@ -181,6 +181,7 @@ export default function TenantHub() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-8 space-y-10">
           <Card className="border-none shadow-2xl overflow-hidden bg-card group ring-1 ring-border">
+            {/* 1. CINEMATIC HERO */}
             <div className="relative h-[450px] md:h-[550px] w-full bg-muted overflow-hidden">
               {primaryImageUrl ? (
                 <img 
@@ -195,6 +196,7 @@ export default function TenantHub() {
               )}
             </div>
 
+            {/* 2. IDENTITY BAR */}
             <div className="p-10 border-b border-border bg-white/[0.01] space-y-4">
                <h2 className="text-3xl md:text-4xl font-headline font-bold text-foreground tracking-tight leading-tight">
                  {property.addressLine1}, {property.city}, {property.zipCode}
@@ -211,6 +213,7 @@ export default function TenantHub() {
             </div>
 
             <CardContent className="p-10 md:p-12 space-y-12">
+              {/* 3. RENT LEDGER */}
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
@@ -230,6 +233,7 @@ export default function TenantHub() {
                 </div>
               </div>
 
+              {/* 4. RESIDENCE NARRATIVE */}
               <div className="space-y-6">
                 <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
                 <div className="p-8 bg-primary/5 rounded-[2rem] border border-border">
@@ -240,6 +244,7 @@ export default function TenantHub() {
                 </div>
               </div>
 
+              {/* 5. PROPERTY DNA */}
               <div className="space-y-6">
                 <h3 className="font-bold font-headline text-xl text-foreground flex items-center tracking-tight"><ShieldCheck className="w-5 h-5 mr-3 text-accent" /> Property DNA</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -260,6 +265,7 @@ export default function TenantHub() {
                 </div>
               </div>
 
+              {/* 6. FITTED ACTIONS */}
               <div className="pt-8 border-t border-border/50">
                 <Button variant="outline" className="w-full h-16 rounded-[1.75rem] border-border bg-card hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all" onClick={handleDownloadStatement}>
                    <Download className="w-5 h-5 mr-3 text-accent" /> Download Rent Statement
@@ -299,7 +305,7 @@ export default function TenantHub() {
               </CardHeader>
               <CardContent className="p-10 pt-0">
                  <div className="p-6 bg-white/10 rounded-[2rem] border border-white/10 shadow-inner">
-                    <p className="text-sm font-medium leading-relaxed">Powered by Gemini 2.0. Ask me about your residency, rent, or maintenance status.</p>
+                    <p className="text-sm font-medium leading-relaxed">Powered by Gemini 2.0 Flash. Ask me about your residency, rent, or maintenance status.</p>
                  </div>
               </CardContent>
            </Card>
