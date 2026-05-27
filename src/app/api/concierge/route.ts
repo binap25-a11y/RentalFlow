@@ -1,11 +1,11 @@
 import { NextRequest } from 'next/server';
-import { ai } from '@/ai/genkit';
+import { ai, googleAI } from '@/ai/genkit';
 import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 
 /**
  * @fileOverview High-Fidelity Streaming Concierge Endpoint.
  * Enables zero-latency AI responses by streaming Gemini chunks directly to the client.
- * Hardened for Genkit 1.x streaming protocols and runtime stability.
+ * Hardened for Genkit 1.x streaming protocols and production stability.
  */
 
 export const dynamic = 'force-dynamic';
@@ -19,24 +19,28 @@ export async function POST(req: NextRequest) {
       return new Response(JSON.stringify({ error: 'Query is required' }), { status: 400 });
     }
 
-    // Correct Genkit 1.x streaming orchestration
+    // Correct Genkit 1.x streaming orchestration with explicit model for stability
     const { stream } = ai.generateStream({
-      prompt: conciergePrompt,
-      input: {
+      model: googleAI.model('gemini-1.5-flash'),
+      prompt: conciergePrompt({
         query,
         residentName,
         propertyAddress,
         propertyContext
+      }),
+      config: {
+        temperature: 0.7
       }
     });
 
     const responseStream = new ReadableStream({
       async start(controller) {
+        const encoder = new TextEncoder();
         try {
           for await (const chunk of stream) {
             const text = chunk.text;
             if (text) {
-              controller.enqueue(new TextEncoder().encode(text));
+              controller.enqueue(encoder.encode(text));
             }
           }
           controller.close();
