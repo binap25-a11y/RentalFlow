@@ -6,7 +6,7 @@ import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 /**
  * @fileOverview Hardened Streaming Concierge Endpoint.
  * Optimized for Gemini 2.0 Flash and Genkit 1.x zero-latency streaming.
- * Handles quota limits and credential errors word-by-word.
+ * Handles quota limits and credential errors word-by-word with professional fallback notifications.
  */
 
 export const dynamic = 'force-dynamic';
@@ -26,8 +26,8 @@ export async function POST(req: NextRequest) {
     const encoder = new TextEncoder();
 
     try {
-      // GENKIT 1.x ORCHESTRATION: Stream initialization is synchronous
-      // GOOGLE_GENAI_API_KEY must be set in .env
+      // GENKIT 1.x ORCHESTRATION: Stream initialization is synchronous.
+      // chunks are awaited during iteration.
       const { stream } = ai.generateStream(
         conciergePrompt({
           query,
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
             } else if (errorMsg.includes('API_KEY_INVALID') || errorMsg.includes('403')) {
               controller.enqueue(encoder.encode("\n\n[SYSTEM ALERT]: Credential verification pending. Please verify your Google API Key configuration in the management console."));
             } else {
-              controller.enqueue(encoder.encode("\n\n[SYSTEM ERROR]: Communication interrupted. Please try again or contact management if the issue persists."));
+              controller.enqueue(encoder.encode("\n\n[SYSTEM ERROR]: Communication interrupted due to a synchronization delay. Please try again or contact management if the issue persists."));
             }
             controller.close();
           }
