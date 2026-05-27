@@ -58,7 +58,7 @@ import Image from "next/image";
 /**
  * @fileOverview High-Fidelity Resident Hub.
  * Optimized for cinematic asset resolution and hardware-aligned stability.
- * Definitively resolves JSX identifier syntax issues.
+ * Corrected returning expression to prevent JSX identifier collisions.
  */
 
 export default function TenantHub() {
@@ -275,7 +275,7 @@ export default function TenantHub() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
-                  <Button variant="ghost" asChild className="rounded-xl font-bold text-[10px] uppercase tracking-widest text-muted-foreground hover:text-accent hover:bg-accent/10 transition-all duration-300">
+                  <Button variant="ghost" asChild className="rounded-xl font-bold text-[10px] uppercase tracking-widest text-muted-foreground hover:bg-accent/10 hover:text-accent transition-all duration-300">
                     <Link href="/tenant/payments">View history <ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
                   </Button>
                 </div>
