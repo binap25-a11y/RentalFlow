@@ -12,7 +12,6 @@ import {
   ReceiptText,
   ShieldCheck, 
   Download, 
-  Info, 
   Wifi, 
   Shield, 
   PoundSterling, 
@@ -40,7 +39,7 @@ import {
   Dialog, 
   DialogContent, 
   DialogTitle,
-  DialogHeader,
+  DialogHeader, 
   DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog";
@@ -55,8 +54,8 @@ import { notifyLandlordOfRequest } from "@/lib/actions/email-actions";
 
 /**
  * @fileOverview High-Fidelity Personalized Resident Hub.
- * Optimized for cinematic asset resolution and tailored user experience.
- * Definitively resolved syntax identifier collision.
+ * Optimized for hardware-aligned syntax and cinematic asset resolution.
+ * Resolved identifier collisions for zero-latency performance.
  */
 
 export default function TenantHub() {
@@ -79,7 +78,7 @@ export default function TenantHub() {
     setIsClient(true); 
   }, []);
 
-  // PROFILE SYNC (For personalization)
+  // PROFILE SYNC
   const userDocRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, 'users', user.uid);

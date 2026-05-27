@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -35,6 +34,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
+
+/**
+ * @fileOverview Premium Contractor & SOS Directory.
+ * Optimized for high-fidelity Light/Dark mode consistency.
+ */
 
 const DEFAULT_UK_SERVICES = [
   { name: "Emergency Services (Police, Fire, Ambulance)", phone: "999 or 112", role: "Primary Emergency" },
@@ -190,7 +194,7 @@ export default function LandlordEmergencyContactsPage() {
     if (!db) return;
     const contactRef = doc(db, 'emergencyContacts', id);
     deleteDocumentNonBlocking(contactRef);
-    toast({ title: "Partner Removed" });
+    toast({ title: "Record Removed" });
   };
 
   const downloadPDF = () => {
@@ -232,7 +236,7 @@ export default function LandlordEmergencyContactsPage() {
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20 text-primary-foreground px-6">
+              <Button variant="outline" className="rounded-xl h-11 font-bold shadow-sm bg-card hover:bg-muted text-foreground px-6 border-border transition-all">
                 <Plus className="w-4 h-4 mr-2" /> Add Partner
               </Button>
             </DialogTrigger>
@@ -287,7 +291,7 @@ export default function LandlordEmergencyContactsPage() {
                 <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
                   <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 text-primary-foreground font-headline">
                     <Save className="w-4 h-4 mr-2" />
-                    {editingContact ? "Update Ledger" : "Commit to Database"}
+                    {editingContact ? "Update Record" : "Commit to Database"}
                   </Button>
                 </DialogFooter>
               </form>
