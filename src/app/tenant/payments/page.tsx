@@ -9,22 +9,19 @@ import {
   CreditCard, 
   History, 
   Loader2, 
-  CheckCircle2, 
-  Clock, 
-  AlertCircle, 
   ArrowLeft,
   Download,
   PoundSterling,
   ShieldCheck
 } from "lucide-react";
-import { format, isValid } from "date-fns";
+import { format } from "date-fns";
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 /**
  * @fileOverview High-Fidelity Resident Rent & Finance Ledger.
- * Sequence: Header -> Tenancy Total Paid -> Audit Trail.
+ * Sequence: Header -> Tenancy Total Paid (Summary Card) -> audit trail.
  */
 
 export default function TenantPaymentsPage() {
@@ -66,36 +63,34 @@ export default function TenantPaymentsPage() {
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-7xl mx-auto pb-24 text-left">
       {/* 1. HEADER SECTION */}
-      <div className="space-y-8">
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-2xl hover:bg-primary/5 transition-colors h-10 w-10 border border-white/5 shrink-0 shadow-sm">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1.5 rounded-full font-bold uppercase tracking-[0.2em] text-[9px]">
-               <PoundSterling className="w-3.5 h-3.5 mr-2" /> Verified Financial Ledger
-            </Badge>
-          </div>
-          <h1 className="text-4xl font-headline font-bold text-foreground tracking-tight">Rent & Finance</h1>
-          <p className="text-muted-foreground font-medium font-body text-lg opacity-70 max-w-2xl leading-relaxed">
-            Review your historical rent receipts and monitor active collection cycles for your residency.
-          </p>
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-2xl hover:bg-primary/5 transition-colors h-10 w-10 border border-white/5 shrink-0 shadow-sm">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1.5 rounded-full font-bold uppercase tracking-[0.2em] text-[9px]">
+             <PoundSterling className="w-3.5 h-3.5 mr-2" /> Verified Financial Ledger
+          </Badge>
         </div>
+        <h1 className="text-4xl font-headline font-bold text-foreground tracking-tight">Rent & Finance</h1>
+        <p className="text-muted-foreground font-medium font-body text-lg opacity-70 max-w-2xl leading-relaxed">
+          Review your historical rent receipts and monitor active collection cycles for your residency.
+        </p>
+      </div>
 
-        {/* 2. FINANCIAL SUMMARY (STRATEGICALLY BELOW HEADER) */}
-        <div className="flex flex-wrap gap-4 pt-4">
-           <div className="p-8 bg-card rounded-[2.5rem] border border-border shadow-sm flex flex-col gap-1 min-w-[280px] relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:rotate-12 transition-transform duration-700">
-                 <ShieldCheck className="w-16 h-16 text-emerald-500" />
-              </div>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] opacity-60 font-headline">Tenancy Total Paid</p>
-              <p className="text-4xl font-bold font-headline text-foreground tracking-tighter">£{financialSummary.totalPaid.toLocaleString()}</p>
-              <div className="flex items-center gap-2 mt-4">
-                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                 <span className="text-[8px] font-bold uppercase tracking-widest text-emerald-600">Audit Pulse Active</span>
-              </div>
-           </div>
-        </div>
+      {/* 2. FINANCIAL SUMMARY (STRATEGICALLY BELOW HEADER) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="p-8 bg-card rounded-[2.5rem] border border-border shadow-sm flex flex-col gap-1 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:rotate-12 transition-transform duration-700">
+                <ShieldCheck className="w-16 h-16 text-emerald-500" />
+            </div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] opacity-60 font-headline">Tenancy Total Paid</p>
+            <p className="text-4xl font-bold font-headline text-foreground tracking-tighter">£{financialSummary.totalPaid.toLocaleString()}</p>
+            <div className="flex items-center gap-2 mt-4">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[8px] font-bold uppercase tracking-widest text-emerald-600">Audit Pulse Active</span>
+            </div>
+          </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -188,7 +183,7 @@ export default function TenantPaymentsPage() {
                 </CardTitle>
              </CardHeader>
              <CardContent className="p-10 space-y-4">
-                <Button variant="outline" className="w-full h-14 rounded-2xl border-border bg-background hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all shadow-sm">
+                <Button variant="outline" className="w-full h-14 rounded-2xl border-border bg-background hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all shadow-sm" onClick={handleDownloadStatement}>
                    Download Annual Statement (PDF)
                 </Button>
              </CardContent>
@@ -197,4 +192,11 @@ export default function TenantPaymentsPage() {
       </div>
     </div>
   );
+
+  async function handleDownloadStatement() {
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF();
+    doc.text(`RENTAL STATEMENT - PORTFOLIO HISTORY`, 20, 20);
+    doc.save(`Statement_Portfolio_Summary.pdf`);
+  }
 }

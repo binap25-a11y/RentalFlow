@@ -5,7 +5,7 @@ import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 
 /**
  * 🤖 Hardened Streaming Concierge Endpoint
- * Optimized for Genkit 1.x synchronous stream initialization and real error logging.
+ * Optimized for Genkit 1.x synchronous stream initialization and resilient error handling.
  */
 
 export const dynamic = 'force-dynamic';
@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
 
     try {
       // GENKIT 1.x ORCHESTRATION: generateStream returns the stream object synchronously.
+      // Verified pattern: Pass the results of the prompt call.
       const { stream } = ai.generateStream(
         conciergePrompt({
           query,
@@ -46,8 +47,8 @@ export async function POST(req: NextRequest) {
             }
             controller.close();
           } catch (streamError: any) {
-            // REAL LOGGING: Hitting the server console with actual error data
-            console.error('AI STREAM ERROR:', streamError);
+            // REAL LOGGING: Server console will show the actual error (429, 403, etc.)
+            console.error('AI STREAM ITERATION ERROR:', streamError);
             
             const errorMsg = streamError.message || "";
             if (errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED')) {
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
       });
 
     } catch (initError: any) {
-      console.error('AI INIT ERROR:', initError);
+      console.error('AI STREAM INIT ERROR:', initError);
       return new Response(JSON.stringify({ error: initError.message }), { 
         status: 500, 
         headers: { 'Content-Type': 'application/json' } 

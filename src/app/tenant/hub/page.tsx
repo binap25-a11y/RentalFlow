@@ -2,7 +2,7 @@
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,8 +11,7 @@ import {
   Loader2, Building2, Sparkles, Send, Bot, 
   ChevronRight, ReceiptText,
   ShieldCheck, RefreshCcw, Download, 
-  Info, RotateCcw, Phone,
-  MessageCircle, X, Wifi, Shield, Clock, PoundSterling
+  Info, MessageSquare, X, Wifi, Shield, Clock, PoundSterling
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -67,7 +66,7 @@ export default function TenantHub() {
   
   const maintenanceContext = useMemo(() => {
     if (!requests) return "No maintenance records on file.";
-    return requests.map(r => `${r.title}: ${r.description} (Status: ${r.status}, Priority: ${r.priority}, Scheduled: ${r.scheduledDate || 'TBC'})`).join(' | ');
+    return requests.map(r => `${r.title}: ${r.description} (Status: ${r.status}, Priority: ${r.priority})`).join(' | ');
   }, [requests]);
 
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [chatHistory, isChatOpen]);
@@ -82,7 +81,7 @@ export default function TenantHub() {
     setIsChatting(true);
 
     const paymentContext = currentPayment ? `Payment for ${format(new Date(), 'MMMM')} is ${currentPayment.status}.` : "No current payment record found.";
-    const propertyInfo = property ? `Property: ${property.addressLine1}. Rent: £${property.rentAmount}. Connectivity: ${property.connectivityStatus || 'Ultra-Fast Fiber Enabled'}. Compliance: ${property.complianceStatus || 'EPC Grade B / Certified'}. Financials: ${paymentContext} Repairs: ${maintenanceContext}` : "Property details are synchronizing.";
+    const propertyInfo = property ? `Property: ${property.addressLine1}. Rent: £${property.rentAmount}. Connectivity: ${property.connectivityStatus || 'Ultra-Fast Fiber Enabled'}. Compliance: ${property.complianceStatus || 'EPC Grade B / Certified'}. Repairs: ${maintenanceContext}. ${paymentContext}` : "Property details are synchronizing.";
 
     try {
       const response = await fetch('/api/concierge', {
@@ -97,10 +96,7 @@ export default function TenantHub() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("AI API ERROR:", errorData);
-        setChatHistory(prev => [...prev, { role: 'bot', text: "[SYSTEM]: AI is temporarily busy. Please try again." }]);
-        return;
+        throw new Error('API route initialization failed');
       }
 
       const reader = response.body?.getReader();
@@ -131,8 +127,6 @@ export default function TenantHub() {
     }
   };
 
-  const handleClearChat = () => setChatHistory([]);
-
   const handleDownloadStatement = async () => {
     if (!property) return;
     const { jsPDF } = await import("jspdf");
@@ -143,18 +137,10 @@ export default function TenantHub() {
 
   if (!isClient || isPropLoading || isRequestsLoading) return (
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-1000 pb-32 text-left bg-background">
+      <div className="h-[400px] w-full bg-muted/40 animate-pulse rounded-[3rem]" />
       <div className="space-y-4">
         <div className="h-10 w-64 bg-muted rounded-full animate-pulse" />
         <div className="h-6 w-48 bg-muted/40 rounded-full animate-pulse" />
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        <div className="lg:col-span-8 space-y-10">
-          <Card className="border-none shadow-2xl rounded-[3rem] overflow-hidden bg-card ring-1 ring-border">
-            <div className="relative h-[400px] w-full bg-muted/40 animate-pulse flex items-center justify-center">
-              <Building2 className="w-20 h-20 text-foreground/10" />
-            </div>
-          </Card>
-        </div>
       </div>
     </div>
   );
@@ -200,7 +186,7 @@ export default function TenantHub() {
                  {property.addressLine1}, {property.city}, {property.zipCode}
                </h2>
                <div className="flex items-center gap-4 flex-wrap">
-                 <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold uppercase tracking-[0.2em] text-[10px] py-2.5 px-6 rounded-full shadow-sm font-headline shrink-0 h-fit w-fit">
+                 <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold uppercase tracking-[0.2em] text-[10px] py-2.5 px-6 rounded-full shadow-sm font-headline shrink-0 h-fit">
                    <ShieldCheck className="w-4 h-4 mr-2" /> Active Tenancy
                  </Badge>
                  <Badge variant="outline" className="border-emerald-500/20 bg-emerald-500/5 text-emerald-600 text-[8px] font-bold uppercase tracking-widest px-4 h-9 flex items-center gap-2 rounded-full">
@@ -378,7 +364,7 @@ export default function TenantHub() {
             isChatOpen ? "bg-card text-foreground ring-1 ring-border" : "bg-primary text-primary-foreground"
           )}
         >
-          {isChatOpen ? <X className="w-8 h-8" /> : <MessageCircle className="w-10 h-10 group-hover:rotate-12 transition-transform" />}
+          {isChatOpen ? <X className="w-8 h-8" /> : <MessageSquare className="w-10 h-10 group-hover:rotate-12 transition-transform" />}
         </button>
       </div>
     </div>
