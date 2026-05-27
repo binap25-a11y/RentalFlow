@@ -8,7 +8,7 @@ import {
   useMemoFirebase, 
   getTenantCollectionQuery 
 } from '@/firebase';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
