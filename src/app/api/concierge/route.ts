@@ -3,8 +3,8 @@ import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 
 /**
  * 🤖 Hardened Streaming Concierge Endpoint
- * Optimized for Genkit 1.x zero-latency streaming and real professional logging.
- * Replaced masked fallback messages with real error logs to expose actual root causes.
+ * Optimized for Genkit 1.x zero-latency streaming.
+ * Provides professional logging to identified the true cause of AI interruptions.
  */
 
 export const dynamic = 'force-dynamic';
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
     const encoder = new TextEncoder();
 
-    // GENKIT 1.x ORCHESTRATION: Correct streaming syntax
+    // GENKIT 1.x STREAMING: Definitive iteration pattern
     try {
       const { stream } = ai.generateStream({
         prompt: conciergePrompt,
@@ -46,14 +46,14 @@ export async function POST(req: Request) {
             }
             controller.close();
           } catch (streamError: any) {
-            // REAL LOGGING: Identify the actual root cause (Quota vs Credential)
+            // EXPOSING THE TRUTH: Identify actual cause (Quota vs Key)
             console.error('REAL AI STREAM ERROR:', streamError);
             
             const errorMsg = streamError.message || "";
             if (errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED')) {
               controller.enqueue(encoder.encode("\n\n[SYSTEM]: AI is temporarily busy. Please try again."));
             } else {
-              controller.enqueue(encoder.encode("\n\n[SYSTEM]: Connection interrupted. Please try again."));
+              controller.enqueue(encoder.encode("\n\n[SYSTEM]: Service Interrupted. Please refresh and try again."));
             }
             controller.close();
           }

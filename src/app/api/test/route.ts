@@ -1,32 +1,35 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { ai } from "@/ai/genkit";
+import { googleAI } from "@genkit-ai/google-genai";
 
 /**
  * 🤖 AI Connectivity Diagnostic Engine
  * Verifies model accessibility and credential status.
- * Use this route to verify your GEMINI_API_KEY.
+ * Performs a live handshake to confirm Gemini API health.
  */
 
 export async function GET() {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY;
+  const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GEMINI_API_KEY;
 
   try {
     if (!apiKey || apiKey.includes('XXXX') || apiKey.length < 10) {
-      throw new Error("API Key is missing or using a placeholder.");
+      throw new Error("API Key is missing or using a placeholder. Ensure GOOGLE_GENAI_API_KEY is set in .env");
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
+    // Attempt a real content generation to verify connectivity
+    const result = await ai.generate({
+      model: googleAI.model("gemini-2.0-flash"),
+      prompt: "Confirm connectivity with 'Identity Verified'.",
     });
 
-    const result = await model.generateContent("Confirm connectivity with 'Identity Verified'.");
+    const responseText = result.text;
 
     return Response.json({
       success: true,
-      text: result.response.text(),
-      engine: "gemini-2.0-flash",
+      handshake: responseText,
       status: "Operational",
-      key_preview: `${apiKey.substring(0, 7)}...`
+      engine: "gemini-2.0-flash",
+      key_source: process.env.GOOGLE_GENAI_API_KEY ? "GOOGLE_GENAI_API_KEY" : "GEMINI_API_KEY",
+      key_preview: `${apiKey.substring(0, 8)}...`
     });
 
   } catch (error: any) {
@@ -36,7 +39,7 @@ export async function GET() {
       success: false,
       error: String(error),
       details: error.message || "Unknown Failure",
-      hint: "Verify GEMINI_API_KEY is correctly set in your environment."
+      hint: "Check your .env file and Google AI Studio project status (studio-3118242301-8f4fd)."
     }, { status: 500 });
   }
 }

@@ -21,9 +21,8 @@ import { format } from "date-fns";
 /**
  * @fileOverview High-Fidelity Resident Hub.
  * Optimized Sequence: Hero -> Identity Bar -> Rent Ledger -> Narrative -> Property DNA -> Actions.
- * Fixed: Phone icon ReferenceError.
+ * Fixed: Phone icon ReferenceError import.
  * Fixed: DNA text fitting with break-words.
- * Hardened: AI error logging and request guards.
  */
 
 export default function TenantHub() {
@@ -73,7 +72,6 @@ export default function TenantHub() {
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [chatHistory, isChatOpen]);
 
   const handleAskConcierge = async (text?: string) => {
-    // 🛡️ SPAM GUARD: Prevent duplicate calls during active generation
     if (isChatting) return;
 
     const queryText = text || chatQuery.trim();
@@ -81,7 +79,6 @@ export default function TenantHub() {
     
     setChatQuery(""); 
     const newUserMsg = { role: 'user' as const, text: queryText };
-    // 🛡️ TOKEN OPTIMIZATION: Slice history to prevent context bloat
     setChatHistory(prev => [...prev, newUserMsg].slice(-10));
     setIsChatting(true);
 
@@ -101,12 +98,11 @@ export default function TenantHub() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'AI service route failed.');
+        throw new Error('AI Service Route Offline');
       }
 
       const reader = response.body?.getReader();
-      if (!reader) throw new Error('Stream reader initialization failed.');
+      if (!reader) throw new Error('Stream Interrupted');
 
       let botText = "";
       setChatHistory(prev => [...prev, { role: 'bot', text: "" }]);
@@ -126,11 +122,10 @@ export default function TenantHub() {
         });
       }
     } catch (error: any) {
-      console.error('REAL CHAT ERROR:', error);
+      console.error('CONCIERGE ERROR:', error);
       setChatHistory(prev => {
         const newHistory = [...prev];
-        const errorMessage = `[SYSTEM]: AI is temporarily busy. Please try again. (${error.message || 'Connection Interrupted'})`;
-        // Replace empty trailing message if it exists, otherwise push
+        const errorMessage = `[SYSTEM]: AI is temporarily busy. Please try again.`;
         const lastMsg = newHistory[newHistory.length - 1];
         if (lastMsg && lastMsg.role === 'bot' && !lastMsg.text) {
            newHistory[newHistory.length - 1] = { role: 'bot', text: errorMessage };
@@ -285,7 +280,7 @@ export default function TenantHub() {
                </CardTitle>
              </CardHeader>
              <CardContent className="p-10 space-y-8">
-                <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/10">
+                <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/10 text-left">
                     <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-red-600 mb-3">Primary SOS</p>
                     <p className="text-base font-bold text-foreground font-headline">Emergency Services</p>
                     <p className="text-lg font-bold mt-4 flex items-center text-red-600">
