@@ -120,15 +120,17 @@ export function Header({ role }: HeaderProps) {
         <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground" />
         <Separator orientation="vertical" className="h-4 bg-border" />
         
-        <form onSubmit={handleSearch} className="hidden md:flex items-center relative max-w-sm w-full ml-4">
-          <Search className="absolute left-3 h-4 w-4 text-muted-foreground/50" />
-          <Input 
-            placeholder="Search portfolio..." 
-            className="pl-9 h-10 rounded-xl bg-muted/30 border-none font-medium text-sm focus-visible:ring-ring w-full text-foreground"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </form>
+        {role === 'landlord' && (
+          <form onSubmit={handleSearch} className="hidden md:flex items-center relative max-w-sm w-full ml-4">
+            <Search className="absolute left-3 h-4 w-4 text-muted-foreground/50" />
+            <Input 
+              placeholder="Search portfolio..." 
+              className="pl-9 h-10 rounded-xl bg-muted/30 border-none font-medium text-sm focus-visible:ring-ring w-full text-foreground"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </form>
+        )}
       </div>
 
       <div className="flex items-center gap-3">
