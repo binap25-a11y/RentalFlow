@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
@@ -277,7 +276,12 @@ export default function TenantHub() {
             <CardContent className="p-10 md:p-12 space-y-12">
               <div className="space-y-12">
                 <div className="space-y-6">
-                  <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
+                    <Button variant="ghost" asChild className="rounded-xl font-bold text-[10px] uppercase tracking-widest text-muted-foreground hover:text-accent">
+                      <Link href="/tenant/payments">View Full Ledger <ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
+                    </Button>
+                  </div>
                   <div className="p-10 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner">
                      <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.3em] font-headline opacity-50 mb-3">Verified Ledger</p>
                      <p className="text-6xl font-bold font-headline text-foreground tracking-tighter mb-4">£{property.rentAmount?.toLocaleString()}</p>

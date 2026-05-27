@@ -14,7 +14,8 @@ import {
   MessageSquare,
   PhoneCall,
   HardHat,
-  CalendarDays
+  CalendarDays,
+  CreditCard
 } from 'lucide-react';
 import { cn, RENTALFLOW_LOGO_URL } from "@/lib/utils";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
@@ -50,6 +51,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
 
   const tenantItems = [
     { label: 'My Hub', icon: Home, href: '/tenant/hub' },
+    { label: 'Rent & Finance', icon: CreditCard, href: '/tenant/payments' },
     { label: 'Maintenance', icon: Wrench, href: '/tenant/maintenance' },
     { label: 'Emergency Contacts', icon: PhoneCall, href: '/tenant/emergency-contacts' },
     { label: 'Documents', icon: FileText, href: '/tenant/documents' },
