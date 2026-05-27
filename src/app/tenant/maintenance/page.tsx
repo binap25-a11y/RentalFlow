@@ -49,7 +49,8 @@ import { cn } from "@/lib/utils";
 
 /**
  * @fileOverview High-Fidelity Resident Maintenance Hub.
- * Optimized layout with Flow Shield Triage at the top and Operational Ledger below.
+ * Optimized for a unified vertical narrative.
+ * Flow Shield (AI Triage) at top prominence, followed by Operational Ledger.
  */
 
 export default function TenantMaintenancePage() {
@@ -192,24 +193,35 @@ export default function TenantMaintenancePage() {
                 <div className="md:col-span-8 p-12">
                    {troubleshootResult ? (
                     <div className="space-y-8 animate-in zoom-in-95 duration-500 text-left">
-                      <div className="bg-emerald-500/5 border border-emerald-500/10 p-8 rounded-[2rem] shadow-inner">
-                        <p className="text-[10px] font-bold text-emerald-600 uppercase mb-4 tracking-[0.2em] font-headline">Guidance Ledger</p>
-                        <p className="text-base font-bold text-foreground mb-6 leading-relaxed">{troubleshootResult.encouragement}</p>
-                        <ul className="space-y-4">
+                      <div className="bg-emerald-500/5 border border-emerald-500/10 p-10 rounded-[2.5rem] shadow-inner">
+                        <p className="text-[11px] font-bold text-emerald-600 uppercase mb-5 tracking-[0.25em] font-headline">Intelligence Ledger</p>
+                        <p className="text-xl font-bold text-foreground mb-8 leading-tight">{troubleshootResult.encouragement}</p>
+                        <div className="space-y-6">
                           {troubleshootResult.troubleshootingSteps.map((step, i) => (
-                            <li key={i} className="flex gap-4 text-sm font-bold text-muted-foreground leading-snug">
-                              <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-500" /> {step}
-                            </li>
+                            <div key={i} className="flex gap-5 items-start">
+                              <div className="p-2 bg-emerald-500/10 rounded-full shrink-0">
+                                <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                              </div>
+                              <p className="text-base font-bold text-muted-foreground leading-relaxed">
+                                {step}
+                              </p>
+                            </div>
                           ))}
-                        </ul>
+                        </div>
+                        {troubleshootResult.safetyWarning && (
+                          <div className="mt-10 p-6 bg-red-500/5 rounded-2xl border border-red-500/10 flex items-start gap-4">
+                             <ShieldAlert className="w-6 h-6 text-red-600 shrink-0" />
+                             <p className="text-sm font-bold text-red-900/80 leading-relaxed">{troubleshootResult.safetyWarning}</p>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex gap-4">
-                        <Button variant="outline" className="h-14 rounded-2xl font-bold px-8 border-border text-xs uppercase tracking-widest" onClick={() => setTroubleshootResult(null)}>Recalibrate</Button>
-                        <Button className="h-14 rounded-2xl font-bold bg-primary text-primary-foreground shadow-2xl px-12 border-none text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform" onClick={() => handleSubmit()}>Notify Management</Button>
+                      <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                        <Button className="h-16 rounded-2xl font-bold bg-primary text-primary-foreground shadow-2xl px-12 border-none font-headline uppercase tracking-widest text-[11px] hover:scale-[1.02] transition-transform" onClick={() => handleSubmit()}>Notify Management</Button>
+                        <Button variant="ghost" className="h-16 rounded-2xl font-bold px-8 text-muted-foreground hover:bg-muted font-headline uppercase tracking-widest text-[10px]" onClick={() => setTroubleshootResult(null)}>Recalibrate Diagnostic</Button>
                       </div>
                     </div>
                   ) : (
-                    <form className="space-y-8 text-left">
+                    <form className="space-y-8 text-left" onSubmit={(e) => e.preventDefault()}>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-3">
                           <Label className="font-bold text-[10px] uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">Issue Identifier</Label>
@@ -288,8 +300,8 @@ export default function TenantMaintenancePage() {
                             </div>
                             
                             <div className="space-y-2 text-left">
-                              <h4 className="text-2xl font-bold font-headline text-foreground group-hover:text-accent transition-colors leading-tight tracking-tight truncate block">{req.title}</h4>
-                              <p className="text-base text-muted-foreground leading-relaxed font-body font-medium opacity-80 line-clamp-2">{req.description}</p>
+                              <h4 className="text-2xl font-bold font-headline text-foreground group-hover:text-accent transition-colors leading-tight tracking-tight block truncate w-full">{req.title}</h4>
+                              <p className="text-base text-muted-foreground leading-relaxed font-body font-medium opacity-80 whitespace-normal break-words">{req.description}</p>
                             </div>
 
                             <div className="flex flex-wrap gap-6 pt-6 border-t border-border/50">
