@@ -57,8 +57,7 @@ import Image from "next/image";
 
 /**
  * @fileOverview High-Fidelity Resident Hub.
- * Optimized for zero-latency compilation and premium visual orchestration.
- * Hardware-aligned with Next.js 15 App Router.
+ * Optimized for cinematic asset resolution and hardware-aligned stability.
  */
 
 export default function TenantHub() {
@@ -138,7 +137,7 @@ export default function TenantHub() {
         }
       }
       setRepairImages(prev => [...prev, ...uploadedUrls]);
-      toast({ title: "Visual Evidence Synchronized" });
+      toast({ title: "Evidence Synchronized" });
     } catch (err: any) {
       toast({ variant: "destructive", title: "Sync Failed", description: err.message });
     } finally {
@@ -149,7 +148,7 @@ export default function TenantHub() {
 
   const handleSaveRepair = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !db || !property || !repairTitle || !repairDescription) return;
+    if (!user || !db || !property || !repairTitle) return;
 
     setIsSaving(true);
     const requestId = doc(collection(db, 'maintenanceRequests')).id;
@@ -181,10 +180,10 @@ export default function TenantHub() {
         description: repairDescription
       });
     } catch (err) {
-      console.warn('Notification engine skipped.');
+      console.warn('Notification skipped.');
     }
 
-    toast({ title: "Repair Dispatched", description: "The maintenance record is now live." });
+    toast({ title: "Repair Dispatched" });
     setIsRepairOpen(false);
     setIsSaving(false);
     setRepairTitle('');
@@ -209,7 +208,7 @@ export default function TenantHub() {
       <div className="max-w-7xl mx-auto space-y-12 py-32 text-center">
         <Building2 className="w-16 h-16 mx-auto text-muted-foreground/20 mb-6" />
         <h1 className="text-3xl font-headline font-bold text-foreground tracking-tighter">Registry Verification</h1>
-        <p className="text-muted-foreground max-w-sm mx-auto font-medium">Once your landlord links your residency to a property, your hub will be initialized here.</p>
+        <p className="text-muted-foreground max-w-sm mx-auto font-medium">Once your landlord links your residency to a property, your hub will be initialized.</p>
       </div>
     );
   }
@@ -222,7 +221,7 @@ export default function TenantHub() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        <div className="lg:col-span-8 space-y-10">
+        <div className="lg:col-span-8 space-y-12">
           <Card className="border-none shadow-2xl overflow-hidden bg-card group ring-1 ring-border rounded-[3rem]">
             <div className="relative w-full bg-muted overflow-hidden">
               {gallery.length > 0 ? (
@@ -230,18 +229,8 @@ export default function TenantHub() {
                   <CarouselContent>
                     {gallery.map((url, index) => (
                       <CarouselItem key={`${url}-${index}`}>
-                        <div 
-                          className="relative h-[450px] md:h-[550px] w-full cursor-zoom-in overflow-hidden"
-                          onClick={() => setLightboxUrl(url)}
-                        >
-                          <Image 
-                            src={url} 
-                            alt={`Asset View ${index + 1}`} 
-                            fill
-                            className="object-cover transition-transform duration-1000 group-hover/carousel:scale-105" 
-                            unoptimized
-                            priority={index === 0}
-                          />
+                        <div className="relative h-[450px] md:h-[550px] w-full cursor-zoom-in overflow-hidden" onClick={() => setLightboxUrl(url)}>
+                          <Image src={url} alt={`Asset View ${index + 1}`} fill className="object-cover transition-transform duration-1000 group-hover/carousel:scale-105" unoptimized priority={index === 0} />
                         </div>
                       </CarouselItem>
                     ))}
@@ -342,7 +331,7 @@ export default function TenantHub() {
                     <form onSubmit={handleSaveRepair} className="flex flex-col h-full overflow-hidden">
                       <div className="p-10 bg-primary/5 border-b border-white/5 text-left shrink-0">
                         <DialogTitle className="text-2xl font-bold font-headline text-foreground flex items-center gap-4">
-                           <Sparkles className="w-7 h-7 text-accent" /> Maintenance Orchestration
+                           <Sparkles className="w-7 h-7 text-accent" /> Maintenance Command
                         </DialogTitle>
                         <DialogDescription className="text-sm font-medium text-muted-foreground mt-2">Initialize a formal request with high-fidelity visual evidence.</DialogDescription>
                       </div>
@@ -350,11 +339,7 @@ export default function TenantHub() {
                         <div className="p-10 space-y-8 text-left">
                           <div className="space-y-3">
                             <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Issue Classification</Label>
-                            <select 
-                              className="flex h-14 w-full rounded-2xl border-none bg-muted/40 px-6 py-2 text-base focus:ring-2 focus:ring-accent outline-none font-bold text-foreground shadow-inner ring-1 ring-white/5"
-                              value={repairCategory}
-                              onChange={(e) => setRepairCategory(e.target.value)}
-                            >
+                            <select className="flex h-14 w-full rounded-2xl border-none bg-muted/40 px-6 py-2 text-base focus:ring-2 focus:ring-accent outline-none font-bold text-foreground shadow-inner ring-1 ring-white/5" value={repairCategory} onChange={(e) => setRepairCategory(e.target.value)}>
                               <option value="plumbing">Plumbing & Water</option>
                               <option value="electrical">Electrical & Lighting</option>
                               <option value="heating">Heating & Boiler</option>
@@ -365,14 +350,14 @@ export default function TenantHub() {
                           </div>
                           <div className="space-y-3">
                             <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Subject</Label>
-                            <Input value={repairTitle} onChange={(e) => setRepairTitle(e.target.value)} placeholder="e.g. Kitchen sink blockage" required className="rounded-2xl h-14 bg-muted/40 border-none font-bold px-6 text-base shadow-inner ring-1 ring-white/5 text-foreground" />
+                            <Input value={repairTitle} onChange={(e) => setRepairTitle(e.target.value)} placeholder="e.g. Kitchen tap leak" required className="rounded-2xl h-14 bg-muted/40 border-none font-bold px-6 text-base shadow-inner ring-1 ring-white/5 text-foreground" />
                           </div>
                           <div className="space-y-3">
                             <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Narrative</Label>
-                            <Textarea value={repairDescription} onChange={(e) => setRepairDescription(e.target.value)} placeholder="Provide full context for management..." required className="rounded-2xl min-h-[140px] bg-muted/40 border-none font-medium px-6 py-5 text-base shadow-inner ring-1 ring-white/5 text-foreground leading-relaxed" />
+                            <Textarea value={repairDescription} onChange={(e) => setRepairDescription(e.target.value)} placeholder="Provide full context..." required className="rounded-2xl min-h-[140px] bg-muted/40 border-none font-medium px-6 py-5 text-base shadow-inner ring-1 ring-white/5 text-foreground leading-relaxed" />
                           </div>
                           <div className="space-y-3">
-                            <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Visual Inventory (Evidence)</Label>
+                            <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Visual Inventory</Label>
                             <div className="grid grid-cols-3 gap-4">
                                {repairImages.map((url, i) => (
                                  <div key={i} className="relative aspect-square rounded-xl overflow-hidden shadow-lg group">
@@ -383,7 +368,7 @@ export default function TenantHub() {
                                  </div>
                                ))}
                                <label className="aspect-square rounded-2xl border-2 border-dashed border-white/10 hover:border-accent/40 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer bg-muted/10 group">
-                                  {isUploading ? <Loader2 className="w-5 h-5 animate-spin text-accent" /> : <Camera className="w-5 h-5 text-muted-foreground group-hover:text-accent transition-colors" />}
+                                  {isUploading ? <Loader2 className="w-5 h-5 animate-spin text-accent" /> : <Camera className="w-5 h-5 text-muted-foreground group-hover:text-accent" />}
                                   <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground group-hover:text-accent">Capture</span>
                                   <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isUploading} />
                                </label>
@@ -408,7 +393,23 @@ export default function TenantHub() {
           </Card>
         </div>
 
-        <div className="lg:col-span-4 space-y-10">
+        <div className="lg:col-span-4 space-y-12">
+           <Card className="border-none shadow-2xl rounded-[3rem] bg-accent text-white overflow-hidden text-left relative group cursor-pointer" onClick={() => setIsRepairOpen(true)}>
+             <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 blur-3xl rounded-full transition-transform duration-1000 group-hover:scale-150" />
+             <CardHeader className="p-10 pb-6">
+                <CardTitle className="text-2xl font-bold font-headline flex items-center gap-4">
+                   <Sparkles className="w-8 h-8 text-white/90" /> Maintenance Command
+                </CardTitle>
+             </CardHeader>
+             <CardContent className="px-10 pb-12 space-y-6">
+                <p className="text-sm font-medium leading-relaxed opacity-90">Report property issues with cinematic visual capture and automated AI triage.</p>
+                <div className="flex items-center gap-3">
+                   <Wrench className="w-5 h-5 text-white/60" />
+                   <span className="text-[10px] font-bold uppercase tracking-widest text-white/70">Secure Dispatch Active</span>
+                </div>
+             </CardContent>
+           </Card>
+
            <Card className="border-none shadow-sm rounded-[3rem] bg-card ring-1 ring-border overflow-hidden">
              <CardHeader className="p-10 pb-4 border-b border-border bg-muted/5 text-left">
                <CardTitle className="text-xl font-headline font-bold flex items-center text-foreground">
@@ -445,10 +446,7 @@ export default function TenantHub() {
           {lightboxUrl && (
             <div className="relative w-full h-full flex items-center justify-center">
               <Image src={lightboxUrl} alt="Asset Preview" fill className="object-contain" unoptimized />
-              <button 
-                onClick={() => setLightboxUrl(null)} 
-                className="absolute top-8 right-8 bg-black/60 backdrop-blur-xl text-white p-4 rounded-full hover:bg-black transition-all hover:scale-110 active:scale-95 shadow-2xl"
-              >
+              <button onClick={() => setLightboxUrl(null)} className="absolute top-8 right-8 bg-black/60 backdrop-blur-xl text-white p-4 rounded-full hover:bg-black transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <X className="w-7 h-7" />
               </button>
             </div>

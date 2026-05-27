@@ -49,7 +49,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * @fileOverview High-Fidelity Resident Maintenance Hub.
- * Features an Enriched Operational Ledger and "Flow Shield" AI Triage.
+ * Optimized layout with Flow Shield Triage at the top and Operational Ledger below.
  */
 
 export default function TenantMaintenancePage() {
@@ -105,7 +105,7 @@ export default function TenantMaintenancePage() {
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!user || !db || !activeProfile) return;
+    if (!user || !db || !activeProfile || !title) return;
 
     setIsSubmitting(true);
     const requestId = doc(collection(db, 'maintenanceRequests')).id;
@@ -137,10 +137,10 @@ export default function TenantMaintenancePage() {
         description
       });
     } catch (e) {
-      console.warn('Email dispatch skipped.');
+      console.warn('Dispatch skipped.');
     }
 
-    toast({ title: "Work Notified", description: "The maintenance record has been synchronized." });
+    toast({ title: "Work Notified" });
     setTitle('');
     setDescription('');
     setTroubleshootResult(null);
@@ -150,14 +150,14 @@ export default function TenantMaintenancePage() {
   if (!isClient || isProfileLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary w-12 h-12 opacity-60" /></div>;
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-7xl mx-auto pb-24 text-left">
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-6xl mx-auto pb-32 text-left bg-background">
       <div className="space-y-4">
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1.5 rounded-full font-bold uppercase tracking-[0.2em] text-[9px] mb-2">
            <Activity className="w-3.5 h-3.5 mr-2" /> Real-Time Operations
         </Badge>
-        <h1 className="text-4xl font-headline font-bold text-foreground tracking-tight">Maintenance Hub</h1>
+        <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground tracking-tighter">Maintenance Hub</h1>
         <p className="text-muted-foreground font-medium font-body text-xl opacity-70 leading-relaxed max-w-3xl">
-          Report issues with AI triage or track the real-time progress of existing property repairs.
+          Dispatch requests with AI triage and track the real-time progress of your property repairs.
         </p>
       </div>
 
@@ -165,75 +165,84 @@ export default function TenantMaintenancePage() {
         <Card className="border-2 border-dashed py-32 text-center bg-card rounded-[3rem] flex flex-col items-center justify-center shadow-inner">
           <AlertCircle className="w-16 h-16 text-primary/10 mb-6" />
           <h3 className="text-2xl font-bold font-headline text-primary/40 uppercase tracking-widest">Awaiting Registry</h3>
-          <p className="text-base text-muted-foreground mt-2 max-w-sm mx-auto font-medium">Once your landlord links your residency to a property, maintenance reporting will be initialized here.</p>
+          <p className="text-base text-muted-foreground mt-2 max-w-sm mx-auto font-medium">Link your residency to begin maintenance reporting.</p>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          {/* 1. REPORTING SUITE */}
-          <div className="lg:col-span-4 space-y-8">
-            <Card className="border-none shadow-2xl h-fit rounded-[2.5rem] overflow-hidden bg-card ring-1 ring-border">
-              <CardHeader className="bg-primary p-10 text-primary-foreground">
-                <CardTitle className="flex items-center gap-4 text-2xl font-headline font-bold">
-                  <Sparkles className="w-8 h-8 text-accent" /> 
-                  Flow Shield
-                </CardTitle>
-                <p className="text-xs opacity-70 font-bold uppercase tracking-widest font-headline mt-1">AI-Powered Triage</p>
-              </CardHeader>
-              <CardContent className="p-10 space-y-8">
-                {troubleshootResult ? (
-                  <div className="space-y-8 animate-in zoom-in-95 duration-500">
-                    <div className="bg-emerald-500/5 border border-emerald-500/10 p-8 rounded-[2rem] shadow-inner">
-                      <p className="text-[10px] font-bold text-emerald-600 uppercase mb-4 tracking-[0.2em] font-headline">Concierge Guidance</p>
-                      <p className="text-sm font-bold text-foreground mb-6 leading-relaxed">{troubleshootResult.encouragement}</p>
-                      <ul className="space-y-4">
-                        {troubleshootResult.troubleshootingSteps.map((step, i) => (
-                          <li key={i} className="flex gap-4 text-xs font-bold text-muted-foreground leading-snug">
-                            <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-500" /> {step}
-                          </li>
-                        ))}
-                      </ul>
+        <div className="space-y-20">
+          {/* 1. FLOW SHIELD (TOP PROMINENCE) */}
+          <section className="space-y-8">
+            <div className="flex items-center justify-between px-2">
+               <h3 className="text-2xl font-bold font-headline flex items-center text-foreground tracking-tight">
+                 <Sparkles className="w-7 h-7 mr-4 text-accent" />
+                 Flow Shield
+               </h3>
+               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] opacity-40 font-headline">AI-Powered Triage</p>
+            </div>
+            
+            <Card className="border-none shadow-2xl rounded-[3rem] overflow-hidden bg-card ring-1 ring-border">
+              <div className="grid grid-cols-1 md:grid-cols-12">
+                <div className="md:col-span-4 bg-primary p-12 text-primary-foreground flex flex-col justify-center gap-4">
+                   <div className="p-5 bg-white/10 rounded-[2rem] w-fit shadow-inner">
+                      <Sparkles className="w-10 h-10 text-accent" />
+                   </div>
+                   <h4 className="text-3xl font-headline font-bold tracking-tight">Diagnostic Command</h4>
+                   <p className="text-sm opacity-70 leading-relaxed font-medium">Orchestrate safe troubleshooting steps before notifying management.</p>
+                </div>
+                
+                <div className="md:col-span-8 p-12">
+                   {troubleshootResult ? (
+                    <div className="space-y-8 animate-in zoom-in-95 duration-500 text-left">
+                      <div className="bg-emerald-500/5 border border-emerald-500/10 p-8 rounded-[2rem] shadow-inner">
+                        <p className="text-[10px] font-bold text-emerald-600 uppercase mb-4 tracking-[0.2em] font-headline">Guidance Ledger</p>
+                        <p className="text-base font-bold text-foreground mb-6 leading-relaxed">{troubleshootResult.encouragement}</p>
+                        <ul className="space-y-4">
+                          {troubleshootResult.troubleshootingSteps.map((step, i) => (
+                            <li key={i} className="flex gap-4 text-sm font-bold text-muted-foreground leading-snug">
+                              <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-500" /> {step}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="flex gap-4">
+                        <Button variant="outline" className="h-14 rounded-2xl font-bold px-8 border-border text-xs uppercase tracking-widest" onClick={() => setTroubleshootResult(null)}>Recalibrate</Button>
+                        <Button className="h-14 rounded-2xl font-bold bg-primary text-primary-foreground shadow-2xl px-12 border-none text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform" onClick={() => handleSubmit()}>Notify Management</Button>
+                      </div>
                     </div>
-                    
-                    {troubleshootResult.safetyWarning && (
-                      <div className="bg-red-500/5 border border-red-500/10 p-6 rounded-2xl flex gap-4 items-start shadow-inner">
-                        <ShieldAlert className="w-6 h-6 text-red-600 shrink-0" />
-                        <div>
-                          <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest font-headline">Safety Protocol</p>
-                          <p className="text-xs font-bold text-red-950 dark:text-red-100 mt-1 leading-relaxed">{troubleshootResult.safetyWarning}</p>
+                  ) : (
+                    <form className="space-y-8 text-left">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-3">
+                          <Label className="font-bold text-[10px] uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">Issue Identifier</Label>
+                          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Kitchen Tap Leak" className="rounded-2xl h-14 bg-muted/20 border-none font-bold text-foreground px-6 shadow-inner ring-1 ring-white/5" />
+                        </div>
+                        <div className="space-y-3">
+                           <Label className="font-bold text-[10px] uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">Status Verification</Label>
+                           <div className="h-14 bg-primary/5 rounded-2xl border border-dashed border-primary/20 flex items-center px-6 gap-3">
+                              <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Awaiting Diagnostic Input</span>
+                           </div>
                         </div>
                       </div>
-                    )}
-                    
-                    <div className="flex gap-4 pt-2">
-                      <Button variant="outline" className="flex-1 rounded-xl font-bold h-14 border-border text-xs uppercase tracking-widest" onClick={() => setTroubleshootResult(null)}>Recalibrate Issue</Button>
-                      <Button className="flex-1 rounded-xl font-bold bg-primary text-primary-foreground shadow-2xl h-14 border-none text-xs uppercase tracking-widest" onClick={() => handleSubmit()}>Still Need Help</Button>
-                    </div>
-                  </div>
-                ) : (
-                  <form className="space-y-8">
-                    <div className="space-y-3">
-                      <Label className="font-bold text-[10px] uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">Issue Identifier</Label>
-                      <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Kitchen Tap Leak" className="rounded-2xl h-14 bg-muted/20 border-none font-bold text-foreground px-6 shadow-inner ring-1 ring-white/5" />
-                    </div>
-                    <div className="space-y-3">
-                      <Label className="font-bold text-[10px] uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">Detailed Narrative</Label>
-                      <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Provide full context for management..." className="rounded-2xl min-h-[200px] bg-muted/20 border-none font-medium text-foreground leading-relaxed px-6 py-5 shadow-inner ring-1 ring-white/5" />
-                    </div>
-                    <div className="space-y-4 pt-4">
-                      <Button type="button" className="w-full rounded-2xl h-16 bg-accent text-white font-bold shadow-2xl shadow-accent/20 transition-all hover:scale-[1.02] border-none font-headline uppercase tracking-widest text-[11px]" disabled={isTroubleshooting || !description} onClick={handleTroubleshoot}>
-                        {isTroubleshooting ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Sparkles className="w-5 h-5 mr-3" />}
-                        Orchestrate Troubleshooting
-                      </Button>
-                      <Button type="button" variant="ghost" className="w-full text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] hover:bg-muted/50 h-12 rounded-xl transition-all" onClick={() => handleSubmit()} disabled={!title}>Skip & Notify Directly</Button>
-                    </div>
-                  </form>
-                )}
-              </CardContent>
+                      <div className="space-y-3">
+                        <Label className="font-bold text-[10px] uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">Detailed Narrative</Label>
+                        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Provide full context for management..." className="rounded-3xl min-h-[160px] bg-muted/20 border-none font-medium text-foreground leading-relaxed px-6 py-5 shadow-inner ring-1 ring-white/5" />
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                        <Button type="button" className="rounded-2xl h-16 bg-accent text-white font-bold shadow-2xl shadow-accent/20 transition-all hover:scale-[1.02] border-none font-headline uppercase tracking-widest text-[11px] px-12" disabled={isTroubleshooting || !description} onClick={handleTroubleshoot}>
+                          {isTroubleshooting ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Sparkles className="w-5 h-5 mr-3" />}
+                          Orchestrate Diagnostic
+                        </Button>
+                        <Button type="button" variant="ghost" className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] hover:bg-muted/50 h-16 rounded-2xl transition-all px-8" onClick={() => handleSubmit()} disabled={!title}>Skip & Notify Management</Button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              </div>
             </Card>
-          </div>
+          </section>
 
-          {/* 2. OPERATIONAL LEDGER */}
-          <div className="lg:col-span-8 space-y-10">
+          {/* 2. OPERATIONAL LEDGER (BELOW REPORTING) */}
+          <section className="space-y-8">
             <div className="flex items-center justify-between px-2">
               <h3 className="text-2xl font-bold font-headline flex items-center text-foreground tracking-tight">
                 <History className="w-7 h-7 mr-4 text-accent" />
@@ -242,7 +251,7 @@ export default function TenantMaintenancePage() {
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] opacity-40 font-headline">Verified Source of Truth</p>
             </div>
             
-            <div className="grid gap-6">
+            <div className="grid grid-cols-1 gap-6">
               {isRequestsLoading ? (
                 <div className="flex flex-col items-center justify-center py-32 gap-4 opacity-40">
                    <Loader2 className="w-12 h-12 animate-spin text-primary" />
@@ -263,7 +272,7 @@ export default function TenantMaintenancePage() {
                           <div className="space-y-6 flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-3">
                               <Badge className={cn(
-                                "uppercase text-[9px] font-bold px-4 py-1 tracking-[0.2em] rounded-full border-none shadow-sm font-headline",
+                                "uppercase text-[9px] font-bold px-4 py-1.5 tracking-[0.2em] rounded-full border-none shadow-sm font-headline",
                                 req.status === 'completed' ? 'bg-emerald-500 text-white' : 
                                 req.status === 'in-progress' ? 'bg-accent text-white animate-pulse' :
                                 'bg-primary/10 text-primary'
@@ -271,17 +280,14 @@ export default function TenantMaintenancePage() {
                                 {req.status}
                               </Badge>
                               <Badge variant="outline" className={cn(
-                                "uppercase text-[9px] font-bold border-border font-headline tracking-[0.2em] px-4 py-1 rounded-full",
+                                "uppercase text-[9px] font-bold border-border font-headline tracking-[0.2em] px-4 py-1.5 rounded-full",
                                 req.priority === 'critical' ? 'border-red-500/50 text-red-600 bg-red-500/5' : 'text-muted-foreground opacity-60'
                               )}>
                                 {req.priority}
                               </Badge>
-                              <Badge variant="secondary" className="uppercase text-[8px] font-bold tracking-[0.1em] px-3 py-1 rounded-full bg-muted/50 text-muted-foreground">
-                                {req.category || 'General'}
-                              </Badge>
                             </div>
                             
-                            <div className="space-y-2">
+                            <div className="space-y-2 text-left">
                               <h4 className="text-2xl font-bold font-headline text-foreground group-hover:text-accent transition-colors leading-tight tracking-tight truncate block">{req.title}</h4>
                               <p className="text-base text-muted-foreground leading-relaxed font-body font-medium opacity-80 line-clamp-2">{req.description}</p>
                             </div>
@@ -313,10 +319,10 @@ export default function TenantMaintenancePage() {
                           </div>
                           
                           <div className={cn(
-                            "p-6 rounded-[2rem] shadow-inner transition-transform group-hover:scale-110 shrink-0",
+                            "p-8 rounded-[2.5rem] shadow-inner transition-transform group-hover:scale-110 shrink-0",
                             req.status === 'completed' ? "bg-emerald-500/5 text-emerald-500" : "bg-primary/5 text-primary"
                           )}>
-                            {req.status === 'completed' ? <CheckCircle2 className="w-10 h-10" /> : <Wrench className="w-10 h-10" />}
+                            {req.status === 'completed' ? <CheckCircle2 className="w-12 h-12" /> : <Wrench className="w-12 h-12" />}
                           </div>
                         </div>
                       </CardContent>
@@ -325,7 +331,7 @@ export default function TenantMaintenancePage() {
                 })
               )}
             </div>
-          </div>
+          </section>
         </div>
       )}
     </div>
