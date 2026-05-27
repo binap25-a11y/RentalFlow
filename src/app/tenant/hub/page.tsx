@@ -168,6 +168,7 @@ export default function TenantHub() {
 
   /**
    * 💎 PREMIUM SYSTEM ORCHESTRATION VIEW (Loading State)
+   * All placeholders resized and reordered to follow requested professional hierarchy.
    */
   if (!property) return (
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-1000 pb-32 text-left bg-background">
@@ -184,6 +185,7 @@ export default function TenantHub() {
             </div>
             
             <CardContent className="p-12 space-y-12">
+              {/* 1. Monthly Rent Ledger Placeholder */}
               <div className="space-y-6">
                 <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight opacity-20"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
                 <div className="p-10 bg-muted/10 rounded-[2.5rem] border border-border/50 shadow-inner space-y-6">
@@ -192,6 +194,7 @@ export default function TenantHub() {
                 </div>
               </div>
 
+              {/* 2. Your Residence Placeholder (Moved Below Rent) */}
               <div className="space-y-6">
                 <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight opacity-20"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
                 <div className="p-10 bg-primary/5 rounded-[2.5rem] border border-border/50 space-y-4">
@@ -200,6 +203,7 @@ export default function TenantHub() {
                 </div>
               </div>
 
+              {/* 3. Fitted Download Action (Bottom of Stack) */}
               <div className="pt-4">
                 <div className="h-14 w-full bg-muted/20 rounded-2xl animate-pulse opacity-20" />
               </div>
@@ -277,6 +281,7 @@ export default function TenantHub() {
 
             <CardContent className="p-10 md:p-12 space-y-12">
               <div className="space-y-12">
+                {/* 1. Monthly Rent Ledger */}
                 <div className="space-y-6">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
                   <div className="p-10 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner">
@@ -288,6 +293,7 @@ export default function TenantHub() {
                   </div>
                 </div>
 
+                {/* 2. Your Residence Narrative (Order Reordered) */}
                 <div className="space-y-6">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -315,6 +321,7 @@ export default function TenantHub() {
                   </div>
                 </div>
 
+                {/* 3. Fitted Action (Bottom of Suite) */}
                 <div className="pt-8 border-t border-border/50">
                   <Button variant="outline" className="w-full h-16 rounded-[1.75rem] border-border bg-card hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all" onClick={handleDownloadStatement}>
                      <Download className="w-5 h-5 mr-3 text-accent" /> Download Rent Statement
