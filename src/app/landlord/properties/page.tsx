@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -164,7 +163,7 @@ export default function PropertiesPage() {
                         <span className="flex items-center text-[10px] font-bold text-muted-foreground font-headline uppercase tracking-widest whitespace-nowrap"><Bath className="w-4 h-4 mr-2 text-primary opacity-40" /> {property.numberOfBathrooms || 1} Bath</span>
                       </div>
                       <div className="flex items-end justify-between min-w-0">
-                         <p className="text-2xl font-bold text-foreground font-headline tracking-tighter truncate">£{property.rentAmount?.toLocaleString()}<span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest ml-2 opacity-40">/ mo</span></p>
+                         <p className="text-2xl font-bold text-foreground font-headline tracking-tighter truncate">£{property.rentAmount?.toLocaleString()}<span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest ml-2 opacity-40">/ month</span></p>
                       </div>
                     </CardContent>
                     <CardFooter className="flex gap-2 p-6 pt-2 bg-muted/5 border-t border-border">

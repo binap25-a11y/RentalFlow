@@ -161,6 +161,7 @@ export default function TenantEmergencyContactsPage() {
         </Button>
       </div>
 
+      {/* EMERGENCY PANEL - LIGHT THEME OPTIMIZED */}
       <div className="bg-red-500/5 border border-red-500/10 dark:border-red-500/30 p-12 rounded-[3.5rem] flex flex-col md:flex-row gap-10 items-start md:items-center shadow-inner">
         <div className="p-6 bg-white dark:bg-red-950/40 rounded-[2.5rem] shadow-xl text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/40 shrink-0 transition-transform hover:scale-105">
            <AlertCircle className="w-12 h-12" />
@@ -175,6 +176,7 @@ export default function TenantEmergencyContactsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-4 space-y-10">
+           {/* SOS PROTOCOLS - LIGHT THEME CONSISTENT */}
            <Card className="border-none shadow-sm rounded-[3.5rem] overflow-hidden bg-card ring-1 ring-border">
              <CardHeader className="bg-muted/10 border-b border-border p-10 text-left">
                <CardTitle className="text-2xl font-headline font-bold flex items-center gap-5 text-foreground">

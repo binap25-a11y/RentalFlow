@@ -176,7 +176,7 @@ export default function TenantMaintenancePage() {
             </div>
             
             <Card className="border-none shadow-2xl rounded-[3.5rem] overflow-hidden bg-card ring-1 ring-border">
-              {/* PREMIUM HEADER panel: NOW AT THE TOP */}
+              {/* PREMIUM HEADER - COMMAND Header at Top */}
               <div className="bg-primary p-10 text-primary-foreground flex flex-col md:flex-row items-center gap-8 border-b border-white/10 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-10 opacity-5"><Sparkles className="w-48 h-48" /></div>
                 <div className="p-4 bg-white/10 rounded-2xl shadow-inner shrink-0 backdrop-blur-xl">
