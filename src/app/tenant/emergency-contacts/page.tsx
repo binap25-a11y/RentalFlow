@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -23,7 +24,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * 🆘 National SOS Protocols (UK Fallbacks)
- * Optimized for dark mode contrast and premium legibility.
+ * Optimized for contrast and premium legibility in all themes.
  */
 const SOS_FALLBACKS = [
   { id: 'f1', name: "Emergency Services", phone: "999 or 112", role: "Primary Emergency", category: 'standard' },
@@ -176,11 +177,11 @@ export default function TenantEmergencyContactsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-4 space-y-8">
            <Card className="border-none shadow-sm rounded-[3rem] overflow-hidden bg-card ring-1 ring-border">
-             <CardHeader className="bg-primary p-8 text-primary-foreground text-left">
-               <CardTitle className="text-xl font-headline font-bold flex items-center gap-4">
-                 <ShieldAlert className="w-8 h-8 text-accent" /> SOS Protocols
+             <CardHeader className="bg-muted/10 border-b border-border p-8 text-left">
+               <CardTitle className="text-xl font-headline font-bold flex items-center gap-4 text-foreground">
+                 <ShieldAlert className="w-8 h-8 text-red-500" /> SOS Protocols
                </CardTitle>
-               <p className="text-xs opacity-70 font-bold uppercase tracking-widest font-headline">National Emergency Lines</p>
+               <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest font-headline">National Emergency Lines</p>
              </CardHeader>
              <CardContent className="pt-10 px-8 pb-10 space-y-10">
                 {isLoading ? (
@@ -191,7 +192,7 @@ export default function TenantEmergencyContactsPage() {
                 ) : standardServices.map((service, i) => (
                   <div key={service.id || i} className="flex justify-between items-start gap-6 group">
                     <div className="space-y-2 min-w-0 text-left">
-                      <p className="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-widest font-headline">{service.role}</p>
+                      <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest font-headline">{service.role}</p>
                       <p className="text-lg font-bold leading-tight text-foreground font-headline group-hover:text-accent transition-colors">{service.name}</p>
                     </div>
                     <div className="text-right shrink-0">

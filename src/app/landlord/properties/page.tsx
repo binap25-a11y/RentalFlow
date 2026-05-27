@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -72,7 +73,7 @@ export default function PropertiesPage() {
     if (!user || !db) return;
     const propertyRef = doc(db, 'properties', propertyId);
     deleteDocumentNonBlocking(propertyRef);
-    toast({ title: "Asset Purged", description: "Record permanently removed from database." });
+    toast({ title: "Record Removed", description: "Record permanently removed from database." });
   };
 
   if (!isClient) return null;
@@ -190,7 +191,7 @@ export default function PropertiesPage() {
                <ShieldAlert className="w-6 h-6 text-accent shrink-0 mt-0.5" />
                <div>
                   <p className="text-sm font-bold text-foreground font-headline">Recovery Vault</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed mt-1 font-medium">Assets in this vault are hidden from your operational roadmap but can be restored instantly. Records will remain here until permanently purged.</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed mt-1 font-medium">Assets in this vault are hidden from your operational roadmap but can be restored instantly. Records will remain here until permanently deleted.</p>
                </div>
             </div>
 
@@ -230,7 +231,7 @@ export default function PropertiesPage() {
                             <RotateCcw className="w-4 h-4 mr-2" /> Restore
                           </Button>
                           <Button variant="ghost" className="flex-1 md:flex-none rounded-xl font-bold h-11 px-6 text-destructive/60 hover:text-white hover:bg-red-500" onClick={() => handlePermanentDelete(property.id)}>
-                            <Trash2 className="w-4 h-4 mr-2" /> Purge
+                            <Trash2 className="w-4 h-4 mr-2" /> Delete
                           </Button>
                         </div>
                       </CardContent>

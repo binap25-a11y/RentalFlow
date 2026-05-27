@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -34,12 +35,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
-
-/**
- * @fileOverview Professional Trade Partner Database.
- * Orchestrates authorized contractors and standard UK SOS protocols.
- * Enhanced for total readability and premium visual consistency.
- */
 
 const DEFAULT_UK_SERVICES = [
   { name: "Emergency Services (Police, Fire, Ambulance)", phone: "999 or 112", role: "Primary Emergency" },
@@ -195,14 +190,13 @@ export default function LandlordEmergencyContactsPage() {
     if (!db) return;
     const contactRef = doc(db, 'emergencyContacts', id);
     deleteDocumentNonBlocking(contactRef);
-    toast({ title: "Partner Purged" });
+    toast({ title: "Partner Removed" });
   };
 
   const downloadPDF = () => {
     if (!contacts) return;
     const pdfDoc = new jsPDF();
-    const today = format(new Date(), 'PPP');
-    pdfDoc.text(`CONTRACTOR DIRECTORY - ${today}`, 20, 20);
+    pdfDoc.text(`CONTRACTOR DIRECTORY - ${format(new Date(), 'PPP')}`, 20, 20);
     pdfDoc.save(`Contractor_Directory.pdf`);
   };
 
@@ -304,25 +298,25 @@ export default function LandlordEmergencyContactsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-1">
-          <Card className="border-none shadow-sm bg-primary text-primary-foreground rounded-3xl overflow-hidden">
-            <CardHeader className="pb-4 border-b border-white/10 p-8 text-left">
-              <CardTitle className="text-xl font-headline font-bold flex items-center gap-3">
-                <ShieldAlert className="w-7 h-7 text-accent" /> SOS Protocols
+          <Card className="border-none shadow-sm bg-card ring-1 ring-border rounded-3xl overflow-hidden">
+            <CardHeader className="pb-4 border-b border-border bg-muted/10 p-8 text-left">
+              <CardTitle className="text-xl font-headline font-bold flex items-center gap-3 text-foreground">
+                <ShieldAlert className="w-7 h-7 text-red-500" /> SOS Protocols
               </CardTitle>
-              <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 font-headline mt-1">UK Safety Systems</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground font-headline mt-1">UK Safety Systems</p>
             </CardHeader>
             <CardContent className="p-8 space-y-10 text-left">
               {standardServices.length > 0 ? (
                 standardServices.map((service) => (
                   <div key={service.id} className="group relative">
                     <div className="space-y-1">
-                      <p className="text-[10px] font-bold uppercase opacity-60 tracking-[0.2em] font-headline">{service.role}</p>
-                      <p className="text-base font-bold font-headline leading-tight">{service.name}</p>
-                      <p className="text-xl font-bold text-primary-foreground/90 font-headline tracking-tight mt-1">{service.phone}</p>
+                      <p className="text-[10px] font-bold uppercase text-red-500 tracking-[0.2em] font-headline">{service.role}</p>
+                      <p className="text-base font-bold font-headline leading-tight text-foreground">{service.name}</p>
+                      <p className="text-xl font-bold text-foreground font-headline tracking-tight mt-1">{service.phone}</p>
                     </div>
                     <div className="flex gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="sm" className="h-8 px-3 text-[10px] font-bold text-primary-foreground hover:bg-white/10 rounded-lg" onClick={() => handleEdit(service)}>EDIT</Button>
-                      <Button variant="ghost" size="sm" className="h-8 px-3 text-[10px] font-bold text-red-300 hover:bg-red-500/20 rounded-lg" onClick={() => handleDelete(service.id)}>PURGE</Button>
+                      <Button variant="ghost" size="sm" className="h-8 px-3 text-[10px] font-bold text-muted-foreground hover:bg-primary/5 rounded-lg" onClick={() => handleEdit(service)}>EDIT</Button>
+                      <Button variant="ghost" size="sm" className="h-8 px-3 text-[10px] font-bold text-red-500 hover:bg-red-500/10 rounded-lg" onClick={() => handleDelete(service.id)}>DELETE</Button>
                     </div>
                   </div>
                 ))
