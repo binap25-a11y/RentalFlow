@@ -53,6 +53,7 @@ import { notifyLandlordOfRequest } from "@/lib/actions/email-actions";
 /**
  * @fileOverview Personalized Resident Hub.
  * Optimized for hardware-aligned logic and cinematic visual inventory.
+ * Dynamic name-based greeting for an elite entry experience.
  */
 
 export default function TenantHub() {

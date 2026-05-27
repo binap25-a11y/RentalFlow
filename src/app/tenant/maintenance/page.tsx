@@ -48,6 +48,7 @@ import { cn } from "@/lib/utils";
 /**
  * @fileOverview High-Fidelity Resident Maintenance Hub.
  * Optimized vertical narrative: Diagnostic Command (Top) -> Operational Ledger (Below).
+ * Flow Shield reorganized for immediate functional authority.
  */
 
 export default function TenantMaintenancePage() {

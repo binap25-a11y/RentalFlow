@@ -38,6 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 /**
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
  * Optimized for cinematic visualization and real-time financial command.
+ * Expanded identifiers ensure no text truncation on mobile.
  */
 
 export default function LandlordDashboard() {
@@ -213,8 +214,8 @@ export default function LandlordDashboard() {
            <Badge variant="outline" className="bg-accent/5 text-accent border-accent/20 px-4 py-1.5 rounded-full font-bold uppercase tracking-[0.25em] text-[9px] mb-4">
               <Activity className="w-3.5 h-3.5 mr-2" /> Real-Time Command Hub
            </Badge>
-          <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground mb-2 tracking-tight truncate">Portfolio Insights</h1>
-          <p className="text-muted-foreground font-medium font-body max-w-xl opacity-70 truncate">Unified financial command and operational analytics.</p>
+          <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground mb-2 tracking-tight">Portfolio Insights</h1>
+          <p className="text-muted-foreground font-medium font-body max-w-xl opacity-70">Unified financial command and operational analytics.</p>
         </div>
         <div className="flex items-center gap-4 shrink-0">
           {!isPro && (
@@ -245,11 +246,11 @@ export default function LandlordDashboard() {
                   {IndicatorComp && <IndicatorComp className={cn("w-6 h-6 opacity-30", stat.color)} />}
                 </div>
                 <div className="space-y-3 min-w-0">
-                  <p className="text-4xl font-bold font-headline tracking-tighter truncate">
+                  <p className="text-4xl font-bold font-headline tracking-tighter">
                      {stat.val}
                   </p>
                   {stat.progress !== undefined && <Progress value={stat.progress} className="h-2 bg-white/10" />}
-                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline opacity-50 whitespace-normal">{stat.title}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline opacity-50 whitespace-normal leading-relaxed">{stat.title}</p>
                 </div>
               </CardContent>
             </Card>
