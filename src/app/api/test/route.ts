@@ -3,6 +3,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 /**
  * 🤖 AI Connectivity Diagnostic Engine
  * Verifies model accessibility and credential status.
+ * Use this route to verify your GEMINI_API_KEY.
  */
 
 export async function GET() {
@@ -35,7 +36,7 @@ export async function GET() {
       success: false,
       error: String(error),
       details: error.message || "Unknown Failure",
-      hint: "Verify GOOGLE_GENAI_API_KEY is correctly set in .env"
+      hint: "Verify GEMINI_API_KEY is correctly set in your environment."
     }, { status: 500 });
   }
 }

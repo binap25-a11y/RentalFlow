@@ -124,8 +124,8 @@ export default function TenantHub() {
       console.error('AI STREAM ERROR:', error);
       setChatHistory(prev => {
         const newHistory = [...prev];
-        const lastMsg = newHistory[newHistory.length - 1];
         const errorMessage = "[SYSTEM]: AI is temporarily busy. Please try again.";
+        const lastMsg = newHistory[newHistory.length - 1];
         if (lastMsg && lastMsg.role === 'bot' && !lastMsg.text) {
            newHistory[newHistory.length - 1] = { role: 'bot', text: errorMessage };
         } else {

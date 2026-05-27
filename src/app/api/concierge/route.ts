@@ -1,10 +1,11 @@
-import { NextRequest } from 'next/request';
+import { NextRequest } from 'next/server';
 import { ai } from '@/ai/genkit';
 import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 
 /**
  * 🤖 Hardened Streaming Concierge Endpoint
  * Optimized for Genkit 1.x zero-latency streaming and real professional logging.
+ * Removes masked fallback messages to expose actual root causes (like quota limits).
  */
 
 export const dynamic = 'force-dynamic';
@@ -45,6 +46,7 @@ export async function POST(req: Request) {
             }
             controller.close();
           } catch (streamError: any) {
+            // REAL LOGGING: Identify the actual root cause (Quota vs Credential)
             console.error('AI STREAM ITERATION ERROR:', streamError);
             
             const errorMsg = streamError.message || "";
