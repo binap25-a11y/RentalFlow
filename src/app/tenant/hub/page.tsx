@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
@@ -98,7 +99,8 @@ export default function TenantHub() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("AI API CRITICAL ERROR:", errorData);
-        throw new Error(errorData.error || 'Intelligence Engine Offline');
+        setChatHistory(prev => [...prev, { role: 'bot', text: "My apologies, I'm identifying a brief synchronization delay with the property intelligence engine. Please try your request once more in a few moments." }]);
+        return;
       }
 
       const reader = response.body?.getReader();
@@ -107,7 +109,7 @@ export default function TenantHub() {
       let botText = "";
       setChatHistory(prev => [...prev, { role: 'bot', text: "" }]);
 
-      const decoder = new TextDecoder();
+      const decoder = new TextEncoder();
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -123,7 +125,7 @@ export default function TenantHub() {
       }
     } catch (error: any) {
       console.error('Concierge Runtime Error:', error);
-      setChatHistory(prev => [...prev, { role: 'bot', text: "My apologies, I'm identifying a brief synchronization delay with the property ledger. Please try your request once more in a moment." }]);
+      setChatHistory(prev => [...prev, { role: 'bot', text: "My apologies, I'm experiencing a temporary delay. Please try your query once more in a moment." }]);
     } finally { 
       setIsChatting(false); 
     }
