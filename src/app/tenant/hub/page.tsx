@@ -395,7 +395,7 @@ export default function TenantHub() {
             </div>
           </ScrollArea>
           <DialogFooter className="p-12 bg-muted/5 border-t border-border shrink-0">
-             <Button className="w-full h-20 rounded-[2rem] bg-accent hover:bg-accent/90 text-white font-bold uppercase tracking-[0.3em] text-[12px] shadow-2xl shadow-accent/20 border-none transition-all hover:scale-[1.02] active:scale-95" onClick={handleSaveRepair} disabled={isSaving || !repairTitle}>
+             <Button className="w-full h-20 rounded-[2rem] bg-accent hover:bg-accent/90 text-white font-bold uppercase tracking-[0.2em] shadow-2xl shadow-accent/20 border-none transition-all hover:scale-[1.02] active:scale-95" onClick={handleSaveRepair} disabled={isSaving || !repairTitle}>
                 {isSaving ? <Loader2 className="w-6 h-6 animate-spin mr-4" /> : <Save className="w-6 h-6 mr-4" />}
                 Finalize & Notify Management
              </Button>
