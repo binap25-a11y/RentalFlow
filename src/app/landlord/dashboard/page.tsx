@@ -38,7 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 /**
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
  * Optimized for real-time financial tracking and total text visibility.
- * Refined for Elite UX: No truncation, expanded identifiers, premium interactions.
+ * Refined for Elite UX: No truncation, expanded identifiers, theme-consistent headers.
  */
 
 export default function LandlordDashboard() {
@@ -248,7 +248,9 @@ export default function LandlordDashboard() {
                      {stat.val}
                   </p>
                   {stat.progress !== undefined && <Progress value={stat.progress} className="h-2 bg-white/10" />}
-                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline opacity-50 whitespace-normal leading-tight h-auto min-h-[2.5em] flex items-center">{stat.title}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline opacity-50 whitespace-normal leading-tight h-auto min-h-[2.5em] flex items-center">
+                    {stat.title}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -300,7 +302,7 @@ export default function LandlordDashboard() {
             </CardHeader>
             <CardContent className="p-0">
                <div className="overflow-x-auto">
-                 <table className="w-full text-left table-fixed min-w-[900px]">
+                 <table className="w-full text-left border-collapse table-fixed min-w-[900px]">
                    <thead>
                      <tr className="bg-white/[0.02]">
                        <th className="px-8 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-2/5">Property Identity</th>
@@ -333,7 +335,10 @@ export default function LandlordDashboard() {
                            </td>
                            <td className="px-8 py-8 font-bold text-base text-foreground tracking-tight truncate">£{prop.rentAmount?.toLocaleString()}</td>
                            <td className="px-8 py-8">
-                             <Badge className={cn("rounded-full px-5 py-2 font-bold text-[9px] uppercase tracking-[0.1em] border-none shadow-sm min-w-[130px] inline-flex items-center justify-center whitespace-normal text-center h-9", isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500")}>
+                             <Badge className={cn(
+                               "rounded-full px-5 py-2 font-bold text-[9px] uppercase tracking-[0.1em] border-none shadow-sm min-w-[145px] inline-flex items-center justify-center whitespace-nowrap text-center h-9", 
+                               isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
+                             )}>
                                {isPaid ? "Receipted" : "Collection Pending"}
                              </Badge>
                            </td>
@@ -460,11 +465,12 @@ export default function LandlordDashboard() {
 
       <Dialog open={!!activePaymentEdit} onOpenChange={(o) => !o && setActivePaymentEdit(null)}>
         <DialogContent className="rounded-[3.5rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh] max-w-[500px] ring-1 ring-white/10">
-           <div className="p-10 bg-primary text-primary-foreground border-b border-white/10 text-left shrink-0 relative overflow-hidden">
-             <div className="absolute top-0 right-0 p-10 opacity-10"><PoundSterling className="w-24 h-24" /></div>
+           {/* THEME-CONSISTENT HEADING: Light in light mode, Dark in dark mode via secondary palette */}
+           <div className="p-10 bg-secondary text-secondary-foreground border-b border-border text-left shrink-0 relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-10 opacity-5"><PoundSterling className="w-24 h-24" /></div>
              <DialogHeader>
                 <DialogTitle className="text-3xl font-bold font-headline tracking-tighter">Manage Ledger</DialogTitle>
-                <DialogDescription className="text-primary-foreground/70 font-medium text-base mt-2">Adjust monthly rent and collection state.</DialogDescription>
+                <DialogDescription className="text-muted-foreground font-medium text-base mt-2">Adjust monthly rent and collection state.</DialogDescription>
              </DialogHeader>
            </div>
            <div className="p-10 space-y-10 text-left bg-white/[0.01]">
