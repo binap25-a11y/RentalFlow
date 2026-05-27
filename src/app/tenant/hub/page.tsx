@@ -10,7 +10,7 @@ import {
   ChevronRight, ReceiptText,
   ShieldCheck, Download, 
   Info, Wifi, Shield, PoundSterling, Phone, Wrench,
-  Plus, Camera, X, Save, CheckCircle2, AlertTriangle, Sparkles
+  Plus, Camera, X, Save, CheckCircle2, Sparkles
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect } from "react";
@@ -36,9 +36,8 @@ import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 
 /**
- * @fileOverview High-Fidelity Resident Hub (Optimized).
+ * @fileOverview High-Fidelity Resident Hub.
  * Hierarchy: Cinematic Hero -> Identity -> Rent Ledger -> Narrative -> Property DNA -> Actions.
- * Features a premium "Maintenance Command" center for an elite user experience.
  */
 
 type ImageLedger = {
@@ -62,7 +61,7 @@ export default function TenantHub() {
     return getTenantCollectionQuery({ db, collectionName: "properties", userId: user.uid });
   }, [db, user]);
   
-  const { data: properties, isLoading: isPropLoading } = useCollection(propertiesQuery);
+  const { data: properties, loading: isPropLoading } = useCollection(propertiesQuery);
   const property = properties?.[0];
 
   const tenantProfileQuery = useMemoFirebase(() => {
@@ -188,23 +187,27 @@ export default function TenantHub() {
     }
   };
 
-  if (!isClient || isPropLoading) return (
-    <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-1000 pb-32 text-left bg-background">
-      <div className="h-[400px] w-full bg-muted/40 animate-pulse rounded-[3rem]" />
-      <div className="space-y-4">
-        <div className="h-10 w-64 bg-muted rounded-full animate-pulse" />
-        <div className="h-6 w-48 bg-muted/40 rounded-full animate-pulse" />
+  if (!isClient || isPropLoading) {
+    return (
+      <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-1000 pb-32 text-left bg-background">
+        <div className="h-[400px] w-full bg-muted/40 animate-pulse rounded-[3rem]" />
+        <div className="space-y-4">
+          <div className="h-10 w-64 bg-muted rounded-full animate-pulse" />
+          <div className="h-6 w-48 bg-muted/40 rounded-full animate-pulse" />
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
-  if (!property) return (
-    <div className="max-w-7xl mx-auto space-y-12 py-32 text-center">
-      <Building2 className="w-16 h-16 mx-auto text-muted-foreground/20 mb-6" />
-      <h1 className="text-3xl font-headline font-bold text-foreground">Registry Verification</h1>
-      <p className="text-muted-foreground max-w-sm mx-auto">Once your landlord links your residency to a property, your hub will be initialized here.</p>
-    </div>
-  );
+  if (!property) {
+    return (
+      <div className="max-w-7xl mx-auto space-y-12 py-32 text-center">
+        <Building2 className="w-16 h-16 mx-auto text-muted-foreground/20 mb-6" />
+        <h1 className="text-3xl font-headline font-bold text-foreground">Registry Verification</h1>
+        <p className="text-muted-foreground max-w-sm mx-auto">Once your landlord links your residency to a property, your hub will be initialized here.</p>
+      </div>
+    );
+  }
 
   const primaryImageUrl = getResolvedImageUrl(property?.imageUrl, property?.imageUrls);
 
@@ -306,7 +309,7 @@ export default function TenantHub() {
               <div className="pt-8 border-t border-border/50 flex flex-col sm:flex-row gap-6">
                 <Button variant="outline" className="flex-1 h-20 rounded-[2rem] border-border bg-card hover:bg-primary/5 font-bold text-[11px] uppercase tracking-widest font-headline transition-all shadow-sm" onClick={handleDownloadStatement}>
                    <Download className="w-6 h-6 mr-3 text-accent" /> Download Statement
-                </Download>
+                </Button>
                 
                 <Dialog open={isRepairOpen} onOpenChange={setIsRepairOpen}>
                   <DialogTrigger asChild>
@@ -328,19 +331,21 @@ export default function TenantHub() {
                         <div className="p-10 space-y-10">
                           <div className="space-y-3">
                             <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Repair Classification</Label>
-                            <select 
-                              className="flex h-14 w-full rounded-2xl border-none bg-muted/40 px-6 py-2 text-base focus:ring-2 focus:ring-accent outline-none font-bold text-foreground shadow-inner"
-                              value={repairCategory}
-                              onChange={(e) => setRepairCategory(e.target.value)}
-                            >
-                              <option value="plumbing">Plumbing (Leaks, Taps)</option>
-                              <option value="electrical">Electrical (Lights, Sockets)</option>
-                              <option value="hvac">Heating & Cooling</option>
-                              <option value="appliance">Appliance Maintenance</option>
-                              <option value="structural">Structural (Windows, Doors)</option>
-                              <option value="cosmetic">Cosmetic / General</option>
-                              <option value="other">Other Requirements</option>
-                            </select>
+                            <div className="relative">
+                              <select 
+                                className="flex h-14 w-full rounded-2xl border-none bg-muted/40 px-6 py-2 text-base focus:ring-2 focus:ring-accent outline-none font-bold text-foreground shadow-inner"
+                                value={repairCategory}
+                                onChange={(e) => setRepairCategory(e.target.value)}
+                              >
+                                <option value="plumbing">Plumbing (Leaks, Taps)</option>
+                                <option value="electrical">Electrical (Lights, Sockets)</option>
+                                <option value="hvac">Heating & Cooling</option>
+                                <option value="appliance">Appliance Maintenance</option>
+                                <option value="structural">Structural (Windows, Doors)</option>
+                                <option value="cosmetic">Cosmetic / General</option>
+                                <option value="other">Other Requirements</option>
+                              </select>
+                            </div>
                           </div>
 
                           <div className="space-y-3">
