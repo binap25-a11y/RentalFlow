@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
 
     try {
       // GENKIT 1.x ORCHESTRATION: Stream initialization is synchronous
+      // Ensure GOOGLE_GENAI_API_KEY is available in the environment
       const { stream } = ai.generateStream(
         conciergePrompt({
           query,
@@ -53,8 +54,10 @@ export async function POST(req: NextRequest) {
             // Handle high-volume or quota scenarios gracefully within the stream
             if (errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED')) {
               controller.enqueue(encoder.encode("\n\n[SYSTEM NOTIFICATION]: The high-fidelity property intelligence engine is currently handling a high volume of requests. Please try your query again in a moment—your residency ledger remains secure."));
+            } else if (errorMsg.includes('API_KEY_INVALID') || errorMsg.includes('403')) {
+              controller.enqueue(encoder.encode("\n\n[SYSTEM ALERT]: Credential verification pending. Please verify your Google API Key configuration in the management console."));
             } else {
-              controller.enqueue(encoder.encode("\n\n[SYSTEM ERROR]: Communication interrupted. Please try again."));
+              controller.enqueue(encoder.encode("\n\n[SYSTEM ERROR]: Communication interrupted. Please try again or contact management if the issue persists."));
             }
             controller.close();
           }
