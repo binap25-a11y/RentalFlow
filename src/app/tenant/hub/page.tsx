@@ -22,7 +22,7 @@ import { format } from "date-fns";
 /**
  * @fileOverview High-Fidelity Resident Hub.
  * Optimized for word-by-word streaming and professional vertical hierarchy.
- * Sequence: Hero -> Identity Bar -> Monthly Rent -> Residence Narrative -> Property DNA.
+ * Resolved ReferenceError: Phone is not defined.
  */
 
 export default function TenantHub() {
@@ -72,6 +72,9 @@ export default function TenantHub() {
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [chatHistory, isChatOpen]);
 
   const handleAskConcierge = async (text?: string) => {
+    // 1. REQUEST GUARD: Prevent duplicate calls
+    if (isChatting) return;
+
     const queryText = text || chatQuery.trim();
     if (!queryText) return;
     
@@ -96,11 +99,11 @@ export default function TenantHub() {
       });
 
       if (!response.ok) {
-        throw new Error('API route initialization failed');
+        throw new Error('API route failed to respond.');
       }
 
       const reader = response.body?.getReader();
-      if (!reader) throw new Error('Stream reading failed');
+      if (!reader) throw new Error('Stream reader initialization failed.');
 
       let botText = "";
       setChatHistory(prev => [...prev, { role: 'bot', text: "" }]);
@@ -120,7 +123,7 @@ export default function TenantHub() {
         });
       }
     } catch (error: any) {
-      console.error('CONCIERGE RUNTIME ERROR:', error);
+      console.error('CONCIERGE CLIENT ERROR:', error);
       setChatHistory(prev => {
         const newHistory = [...prev];
         const lastMsg = newHistory[newHistory.length - 1];

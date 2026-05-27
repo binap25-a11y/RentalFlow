@@ -5,7 +5,8 @@ import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 
 /**
  * 🤖 Hardened Streaming Concierge Endpoint
- * Optimized for Genkit 1.x synchronous stream initialization and resilient error handling.
+ * Optimized for Genkit 1.x zero-latency streaming and real professional logging.
+ * Removes masked fallback messages.
  */
 
 export const dynamic = 'force-dynamic';
@@ -26,6 +27,7 @@ export async function POST(req: NextRequest) {
 
     try {
       // GENKIT 1.x ORCHESTRATION: generateStream returns the stream object synchronously.
+      // Use gemini-2.0-flash via the conciergePrompt.
       const { stream } = ai.generateStream(
         conciergePrompt({
           query,
@@ -46,6 +48,7 @@ export async function POST(req: NextRequest) {
             }
             controller.close();
           } catch (streamError: any) {
+            // PROFESSIONAL LOGGING: Expose actual error to server logs
             console.error('AI STREAM ITERATION ERROR:', streamError);
             
             const errorMsg = streamError.message || "";

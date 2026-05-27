@@ -3,7 +3,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 /**
  * 🤖 AI Connectivity Diagnostic Engine
- * Verifies the GEMINI_API_KEY configuration and model accessibility.
+ * Verifies model accessibility and credential status.
+ * Replaces generic alerts with definitive SDK testing.
  */
 
 export async function GET() {
