@@ -62,7 +62,7 @@ export default function TenantPaymentsPage() {
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-7xl mx-auto pb-24 text-left">
       {/* 1. HEADER SECTION */}
-      <div className="space-y-4">
+      <div className="space-y-4 text-left">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-2xl hover:bg-primary/5 transition-colors h-10 w-10 border border-white/5 shrink-0 shadow-sm">
             <ArrowLeft className="w-5 h-5" />

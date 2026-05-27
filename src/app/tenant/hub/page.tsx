@@ -17,10 +17,11 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { cn, getResolvedImageUrl } from "@/lib/utils";
 import { query, collection, where } from "firebase/firestore";
 import { format } from "date-fns";
+import Image from "next/image";
 
 /**
  * @fileOverview High-Fidelity Gemini Resident Hub.
- * Sequence: Hero -> Identity Bar -> Rent Ledger -> Narrative -> Property DNA -> Gemini Chatbot.
+ * Hierarchy: Cinematic Hero -> Identity -> Rent Ledger -> Narrative -> Property DNA -> Gemini Chatbot.
  */
 
 export default function TenantHub() {
@@ -126,7 +127,11 @@ export default function TenantHub() {
       }
     } catch (error: any) {
       console.error('CHATBOT ERROR:', error);
-      const errorMessage = `[GEMINI ERROR]: ${error.message || 'Service synchronization lost. Please refresh the page.'}`;
+      const isQuota = error.message?.includes('429') || error.message?.includes('quota');
+      const errorMessage = isQuota 
+        ? "[GEMINI] Systems are at peak capacity. Please retry your query in 20 seconds."
+        : `[GEMINI ERROR]: ${error.message || 'Service synchronization lost. Please refresh.'}`;
+      
       setChatHistory(prev => {
         const newHistory = [...prev];
         const lastMsg = newHistory[newHistory.length - 1];

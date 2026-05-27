@@ -3,8 +3,7 @@ import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 
 /**
  * 🤖 Hardened Gemini Streaming Chatbot
- * Optimized for Genkit 1.x zero-latency streaming.
- * DEFINITIVE FIX: Passes evaluated prompt request to ensure model is supplied.
+ * Optimized for Genkit 1.x with explicit Quota (429) detection.
  */
 
 export const dynamic = 'force-dynamic';
@@ -35,6 +34,7 @@ export async function POST(req: Request) {
 
     try {
       // GENKIT 1.x STREAMING: Definitive iteration pattern using evaluated prompt
+      // Evaluated prompt ensure the model is supplied automatically
       const { stream } = ai.generateStream(conciergePrompt({
         query,
         residentName,
@@ -54,8 +54,14 @@ export async function POST(req: Request) {
             controller.close();
           } catch (streamError: any) {
             console.error('REAL AI STREAM ERROR:', streamError);
-            const errorMsg = streamError.message || "Service Interrupted";
-            controller.enqueue(encoder.encode(`\n\n[GEMINI ERROR]: ${errorMsg}`));
+            const rawError = streamError.message || "";
+            const isQuota = rawError.includes('429') || rawError.includes('RESOURCE_EXHAUSTED') || rawError.includes('quota');
+            
+            const userMsg = isQuota 
+              ? "\n\n[GEMINI] Systems are currently at peak capacity. I'm prioritizing critical safety records—please wait a moment and refresh your hub to continue our conversation."
+              : `\n\n[GEMINI ERROR]: Service synchronization interrupted. Please verify connectivity.`;
+            
+            controller.enqueue(encoder.encode(userMsg));
             controller.close();
           }
         },
