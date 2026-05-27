@@ -68,7 +68,10 @@ export default function TenantHub() {
   }, [db, user]);
   const { data: requests, isLoading: isRequestsLoading } = useCollection(requestsQuery);
   
-  const activeRequests = useMemo(() => requests?.filter(r => r.status !== 'completed') || [], [requests]);
+  const maintenanceContext = useMemo(() => {
+    if (!requests) return "No maintenance records on file.";
+    return requests.map(r => `${r.title} (Status: ${r.status}, Priority: ${r.priority})`).join(', ');
+  }, [requests]);
 
   const contactsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -97,9 +100,8 @@ export default function TenantHub() {
     setChatHistory(prev => [...prev, { role: 'user', text: queryText }]); 
     setIsChatting(true);
 
-    const activeRequestsContext = activeRequests.map(r => `${r.title} (${r.status})`).join(', ');
     const paymentContext = currentPayment ? `Payment for ${format(new Date(), 'MMMM')} is ${currentPayment.status}.` : "No current payment record found.";
-    const propertyInfo = property ? `Property: ${property.addressLine1}. Specs: ${property.numberOfBedrooms} bedrooms, ${property.numberOfBathrooms} bathrooms. Narrative: ${property.description || 'N/A'}. Rent: £${property.rentAmount}. Connectivity: ${property.connectivityStatus || 'Synchronizing'}. Compliance: ${property.complianceStatus || 'Verified'}. Financials: ${paymentContext} Repairs: ${activeRequestsContext}` : "Property details are currently synchronizing.";
+    const propertyInfo = property ? `Property: ${property.addressLine1}. Specs: ${property.numberOfBedrooms} bedrooms, ${property.numberOfBathrooms} bathrooms. Narrative: ${property.description || 'N/A'}. Rent: £${property.rentAmount}. Connectivity: ${property.connectivityStatus || 'Synchronizing'}. Compliance: ${property.complianceStatus || 'Verified'}. Financials: ${paymentContext} Repairs/History: ${maintenanceContext}` : "Property details are currently synchronizing.";
 
     try {
       const response = await tenantConcierge({ 
@@ -165,10 +167,6 @@ export default function TenantHub() {
 
   if (!isClient || isPropLoading || isRequestsLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary w-12 h-12 opacity-60" /></div>;
 
-  /**
-   * 💎 PREMIUM SYSTEM ORCHESTRATION VIEW (Placeholder State)
-   * Streamlined hierarchy: Hero -> Monthly Rent -> Your Residence -> Actions
-   */
   if (!property) return (
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-1000 pb-32 text-left bg-background">
       <div className="space-y-4">
@@ -184,7 +182,6 @@ export default function TenantHub() {
             </div>
             
             <CardContent className="p-12 space-y-12">
-              {/* 1. Monthly Rent Placeholder */}
               <div className="space-y-6">
                 <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight opacity-20"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
                 <div className="p-10 bg-muted/10 rounded-[2.5rem] border border-border/50 shadow-inner space-y-6">
@@ -193,7 +190,6 @@ export default function TenantHub() {
                 </div>
               </div>
 
-              {/* 2. Your Residence Placeholder */}
               <div className="space-y-6">
                 <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight opacity-20"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
                 <div className="p-10 bg-primary/5 rounded-[2.5rem] border border-border/50 space-y-4">
@@ -204,11 +200,6 @@ export default function TenantHub() {
                      <div className="h-16 bg-muted/20 rounded-2xl animate-pulse" />
                   </div>
                 </div>
-              </div>
-
-              {/* 3. Fitted Action Placeholder */}
-              <div className="pt-4">
-                <div className="h-16 w-full bg-muted/20 rounded-2xl animate-pulse opacity-20" />
               </div>
             </CardContent>
           </Card>
@@ -284,7 +275,6 @@ export default function TenantHub() {
 
             <CardContent className="p-10 md:p-12 space-y-12">
               <div className="space-y-12">
-                {/* 1. Monthly Rent Ledger */}
                 <div className="space-y-6">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
                   <div className="p-10 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner">
@@ -296,7 +286,6 @@ export default function TenantHub() {
                   </div>
                 </div>
 
-                {/* 2. Your Residence Narrative + Connectivity/Compliance */}
                 <div className="space-y-6">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -324,7 +313,6 @@ export default function TenantHub() {
                   </div>
                 </div>
 
-                {/* 3. Fitted Download Action */}
                 <div className="pt-8 border-t border-border/50">
                   <Button variant="outline" className="w-full h-16 rounded-[1.75rem] border-border bg-card hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all shadow-sm" onClick={handleDownloadStatement}>
                      <Download className="w-5 h-5 mr-3 text-accent" /> Download Rent Statement
@@ -381,7 +369,6 @@ export default function TenantHub() {
              </CardContent>
            </Card>
 
-           {/* AI Hub Status */}
            <Card className="border-none shadow-sm rounded-[3rem] bg-accent text-white overflow-hidden text-left relative group">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl rounded-full group-hover:scale-150 transition-transform duration-1000" />
               <CardHeader className="p-10 pb-4">
@@ -405,7 +392,6 @@ export default function TenantHub() {
         </Button>
       </div>
 
-      {/* 🤖 ELITE AI CONCIERGE FLOATING INTERFACE */}
       <div className="fixed bottom-10 right-10 z-[100] flex flex-col items-end gap-6">
         {isChatOpen && (
           <Card className="w-[400px] h-[600px] border-none shadow-2xl rounded-[3rem] bg-card ring-1 ring-border overflow-hidden flex flex-col animate-in slide-in-from-bottom-10 fade-in duration-500">
@@ -440,7 +426,7 @@ export default function TenantHub() {
                     {[
                       { title: "Property Rules", icon: BookOpen, query: "What are the property rules?" },
                       { title: "Rent Status", icon: CreditCard, query: "What is my rent status?" },
-                      { title: "Report Repair", icon: Info, query: "How do I report a repair?" },
+                      { title: "Repairs History", icon: Info, query: "What is the status of my repairs?" },
                       { title: "Home Guides", icon: Info, query: "Tell me about my home specs." }
                     ].map((topic, i) => (
                       <button key={i} onClick={() => handleAskConcierge(topic.query)} className="p-5 bg-primary/5 rounded-[1.5rem] border border-border flex items-center gap-4 hover:bg-primary/10 transition-all text-left group">
