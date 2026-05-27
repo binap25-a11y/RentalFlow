@@ -160,6 +160,7 @@ export default function TenantEmergencyContactsPage() {
         </Button>
       </div>
 
+      {/* EMERGENCY ALERT - Optimised for high readability in both modes */}
       <div className="bg-red-500/5 border border-red-500/10 p-10 rounded-[3rem] flex flex-col md:flex-row gap-8 items-start md:items-center shadow-inner">
         <div className="p-5 bg-white dark:bg-red-950/40 rounded-[2rem] shadow-xl text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/40 shrink-0">
            <AlertCircle className="w-10 h-10" />

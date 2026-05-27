@@ -20,6 +20,7 @@ import { RENTALFLOW_LOGO_URL } from '@/lib/utils';
 /**
  * @fileOverview Accelerated Authentication Pipeline.
  * Optimized for zero-latency redirection and atomic profile resolution.
+ * Enhanced with premium visual feedback to reduce perceived wait time.
  */
 
 export default function AuthPage() {
@@ -48,7 +49,7 @@ export default function AuthPage() {
     setMounted(true);
   }, []);
 
-  // HYPER-ACCELERATED REDIRECTION: Jump to target the microsecond session resolves
+  // HYPER-ACCELERATED REDIRECTION
   useEffect(() => {
     if (user && db && mounted && !isLoading && !isRedirecting.current) {
       const checkAndRedirect = async () => {
@@ -68,7 +69,7 @@ export default function AuthPage() {
             if (isRedirecting.current) return;
             isRedirecting.current = true;
             
-            // ATOMIC REDIRECT: Bypass session check screens
+            // ATOMIC REDIRECT: Immediate jump to specific dashboard
             router.replace(userData.role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
           } else {
             setNeedsProfile(true);
@@ -106,6 +107,7 @@ export default function AuthPage() {
         updatedAt: serverTimestamp(),
       }, { merge: true });
 
+      // Handle Tenant profile linking
       if (role === 'tenant' && user.email) {
         const emailLower = user.email.toLowerCase().trim();
         const tenantProfilesRef = collection(db, 'tenantProfiles');
@@ -128,7 +130,6 @@ export default function AuthPage() {
         }
       }
       
-      await user.getIdToken(true);
       isRedirecting.current = true;
       router.replace(role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
     } catch (e: any) {
@@ -145,7 +146,7 @@ export default function AuthPage() {
       else await initiateEmailSignIn(auth, email, password);
     } catch (error: any) {
       setIsLoading(false);
-      toast({ variant: "destructive", title: "Auth Failed", description: "Invalid credentials or session error." });
+      toast({ variant: "destructive", title: "Auth Failed", description: "Invalid credentials." });
     }
   };
 
@@ -155,21 +156,21 @@ export default function AuthPage() {
       await initiateGoogleSignIn(auth);
     } catch (error) {
       setIsLoading(false);
-      toast({ variant: "destructive", title: "Google Session Failed" });
+      toast({ variant: "destructive", title: "Session Interrupted" });
     }
   };
 
-  // HYDRATION GUARD: Strictly show overlay until auth state is resolved
+  // HYDRATION GUARD: High-fidelity loading state to reduce perceived lag
   if (!mounted || isUserLoading || (user && !needsProfile)) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background z-[100]">
-        <div className="flex flex-col items-center gap-4 animate-in fade-in duration-500">
-          <div className="relative w-24 h-24 rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 bg-card">
+        <div className="flex flex-col items-center gap-6 animate-in fade-in duration-700">
+          <div className="relative w-28 h-28 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 bg-card">
              <Image src={RENTALFLOW_LOGO_URL} alt="RentalFlow" fill className="object-cover" unoptimized priority />
           </div>
-          <div className="flex items-center gap-3">
-            <Loader2 className="w-4 h-4 animate-spin text-accent opacity-40" />
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Authenticating</p>
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="w-6 h-6 animate-spin text-accent opacity-60" />
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.5em] font-headline ml-2">Synchronizing Session</p>
           </div>
         </div>
       </div>
@@ -196,7 +197,7 @@ export default function AuthPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Role</Label>
+              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Account Role</Label>
               <Tabs value={role} onValueChange={(v) => setRole(v as any)}>
                 <TabsList className="grid w-full grid-cols-2 h-12 bg-muted/20 rounded-xl">
                   <TabsTrigger value="landlord" className="rounded-lg font-bold data-[state=active]:bg-accent data-[state=active]:text-white">Landlord</TabsTrigger>
@@ -205,7 +206,7 @@ export default function AuthPage() {
               </Tabs>
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Phone</Label>
+              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Mobile Registry</Label>
               <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground" />
             </div>
             <Button className="w-full h-14 rounded-2xl font-bold bg-accent hover:bg-accent/90 text-white text-lg shadow-xl shadow-accent/20 border-none transition-all hover:scale-[1.01]" onClick={handleCreateProfile} disabled={isLoading}>
@@ -220,7 +221,7 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative animate-in fade-in duration-1000">
       <div className="absolute top-8 left-8">
-         <Button variant="ghost" asChild className="rounded-xl font-bold text-foreground hover:bg-primary/5"><Link href="/"><ArrowLeft className="w-4 h-4 mr-2" /> Home</Link></Button>
+         <Button variant="ghost" asChild className="rounded-xl font-bold text-foreground hover:bg-primary/5"><Link href="/"><ArrowLeft className="w-4 h-4 mr-2" /> Return Home</Link></Button>
       </div>
       <div className="max-w-xl w-full text-center">
         <div className="mb-12 inline-flex flex-col items-center">
@@ -232,13 +233,13 @@ export default function AuthPage() {
         <Card className="border-none shadow-2xl rounded-[3rem] p-2 bg-card">
           <CardHeader className="pt-10 pb-6 text-center">
             <CardTitle className="text-3xl font-headline font-bold text-foreground">Authentication</CardTitle>
-            <CardDescription className="font-medium">Access your professional portfolio vault.</CardDescription>
+            <CardDescription className="font-medium">Secure access to your property vault.</CardDescription>
           </CardHeader>
           <CardContent className="px-10 pb-12 space-y-6">
             <Button variant="outline" className="w-full h-14 rounded-2xl font-bold border-border bg-muted/10 hover:bg-muted/20 text-foreground" onClick={handleGoogleSignIn} disabled={isLoading}>
-              Continue with Google
+              Access with Google
             </Button>
-            <div className="relative my-4"><div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/10"></span></div><div className="relative flex justify-center text-[10px] uppercase font-bold text-muted-foreground tracking-widest"><span className="bg-card px-4">or use email</span></div></div>
+            <div className="relative my-4"><div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/10"></span></div><div className="relative flex justify-center text-[10px] uppercase font-bold text-muted-foreground tracking-widest"><span className="bg-card px-4">or use internal mail</span></div></div>
             <form onSubmit={handleSubmit} className="space-y-6 text-left">
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase text-muted-foreground opacity-60 font-headline">Email</Label>
@@ -254,11 +255,11 @@ export default function AuthPage() {
                 </div>
               </div>
               <Button type="submit" className="w-full h-14 rounded-2xl font-extrabold bg-accent hover:bg-accent/90 text-white text-xl shadow-xl shadow-accent/20 border-none transition-all hover:scale-[1.01]" disabled={isLoading}>
-                {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : (authMode === 'login' ? 'Access Vault' : 'Create Credentials')}
+                {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : (authMode === 'login' ? 'Enter Vault' : 'Initialize Credentials')}
               </Button>
             </form>
             <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full text-xs font-bold text-muted-foreground hover:text-accent transition-all font-headline uppercase tracking-widest mt-6">
-              {authMode === 'login' ? "Create Professional Account" : "Back to Sign In"}
+              {authMode === 'login' ? "Register Professional Portfolio" : "Return to Access Hub"}
             </button>
           </CardContent>
         </Card>

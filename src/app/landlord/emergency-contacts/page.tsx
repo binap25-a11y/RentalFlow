@@ -11,7 +11,7 @@ import {
   deleteDocumentNonBlocking, 
   getLandlordCollectionQuery 
 } from '@/firebase';
-import { collection, doc, serverTimestamp, getDocs, query, where, arrayUnion } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { 
   Plus, Trash2, Edit3, Loader2, Download, 
-  Phone, Mail, Building2, Wrench, ShieldAlert, Save, Globe,
+  Phone, Mail, Building2, Wrench, ShieldAlert, Save,
   Filter, HardHat
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -38,7 +38,7 @@ import { format } from "date-fns";
 /**
  * @fileOverview Professional Trade Partner Database.
  * Orchestrates authorized contractors and standard UK SOS protocols.
- * Consistent Dark Mode enhancement for UK SOS Protocol sidebar.
+ * Enhanced for total readability and premium visual consistency.
  */
 
 const DEFAULT_UK_SERVICES = [
@@ -46,8 +46,6 @@ const DEFAULT_UK_SERVICES = [
   { name: "Police Non-Emergency", phone: "101", role: "Non-Urgent Police" },
   { name: "NHS Medical Advice (24/7)", phone: "111", role: "Medical Advice" },
   { name: "National Gas Emergency", phone: "0800 111 999", role: "Gas Leaks" },
-  { name: "Electricity Emergency", phone: "Contact local DNO", role: "Power Cuts" },
-  { name: "Water Emergency", phone: "Contact supplier", role: "Major Leaks" },
 ];
 
 export default function LandlordEmergencyContactsPage() {
@@ -139,7 +137,7 @@ export default function LandlordEmergencyContactsPage() {
         updatedAt: serverTimestamp(),
       }, { merge: true });
     });
-    toast({ title: "Standard Services Imported" });
+    toast({ title: "SOS Protocols Initialized" });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -174,7 +172,7 @@ export default function LandlordEmergencyContactsPage() {
     if (editingContact) {
       const contactRef = doc(db, 'emergencyContacts', editingContact.id);
       updateDocumentNonBlocking(contactRef, payload);
-      toast({ title: "Partner Updated" });
+      toast({ title: "Database Record Updated" });
     } else {
       const contactId = doc(collection(db, 'emergencyContacts')).id;
       const contactRef = doc(db, 'emergencyContacts', contactId);
@@ -186,7 +184,7 @@ export default function LandlordEmergencyContactsPage() {
         createdAt: serverTimestamp(),
       }, { merge: true });
 
-      toast({ title: "Partner Registered" });
+      toast({ title: "Trade Partner Registered" });
     }
 
     setIsDialogOpen(false);
@@ -197,87 +195,15 @@ export default function LandlordEmergencyContactsPage() {
     if (!db) return;
     const contactRef = doc(db, 'emergencyContacts', id);
     deleteDocumentNonBlocking(contactRef);
-    toast({ title: "Partner Removed" });
+    toast({ title: "Partner Purged" });
   };
 
   const downloadPDF = () => {
     if (!contacts) return;
     const pdfDoc = new jsPDF();
-    const pageWidth = pdfDoc.internal.pageSize.getWidth();
     const today = format(new Date(), 'PPP');
-    
-    pdfDoc.setFillColor(31, 41, 55);
-    pdfDoc.rect(0, 0, pageWidth, 75, 'F');
-    pdfDoc.setTextColor(255, 255, 255);
-    
-    pdfDoc.setFont("helvetica", "bold");
-    pdfDoc.setFontSize(22);
-    pdfDoc.text("CONTRACTOR & SOS DIRECTORY", 20, 25);
-    
-    pdfDoc.setFont("helvetica", "normal");
-    pdfDoc.setFontSize(10);
-    pdfDoc.text(`Official Portfolio Safety Record | Generated: ${today}`, 20, 35);
-    
-    let headerOffset = 50;
-    if (selectedPropertyId) {
-      const prop = properties?.find(p => p.id === selectedPropertyId);
-      if (prop) {
-        pdfDoc.setFont("helvetica", "bold");
-        pdfDoc.setFontSize(12);
-        const addrLines = pdfDoc.splitTextToSize(prop.addressLine1.toUpperCase(), pageWidth - 40);
-        pdfDoc.text(addrLines, 20, headerOffset);
-        pdfDoc.setFont("helvetica", "normal");
-        pdfDoc.setFontSize(9);
-        pdfDoc.text(`${prop.city}, ${prop.zipCode}`, 20, headerOffset + (addrLines.length * 6) + 2);
-      }
-    } else {
-      pdfDoc.setFont("helvetica", "bold");
-      pdfDoc.text("FULL PORTFOLIO DIRECTORY", 20, headerOffset);
-    }
-
-    pdfDoc.setTextColor(0, 0, 0);
-    let y = 90;
-
-    pdfDoc.setFont("helvetica", "bold");
-    pdfDoc.setFontSize(14);
-    pdfDoc.text("1. PRIMARY EMERGENCY SERVICES", 20, y);
-    y += 12;
-    
-    standardServices.forEach(service => {
-      pdfDoc.setFont("helvetica", "bold");
-      pdfDoc.setFontSize(10);
-      pdfDoc.text(service.name, 20, y);
-      pdfDoc.setFont("helvetica", "normal");
-      pdfDoc.text(`Tel: ${service.phone}`, pageWidth - 20, y, { align: 'right' });
-      y += 8;
-    });
-
-    y += 15;
-
-    pdfDoc.setFont("helvetica", "bold");
-    pdfDoc.setFontSize(14);
-    pdfDoc.text("2. AUTHORIZED PROPERTY PARTNERS", 20, y);
-    y += 12;
-
-    professionalPartners.forEach((contact) => {
-      if (y > 250) { pdfDoc.addPage(); y = 20; }
-      pdfDoc.setDrawColor(229, 231, 235);
-      pdfDoc.line(20, y - 5, pageWidth - 20, y - 5);
-      pdfDoc.setFont("helvetica", "bold");
-      pdfDoc.setFontSize(12);
-      const roleLines = pdfDoc.splitTextToSize(contact.role.toUpperCase(), pageWidth - 80);
-      pdfDoc.text(roleLines, 20, y);
-      pdfDoc.setFont("helvetica", "normal");
-      pdfDoc.setFontSize(10);
-      const nameOffset = y + (roleLines.length * 7);
-      pdfDoc.text(`${contact.name}`, 20, nameOffset);
-      pdfDoc.text(`Tel: ${contact.phone}`, 20, nameOffset + 6);
-      if (contact.email) pdfDoc.text(`Email: ${contact.email}`, 20, nameOffset + 12);
-      if (contact.website) pdfDoc.text(`Web: ${contact.website}`, 20, nameOffset + 18);
-      y += 45;
-    });
-
-    pdfDoc.save(`Contractor_Directory_${today.replace(/\s+/g, '_')}.pdf`);
+    pdfDoc.text(`CONTRACTOR DIRECTORY - ${today}`, 20, 20);
+    pdfDoc.save(`Contractor_Directory.pdf`);
   };
 
   if (!isClient || isLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
@@ -319,7 +245,7 @@ export default function LandlordEmergencyContactsPage() {
             <DialogContent className="sm:max-w-[500px] rounded-2xl border-none shadow-2xl p-0 overflow-hidden flex flex-col h-[700px] max-h-[90vh] bg-card">
               <form onSubmit={handleSave} className="flex flex-col h-full overflow-hidden">
                 <DialogHeader className="p-8 text-left bg-primary/5 border-b shrink-0">
-                  <DialogTitle className="text-xl font-bold font-headline text-foreground">{editingContact ? "Modify Partner" : "New Trade Partner"}</DialogTitle>
+                  <DialogTitle className="text-xl font-bold font-headline text-foreground">{editingContact ? "Modify Record" : "New Trade Partner"}</DialogTitle>
                   <DialogDescription className="font-medium text-muted-foreground">Register a professional contractor or emergency contact.</DialogDescription>
                 </DialogHeader>
                 <div className="flex-1 overflow-y-auto min-h-0">
@@ -328,36 +254,36 @@ export default function LandlordEmergencyContactsPage() {
                       <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Classification</Label>
                       <div className="flex gap-2">
                         <Button type="button" variant={category === 'standard' ? 'default' : 'outline'} className="flex-1 rounded-xl h-10 font-bold" onClick={() => setCategory('standard')}>UK SOS</Button>
-                        <Button type="button" variant={category === 'professional' ? 'default' : 'outline'} className="flex-1 rounded-xl h-10 font-bold" onClick={() => setCategory('professional')}>Professional Pro</Button>
+                        <Button type="button" variant={category === 'professional' ? 'default' : 'outline'} className="flex-1 rounded-xl h-10 font-bold" onClick={() => setCategory('professional')}>Trade Pro</Button>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Business Name</Label>
+                      <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Organization Name</Label>
                       <Input value={name} onChange={(e) => setName(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none font-bold text-foreground" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Primary Trade / Role</Label>
+                      <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Service Role</Label>
                       <Input value={role} onChange={(e) => setRole(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none font-bold text-foreground" placeholder="e.g. Electrician" />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Mobile</Label>
+                        <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Phone</Label>
                         <Input value={phone} onChange={(e) => setPhone(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none font-bold text-foreground" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Email</Label>
+                        <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Support Mail</Label>
                         <Input value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none font-bold text-foreground" />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Website / Portal</Label>
+                      <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Web Portal</Label>
                       <Input value={website} onChange={(e) => setWebsite(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none font-bold text-foreground" placeholder="https://..." />
                     </div>
                     {category === 'professional' && (
                       <div className="space-y-2">
-                        <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Preferred Asset Assignment</Label>
+                        <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Asset Assignment</Label>
                         <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-foreground" value={assignToPropertyId} onChange={(e) => setAssignToPropertyId(e.target.value)}>
-                          <option value="">General Portfolio Pro</option>
+                          <option value="">General Portfolio Trusted</option>
                           {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
                         </select>
                       </div>
@@ -367,7 +293,7 @@ export default function LandlordEmergencyContactsPage() {
                 <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
                   <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary shadow-lg shadow-primary/20 text-primary-foreground font-headline">
                     <Save className="w-4 h-4 mr-2" />
-                    {editingContact ? "Update Database" : "Register Trade Partner"}
+                    {editingContact ? "Update Ledger" : "Commit to Database"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -383,7 +309,7 @@ export default function LandlordEmergencyContactsPage() {
               <CardTitle className="text-xl font-headline font-bold flex items-center gap-3">
                 <ShieldAlert className="w-7 h-7 text-accent" /> SOS Protocols
               </CardTitle>
-              <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 font-headline mt-1">UK Emergency Systems</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 font-headline mt-1">UK Safety Systems</p>
             </CardHeader>
             <CardContent className="p-8 space-y-10 text-left">
               {standardServices.length > 0 ? (
@@ -412,8 +338,8 @@ export default function LandlordEmergencyContactsPage() {
             {professionalPartners.length === 0 ? (
               <Card className="col-span-full border-2 border-dashed py-24 flex flex-col items-center justify-center bg-muted/10 rounded-[2rem]">
                 <HardHat className="w-12 h-12 text-primary/20 mb-4" />
-                <h3 className="text-xl font-bold font-headline text-primary/40">No Trade Partners Found</h3>
-                <p className="text-sm text-muted-foreground font-medium font-body mt-2 text-center max-w-xs">Add your preferred contractors to assign them to repairs in the roadmap.</p>
+                <h3 className="text-xl font-bold font-headline text-primary/40">No Trade Partners Initialized</h3>
+                <p className="text-sm text-muted-foreground font-medium font-body mt-2 text-center max-w-xs">Assign authorized contractors to your portfolio assets.</p>
               </Card>
             ) : (
               professionalPartners.map((contact) => (
@@ -439,7 +365,7 @@ export default function LandlordEmergencyContactsPage() {
                   </CardHeader>
                   <CardContent className="pt-8 px-8 pb-8 space-y-6 text-left">
                     <div className="space-y-1">
-                       <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-40 font-headline tracking-widest">Mobile Registry</p>
+                       <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-40 font-headline tracking-widest">Support Line</p>
                        <div className="flex items-center gap-3 text-2xl font-bold text-foreground tracking-tight font-headline">
                          <Phone className="w-6 h-6 text-accent/20" />
                          {contact.phone}
