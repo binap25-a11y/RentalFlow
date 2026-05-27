@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
@@ -11,14 +12,14 @@ import {
   ChevronRight, ReceiptText,
   ShieldCheck, RefreshCcw, Bed, Bath, Download, 
   Home, Info, BookOpen, CreditCard, RotateCcw, Phone,
-  MessageCircle, X, Wifi, Shield
+  MessageCircle, X, Wifi, Shield, Clock
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { tenantConcierge } from "@/ai/flows/tenant-concierge-flow";
 import { cn, getResolvedImageUrl } from "@/lib/utils";
 import { query, collection, where } from "firebase/firestore";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 
 /**
  * 🆘 National SOS Protocols (UK Fallbacks)
@@ -279,8 +280,14 @@ export default function TenantHub() {
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
                   <div className="p-10 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner">
                      <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.3em] font-headline opacity-50 mb-3">Verified Ledger</p>
-                     <p className="text-6xl font-bold font-headline text-foreground tracking-tighter mb-6">£{property.rentAmount?.toLocaleString()}</p>
-                     <Badge className={cn("w-full h-12 flex items-center justify-center font-bold text-[11px] rounded-2xl shadow-sm uppercase tracking-[0.2em] border shadow-inner", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white border-transparent" : "bg-amber-500/10 text-amber-600 border-amber-500/20")}>
+                     <p className="text-6xl font-bold font-headline text-foreground tracking-tighter mb-4">£{property.rentAmount?.toLocaleString()}</p>
+                     <div className="flex items-center gap-2 mb-6">
+                        <Clock className="w-3.5 h-3.5 text-muted-foreground opacity-40" />
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40">
+                          {currentPayment?.status === 'paid' && currentPayment?.paidAt ? `Verification Receipted: ${format(new Date(currentPayment.paidAt), 'PPP')}` : `Waiting for verification for ${format(new Date(), 'MMMM yyyy')}`}
+                        </span>
+                     </div>
+                     <Badge className={cn("w-full h-14 flex items-center justify-center font-bold text-[11px] rounded-2xl shadow-sm uppercase tracking-[0.2em] border shadow-inner transition-all duration-700", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white border-transparent" : "bg-amber-500/10 text-amber-600 border-amber-500/20")}>
                        {currentPayment?.status === 'paid' ? "Receipted & Collected" : "Collection Pending"}
                      </Badge>
                   </div>
