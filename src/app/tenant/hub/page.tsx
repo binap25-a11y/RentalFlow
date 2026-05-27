@@ -58,7 +58,7 @@ import Image from "next/image";
 /**
  * @fileOverview High-Fidelity Resident Hub.
  * Optimized for cinematic asset resolution and hardware-aligned stability.
- * Fixed JSX identifier collision and enhanced hover visibility.
+ * Definitively resolved JSX identifier collision and enhanced dark mode SOS.
  */
 
 export default function TenantHub() {
@@ -305,14 +305,14 @@ export default function TenantHub() {
                 <h3 className="font-bold font-headline text-xl text-foreground flex items-center tracking-tight"><ShieldCheck className="w-5 h-5 mr-3 text-accent" /> Property DNA</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
-                     <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Wifi className="w-5 h-5" /></div>
+                     <div className="p-3 bg-white dark:bg-muted rounded-xl shadow-sm text-accent shrink-0"><Wifi className="w-5 h-5" /></div>
                      <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-bold uppercase opacity-40 font-headline">Connectivity</p>
                         <p className="text-sm font-bold leading-tight whitespace-normal break-words">{property.connectivityStatus || 'Ultra-Fast Fiber Enabled'}</p>
                      </div>
                   </div>
                   <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
-                     <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Shield className="w-5 h-5" /></div>
+                     <div className="p-3 bg-white dark:bg-muted rounded-xl shadow-sm text-accent shrink-0"><Shield className="w-5 h-5" /></div>
                      <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-bold uppercase opacity-40 font-headline">Compliance</p>
                         <p className="text-sm font-bold leading-tight whitespace-normal break-words">{property.complianceStatus || 'EPC Grade B / Certified'}</p>
@@ -420,9 +420,9 @@ export default function TenantHub() {
              </CardHeader>
              <CardContent className="p-10 space-y-8 text-left">
                 <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/10 text-left">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-red-600 mb-3 font-headline">Primary SOS</p>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-red-600 dark:text-red-400 mb-3 font-headline">Primary SOS</p>
                     <p className="text-base font-bold text-foreground font-headline">Emergency Services</p>
-                    <p className="text-lg font-bold mt-4 flex items-center text-red-600">
+                    <p className="text-lg font-bold mt-4 flex items-center text-red-600 dark:text-red-400">
                       <Phone className="w-5 h-5 mr-3 opacity-40" /> 999
                     </p>
                 </div>

@@ -38,7 +38,7 @@ import { format } from "date-fns";
 /**
  * @fileOverview Professional Trade Partner Database.
  * Orchestrates authorized contractors and standard UK SOS protocols.
- * Hardened for real-time resident synchronization.
+ * Consistent Dark Mode enhancement for UK SOS Protocol sidebar.
  */
 
 const DEFAULT_UK_SERVICES = [
@@ -148,7 +148,6 @@ export default function LandlordEmergencyContactsPage() {
 
     let memberIds = [user.uid];
     
-    // Proactively grant visibility to relevant residents
     if (category === 'standard' || !assignToPropertyId) {
       const tenantsQuery = query(collection(db, 'tenantProfiles'), where('landlordId', '==', user.uid));
       const tenantSnaps = await getDocs(tenantsQuery);
@@ -287,7 +286,7 @@ export default function LandlordEmergencyContactsPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto text-left pb-12">
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-headline font-bold text-primary mb-2 tracking-tight">Contractors & SOS</h1>
+          <h1 className="text-3xl font-headline font-bold text-foreground mb-2 tracking-tight">Contractors & SOS</h1>
           <p className="text-muted-foreground font-medium font-body max-w-2xl">
             {selectedProperty 
               ? `Authorized professionals and emergency protocols for ${selectedProperty.addressLine1}` 
@@ -324,7 +323,7 @@ export default function LandlordEmergencyContactsPage() {
                   <DialogDescription className="font-medium text-muted-foreground">Register a professional contractor or emergency contact.</DialogDescription>
                 </DialogHeader>
                 <div className="flex-1 overflow-y-auto min-h-0">
-                  <div className="grid gap-6 p-8">
+                  <div className="grid gap-6 p-8 text-left">
                     <div className="space-y-2">
                       <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Classification</Label>
                       <div className="flex gap-2">
@@ -334,25 +333,25 @@ export default function LandlordEmergencyContactsPage() {
                     </div>
                     <div className="space-y-2">
                       <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Business Name</Label>
-                      <Input value={name} onChange={(e) => setName(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none font-bold" />
+                      <Input value={name} onChange={(e) => setName(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none font-bold text-foreground" />
                     </div>
                     <div className="space-y-2">
                       <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Primary Trade / Role</Label>
-                      <Input value={role} onChange={(e) => setRole(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none font-bold" placeholder="e.g. Electrician" />
+                      <Input value={role} onChange={(e) => setRole(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none font-bold text-foreground" placeholder="e.g. Electrician" />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Mobile</Label>
-                        <Input value={phone} onChange={(e) => setPhone(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none font-bold" />
+                        <Input value={phone} onChange={(e) => setPhone(e.target.value)} required className="rounded-xl h-11 bg-muted/20 border-none font-bold text-foreground" />
                       </div>
                       <div className="space-y-2">
                         <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Email</Label>
-                        <Input value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none font-bold" />
+                        <Input value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none font-bold text-foreground" />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <Label className="font-bold text-xs uppercase text-muted-foreground opacity-60 tracking-wider font-headline">Website / Portal</Label>
-                      <Input value={website} onChange={(e) => setWebsite(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none font-bold" placeholder="https://..." />
+                      <Input value={website} onChange={(e) => setWebsite(e.target.value)} className="rounded-xl h-11 bg-muted/20 border-none font-bold text-foreground" placeholder="https://..." />
                     </div>
                     {category === 'professional' && (
                       <div className="space-y-2">
@@ -379,29 +378,30 @@ export default function LandlordEmergencyContactsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-1">
-          <Card className="border-none shadow-sm bg-primary text-primary-foreground rounded-2xl overflow-hidden">
-            <CardHeader className="pb-4 border-b border-white/10">
-              <CardTitle className="text-lg font-headline flex items-center gap-2 text-left">
-                <ShieldAlert className="w-5 h-5 text-accent" /> UK SOS Protocols
+          <Card className="border-none shadow-sm bg-primary text-primary-foreground rounded-3xl overflow-hidden">
+            <CardHeader className="pb-4 border-b border-white/10 p-8 text-left">
+              <CardTitle className="text-xl font-headline font-bold flex items-center gap-3">
+                <ShieldAlert className="w-7 h-7 text-accent" /> SOS Protocols
               </CardTitle>
+              <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 font-headline mt-1">UK Emergency Systems</p>
             </CardHeader>
-            <CardContent className="pt-6 space-y-6 text-left">
+            <CardContent className="p-8 space-y-10 text-left">
               {standardServices.length > 0 ? (
                 standardServices.map((service) => (
                   <div key={service.id} className="group relative">
                     <div className="space-y-1">
-                      <p className="text-[10px] font-bold uppercase opacity-60 tracking-widest">{service.role}</p>
-                      <p className="text-sm font-bold">{service.name}</p>
-                      <p className="text-base font-bold text-white/90">{service.phone}</p>
+                      <p className="text-[10px] font-bold uppercase opacity-60 tracking-[0.2em] font-headline">{service.role}</p>
+                      <p className="text-base font-bold font-headline leading-tight">{service.name}</p>
+                      <p className="text-xl font-bold text-primary-foreground/90 font-headline tracking-tight mt-1">{service.phone}</p>
                     </div>
-                    <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold text-white hover:bg-white/20" onClick={() => handleEdit(service)}>EDIT</Button>
-                      <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold text-red-300 hover:bg-red-500/20" onClick={() => handleDelete(service.id)}>DEL</Button>
+                    <div className="flex gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="sm" className="h-8 px-3 text-[10px] font-bold text-primary-foreground hover:bg-white/10 rounded-lg" onClick={() => handleEdit(service)}>EDIT</Button>
+                      <Button variant="ghost" size="sm" className="h-8 px-3 text-[10px] font-bold text-red-300 hover:bg-red-500/20 rounded-lg" onClick={() => handleDelete(service.id)}>PURGE</Button>
                     </div>
                   </div>
                 ))
               ) : (
-                <Button variant="secondary" size="sm" className="w-full rounded-xl font-bold" onClick={handleSeedStandardServices}>Seed SOS Defaults</Button>
+                <Button variant="secondary" size="sm" className="w-full rounded-xl font-bold h-12 uppercase tracking-widest text-[10px] font-headline" onClick={handleSeedStandardServices}>Initialize UK SOS Ledger</Button>
               )}
             </CardContent>
           </Card>
@@ -413,51 +413,46 @@ export default function LandlordEmergencyContactsPage() {
               <Card className="col-span-full border-2 border-dashed py-24 flex flex-col items-center justify-center bg-muted/10 rounded-[2rem]">
                 <HardHat className="w-12 h-12 text-primary/20 mb-4" />
                 <h3 className="text-xl font-bold font-headline text-primary/40">No Trade Partners Found</h3>
-                <p className="text-sm text-muted-foreground font-medium font-body mt-2">Add your preferred contractors to assign them to repairs.</p>
+                <p className="text-sm text-muted-foreground font-medium font-body mt-2 text-center max-w-xs">Add your preferred contractors to assign them to repairs in the roadmap.</p>
               </Card>
             ) : (
               professionalPartners.map((contact) => (
-                <Card key={contact.id} className="border-none shadow-sm hover:shadow-md transition-all rounded-2xl group overflow-hidden bg-card border border-transparent hover:border-accent/10">
-                  <CardHeader className="pb-4 bg-muted/5 text-left">
+                <Card key={contact.id} className="border-none shadow-sm hover:shadow-md transition-all rounded-[2rem] group overflow-hidden bg-card border border-transparent hover:border-accent/10 ring-1 ring-border">
+                  <CardHeader className="pb-4 bg-muted/5 p-8 text-left">
                     <div className="flex justify-between items-start">
                       <div className="p-3 bg-card rounded-xl shadow-sm text-primary ring-1 ring-border">
                         <Wrench className="w-5 h-5" />
                       </div>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary" onClick={() => handleEdit(contact)}>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5" onClick={() => handleEdit(contact)}>
                           <Edit3 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-destructive/40 hover:text-destructive hover:bg-destructive/5" onClick={() => handleDelete(contact.id)}>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-destructive/40 hover:text-destructive hover:bg-destructive/5" onClick={() => handleDelete(contact.id)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </div>
-                    <CardTitle className="text-lg font-bold font-headline mt-4 text-foreground">{contact.name}</CardTitle>
-                    <Badge variant="secondary" className="bg-accent/10 text-accent border-none uppercase text-[10px] font-bold mt-1 tracking-widest font-headline">
+                    <CardTitle className="text-xl font-bold font-headline mt-6 text-foreground tracking-tight">{contact.name}</CardTitle>
+                    <Badge variant="secondary" className="bg-accent/10 text-accent border-none uppercase text-[9px] font-bold mt-2 tracking-widest font-headline px-4 py-1 rounded-full shadow-inner">
                       {contact.role}
                     </Badge>
                   </CardHeader>
-                  <CardContent className="pt-6 space-y-3 text-left">
-                    <div className="flex items-center gap-3 text-xl font-bold text-foreground">
-                      <Phone className="w-5 h-5 text-accent" />
-                      {contact.phone}
+                  <CardContent className="pt-8 px-8 pb-8 space-y-6 text-left">
+                    <div className="space-y-1">
+                       <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-40 font-headline tracking-widest">Mobile Registry</p>
+                       <div className="flex items-center gap-3 text-2xl font-bold text-foreground tracking-tight font-headline">
+                         <Phone className="w-6 h-6 text-accent/20" />
+                         {contact.phone}
+                       </div>
                     </div>
                     {contact.email && (
-                      <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
-                        <Mail className="w-4 h-4 text-muted-foreground/40" />
+                      <div className="flex items-center gap-4 text-sm font-medium text-muted-foreground pt-4 border-t border-border">
+                        <Mail className="w-5 h-5 text-accent/30" />
                         {contact.email}
                       </div>
                     )}
-                    {contact.website && (
-                      <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
-                        <Globe className="w-4 h-4 text-muted-foreground/40" />
-                        <a href={contact.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary hover:underline truncate">
-                          {contact.website.replace(/^https?:\/\//, '')}
-                        </a>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground pt-4 border-t border-border">
-                      <Building2 className="w-4 h-4 text-muted-foreground/40" />
+                    <div className="flex items-center gap-4 text-[10px] font-bold text-muted-foreground pt-6 border-t border-border uppercase tracking-widest opacity-60">
+                      <Building2 className="w-4 h-4 text-accent/30" />
                       {properties?.find(p => p.id === contact.propertyId)?.addressLine1 || "Full Portfolio Trusted"}
                     </div>
                   </CardContent>

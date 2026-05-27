@@ -161,7 +161,7 @@ export default function TenantEmergencyContactsPage() {
       </div>
 
       <div className="bg-red-500/5 border border-red-500/10 p-10 rounded-[3rem] flex flex-col md:flex-row gap-8 items-start md:items-center shadow-inner">
-        <div className="p-5 bg-white dark:bg-red-950 rounded-[2rem] shadow-xl text-red-600 border border-red-100 dark:border-red-900/40 shrink-0">
+        <div className="p-5 bg-white dark:bg-red-950/40 rounded-[2rem] shadow-xl text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/40 shrink-0">
            <AlertCircle className="w-10 h-10" />
         </div>
         <div className="space-y-2 text-left">
@@ -181,7 +181,7 @@ export default function TenantEmergencyContactsPage() {
                </CardTitle>
                <p className="text-xs opacity-70 font-bold uppercase tracking-widest font-headline">National Emergency Lines</p>
              </CardHeader>
-             <CardContent className="pt-10 px-8 pb-10 space-y-8">
+             <CardContent className="pt-10 px-8 pb-10 space-y-10">
                 {isLoading ? (
                   <div className="py-12 flex flex-col items-center justify-center gap-4">
                     <RefreshCcw className="w-8 h-8 animate-spin text-primary opacity-20" />
@@ -189,12 +189,14 @@ export default function TenantEmergencyContactsPage() {
                   </div>
                 ) : standardServices.map((service, i) => (
                   <div key={service.id || i} className="flex justify-between items-start gap-6 group">
-                    <div className="space-y-1.5 min-w-0 text-left">
-                      <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest font-headline opacity-80">{service.role}</p>
-                      <p className="text-base font-bold leading-tight text-foreground font-headline group-hover:text-primary transition-colors">{service.name}</p>
+                    <div className="space-y-2 min-w-0 text-left">
+                      <p className="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-widest font-headline">{service.role}</p>
+                      <p className="text-lg font-bold leading-tight text-foreground font-headline group-hover:text-accent transition-colors">{service.name}</p>
                     </div>
                     <div className="text-right shrink-0">
-                       <p className="text-lg font-bold text-primary bg-primary/5 px-4 py-1.5 rounded-xl border border-primary/10 shadow-sm">{service.phone}</p>
+                       <p className="text-xl font-bold text-foreground bg-muted/40 dark:bg-white/5 px-5 py-2.5 rounded-2xl border border-border dark:border-white/10 shadow-sm font-headline tracking-tight">
+                         {service.phone}
+                       </p>
                     </div>
                   </div>
                 ))}
@@ -223,10 +225,10 @@ export default function TenantEmergencyContactsPage() {
                  <Card key={contact.id} className="border-none shadow-sm hover:shadow-2xl transition-all duration-500 rounded-[3rem] group overflow-hidden bg-card border border-transparent hover:border-accent/10 ring-1 ring-border">
                    <CardHeader className="pb-4 bg-accent/5 p-10 text-left">
                      <div className="flex justify-between items-start mb-6">
-                       <div className="p-5 bg-white rounded-2xl shadow-xl text-accent border border-accent/10 transition-transform group-hover:scale-110 duration-500">
+                       <div className="p-5 bg-white dark:bg-muted rounded-2xl shadow-xl text-accent border border-accent/10 transition-transform group-hover:scale-110 duration-500">
                          <Wrench className="w-8 h-8" />
                        </div>
-                       <Badge variant="outline" className="border-accent/30 text-accent uppercase text-[10px] font-bold px-5 py-1.5 rounded-full bg-white/50 backdrop-blur-sm">
+                       <Badge variant="outline" className="border-accent/30 text-accent uppercase text-[10px] font-bold px-5 py-1.5 rounded-full bg-white/50 dark:bg-white/5 backdrop-blur-sm">
                          Verified Pro
                        </Badge>
                      </div>
@@ -238,7 +240,7 @@ export default function TenantEmergencyContactsPage() {
                    <CardContent className="pt-10 px-10 pb-2 space-y-8 text-left">
                      <div className="space-y-1 text-left">
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest font-headline opacity-40">Direct Support Line</p>
-                        <div className="flex items-center gap-4 text-3xl font-bold text-primary font-headline tracking-tighter">
+                        <div className="flex items-center gap-4 text-3xl font-bold text-foreground font-headline tracking-tighter">
                           <Phone className="w-8 h-8 text-accent/20" />
                           {contact.phone}
                         </div>
