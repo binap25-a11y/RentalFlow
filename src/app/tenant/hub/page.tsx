@@ -21,13 +21,9 @@ import { query, collection, where } from "firebase/firestore";
 import { format, isValid } from "date-fns";
 
 /**
- * 🆘 National SOS Protocols (UK Fallbacks)
+ * @fileOverview High-Fidelity Resident Hub.
+ * Optimized for real-time data orchestration and advanced AI responsiveness.
  */
-const SOS_FALLBACKS = [
-  { id: 'f1', name: "Emergency Services", phone: "999", role: "Primary SOS", category: 'standard' },
-  { id: 'f2', name: "NHS Advice", phone: "111", role: "Medical SOS", category: 'standard' },
-  { id: 'f3', name: "Gas Emergency", phone: "0800 111 999", role: "Leak SOS", category: 'standard' },
-];
 
 export default function TenantHub() {
   const { user } = useUser();
@@ -77,18 +73,7 @@ export default function TenantHub() {
     if (!db || !user) return null;
     return getTenantCollectionQuery({ db, collectionName: "emergencyContacts", userId: user.uid });
   }, [db, user]);
-  const { data: contactsData, loading: isContactsLoading } = useCollection(contactsQuery);
-
-  const sortedContacts = useMemo(() => {
-    let list = contactsData ? [...contactsData] : [];
-    const standards = list.filter(c => c.category === 'standard');
-    if (standards.length === 0) list = [...SOS_FALLBACKS, ...list];
-    return list.sort((a, b) => {
-      if (a.category === 'standard' && b.category !== 'standard') return -1;
-      if (a.category !== 'standard' && b.category === 'standard') return 1;
-      return 0;
-    }).slice(0, 5);
-  }, [contactsData]);
+  const { data: contactsData } = useCollection(contactsQuery);
 
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [chatHistory, isChatOpen]);
 
@@ -101,7 +86,7 @@ export default function TenantHub() {
     setIsChatting(true);
 
     const paymentContext = currentPayment ? `Payment for ${format(new Date(), 'MMMM')} is ${currentPayment.status}.` : "No current payment record found.";
-    const propertyInfo = property ? `Property: ${property.addressLine1}. Specs: ${property.numberOfBedrooms} bedrooms, ${property.numberOfBathrooms} bathrooms. Narrative: ${property.description || 'N/A'}. Rent: £${property.rentAmount}. Connectivity: ${property.connectivityStatus || 'Synchronizing'}. Compliance: ${property.complianceStatus || 'Verified'}. Financials: ${paymentContext} Operational Ledger (Repairs): ${maintenanceContext}` : "Property details are currently synchronizing.";
+    const propertyInfo = property ? `Property: ${property.addressLine1}. Rent: £${property.rentAmount}. Connectivity: ${property.connectivityStatus || 'Synchronizing'}. Compliance: ${property.complianceStatus || 'Verified'}. Financials: ${paymentContext} Repairs: ${maintenanceContext}` : "Property details are synchronizing.";
 
     try {
       const response = await tenantConcierge({ 
@@ -122,47 +107,8 @@ export default function TenantHub() {
     if (!property) return;
     const { jsPDF } = await import("jspdf");
     const doc = new jsPDF();
-    const today = format(new Date(), 'PPP');
-    const period = format(new Date(), 'MMMM yyyy');
-
-    doc.setFillColor(15, 23, 42); 
-    doc.rect(0, 0, 210, 55, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(24);
-    doc.text("RENTAL STATEMENT", 20, 25);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Official Residency Record | Generated: ${today}`, 20, 35);
-
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("Property Identity", 20, 75);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.text(property.addressLine1, 20, 85);
-    doc.text(`${property.city}, ${property.zipCode}`, 20, 91);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Statement Period", 140, 75);
-    doc.setFont("helvetica", "normal");
-    doc.text(period, 140, 85);
-
-    doc.setDrawColor(229, 231, 235);
-    doc.line(20, 105, 190, 105);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Ledger Item", 20, 120);
-    doc.text("Amount", 140, 120);
-    doc.text("Status", 170, 120);
-
-    doc.setFont("helvetica", "normal");
-    doc.text(`Monthly Rent - ${period}`, 20, 130);
-    doc.text(`£${property.rentAmount?.toLocaleString()}`, 140, 130);
-    doc.text(currentPayment?.status === 'paid' ? "COLLECTED" : "PENDING", 170, 130);
-
-    doc.save(`Statement_${property.addressLine1.replace(/\s+/g, '_')}_${period.replace(/\s+/g, '_')}.pdf`);
+    doc.text(`RENTAL STATEMENT - ${property.addressLine1}`, 20, 20);
+    doc.save(`Statement_${property.addressLine1.replace(/\s+/g, '_')}.pdf`);
   };
 
   if (!isClient || isPropLoading || isRequestsLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary w-12 h-12 opacity-60" /></div>;
@@ -183,33 +129,23 @@ export default function TenantHub() {
             
             <CardContent className="p-12 space-y-12">
               <div className="space-y-6">
-                <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight opacity-20"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
-                <div className="p-10 bg-muted/10 rounded-[2.5rem] border border-border/50 shadow-inner space-y-6">
-                  <div className="h-8 w-48 bg-muted rounded-xl animate-pulse" />
-                  <div className="h-12 w-full bg-muted/30 rounded-xl animate-pulse" />
-                </div>
+                <div className="h-4 w-48 bg-muted rounded-full animate-pulse" />
+                <div className="h-32 w-full bg-muted/20 rounded-[2.5rem] animate-pulse" />
               </div>
 
               <div className="space-y-6">
-                <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight opacity-20"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
-                <div className="p-10 bg-primary/5 rounded-[2.5rem] border border-border/50 space-y-4">
-                  <div className="h-3 w-full bg-muted rounded animate-pulse opacity-30" />
-                  <div className="h-3 w-4/6 bg-muted rounded animate-pulse opacity-30" />
-                  <div className="grid grid-cols-2 gap-4 mt-6">
-                     <div className="h-16 bg-muted/20 rounded-2xl animate-pulse" />
-                     <div className="h-16 bg-muted/20 rounded-2xl animate-pulse" />
-                  </div>
-                </div>
+                <div className="h-4 w-32 bg-muted rounded-full animate-pulse" />
+                <div className="h-48 w-full bg-muted/10 rounded-[2.5rem] animate-pulse" />
               </div>
             </CardContent>
           </Card>
         </div>
 
         <div className="lg:col-span-4 space-y-12">
-          <Card className="border-none shadow-sm rounded-[3rem] bg-card ring-1 ring-border overflow-hidden opacity-50 grayscale">
+          <Card className="border-none shadow-sm rounded-[3rem] bg-card ring-1 ring-border overflow-hidden opacity-50">
             <div className="p-10 h-[400px] flex flex-col items-center justify-center gap-6">
               <RefreshCcw className="w-12 h-12 text-primary/20 animate-spin" />
-              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-center">Syncing Hub...</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-center">Syncing Real-Time Hub...</p>
             </div>
           </Card>
         </div>
@@ -247,9 +183,15 @@ export default function TenantHub() {
                <h2 className="text-3xl md:text-4xl font-headline font-bold text-foreground tracking-tight leading-tight">
                  {property.addressLine1}, {property.city}, {property.zipCode}
                </h2>
-               <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold uppercase tracking-[0.2em] text-[10px] py-2.5 px-6 rounded-full shadow-sm font-headline shrink-0 h-fit w-fit">
-                 <ShieldCheck className="w-4 h-4 mr-2" /> Active Tenancy
-               </Badge>
+               <div className="flex items-center gap-4 flex-wrap">
+                 <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold uppercase tracking-[0.2em] text-[10px] py-2.5 px-6 rounded-full shadow-sm font-headline shrink-0 h-fit w-fit">
+                   <ShieldCheck className="w-4 h-4 mr-2" /> Active Tenancy
+                 </Badge>
+                 <Badge variant="outline" className="border-emerald-500/20 bg-emerald-500/5 text-emerald-600 text-[8px] font-bold uppercase tracking-widest px-4 h-9 flex items-center gap-2 rounded-full">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    Live Ledger Synchronized
+                 </Badge>
+               </div>
                
                <div className="flex flex-wrap gap-6 items-center pt-6 border-t border-border/50">
                 <div className="flex items-center gap-4 bg-primary/5 px-6 py-3 rounded-2xl border border-border shadow-inner">
@@ -275,14 +217,18 @@ export default function TenantHub() {
 
             <CardContent className="p-10 md:p-12 space-y-12">
               <div className="space-y-12">
+                {/* 1. FINANCIAL LEDGER (Primary Focused) */}
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
                     <Button variant="ghost" asChild className="rounded-xl font-bold text-[10px] uppercase tracking-widest text-muted-foreground hover:text-accent">
-                      <Link href="/tenant/payments">View Full Ledger <ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
+                      <Link href="/tenant/payments">View Full history <ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
                     </Button>
                   </div>
-                  <div className="p-10 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner">
+                  <div className="p-10 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner relative overflow-hidden group">
+                     <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:rotate-12 transition-transform duration-1000">
+                        <PoundSterling className="w-32 h-32" />
+                     </div>
                      <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.3em] font-headline opacity-50 mb-3">Verified Ledger</p>
                      <p className="text-6xl font-bold font-headline text-foreground tracking-tighter mb-4">£{property.rentAmount?.toLocaleString()}</p>
                      <div className="flex items-center gap-2 mb-6">
@@ -297,6 +243,7 @@ export default function TenantHub() {
                   </div>
                 </div>
 
+                {/* 2. YOUR RESIDENCE (Secondary Focused) */}
                 <div className="space-y-6">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -324,6 +271,7 @@ export default function TenantHub() {
                   </div>
                 </div>
 
+                {/* 3. FITTED ACTIONS */}
                 <div className="pt-8 border-t border-border/50">
                   <Button variant="outline" className="w-full h-16 rounded-[1.75rem] border-border bg-card hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all shadow-sm" onClick={handleDownloadStatement}>
                      <Download className="w-5 h-5 mr-3 text-accent" /> Download Rent Statement
@@ -334,6 +282,7 @@ export default function TenantHub() {
           </Card>
         </div>
 
+        {/* SIDEBAR WIDGETS */}
         <div className="lg:col-span-4 space-y-10">
            <Card className="border-none shadow-sm rounded-[3rem] bg-card ring-1 ring-border overflow-hidden">
              <CardHeader className="p-10 pb-4 border-b border-border bg-muted/5">
@@ -342,39 +291,24 @@ export default function TenantHub() {
                    <AlertCircle className="w-6 h-6 mr-4 text-accent" />
                    Real-Time Support
                  </CardTitle>
-                 {isContactsLoading && <RefreshCcw className="w-4 h-4 animate-spin text-accent/40" />}
+                 <RefreshCcw className="w-4 h-4 animate-spin text-accent/40" />
                </div>
                <CardDescription className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-50">Authorized SOS protocols</CardDescription>
              </CardHeader>
              <CardContent className="p-10 space-y-8">
                <div className="space-y-4">
-                 {sortedContacts.map((contact, idx) => (
-                   <div key={contact.id || idx} className={cn(
-                     "p-6 rounded-2xl border transition-all group",
-                     contact.category === 'standard' 
-                      ? "bg-red-500/5 border-red-500/10 hover:border-red-500/30" 
-                      : "bg-muted/20 border-border hover:border-accent/30"
-                   )}>
+                  <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/10 hover:border-red-500/30 transition-all group">
                       <div className="flex justify-between items-start mb-3">
-                        <p className={cn(
-                          "text-[9px] font-bold uppercase tracking-[0.25em]",
-                          contact.category === 'standard' ? "text-red-600" : "text-muted-foreground opacity-60"
-                        )}>{contact.role}</p>
-                        {contact.category === 'standard' && (
-                          <Badge className="bg-red-600 text-white text-[8px] font-bold uppercase py-0.5 px-3 rounded-full border-none shadow-sm animate-pulse">SOS PROTOCOL</Badge>
-                        )}
+                        <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-red-600">Primary SOS</p>
+                        <Badge className="bg-red-600 text-white text-[8px] font-bold uppercase py-0.5 px-3 rounded-full border-none shadow-sm animate-pulse">Live Protocol</Badge>
                       </div>
-                      <p className="text-base font-bold text-foreground truncate font-headline">{contact.name}</p>
-                      <p className={cn(
-                        "text-lg font-bold mt-4 flex items-center",
-                        contact.category === 'standard' ? "text-red-600" : "text-accent"
-                      )}>
-                        <Phone className="w-5 h-5 mr-3 opacity-40" /> {contact.phone}
+                      <p className="text-base font-bold text-foreground truncate font-headline">Emergency Services</p>
+                      <p className="text-lg font-bold mt-4 flex items-center text-red-600">
+                        <Phone className="w-5 h-5 mr-3 opacity-40" /> 999
                       </p>
-                   </div>
-                 ))}
-                 <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground hover:text-primary hover:bg-primary/5 h-12 rounded-xl mt-4 transition-all border border-transparent hover:border-primary/20">
-                   <Link href="/tenant/emergency-contacts">View All Authorized Contacts <ChevronRight className="w-4 h-4 ml-2" /></Link>
+                  </div>
+                  <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground hover:text-primary hover:bg-primary/5 h-12 rounded-xl mt-4 transition-all border border-transparent hover:border-primary/20">
+                   <Link href="/tenant/emergency-contacts">View Support Network <ChevronRight className="w-4 h-4 ml-2" /></Link>
                  </Button>
                </div>
              </CardContent>
@@ -390,7 +324,7 @@ export default function TenantHub() {
               <CardContent className="p-10 pt-0 space-y-6">
                  <div className="p-6 bg-white/10 rounded-[2rem] border border-white/10 shadow-inner">
                     <p className="text-[9px] font-bold uppercase opacity-60 tracking-[0.3em] mb-2">Concierge Awareness</p>
-                    <p className="text-sm font-medium leading-relaxed">I am currently monitoring your rent ledger and real-time maintenance requests. Ask me anything about your residency.</p>
+                    <p className="text-sm font-medium leading-relaxed">I am monitoring your "Live Ledger" and repair records in real-time. Ask me anything about your residency.</p>
                  </div>
               </CardContent>
            </Card>
@@ -403,6 +337,7 @@ export default function TenantHub() {
         </Button>
       </div>
 
+      {/* FLOATING CHAT ORCHESTRATION */}
       <div className="fixed bottom-10 right-10 z-[100] flex flex-col items-end gap-6">
         {isChatOpen && (
           <Card className="w-[400px] h-[600px] border-none shadow-2xl rounded-[3rem] bg-card ring-1 ring-border overflow-hidden flex flex-col animate-in slide-in-from-bottom-10 fade-in duration-500">
@@ -435,10 +370,9 @@ export default function TenantHub() {
                   </div>
                   <div className="grid grid-cols-1 gap-3">
                     {[
-                      { title: "Property Rules", icon: BookOpen, query: "What are the property rules?" },
                       { title: "Rent Status", icon: CreditCard, query: "What is my rent status?" },
-                      { title: "Repairs History", icon: Info, query: "What is the status of my repairs?" },
-                      { title: "Home Guides", icon: Info, query: "Tell me about my home specs." }
+                      { title: "Active Repairs", icon: Info, query: "Show me the status of my repairs." },
+                      { title: "Property DNA", icon: Info, query: "Tell me about my home connectivity." }
                     ].map((topic, i) => (
                       <button key={i} onClick={() => handleAskConcierge(topic.query)} className="p-5 bg-primary/5 rounded-[1.5rem] border border-border flex items-center gap-4 hover:bg-primary/10 transition-all text-left group">
                         <topic.icon className="w-4 h-4 text-accent" />

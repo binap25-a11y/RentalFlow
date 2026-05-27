@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
@@ -13,8 +13,9 @@ import {
   AlertCircle, 
   ArrowLeft,
   Download,
-  CalendarDays,
-  PoundSterling
+  PoundSterling,
+  RefreshCcw,
+  ShieldCheck
 } from "lucide-react";
 import { format, isValid } from "date-fns";
 import { useMemo, useState, useEffect } from "react";
@@ -24,6 +25,7 @@ import { cn } from "@/lib/utils";
 /**
  * @fileOverview High-Fidelity Resident Rent & Finance Ledger.
  * Provides a verified historical audit trail of all tenancy payments.
+ * Synchronized with the "Live Ledger" real-time protocol.
  */
 
 export default function TenantPaymentsPage() {
@@ -81,7 +83,10 @@ export default function TenantPaymentsPage() {
         </div>
 
         <div className="flex gap-4">
-           <div className="p-6 bg-card rounded-[2rem] border border-border shadow-sm flex flex-col gap-1 min-w-[200px]">
+           <div className="p-6 bg-card rounded-[2rem] border border-border shadow-sm flex flex-col gap-1 min-w-[200px] relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
+                 <ShieldCheck className="w-12 h-12" />
+              </div>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Tenancy Total Paid</p>
               <p className="text-3xl font-bold font-headline text-foreground tracking-tighter">£{financialSummary.totalPaid.toLocaleString()}</p>
            </div>
@@ -91,11 +96,17 @@ export default function TenantPaymentsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-8 space-y-10">
           <div className="flex items-center justify-between px-2">
-            <h3 className="text-2xl font-bold font-headline flex items-center text-foreground tracking-tight">
-              <History className="w-7 h-7 mr-4 text-accent" />
-              Payment History
-            </h3>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] opacity-40 font-headline">Audit Trail</p>
+            <div className="flex items-center gap-3">
+              <h3 className="text-2xl font-bold font-headline flex items-center text-foreground tracking-tight">
+                <History className="w-7 h-7 mr-4 text-accent" />
+                Payment History
+              </h3>
+              <Badge variant="outline" className="h-6 border-emerald-500/20 bg-emerald-500/5 text-emerald-600 text-[8px] font-bold uppercase tracking-widest px-3 flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live Sync
+              </Badge>
+            </div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] opacity-40 font-headline hidden sm:block">Audit Trail</p>
           </div>
 
           <div className="grid gap-6">
@@ -120,7 +131,7 @@ export default function TenantPaymentsPage() {
                       <div className="flex flex-col md:flex-row justify-between items-center gap-8">
                         <div className="flex items-center gap-8 flex-1 min-w-0">
                           <div className={cn(
-                            "w-16 h-16 rounded-2xl flex flex-col items-center justify-center font-headline shadow-inner border transition-colors",
+                            "w-16 h-16 rounded-2xl flex flex-col items-center justify-center font-headline shadow-inner border transition-all",
                             isPaid ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600" : "bg-amber-500/10 border-amber-500/20 text-amber-600"
                           )}>
                              <span className="text-[9px] font-bold uppercase tracking-widest opacity-60">
@@ -129,7 +140,7 @@ export default function TenantPaymentsPage() {
                              <span className="text-xl font-bold leading-none">{payment.year}</span>
                           </div>
                           
-                          <div className="space-y-2 flex-1 min-w-0">
+                          <div className="space-y-2 flex-1 min-w-0 text-left">
                             <h4 className="text-2xl font-bold font-headline text-foreground tracking-tight">Monthly Rent Receipt</h4>
                             <div className="flex flex-wrap items-center gap-4">
                               <Badge className={cn(
@@ -163,22 +174,22 @@ export default function TenantPaymentsPage() {
 
         <div className="lg:col-span-4 space-y-10">
           <Card className="border-none shadow-2xl rounded-[3rem] bg-accent text-white overflow-hidden text-left relative group">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl rounded-full" />
+             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl rounded-full transition-transform duration-1000 group-hover:scale-150" />
              <CardHeader className="pb-6 p-10">
                 <CardTitle className="text-2xl font-bold font-headline flex items-center gap-4">
-                   <CheckCircle2 className="w-8 h-8 text-white/90" /> Ledger Protocol
+                   <RefreshCcw className="w-8 h-8 text-white/90 animate-spin-slow" /> Ledger Protocol
                 </CardTitle>
              </CardHeader>
              <CardContent className="space-y-6 px-10 pb-12">
                 <div className="p-6 bg-white/10 rounded-[2rem] border border-white/10 shadow-inner space-y-3">
-                   <p className="text-[10px] font-bold uppercase opacity-60 tracking-[0.3em] font-headline">Verified Records</p>
+                   <p className="text-[10px] font-bold uppercase opacity-60 tracking-[0.3em] font-headline">Real-Time Verification</p>
                    <p className="text-sm font-medium leading-relaxed opacity-90">
-                     Every entry in this ledger is a verified financial record confirmed by management. Status updates occur in real-time as bank transfers are reconciled.
+                     This ledger is synchronized in real-time. Status transitions from pending to collected occur the moment your management verifies fund receipt in their vault.
                    </p>
                 </div>
                 <div className="flex items-center gap-3 px-2">
                    <AlertCircle className="w-5 h-5 text-white/60" />
-                   <span className="text-[10px] font-bold uppercase tracking-widest text-white/70">Secure Cloud Reconciler Active</span>
+                   <span className="text-[10px] font-bold uppercase tracking-widest text-white/70">Live Firestore Listener Active</span>
                 </div>
              </CardContent>
           </Card>
