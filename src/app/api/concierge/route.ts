@@ -6,7 +6,7 @@ import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 /**
  * @fileOverview Hardened Streaming Concierge Endpoint.
  * Enables zero-latency AI responses by streaming Gemini chunks directly to the client.
- * Synchronized with Google AI Key and robust error boundaries.
+ * Refined to handle quota limits and credential verification gracefully.
  */
 
 export const dynamic = 'force-dynamic';
