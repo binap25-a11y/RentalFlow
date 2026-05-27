@@ -15,6 +15,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { query, residentName, propertyAddress, propertyContext } = body;
 
+    if (!query) {
+      return new Response(JSON.stringify({ error: 'Query is required' }), { status: 400 });
+    }
+
     // Correct Genkit 1.x streaming orchestration
     const { stream } = ai.generateStream({
       prompt: conciergePrompt,
@@ -36,7 +40,7 @@ export async function POST(req: NextRequest) {
             }
           }
           controller.close();
-        } catch (streamError) {
+        } catch (streamError: any) {
           console.error('API Stream Iteration Failure:', streamError);
           controller.error(streamError);
         }

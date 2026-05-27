@@ -9,8 +9,8 @@ import {
   MapPin, AlertCircle, 
   Loader2, Building2, Sparkles, Send, Bot, 
   ChevronRight, ReceiptText,
-  ShieldCheck, RefreshCcw, Bed, Bath, Download, 
-  Home, Info, RotateCcw, Phone,
+  ShieldCheck, RefreshCcw, Download, 
+  Info, RotateCcw, Phone,
   MessageCircle, X, Wifi, Shield, Clock, PoundSterling
 } from "lucide-react";
 import Link from "next/link";
