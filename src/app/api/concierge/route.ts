@@ -1,17 +1,15 @@
-
-import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/request';
 import { ai } from '@/ai/genkit';
 import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 
 /**
  * 🤖 Hardened Streaming Concierge Endpoint
  * Optimized for Genkit 1.x zero-latency streaming and real professional logging.
- * Removes masked fallback messages.
  */
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
     const { query, residentName, propertyAddress, propertyContext } = body;
@@ -27,7 +25,6 @@ export async function POST(req: NextRequest) {
 
     try {
       // GENKIT 1.x ORCHESTRATION: generateStream returns the stream object synchronously.
-      // Use gemini-2.0-flash via the conciergePrompt.
       const { stream } = ai.generateStream(
         conciergePrompt({
           query,
@@ -48,7 +45,6 @@ export async function POST(req: NextRequest) {
             }
             controller.close();
           } catch (streamError: any) {
-            // PROFESSIONAL LOGGING: Expose actual error to server logs
             console.error('AI STREAM ITERATION ERROR:', streamError);
             
             const errorMsg = streamError.message || "";

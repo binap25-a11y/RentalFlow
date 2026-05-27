@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
@@ -72,7 +71,6 @@ export default function TenantHub() {
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [chatHistory, isChatOpen]);
 
   const handleAskConcierge = async (text?: string) => {
-    // 1. REQUEST GUARD: Prevent duplicate calls
     if (isChatting) return;
 
     const queryText = text || chatQuery.trim();
@@ -123,14 +121,15 @@ export default function TenantHub() {
         });
       }
     } catch (error: any) {
-      console.error('CONCIERGE CLIENT ERROR:', error);
+      console.error('AI STREAM ERROR:', error);
       setChatHistory(prev => {
         const newHistory = [...prev];
         const lastMsg = newHistory[newHistory.length - 1];
+        const errorMessage = "[SYSTEM]: AI is temporarily busy. Please try again.";
         if (lastMsg && lastMsg.role === 'bot' && !lastMsg.text) {
-           newHistory[newHistory.length - 1] = { role: 'bot', text: "[SYSTEM]: AI is temporarily busy. Please try again." };
+           newHistory[newHistory.length - 1] = { role: 'bot', text: errorMessage };
         } else {
-           newHistory.push({ role: 'bot', text: "[SYSTEM]: Communication interrupted. Please try again." });
+           newHistory.push({ role: 'bot', text: errorMessage });
         }
         return newHistory;
       });

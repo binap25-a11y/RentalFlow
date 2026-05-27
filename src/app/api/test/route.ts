@@ -1,10 +1,8 @@
-
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 /**
  * 🤖 AI Connectivity Diagnostic Engine
  * Verifies model accessibility and credential status.
- * Replaces generic alerts with definitive SDK testing.
  */
 
 export async function GET() {
