@@ -5,8 +5,8 @@ import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 
 /**
  * @fileOverview Hardened Streaming Concierge Endpoint.
- * Enables zero-latency AI responses by streaming Gemini chunks directly to the client.
- * Refined to handle quota limits and credential verification gracefully.
+ * Optimized for Gemini 2.0 Flash and Genkit 1.x zero-latency streaming.
+ * Handles quota limits and credential errors word-by-word.
  */
 
 export const dynamic = 'force-dynamic';
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     try {
       // GENKIT 1.x ORCHESTRATION: Stream initialization is synchronous
-      // Ensure GOOGLE_GENAI_API_KEY is available in the environment
+      // GOOGLE_GENAI_API_KEY must be set in .env
       const { stream } = ai.generateStream(
         conciergePrompt({
           query,
@@ -74,17 +74,9 @@ export async function POST(req: NextRequest) {
 
     } catch (initError: any) {
       console.error('Stream Initialization Error:', initError);
-      const errorMsg = initError.message || "";
-      
-      if (errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED')) {
-        return new Response(JSON.stringify({ 
-          error: 'Intelligence engine is temporarily busy. Please retry in a few moments.' 
-        }), { status: 429, headers: { 'Content-Type': 'application/json' } });
-      }
-      
       return new Response(JSON.stringify({ 
         error: 'Intelligence engine initialization failed.',
-        details: errorMsg
+        details: initError.message
       }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 
@@ -92,7 +84,7 @@ export async function POST(req: NextRequest) {
     console.error('Concierge API Runtime Error:', error);
     return new Response(JSON.stringify({ 
       error: 'Intelligence Engine Offline',
-      details: error.message || 'An unexpected server error occurred.'
+      details: error.message
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
