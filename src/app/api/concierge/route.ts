@@ -4,6 +4,7 @@ import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 /**
  * 🤖 Hardened Gemini Streaming Chatbot
  * Optimized for Genkit 1.x with explicit Quota (429) detection.
+ * Corrected streaming implementation for prompt-based evaluated execution.
  */
 
 export const dynamic = 'force-dynamic';

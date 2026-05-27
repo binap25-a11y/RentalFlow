@@ -41,7 +41,7 @@ import {
   Dialog, 
   DialogContent, 
   DialogTitle,
-  DialogHeader,
+  DialogHeader, 
   DialogDescription,
   DialogFooter,
   DialogTrigger
@@ -57,8 +57,7 @@ import Image from "next/image";
 
 /**
  * @fileOverview High-Fidelity Resident Hub.
- * Features a cinematic Visual Inventory and an integrated Repair Reporting Suite.
- * Stabilized against JSX identifier collisions.
+ * Optimized for zero-latency compilation and premium visual orchestration.
  */
 
 export default function TenantHub() {
