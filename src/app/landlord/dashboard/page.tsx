@@ -39,6 +39,7 @@ import { useToast } from "@/hooks/use-toast";
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
  * Optimized for real-time financial tracking and total text visibility.
  * Refined for Elite UX: No truncation, theme-consistent headers, and fitted placeholders.
+ * Updated: Manage Ledger now includes a professional scrollable region.
  */
 
 export default function LandlordDashboard() {
@@ -473,22 +474,26 @@ export default function LandlordDashboard() {
                 <DialogDescription className="text-secondary-foreground/70 font-bold text-base mt-2">Adjust monthly rent and collection state.</DialogDescription>
              </DialogHeader>
            </div>
-           <div className="p-10 space-y-10 text-left bg-white/[0.01]">
-              <div className="space-y-4">
-                 <Label className="font-bold text-[11px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-50">Monthly Rent Amount (£)</Label>
-                 <Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className="rounded-2xl h-16 bg-muted/40 border-none font-bold px-8 text-xl shadow-inner ring-1 ring-white/10 text-foreground" placeholder="e.g. 1500.00" />
-              </div>
-              <div className="space-y-4">
-                 <Label className="font-bold text-[11px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-50">Collection Status</Label>
-                 <Tabs value={editStatus} onValueChange={(v) => setEditStatus(v as any)}>
-                    <TabsList className="grid grid-cols-2 h-16 bg-muted/40 rounded-2xl p-2 border-none ring-1 ring-white/10">
-                       <TabsTrigger value="pending" className="rounded-xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-white shadow-sm">Pending</TabsTrigger>
-                       <TabsTrigger value="paid" className="rounded-xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-emerald-500 data-[state=active]:text-white shadow-sm">Receipted</TabsTrigger>
-                    </TabsList>
-                 </Tabs>
-              </div>
-           </div>
-           <DialogFooter className="p-10 bg-muted/5 border-t border-white/5">
+           
+           <ScrollArea className="flex-1">
+             <div className="p-10 space-y-10 text-left bg-white/[0.01]">
+                <div className="space-y-4">
+                   <Label className="font-bold text-[11px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-50">Monthly Rent Amount (£)</Label>
+                   <Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className="rounded-2xl h-16 bg-muted/40 border-none font-bold px-8 text-xl shadow-inner ring-1 ring-white/10 text-foreground" placeholder="e.g. 1500.00" />
+                </div>
+                <div className="space-y-4">
+                   <Label className="font-bold text-[11px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-50">Collection Status</Label>
+                   <Tabs value={editStatus} onValueChange={(v) => setEditStatus(v as any)}>
+                      <TabsList className="grid grid-cols-2 h-16 bg-muted/40 rounded-2xl p-2 border-none ring-1 ring-white/10">
+                         <TabsTrigger value="pending" className="rounded-xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-white shadow-sm">Pending</TabsTrigger>
+                         <TabsTrigger value="paid" className="rounded-xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-emerald-500 data-[state=active]:text-white shadow-sm">Receipted</TabsTrigger>
+                      </TabsList>
+                   </Tabs>
+                </div>
+             </div>
+           </ScrollArea>
+
+           <DialogFooter className="p-10 bg-muted/5 border-t border-white/5 shrink-0">
               <Button className="w-full rounded-[2rem] h-20 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:opacity-90 font-headline uppercase tracking-[0.3em] text-[12px] border-none transition-all hover:scale-[1.01]" onClick={handleSavePayment} disabled={isSavingPayment}>
                  {isSavingPayment ? <Loader2 className="w-6 h-6 animate-spin mr-4" /> : <Save className="w-6 h-6 mr-4" />}
                  Synchronize Ledger
