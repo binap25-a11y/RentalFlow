@@ -39,7 +39,7 @@ import { useToast } from "@/hooks/use-toast";
 /**
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
  * Optimized for real-time financial tracking and total text visibility.
- * Refined for Elite UX: Compressed horizontal/vertical spacing and anti-clipping table layout.
+ * Refined for Elite UX: Compressed horizontal/vertical spacing and flush action alignment.
  */
 
 export default function LandlordDashboard() {
@@ -306,10 +306,10 @@ export default function LandlordDashboard() {
                  <table className="w-full text-left border-collapse min-w-[1100px]">
                    <thead>
                      <tr className="bg-white/[0.02]">
-                       <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[30%]">Property Identity</th>
+                       <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[40%]">Property Identity</th>
                        <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[15%]">Monthly Rent</th>
-                       <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[25%]">Collection Status</th>
-                       <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground text-right w-[30%]">Actions</th>
+                       <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[20%]">Collection Status</th>
+                       <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground w-[25%]">Actions</th>
                      </tr>
                    </thead>
                    <tbody className="divide-y divide-white/5">
@@ -343,8 +343,8 @@ export default function LandlordDashboard() {
                                {isPaid ? "Receipted" : "Collection Pending"}
                              </Badge>
                            </td>
-                           <td className="px-4 py-2.5 text-right shrink-0">
-                              <div className="flex items-center justify-end gap-2">
+                           <td className="px-4 py-2.5 shrink-0">
+                              <div className="flex items-center gap-2">
                                 <Button variant="ghost" size="icon" className="rounded-lg h-9 w-9 hover:bg-white/5 border border-white/5 shrink-0" onClick={() => handleOpenLedgerEdit(prop, payment)}>
                                   <Settings2 className="w-3.5 h-3.5 text-muted-foreground" />
                                 </Button>
