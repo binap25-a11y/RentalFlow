@@ -38,6 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 /**
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
  * Optimized for real-time financial tracking and total text visibility.
+ * Labels refined: Yield -> Rent. Status indicators optimized for no-truncation.
  */
 
 export default function LandlordDashboard() {
@@ -247,7 +248,7 @@ export default function LandlordDashboard() {
                      {stat.val}
                   </p>
                   {stat.progress !== undefined && <Progress value={stat.progress} className="h-2 bg-white/10" />}
-                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline opacity-50 whitespace-normal leading-tight h-auto">{stat.title}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline opacity-50 whitespace-normal leading-tight h-auto min-h-[2.5em] flex items-center">{stat.title}</p>
                 </div>
               </CardContent>
             </Card>
@@ -299,7 +300,7 @@ export default function LandlordDashboard() {
             </CardHeader>
             <CardContent className="p-0">
                <div className="overflow-x-auto">
-                 <table className="w-full text-left table-fixed min-w-[800px]">
+                 <table className="w-full text-left table-fixed min-w-[900px]">
                    <thead>
                      <tr className="bg-white/[0.02]">
                        <th className="px-8 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-2/5">Property Identity</th>
@@ -332,7 +333,7 @@ export default function LandlordDashboard() {
                            </td>
                            <td className="px-8 py-8 font-bold text-base text-foreground tracking-tight truncate">£{prop.rentAmount?.toLocaleString()}</td>
                            <td className="px-8 py-8">
-                             <Badge className={cn("rounded-full px-4 py-1.5 font-bold text-[8px] uppercase tracking-[0.05em] border-none shadow-sm w-full inline-flex items-center justify-center whitespace-nowrap", isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500")}>
+                             <Badge className={cn("rounded-full px-5 py-2 font-bold text-[9px] uppercase tracking-[0.08em] border-none shadow-sm w-fit min-w-[120px] inline-flex items-center justify-center whitespace-normal text-center", isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500")}>
                                {isPaid ? "Receipted" : "Collection Pending"}
                              </Badge>
                            </td>
@@ -461,7 +462,7 @@ export default function LandlordDashboard() {
         <DialogContent className="rounded-[3.5rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh] max-w-[500px] ring-1 ring-white/10">
            <div className="p-10 bg-primary/5 border-b border-white/5 text-left shrink-0">
              <DialogTitle className="text-2xl font-bold font-headline text-foreground tracking-tight">Manage Ledger</DialogTitle>
-             <DialogDescription className="text-sm font-medium text-muted-foreground mt-2">Adjust monthly yield and collection state.</DialogDescription>
+             <DialogDescription className="text-sm font-medium text-muted-foreground mt-2">Adjust monthly rent and collection state.</DialogDescription>
            </div>
            <div className="p-10 space-y-8 text-left">
               <div className="space-y-3">
