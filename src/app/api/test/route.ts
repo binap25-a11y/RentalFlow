@@ -17,9 +17,10 @@ export async function GET() {
     }
 
     // Attempt a real content generation to verify connectivity
+    // Using gemini-1.5-flash for maximum availability during testing
     const result = await ai.generate({
-      model: googleAI.model("gemini-2.0-flash"),
-      prompt: "Confirm connectivity with 'Identity Verified'.",
+      model: googleAI.model("gemini-1.5-flash"),
+      prompt: "Confirm connectivity with 'Identity Verified'. Respond only with those two words.",
     });
 
     const responseText = result.text;
@@ -28,7 +29,7 @@ export async function GET() {
       success: true,
       handshake: responseText,
       status: "Operational",
-      engine: "gemini-2.0-flash",
+      engine: "gemini-1.5-flash",
       key_source: process.env.GOOGLE_GENAI_API_KEY ? "GOOGLE_GENAI_API_KEY" : "GEMINI_API_KEY",
       key_preview: `${apiKey.substring(0, 8)}...`
     });
@@ -40,7 +41,7 @@ export async function GET() {
       success: false,
       error: String(error),
       details: error.message || "Unknown Failure",
-      hint: "Check your .env file and Google AI Studio project status (studio-3118242301-8f4fd)."
+      hint: "Check your .env file and Google AI Studio project status. Ensure your API Key has not exceeded its quota (429 RESOURCE_EXHAUSTED)."
     }, { status: 500 });
   }
 }

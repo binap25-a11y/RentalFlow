@@ -3,9 +3,9 @@ import { ai } from '@/ai/genkit';
 import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 
 /**
- * 🤖 Hardened Gemini Streaming Concierge
+ * 🤖 Hardened Gemini Streaming Chatbot
  * Optimized for Genkit 1.x zero-latency streaming.
- * Provides professional logging to identify the true cause of AI interruptions.
+ * Features professional logging to identify the true cause of AI interruptions.
  */
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GEMINI_API_KEY;
     if (!apiKey) {
       console.error("AI CONFIG ERROR: Gemini API Key is missing from environment.");
-      return new Response(JSON.stringify({ error: 'System intelligence is currently offline.' }), { 
+      return new Response(JSON.stringify({ error: 'System intelligence is currently offline. Please contact support.' }), { 
         status: 503,
         headers: { 'Content-Type': 'application/json' }
       });
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     const { query, residentName, propertyAddress, propertyContext } = body;
 
     if (!query) {
-      return new Response(JSON.stringify({ error: 'Resident query is required' }), { 
+      return new Response(JSON.stringify({ error: 'Query is required' }), { 
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
@@ -61,9 +61,9 @@ export async function POST(req: Request) {
             
             const errorMsg = streamError.message || "";
             if (errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED')) {
-              controller.enqueue(encoder.encode("\n\n[GEMINI ALERT]: AI is temporarily busy. Please try again in a moment."));
+              controller.enqueue(encoder.encode("\n\n[GEMINI ALERT]: AI is temporarily busy due to high demand. Please try again in 60 seconds."));
             } else {
-              controller.enqueue(encoder.encode("\n\n[GEMINI ERROR]: Service Interrupted. Please refresh and try again."));
+              controller.enqueue(encoder.encode("\n\n[GEMINI ERROR]: Service synchronization lost. Please refresh the page."));
             }
             controller.close();
           }
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
 
     } catch (initError: any) {
       console.error('AI STREAM INIT ERROR:', initError);
-      return new Response(JSON.stringify({ error: initError.message }), { 
+      return new Response(JSON.stringify({ error: `Initialization Failure: ${initError.message}` }), { 
         status: 500, 
         headers: { 'Content-Type': 'application/json' } 
       });
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error('CONCIERGE API RUNTIME ERROR:', error);
-    return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
+    return new Response(JSON.stringify({ error: 'Internal intelligence relay failure.' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });

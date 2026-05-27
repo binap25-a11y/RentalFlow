@@ -23,7 +23,7 @@ import { format } from "date-fns";
  * @fileOverview High-Fidelity Gemini Resident Hub.
  * Optimized Sequence: Hero -> Identity Bar -> Rent Ledger -> Narrative -> Property DNA -> Gemini Chatbot.
  * Fixed: Phone ReferenceError definitive fix.
- * Fixed: Stream Decoder binary resolution.
+ * Fixed: Stream Decoder binary resolution and error transparency.
  */
 
 export default function TenantHub() {
@@ -99,7 +99,8 @@ export default function TenantHub() {
       });
 
       if (!response.ok) {
-        throw new Error('Gemini Service Route Offline');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Gemini Service Route Offline');
       }
 
       const reader = response.body?.getReader();
@@ -124,9 +125,9 @@ export default function TenantHub() {
       }
     } catch (error: any) {
       console.error('CONCIERGE ERROR:', error);
+      const errorMessage = `[GEMINI ALERT]: ${error.message || 'AI is temporarily busy. Please try again.'}`;
       setChatHistory(prev => {
         const newHistory = [...prev];
-        const errorMessage = `[GEMINI ALERT]: AI is temporarily busy. Please try again.`;
         const lastMsg = newHistory[newHistory.length - 1];
         if (lastMsg && lastMsg.role === 'bot' && !lastMsg.text) {
            newHistory[newHistory.length - 1] = { role: 'bot', text: errorMessage };
