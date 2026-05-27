@@ -9,7 +9,7 @@ import {
   MapPin, AlertCircle, 
   Loader2, Building2, Sparkles, Send, Bot, 
   ChevronRight, ReceiptText,
-  ShieldCheck, RefreshCcw, Download, 
+  ShieldCheck, Download, 
   Info, MessageSquare, X, Wifi, Shield, Clock, PoundSterling, Phone
 } from "lucide-react";
 import Link from "next/link";
@@ -20,8 +20,8 @@ import { format } from "date-fns";
 
 /**
  * @fileOverview High-Fidelity Resident Hub.
- * Optimized for word-by-word streaming and professional vertical hierarchy.
- * Resolved ReferenceError: Phone is not defined.
+ * Sequence: Hero -> Identity Bar -> Rent Ledger -> Narrative -> Property DNA -> Actions.
+ * Resolved Visibility: Break-words implementation for DNA cards.
  */
 
 export default function TenantHub() {
@@ -96,9 +96,7 @@ export default function TenantHub() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('API route failed to respond.');
-      }
+      if (!response.ok) throw new Error('API route failed to respond.');
 
       const reader = response.body?.getReader();
       if (!reader) throw new Error('Stream reader initialization failed.');
