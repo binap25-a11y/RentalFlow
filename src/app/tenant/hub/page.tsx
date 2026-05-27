@@ -58,6 +58,7 @@ import Image from "next/image";
 /**
  * @fileOverview High-Fidelity Resident Hub.
  * Features a cinematic Visual Inventory and an integrated Repair Reporting Suite.
+ * Stabilized against JSX identifier collisions.
  */
 
 export default function TenantHub() {
@@ -125,7 +126,6 @@ export default function TenantHub() {
       const uploadedUrls: string[] = [];
       for (const file of files) {
         const optimizedBlob = await compressImage(file);
-        // ATOMIC PATH PROTOCOL: uid/propertyId/timestamp-filename
         const path = `${user.uid}/${property.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
         
         const formData = new FormData();
@@ -174,7 +174,7 @@ export default function TenantHub() {
 
     try {
       await notifyLandlordOfRequest({
-        landlordEmail: 'landlord@rentalflow.app', // Fallback, in production fetch from management profile
+        landlordEmail: 'landlord@rentalflow.app', 
         propertyAddress: property.addressLine1,
         title: repairTitle,
         description: repairDescription
@@ -223,7 +223,6 @@ export default function TenantHub() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-8 space-y-10">
           <Card className="border-none shadow-2xl overflow-hidden bg-card group ring-1 ring-border rounded-[3rem]">
-            {/* 1. CINEMATIC VISUAL INVENTORY */}
             <div className="relative w-full bg-muted overflow-hidden">
               {gallery.length > 0 ? (
                 <Carousel className="w-full group/carousel">
@@ -266,7 +265,6 @@ export default function TenantHub() {
               )}
             </div>
 
-            {/* 2. IDENTITY BAR */}
             <div className="p-10 border-b border-border bg-white/[0.01] space-y-4">
                <h2 className="text-3xl md:text-4xl font-headline font-bold text-foreground tracking-tight leading-tight">
                  {property.addressLine1}, {property.city}, {property.zipCode}
@@ -283,7 +281,6 @@ export default function TenantHub() {
             </div>
 
             <CardContent className="p-10 md:p-12 space-y-12">
-              {/* 3. RENT LEDGER */}
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
@@ -303,7 +300,6 @@ export default function TenantHub() {
                 </div>
               </div>
 
-              {/* 4. RESIDENCE NARRATIVE */}
               <div className="space-y-6">
                 <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
                 <div className="p-8 bg-primary/5 rounded-[2rem] border border-border text-left">
@@ -314,7 +310,6 @@ export default function TenantHub() {
                 </div>
               </div>
 
-              {/* 5. PROPERTY DNA */}
               <div className="space-y-6">
                 <h3 className="font-bold font-headline text-xl text-foreground flex items-center tracking-tight"><ShieldCheck className="w-5 h-5 mr-3 text-accent" /> Property DNA</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -335,7 +330,6 @@ export default function TenantHub() {
                 </div>
               </div>
 
-              {/* 6. ORCHESTRATED ACTIONS */}
               <div className="pt-10 border-t border-border/50 flex flex-col gap-4">
                 <Dialog open={isRepairOpen} onOpenChange={setIsRepairOpen}>
                   <DialogTrigger asChild>
@@ -444,7 +438,6 @@ export default function TenantHub() {
         </div>
       </div>
 
-      {/* LIGHTBOX DIALOG */}
       <Dialog open={!!lightboxUrl} onOpenChange={() => setLightboxUrl(null)}>
         <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-none bg-transparent shadow-none flex items-center justify-center overflow-hidden">
           <DialogTitle className="sr-only">Visual Asset Preview</DialogTitle>

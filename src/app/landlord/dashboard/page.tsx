@@ -451,7 +451,7 @@ export default function LandlordDashboard() {
                     </DialogFooter>
                   </form>
                 </DialogContent>
-              </Dialog>
+               </Dialog>
             </div>
           </Card>
         </div>
