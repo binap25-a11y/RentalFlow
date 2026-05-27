@@ -11,7 +11,7 @@ import {
   ChevronRight, CheckCircle2, Clock, ReceiptText,
   ShieldCheck, ShieldAlert, RefreshCcw, Zap, Bed, Bath, Download, 
   Home, Info, BookOpen, CreditCard, RotateCcw, Phone,
-  MessageCircle, X, Wifi, Shield, LayoutDashboard, Settings
+  MessageCircle, X, Wifi, Shield
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -184,6 +184,7 @@ export default function TenantHub() {
             </div>
             
             <CardContent className="p-12 space-y-12">
+              {/* 1. Resized Rent Placeholder */}
               <div className="space-y-6">
                 <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight opacity-20"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
                 <div className="p-10 bg-muted/10 rounded-[2.5rem] border border-border/50 shadow-inner space-y-6">
@@ -192,6 +193,7 @@ export default function TenantHub() {
                 </div>
               </div>
 
+              {/* 2. Your Residence Placeholder */}
               <div className="space-y-6">
                 <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight opacity-20"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
                 <div className="p-10 bg-primary/5 rounded-[2.5rem] border border-border/50 space-y-4">
@@ -200,6 +202,16 @@ export default function TenantHub() {
                 </div>
               </div>
 
+              {/* 3. Operational History Placeholder */}
+              <div className="space-y-6">
+                <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight opacity-20"><Wrench className="w-6 h-6 mr-4 text-accent" /> Operational History</h3>
+                <div className="space-y-4">
+                  <div className="h-20 w-full bg-muted/20 rounded-2xl animate-pulse opacity-20" />
+                  <div className="h-20 w-full bg-muted/20 rounded-2xl animate-pulse opacity-20" />
+                </div>
+              </div>
+
+              {/* 4. Fitted Action Placeholder */}
               <div className="pt-4">
                 <div className="h-14 w-full bg-muted/20 rounded-2xl animate-pulse opacity-20" />
               </div>
@@ -317,9 +329,9 @@ export default function TenantHub() {
                   </div>
                 </div>
 
-                {/* 3. Maintenance Snapshot (NEW) */}
+                {/* 3. Real-Time Operational History */}
                 <div className="space-y-6">
-                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><Wrench className="w-6 h-6 mr-4 text-accent" /> Maintenance History</h3>
+                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><Wrench className="w-6 h-6 mr-4 text-accent" /> Operational History</h3>
                    <div className="space-y-4">
                       {activeRequests.length > 0 ? activeRequests.map(req => (
                         <div key={req.id} className="p-6 bg-muted/10 rounded-[1.75rem] border border-border/50 flex items-center justify-between group hover:border-accent/30 transition-all">
@@ -400,7 +412,7 @@ export default function TenantHub() {
              </CardContent>
            </Card>
 
-           {/* AI Hub Stats or secondary info */}
+           {/* AI Hub Status */}
            <Card className="border-none shadow-sm rounded-[3rem] bg-accent text-white overflow-hidden text-left relative group">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl rounded-full group-hover:scale-150 transition-transform duration-1000" />
               <CardHeader className="p-10 pb-4">

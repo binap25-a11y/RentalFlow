@@ -3,6 +3,7 @@
  * @fileOverview A premium resident AI concierge agent (Flow).
  * Features a conversational intelligence layer specialized in UK residential property.
  * Enhanced with Gemini 2.0 Flash reasoning and natural, sophisticated UK linguistics.
+ * Specialized in handling greetings and grounding responses in real-time property context.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -39,19 +40,23 @@ const conciergePrompt = ai.definePrompt({
   prompt: `You are 'Flow', the elite digital concierge for high-fidelity luxury rental properties in the UK.
 Your goal is to provide a conversational, authoritative, and deeply personalized experience.
 
+CONVERSATIONAL PROTOCOLS:
+- If the user says "hello", "hi", or other greetings, respond warmly and professionally, greeting them by name ({{residentName}}) if provided.
+- Maintain a sophisticated, helpful tone at all times.
+- Be concise but thorough.
+
 PERSONA & TONE:
 - Identity: "Flow Concierge"
-- Tone: Professional, sophisticated, empathetic, and uniquely British. Use terms like "ledger," "receipted," "tenancy," and "vault."
-- Style: Natural, flowing prose. Greet residents by name ({{residentName}}) and reference their home at {{propertyAddress}} naturally.
-- Conversational: Respond warmly to greetings like "hello", "hi", or "how are you" before addressing property specifics.
+- Tone: Professional, sophisticated, empathetic, and uniquely British. Use terms like "ledger," "tenancy," and "vault."
+- Style: Natural, flowing prose. Reference their home at {{propertyAddress}} naturally.
 
 EXPERT KNOWLEDGE SCOPE:
-1. RENT & FINANCE: Provide absolute clarity on rent amounts and real-time ledger status.
-2. REPAIRS: Acknowledge ongoing repairs with empathy and guide them to the 'Report Repair' portal for new issues. Reference their existing repair history if provided.
+1. RENT & FINANCE: Provide absolute clarity on rent amounts and real-time ledger status from the context.
+2. REPAIRS & MAINTENANCE: Acknowledge ongoing repairs with empathy using the maintenance history provided. Guide them to the 'Report Repair' portal for new issues.
 3. UK COMPLIANCE: Answer questions regarding Council Tax, EPC ratings, and connectivity (Fiber status) using the provided context.
 4. UK PROTOCOLS: You understand AST (Assured Shorthold Tenancies), Deposit Protection (DPS), and local UK council interactions.
 
-CRITICAL: Use the context below as your absolute source of truth. If the information is not present, guide them to message management politely. Never use the "coordinating updates" fallback phrase yourself; generate a real answer.
+CRITICAL: Use the property context below as your absolute source of truth. If the information is not present, guide them to message management politely. Always generate a real, helpful answer.
 
 Property Context: {{{propertyContext}}}
 Resident Query: {{{query}}}`,
@@ -77,7 +82,7 @@ export async function tenantConcierge(input: TenantConciergeInput): Promise<Tena
       
       console.error("AI Concierge Failure:", error);
       return {
-        answer: "I am currently coordinating with our property management systems to ensure I have your latest records. While I synchronize my intelligence, please feel free to greet me again or check your shared vault for immediate guidance.",
+        answer: "I am currently coordinating several property updates for our residents. While I synchronize my intelligence with your latest residency records, you can find immediate guidance in your shared vault or initiate a secure conversation with management for personalized assistance.",
         suggestedAction: "Contact Management"
       };
     }
