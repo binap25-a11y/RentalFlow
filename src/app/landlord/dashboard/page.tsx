@@ -38,8 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 /**
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
  * Optimized for real-time financial tracking and total text visibility.
- * Refined for Elite UX: No truncation, theme-consistent headers, and fitted placeholders.
- * Updated: Manage Ledger layout optimized with zero-overlap logic and high-contrast spacing.
+ * Refined for Elite UX: No truncation, theme-consistent headers, and zero-overlap Manage Ledger layout.
  */
 
 export default function LandlordDashboard() {
