@@ -125,9 +125,12 @@ export default function TenantHub() {
       const uploadedUrls: string[] = [];
       for (const file of files) {
         const optimizedBlob = await compressImage(file);
+        // ATOMIC PATH PROTOCOL: uid/propertyId/timestamp-filename
         const path = `${user.uid}/${property.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        
         const formData = new FormData();
         formData.append('file', optimizedBlob, file.name);
+        
         const result = await uploadToSupabase(formData, 'Property-Images-', path);
         if (result.success && result.url) {
           uploadedUrls.push(result.url);
@@ -171,7 +174,7 @@ export default function TenantHub() {
 
     try {
       await notifyLandlordOfRequest({
-        landlordEmail: 'landlord@rentalflow.app', // In real app, fetch from landlord profile
+        landlordEmail: 'landlord@rentalflow.app', // Fallback, in production fetch from management profile
         propertyAddress: property.addressLine1,
         title: repairTitle,
         description: repairDescription
