@@ -161,7 +161,7 @@ export default function TenantPaymentsPage() {
              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl rounded-full transition-transform duration-1000 group-hover:scale-150" />
              <CardHeader className="pb-6 p-10">
                 <CardTitle className="text-2xl font-bold font-headline flex items-center gap-4">
-                   <RefreshCcw className="w-8 h-8 text-white/90" /> Ledger Protocol
+                   <ShieldCheck className="w-8 h-8 text-white/90" /> Ledger Protocol
                 </CardTitle>
              </CardHeader>
              <CardContent className="space-y-6 px-10 pb-12">

@@ -22,6 +22,7 @@ import { format } from "date-fns";
  * @fileOverview High-Fidelity Resident Hub.
  * Sequence: Hero -> Identity Bar -> Rent Ledger -> Narrative -> Property DNA -> Actions.
  * Resolved Visibility: Break-words implementation for DNA cards.
+ * Resolved References: Fixed missing icon imports.
  */
 
 export default function TenantHub() {
@@ -122,7 +123,7 @@ export default function TenantHub() {
       console.error('AI STREAM ERROR:', error);
       setChatHistory(prev => {
         const newHistory = [...prev];
-        const errorMessage = "[SYSTEM]: AI is temporarily busy. Please try again.";
+        const errorMessage = "[SYSTEM]: Connection interrupted. Please try again.";
         const lastMsg = newHistory[newHistory.length - 1];
         if (lastMsg && lastMsg.role === 'bot' && !lastMsg.text) {
            newHistory[newHistory.length - 1] = { role: 'bot', text: errorMessage };
