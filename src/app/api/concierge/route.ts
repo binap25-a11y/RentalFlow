@@ -1,3 +1,4 @@
+
 import { ai } from '@/ai/genkit';
 import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 
@@ -11,6 +12,15 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error("AI CONFIG ERROR: Gemini API Key is missing from environment.");
+      return new Response(JSON.stringify({ error: 'System intelligence is currently offline.' }), { 
+        status: 503,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const body = await req.json().catch(() => ({}));
     const { query, residentName, propertyAddress, propertyContext } = body;
 
