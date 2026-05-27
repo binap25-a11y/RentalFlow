@@ -9,7 +9,7 @@ import {
   Loader2, Building2, 
   ChevronRight, ReceiptText,
   ShieldCheck, Download, 
-  Info, Wifi, Shield, PoundSterling, Phone
+  Info, Wifi, Shield, PoundSterling, Phone, Wrench
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect } from "react";
@@ -19,8 +19,7 @@ import { format } from "date-fns";
 
 /**
  * @fileOverview High-Fidelity Resident Hub (Optimized).
- * Hierarchy: Cinematic Hero -> Identity -> Rent Ledger -> Narrative -> Property DNA.
- * Chatbot removed to eliminate intelligence overhead and quota interruptions.
+ * Hierarchy: Cinematic Hero -> Identity -> Rent Ledger -> Narrative -> Property DNA -> Actions.
  */
 
 export default function TenantHub() {
@@ -158,14 +157,14 @@ export default function TenantHub() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
                      <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Wifi className="w-5 h-5" /></div>
-                     <div className="min-w-0 flex-1 overflow-hidden">
+                     <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-bold uppercase opacity-40">Connectivity</p>
                         <p className="text-sm font-bold leading-tight whitespace-normal break-words">{property.connectivityStatus || 'Ultra-Fast Fiber Enabled'}</p>
                      </div>
                   </div>
                   <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
                      <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Shield className="w-5 h-5" /></div>
-                     <div className="min-w-0 flex-1 overflow-hidden">
+                     <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-bold uppercase opacity-40">Compliance</p>
                         <p className="text-sm font-bold leading-tight whitespace-normal break-words">{property.complianceStatus || 'EPC Grade B / Certified'}</p>
                      </div>
@@ -174,9 +173,14 @@ export default function TenantHub() {
               </div>
 
               {/* 6. FITTED ACTIONS */}
-              <div className="pt-8 border-t border-border/50">
-                <Button variant="outline" className="w-full h-16 rounded-[1.75rem] border-border bg-card hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all" onClick={handleDownloadStatement}>
+              <div className="pt-8 border-t border-border/50 flex flex-col sm:flex-row gap-4">
+                <Button variant="outline" className="flex-1 h-16 rounded-[1.75rem] border-border bg-card hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all" onClick={handleDownloadStatement}>
                    <Download className="w-5 h-5 mr-3 text-accent" /> Download Rent Statement
+                </Button>
+                <Button asChild className="flex-1 h-16 rounded-[1.75rem] bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-[10px] uppercase tracking-widest font-headline shadow-2xl shadow-primary/20 transition-all border-none">
+                   <Link href="/tenant/maintenance">
+                     <Wrench className="w-5 h-5 mr-3 text-accent" /> Report a Repair
+                   </Link>
                 </Button>
               </div>
             </CardContent>
