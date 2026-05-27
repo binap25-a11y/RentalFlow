@@ -11,7 +11,7 @@ import {
   Loader2, Building2, Sparkles, Send, Bot, 
   ChevronRight, ReceiptText,
   ShieldCheck, RefreshCcw, Download, 
-  Info, MessageSquare, X, Wifi, Shield, Clock, PoundSterling
+  Info, MessageSquare, X, Wifi, Shield, Clock, PoundSterling, Phone
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -121,7 +121,16 @@ export default function TenantHub() {
       }
     } catch (error: any) {
       console.error('CONCIERGE RUNTIME ERROR:', error);
-      setChatHistory(prev => [...prev, { role: 'bot', text: "[SYSTEM]: Communication interrupted. Please try again." }]);
+      setChatHistory(prev => {
+        const newHistory = [...prev];
+        const lastMsg = newHistory[newHistory.length - 1];
+        if (lastMsg && lastMsg.role === 'bot' && !lastMsg.text) {
+           newHistory[newHistory.length - 1] = { role: 'bot', text: "[SYSTEM]: AI is temporarily busy. Please try again." };
+        } else {
+           newHistory.push({ role: 'bot', text: "[SYSTEM]: Communication interrupted. Please try again." });
+        }
+        return newHistory;
+      });
     } finally { 
       setIsChatting(false); 
     }

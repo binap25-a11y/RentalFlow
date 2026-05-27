@@ -10,7 +10,7 @@ export async function GET() {
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY;
 
   try {
-    if (!apiKey || apiKey.includes('XXXX')) {
+    if (!apiKey || apiKey.includes('XXXX') || apiKey.length < 10) {
       throw new Error("API Key is missing or using a placeholder.");
     }
 
@@ -25,7 +25,8 @@ export async function GET() {
       success: true,
       text: result.response.text(),
       engine: "gemini-2.0-flash",
-      status: "Operational"
+      status: "Operational",
+      key_preview: `${apiKey.substring(0, 7)}...`
     });
 
   } catch (error: any) {

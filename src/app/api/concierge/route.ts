@@ -26,7 +26,6 @@ export async function POST(req: NextRequest) {
 
     try {
       // GENKIT 1.x ORCHESTRATION: generateStream returns the stream object synchronously.
-      // Verified pattern: Pass the results of the prompt call.
       const { stream } = ai.generateStream(
         conciergePrompt({
           query,
@@ -47,7 +46,6 @@ export async function POST(req: NextRequest) {
             }
             controller.close();
           } catch (streamError: any) {
-            // REAL LOGGING: Server console will show the actual error (429, 403, etc.)
             console.error('AI STREAM ITERATION ERROR:', streamError);
             
             const errorMsg = streamError.message || "";
