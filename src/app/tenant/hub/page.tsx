@@ -19,10 +19,10 @@ import { query, collection, where } from "firebase/firestore";
 import { format } from "date-fns";
 
 /**
- * @fileOverview High-Fidelity Resident Hub.
- * Optimized Sequence: Hero -> Identity Bar -> Rent Ledger -> Narrative -> Property DNA -> Actions.
- * Fixed: Phone icon ReferenceError import.
- * Fixed: DNA text fitting with break-words.
+ * @fileOverview High-Fidelity Gemini Resident Hub.
+ * Optimized Sequence: Hero -> Identity Bar -> Rent Ledger -> Narrative -> Property DNA -> Gemini Chatbot.
+ * Fixed: Phone ReferenceError definitive fix.
+ * Fixed: Stream Decoder binary resolution.
  */
 
 export default function TenantHub() {
@@ -98,7 +98,7 @@ export default function TenantHub() {
       });
 
       if (!response.ok) {
-        throw new Error('AI Service Route Offline');
+        throw new Error('Gemini Service Route Offline');
       }
 
       const reader = response.body?.getReader();
@@ -125,7 +125,7 @@ export default function TenantHub() {
       console.error('CONCIERGE ERROR:', error);
       setChatHistory(prev => {
         const newHistory = [...prev];
-        const errorMessage = `[SYSTEM]: AI is temporarily busy. Please try again.`;
+        const errorMessage = `[GEMINI ALERT]: AI is temporarily busy. Please try again.`;
         const lastMsg = newHistory[newHistory.length - 1];
         if (lastMsg && lastMsg.role === 'bot' && !lastMsg.text) {
            newHistory[newHistory.length - 1] = { role: 'bot', text: errorMessage };
@@ -296,12 +296,12 @@ export default function TenantHub() {
            <Card className="border-none shadow-sm rounded-[3rem] bg-accent text-white overflow-hidden text-left relative group">
               <CardHeader className="p-10 pb-4">
                  <CardTitle className="text-xl font-bold font-headline flex items-center gap-4">
-                    <Bot className="w-8 h-8 text-white/90" /> Flow Concierge
+                    <Bot className="w-8 h-8 text-white/90" /> Gemini Chatbot
                  </CardTitle>
               </CardHeader>
               <CardContent className="p-10 pt-0">
                  <div className="p-6 bg-white/10 rounded-[2rem] border border-white/10 shadow-inner">
-                    <p className="text-sm font-medium leading-relaxed">Ask me anything about your residency, rent, or maintenance status.</p>
+                    <p className="text-sm font-medium leading-relaxed">Powered by Gemini. Ask me about your residency, rent, or maintenance status.</p>
                  </div>
               </CardContent>
            </Card>
@@ -317,7 +317,7 @@ export default function TenantHub() {
                 <div className="flex items-center gap-4">
                   <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center"><Sparkles className="w-6 h-6 text-white" /></div>
                   <div className="text-left">
-                    <CardTitle className="text-xl font-headline font-bold">Flow Concierge</CardTitle>
+                    <CardTitle className="text-xl font-headline font-bold">Gemini Chatbot</CardTitle>
                     <p className="text-xs opacity-70 font-bold uppercase tracking-widest">Real-Time Intelligence</p>
                   </div>
                 </div>
@@ -331,7 +331,7 @@ export default function TenantHub() {
               {chatHistory.length === 0 ? (
                 <div className="h-full flex flex-col justify-center items-center text-center space-y-4 opacity-40">
                   <Bot className="w-12 h-12 mx-auto text-foreground" />
-                  <p className="text-[10px] font-bold font-headline uppercase tracking-[0.3em]">How can I assist your residency?</p>
+                  <p className="text-[10px] font-bold font-headline uppercase tracking-[0.3em]">How can Gemini assist your residency?</p>
                 </div>
               ) : (
                 <>
@@ -360,7 +360,7 @@ export default function TenantHub() {
 
             <div className="p-6 bg-muted/10 border-t border-border">
               <form onSubmit={(e) => { e.preventDefault(); handleAskConcierge(); }} className="flex gap-3 items-center">
-                <Input value={chatQuery} onChange={(e) => setChatQuery(e.target.value)} placeholder="Ask Flow..." className="h-12 rounded-2xl bg-background border-none shadow-inner px-5 text-sm text-foreground focus-visible:ring-primary flex-1" disabled={isChatting} />
+                <Input value={chatQuery} onChange={(e) => setChatQuery(e.target.value)} placeholder="Ask Gemini..." className="h-12 rounded-2xl bg-background border-none shadow-inner px-5 text-sm text-foreground focus-visible:ring-primary flex-1" disabled={isChatting} />
                 <button type="submit" className="h-12 w-12 rounded-2xl shadow-xl shadow-primary/20 bg-primary text-primary-foreground transition-all active:scale-95 shrink-0 flex items-center justify-center disabled:opacity-50" disabled={isChatting || !chatQuery.trim()}>
                   {isChatting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </button>

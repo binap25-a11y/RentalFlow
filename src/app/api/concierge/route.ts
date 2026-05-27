@@ -2,9 +2,9 @@ import { ai } from '@/ai/genkit';
 import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 
 /**
- * 🤖 Hardened Streaming Concierge Endpoint
+ * 🤖 Hardened Gemini Streaming Concierge
  * Optimized for Genkit 1.x zero-latency streaming.
- * Provides professional logging to identified the true cause of AI interruptions.
+ * Provides professional logging to identify the true cause of AI interruptions.
  */
 
 export const dynamic = 'force-dynamic';
@@ -23,8 +23,8 @@ export async function POST(req: Request) {
 
     const encoder = new TextEncoder();
 
-    // GENKIT 1.x STREAMING: Definitive iteration pattern
     try {
+      // GENKIT 1.x STREAMING: Definitive iteration pattern
       const { stream } = ai.generateStream({
         prompt: conciergePrompt,
         input: {
@@ -51,9 +51,9 @@ export async function POST(req: Request) {
             
             const errorMsg = streamError.message || "";
             if (errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED')) {
-              controller.enqueue(encoder.encode("\n\n[SYSTEM]: AI is temporarily busy. Please try again."));
+              controller.enqueue(encoder.encode("\n\n[GEMINI ALERT]: AI is temporarily busy. Please try again in a moment."));
             } else {
-              controller.enqueue(encoder.encode("\n\n[SYSTEM]: Service Interrupted. Please refresh and try again."));
+              controller.enqueue(encoder.encode("\n\n[GEMINI ERROR]: Service Interrupted. Please refresh and try again."));
             }
             controller.close();
           }
