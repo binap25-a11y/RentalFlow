@@ -475,25 +475,53 @@ export default function LandlordDashboard() {
            </div>
            
            <ScrollArea className="flex-1">
-             <div className="p-10 space-y-14 text-left bg-white/[0.01] pb-24">
-                <div className="space-y-6 bg-white/[0.02] p-8 rounded-[2rem] ring-1 ring-white/5">
-                   <Label className="font-bold text-[11px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-50">Monthly Rent Amount (£)</Label>
-                   <Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className="rounded-2xl h-20 bg-muted/40 border-none font-bold px-8 text-2xl shadow-inner ring-1 ring-white/10 text-foreground" placeholder="e.g. 1500.00" />
+             <div className="p-10 space-y-12 text-left pb-24">
+                {/* RENT SECTION */}
+                <div className="space-y-6">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-accent/10 rounded-xl text-accent">
+                            <PoundSterling className="w-5 h-5" />
+                        </div>
+                        <Label className="font-bold text-[11px] uppercase text-foreground tracking-[0.2em] font-headline">Monthly Rent Adjustment</Label>
+                    </div>
+                    <div className="bg-muted/30 p-8 rounded-[2.5rem] border border-border/50 shadow-inner">
+                        <Input 
+                            type="number" 
+                            value={editAmount} 
+                            onChange={(e) => setEditAmount(e.target.value)} 
+                            className="rounded-2xl h-20 bg-background border-none font-bold px-8 text-3xl shadow-2xl text-foreground" 
+                            placeholder="0.00" 
+                        />
+                        <p className="text-[10px] text-muted-foreground font-bold mt-4 px-2 uppercase tracking-widest">Target monthly yield for this asset</p>
+                    </div>
                 </div>
-                <div className="space-y-6 bg-white/[0.02] p-8 rounded-[2rem] ring-1 ring-white/5">
-                   <Label className="font-bold text-[11px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-50">Collection Status</Label>
-                   <Tabs value={editStatus} onValueChange={(v) => setEditStatus(v as any)}>
-                      <TabsList className="grid grid-cols-2 h-16 bg-muted/40 rounded-2xl p-2 border-none ring-1 ring-white/10">
-                         <TabsTrigger value="pending" className="rounded-xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-white shadow-sm">Pending</TabsTrigger>
-                         <TabsTrigger value="paid" className="rounded-xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-emerald-500 data-[state=active]:text-white shadow-sm">Receipted</TabsTrigger>
-                      </TabsList>
-                   </Tabs>
+
+                {/* STATUS SECTION */}
+                <div className="space-y-6">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-accent/10 rounded-xl text-accent">
+                            <Activity className="w-5 h-5" />
+                        </div>
+                        <Label className="font-bold text-[11px] uppercase text-foreground tracking-[0.2em] font-headline">Collection State</Label>
+                    </div>
+                    <div className="bg-muted/30 p-3 rounded-[2rem] border border-border/50 shadow-inner">
+                        <Tabs value={editStatus} onValueChange={(v) => setEditStatus(v as any)}>
+                            <TabsList className="grid grid-cols-2 h-16 bg-transparent border-none p-0 gap-2">
+                                <TabsTrigger value="pending" className="rounded-2xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-xl transition-all h-full border-none">
+                                    Pending
+                                </TabsTrigger>
+                                <TabsTrigger value="paid" className="rounded-2xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-xl transition-all h-full border-none">
+                                    Receipted
+                                </TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    </div>
                 </div>
              </div>
            </ScrollArea>
 
            <DialogFooter className="p-10 bg-muted/5 border-t border-white/5 shrink-0">
-              <Button className="w-full rounded-[2rem] h-20 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:opacity-90 font-headline uppercase tracking-[0.3em] text-[12px] border-none transition-all hover:scale-[1.01]" onClick={handleSavePayment} disabled={isSavingPayment}>
+              <Button className="w-full rounded-[2.5rem] h-20 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:opacity-90 font-headline uppercase tracking-[0.3em] text-[12px] border-none transition-all hover:scale-[1.01]" onClick={handleSavePayment} disabled={isSavingPayment}>
                  {isSavingPayment ? <Loader2 className="w-6 h-6 animate-spin mr-4" /> : <Save className="w-6 h-6 mr-4" />}
                  Synchronize Ledger
               </Button>
