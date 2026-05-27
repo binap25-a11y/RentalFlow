@@ -200,9 +200,9 @@ export default function LandlordDashboard() {
 
   const statConfig = [
     { title: "Gross Annual Potential", val: `£${financialStats.annualGross.toLocaleString()}`, Icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5", Indicator: ArrowUpRight },
-    { title: "Portfolio Expenses (YTD)", val: `£${financialStats.totalExpenses.toLocaleString()}`, Icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", Indicator: ArrowDownRight },
+    { title: "Portfolio Expenses (Year To Date)", val: `£${financialStats.totalExpenses.toLocaleString()}`, Icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", Indicator: ArrowDownRight },
     { title: "Net Annual Forecast", val: `£${financialStats.netAnnualForecast.toLocaleString()}`, Icon: TrendingUp, color: "text-primary-foreground", bg: "bg-primary", isPrimary: true },
-    { title: "Current Month Receipt", val: `£${financialStats.actualCollectedThisMonth.toLocaleString()}`, Icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats.collectionRate }
+    { title: "Current Month Collected", val: `£${financialStats.actualCollectedThisMonth.toLocaleString()}`, Icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats.collectionRate }
   ];
 
   return (
@@ -248,7 +248,7 @@ export default function LandlordDashboard() {
                      {stat.val}
                   </p>
                   {stat.progress !== undefined && <Progress value={stat.progress} className="h-2 bg-white/10" />}
-                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] font-headline opacity-50 whitespace-normal leading-tight">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] font-headline opacity-50 whitespace-normal leading-tight">
                     {stat.title}
                   </p>
                 </div>
@@ -307,7 +307,7 @@ export default function LandlordDashboard() {
                      <tr className="bg-white/[0.02]">
                        <th className="px-8 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-2/5">Property Identity</th>
                        <th className="px-8 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-1/5">Monthly Rent</th>
-                       <th className="px-8 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-1/5">Ledger Status</th>
+                       <th className="px-8 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-1/5">Collection Status</th>
                        <th className="px-8 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground text-right w-1/5">Actions</th>
                      </tr>
                    </thead>
@@ -422,16 +422,16 @@ export default function LandlordDashboard() {
                     <ScrollArea className="flex-1">
                       <div className="p-10 space-y-8 text-left">
                         <div className="space-y-3">
-                          <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Expense Identifier</Label>
+                          <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Expense Identifier</Label>
                           <Input value={expTitle} onChange={(e) => setExpTitle(e.target.value)} placeholder="e.g. Landlord Insurance 2026" className="rounded-2xl h-14 bg-muted/30 border-none font-bold px-6 text-base" />
                         </div>
                         <div className="grid grid-cols-2 gap-6">
                           <div className="space-y-3">
-                            <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Capital Amount (£)</Label>
+                            <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Capital Amount (£)</Label>
                             <Input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="0.00" className="rounded-2xl h-14 bg-muted/30 border-none font-bold px-6 text-base" />
                           </div>
                           <div className="space-y-3">
-                            <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Category</Label>
+                            <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Category</Label>
                             <select className="flex h-14 w-full rounded-2xl border-none bg-muted/30 px-6 py-2 text-base focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" value={expCategory} onChange={(e) => setExpCategory(e.target.value)}>
                               <option value="insurance">Insurance</option>
                               <option value="maintenance">Maintenance</option>
@@ -441,7 +441,7 @@ export default function LandlordDashboard() {
                           </div>
                         </div>
                         <div className="space-y-3">
-                          <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.3em] opacity-40">Target Inventory Asset</Label>
+                          <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Target Inventory Asset</Label>
                           <select className="flex h-14 w-full rounded-2xl border-none bg-muted/30 px-6 py-2 text-base focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" value={expPropertyId} onChange={(e) => setExpPropertyId(e.target.value)} required>
                             <option value="">Select Asset...</option>
                             {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
@@ -465,7 +465,7 @@ export default function LandlordDashboard() {
 
       <Dialog open={!!activePaymentEdit} onOpenChange={(o) => !o && setActivePaymentEdit(null)}>
         <DialogContent className="rounded-[3.5rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh] max-w-[500px] ring-1 ring-white/10">
-           {/* THEME-CONSISTENT HEADING: Light in light mode, Dark in dark mode via secondary palette */}
+           {/* THEME-CONSISTENT HEADING */}
            <div className="p-10 bg-secondary text-secondary-foreground border-b border-border text-left shrink-0 relative overflow-hidden">
              <div className="absolute top-0 right-0 p-10 opacity-5"><PoundSterling className="w-24 h-24" /></div>
              <DialogHeader>
@@ -475,11 +475,11 @@ export default function LandlordDashboard() {
            </div>
            <div className="p-10 space-y-10 text-left bg-white/[0.01]">
               <div className="space-y-4">
-                 <Label className="font-bold text-[11px] uppercase text-muted-foreground font-headline tracking-[0.4em] opacity-50">Monthly Rent Amount (£)</Label>
-                 <Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className="rounded-2xl h-16 bg-muted/40 border-none font-bold px-8 text-xl shadow-inner ring-1 ring-white/10 text-foreground" placeholder="0.00" />
+                 <Label className="font-bold text-[11px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-50">Monthly Rent Amount (£)</Label>
+                 <Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className="rounded-2xl h-16 bg-muted/40 border-none font-bold px-8 text-xl shadow-inner ring-1 ring-white/10 text-foreground" placeholder="e.g. 1500.00" />
               </div>
               <div className="space-y-4">
-                 <Label className="font-bold text-[11px] uppercase text-muted-foreground font-headline tracking-[0.4em] opacity-50">Collection Status</Label>
+                 <Label className="font-bold text-[11px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-50">Collection Status</Label>
                  <Tabs value={editStatus} onValueChange={(v) => setEditStatus(v as any)}>
                     <TabsList className="grid grid-cols-2 h-16 bg-muted/40 rounded-2xl p-2 border-none ring-1 ring-white/10">
                        <TabsTrigger value="pending" className="rounded-xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-white shadow-sm">Pending</TabsTrigger>
