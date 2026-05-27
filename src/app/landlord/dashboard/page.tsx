@@ -37,8 +37,7 @@ import { useToast } from "@/hooks/use-toast";
 
 /**
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
- * Optimized for cinematic visualization and real-time financial command.
- * Expanded identifiers ensure no text truncation on mobile.
+ * Optimized for real-time financial tracking and total text visibility.
  */
 
 export default function LandlordDashboard() {
@@ -93,20 +92,6 @@ export default function LandlordDashboard() {
   }, [db, user]);
   const { data: currentMonthPayments } = useCollection(paymentsQuery);
 
-  // LEDGER EDIT STATE
-  const [activePaymentEdit, setActivePaymentEdit] = useState<any>(null);
-  const [editAmount, setEditAmount] = useState('');
-  const [editStatus, setEditStatus] = useState<'paid' | 'pending'>('pending');
-  const [isSavingPayment, setIsSavingPayment] = useState(false);
-
-  // EXPENSE ORCHESTRATION STATE
-  const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
-  const [isSavingExpense, setIsSavingExpense] = useState(false);
-  const [expAmount, setExpAmount] = useState('');
-  const [expCategory, setExpCategory] = useState('other');
-  const [expPropertyId, setExpPropertyId] = useState('');
-  const [expTitle, setExpTitle] = useState('');
-
   const financialStats = useMemo(() => {
     if (!isClient || !properties || !maintenance) return { annualGross: 0, totalExpenses: 0, netAnnualForecast: 0, collectionRate: 0, actualCollectedThisMonth: 0 };
     const monthlyGrossPotential = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
@@ -159,6 +144,20 @@ export default function LandlordDashboard() {
     setActivePaymentEdit(null);
     setIsSavingPayment(false);
   };
+
+  // LEDGER EDIT STATE
+  const [activePaymentEdit, setActivePaymentEdit] = useState<any>(null);
+  const [editAmount, setEditAmount] = useState('');
+  const [editStatus, setEditStatus] = useState<'paid' | 'pending'>('pending');
+  const [isSavingPayment, setIsSavingPayment] = useState(false);
+
+  // EXPENSE STATE
+  const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
+  const [isSavingExpense, setIsSavingExpense] = useState(false);
+  const [expAmount, setExpAmount] = useState('');
+  const [expCategory, setExpCategory] = useState('other');
+  const [expPropertyId, setExpPropertyId] = useState('');
+  const [expTitle, setExpTitle] = useState('');
 
   const handleLogManualExpense = () => {
     if (!user || !db || !expAmount || !expPropertyId || !expTitle) return;
@@ -306,7 +305,7 @@ export default function LandlordDashboard() {
                    <thead>
                      <tr className="bg-white/[0.02]">
                        <th className="px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-2/5">Property Identity</th>
-                       <th className="px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-1/5">Monthly Yield</th>
+                       <th className="px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-1/5">Monthly Rent</th>
                        <th className="px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-1/5">Ledger Status</th>
                        <th className="px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground text-right w-1/5">Actions</th>
                      </tr>
@@ -335,7 +334,7 @@ export default function LandlordDashboard() {
                            </td>
                            <td className="px-12 py-8 font-bold text-base text-foreground tracking-tight truncate">£{prop.rentAmount?.toLocaleString()}</td>
                            <td className="px-12 py-8">
-                             <Badge className={cn("rounded-full px-5 py-1.5 font-bold text-[9px] uppercase tracking-[0.1em] border-none shadow-sm block text-center truncate", isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500")}>
+                             <Badge className={cn("rounded-full px-5 py-1.5 font-bold text-[9px] uppercase tracking-[0.1em] border-none shadow-sm block text-center", isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500")}>
                                {isPaid ? "Receipted" : "Collection Pending"}
                              </Badge>
                            </td>

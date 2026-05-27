@@ -52,8 +52,7 @@ import { notifyLandlordOfRequest } from "@/lib/actions/email-actions";
 
 /**
  * @fileOverview Personalized Resident Hub.
- * Optimized for hardware-aligned logic and cinematic visual inventory.
- * Dynamic name-based greeting for an elite entry experience.
+ * Optimized for real-time finance tracking and vertical vertical authority.
  */
 
 export default function TenantHub() {
@@ -186,7 +185,6 @@ export default function TenantHub() {
     setIsSaving(false);
   };
 
-  // PREMIUM LOADING STATE
   if (!isClient || isPropLoading) {
     return (
       <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-1000 pb-32 text-left bg-background">
@@ -199,7 +197,6 @@ export default function TenantHub() {
     );
   }
 
-  // REGISTRY VERIFICATION STATE
   if (!property) {
     return (
       <div className="max-w-7xl mx-auto space-y-12 py-32 text-center flex flex-col items-center justify-center">
@@ -256,7 +253,7 @@ export default function TenantHub() {
                <h2 className="text-3xl md:text-5xl font-headline font-bold text-foreground tracking-tight leading-[0.9]">
                  {property.addressLine1}, <br/><span className="text-muted-foreground opacity-60">{property.city}, {property.zipCode}</span>
                </h2>
-               <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-bold uppercase tracking-[0.2em] text-[10px] py-3 px-8 rounded-full shadow-sm font-headline shrink-0 h-fit">
+               <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-bold uppercase tracking-widest text-[10px] py-3 px-8 rounded-full shadow-sm font-headline shrink-0 h-fit">
                  <ShieldCheck className="w-4 h-4 mr-2" /> Verified Active Tenancy
                </Badge>
             </div>
