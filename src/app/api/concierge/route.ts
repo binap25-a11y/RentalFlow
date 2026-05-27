@@ -5,23 +5,26 @@ import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 /**
  * @fileOverview High-Fidelity Streaming Concierge Endpoint.
  * Enables zero-latency AI responses by streaming Gemini chunks directly to the client.
- * Hardened for Genkit 1.x streaming protocols and production stability.
+ * Corrected for Genkit 1.x synchronous stream initialization.
  */
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const { query, residentName, propertyAddress, propertyContext } = body;
 
     if (!query) {
-      return new Response(JSON.stringify({ error: 'Query is required' }), { status: 400 });
+      return new Response(JSON.stringify({ error: 'Query is required' }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
-    // ATOMIC FIX: Await the generateStream call (Genkit 1.x requirement)
-    // pattern: ai.generateStream(prompt(input))
-    const { stream } = await ai.generateStream(
+    // ATOMIC FIX: ai.generateStream is synchronous in Genkit 1.x
+    // It returns the stream object immediately; the chunks are awaited during iteration.
+    const { stream } = ai.generateStream(
       conciergePrompt({
         query,
         residentName,
@@ -43,7 +46,9 @@ export async function POST(req: NextRequest) {
           controller.close();
         } catch (streamError: any) {
           console.error('API Stream Iteration Failure:', streamError);
-          controller.error(streamError);
+          const errorMsg = JSON.stringify({ error: streamError.message || 'Stream processing failed' });
+          controller.enqueue(encoder.encode(errorMsg));
+          controller.close();
         }
       },
     });
@@ -59,7 +64,7 @@ export async function POST(req: NextRequest) {
     console.error('Concierge API Runtime Error:', error);
     return new Response(JSON.stringify({ 
       error: 'Intelligence Engine Offline',
-      details: error.message 
+      details: error.message || 'An unexpected server error occurred.'
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

@@ -96,9 +96,14 @@ export default function TenantHub() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("AI API CRITICAL ERROR:", errorData);
-        throw new Error(errorData.error || 'Intelligence Engine Offline');
+        const errorText = await response.text().catch(() => "Unknown server error");
+        let errorJson = { error: "Intelligence Engine Offline" };
+        try {
+          errorJson = JSON.parse(errorText);
+        } catch (e) {}
+        
+        console.error("AI API CRITICAL ERROR:", errorJson);
+        throw new Error(errorJson.error || 'Intelligence Engine Offline');
       }
 
       const reader = response.body?.getReader();
@@ -122,7 +127,7 @@ export default function TenantHub() {
         });
       }
     } catch (error: any) {
-      console.error('Concierge Fetch Error Handled:', error);
+      console.error('Concierge Runtime Error:', error);
       setChatHistory(prev => [...prev, { role: 'bot', text: "My apologies, I'm identifying a brief synchronization delay with the property ledger. Please try your request once more in a moment." }]);
     } finally { 
       setIsChatting(false); 
