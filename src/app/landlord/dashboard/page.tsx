@@ -306,10 +306,10 @@ export default function LandlordDashboard() {
                  <table className="w-full text-left border-collapse min-w-[1100px]">
                    <thead>
                      <tr className="bg-white/[0.02]">
-                       <th className="px-6 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[30%]">Property Identity</th>
-                       <th className="px-6 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[15%]">Monthly Rent</th>
-                       <th className="px-6 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[25%]">Collection Status</th>
-                       <th className="px-6 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground text-right w-[30%]">Actions</th>
+                       <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[30%]">Property Identity</th>
+                       <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[15%]">Monthly Rent</th>
+                       <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[25%]">Collection Status</th>
+                       <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground text-right w-[30%]">Actions</th>
                      </tr>
                    </thead>
                    <tbody className="divide-y divide-white/5">
@@ -319,7 +319,7 @@ export default function LandlordDashboard() {
                        const imageUrl = getResolvedImageUrl(prop.imageUrl, prop.imageUrls);
                        return (
                          <tr key={prop.id} className="hover:bg-white/[0.02] transition-colors group">
-                           <td className="px-6 py-8 min-w-0">
+                           <td className="px-6 py-5 min-w-0">
                              <div className="flex items-center gap-5">
                                <div className="relative h-14 w-14 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/5 group-hover:scale-110 transition-transform bg-muted shrink-0 flex items-center justify-center">
                                  {imageUrl ? (
@@ -334,8 +334,8 @@ export default function LandlordDashboard() {
                                </div>
                              </div>
                            </td>
-                           <td className="px-6 py-8 font-bold text-base text-foreground tracking-tight truncate">£{prop.rentAmount?.toLocaleString()}</td>
-                           <td className="px-6 py-8">
+                           <td className="px-6 py-5 font-bold text-base text-foreground tracking-tight truncate">£{prop.rentAmount?.toLocaleString()}</td>
+                           <td className="px-6 py-5">
                              {/* ANTI-CLIPPING BADGE: Optimized min-w and whitespace handling */}
                              <Badge className={cn(
                                "rounded-full px-6 py-2.5 font-bold text-[10px] uppercase tracking-[0.1em] border-none shadow-sm min-w-[170px] inline-flex items-center justify-center whitespace-nowrap text-center h-10", 
@@ -344,7 +344,7 @@ export default function LandlordDashboard() {
                                {isPaid ? "Receipted" : "Collection Pending"}
                              </Badge>
                            </td>
-                           <td className="px-6 py-8 text-right shrink-0">
+                           <td className="px-6 py-5 text-right shrink-0">
                               <div className="flex items-center justify-end gap-3">
                                 <Button variant="ghost" size="icon" className="rounded-xl h-11 w-11 hover:bg-white/5 border border-white/5 shrink-0" onClick={() => handleOpenLedgerEdit(prop, payment)}>
                                   <Settings2 className="w-4 h-4 text-muted-foreground" />
