@@ -5,27 +5,51 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
-  MapPin, AlertCircle, 
-  Loader2, Building2, 
-  ChevronRight, ReceiptText,
-  ShieldCheck, Download, 
-  Info, Wifi, Shield, PoundSterling, Phone
+  MapPin, 
+  Loader2, 
+  Building2, 
+  ChevronRight, 
+  ReceiptText,
+  ShieldCheck, 
+  Download, 
+  Info, 
+  Wifi, 
+  Shield, 
+  PoundSterling, 
+  Phone,
+  AlertCircle,
+  X,
+  Sparkles
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect } from "react";
-import { cn, getResolvedImageUrl } from "@/lib/utils";
+import { cn, getResolvedImageUrl, getResolvedGallery } from "@/lib/utils";
 import { query, collection, where } from "firebase/firestore";
 import { format } from "date-fns";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogTitle 
+} from "@/components/ui/dialog";
+import Image from "next/image";
 
 /**
  * @fileOverview High-Fidelity Resident Hub.
- * Sequence: Cinematic Hero -> Identity -> Rent Ledger -> Narrative -> Property DNA -> Actions.
+ * Features a cinematic Visual Inventory and optimized content hierarchy.
  */
 
 export default function TenantHub() {
   const { user } = useUser();
   const db = useFirestore();
   const [isClient, setIsClient] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   useEffect(() => { 
     setIsClient(true); 
@@ -40,12 +64,10 @@ export default function TenantHub() {
   const { data: properties, loading: isPropLoading } = useCollection(propertiesQuery);
   const property = properties?.[0];
 
-  const tenantProfileQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return getTenantCollectionQuery({ db, collectionName: "tenantProfiles", userId: user.uid });
-  }, [db, user]);
-  const { data: profiles } = useCollection(tenantProfileQuery);
-  const profile = profiles?.[0];
+  const gallery = useMemo(() => {
+    if (!property) return [];
+    return getResolvedGallery(property.imageUrl, property.imageUrls);
+  }, [property]);
 
   // FINANCE SYNC
   const paymentsQuery = useMemoFirebase(() => {
@@ -72,7 +94,7 @@ export default function TenantHub() {
   if (!isClient || isPropLoading) {
     return (
       <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-1000 pb-32 text-left bg-background">
-        <div className="h-[400px] w-full bg-muted/40 animate-pulse rounded-[3rem]" />
+        <div className="h-[450px] w-full bg-muted/40 animate-pulse rounded-[3rem]" />
         <div className="space-y-4">
           <div className="h-10 w-64 bg-muted rounded-full animate-pulse" />
           <div className="h-6 w-48 bg-muted/40 rounded-full animate-pulse" />
@@ -85,13 +107,11 @@ export default function TenantHub() {
     return (
       <div className="max-w-7xl mx-auto space-y-12 py-32 text-center">
         <Building2 className="w-16 h-16 mx-auto text-muted-foreground/20 mb-6" />
-        <h1 className="text-3xl font-headline font-bold text-foreground">Registry Verification</h1>
-        <p className="text-muted-foreground max-w-sm mx-auto">Once your landlord links your residency to a property, your hub will be initialized here.</p>
+        <h1 className="text-3xl font-headline font-bold text-foreground tracking-tighter">Registry Verification</h1>
+        <p className="text-muted-foreground max-w-sm mx-auto font-medium">Once your landlord links your residency to a property, your hub will be initialized here.</p>
       </div>
     );
   }
-
-  const primaryImageUrl = getResolvedImageUrl(property?.imageUrl, property?.imageUrls);
 
   return (
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-32 text-left bg-background relative">
@@ -102,18 +122,46 @@ export default function TenantHub() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-8 space-y-10">
-          <Card className="border-none shadow-2xl overflow-hidden bg-card group ring-1 ring-border">
-            {/* 1. CINEMATIC HERO */}
-            <div className="relative h-[450px] md:h-[550px] w-full bg-muted overflow-hidden">
-              {primaryImageUrl ? (
-                <img 
-                  src={primaryImageUrl} 
-                  alt={property.addressLine1} 
-                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105" 
-                />
+          <Card className="border-none shadow-2xl overflow-hidden bg-card group ring-1 ring-border rounded-[3rem]">
+            {/* 1. CINEMATIC VISUAL INVENTORY */}
+            <div className="relative w-full bg-muted overflow-hidden">
+              {gallery.length > 0 ? (
+                <Carousel className="w-full group/carousel">
+                  <CarouselContent>
+                    {gallery.map((url, index) => (
+                      <CarouselItem key={`${url}-${index}`}>
+                        <div 
+                          className="relative h-[450px] md:h-[550px] w-full cursor-zoom-in overflow-hidden"
+                          onClick={() => setLightboxUrl(url)}
+                        >
+                          <Image 
+                            src={url} 
+                            alt={`Asset View ${index + 1}`} 
+                            fill
+                            className="object-cover transition-transform duration-1000 group-hover/carousel:scale-105" 
+                            unoptimized
+                            priority={index === 0}
+                          />
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  {gallery.length > 1 && (
+                    <>
+                      <CarouselPrevious className="left-6 bg-black/40 border-none shadow-2xl text-white opacity-0 group-hover/carousel:opacity-100 transition-opacity" />
+                      <CarouselNext className="right-6 bg-black/40 border-none shadow-2xl text-white opacity-0 group-hover/carousel:opacity-100 transition-opacity" />
+                    </>
+                  )}
+                  <div className="absolute top-8 left-8 px-5 py-2 bg-accent text-white text-[11px] font-bold uppercase rounded-full shadow-2xl font-headline z-10 tracking-[0.1em] flex items-center gap-2">
+                     <Sparkles className="w-4 h-4" /> Property Visual Inventory
+                  </div>
+                </Carousel>
               ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                  <Building2 className="w-24 h-24 text-muted-foreground/10" />
+                <div className="relative h-[450px] md:h-[550px] w-full bg-gradient-to-br from-primary/20 to-accent/20 flex flex-col items-center justify-center gap-4">
+                  <div className="p-8 bg-white/5 rounded-[2rem] border border-white/5 shadow-inner">
+                    <Building2 className="w-24 h-24 text-muted-foreground/10" />
+                  </div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/30 font-headline">Awaiting visual identity</p>
                 </div>
               )}
             </div>
@@ -173,14 +221,14 @@ export default function TenantHub() {
                   <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
                      <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Wifi className="w-5 h-5" /></div>
                      <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-bold uppercase opacity-40">Connectivity</p>
+                        <p className="text-[10px] font-bold uppercase opacity-40 font-headline">Connectivity</p>
                         <p className="text-sm font-bold leading-tight whitespace-normal break-words">{property.connectivityStatus || 'Ultra-Fast Fiber Enabled'}</p>
                      </div>
                   </div>
                   <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
                      <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Shield className="w-5 h-5" /></div>
                      <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-bold uppercase opacity-40">Compliance</p>
+                        <p className="text-[10px] font-bold uppercase opacity-40 font-headline">Compliance</p>
                         <p className="text-sm font-bold leading-tight whitespace-normal break-words">{property.complianceStatus || 'EPC Grade B / Certified'}</p>
                      </div>
                   </div>
@@ -207,14 +255,14 @@ export default function TenantHub() {
              </CardHeader>
              <CardContent className="p-10 space-y-8 text-left">
                 <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/10 text-left">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-red-600 mb-3">Primary SOS</p>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-red-600 mb-3 font-headline">Primary SOS</p>
                     <p className="text-base font-bold text-foreground font-headline">Emergency Services</p>
                     <p className="text-lg font-bold mt-4 flex items-center text-red-600">
                       <Phone className="w-5 h-5 mr-3 opacity-40" /> 999
                     </p>
                 </div>
                 <div className="p-6 rounded-2xl bg-primary/5 border border-primary/10 text-left">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-primary mb-3">Management</p>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-primary mb-3 font-headline">Management</p>
                     <p className="text-base font-bold text-foreground font-headline">Direct Liaison</p>
                     <Button variant="ghost" asChild className="w-full mt-4 h-12 rounded-xl text-[10px] font-bold uppercase tracking-widest text-primary hover:bg-primary/10 p-0 border border-primary/10">
                        <Link href="/tenant/messages">Initiate Secure Channel</Link>
@@ -227,6 +275,24 @@ export default function TenantHub() {
            </Card>
         </div>
       </div>
+
+      {/* LIGHTBOX DIALOG */}
+      <Dialog open={!!lightboxUrl} onOpenChange={() => setLightboxUrl(null)}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-none bg-transparent shadow-none flex items-center justify-center overflow-hidden">
+          <DialogTitle className="sr-only">Visual Asset Preview</DialogTitle>
+          {lightboxUrl && (
+            <div className="relative w-full h-full flex items-center justify-center">
+              <Image src={lightboxUrl} alt="Asset Preview" fill className="object-contain" unoptimized />
+              <button 
+                onClick={() => setLightboxUrl(null)} 
+                className="absolute top-8 right-8 bg-black/60 backdrop-blur-xl text-white p-4 rounded-full hover:bg-black transition-all hover:scale-110 active:scale-95 shadow-2xl"
+              >
+                <X className="w-7 h-7" />
+              </button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
