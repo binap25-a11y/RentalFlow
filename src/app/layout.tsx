@@ -45,15 +45,15 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        {/* Zero-Flicker Theme Engine: Defaults to light, honors saved user preference */}
+        {/* ZERO-FLICKER THEME ENGINE: Synchronizes theme before first paint */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
                   var theme = localStorage.getItem('theme');
-                  var isDark = theme === 'dark';
-                  if (isDark) {
+                  var supportDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  if (theme === 'dark' || (!theme && supportDark)) {
                     document.documentElement.classList.add('dark');
                     document.documentElement.style.background = '#020617';
                   } else {
@@ -66,7 +66,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="font-body antialiased min-h-screen bg-background text-foreground">
+      <body className="font-body antialiased min-h-screen bg-background text-foreground transition-colors duration-300">
         <FirebaseClientProvider>
           <div className="relative flex min-h-screen flex-col">
             {children}

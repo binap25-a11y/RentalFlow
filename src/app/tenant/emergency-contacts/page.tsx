@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -9,7 +8,7 @@ import {
   useMemoFirebase, 
   getTenantCollectionQuery 
 } from '@/firebase';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -24,7 +23,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * 🆘 National SOS Protocols (UK Fallbacks)
- * Optimized for contrast and premium legibility in all themes.
+ * Optimized for Light/Dark mode consistency and bank-grade visibility.
  */
 const SOS_FALLBACKS = [
   { id: 'f1', name: "Emergency Services", phone: "999 or 112", role: "Primary Emergency", category: 'standard' },
@@ -142,61 +141,62 @@ export default function TenantEmergencyContactsPage() {
   if (!isClient) return null;
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-7xl mx-auto text-left pb-16 bg-background">
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-7xl mx-auto text-left pb-24 bg-background">
       <div className="space-y-6 text-left">
         <div className="space-y-2">
-          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1.5 rounded-full font-bold uppercase tracking-[0.2em] text-[9px] mb-2">
-             <ShieldCheck className="w-3.5 h-3.5 mr-2" /> Verified Support Network
+          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-5 py-2 rounded-full font-bold uppercase tracking-[0.25em] text-[10px] mb-2">
+             <ShieldCheck className="w-4 h-4 mr-2" /> Verified Support Network
           </Badge>
-          <h1 className="text-4xl font-headline font-bold text-foreground tracking-tight">Support Directory</h1>
-          <p className="text-muted-foreground font-medium font-body max-w-3xl leading-relaxed text-lg">
-            Authorized UK services and property-specific professional partners assigned to your residency.
+          <h1 className="text-4xl md:text-6xl font-headline font-bold text-foreground tracking-tighter">Support Directory</h1>
+          <p className="text-muted-foreground font-medium font-body max-w-3xl leading-relaxed text-xl opacity-70">
+            Authorized UK emergency services and property-specific professional partners assigned to your residency identity.
           </p>
         </div>
         
         <Button 
           onClick={downloadPDF} 
-          className="rounded-2xl font-bold h-14 bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xl shadow-primary/20 px-10 transition-all hover:scale-[1.02] border-none font-headline uppercase tracking-widest text-xs"
+          className="rounded-[1.75rem] font-bold h-16 bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xl shadow-primary/20 px-12 transition-all hover:scale-[1.02] border-none font-headline uppercase tracking-[0.3em] text-[11px]"
         >
-          <Download className="w-5 h-5 mr-3" /> Download Official Safety Guide
+          <Download className="w-5 h-5 mr-4" /> Download Official Safety Guide
         </Button>
       </div>
 
-      <div className="bg-red-500/5 border border-red-500/10 dark:border-red-500/20 p-10 rounded-[3rem] flex flex-col md:flex-row gap-8 items-start md:items-center shadow-inner">
-        <div className="p-5 bg-white dark:bg-red-950/40 rounded-[2rem] shadow-xl text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/40 shrink-0">
-           <AlertCircle className="w-10 h-10" />
+      <div className="bg-red-500/5 border border-red-500/10 dark:border-red-500/30 p-12 rounded-[3.5rem] flex flex-col md:flex-row gap-10 items-start md:items-center shadow-inner">
+        <div className="p-6 bg-white dark:bg-red-950/40 rounded-[2.5rem] shadow-xl text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/40 shrink-0 transition-transform hover:scale-105">
+           <AlertCircle className="w-12 h-12" />
         </div>
         <div className="space-y-2 text-left">
-          <h3 className="font-bold text-2xl text-red-900 dark:text-red-100 font-headline tracking-tight leading-none">Immediate Life Danger</h3>
-          <p className="text-base text-red-800/80 dark:text-red-200/60 font-medium font-body leading-relaxed max-w-4xl">
-            If there is immediate danger to life, fire, or evidence of a gas leak, always call <strong>999</strong> or <strong>112</strong> immediately. For non-life-threatening property issues, utilize the professional partners listed below.
+          <h3 className="font-bold text-3xl text-red-900 dark:text-red-100 font-headline tracking-tight leading-none">Immediate Life Danger</h3>
+          <p className="text-lg text-red-800/80 dark:text-red-200/60 font-medium font-body leading-relaxed max-w-4xl">
+            If there is immediate danger to life, fire, or evidence of a gas leak, always call <strong className="text-red-600 dark:text-red-400">999</strong> or <strong className="text-red-600 dark:text-red-400">112</strong> immediately. For non-life-threatening property issues, utilize the professional partners below.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        <div className="lg:col-span-4 space-y-8">
-           <Card className="border-none shadow-sm rounded-[3rem] overflow-hidden bg-card ring-1 ring-border">
-             <CardHeader className="bg-muted/10 border-b border-border p-8 text-left">
-               <CardTitle className="text-xl font-headline font-bold flex items-center gap-4 text-foreground">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        {/* UK SOS PROTOCOLS: LIGHT IN LIGHT MODE */}
+        <div className="lg:col-span-4 space-y-10">
+           <Card className="border-none shadow-sm rounded-[3.5rem] overflow-hidden bg-card ring-1 ring-border">
+             <CardHeader className="bg-muted/10 border-b border-border p-10 text-left">
+               <CardTitle className="text-2xl font-headline font-bold flex items-center gap-5 text-foreground">
                  <ShieldAlert className="w-8 h-8 text-red-500" /> SOS Protocols
                </CardTitle>
-               <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest font-headline">National Emergency Lines</p>
+               <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline mt-2 opacity-50">National Emergency Lines</p>
              </CardHeader>
-             <CardContent className="pt-10 px-8 pb-10 space-y-10">
+             <CardContent className="pt-12 px-10 pb-12 space-y-12">
                 {isLoading ? (
-                  <div className="py-12 flex flex-col items-center justify-center gap-4">
-                    <RefreshCcw className="w-8 h-8 animate-spin text-primary opacity-20" />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground font-headline">Synchronizing Safety Protocols...</span>
+                  <div className="py-20 flex flex-col items-center justify-center gap-6 opacity-40">
+                    <RefreshCcw className="w-10 h-10 animate-spin text-primary" />
+                    <span className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground font-headline">Synchronizing Safety Protocols...</span>
                   </div>
                 ) : standardServices.map((service, i) => (
-                  <div key={service.id || i} className="flex justify-between items-start gap-6 group">
-                    <div className="space-y-2 min-w-0 text-left">
-                      <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest font-headline">{service.role}</p>
-                      <p className="text-lg font-bold leading-tight text-foreground font-headline group-hover:text-accent transition-colors">{service.name}</p>
+                  <div key={service.id || i} className="flex justify-between items-start gap-8 group text-left">
+                    <div className="space-y-2 min-w-0">
+                      <p className="text-[10px] font-bold text-red-500 dark:text-red-400 uppercase tracking-[0.3em] font-headline">{service.role}</p>
+                      <p className="text-xl font-bold leading-tight text-foreground font-headline group-hover:text-accent transition-colors">{service.name}</p>
                     </div>
                     <div className="text-right shrink-0">
-                       <p className="text-xl font-bold text-foreground bg-muted/40 dark:bg-white/5 px-5 py-2.5 rounded-2xl border border-border dark:border-white/10 shadow-sm font-headline tracking-tight">
+                       <p className="text-2xl font-bold text-foreground bg-muted/30 dark:bg-white/5 px-6 py-3 rounded-2xl border border-border dark:border-white/10 shadow-sm font-headline tracking-tighter transition-all group-hover:bg-accent group-hover:text-white group-hover:border-transparent">
                          {service.phone}
                        </p>
                     </div>
@@ -206,57 +206,58 @@ export default function TenantEmergencyContactsPage() {
            </Card>
         </div>
 
+        {/* TRADE PARTNER DIRECTORY */}
         <div className="lg:col-span-8">
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
              {isLoading ? (
-               <div className="col-span-full py-32 flex flex-col items-center justify-center gap-4 opacity-40">
-                  <RefreshCcw className="w-12 h-12 animate-pulse text-primary" />
-                  <p className="text-[10px] font-bold uppercase tracking-[0.4em] font-headline">Synchronizing Real-Time Ledger...</p>
+               <div className="col-span-full py-40 flex flex-col items-center justify-center gap-6 opacity-40">
+                  <RefreshCcw className="w-16 h-16 animate-pulse text-primary" />
+                  <p className="text-[11px] font-bold uppercase tracking-[0.5em] text-muted-foreground font-headline">Synchronizing Real-Time Ledger...</p>
                </div>
              ) : professionalPartners.length === 0 ? (
-               <Card className="col-span-full border-2 border-dashed py-32 flex flex-col items-center justify-center bg-muted/5 rounded-[3rem] ring-1 ring-border/10">
-                 <div className="p-8 bg-muted rounded-[2.5rem] mb-8"><Zap className="w-16 h-16 text-primary/10" /></div>
-                 <h3 className="text-2xl font-bold font-headline text-primary/40 uppercase tracking-widest text-center">No property partners assigned</h3>
-                 <p className="text-sm text-muted-foreground font-medium mt-3 text-center max-w-sm mb-8">Authorized contractors for your asset will appear here in real-time as management confirms them.</p>
-                 <Button variant="outline" asChild className="rounded-xl font-bold h-12 border-primary/20 hover:bg-primary/5 transition-all text-primary">
-                    <Link href="/tenant/messages"><MessageSquare className="w-4 h-4 mr-2" /> Inquire with Management</Link>
+               <Card className="col-span-full border-2 border-dashed py-40 flex flex-col items-center justify-center bg-muted/5 rounded-[4rem] ring-1 ring-border/10 shadow-inner">
+                 <div className="p-10 bg-muted rounded-[3rem] mb-10"><Zap className="w-20 h-20 text-primary/10 animate-pulse" /></div>
+                 <h3 className="text-3xl font-bold font-headline text-primary/40 uppercase tracking-[0.4em] text-center">No assigned partners</h3>
+                 <p className="text-lg text-muted-foreground font-medium mt-4 text-center max-w-sm mb-10 opacity-70">Authorized contractors for your asset will appear here the moment management verifies them.</p>
+                 <Button variant="outline" asChild className="rounded-2xl font-bold h-16 px-12 border-primary/20 hover:bg-primary/5 transition-all text-primary uppercase tracking-[0.2em] text-[10px] font-headline">
+                    <Link href="/tenant/messages"><MessageSquare className="w-5 h-5 mr-4" /> Inquire with Management</Link>
                  </Button>
                </Card>
              ) : (
                professionalPartners.map((contact) => (
-                 <Card key={contact.id} className="border-none shadow-sm hover:shadow-2xl transition-all duration-500 rounded-[3rem] group overflow-hidden bg-card border border-transparent hover:border-accent/10 ring-1 ring-border">
-                   <CardHeader className="pb-4 bg-accent/5 p-10 text-left">
-                     <div className="flex justify-between items-start mb-6">
-                       <div className="p-5 bg-white dark:bg-muted rounded-2xl shadow-xl text-accent border border-accent/10 transition-transform group-hover:scale-110 duration-500">
-                         <Wrench className="w-8 h-8" />
+                 <Card key={contact.id} className="border-none shadow-sm hover:shadow-2xl transition-all duration-700 rounded-[3.5rem] group overflow-hidden bg-card border border-transparent hover:border-accent/10 ring-1 ring-border">
+                   <CardHeader className="pb-4 bg-accent/5 p-12 text-left">
+                     <div className="flex justify-between items-start mb-8">
+                       <div className="p-6 bg-white dark:bg-muted rounded-2xl shadow-xl text-accent border border-accent/10 transition-transform group-hover:scale-110 duration-700">
+                         <Wrench className="w-10 h-10" />
                        </div>
-                       <Badge variant="outline" className="border-accent/30 text-accent uppercase text-[10px] font-bold px-5 py-1.5 rounded-full bg-white/50 dark:bg-white/5 backdrop-blur-sm">
+                       <Badge variant="outline" className="border-accent/30 text-accent uppercase text-[10px] font-bold px-6 py-2 rounded-full bg-white/50 dark:bg-white/5 backdrop-blur-md font-headline tracking-widest">
                          Verified Pro
                        </Badge>
                      </div>
-                     <CardTitle className="text-2xl font-bold font-headline text-foreground tracking-tight group-hover:text-accent transition-colors">{contact.name}</CardTitle>
-                     <p className="text-xs font-bold text-accent uppercase tracking-[0.25em] mt-2 font-headline opacity-70">
+                     <CardTitle className="text-3xl font-bold font-headline text-foreground tracking-tighter group-hover:text-accent transition-colors">{contact.name}</CardTitle>
+                     <p className="text-[11px] font-bold text-accent uppercase tracking-[0.4em] mt-3 font-headline opacity-80">
                        {contact.role}
                      </p>
                    </CardHeader>
-                   <CardContent className="pt-10 px-10 pb-2 space-y-8 text-left">
-                     <div className="space-y-1 text-left">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest font-headline opacity-40">Direct Support Line</p>
-                        <div className="flex items-center gap-4 text-3xl font-bold text-foreground font-headline tracking-tighter">
-                          <Phone className="w-8 h-8 text-accent/20" />
+                   <CardContent className="pt-12 px-12 pb-2 space-y-10 text-left">
+                     <div className="space-y-2 text-left">
+                        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline opacity-40">Direct Support Line</p>
+                        <div className="flex items-center gap-5 text-4xl font-bold text-foreground font-headline tracking-tighter">
+                          <Phone className="w-10 h-10 text-accent/20" />
                           {contact.phone}
                         </div>
                      </div>
                      {contact.email && (
-                       <div className="flex items-center gap-4 text-sm font-medium text-muted-foreground pt-6 border-t border-border">
-                         <Mail className="w-5 h-5 text-accent/30" />
+                       <div className="flex items-center gap-5 text-base font-bold text-muted-foreground pt-8 border-t border-border/50 font-body">
+                         <Mail className="w-6 h-6 text-accent/30" />
                          {contact.email}
                        </div>
                      )}
                    </CardContent>
-                   <CardFooter className="bg-accent/5 border-t border-border/50 py-8 px-10">
-                      <Button className="w-full rounded-2xl font-bold h-16 bg-accent hover:bg-accent/90 text-white shadow-2xl shadow-accent/20 transition-all hover:scale-[1.02] border-none font-headline uppercase tracking-widest text-[11px]" asChild>
-                        <a href={`tel:${contact.phone}`}>Initiate Professional Connection</a>
+                   <CardFooter className="bg-accent/5 border-t border-border/50 py-10 px-12">
+                      <Button className="w-full h-20 rounded-[2rem] font-bold bg-accent hover:bg-accent/90 text-white shadow-2xl shadow-accent/20 transition-all hover:scale-[1.02] border-none font-headline uppercase tracking-[0.3em] text-[12px]" asChild>
+                        <a href={`tel:${contact.phone}`}>Initiate Connection</a>
                       </Button>
                    </CardFooter>
                  </Card>

@@ -3,11 +3,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Loader2, Eye, EyeOff, ArrowLeft, Sparkles } from "lucide-react";
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp, setDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -18,9 +18,8 @@ import Link from 'next/link';
 import { RENTALFLOW_LOGO_URL } from '@/lib/utils';
 
 /**
- * @fileOverview Accelerated Authentication Pipeline.
- * Optimized for zero-latency redirection and atomic profile resolution.
- * Enhanced with premium visual feedback to reduce perceived wait time.
+ * @fileOverview Hyper-Accelerated Authentication Pipeline.
+ * Optimized for zero-flicker mobile loading and atomic redirection.
  */
 
 export default function AuthPage() {
@@ -49,7 +48,7 @@ export default function AuthPage() {
     setMounted(true);
   }, []);
 
-  // HYPER-ACCELERATED REDIRECTION
+  // HYPER-ACCELERATED ATOMIC REDIRECTION
   useEffect(() => {
     if (user && db && mounted && !isLoading && !isRedirecting.current) {
       const checkAndRedirect = async () => {
@@ -68,7 +67,7 @@ export default function AuthPage() {
               return;
             }
             
-            // ATOMIC REDIRECT: Immediate jump to specific dashboard
+            // ATOMIC DASHBOARD JUMP
             router.replace(userData.role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
           } else {
             setNeedsProfile(true);
@@ -160,18 +159,20 @@ export default function AuthPage() {
     }
   };
 
+  // CINEMATIC SYNCHRONIZATION OVERLAY
   if (!mounted || isUserLoading || (user && !needsProfile)) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100]">
-        <div className="flex flex-col items-center gap-6 animate-in fade-in duration-700">
-          <div className="relative w-32 h-32 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 bg-card">
-             <Image src={RENTALFLOW_LOGO_URL} alt="RentalFlow" fill className="object-cover" unoptimized priority />
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-background z-[100] animate-in fade-in duration-500">
+        <div className="relative w-32 h-32 mb-12 animate-in zoom-in duration-1000">
+          <div className="absolute inset-0 bg-primary/10 rounded-[2.5rem] blur-3xl animate-pulse" />
+          <div className="relative z-10 w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 bg-card flex items-center justify-center">
+            <Image src={RENTALFLOW_LOGO_URL} alt="RentalFlow" fill className="object-cover" unoptimized priority />
           </div>
-          <div className="flex flex-col items-center gap-3">
-            <div className="flex items-center gap-3">
-              <Loader2 className="w-5 h-5 animate-spin text-accent" />
-              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Synchronizing Workspace</p>
-            </div>
+        </div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex items-center gap-3">
+            <Loader2 className="w-4 h-4 animate-spin text-accent" />
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Synchronizing Ledger</p>
           </div>
         </div>
       </div>

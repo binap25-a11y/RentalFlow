@@ -53,9 +53,8 @@ import { uploadToSupabase } from "@/lib/actions/supabase-storage";
 import { notifyLandlordOfRequest } from "@/lib/actions/email-actions";
 
 /**
- * @fileOverview High-Fidelity Personalized Resident Hub.
- * Optimized for hardware-aligned syntax and cinematic asset resolution.
- * Resolved identifier collisions for zero-latency performance.
+ * @fileOverview Personalized Resident Hub.
+ * Optimized for hardware-aligned logic and cinematic visual inventory.
  */
 
 export default function TenantHub() {
@@ -65,7 +64,7 @@ export default function TenantHub() {
   const [isClient, setIsClient] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
-  // MAINTENANCE STATE
+  // MAINTENANCE ORCHESTRATION
   const [isRepairOpen, setIsRepairOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [repairTitle, setRepairTitle] = useState('');
@@ -78,14 +77,14 @@ export default function TenantHub() {
     setIsClient(true); 
   }, []);
 
-  // PROFILE SYNC
+  // IDENTITY SYNC
   const userDocRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, 'users', user.uid);
   }, [db, user]);
   const { data: profile } = useDoc(userDocRef);
 
-  // PROPERTY SYNC
+  // RESIDENCY SYNC
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return getTenantCollectionQuery({ db, collectionName: "properties", userId: user.uid });
@@ -94,13 +93,13 @@ export default function TenantHub() {
   const { data: properties, loading: isPropLoading } = useCollection(propertiesQuery);
   const property = properties?.[0];
 
-  // ASSET RESOLUTION
+  // VISUAL RESOLUTION
   const gallery = useMemo(() => {
     if (!property) return [];
     return getResolvedGallery(property.imageUrl, property.imageUrls);
   }, [property]);
 
-  // FINANCE SYNC
+  // FINANCIAL LEDGER SYNC
   const paymentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     const now = new Date();
@@ -188,6 +187,7 @@ export default function TenantHub() {
     setIsSaving(false);
   };
 
+  // PREMIUM LOADING STATE
   if (!isClient || isPropLoading) {
     return (
       <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-1000 pb-32 text-left bg-background">
@@ -200,12 +200,13 @@ export default function TenantHub() {
     );
   }
 
+  // REGISTRY VERIFICATION STATE
   if (!property) {
     return (
-      <div className="max-w-7xl mx-auto space-y-12 py-32 text-center">
-        <Building2 className="w-16 h-16 mx-auto text-muted-foreground/20 mb-6" />
-        <h1 className="text-3xl font-headline font-bold text-foreground tracking-tighter">Registry Verification</h1>
-        <p className="text-muted-foreground max-w-sm mx-auto font-medium">Once your landlord links your residency to a property, your hub will be initialized.</p>
+      <div className="max-w-7xl mx-auto space-y-12 py-32 text-center flex flex-col items-center justify-center">
+        <Building2 className="w-20 h-20 text-primary opacity-10 mb-8 animate-in zoom-in duration-1000" />
+        <h1 className="text-4xl font-headline font-bold text-foreground tracking-tighter">Registry Verification</h1>
+        <p className="text-muted-foreground max-w-sm mx-auto font-medium text-lg leading-relaxed mt-4">Once your landlord links your residency to a property, your hub will be initialized.</p>
       </div>
     );
   }
@@ -215,13 +216,13 @@ export default function TenantHub() {
   return (
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-32 text-left bg-background relative">
       <div className="space-y-4">
-        <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground tracking-tighter">Welcome home, {residentName}</h1>
-        <p className="text-muted-foreground font-medium font-body text-xl opacity-70 leading-relaxed">Your residency hub is active and synchronized.</p>
+        <h1 className="text-5xl font-headline font-bold text-foreground tracking-tighter">Welcome home, {residentName}</h1>
+        <p className="text-muted-foreground font-medium font-body text-xl opacity-70 leading-relaxed max-w-3xl">Your professional residency hub is active and synchronized with property management.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-8 space-y-12">
-          <Card className="border-none shadow-2xl overflow-hidden bg-card group ring-1 ring-border rounded-[3rem]">
+          <Card className="border-none shadow-2xl overflow-hidden bg-card group ring-1 ring-border rounded-[3.5rem]">
             <div className="relative w-full bg-muted overflow-hidden">
               {gallery.length > 0 ? (
                 <Carousel key={gallery.join(',')} className="w-full group/carousel">
@@ -229,7 +230,7 @@ export default function TenantHub() {
                     {gallery.map((url, index) => (
                       <CarouselItem key={`${url}-${index}`}>
                         <div className="relative h-[450px] md:h-[550px] w-full cursor-zoom-in overflow-hidden" onClick={() => setLightboxUrl(url)}>
-                          <Image src={url} alt={`Asset View ${index + 1}`} fill className="object-cover transition-transform duration-1000 group-hover/carousel:scale-105" unoptimized priority={index === 0} />
+                          <Image src={url} alt={`Property View ${index + 1}`} fill className="object-cover transition-transform duration-1000 group-hover/carousel:scale-105" unoptimized priority={index === 0} />
                         </div>
                       </CarouselItem>
                     ))}
@@ -240,176 +241,179 @@ export default function TenantHub() {
                       <CarouselNext className="right-6 bg-black/40 border-none shadow-2xl text-white opacity-0 group-hover/carousel:opacity-100 transition-opacity" />
                     </>
                   )}
-                  <div className="absolute top-8 left-8 px-5 py-2 bg-accent text-white text-[11px] font-bold uppercase rounded-full shadow-2xl font-headline z-10 tracking-[0.1em] flex items-center gap-2">
+                  <div className="absolute top-8 left-8 px-6 py-2.5 bg-accent text-white text-[11px] font-bold uppercase rounded-full shadow-2xl font-headline z-10 tracking-[0.15em] flex items-center gap-2 backdrop-blur-md">
                      <Sparkles className="w-4 h-4" /> Property Visual Inventory
                   </div>
                 </Carousel>
               ) : (
                 <div className="relative h-[450px] md:h-[550px] w-full bg-gradient-to-br from-primary/20 to-accent/20 flex flex-col items-center justify-center gap-4">
-                  <div className="p-8 bg-white/5 rounded-[2rem] border border-white/5 shadow-inner">
-                    <Building2 className="w-24 h-24 text-muted-foreground/10" />
-                  </div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/30 font-headline">Awaiting visual identity</p>
+                  <Building2 className="w-24 h-24 text-muted-foreground/10 animate-pulse" />
+                  <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/30 font-headline">Awaiting visual identity</p>
                 </div>
               )}
             </div>
 
-            <div className="p-10 border-b border-border bg-white/[0.01] space-y-4">
-               <h2 className="text-3xl md:text-4xl font-headline font-bold text-foreground tracking-tight leading-tight">
-                 {property.addressLine1}, {property.city}, {property.zipCode}
+            <div className="p-12 border-b border-border bg-white/[0.01] space-y-6 text-left">
+               <h2 className="text-3xl md:text-5xl font-headline font-bold text-foreground tracking-tight leading-[0.9]">
+                 {property.addressLine1}, <br/><span className="text-muted-foreground opacity-60">{property.city}, {property.zipCode}</span>
                </h2>
-               <div className="flex items-center gap-4 flex-wrap">
-                 <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold uppercase tracking-[0.2em] text-[10px] py-2.5 px-6 rounded-full shadow-sm font-headline shrink-0 h-fit">
-                   <ShieldCheck className="w-4 h-4 mr-2" /> Active Tenancy
-                 </Badge>
-               </div>
+               <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-bold uppercase tracking-[0.2em] text-[10px] py-3 px-8 rounded-full shadow-sm font-headline shrink-0 h-fit">
+                 <ShieldCheck className="w-4 h-4 mr-2" /> Verified Active Tenancy
+               </Badge>
             </div>
 
-            <CardContent className="p-10 md:p-12 space-y-12">
-              <div className="space-y-6">
+            <CardContent className="p-12 space-y-16 text-left">
+              {/* FINANCIAL LEDGER */}
+              <div className="space-y-8">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
-                  <Button variant="ghost" asChild className="rounded-xl font-bold text-[10px] uppercase tracking-widest text-muted-foreground hover:bg-accent/10 hover:text-accent transition-all duration-300">
-                    <Link href="/tenant/payments">View history <ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
+                  <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-7 h-7 mr-4 text-accent" /> Monthly Rent Ledger</h3>
+                  <Button variant="ghost" asChild className="rounded-2xl font-bold text-[10px] uppercase tracking-widest text-muted-foreground hover:bg-accent/10 hover:text-accent transition-all duration-500 px-6 h-11 border border-transparent hover:border-accent/20">
+                    <Link href="/tenant/payments">View history <ChevronRight className="w-4 h-4 ml-1" /></Link>
                   </Button>
                 </div>
-                <div className="p-10 bg-muted/20 rounded-[2.5rem] border border-border shadow-inner relative overflow-hidden group text-left">
-                   <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:rotate-12 transition-transform duration-1000">
-                      <PoundSterling className="w-32 h-32" />
+                <div className="p-12 bg-muted/20 rounded-[3rem] border border-border shadow-inner relative overflow-hidden group text-left transition-all hover:bg-muted/30">
+                   <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:rotate-12 group-hover:scale-125 transition-all duration-1000">
+                      <PoundSterling className="w-40 h-40" />
                    </div>
-                   <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.3em] font-headline opacity-50 mb-3">Verified Ledger</p>
-                   <p className="text-6xl font-bold font-headline text-foreground tracking-tighter mb-4">£{property.rentAmount?.toLocaleString()}</p>
-                   <Badge className={cn("w-full h-14 flex items-center justify-center font-bold text-[11px] rounded-2xl shadow-sm uppercase tracking-[0.2em] border transition-all duration-700", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white border-transparent" : "bg-amber-500/10 text-amber-600 border-amber-500/20")}>
+                   <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.4em] font-headline opacity-50 mb-4">Official Payment Record</p>
+                   <p className="text-7xl font-bold font-headline text-foreground tracking-tighter mb-6">£{property.rentAmount?.toLocaleString()}</p>
+                   <Badge className={cn("w-full h-16 flex items-center justify-center font-bold text-[12px] rounded-2xl shadow-lg uppercase tracking-[0.3em] border transition-all duration-1000 font-headline", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white border-transparent" : "bg-amber-500/10 text-amber-600 border-amber-500/20")}>
                      {currentPayment?.status === 'paid' ? "Receipted & Collected" : "Collection Pending"}
                    </Badge>
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <h3 className="font-bold font-headline text-xl text-foreground flex items-center tracking-tight"><ShieldCheck className="w-5 h-5 mr-3 text-accent" /> Property DNA</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
-                     <div className="p-3 bg-white dark:bg-muted rounded-xl shadow-sm text-accent shrink-0"><Wifi className="w-5 h-5" /></div>
+              {/* PROPERTY DNA */}
+              <div className="space-y-8">
+                <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ShieldCheck className="w-6 h-6 mr-4 text-accent" /> Property Identity</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="p-8 bg-muted/10 rounded-3xl border border-border/50 flex items-center gap-6 group hover:border-accent/30 transition-all shadow-sm">
+                     <div className="p-4 bg-white dark:bg-muted rounded-2xl shadow-xl text-accent shrink-0 transition-transform group-hover:scale-110"><Wifi className="w-6 h-6" /></div>
                      <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-bold uppercase opacity-40 font-headline">Connectivity</p>
-                        <p className="text-sm font-bold leading-tight whitespace-normal break-words">{property.connectivityStatus || 'Ultra-Fast Fiber Enabled'}</p>
+                        <p className="text-[11px] font-bold uppercase opacity-40 font-headline tracking-widest mb-1">Connectivity Status</p>
+                        <p className="text-base font-bold leading-tight text-foreground">{property.connectivityStatus || 'Ultra-Fast Fiber Enabled'}</p>
                      </div>
                   </div>
-                  <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
-                     <div className="p-3 bg-white dark:bg-muted rounded-xl shadow-sm text-accent shrink-0"><Shield className="w-5 h-5" /></div>
+                  <div className="p-8 bg-muted/10 rounded-3xl border border-border/50 flex items-center gap-6 group hover:border-accent/30 transition-all shadow-sm">
+                     <div className="p-4 bg-white dark:bg-muted rounded-2xl shadow-xl text-accent shrink-0 transition-transform group-hover:scale-110"><Shield className="w-6 h-6" /></div>
                      <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-bold uppercase opacity-40 font-headline">Compliance</p>
-                        <p className="text-sm font-bold leading-tight whitespace-normal break-words">{property.complianceStatus || 'EPC Grade B / Certified'}</p>
+                        <p className="text-[11px] font-bold uppercase opacity-40 font-headline tracking-widest mb-1">Health & Compliance</p>
+                        <p className="text-base font-bold leading-tight text-foreground">{property.complianceStatus || 'EPC Grade B / Certified'}</p>
                      </div>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-10 border-t border-border/50 space-y-6">
-                <Button className="w-full h-16 rounded-[1.75rem] bg-accent hover:bg-accent/90 text-white font-bold text-sm uppercase tracking-widest shadow-2xl shadow-accent/20 border-none transition-all hover:scale-[1.01]" onClick={() => setIsRepairOpen(true)}>
-                   <Wrench className="w-5 h-5 mr-3" /> Report a Repair
+              {/* ACTIONS */}
+              <div className="pt-12 border-t border-border/50 space-y-6">
+                <Button className="w-full h-20 rounded-[2rem] bg-accent hover:bg-accent/90 text-white font-bold text-base uppercase tracking-[0.2em] shadow-2xl shadow-accent/20 border-none transition-all hover:scale-[1.01] active:scale-95" onClick={() => setIsRepairOpen(true)}>
+                   <Wrench className="w-6 h-6 mr-4" /> Report a Maintenance Issue
                 </Button>
-                <Button variant="ghost" className="w-full h-14 rounded-2xl text-muted-foreground hover:text-accent hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all" onClick={handleDownloadStatement}>
-                   <Download className="w-4 h-4 mr-3" /> Download Monthly Statement
+                <Button variant="ghost" className="w-full h-16 rounded-2xl text-muted-foreground hover:text-accent hover:bg-primary/5 font-bold text-[11px] uppercase tracking-widest font-headline transition-all" onClick={handleDownloadStatement}>
+                   <Download className="w-5 h-5 mr-4" /> Download Official Statement (PDF)
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
 
+        {/* SIDEBAR WIDGETS */}
         <div className="lg:col-span-4 space-y-12">
            <Card className="border-none shadow-sm rounded-[3rem] bg-card ring-1 ring-border overflow-hidden">
              <CardHeader className="p-10 pb-4 border-b border-border bg-muted/5 text-left">
-               <CardTitle className="text-xl font-headline font-bold flex items-center text-foreground">
-                 <AlertCircle className="w-6 h-6 mr-4 text-accent" />
-                 Real-Time Support
+               <CardTitle className="text-xl font-headline font-bold flex items-center gap-4 text-foreground">
+                 <AlertCircle className="w-7 h-7 text-red-500" />
+                 Emergency Support
                </CardTitle>
              </CardHeader>
-             <CardContent className="p-10 space-y-8 text-left">
-                <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/10 text-left">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-red-600 dark:text-red-400 mb-3 font-headline">Primary SOS</p>
-                    <p className="text-base font-bold text-foreground font-headline">Emergency Services</p>
-                    <p className="text-lg font-bold mt-4 flex items-center text-red-600 dark:text-red-400">
-                      <Phone className="w-5 h-5 mr-3 opacity-40" /> 999
+             <CardContent className="p-10 space-y-10 text-left">
+                <div className="p-8 rounded-[2rem] bg-red-500/5 border border-red-500/10 text-left group hover:bg-red-500/10 transition-colors">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-600 dark:text-red-400 mb-4 font-headline">National SOS Protocol</p>
+                    <p className="text-xl font-bold text-foreground font-headline">Emergency Services</p>
+                    <p className="text-3xl font-bold mt-6 flex items-center text-red-600 dark:text-red-400 tracking-tighter">
+                      <Phone className="w-7 h-7 mr-4 opacity-40" /> 999
                     </p>
                 </div>
-                <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground hover:text-primary hover:bg-primary/5 h-12 rounded-xl transition-all">
-                   <Link href="/tenant/emergency-contacts">View Support Network <ChevronRight className="w-4 h-4 ml-2" /></Link>
+                <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground hover:text-primary hover:bg-primary/5 h-14 rounded-2xl transition-all border border-transparent hover:border-primary/10">
+                   <Link href="/tenant/emergency-contacts">Full Support Directory <ChevronRight className="w-4 h-4 ml-2" /></Link>
                 </Button>
              </CardContent>
            </Card>
         </div>
       </div>
 
+      {/* REPAIR DIALOG */}
       <Dialog open={isRepairOpen} onOpenChange={setIsRepairOpen}>
-        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card max-w-[600px] flex flex-col max-h-[90vh] ring-1 ring-white/10">
-          <div className="p-10 bg-primary text-primary-foreground border-b border-white/10 text-left shrink-0">
+        <DialogContent className="rounded-[3.5rem] border-none shadow-2xl p-0 overflow-hidden bg-card max-w-[650px] flex flex-col max-h-[90vh] ring-1 ring-white/10">
+          <div className="p-12 bg-primary text-primary-foreground border-b border-white/10 text-left shrink-0 relative">
+             <div className="absolute top-0 right-0 p-12 opacity-10"><Wrench className="w-24 h-24" /></div>
              <DialogHeader>
-                <DialogTitle className="text-2xl font-bold font-headline tracking-tight flex items-center gap-4">
-                   <Wrench className="w-8 h-8 text-accent" /> Register Repair
+                <DialogTitle className="text-3xl font-bold font-headline tracking-tighter flex items-center gap-5">
+                   <Wrench className="w-10 h-10 text-accent" /> Register Repair
                 </DialogTitle>
-                <DialogDescription className="text-primary-foreground/60 font-medium text-sm mt-2">Identify a maintenance issue for immediate management review.</DialogDescription>
+                <DialogDescription className="text-primary-foreground/70 font-medium text-base mt-3 leading-relaxed">Identity a property issue for immediate professional review.</DialogDescription>
              </DialogHeader>
           </div>
           <ScrollArea className="flex-1">
-            <div className="p-10 space-y-10 text-left">
-               <div className="space-y-3">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">Issue Category</Label>
+            <div className="p-12 space-y-12 text-left pb-24">
+               <div className="space-y-4">
+                  <Label className="text-[11px] font-bold uppercase tracking-[0.4em] text-muted-foreground opacity-50 font-headline">Classification</Label>
                   <select 
-                    className="flex h-14 w-full rounded-2xl border-none bg-muted/40 px-6 py-2 text-base focus:ring-2 focus:ring-accent outline-none font-bold text-foreground shadow-inner"
+                    className="flex h-16 w-full rounded-2xl border-none bg-muted/40 px-8 py-2 text-base focus:ring-2 focus:ring-accent outline-none font-bold text-foreground shadow-inner ring-1 ring-white/10"
                     value={repairCategory}
                     onChange={(e) => setRepairCategory(e.target.value)}
                   >
-                    <option value="Plumbing">Plumbing & Water</option>
-                    <option value="Electrical">Electrical & Power</option>
-                    <option value="Heating">Heating & Gas</option>
-                    <option value="Appliance">Appliances</option>
-                    <option value="General">General Maintenance</option>
+                    <option value="Plumbing">Plumbing & Water Systems</option>
+                    <option value="Electrical">Electrical & Power Faults</option>
+                    <option value="Heating">Heating & Gas Utility</option>
+                    <option value="Appliance">Home Appliances</option>
+                    <option value="General">General Site Maintenance</option>
                   </select>
                </div>
-               <div className="space-y-3">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">Repair Subject</Label>
-                  <Input value={repairTitle} onChange={(e) => setRepairTitle(e.target.value)} placeholder="e.g. Kitchen tap leak" className="rounded-2xl h-14 bg-muted/40 border-none font-bold px-6 shadow-inner" />
+               <div className="space-y-4">
+                  <Label className="text-[11px] font-bold uppercase tracking-[0.4em] text-muted-foreground opacity-50 font-headline">Fault Identifier</Label>
+                  <Input value={repairTitle} onChange={(e) => setRepairTitle(e.target.value)} placeholder="e.g. Master bathroom tap leak" className="rounded-2xl h-16 bg-muted/40 border-none font-bold px-8 shadow-inner ring-1 ring-white/10 text-lg" />
                </div>
-               <div className="space-y-3">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">Context Ledger</Label>
-                  <Textarea value={repairDesc} onChange={(e) => setRepairDesc(e.target.value)} placeholder="Detailed narrative of the fault..." className="rounded-3xl min-h-[140px] bg-muted/40 border-none font-medium px-6 py-5 shadow-inner leading-relaxed" />
+               <div className="space-y-4">
+                  <Label className="text-[11px] font-bold uppercase tracking-[0.4em] text-muted-foreground opacity-50 font-headline">Context Ledger</Label>
+                  <Textarea value={repairDesc} onChange={(e) => setRepairDesc(e.target.value)} placeholder="Provide a detailed narrative of the issue for the trade partner..." className="rounded-[2rem] min-h-[180px] bg-muted/40 border-none font-medium px-8 py-8 shadow-inner leading-relaxed text-base" />
                </div>
-               <div className="space-y-3">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">Visual Evidence</Label>
-                  <div className="grid grid-cols-2 gap-4">
+               <div className="space-y-6">
+                  <Label className="text-[11px] font-bold uppercase tracking-[0.4em] text-muted-foreground opacity-50 font-headline">Visual Evidence Capture</Label>
+                  <div className="grid grid-cols-2 gap-6">
                      {repairImages.map((img, i) => (
-                       <div key={i} className="relative aspect-square rounded-2xl overflow-hidden border border-border shadow-sm">
-                          <Image src={img} alt="Evidence" fill className="object-cover" unoptimized />
-                          <button onClick={() => setRepairImages(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-2 right-2 p-1 bg-black/60 rounded-lg text-white backdrop-blur-sm"><X className="w-3 h-3" /></button>
+                       <div key={i} className="relative aspect-square rounded-[2rem] overflow-hidden border border-border shadow-2xl group/img">
+                          <Image src={img} alt="Evidence" fill className="object-cover transition-transform group-hover/img:scale-110 duration-700" unoptimized />
+                          <button onClick={() => setRepairImages(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-4 right-4 p-2.5 bg-black/60 rounded-xl text-white backdrop-blur-xl border border-white/10 hover:bg-red-500 transition-all"><X className="w-4 h-4" /></button>
                        </div>
                      ))}
-                     <label className="aspect-square rounded-2xl border-2 border-dashed border-border hover:border-accent transition-all bg-muted/10 flex flex-col items-center justify-center gap-2 cursor-pointer group">
-                        {isUploading ? <Loader2 className="w-6 h-6 animate-spin text-accent" /> : <Camera className="w-6 h-6 text-muted-foreground opacity-40 group-hover:opacity-100" />}
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">Add Asset</span>
+                     <label className="aspect-square rounded-[2rem] border-2 border-dashed border-border hover:border-accent transition-all duration-500 bg-muted/10 flex flex-col items-center justify-center gap-4 cursor-pointer group/upload shadow-inner">
+                        {isUploading ? <Loader2 className="w-10 h-10 animate-spin text-accent" /> : <Camera className="w-10 h-10 text-muted-foreground opacity-40 group-hover/upload:opacity-100 group-hover/upload:scale-110 transition-all duration-500" />}
+                        <span className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-40">Register Asset</span>
                         <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
                      </label>
                   </div>
                </div>
             </div>
           </ScrollArea>
-          <DialogFooter className="p-10 bg-muted/5 border-t border-border shrink-0">
-             <Button className="w-full h-16 rounded-[1.75rem] bg-accent hover:bg-accent/90 text-white font-bold uppercase tracking-widest text-[11px] shadow-2xl shadow-accent/20 border-none" onClick={handleSaveRepair} disabled={isSaving || !repairTitle}>
-                {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
+          <DialogFooter className="p-12 bg-muted/5 border-t border-border shrink-0">
+             <Button className="w-full h-20 rounded-[2rem] bg-accent hover:bg-accent/90 text-white font-bold uppercase tracking-[0.3em] text-[12px] shadow-2xl shadow-accent/20 border-none transition-all hover:scale-[1.02] active:scale-95" onClick={handleSaveRepair} disabled={isSaving || !repairTitle}>
+                {isSaving ? <Loader2 className="w-6 h-6 animate-spin mr-4" /> : <Save className="w-6 h-6 mr-4" />}
                 Finalize & Notify Management
              </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* LIGHTBOX */}
       <Dialog open={!!lightboxUrl} onOpenChange={() => setLightboxUrl(null)}>
         <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-none bg-transparent shadow-none flex items-center justify-center overflow-hidden">
           <DialogTitle className="sr-only">Visual Asset Preview</DialogTitle>
           {lightboxUrl && (
             <div className="relative w-full h-full flex items-center justify-center">
               <Image src={lightboxUrl} alt="Asset Preview" fill className="object-contain" unoptimized />
-              <button onClick={() => setLightboxUrl(null)} className="absolute top-8 right-8 bg-black/60 backdrop-blur-xl text-white p-4 rounded-full hover:bg-black transition-all hover:scale-110 active:scale-95 shadow-2xl">
-                <X className="w-7 h-7" />
+              <button onClick={() => setLightboxUrl(null)} className="absolute top-10 right-10 bg-black/60 backdrop-blur-2xl text-white p-5 rounded-full hover:bg-black transition-all hover:scale-110 active:scale-95 shadow-2xl border border-white/10">
+                <X className="w-8 h-8" />
               </button>
             </div>
           )}
