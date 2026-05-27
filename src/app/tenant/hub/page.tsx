@@ -297,7 +297,7 @@ export default function TenantHub() {
 
            <Card className="border-none shadow-sm rounded-[3rem] bg-accent text-white overflow-hidden text-left relative group">
               <CardHeader className="p-10 pb-4">
-                 <CardTitle className="text-xl font-bold font-headline flex items-center gap-4">
+                 <CardTitle className="text-xl font-bold font-headline flex items-center gap-4 text-white">
                     <Bot className="w-8 h-8 text-white/90" /> Gemini Chatbot
                  </CardTitle>
               </CardHeader>
