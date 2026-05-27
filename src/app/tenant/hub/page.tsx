@@ -22,8 +22,8 @@ import { format } from "date-fns";
 
 /**
  * @fileOverview High-Fidelity Resident Hub.
- * Optimized for real-time data orchestration and Streaming AI responsiveness.
- * Hierarchy: Hero -> Identity -> Rent Ledger -> Residence Narrative -> Property DNA.
+ * Optimized for word-by-word streaming and professional vertical hierarchy.
+ * Sequence: Hero -> Identity Bar -> Monthly Rent -> Residence Narrative -> Property DNA.
  */
 
 export default function TenantHub() {
@@ -98,8 +98,9 @@ export default function TenantHub() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        // REAL LOGGING
         console.error("AI API CRITICAL ERROR:", errorData);
-        setChatHistory(prev => [...prev, { role: 'bot', text: "[SYSTEM NOTIFICATION]: I am identifying a brief synchronization delay with the property intelligence engine. Please try your request once more in a few moments." }]);
+        setChatHistory(prev => [...prev, { role: 'bot', text: "[SYSTEM]: AI is temporarily busy. Please try again in a moment." }]);
         return;
       }
 
@@ -109,6 +110,7 @@ export default function TenantHub() {
       let botText = "";
       setChatHistory(prev => [...prev, { role: 'bot', text: "" }]);
 
+      // DEFINITIVE FIX: Using TextDecoder (not encoder) for binary-to-string conversion
       const decoder = new TextDecoder();
       while (true) {
         const { done, value } = await reader.read();
@@ -124,8 +126,8 @@ export default function TenantHub() {
         });
       }
     } catch (error: any) {
-      console.error('Concierge Runtime Error:', error);
-      setChatHistory(prev => [...prev, { role: 'bot', text: "[SYSTEM ERROR]: Communication interrupted due to a synchronization delay. Please try your query again in a moment." }]);
+      console.error('CONCIERGE RUNTIME ERROR:', error);
+      setChatHistory(prev => [...prev, { role: 'bot', text: "[SYSTEM]: Communication interrupted. Please try your request once more." }]);
     } finally { 
       setIsChatting(false); 
     }
@@ -262,7 +264,7 @@ export default function TenantHub() {
                        </p>
                     </div>
                     
-                    {/* 🧬 PROPERTY DNA - FIT-FIRST ARCHITECTURE */}
+                    {/* 🧬 PROPERTY DNA - FIT-FIRST ARCHITECTURE (NO TRUNCATE) */}
                     <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
                        <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Wifi className="w-5 h-5" /></div>
                        <div className="min-w-0 flex-1">
@@ -346,7 +348,7 @@ export default function TenantHub() {
         </Button>
       </div>
 
-      {/* 🤖 FLOATING CHAT ORCHESTRATION - STREAMING ENHANCED */}
+      {/* 🤖 FLOATING CHAT ORCHESTRATION */}
       <div className="fixed bottom-10 right-10 z-[100] flex flex-col items-end gap-6">
         {isChatOpen && (
           <Card className="w-[400px] h-[600px] border-none shadow-2xl rounded-[3rem] bg-card ring-1 ring-border overflow-hidden flex flex-col animate-in slide-in-from-bottom-10 fade-in duration-500">

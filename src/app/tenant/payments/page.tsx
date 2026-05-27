@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 /**
  * @fileOverview High-Fidelity Resident Rent & Finance Ledger.
  * Provides a verified historical audit trail of all tenancy payments.
- * Hierarchy: Header -> Account Narrative -> Tenancy Total Paid -> History.
+ * Realigned Hierarchy: Header -> Tenancy Total Paid -> Audit Trail.
  */
 
 export default function TenantPaymentsPage() {
@@ -66,6 +66,7 @@ export default function TenantPaymentsPage() {
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-7xl mx-auto pb-24 text-left">
+      {/* 1. HEADER SECTION */}
       <div className="space-y-8">
         <div className="space-y-4">
           <div className="flex items-center gap-4">
@@ -82,7 +83,7 @@ export default function TenantPaymentsPage() {
           </p>
         </div>
 
-        {/* FINANCIAL SUMMARY STRATEGICALLY PLACED BELOW HEADING AND TEXT */}
+        {/* 2. FINANCIAL SUMMARY (STRATEGICALLY BELOW HEADER) */}
         <div className="flex flex-wrap gap-4 pt-4">
            <div className="p-8 bg-card rounded-[2.5rem] border border-border shadow-sm flex flex-col gap-1 min-w-[280px] relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:rotate-12 transition-transform duration-700">
@@ -99,6 +100,7 @@ export default function TenantPaymentsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        {/* 3. AUDIT TRAIL */}
         <div className="lg:col-span-8 space-y-10">
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-3">
