@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useCollection, useMemoFirebase, getTenantCollectionQuery } from "@/firebase";
@@ -109,7 +108,7 @@ export default function TenantHub() {
       let botText = "";
       setChatHistory(prev => [...prev, { role: 'bot', text: "" }]);
 
-      const decoder = new TextEncoder();
+      const decoder = new TextDecoder();
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
