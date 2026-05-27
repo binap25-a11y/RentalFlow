@@ -9,7 +9,7 @@ import {
   Crown, ShieldCheck, PoundSterling, ArrowUpRight, ArrowDownRight,
   Activity, BarChart3, Settings2
 } from "lucide-react";
-import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking } from "@/firebase";
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -33,13 +33,20 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { collection, doc, serverTimestamp, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 /**
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
- * Optimized for real-time financial tracking and total text visibility.
- * Refined for Elite UX: Compressed horizontal/vertical spacing and flush action alignment.
+ * Optimized for real-time financial tracking and elite inline management.
+ * Features a horizontally scrollable "Month Ledge" with direct entry textboxes.
  */
 
 export default function LandlordDashboard() {
@@ -112,6 +119,41 @@ export default function LandlordDashboard() {
       rent: p.rentAmount || 0,
     })).slice(0, 8);
   }, [properties, isClient]);
+
+  // INLINE LEDGER ACTIONS
+  const handleQuickRentUpdate = (propertyId: string, amount: string) => {
+    if (!db) return;
+    const propertyRef = doc(db, 'properties', propertyId);
+    updateDocumentNonBlocking(propertyRef, {
+      rentAmount: Number(amount),
+      updatedAt: serverTimestamp(),
+    });
+    toast({ title: "Rent Adjusted" });
+  };
+
+  const handleQuickStatusUpdate = (prop: any, status: string) => {
+    if (!user || !db) return;
+    const now = new Date();
+    const paymentId = `${prop.id}-${now.getMonth() + 1}-${now.getFullYear()}`;
+    const paymentRef = doc(db, 'rentPayments', paymentId);
+
+    const payload = {
+      id: paymentId,
+      propertyId: prop.id,
+      landlordId: user.uid,
+      tenantId: prop.tenantIds?.[0] || 'landlord-direct',
+      amount: prop.rentAmount || 0,
+      status: status,
+      month: now.getMonth() + 1,
+      year: now.getFullYear(),
+      memberIds: prop.memberIds || [user.uid],
+      updatedAt: serverTimestamp(),
+      paidAt: status === 'paid' ? new Date().toISOString() : null
+    };
+
+    setDocumentNonBlocking(paymentRef, payload, { merge: true });
+    toast({ title: "Ledger Synchronized" });
+  };
 
   const handleOpenLedgerEdit = (prop: any, payment: any) => {
     setActivePaymentEdit({ prop, payment });
@@ -297,19 +339,19 @@ export default function LandlordDashboard() {
             <CardHeader className="text-left px-8 pt-8 pb-4 border-b border-white/5 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 bg-white/[0.01]">
               <CardTitle className="text-xl font-headline flex items-center text-foreground tracking-tight">
                 <ReceiptText className="w-6 h-6 mr-3 text-accent" />
-                Collection Suite
+                Monthly Rent Ledger
               </CardTitle>
-              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em] font-headline opacity-40 shrink-0">{format(new Date(), 'MMMM yyyy')} Ledger</p>
+              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em] font-headline opacity-40 shrink-0">{format(new Date(), 'MMMM yyyy')} Registry</p>
             </CardHeader>
             <CardContent className="p-0">
                <div className="overflow-x-auto">
-                 <table className="w-full text-left border-collapse min-w-[1100px]">
+                 <table className="w-full text-left border-collapse min-w-[1200px]">
                    <thead>
                      <tr className="bg-white/[0.02]">
-                       <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[40%]">Property Identity</th>
-                       <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[15%]">Monthly Rent</th>
-                       <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[20%]">Collection Status</th>
-                       <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground w-[25%]">Actions</th>
+                       <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[35%]">Property Identity</th>
+                       <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[20%]">Rent Entry</th>
+                       <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[25%]">Collection State</th>
+                       <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground w-[20%]">Actions</th>
                      </tr>
                    </thead>
                    <tbody className="divide-y divide-white/5">
@@ -319,7 +361,7 @@ export default function LandlordDashboard() {
                        const imageUrl = getResolvedImageUrl(prop.imageUrl, prop.imageUrls);
                        return (
                          <tr key={prop.id} className="hover:bg-white/[0.02] transition-colors group">
-                           <td className="px-4 py-2.5 min-w-0">
+                           <td className="px-4 py-3 min-w-0">
                              <div className="flex items-center gap-4">
                                <div className="relative h-11 w-11 rounded-xl overflow-hidden shadow-xl ring-1 ring-white/5 group-hover:scale-105 transition-transform bg-muted shrink-0 flex items-center justify-center">
                                  {imageUrl ? (
@@ -334,16 +376,32 @@ export default function LandlordDashboard() {
                                </div>
                              </div>
                            </td>
-                           <td className="px-4 py-2.5 font-bold text-sm text-foreground tracking-tight truncate">£{prop.rentAmount?.toLocaleString()}</td>
-                           <td className="px-4 py-2.5">
-                             <Badge className={cn(
-                               "rounded-full px-5 py-1.5 font-bold text-[9px] uppercase tracking-[0.05em] border-none shadow-sm min-w-[170px] inline-flex items-center justify-center whitespace-nowrap text-center h-8", 
-                               isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
-                             )}>
-                               {isPaid ? "Receipted" : "Collection Pending"}
-                             </Badge>
+                           <td className="px-4 py-3">
+                              <div className="flex items-center gap-2 max-w-[120px]">
+                                 <span className="text-muted-foreground opacity-40 font-bold text-xs">£</span>
+                                 <Input 
+                                    type="number" 
+                                    defaultValue={prop.rentAmount} 
+                                    className="h-9 rounded-lg bg-muted/30 border-none font-bold text-sm px-3 shadow-inner focus:ring-1 focus:ring-accent"
+                                    onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)}
+                                 />
+                              </div>
                            </td>
-                           <td className="px-4 py-2.5 shrink-0">
+                           <td className="px-4 py-3">
+                              <Select defaultValue={payment?.status || 'pending'} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
+                                <SelectTrigger className={cn(
+                                  "h-9 w-[180px] rounded-lg border-none font-bold text-[9px] uppercase tracking-widest shadow-sm px-4",
+                                  isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
+                                )}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl border-white/5 bg-card">
+                                  <SelectItem value="pending" className="text-[9px] font-bold uppercase tracking-widest py-3">Pending</SelectItem>
+                                  <SelectItem value="paid" className="text-[9px] font-bold uppercase tracking-widest py-3">Receipted</SelectItem>
+                                </SelectContent>
+                              </Select>
+                           </td>
+                           <td className="px-4 py-3 shrink-0">
                               <div className="flex items-center gap-2">
                                 <Button variant="ghost" size="icon" className="rounded-lg h-9 w-9 hover:bg-white/5 border border-white/5 shrink-0" onClick={() => handleOpenLedgerEdit(prop, payment)}>
                                   <Settings2 className="w-3.5 h-3.5 text-muted-foreground" />
@@ -476,47 +534,42 @@ export default function LandlordDashboard() {
            </div>
            
            <ScrollArea className="flex-1">
-             <div className="p-6 space-y-8 text-left pb-20">
+             <div className="p-6 space-y-12 text-left pb-24">
                 {/* RENT SECTION */}
-                <div className="space-y-4">
+                <div className="space-y-4 bg-muted/30 p-5 rounded-[2rem] border border-border/50 shadow-inner">
                     <div className="flex items-center gap-2.5">
                         <div className="p-2 bg-accent/10 rounded-lg text-accent">
                             <PoundSterling className="w-4 h-4" />
                         </div>
                         <Label className="font-bold text-[10px] uppercase text-foreground tracking-[0.15em] font-headline">Monthly Rent Adjustment</Label>
                     </div>
-                    <div className="bg-muted/30 p-5 rounded-[2rem] border border-border/50 shadow-inner">
-                        <Input 
-                            type="number" 
-                            value={editAmount} 
-                            onChange={(e) => setEditAmount(e.target.value)} 
-                            className="rounded-xl h-16 bg-background border-none font-bold px-6 text-2xl shadow-2xl text-foreground" 
-                            placeholder="e.g. 1500.00" 
-                        />
-                        <p className="text-[9px] text-muted-foreground font-bold mt-3 px-1 uppercase tracking-widest">Target monthly yield for this asset</p>
-                    </div>
+                    <Input 
+                        type="number" 
+                        value={editAmount} 
+                        onChange={(e) => setEditAmount(e.target.value)} 
+                        className="rounded-xl h-16 bg-background border-none font-bold px-6 text-2xl shadow-2xl text-foreground focus:ring-accent" 
+                        placeholder="e.g. 1500.00" 
+                    />
                 </div>
 
                 {/* STATUS SECTION */}
-                <div className="space-y-4">
+                <div className="space-y-4 bg-muted/30 p-5 rounded-[2rem] border border-border/50 shadow-inner">
                     <div className="flex items-center gap-2.5">
                         <div className="p-2 bg-accent/10 rounded-lg text-accent">
                             <Activity className="w-4 h-4" />
                         </div>
                         <Label className="font-bold text-[10px] uppercase text-foreground tracking-[0.15em] font-headline">Collection State</Label>
                     </div>
-                    <div className="bg-muted/30 p-2 rounded-[1.5rem] border border-border/50 shadow-inner">
-                        <Tabs value={editStatus} onValueChange={(v) => setEditStatus(v as any)}>
-                            <TabsList className="grid grid-cols-2 h-14 bg-transparent border-none p-0 gap-1.5">
-                                <TabsTrigger value="pending" className="rounded-xl font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-xl transition-all h-full border-none">
-                                    Pending
-                                </TabsTrigger>
-                                <TabsTrigger value="paid" className="rounded-xl font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-xl transition-all h-full border-none">
-                                    Receipted
-                                </TabsTrigger>
-                            </TabsList>
-                        </Tabs>
-                    </div>
+                    <Tabs value={editStatus} onValueChange={(v) => setEditStatus(v as any)}>
+                        <TabsList className="grid grid-cols-2 h-14 bg-background/50 border-none p-1.5 gap-1.5 rounded-xl">
+                            <TabsTrigger value="pending" className="rounded-lg font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-xl transition-all h-full border-none">
+                                Pending
+                            </TabsTrigger>
+                            <TabsTrigger value="paid" className="rounded-lg font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-xl transition-all h-full border-none">
+                                Receipted
+                            </TabsTrigger>
+                        </TabsList>
+                    </Tabs>
                 </div>
              </div>
            </ScrollArea>
