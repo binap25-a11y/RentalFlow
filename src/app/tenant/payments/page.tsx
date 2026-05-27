@@ -66,7 +66,7 @@ export default function TenantPaymentsPage() {
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-7xl mx-auto pb-24 text-left">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="space-y-8">
         <div className="space-y-4">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-2xl hover:bg-primary/5 transition-colors h-10 w-10 border border-white/5 shrink-0 shadow-sm">
@@ -82,13 +82,14 @@ export default function TenantPaymentsPage() {
           </p>
         </div>
 
-        <div className="flex gap-4">
-           <div className="p-6 bg-card rounded-[2rem] border border-border shadow-sm flex flex-col gap-1 min-w-[200px] relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
-                 <ShieldCheck className="w-12 h-12" />
+        {/* FINANCIAL SUMMARY MOVED BELOW HEADING & TEXT */}
+        <div className="flex flex-wrap gap-4">
+           <div className="p-8 bg-card rounded-[2.5rem] border border-border shadow-sm flex flex-col gap-1 min-w-[260px] relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:rotate-12 transition-transform duration-700">
+                 <ShieldCheck className="w-16 h-16" />
               </div>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Tenancy Total Paid</p>
-              <p className="text-3xl font-bold font-headline text-foreground tracking-tighter">£{financialSummary.totalPaid.toLocaleString()}</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] opacity-60 font-headline">Tenancy Total Paid</p>
+              <p className="text-4xl font-bold font-headline text-foreground tracking-tighter">£{financialSummary.totalPaid.toLocaleString()}</p>
            </div>
         </div>
       </div>

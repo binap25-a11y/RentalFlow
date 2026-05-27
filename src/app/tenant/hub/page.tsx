@@ -11,7 +11,7 @@ import {
   ChevronRight, ReceiptText,
   ShieldCheck, RefreshCcw, Bed, Bath, Download, 
   Home, Info, BookOpen, CreditCard, RotateCcw, Phone,
-  MessageCircle, X, Wifi, Shield, Clock
+  MessageCircle, X, Wifi, Shield, Clock, PoundSterling
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -108,7 +108,7 @@ export default function TenantHub() {
     const { jsPDF } = await import("jspdf");
     const doc = new jsPDF();
     doc.text(`RENTAL STATEMENT - ${property.addressLine1}`, 20, 20);
-    doc.save(`Statement_${property.addressLine1.replace(/\s+/g, '_')}.pdf`);
+    doc.save(`Statement_${property.addressLine1.replace(/\s+/g, '_')}_${format(new Date(), 'MMM_yyyy')}.pdf`);
   };
 
   if (!isClient || isPropLoading || isRequestsLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary w-12 h-12 opacity-60" /></div>;
