@@ -14,11 +14,9 @@ export async function POST(req: Request) {
     const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GEMINI_API_KEY;
     
     // STEP 1: Verify Credential Loading
-    console.log("GEMINI KEY STATUS:", !!apiKey);
-    
     if (!apiKey) {
       console.error("AI CONFIG ERROR: Gemini API Key is missing from environment.");
-      return new Response(JSON.stringify({ error: 'System intelligence is currently offline. Please configure API credentials.' }), { 
+      return new Response(JSON.stringify({ error: 'System intelligence is currently offline.' }), { 
         status: 503,
         headers: { 'Content-Type': 'application/json' }
       });
@@ -86,7 +84,7 @@ export async function POST(req: Request) {
       return new Response(JSON.stringify({ error: `Initialization Failure: ${initError.message}` }), { 
         status: 500, 
         headers: { 'Content-Type': 'application/json' } 
-      });
+  });
     }
 
   } catch (error: any) {
