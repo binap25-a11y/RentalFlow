@@ -1,11 +1,10 @@
-import { NextRequest } from 'next/server';
 import { ai } from '@/ai/genkit';
 import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 
 /**
  * 🤖 Hardened Streaming Concierge Endpoint
  * Optimized for Genkit 1.x zero-latency streaming and real professional logging.
- * Removes masked fallback messages to expose actual root causes (like quota limits).
+ * Exposes actual root causes (like quota limits) to server logs while maintaining elite UX.
  */
 
 export const dynamic = 'force-dynamic';
@@ -25,15 +24,16 @@ export async function POST(req: Request) {
     const encoder = new TextEncoder();
 
     try {
-      // GENKIT 1.x ORCHESTRATION: generateStream returns the stream object synchronously.
-      const { stream } = ai.generateStream(
-        conciergePrompt({
+      // GENKIT 1.x ORCHESTRATION: Correct streaming syntax for defined prompts
+      const { stream } = ai.generateStream({
+        prompt: conciergePrompt,
+        input: {
           query,
           residentName,
           propertyAddress,
           propertyContext
-        })
-      );
+        }
+      });
 
       const responseStream = new ReadableStream({
         async start(controller) {
