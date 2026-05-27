@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Loader2, Eye, EyeOff, ArrowLeft, Sparkles } from "lucide-react";
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp, setDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -54,6 +54,7 @@ export default function AuthPage() {
     if (user && db && mounted && !isLoading && !isRedirecting.current) {
       const checkAndRedirect = async () => {
         try {
+          isRedirecting.current = true;
           const userDocRef = doc(db, 'users', user.uid);
           const userDoc = await getDoc(userDocRef);
 
@@ -63,19 +64,19 @@ export default function AuthPage() {
             
             if (!isProfileComplete) {
               setNeedsProfile(true);
+              isRedirecting.current = false;
               return;
             }
-
-            if (isRedirecting.current) return;
-            isRedirecting.current = true;
             
             // ATOMIC REDIRECT: Immediate jump to specific dashboard
             router.replace(userData.role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
           } else {
             setNeedsProfile(true);
+            isRedirecting.current = false;
           }
         } catch (e) {
           setNeedsProfile(true);
+          isRedirecting.current = false;
         }
       };
       checkAndRedirect();
@@ -107,7 +108,6 @@ export default function AuthPage() {
         updatedAt: serverTimestamp(),
       }, { merge: true });
 
-      // Handle Tenant profile linking
       if (role === 'tenant' && user.email) {
         const emailLower = user.email.toLowerCase().trim();
         const tenantProfilesRef = collection(db, 'tenantProfiles');
@@ -160,17 +160,18 @@ export default function AuthPage() {
     }
   };
 
-  // HYDRATION GUARD: High-fidelity loading state to reduce perceived lag
   if (!mounted || isUserLoading || (user && !needsProfile)) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background z-[100]">
         <div className="flex flex-col items-center gap-6 animate-in fade-in duration-700">
-          <div className="relative w-28 h-28 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 bg-card">
+          <div className="relative w-32 h-32 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 bg-card">
              <Image src={RENTALFLOW_LOGO_URL} alt="RentalFlow" fill className="object-cover" unoptimized priority />
           </div>
           <div className="flex flex-col items-center gap-3">
-            <Loader2 className="w-6 h-6 animate-spin text-accent opacity-60" />
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.5em] font-headline ml-2">Synchronizing Session</p>
+            <div className="flex items-center gap-3">
+              <Loader2 className="w-5 h-5 animate-spin text-accent" />
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Synchronizing Workspace</p>
+            </div>
           </div>
         </div>
       </div>

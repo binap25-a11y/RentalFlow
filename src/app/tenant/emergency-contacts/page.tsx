@@ -19,10 +19,11 @@ import {
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 /**
  * 🆘 National SOS Protocols (UK Fallbacks)
- * Proactively displayed by default if landlord ledger is empty.
+ * Optimized for dark mode contrast and premium legibility.
  */
 const SOS_FALLBACKS = [
   { id: 'f1', name: "Emergency Services", phone: "999 or 112", role: "Primary Emergency", category: 'standard' },
@@ -140,7 +141,7 @@ export default function TenantEmergencyContactsPage() {
   if (!isClient) return null;
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-7xl mx-auto text-left pb-16">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-7xl mx-auto text-left pb-16 bg-background">
       <div className="space-y-6 text-left">
         <div className="space-y-2">
           <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1.5 rounded-full font-bold uppercase tracking-[0.2em] text-[9px] mb-2">
@@ -160,13 +161,12 @@ export default function TenantEmergencyContactsPage() {
         </Button>
       </div>
 
-      {/* EMERGENCY ALERT - Optimised for high readability in both modes */}
-      <div className="bg-red-500/5 border border-red-500/10 p-10 rounded-[3rem] flex flex-col md:flex-row gap-8 items-start md:items-center shadow-inner">
+      <div className="bg-red-500/5 border border-red-500/10 dark:border-red-500/20 p-10 rounded-[3rem] flex flex-col md:flex-row gap-8 items-start md:items-center shadow-inner">
         <div className="p-5 bg-white dark:bg-red-950/40 rounded-[2rem] shadow-xl text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/40 shrink-0">
            <AlertCircle className="w-10 h-10" />
         </div>
         <div className="space-y-2 text-left">
-          <h3 className="font-bold text-2xl text-red-900 dark:text-red-100 font-headline tracking-tight">Immediate Life Danger</h3>
+          <h3 className="font-bold text-2xl text-red-900 dark:text-red-100 font-headline tracking-tight leading-none">Immediate Life Danger</h3>
           <p className="text-base text-red-800/80 dark:text-red-200/60 font-medium font-body leading-relaxed max-w-4xl">
             If there is immediate danger to life, fire, or evidence of a gas leak, always call <strong>999</strong> or <strong>112</strong> immediately. For non-life-threatening property issues, utilize the professional partners listed below.
           </p>
