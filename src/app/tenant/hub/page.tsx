@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
-  MapPin, AlertCircle, Wrench, 
+  MapPin, AlertCircle, 
   Loader2, Building2, Sparkles, Send, Bot, 
-  ChevronRight, CheckCircle2, Clock, ReceiptText,
-  ShieldCheck, ShieldAlert, RefreshCcw, Zap, Bed, Bath, Download, 
+  ChevronRight, ReceiptText,
+  ShieldCheck, RefreshCcw, Bed, Bath, Download, 
   Home, Info, BookOpen, CreditCard, RotateCcw, Phone,
   MessageCircle, X, Wifi, Shield
 } from "lucide-react";
@@ -19,7 +19,6 @@ import { tenantConcierge } from "@/ai/flows/tenant-concierge-flow";
 import { cn, getResolvedImageUrl } from "@/lib/utils";
 import { query, collection, where } from "firebase/firestore";
 import { format } from "date-fns";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 /**
  * 🆘 National SOS Protocols (UK Fallbacks)
@@ -69,7 +68,7 @@ export default function TenantHub() {
   }, [db, user]);
   const { data: requests, isLoading: isRequestsLoading } = useCollection(requestsQuery);
   
-  const activeRequests = useMemo(() => requests?.filter(r => r.status !== 'completed').slice(0, 5) || [], [requests]);
+  const activeRequests = useMemo(() => requests?.filter(r => r.status !== 'completed') || [], [requests]);
 
   const contactsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -167,7 +166,8 @@ export default function TenantHub() {
   if (!isClient || isPropLoading || isRequestsLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary w-12 h-12 opacity-60" /></div>;
 
   /**
-   * 💎 PREMIUM SYSTEM ORCHESTRATION VIEW (Loading State)
+   * 💎 PREMIUM SYSTEM ORCHESTRATION VIEW (Placeholder State)
+   * Streamlined hierarchy: Hero -> Monthly Rent -> Your Residence -> Actions
    */
   if (!property) return (
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-1000 pb-32 text-left bg-background">
@@ -184,7 +184,7 @@ export default function TenantHub() {
             </div>
             
             <CardContent className="p-12 space-y-12">
-              {/* 1. Resized Rent Placeholder */}
+              {/* 1. Monthly Rent Placeholder */}
               <div className="space-y-6">
                 <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight opacity-20"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
                 <div className="p-10 bg-muted/10 rounded-[2.5rem] border border-border/50 shadow-inner space-y-6">
@@ -199,21 +199,16 @@ export default function TenantHub() {
                 <div className="p-10 bg-primary/5 rounded-[2.5rem] border border-border/50 space-y-4">
                   <div className="h-3 w-full bg-muted rounded animate-pulse opacity-30" />
                   <div className="h-3 w-4/6 bg-muted rounded animate-pulse opacity-30" />
+                  <div className="grid grid-cols-2 gap-4 mt-6">
+                     <div className="h-16 bg-muted/20 rounded-2xl animate-pulse" />
+                     <div className="h-16 bg-muted/20 rounded-2xl animate-pulse" />
+                  </div>
                 </div>
               </div>
 
-              {/* 3. Operational History Placeholder */}
-              <div className="space-y-6">
-                <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight opacity-20"><Wrench className="w-6 h-6 mr-4 text-accent" /> Operational History</h3>
-                <div className="space-y-4">
-                  <div className="h-20 w-full bg-muted/20 rounded-2xl animate-pulse opacity-20" />
-                  <div className="h-20 w-full bg-muted/20 rounded-2xl animate-pulse opacity-20" />
-                </div>
-              </div>
-
-              {/* 4. Fitted Action Placeholder */}
+              {/* 3. Fitted Action Placeholder */}
               <div className="pt-4">
-                <div className="h-14 w-full bg-muted/20 rounded-2xl animate-pulse opacity-20" />
+                <div className="h-16 w-full bg-muted/20 rounded-2xl animate-pulse opacity-20" />
               </div>
             </CardContent>
           </Card>
@@ -316,46 +311,20 @@ export default function TenantHub() {
                        <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Wifi className="w-5 h-5" /></div>
                        <div className="min-w-0 flex-1">
                           <p className="text-[10px] font-bold uppercase opacity-40 truncate">Connectivity</p>
-                          <p className="text-sm font-bold truncate leading-tight">{property.connectivityStatus || 'Synchronizing Fiber Status...'}</p>
+                          <p className="text-sm font-bold truncate leading-tight">{property.connectivityStatus || 'Synchronizing...'}</p>
                        </div>
                     </div>
                     <div className="p-6 bg-muted/10 rounded-2xl border border-border/50 flex items-center gap-4 min-w-0">
                        <div className="p-3 bg-white rounded-xl shadow-sm text-accent shrink-0"><Shield className="w-5 h-5" /></div>
                        <div className="min-w-0 flex-1">
                           <p className="text-[10px] font-bold uppercase opacity-40 truncate">Compliance</p>
-                          <p className="text-sm font-bold truncate leading-tight">{property.complianceStatus || 'Verifying Safety Certs...'}</p>
+                          <p className="text-sm font-bold truncate leading-tight">{property.complianceStatus || 'Verifying...'}</p>
                        </div>
                     </div>
                   </div>
                 </div>
 
-                {/* 3. Real-Time Operational History */}
-                <div className="space-y-6">
-                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><Wrench className="w-6 h-6 mr-4 text-accent" /> Operational History</h3>
-                   <div className="space-y-4">
-                      {activeRequests.length > 0 ? activeRequests.map(req => (
-                        <div key={req.id} className="p-6 bg-muted/10 rounded-[1.75rem] border border-border/50 flex items-center justify-between group hover:border-accent/30 transition-all">
-                           <div className="min-w-0 flex-1 pr-4">
-                              <p className="font-bold text-base text-foreground truncate group-hover:text-accent transition-colors">{req.title}</p>
-                              <div className="flex items-center gap-3 mt-1.5">
-                                 <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-[0.2em] text-muted-foreground border-border px-3 py-0.5 rounded-full">{req.status}</Badge>
-                                 <span className="text-[9px] font-bold text-muted-foreground opacity-30 uppercase tracking-widest">{req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'MMM dd') : 'Recently'}</span>
-                              </div>
-                           </div>
-                           <Button variant="ghost" size="icon" asChild className="rounded-xl h-10 w-10 text-muted-foreground border border-border/50 group-hover:text-accent group-hover:border-accent/30 transition-all">
-                              <Link href="/tenant/maintenance"><ChevronRight className="w-5 h-5" /></Link>
-                           </Button>
-                        </div>
-                      )) : (
-                        <div className="p-10 text-center bg-muted/5 rounded-[2rem] border-2 border-dashed border-border flex flex-col items-center gap-3">
-                           <CheckCircle2 className="w-10 h-10 text-emerald-500/20" />
-                           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-40">No ongoing repairs reported</p>
-                        </div>
-                      )}
-                   </div>
-                </div>
-
-                {/* 4. Fitted Download Action */}
+                {/* 3. Fitted Download Action */}
                 <div className="pt-8 border-t border-border/50">
                   <Button variant="outline" className="w-full h-16 rounded-[1.75rem] border-border bg-card hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all shadow-sm" onClick={handleDownloadStatement}>
                      <Download className="w-5 h-5 mr-3 text-accent" /> Download Rent Statement
@@ -371,7 +340,7 @@ export default function TenantHub() {
              <CardHeader className="p-10 pb-4 border-b border-border bg-muted/5">
                <div className="flex justify-between items-center mb-2">
                  <CardTitle className="text-xl font-headline font-bold flex items-center text-foreground">
-                   <ShieldAlert className="w-6 h-6 mr-4 text-accent" />
+                   <AlertCircle className="w-6 h-6 mr-4 text-accent" />
                    Real-Time Support
                  </CardTitle>
                  {isContactsLoading && <RefreshCcw className="w-4 h-4 animate-spin text-accent/40" />}
@@ -423,7 +392,7 @@ export default function TenantHub() {
               <CardContent className="p-10 pt-0 space-y-6">
                  <div className="p-6 bg-white/10 rounded-[2rem] border border-white/10 shadow-inner">
                     <p className="text-[9px] font-bold uppercase opacity-60 tracking-[0.3em] mb-2">Concierge Awareness</p>
-                    <p className="text-sm font-medium leading-relaxed">I am currently monitoring your rent ledger and {activeRequests.length} active repair {activeRequests.length === 1 ? 'record' : 'records'}. Ask me anything.</p>
+                    <p className="text-sm font-medium leading-relaxed">I am currently monitoring your rent ledger and residency records. Ask me anything about your tenancy.</p>
                  </div>
               </CardContent>
            </Card>
@@ -471,7 +440,7 @@ export default function TenantHub() {
                     {[
                       { title: "Property Rules", icon: BookOpen, query: "What are the property rules?" },
                       { title: "Rent Status", icon: CreditCard, query: "What is my rent status?" },
-                      { title: "Report Repair", icon: Wrench, query: "How do I report a repair?" },
+                      { title: "Report Repair", icon: Info, query: "How do I report a repair?" },
                       { title: "Home Guides", icon: Info, query: "Tell me about my home specs." }
                     ].map((topic, i) => (
                       <button key={i} onClick={() => handleAskConcierge(topic.query)} className="p-5 bg-primary/5 rounded-[1.5rem] border border-border flex items-center gap-4 hover:bg-primary/10 transition-all text-left group">
