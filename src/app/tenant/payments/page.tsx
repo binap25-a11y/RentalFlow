@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 /**
  * @fileOverview High-Fidelity Resident Rent & Finance Ledger.
  * Provides a verified historical audit trail of all tenancy payments.
- * Synchronized with the "Live Ledger" real-time protocol.
+ * Hierarchy: Header -> Account Narrative -> Tenancy Total Paid -> History.
  */
 
 export default function TenantPaymentsPage() {

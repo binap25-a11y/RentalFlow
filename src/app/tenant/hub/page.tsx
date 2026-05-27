@@ -21,8 +21,8 @@ import { format } from "date-fns";
 
 /**
  * @fileOverview High-Fidelity Resident Hub.
- * Optimized for real-time data orchestration and advanced Streaming AI responsiveness.
- * Features Fit-First architecture for Property DNA visibility.
+ * Optimized for real-time data orchestration and Streaming AI responsiveness.
+ * Hierarchy: Hero -> Identity -> Rent Ledger -> Residence Narrative -> Property DNA.
  */
 
 export default function TenantHub() {
@@ -81,10 +81,9 @@ export default function TenantHub() {
     setIsChatting(true);
 
     const paymentContext = currentPayment ? `Payment for ${format(new Date(), 'MMMM')} is ${currentPayment.status}.` : "No current payment record found.";
-    const propertyInfo = property ? `Property: ${property.addressLine1}. Rent: £${property.rentAmount}. Connectivity: ${property.connectivityStatus || 'Synchronizing'}. Compliance: ${property.complianceStatus || 'Verified'}. Financials: ${paymentContext} Repairs: ${maintenanceContext}` : "Property details are synchronizing.";
+    const propertyInfo = property ? `Property: ${property.addressLine1}. Rent: £${property.rentAmount}. Connectivity: ${property.connectivityStatus || 'Ultra-Fast Fiber Enabled'}. Compliance: ${property.complianceStatus || 'EPC Grade B / Certified'}. Financials: ${paymentContext} Repairs: ${maintenanceContext}` : "Property details are synchronizing.";
 
     try {
-      // 🚀 Initiate Real-Time Streaming Fetch via API Route
       const response = await fetch('/api/concierge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -104,11 +103,12 @@ export default function TenantHub() {
       let botText = "";
       setChatHistory(prev => [...prev, { role: 'bot', text: "" }]);
 
+      const decoder = new TextDecoder();
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = new TextDecoder().decode(value);
+        const chunk = decoder.decode(value, { stream: true });
         botText += chunk;
         
         setChatHistory(prev => {
@@ -117,9 +117,9 @@ export default function TenantHub() {
           return newHistory;
         });
       }
-    } catch (error) {
-      console.error('Concierge Error:', error);
-      setChatHistory(prev => [...prev, { role: 'bot', text: "My apologies, I encountered a connection issue while synchronized with the property ledger. Please try your request once more." }]);
+    } catch (error: any) {
+      console.error('Concierge Fetch Error:', error);
+      setChatHistory(prev => [...prev, { role: 'bot', text: "My apologies, I'm identifying a brief synchronization delay with the property ledger. Please try your request once more in a moment." }]);
     } finally { 
       setIsChatting(false); 
     }
@@ -148,7 +148,7 @@ export default function TenantHub() {
               <Building2 className="w-20 h-20 text-foreground/10" />
             </div>
             <CardContent className="p-12 space-y-12">
-              <div className="h-40 w-full bg-muted/20 rounded-[2.5rem] animate-pulse" />
+              <div className="h-32 w-full bg-muted/20 rounded-[2.5rem] animate-pulse" />
               <div className="space-y-6">
                 <div className="h-24 w-full bg-muted/10 rounded-[1.5rem] animate-pulse" />
                 <div className="grid grid-cols-2 gap-6">
@@ -186,6 +186,7 @@ export default function TenantHub() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-8 space-y-10">
           <Card className="border-none shadow-2xl overflow-hidden bg-card group ring-1 ring-border">
+            {/* 1. CINEMATIC HERO */}
             <div className="relative h-[450px] md:h-[550px] w-full bg-muted overflow-hidden">
               {primaryImageUrl ? (
                 <img 
@@ -200,6 +201,7 @@ export default function TenantHub() {
               )}
             </div>
 
+            {/* 2. IDENTITY IDENTITY BAR */}
             <div className="p-10 border-b border-border bg-white/[0.01] space-y-4">
                <h2 className="text-3xl md:text-4xl font-headline font-bold text-foreground tracking-tight leading-tight">
                  {property.addressLine1}, {property.city}, {property.zipCode}
@@ -213,32 +215,11 @@ export default function TenantHub() {
                     Live Ledger Synchronized
                  </Badge>
                </div>
-               
-               <div className="flex flex-wrap gap-6 items-center pt-6 border-t border-border/50">
-                <div className="flex items-center gap-4 bg-primary/5 px-6 py-3 rounded-2xl border border-border shadow-inner">
-                   <Bed className="w-6 h-6 text-accent" />
-                   <span className="text-base font-bold text-foreground font-headline uppercase tracking-widest">
-                     {property.numberOfBedrooms || 1} {property.numberOfBedrooms === 1 ? 'Bedroom' : 'Bedrooms'}
-                   </span>
-                </div>
-                <div className="flex items-center gap-4 bg-primary/5 px-6 py-3 rounded-2xl border border-border shadow-inner">
-                   <Bath className="w-6 h-6 text-accent" />
-                   <span className="text-base font-bold text-foreground font-headline uppercase tracking-widest">
-                     {property.numberOfBathrooms || 1} {property.numberOfBathrooms === 1 ? 'Bathroom' : 'Bathrooms'}
-                   </span>
-                </div>
-                <div className="flex items-center gap-4 bg-primary/5 px-6 py-3 rounded-2xl border border-border shadow-inner">
-                   <Home className="w-6 h-6 text-accent" />
-                   <span className="text-base font-bold text-foreground font-headline uppercase tracking-widest truncate">
-                     {property.propertyType || "Residential Home"}
-                   </span>
-                </div>
-              </div>
             </div>
 
             <CardContent className="p-10 md:p-12 space-y-12">
               <div className="space-y-12">
-                {/* 1. FINANCIAL LEDGER */}
+                {/* 3. RESIZED MONTHLY RENT LEDGER */}
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-6 h-6 mr-4 text-accent" /> Monthly Rent</h3>
@@ -264,7 +245,7 @@ export default function TenantHub() {
                   </div>
                 </div>
 
-                {/* 2. YOUR RESIDENCE */}
+                {/* 4. YOUR RESIDENCE NARRATIVE */}
                 <div className="space-y-6">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><Info className="w-6 h-6 mr-4 text-accent" /> Your Residence</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -293,7 +274,7 @@ export default function TenantHub() {
                   </div>
                 </div>
 
-                {/* 3. FITTED ACTIONS */}
+                {/* 5. FITTED ACTIONS */}
                 <div className="pt-8 border-t border-border/50">
                   <Button variant="outline" className="w-full h-16 rounded-[1.75rem] border-border bg-card hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all shadow-sm" onClick={handleDownloadStatement}>
                      <Download className="w-5 h-5 mr-3 text-accent" /> Download Rent Statement

@@ -2,7 +2,7 @@
 /**
  * @fileOverview A premium resident AI concierge agent (Flow).
  * Features a real-time streaming intelligence layer specialized in UK residential property.
- * Enhanced with Gemini 2.0 Flash reasoning and sophisticated UK linguistics.
+ * Enhanced with Gemini 1.5 Flash reasoning for maximum stability and UK linguistics.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -24,7 +24,7 @@ export type TenantConciergeOutput = z.infer<typeof TenantConciergeOutputSchema>;
 
 export const conciergePrompt = ai.definePrompt({
   name: 'tenantConciergePrompt',
-  model: googleAI.model('gemini-2.0-flash'),
+  model: googleAI.model('gemini-1.5-flash'),
   input: { schema: TenantConciergeInputSchema },
   config: { 
     temperature: 0.7,
@@ -54,7 +54,7 @@ EXPERT KNOWLEDGE SCOPE:
 3. UK COMPLIANCE: Answer questions regarding Council Tax, EPC ratings, and connectivity (Fiber status) using the provided context.
 4. UK PROTOCOLS: You understand AST (Assured Shorthold Tenancies), Deposit Protection (DPS), and local UK council interactions.
 
-CRITICAL: Use the property context below as your absolute source of truth. If information about a repair is present in the Operational Ledger, tell them its status. If not, guide them to report a new issue.
+CRITICAL: Use the property context below as your absolute source of truth. If information about a repair (like a 'door repair') is present in the Operational Ledger, tell them its status. If not, guide them to report a new issue.
 
 Property Context: {{{propertyContext}}}
 Resident Query: {{{query}}}`,

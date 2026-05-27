@@ -4,16 +4,18 @@ import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 
 /**
  * @fileOverview High-Fidelity Streaming Concierge Endpoint.
- * Enables zero-latency AI responses by streaming Gemini 2.0 Flash chunks directly to the client.
- * Optimized for Genkit 1.x streaming protocols.
+ * Enables zero-latency AI responses by streaming Gemini chunks directly to the client.
+ * Hardened for Genkit 1.x streaming protocols and runtime stability.
  */
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { query, residentName, propertyAddress, propertyContext } = body;
 
-    // Use the definitive streaming syntax for defined prompts in Genkit 1.x
+    // Correct Genkit 1.x streaming orchestration
     const { stream } = ai.generateStream({
       prompt: conciergePrompt,
       input: {
@@ -35,7 +37,7 @@ export async function POST(req: NextRequest) {
           }
           controller.close();
         } catch (streamError) {
-          console.error('Stream iteration error:', streamError);
+          console.error('API Stream Iteration Failure:', streamError);
           controller.error(streamError);
         }
       },
@@ -44,12 +46,16 @@ export async function POST(req: NextRequest) {
     return new Response(responseStream, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-transform',
+        'X-Content-Type-Options': 'nosniff',
       },
     });
   } catch (error: any) {
-    console.error('Concierge Stream Error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('Concierge API Runtime Error:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Intelligence Engine Offline',
+      details: error.message 
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
