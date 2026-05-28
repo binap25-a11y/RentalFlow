@@ -30,7 +30,7 @@ import {
 
 /**
  * @fileOverview High-Fidelity Portfolio Registry.
- * Implements Cascading Delete Protocol for financial, operational, and compliance consistency.
+ * Implements Full Cascading Purge Protocol for Maintenance, Compliance, and Residency integrity.
  */
 
 export default function PropertiesPage() {
@@ -92,14 +92,14 @@ export default function PropertiesPage() {
       const propertyRef = doc(db, 'properties', propertyId);
       deleteDocumentNonBlocking(propertyRef);
 
-      // 2. Cascade Delete all related records (Inspections, Tenants, Repairs, Finance)
+      // 2. FULL CASCADING PURGE: Remove all related portfolio records
       const relatedCollections = [
-        'maintenanceRequests',
-        'inspections',
-        'emergencyContacts',
-        'tenantProfiles',
-        'documents',
-        'rentPayments'
+        'maintenanceRequests',  // Scrub Maintenance Hub
+        'inspections',          // Scrub Compliance Ledger
+        'tenantProfiles',       // Scrub Residency Identity
+        'documents',            // Scrub Property Vault
+        'rentPayments',         // Scrub Financial Ledger
+        'emergencyContacts'     // Scrub Support Directory
       ];
 
       for (const collName of relatedCollections) {
@@ -112,7 +112,7 @@ export default function PropertiesPage() {
 
       toast({ 
         title: "Asset Purged", 
-        description: "Compliance Ledger, tenants, and financial records updated." 
+        description: "Maintenance logs, Compliance Ledger, and tenants removed." 
       });
     } catch (error) {
       console.error('Cascading Purge Error:', error);
@@ -272,7 +272,7 @@ export default function PropertiesPage() {
                               <AlertDialogHeader className="text-left">
                                 <AlertDialogTitle className="text-2xl font-headline font-bold text-foreground">Purge Asset Record?</AlertDialogTitle>
                                 <AlertDialogDescription className="text-muted-foreground font-medium text-base mt-2">
-                                  This action is irreversible. All <strong>Compliance Ledger</strong> entries (Inspections), associated <strong>tenants</strong>, maintenance history, and financial ledgers for <strong>{property.addressLine1}</strong> will be permanently purged.
+                                  This action is irreversible. Every related maintenance record, site audit, resident profile, and financial receipt for <strong>{property.addressLine1}</strong> will be permanently purged from the database.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter className="mt-8 gap-3">

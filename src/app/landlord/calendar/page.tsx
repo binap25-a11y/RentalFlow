@@ -50,7 +50,7 @@ type PortfolioEvent = {
 
 /**
  * @fileOverview High-Fidelity Portfolio Calendar.
- * Optimized for real-time site audit selection and administrative visibility.
+ * Resolved visibility collapse in the maintenance portal.
  */
 
 export default function LandlordCalendarPage() {
@@ -339,18 +339,18 @@ export default function LandlordCalendarPage() {
       </div>
 
       <Dialog open={isAddRepairOpen} onOpenChange={setIsAddRepairOpen}>
-        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-[550px] bg-card flex flex-col h-[850px] max-h-[95vh] ring-1 ring-white/10">
-          <div className="p-10 bg-primary/5 border-b border-white/5 text-left shrink-0">
+        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-[550px] bg-card flex flex-col h-[750px] max-h-[90vh] ring-1 ring-white/10">
+          <div className="p-8 bg-primary/5 border-b border-white/5 text-left shrink-0">
             <DialogTitle className="text-2xl font-bold font-headline text-foreground tracking-tight">Schedule Maintenance</DialogTitle>
-            <DialogDescription className="text-sm font-medium text-muted-foreground mt-2">Registering an operational event for {format(selectedDate, 'PPP')}</DialogDescription>
+            <DialogDescription className="text-sm font-medium text-muted-foreground mt-1">Registering a site event for {format(selectedDate, 'PPP')}</DialogDescription>
           </div>
           
           <div className="flex-1 overflow-y-auto min-h-0 bg-white/[0.01]">
-            <form id="maintenance-scheduler" onSubmit={handleAddRepair} className="p-8 space-y-10 text-left pb-24">
+            <form id="maintenance-scheduler" onSubmit={handleAddRepair} className="p-8 space-y-8 text-left pb-20">
               <div className="space-y-3">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Target Inventory Asset</Label>
                 <select 
-                  className="flex h-14 w-full rounded-2xl border-none bg-muted/40 px-6 py-2 text-base focus:ring-2 focus:ring-primary outline-none font-bold text-foreground font-headline shadow-inner ring-1 ring-white/10" 
+                  className="flex h-12 w-full rounded-xl border-none bg-muted/40 px-5 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-foreground font-headline shadow-inner ring-1 ring-white/10" 
                   value={selectedPropertyId} 
                   onChange={(e) => setSelectedPropertyId(e.target.value)} 
                   required
@@ -366,7 +366,7 @@ export default function LandlordCalendarPage() {
                   onChange={(e) => setRepairTitle(e.target.value)} 
                   required 
                   placeholder="e.g. Electrical Fault Discovery" 
-                  className="rounded-2xl h-14 bg-background/80 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/10 text-foreground" 
+                  className="rounded-xl h-12 bg-background/80 border-none font-bold text-sm px-5 shadow-inner ring-1 ring-white/10 text-foreground" 
                 />
               </div>
               <div className="space-y-3">
@@ -375,13 +375,13 @@ export default function LandlordCalendarPage() {
                   value={repairDesc} 
                   onChange={(e) => setRepairDesc(e.target.value)} 
                   placeholder="Provide full context for contractor access..." 
-                  className="rounded-2xl min-h-[220px] bg-background/80 border-none font-medium px-6 py-6 text-base leading-relaxed shadow-inner ring-1 ring-white/10 text-foreground" 
+                  className="rounded-xl min-h-[180px] bg-background/80 border-none font-medium px-5 py-5 text-sm leading-relaxed shadow-inner ring-1 ring-white/10 text-foreground" 
                 />
               </div>
             </form>
           </div>
 
-          <DialogFooter className="p-8 bg-muted/5 border-t border-white/5 shrink-0">
+          <DialogFooter className="p-6 bg-muted/5 border-t border-white/5 shrink-0">
             <Button 
               form="maintenance-scheduler"
               type="submit" 

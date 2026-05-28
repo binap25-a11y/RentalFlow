@@ -42,8 +42,8 @@ import { collection, doc, serverTimestamp, query, where } from "firebase/firesto
 import { useToast } from "@/hooks/use-toast";
 
 /**
- * @fileOverview High-Fidelity Landlord Insight Hub.
- * Optimized for zero-latency financial sync and adaptive registry views.
+ * @fileOverview Landlord Insight Hub.
+ * Optimized for active-asset financials and structural stability.
  */
 
 export default function LandlordDashboard() {
@@ -213,13 +213,6 @@ export default function LandlordDashboard() {
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const yearsList = Array.from({length: 5}, (_, i) => new Date().getFullYear() - 2 + i);
 
-  const statConfig = [
-    { title: "Gross Annual Potential", val: `£${financialStats.annualGross.toLocaleString()}`, Icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5", Indicator: ArrowUpRight },
-    { title: "Portfolio Expenses (YTD)", val: `£${financialStats.totalExpenses.toLocaleString()}`, Icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", Indicator: ArrowDownRight },
-    { title: "Net Annual Forecast", val: `£${financialStats.netAnnualForecast.toLocaleString()}`, Icon: TrendingUp, color: "text-primary-foreground", bg: "bg-primary", isPrimary: true },
-    { title: `${months[selectedMonth - 1].substring(0, 3)} Collected`, val: `£${financialStats.actualCollectedThisPeriod.toLocaleString()}`, Icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats.collectionRate }
-  ];
-
   return (
     <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-500 pb-12">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4 text-left border-b border-white/5 pb-6">
@@ -246,26 +239,25 @@ export default function LandlordDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statConfig.map((stat, i) => {
+        {[
+          { title: "Gross Annual Potential", val: `£${financialStats.annualGross.toLocaleString()}`, Icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5", Indicator: ArrowUpRight },
+          { title: "Portfolio Expenses (YTD)", val: `£${financialStats.totalExpenses.toLocaleString()}`, Icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", Indicator: ArrowDownRight },
+          { title: "Net Annual Forecast", val: `£${financialStats.netAnnualForecast.toLocaleString()}`, Icon: TrendingUp, color: "text-primary-foreground", bg: "bg-primary", isPrimary: true },
+          { title: `${months[selectedMonth - 1].substring(0, 3)} Collected`, val: `£${financialStats.actualCollectedThisPeriod.toLocaleString()}`, Icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats.collectionRate }
+        ].map((stat, i) => {
           const IconComp = stat.Icon;
-          const IndicatorComp = stat.Indicator;
           return (
-            <Card key={i} className={cn("border-none shadow-sm rounded-[2rem] overflow-hidden group hover:scale-[1.01] transition-all", stat.isPrimary ? "bg-primary text-primary-foreground shadow-2xl shadow-primary/10" : "bg-card ring-1 ring-white/5")}>
+            <Card key={i} className={cn("border-none shadow-sm rounded-[2rem] overflow-hidden group hover:scale-[1.01] transition-all", stat.isPrimary ? "bg-primary text-primary-foreground" : "bg-card ring-1 ring-white/5")}>
               <CardContent className="pt-8 text-left px-6">
                 <div className="flex items-center justify-between mb-6">
                   <div className={cn("p-3 rounded-xl shadow-inner border border-white/5 transition-transform group-hover:scale-110", stat.bg, !stat.isPrimary && stat.color)}>
                     <IconComp className="w-6 h-6" />
                   </div>
-                  {IndicatorComp && <IndicatorComp className={cn("w-5 h-5", stat.color)} />}
                 </div>
                 <div className="space-y-2 min-w-0">
-                  <p className="text-3xl font-bold font-headline tracking-tighter">
-                     {stat.val}
-                  </p>
+                  <p className="text-3xl font-bold font-headline tracking-tighter">{stat.val}</p>
                   {stat.progress !== undefined && <Progress value={stat.progress} className="h-1.5 bg-white/10" />}
-                  <p className="text-[9px] font-bold uppercase tracking-[0.1em] font-headline opacity-50 whitespace-normal leading-tight">
-                    {stat.title}
-                  </p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.1em] font-headline opacity-50">{stat.title}</p>
                 </div>
               </CardContent>
             </Card>
@@ -277,13 +269,10 @@ export default function LandlordDashboard() {
         <div className="lg:col-span-8 space-y-6">
           <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-card ring-1 ring-white/5">
             <CardHeader className="text-left px-8 pt-8 pb-4 border-b border-white/5 bg-white/[0.02]">
-              <div className="flex justify-between items-center">
-                 <CardTitle className="text-xl font-headline flex items-center text-foreground tracking-tight">
-                   <BarChart3 className="w-6 h-6 mr-3 text-accent" />
-                   Yield Distribution
-                 </CardTitle>
-                 <Badge variant="outline" className="border-white/10 text-[8px] font-bold uppercase tracking-[0.15em] font-headline opacity-60 shrink-0">Performance Snapshot</Badge>
-              </div>
+              <CardTitle className="text-xl font-headline flex items-center text-foreground tracking-tight">
+                <BarChart3 className="w-6 h-6 mr-3 text-accent" />
+                Yield Distribution
+              </CardTitle>
             </CardHeader>
             <CardContent className="h-[380px] p-8">
                <ResponsiveContainer width="100%" height="100%">
@@ -295,7 +284,6 @@ export default function LandlordDashboard() {
                       cursor={{fill: 'rgba(255,255,255,0.03)', radius: 12}}
                       contentStyle={{borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', backgroundColor: 'rgba(10,10,10,0.95)', backdropFilter: 'blur(12px)', padding: '12px'}}
                       itemStyle={{fontWeight: 800, color: 'hsl(var(--accent))', fontSize: '11px'}}
-                      labelStyle={{fontWeight: 800, marginBottom: '6px', color: '#fff', fontSize: '12px'}}
                     />
                     <Bar dataKey="rent" radius={[12, 12, 0, 0]} barSize={45}>
                       {chartData.map((entry, index) => (
@@ -313,10 +301,9 @@ export default function LandlordDashboard() {
                 <ReceiptText className="w-6 h-6 mr-3 text-accent" />
                 Monthly Rent Ledger
               </CardTitle>
-              
-              <div className="flex items-center gap-2 bg-muted/20 p-1.5 rounded-2xl border border-white/5 shadow-inner shrink-0">
+              <div className="flex items-center gap-2 bg-muted/20 p-1.5 rounded-2xl border border-white/5 shrink-0">
                 <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(Number(v))}>
-                  <SelectTrigger className="h-9 w-[130px] border-none bg-transparent font-bold text-[10px] uppercase tracking-widest text-foreground focus:ring-0">
+                  <SelectTrigger className="h-9 w-[130px] border-none bg-transparent font-bold text-[10px] uppercase tracking-widest focus:ring-0">
                     <CalendarDays className="w-3.5 h-3.5 mr-2 opacity-40" />
                     <SelectValue />
                   </SelectTrigger>
@@ -324,180 +311,70 @@ export default function LandlordDashboard() {
                     {months.map((m, i) => <SelectItem key={m} value={(i + 1).toString()} className="text-[10px] font-bold uppercase py-2">{m}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(Number(v))}>
-                  <SelectTrigger className="h-9 w-[90px] border-none bg-transparent font-bold text-[10px] uppercase tracking-widest text-foreground focus:ring-0">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl border-white/5 bg-card">
-                    {yearsList.map(y => <SelectItem key={y} value={y.toString()} className="text-[10px] font-bold py-2">{y}</SelectItem>)}
-                  </SelectContent>
-                </Select>
               </div>
             </CardHeader>
             <CardContent className="p-0">
                <ScrollArea className="h-[600px] w-full overflow-auto">
-                 <div className="block lg:hidden p-4 space-y-4">
-                   {properties?.filter(p => p.isOccupied).map(prop => {
-                     const payment = periodPayments?.find(pm => pm.propertyId === prop.id);
-                     const status = payment?.status || 'not-paid';
-                     const isPaid = status === 'paid';
-                     const isLate = status === 'late';
-                     const imageUrl = getResolvedImageUrl(prop.imageUrl, prop.imageUrls);
-
-                     return (
-                       <Card key={prop.id} className="border-none shadow-sm rounded-2xl bg-muted/10 ring-1 ring-white/5 p-5 space-y-5 text-left">
-                         <div className="flex items-center gap-4">
-                           <div className="relative h-16 w-16 rounded-xl overflow-hidden shadow-lg bg-muted shrink-0 flex items-center justify-center">
-                             {imageUrl ? <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" /> : <Building2 className="w-6 h-6 text-muted-foreground/30" />}
-                           </div>
-                           <div className="min-w-0 flex-1">
-                             <span className="font-bold text-base text-foreground block truncate">{prop.addressLine1}</span>
-                             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 block">{prop.city}</span>
-                           </div>
-                         </div>
-
-                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/5">
-                            <div className="space-y-2">
-                               <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-50 font-headline tracking-widest">Monthly Yield</Label>
-                               <div className="flex items-center gap-2 bg-background/80 rounded-xl px-4 h-12 border border-white/10 shadow-inner">
-                                  <span className="text-muted-foreground opacity-30 font-bold text-sm">£</span>
-                                  <Input 
-                                    type="number" 
-                                    defaultValue={prop.rentAmount} 
-                                    className="h-10 border-none bg-transparent font-bold text-sm p-0 focus:ring-0 text-foreground"
-                                    onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)}
-                                  />
-                               </div>
-                            </div>
-                            <div className="space-y-2">
-                               <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-50 font-headline tracking-widest">Verification</Label>
-                               <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
-                                  <SelectTrigger className={cn(
-                                    "h-12 w-full rounded-xl border-none font-bold text-[10px] uppercase tracking-widest shadow-inner px-4",
-                                    isPaid ? "bg-emerald-500/10 text-emerald-500" : isLate ? "bg-sky-500/10 text-sky-500" : "bg-amber-500/10 text-amber-500"
-                                  )}>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent className="rounded-xl border-white/5 bg-card">
-                                    <SelectItem value="not-paid" className="text-[10px] font-bold uppercase py-3">Not Paid</SelectItem>
-                                    <SelectItem value="paid" className="text-[10px] font-bold uppercase py-3">Paid</SelectItem>
-                                    <SelectItem value="late" className="text-[10px] font-bold uppercase py-3">Paid Late</SelectItem>
-                                  </SelectContent>
-                               </Select>
-                            </div>
-                         </div>
-                       </Card>
-                     );
-                   })}
-                 </div>
-
-                 <div className="hidden lg:block">
-                    <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
-                      <thead>
-                        <tr className="bg-white/[0.02] sticky top-0 z-10">
-                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[40%] bg-card">Asset Identity</th>
-                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[25%] bg-card text-center">Monthly Yield</th>
-                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[35%] bg-card">Verification Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/5">
-                        {properties?.filter(p => p.isOccupied).map(prop => {
-                          const payment = periodPayments?.find(pm => pm.propertyId === prop.id);
-                          const status = payment?.status || 'not-paid';
-                          const isPaid = status === 'paid';
-                          const isLate = status === 'late';
-                          const imageUrl = getResolvedImageUrl(prop.imageUrl, prop.imageUrls);
-                          
-                          return (
-                            <tr key={prop.id} className="hover:bg-white/[0.02] transition-colors group">
-                              <td className="px-8 py-6">
-                                <div className="flex items-center gap-5">
-                                  <div className="relative h-14 w-14 rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/5 bg-muted shrink-0 flex items-center justify-center">
-                                    {imageUrl ? <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" /> : <Building2 className="w-6 h-6 text-muted-foreground/30" />}
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <span className="font-bold text-base text-foreground truncate block">{prop.addressLine1}</span>
-                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 truncate block mt-0.5">{prop.city}</span>
-                                  </div>
+                  <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
+                    <thead>
+                      <tr className="bg-white/[0.02] sticky top-0 z-10">
+                        <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[40%] bg-card">Asset Identity</th>
+                        <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[25%] bg-card text-center">Monthly Yield</th>
+                        <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[35%] bg-card">Verification Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {properties?.filter(p => p.isOccupied).map(prop => {
+                        const payment = periodPayments?.find(pm => pm.propertyId === prop.id);
+                        const status = payment?.status || 'not-paid';
+                        return (
+                          <tr key={prop.id} className="hover:bg-white/[0.02] transition-colors group">
+                            <td className="px-8 py-6">
+                              <div className="flex items-center gap-5">
+                                <div className="relative h-14 w-14 rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/5 bg-muted shrink-0 flex items-center justify-center">
+                                  {prop.imageUrl ? <img src={prop.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" /> : <Building2 className="w-6 h-6 text-muted-foreground/30" />}
                                 </div>
-                              </td>
-                              <td className="px-8 py-6">
-                                 <div className="flex items-center justify-center gap-3 max-w-[160px] mx-auto bg-background/80 rounded-xl px-4 h-12 border border-white/10 shadow-inner">
-                                    <span className="text-muted-foreground opacity-30 font-bold text-sm">£</span>
-                                    <Input 
-                                       type="number" 
-                                       defaultValue={prop.rentAmount} 
-                                       className="h-10 border-none bg-transparent font-bold text-base focus:ring-0 text-center text-foreground"
-                                       onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)}
-                                    />
-                                 </div>
-                              </td>
-                              <td className="px-8 py-6">
-                                 <div className="flex items-center gap-3">
-                                   <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
-                                     <SelectTrigger className={cn(
-                                       "h-12 w-full rounded-xl border-none font-bold text-[10px] uppercase tracking-[0.15em] shadow-inner px-5 transition-all",
-                                       isPaid ? "bg-emerald-500/10 text-emerald-500" : isLate ? "bg-sky-500/10 text-sky-500" : "bg-amber-500/10 text-amber-500"
-                                     )}>
-                                       <SelectValue />
-                                     </SelectTrigger>
-                                     <SelectContent className="rounded-xl border-white/5 bg-card">
-                                       <SelectItem value="not-paid" className="text-[10px] font-bold uppercase tracking-widest py-3">Not Paid</SelectItem>
-                                       <SelectItem value="paid" className="text-[10px] font-bold uppercase tracking-widest py-3">Paid</SelectItem>
-                                       <SelectItem value="late" className="text-[10px] font-bold uppercase tracking-widest py-3">Paid Late</SelectItem>
-                                     </SelectContent>
-                                   </Select>
-                                 </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                 </div>
+                                <div className="min-w-0 flex-1">
+                                  <span className="font-bold text-base text-foreground truncate block">{prop.addressLine1}</span>
+                                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 truncate block mt-0.5">{prop.city}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-8 py-6">
+                               <div className="flex items-center justify-center gap-3 max-w-[160px] mx-auto bg-background/80 rounded-xl px-4 h-12 border border-white/10 shadow-inner">
+                                  <span className="text-muted-foreground opacity-30 font-bold text-sm">£</span>
+                                  <Input type="number" defaultValue={prop.rentAmount} className="h-10 border-none bg-transparent font-bold text-base focus:ring-0 text-center" onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)} />
+                               </div>
+                            </td>
+                            <td className="px-8 py-6">
+                               <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
+                                 <SelectTrigger className={cn("h-12 w-full rounded-xl border-none font-bold text-[10px] uppercase tracking-[0.15em] shadow-inner px-5", status === 'paid' ? "bg-emerald-500/10 text-emerald-500" : status === 'late' ? "bg-sky-500/10 text-sky-500" : "bg-amber-500/10 text-amber-500")}>
+                                   <SelectValue />
+                                 </SelectTrigger>
+                                 <SelectContent className="rounded-xl border-white/5 bg-card">
+                                   <SelectItem value="not-paid" className="text-[10px] font-bold uppercase py-3">Not Paid</SelectItem>
+                                   <SelectItem value="paid" className="text-[10px] font-bold uppercase py-3">Paid</SelectItem>
+                                   <SelectItem value="late" className="text-[10px] font-bold uppercase py-3">Paid Late</SelectItem>
+                                 </SelectContent>
+                               </Select>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                </ScrollArea>
             </CardContent>
           </Card>
         </div>
 
         <div className="lg:col-span-4 space-y-6">
-          <Card className="border-none shadow-2xl rounded-[2.5rem] bg-card overflow-hidden ring-1 ring-white/5">
-            <CardHeader className="text-left px-6 pt-6 pb-3 border-b border-white/5 bg-white/[0.02]">
-              <CardTitle className="text-lg font-headline flex items-center text-foreground tracking-tight">
-                <ShieldAlert className="w-5 h-5 mr-3 text-accent" />
-                Portfolio Roadmap
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 p-6 text-left">
-               <div className="space-y-3">
-                  {maintenance?.filter(m => m.status !== 'completed').slice(0, 6).map(req => (
-                    <div key={req.id} className="p-4 bg-white/[0.02] rounded-[1.5rem] border border-white/5 flex items-center justify-between text-left group hover:border-accent/30 transition-all min-w-0">
-                       <div className="min-w-0 flex-1 pr-3">
-                          <p className="font-bold text-xs text-foreground truncate group-hover:text-accent transition-colors block">{req.title}</p>
-                          <div className="flex items-center gap-2 mt-1 overflow-hidden">
-                             <Badge variant="outline" className="text-[7px] font-bold uppercase tracking-[0.1em] text-muted-foreground border-white/10 px-2 py-0.5 rounded-full shrink-0">{req.priority}</Badge>
-                             <span className="text-[8px] font-bold text-muted-foreground opacity-30 uppercase tracking-widest truncate">{req.category}</span>
-                          </div>
-                       </div>
-                       <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9 hover:bg-white/5 border border-white/5 shrink-0" asChild>
-                         <Link href="/landlord/maintenance"><Activity className="w-4 h-4 text-foreground" /></Link>
-                       </Button>
-                    </div>
-                  ))}
-               </div>
-               <Button variant="ghost" className="w-full rounded-xl h-10 font-bold text-[9px] uppercase tracking-[0.15em] text-muted-foreground hover:bg-white/5 mt-2" asChild>
-                  <Link href="/landlord/maintenance">View All Repairs</Link>
-               </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border-none shadow-2xl rounded-[2.5rem] bg-card ring-1 ring-border text-card-foreground overflow-hidden p-8 text-left relative group">
+           <Card className="border-none shadow-2xl rounded-[2.5rem] bg-card ring-1 ring-border text-card-foreground overflow-hidden p-8 text-left relative group">
             <div className="relative z-10 space-y-6">
                <div className="space-y-1.5">
                  <h3 className="font-bold font-headline text-xl tracking-tight text-foreground">Financial Hub</h3>
                  <p className="text-xs text-muted-foreground font-medium opacity-70 leading-relaxed">Orchestrate portfolio expenses and insurance records.</p>
                </div>
-               
                <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="w-full rounded-xl bg-accent text-white font-bold h-12 hover:bg-accent/90 transition-all shadow-xl shadow-accent/10 text-[10px] uppercase tracking-[0.15em] border-none">
@@ -515,9 +392,16 @@ export default function LandlordDashboard() {
                         <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Expense Identifier</Label>
                         <Input value={expTitle} onChange={(e) => setExpTitle(e.target.value)} placeholder="e.g. Portfolio Insurance 2026" className="rounded-xl h-12 bg-muted/30 border-none font-bold px-5 text-sm text-foreground" />
                       </div>
+                      <div className="space-y-2">
+                        <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Target Asset</Label>
+                        <select className="flex h-12 w-full rounded-xl border-none bg-muted/30 px-5 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" value={expPropertyId} onChange={(e) => setExpPropertyId(e.target.value)} required>
+                          <option value="">Select Asset...</option>
+                          {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                        </select>
+                      </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Capital Amount (£)</Label>
+                          <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Amount (£)</Label>
                           <Input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="0.00" className="rounded-xl h-12 bg-muted/30 border-none font-bold px-5 text-sm text-foreground" />
                         </div>
                         <div className="space-y-2">
@@ -529,13 +413,6 @@ export default function LandlordDashboard() {
                             <option value="other">Other Capital</option>
                           </select>
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Target Inventory Asset</Label>
-                        <select className="flex h-12 w-full rounded-xl border-none bg-muted/30 px-5 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" value={expPropertyId} onChange={(e) => setExpPropertyId(e.target.value)} required>
-                          <option value="">Select Asset...</option>
-                          {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
-                        </select>
                       </div>
                     </div>
                   </ScrollArea>

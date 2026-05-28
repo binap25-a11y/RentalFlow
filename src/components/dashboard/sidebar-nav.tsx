@@ -32,8 +32,7 @@ interface SidebarNavProps {
 
 /**
  * @fileOverview Hyper-Accelerated Navigation Registry.
- * Implements hardware-accelerated transforms for a premium user experience.
- * Optimized for snappy 150ms transitions and tactile feedback.
+ * Implements hardware-accelerated transforms and snappy 150ms transitions.
  */
 
 export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
@@ -77,25 +76,12 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
     }
   };
 
-  const LOGO_URL = RENTALFLOW_LOGO_URL;
-
   return (
     <Sidebar className="border-r border-sidebar-border shadow-2xl transition-all duration-300">
       <SidebarHeader className="p-6">
-        <Link 
-          href={dashboardHref} 
-          className="flex items-center gap-3 group min-w-0" 
-          onClick={handleItemClick}
-        >
+        <Link href={dashboardHref} className="flex items-center gap-3 group min-w-0" onClick={handleItemClick}>
           <div className="relative h-10 w-10 rounded-xl overflow-hidden shadow-lg transition-transform group-hover:scale-110 shrink-0">
-            <Image 
-              src={LOGO_URL} 
-              alt="RentalFlow" 
-              fill 
-              className="object-cover" 
-              unoptimized 
-              priority
-            />
+            <Image src={RENTALFLOW_LOGO_URL} alt="RentalFlow" fill className="object-cover" unoptimized priority />
           </div>
           <span className="font-headline font-bold text-xl tracking-tight text-sidebar-foreground truncate block">RentalFlow</span>
         </Link>
@@ -129,7 +115,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
             <AvatarImage src={userAvatar} />
             <AvatarFallback className="bg-sidebar-primary/20 text-sidebar-foreground font-bold">{userName[0]}</AvatarFallback>
           </Avatar>
-          <div className="flex flex-col min-w-0 overflow-hidden">
+          <div className="flex flex-col min-w-0 overflow-hidden text-left">
             <span className="text-sm font-semibold truncate text-sidebar-foreground font-body block">{userName}</span>
             <span className="text-xs text-sidebar-foreground/60 capitalize font-headline font-bold truncate block">{role} Account</span>
           </div>
