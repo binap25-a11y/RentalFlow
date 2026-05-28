@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -257,7 +256,7 @@ export default function MaintenancePage() {
                       {request.priority}
                     </Badge>
                     <span className="text-[9px] text-muted-foreground font-bold uppercase flex items-center tracking-widest opacity-60 font-headline truncate">
-                      <Clock className="w-3.5 h-3.5 mr-1.5 shrink-0" /> {request.createdAt ? format(new Date(request.createdAt.seconds * 1000), 'p') : 'Just now'}
+                      <Clock className="w-3.5 h-3.5 mr-1.5 shrink-0" /> {request.createdAt ? format(new Date(request.createdAt.seconds * 1000), 'PPp') : 'Just now'}
                     </span>
                   </div>
                 </div>
