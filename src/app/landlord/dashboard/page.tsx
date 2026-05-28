@@ -504,7 +504,7 @@ export default function LandlordDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { title: "Gross Annual Potential", val: `£${financialStats.annualGross.toLocaleString()}`, Icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5", href: "/landlord/properties" },
-          { title: "Portfolio Expenses (YTD)", val: `£${financialStats.totalExpenses.toLocaleString()}`, Icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", href: "/landlord/maintenance" },
+          { title: "Portfolio Expenses (YTD)", val: `£${financialStats.totalExpenses.toLocaleString()}`, Icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", href: "#expense-hub" },
           { title: "Net Annual Forecast", val: `£${financialStats.netAnnualForecast.toLocaleString()}`, Icon: TrendingUp, color: "text-accent", bg: "bg-accent/5" },
           { title: `${months[selectedMonth - 1].substring(0, 3)} Collected`, val: `£${financialStats.actualCollectedThisPeriod.toLocaleString()}`, Icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats.collectionRate, href: "#rent-ledger" }
         ].map((stat, i) => {
@@ -645,7 +645,7 @@ export default function LandlordDashboard() {
         </div>
 
         <div className="lg:col-span-4 space-y-6">
-           <Card className="border-none shadow-2xl rounded-[2.5rem] bg-card ring-1 ring-border text-card-foreground overflow-hidden p-8 text-left relative group">
+           <Card id="expense-hub" className="border-none shadow-2xl rounded-[2.5rem] bg-card ring-1 ring-border text-card-foreground overflow-hidden p-8 text-left relative group">
             <div className="relative z-10 space-y-6">
                <div className="space-y-1.5">
                  <h3 className="font-bold font-headline text-xl tracking-tight text-foreground">Expense Hub</h3>
