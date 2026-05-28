@@ -34,6 +34,17 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 /**
  * @fileOverview Premium Contractor & SOS Directory.
@@ -320,7 +331,26 @@ export default function LandlordEmergencyContactsPage() {
                     </div>
                     <div className="flex gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button variant="ghost" size="sm" className="h-8 px-3 text-[10px] font-bold text-muted-foreground hover:bg-primary/5 rounded-lg" onClick={() => handleEdit(service)}>EDIT</Button>
-                      <Button variant="ghost" size="sm" className="h-8 px-3 text-[10px] font-bold text-red-500 hover:bg-red-500/10 rounded-lg" onClick={() => handleDelete(service.id)}>DELETE</Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 px-3 text-[10px] font-bold text-red-500 hover:bg-red-500/10 rounded-lg">DELETE</Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="rounded-3xl border-none shadow-2xl bg-card">
+                          <AlertDialogHeader className="text-left">
+                            <AlertDialogTitle className="font-headline font-bold text-xl text-foreground">Remove Emergency Protocol?</AlertDialogTitle>
+                            <AlertDialogDescription className="text-muted-foreground font-medium mt-2">This will remove this SOS line from all resident directories. Are you sure?</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter className="mt-6 gap-3">
+                            <AlertDialogCancel className="rounded-xl h-12 font-bold uppercase tracking-widest text-[10px] border-border">Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => handleDelete(service.id)}
+                              className="rounded-xl h-12 font-bold bg-red-600 text-white uppercase tracking-widest text-[10px] hover:bg-red-700 border-none"
+                            >
+                              Purge Protocol
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                 ))
@@ -351,9 +381,28 @@ export default function LandlordEmergencyContactsPage() {
                         <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5" onClick={() => handleEdit(contact)}>
                           <Edit3 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-destructive/40 hover:text-destructive hover:bg-destructive/5" onClick={() => handleDelete(contact.id)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-destructive/40 hover:text-destructive hover:bg-destructive/5"><Trash2 className="w-4 h-4" /></Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="rounded-3xl border-none shadow-2xl bg-card">
+                            <AlertDialogHeader className="text-left">
+                              <AlertDialogTitle className="font-headline font-bold text-xl text-foreground">Remove Trade Partner?</AlertDialogTitle>
+                              <AlertDialogDescription className="text-muted-foreground font-medium mt-2">
+                                This will remove <strong>{contact.name}</strong> from your authorized contractor database and revoke their visibility for assigned residents.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter className="mt-6 gap-3">
+                              <AlertDialogCancel className="rounded-xl h-12 font-bold uppercase tracking-widest text-[10px] border-border">Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleDelete(contact.id)}
+                                className="rounded-xl h-12 font-bold bg-red-600 text-white uppercase tracking-widest text-[10px] hover:bg-red-700 border-none"
+                              >
+                                Purge Partner
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                     <CardTitle className="text-xl font-bold font-headline mt-6 text-foreground tracking-tight">{contact.name}</CardTitle>
@@ -389,3 +438,4 @@ export default function LandlordEmergencyContactsPage() {
     </div>
   );
 }
+

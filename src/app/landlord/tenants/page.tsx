@@ -30,6 +30,17 @@ import { Users, Plus, Mail, Phone, Trash2, Search, Loader2, UserX, Edit3, Save }
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function TenantsPage() {
   const { user } = useUser();
@@ -295,7 +306,29 @@ export default function TenantsPage() {
                       <td className="px-10 py-8 text-right shrink-0">
                         <div className="flex justify-end gap-3">
                           <Button variant="ghost" size="icon" className="h-11 w-11 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-xl transition-all" onClick={() => handleEditClick(tenant)}><Edit3 className="w-5 h-5" /></Button>
-                          <Button variant="ghost" size="icon" className="h-11 w-11 text-destructive/40 hover:text-white hover:bg-red-500 rounded-xl transition-all" onClick={() => handleDeleteTenant(tenant)}><Trash2 className="w-5 h-5" /></Button>
+                          
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-11 w-11 text-destructive/40 hover:text-white hover:bg-red-500 rounded-xl transition-all"><Trash2 className="w-5 h-5" /></Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="rounded-3xl border-none shadow-2xl bg-card">
+                              <AlertDialogHeader className="text-left">
+                                <AlertDialogTitle className="font-headline font-bold text-xl text-foreground">Remove Resident?</AlertDialogTitle>
+                                <AlertDialogDescription className="text-muted-foreground font-medium mt-2">
+                                  This will permanently detach <strong>{tenant.firstName} {tenant.lastName}</strong> from their assigned asset and purge their residency profile.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter className="mt-6 gap-3">
+                                <AlertDialogCancel className="rounded-xl h-12 font-bold uppercase tracking-widest text-[10px] border-border">Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => handleDeleteTenant(tenant)}
+                                  className="rounded-xl h-12 font-bold bg-red-600 text-white uppercase tracking-widest text-[10px] hover:bg-red-700 border-none"
+                                >
+                                  Confirm Removal
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </td>
                     </tr>
@@ -309,3 +342,4 @@ export default function TenantsPage() {
     </div>
   );
 }
+

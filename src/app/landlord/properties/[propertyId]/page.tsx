@@ -51,6 +51,17 @@ import { syncDocumentToDb } from '@/lib/actions/db-sync';
 import { format } from 'date-fns';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Image from "next/image";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -324,8 +335,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     </CarouselItem>
                   ))}
                 </CarouselContent>
-                <CarouselPrevious className="left-6 bg-black/40 border-none shadow-2xl text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                <CarouselNext className="right-6 bg-black/40 border-none shadow-2xl text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                {gallery.length > 1 && (
+                  <>
+                    <CarouselPrevious className="left-6 bg-black/40 border-none shadow-2xl text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <CarouselNext className="right-6 bg-black/40 border-none shadow-2xl text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </>
+                )}
               </Carousel>
             ) : (
               <div className="relative h-[400px] md:h-[550px] w-full bg-gradient-to-br from-primary/10 to-accent/5 flex flex-col items-center justify-center gap-4">
@@ -517,9 +532,30 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                         <Button variant="ghost" size="icon" asChild className="h-12 w-12 rounded-2xl text-muted-foreground hover:text-accent hover:bg-white/5 border border-white/5">
                           <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer"><Download className="w-5 h-5" /></a>
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl text-destructive/40 hover:text-destructive hover:bg-destructive/5 border border-white/5" onClick={() => handleDeleteDocument(doc.id)}>
-                          <Trash2 className="w-5 h-5" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl text-destructive/40 hover:text-destructive hover:bg-destructive/5 border border-white/5">
+                              <Trash2 className="w-5 h-5" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="rounded-3xl border-none shadow-2xl bg-card">
+                            <AlertDialogHeader className="text-left">
+                              <AlertDialogTitle className="font-headline font-bold text-xl text-foreground">Purge Vault Record?</AlertDialogTitle>
+                              <AlertDialogDescription className="text-muted-foreground font-medium mt-2">
+                                This will permanently remove <strong>{doc.fileName}</strong> from the property vault. Residents will no longer have access to this binary asset.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter className="mt-6 gap-3">
+                              <AlertDialogCancel className="rounded-xl h-12 font-bold uppercase tracking-widest text-[10px] border-border">Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleDeleteDocument(doc.id)}
+                                className="rounded-xl h-12 font-bold bg-red-600 text-white uppercase tracking-widest text-[10px] hover:bg-red-700 border-none"
+                              >
+                                Purge Document
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   ))
@@ -647,3 +683,4 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     </div>
   );
 }
+

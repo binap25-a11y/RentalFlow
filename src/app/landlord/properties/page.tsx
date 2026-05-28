@@ -16,6 +16,17 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { cn, getResolvedImageUrl } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function PropertiesPage() {
   const { user } = useUser();
@@ -257,9 +268,31 @@ export default function PropertiesPage() {
                           <Button variant="outline" className="flex-1 md:flex-none rounded-xl font-bold h-11 px-6 border-border text-foreground hover:bg-accent/10 hover:text-accent" onClick={() => handleRestoreProperty(property.id)}>
                             <RotateCcw className="w-4 h-4 mr-2" /> Restore
                           </Button>
-                          <Button variant="ghost" className="flex-1 md:flex-none rounded-xl font-bold h-11 px-6 text-destructive/60 hover:text-white hover:bg-red-500" onClick={() => handlePermanentDelete(property.id)}>
-                            <Trash2 className="w-4 h-4 mr-2" /> Permanently Delete
-                          </Button>
+
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" className="flex-1 md:flex-none rounded-xl font-bold h-11 px-6 text-destructive/60 hover:text-white hover:bg-red-500">
+                                <Trash2 className="w-4 h-4 mr-2" /> Permanently Delete
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl bg-card p-10">
+                              <AlertDialogHeader className="text-left">
+                                <AlertDialogTitle className="text-2xl font-headline font-bold text-foreground">Purge Asset Record?</AlertDialogTitle>
+                                <AlertDialogDescription className="text-muted-foreground font-medium text-base mt-2">
+                                  This action is irreversible. All maintenance history, financial ledgers, and site audits associated with <strong>{property.addressLine1}</strong> will be permanently synchronized and deleted.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter className="mt-8 gap-3">
+                                <AlertDialogCancel className="rounded-xl h-12 font-bold font-headline uppercase tracking-widest text-[10px] border-border">Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => handlePermanentDelete(property.id)}
+                                  className="rounded-xl h-12 font-bold bg-red-600 hover:bg-red-700 text-white font-headline uppercase tracking-widest text-[10px] border-none"
+                                >
+                                  Purge Record
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </CardContent>
                     </Card>
@@ -273,3 +306,4 @@ export default function PropertiesPage() {
     </div>
   );
 }
+

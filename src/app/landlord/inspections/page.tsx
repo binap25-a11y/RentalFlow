@@ -33,6 +33,17 @@ import { cn, compressImage, withRetry } from "@/lib/utils";
 import { generateInspectionReport } from "@/ai/flows/generate-inspection-report";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 import Image from 'next/image';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const INSPECTION_SECTIONS = [
   {
@@ -138,7 +149,6 @@ export default function InspectionsPage() {
 
     try {
       const optimizedBlob = await compressImage(file);
-      // ATOMIC PATH PROTOCOL: uid/propertyId/timestamp-filename
       const path = `${user.uid}/${activeInspection.propertyId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       
       const publicUrl = await withRetry(async () => {
@@ -301,7 +311,28 @@ export default function InspectionsPage() {
                         <div className="flex items-center justify-between">
                           <Badge variant={inspection.status === 'completed' ? 'secondary' : 'default'} className="uppercase font-bold text-[10px] font-headline tracking-widest rounded-full">{inspection.status}</Badge>
                           <div className="flex gap-2">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-lg" onClick={() => handleDeleteInspection(inspection.id)}><Trash2 className="w-4 h-4" /></Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-lg"><Trash2 className="w-4 h-4" /></Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="rounded-3xl border-none shadow-2xl bg-card">
+                                <AlertDialogHeader className="text-left">
+                                  <AlertDialogTitle className="font-headline font-bold text-xl text-foreground">Remove Audit Record?</AlertDialogTitle>
+                                  <AlertDialogDescription className="text-muted-foreground font-medium mt-2">
+                                    This will permanently remove the audit roadmap and findings for this property. This action cannot be reversed.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter className="mt-6 gap-3">
+                                  <AlertDialogCancel className="rounded-xl h-12 font-bold uppercase tracking-widest text-[10px] border-border">Cancel</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => handleDeleteInspection(inspection.id)}
+                                    className="rounded-xl h-12 font-bold bg-red-600 text-white uppercase tracking-widest text-[10px] hover:bg-red-700 border-none"
+                                  >
+                                    Purge Audit
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </div>
                         <div className="text-left">
@@ -426,3 +457,4 @@ export default function InspectionsPage() {
     </div>
   );
 }
+

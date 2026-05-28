@@ -491,48 +491,46 @@ export default function LandlordDashboard() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[85vh] max-w-[500px] ring-1 ring-white/10">
-                  <div className="flex flex-col h-full overflow-hidden">
-                    <div className="p-8 bg-primary/5 border-b border-white/5 text-left shrink-0">
-                      <DialogTitle className="text-xl font-bold font-headline text-foreground tracking-tight">Register Expense</DialogTitle>
-                      <DialogDescription className="text-xs font-medium text-muted-foreground mt-1.5">Record insurance, maintenance, or portfolio costs.</DialogDescription>
-                    </div>
-                    <ScrollArea className="flex-1">
-                      <div className="p-8 space-y-6 text-left">
+                  <div className="p-8 bg-primary/5 border-b border-white/5 text-left shrink-0">
+                    <DialogTitle className="text-xl font-bold font-headline text-foreground tracking-tight">Register Expense</DialogTitle>
+                    <DialogDescription className="text-xs font-medium text-muted-foreground mt-1.5">Record insurance, maintenance, or portfolio costs.</DialogDescription>
+                  </div>
+                  <ScrollArea className="flex-1">
+                    <div className="p-8 space-y-6 text-left">
+                      <div className="space-y-2">
+                        <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Expense Identifier</Label>
+                        <Input value={expTitle} onChange={(e) => setExpTitle(e.target.value)} placeholder="e.g. Portfolio Insurance 2026" className="rounded-xl h-12 bg-muted/30 border-none font-bold px-5 text-sm text-foreground" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Expense Identifier</Label>
-                          <Input value={expTitle} onChange={(e) => setExpTitle(e.target.value)} placeholder="e.g. Portfolio Insurance 2026" className="rounded-xl h-12 bg-muted/30 border-none font-bold px-5 text-sm text-foreground" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Capital Amount (£)</Label>
-                            <Input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="0.00" className="rounded-xl h-12 bg-muted/30 border-none font-bold px-5 text-sm text-foreground" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Category</Label>
-                            <select className="flex h-12 w-full rounded-xl border-none bg-muted/30 px-5 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" value={expCategory} onChange={(e) => setExpCategory(e.target.value)}>
-                              <option value="insurance">Insurance</option>
-                              <option value="maintenance">Maintenance</option>
-                              <option value="tax">Tax/Compliance</option>
-                              <option value="other">Other Capital</option>
-                            </select>
-                          </div>
+                          <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Capital Amount (£)</Label>
+                          <Input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="0.00" className="rounded-xl h-12 bg-muted/30 border-none font-bold px-5 text-sm text-foreground" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Target Inventory Asset</Label>
-                          <select className="flex h-12 w-full rounded-xl border-none bg-muted/30 px-5 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" value={expPropertyId} onChange={(e) => setExpPropertyId(e.target.value)} required>
-                            <option value="">Select Asset...</option>
-                            {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                          <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Category</Label>
+                          <select className="flex h-12 w-full rounded-xl border-none bg-muted/30 px-5 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" value={expCategory} onChange={(e) => setExpCategory(e.target.value)}>
+                            <option value="insurance">Insurance</option>
+                            <option value="maintenance">Maintenance</option>
+                            <option value="tax">Tax/Compliance</option>
+                            <option value="other">Other Capital</option>
                           </select>
                         </div>
                       </div>
-                    </ScrollArea>
-                    <DialogFooter className="p-8 bg-muted/5 border-t border-white/5 shrink-0">
-                      <Button onClick={handleLogManualExpense} type="button" className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.2em] text-[10px] border-none" disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
-                        {isSavingExpense ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                        Commit to Ledger
-                      </Button>
-                    </DialogFooter>
-                  </div>
+                      <div className="space-y-2">
+                        <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Target Inventory Asset</Label>
+                        <select className="flex h-12 w-full rounded-xl border-none bg-muted/30 px-5 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" value={expPropertyId} onChange={(e) => setExpPropertyId(e.target.value)} required>
+                          <option value="">Select Asset...</option>
+                          {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  </ScrollArea>
+                  <DialogFooter className="p-8 bg-muted/5 border-t border-white/5 shrink-0">
+                    <Button onClick={handleLogManualExpense} type="button" className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.2em] text-[10px] border-none" disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
+                      {isSavingExpense ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                      Commit to Ledger
+                    </Button>
+                  </DialogFooter>
                 </DialogContent>
                </Dialog>
             </div>
@@ -542,3 +540,4 @@ export default function LandlordDashboard() {
     </div>
   );
 }
+
