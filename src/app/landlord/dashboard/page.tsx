@@ -81,6 +81,7 @@ import {
  * Integration: Stat cards wired with high-fidelity navigation.
  * Resolved: Expense visibility - Added Recent Outlays audit trail with Edit/Delete controls.
  * Fixed: Temporal Integrity - Added isValid checks to prevent RangeError on invalid dates.
+ * Performance: Synchronized for real-time financial updates.
  */
 
 export default function LandlordDashboard() {
@@ -181,7 +182,7 @@ export default function LandlordDashboard() {
     const monthlyGrossPotential = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
     const annualGross = monthlyGrossPotential * 12;
     
-    // REFINED YTD EXPENSE CALCULATION
+    // REFINED YTD EXPENSE CALCULATION - Reactive to maintenance collection
     const totalExpenses = maintenance
       .filter(m => {
         if (!activePropertyIds.has(m.propertyId) || m.status !== 'completed' || !m.scheduledDate) return false;
@@ -724,7 +725,7 @@ export default function LandlordDashboard() {
                 </DialogContent>
                </Dialog>
 
-               {/* EXPENSE AUDIT TRAIL: Provides visibility for items like the £160 outlay */}
+               {/* EXPENSE AUDIT TRAIL: Reactive list for real-time verification */}
                <div className="pt-6 border-t border-border space-y-4">
                   <div className="flex items-center justify-between">
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 font-headline">Recent Outlays</p>
