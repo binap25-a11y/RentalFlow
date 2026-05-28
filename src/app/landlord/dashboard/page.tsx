@@ -44,6 +44,7 @@ import { useToast } from "@/hooks/use-toast";
 /**
  * @fileOverview Landlord Insight Hub.
  * Optimized for active-asset financials and structural stability.
+ * Thematic update: Forecast card now follows light/dark mode protocols.
  */
 
 export default function LandlordDashboard() {
@@ -241,22 +242,22 @@ export default function LandlordDashboard() {
         {[
           { title: "Gross Annual Potential", val: `£${financialStats.annualGross.toLocaleString()}`, Icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5", Indicator: ArrowUpRight },
           { title: "Portfolio Expenses (YTD)", val: `£${financialStats.totalExpenses.toLocaleString()}`, Icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", Indicator: ArrowDownRight },
-          { title: "Net Annual Forecast", val: `£${financialStats.netAnnualForecast.toLocaleString()}`, Icon: TrendingUp, color: "text-primary-foreground", bg: "bg-primary", isPrimary: true },
+          { title: "Net Annual Forecast", val: `£${financialStats.netAnnualForecast.toLocaleString()}`, Icon: TrendingUp, color: "text-accent", bg: "bg-accent/5" },
           { title: `${months[selectedMonth - 1].substring(0, 3)} Collected`, val: `£${financialStats.actualCollectedThisPeriod.toLocaleString()}`, Icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats.collectionRate }
         ].map((stat, i) => {
           const IconComp = stat.Icon;
           return (
-            <Card key={i} className={cn("border-none shadow-sm rounded-[2rem] overflow-hidden group hover:scale-[1.01] transition-all", stat.isPrimary ? "bg-primary text-primary-foreground" : "bg-card ring-1 ring-white/5")}>
+            <Card key={i} className="border-none shadow-sm rounded-[2rem] overflow-hidden group hover:scale-[1.01] transition-all bg-card ring-1 ring-white/5">
               <CardContent className="pt-8 text-left px-6">
                 <div className="flex items-center justify-between mb-6">
-                  <div className={cn("p-3 rounded-xl shadow-inner border border-white/5 transition-transform group-hover:scale-110", stat.bg, !stat.isPrimary && stat.color)}>
+                  <div className={cn("p-3 rounded-xl shadow-inner border border-white/5 transition-transform group-hover:scale-110", stat.bg, stat.color)}>
                     <IconComp className="w-6 h-6" />
                   </div>
                 </div>
                 <div className="space-y-2 min-w-0">
-                  <p className="text-3xl font-bold font-headline tracking-tighter">{stat.val}</p>
-                  {stat.progress !== undefined && <Progress value={stat.progress} className="h-1.5 bg-white/10" />}
-                  <p className="text-[9px] font-bold uppercase tracking-[0.1em] font-headline opacity-50">{stat.title}</p>
+                  <p className="text-3xl font-bold font-headline tracking-tighter text-foreground">{stat.val}</p>
+                  {stat.progress !== undefined && <Progress value={stat.progress} className="h-1.5 bg-muted" />}
+                  <p className="text-[9px] font-bold uppercase tracking-[0.1em] font-headline opacity-50 text-muted-foreground">{stat.title}</p>
                 </div>
               </CardContent>
             </Card>
@@ -276,12 +277,12 @@ export default function LandlordDashboard() {
             <CardContent className="h-[380px] p-8">
                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: 'rgba(255,255,255,0.3)'}} dy={15} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: 'rgba(255,255,255,0.3)'}} />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: 'rgba(0,0,0,0.3)'}} dy={15} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: 'rgba(0,0,0,0.3)'}} />
                     <Tooltip 
-                      cursor={{fill: 'rgba(255,255,255,0.03)', radius: 12}}
-                      contentStyle={{borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', backgroundColor: 'rgba(10,10,10,0.95)', backdropFilter: 'blur(12px)', padding: '12px'}}
+                      cursor={{fill: 'rgba(0,0,0,0.03)', radius: 12}}
+                      contentStyle={{borderRadius: '16px', border: '1px solid rgba(0,0,0,0.05)', backgroundColor: 'hsl(var(--card))', backdropFilter: 'blur(12px)', padding: '12px'}}
                       itemStyle={{fontWeight: 800, color: 'hsl(var(--accent))', fontSize: '11px'}}
                     />
                     <Bar dataKey="rent" radius={[12, 12, 0, 0]} barSize={45}>
@@ -316,7 +317,7 @@ export default function LandlordDashboard() {
                <ScrollArea className="h-[600px] w-full overflow-auto">
                   <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
                     <thead>
-                      <tr className="bg-white/[0.02] sticky top-0 z-10">
+                      <tr className="bg-muted/10 sticky top-0 z-10">
                         <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[40%] bg-card">Asset Identity</th>
                         <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[25%] bg-card text-center">Monthly Rent</th>
                         <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[35%] bg-card">Verification Status</th>
@@ -327,7 +328,7 @@ export default function LandlordDashboard() {
                         const payment = periodPayments?.find(pm => pm.propertyId === prop.id);
                         const status = payment?.status || 'not-paid';
                         return (
-                          <tr key={prop.id} className="hover:bg-white/[0.02] transition-colors group">
+                          <tr key={prop.id} className="hover:bg-muted/5 transition-colors group">
                             <td className="px-8 py-6">
                               <div className="flex items-center gap-5">
                                 <div className="relative h-14 w-14 rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/5 bg-muted shrink-0 flex items-center justify-center">
@@ -342,7 +343,7 @@ export default function LandlordDashboard() {
                             <td className="px-8 py-6">
                                <div className="flex items-center justify-center gap-3 max-w-[160px] mx-auto bg-background/80 rounded-xl px-4 h-12 border border-white/10 shadow-inner">
                                   <span className="text-muted-foreground opacity-30 font-bold text-sm">£</span>
-                                  <Input type="number" defaultValue={prop.rentAmount} className="h-10 border-none bg-transparent font-bold text-base focus:ring-0 text-center" onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)} />
+                                  <Input type="number" defaultValue={prop.rentAmount} className="h-10 border-none bg-transparent font-bold text-base focus:ring-0 text-center text-foreground" onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)} />
                                </div>
                             </td>
                             <td className="px-8 py-6">
