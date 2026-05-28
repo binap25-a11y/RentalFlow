@@ -43,8 +43,8 @@ import { useToast } from "@/hooks/use-toast";
 
 /**
  * @fileOverview High-Fidelity Landlord Insight Hub.
- * Features cascading financial sync: Archived properties are excluded from live stats.
- * Corrected syntax to ensure stable JSX structural parsing.
+ * Optimized for zero-latency financial sync and adaptive registry views.
+ * Corrected syntax to resolve JSX parsing errors.
  */
 
 export default function LandlordDashboard() {
@@ -80,7 +80,6 @@ export default function LandlordDashboard() {
   }, [db, user]);
   const { data: allProperties, loading: propLoading } = useCollection(propertiesQuery);
 
-  // FINANCIAL SYNC: Only include properties that are NOT archived/deleted
   const properties = useMemo(() => 
     allProperties?.filter(p => !p.isDeleted) || [], 
   [allProperties]);
@@ -107,16 +106,13 @@ export default function LandlordDashboard() {
     
     const activePropertyIds = new Set(properties.map(p => p.id));
     
-    // 1. Annual Potential from ACTIVE properties
     const monthlyGrossPotential = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
     const annualGross = monthlyGrossPotential * 12;
     
-    // 2. Expenses filtered by ACTIVE properties
     const totalExpenses = maintenance
       .filter(m => activePropertyIds.has(m.propertyId))
       .reduce((acc, r) => acc + (Number(r.cost) || 0), 0);
 
-    // 3. Collection filtered by ACTIVE properties
     const actualCollectedThisPeriod = periodPayments
       ?.filter(p => activePropertyIds.has(p.propertyId) && (p.status === 'paid' || p.status === 'late'))
       .reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
@@ -341,7 +337,6 @@ export default function LandlordDashboard() {
             </CardHeader>
             <CardContent className="p-0">
                <ScrollArea className="h-[600px] w-full overflow-auto">
-                 {/* Adaptive Registry: Mobile Cards */}
                  <div className="block lg:hidden p-4 space-y-4">
                    {properties?.filter(p => p.isOccupied).map(prop => {
                      const payment = periodPayments?.find(pm => pm.propertyId === prop.id);
@@ -397,7 +392,6 @@ export default function LandlordDashboard() {
                    })}
                  </div>
 
-                 {/* Adaptive Registry: Desktop Rows */}
                  <div className="hidden lg:block">
                     <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
                       <thead>

@@ -30,8 +30,7 @@ import {
 
 /**
  * @fileOverview High-Fidelity Portfolio Registry.
- * Implements Cascading Delete Protocol for financial and operational consistency.
- * Optimized: Deleting a property now purges all scheduled inspections.
+ * Implements Cascading Delete Protocol for financial, operational, and compliance consistency.
  */
 
 export default function PropertiesPage() {
@@ -92,7 +91,7 @@ export default function PropertiesPage() {
     const propertyRef = doc(db, 'properties', propertyId);
     deleteDocumentNonBlocking(propertyRef);
 
-    // 2. Cascade Delete all related records (Inspections, Repairs, Finance)
+    // 2. Cascade Delete all related records (Inspections/Compliance, Repairs, Finance)
     const relatedCollections = [
       'maintenanceRequests',
       'inspections',
@@ -116,7 +115,7 @@ export default function PropertiesPage() {
 
     toast({ 
       title: "Asset Purged", 
-      description: "Scheduled inspections and all historical records removed." 
+      description: "Compliance Ledger and financial records updated." 
     });
   };
 
@@ -272,7 +271,7 @@ export default function PropertiesPage() {
                               <AlertDialogHeader className="text-left">
                                 <AlertDialogTitle className="text-2xl font-headline font-bold text-foreground">Purge Asset Record?</AlertDialogTitle>
                                 <AlertDialogDescription className="text-muted-foreground font-medium text-base mt-2">
-                                  This action is irreversible. All <strong>scheduled inspections</strong>, maintenance history, and financial ledgers for <strong>{property.addressLine1}</strong> will be permanently purged.
+                                  This action is irreversible. All <strong>Compliance Ledger</strong> entries (Inspections), maintenance history, and financial ledgers for <strong>{property.addressLine1}</strong> will be permanently purged.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter className="mt-8 gap-3">

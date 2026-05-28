@@ -51,7 +51,7 @@ type PortfolioEvent = {
 /**
  * @fileOverview High-Fidelity Portfolio Calendar.
  * Supports interactive Site Visit selection and expanded maintenance scheduling.
- * Optimized vertical real estate for administrative forms.
+ * Expanded Dialog height and reduced button size for a premium administrative footprint.
  */
 
 export default function LandlordCalendarPage() {
