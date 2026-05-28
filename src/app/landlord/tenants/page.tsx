@@ -183,15 +183,15 @@ export default function TenantsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto pb-12 text-left">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="min-w-0 flex-1">
+      <div className="space-y-6">
+        <div className="min-w-0">
           <h1 className="text-3xl font-headline font-bold text-foreground mb-2 tracking-tight">Portfolio Residents</h1>
           <p className="text-muted-foreground font-medium font-body text-sm opacity-70">Managing tenant identities and high-fidelity lease assignments.</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20 font-headline text-primary-foreground px-6 transition-all hover:scale-[1.02] shrink-0 text-xs uppercase tracking-widest">
+            <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20 font-headline text-primary-foreground px-6 transition-all hover:scale-[1.02] shrink-0 text-xs uppercase tracking-widest w-fit">
               <Plus className="w-4 h-4 mr-2" />
               Assign New Resident
             </Button>
@@ -242,7 +242,7 @@ export default function TenantsPage() {
               </ScrollArea>
 
               <DialogFooter className="p-10 bg-muted/5 border-t border-white/5 shrink-0">
-                <Button type="submit" disabled={isSubmitting || !selectedPropertyId} className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 font-headline text-sm uppercase tracking-widest hover:opacity-90 hover:scale-[1.01] transition-transform">
+                <Button type="submit" disabled={isSubmitting || !selectedPropertyId} className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/20 font-headline text-sm uppercase tracking-widest hover:opacity-90 hover:scale-[1.01] transition-transform">
                   {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
                   {editingTenant ? "Update Resident Record" : "Confirm Assignment"}
                 </Button>
