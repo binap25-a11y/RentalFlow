@@ -273,7 +273,7 @@ export default function LandlordDashboard() {
               <CardTitle className="text-xl font-headline flex items-center text-foreground tracking-tight">
                 <BarChart3 className="w-6 h-6 mr-3 text-accent" />
                 Rent Distribution
-              </BarChart3>
+              </CardTitle>
             </CardHeader>
             <CardContent className="h-[380px] p-8">
                <ResponsiveContainer width="100%" height="100%">
