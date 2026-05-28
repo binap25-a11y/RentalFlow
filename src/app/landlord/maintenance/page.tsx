@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -56,6 +57,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from 'next/link';
+import { notifyTenantOfUpdate } from '@/lib/actions/email-actions';
 
 export default function MaintenancePage() {
   const { user } = useUser();
@@ -195,6 +197,20 @@ export default function MaintenancePage() {
     if (!user || !db) return;
     const requestRef = doc(db, 'maintenanceRequests', request.id);
     updateDocumentNonBlocking(requestRef, { status: newStatus, updatedAt: serverTimestamp() });
+    
+    // 📧 TENANT UPDATE ORCHESTRATION
+    if (request.tenantId && request.tenantId !== 'landlord-direct') {
+      try {
+        const property = properties?.find(p => p.id === request.propertyId);
+        await notifyTenantOfUpdate({
+          tenantEmail: request.tenantId, // Fallback for email-based IDs
+          propertyAddress: property?.addressLine1 || 'Property Asset',
+          status: newStatus,
+          title: request.title
+        });
+      } catch (err) {}
+    }
+
     toast({ title: "Status Updated", description: `Task transitioned to ${newStatus}.` });
   };
 

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,11 +41,11 @@ import {
 } from "@/components/ui/select";
 import { collection, doc, serverTimestamp, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { sendRentReceiptEmail } from "@/lib/actions/email-actions";
 
 /**
  * @fileOverview Landlord Insight Hub.
- * Optimized for active-asset financials and structural stability.
- * Features: Themed Period Selectors (Light/Dark mode responsive) and Horizontal Scroll Ledger.
+ * Optimized for active-asset financials and professional verification.
  */
 
 export default function LandlordDashboard() {
@@ -141,7 +142,7 @@ export default function LandlordDashboard() {
     toast({ title: "Rent Adjusted" });
   };
 
-  const handleQuickStatusUpdate = (prop: any, status: string) => {
+  const handleQuickStatusUpdate = async (prop: any, status: string) => {
     if (!user || !db) return;
     const paymentId = `${prop.id}-${selectedMonth}-${selectedYear}`;
     const paymentRef = doc(db, 'rentPayments', paymentId);
@@ -161,6 +162,21 @@ export default function LandlordDashboard() {
     };
 
     setDocumentNonBlocking(paymentRef, payload, { merge: true });
+
+    // 📧 RECEIPT ORCHESTRATION
+    if ((status === 'paid' || status === 'late') && prop.tenantIds?.[0] && prop.tenantIds[0] !== 'landlord-direct') {
+      try {
+        await sendRentReceiptEmail({
+          tenantEmail: prop.tenantIds[0],
+          tenantName: 'Resident',
+          propertyAddress: prop.addressLine1,
+          amount: prop.rentAmount || 0,
+          month: months[selectedMonth - 1],
+          paymentDate: new Date().toLocaleDateString()
+        });
+      } catch (err) {}
+    }
+
     toast({ title: "Ledger Synchronized" });
   };
 
@@ -302,7 +318,6 @@ export default function LandlordDashboard() {
                 <ReceiptText className="w-6 h-6 mr-3 text-accent" />
                 Monthly Rent Ledger
               </CardTitle>
-              {/* THEMED PERIOD SELECTOR: Light on Light / Dark on Dark */}
               <div className="flex items-center gap-1 bg-background p-1.5 rounded-2xl border border-border shrink-0 transition-colors duration-300 shadow-sm">
                 <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(Number(v))}>
                   <SelectTrigger className="h-9 w-[115px] border-none bg-transparent font-bold text-[10px] uppercase tracking-widest focus:ring-0">

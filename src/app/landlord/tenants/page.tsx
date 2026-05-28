@@ -42,10 +42,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { sendTenantWelcomeEmail } from '@/lib/actions/email-actions';
 
 /**
  * @fileOverview High-Fidelity Resident Directory.
- * Optimized with Real-Time Occupancy Synchronization: Updating a resident ensures the assigned property is "Occupied" on the Portfolio Inventory.
+ * Optimized with Real-Time Occupancy Synchronization and Welcome Orchestration.
  */
 
 export default function TenantsPage() {
@@ -117,12 +118,12 @@ export default function TenantsPage() {
         updatedAt: serverTimestamp() 
       };
 
+      const property = properties?.find(p => p.id === selectedPropertyId);
       let targetTenantId = '';
 
       if (editingTenant) {
         targetTenantId = editingTenant.userId || emailLower;
         
-        // If property changed, handle the old property cleanup
         if (editingTenant.propertyId !== selectedPropertyId) {
           updateDocumentNonBlocking(doc(db, 'properties', editingTenant.propertyId), {
             tenantIds: arrayRemove(targetTenantId),
@@ -133,7 +134,6 @@ export default function TenantsPage() {
 
         updateDocumentNonBlocking(doc(db, 'tenantProfiles', editingTenant.id), tenantPayload);
         
-        // 🏠 SYNC PROPERTY STATE (OCCUPANCY ENFORCEMENT)
         updateDocumentNonBlocking(doc(db, 'properties', selectedPropertyId), { 
           isOccupied: true, 
           tenantIds: arrayUnion(targetTenantId), 
@@ -158,16 +158,23 @@ export default function TenantsPage() {
           createdAt: serverTimestamp() 
         }, { merge: true });
 
-        // 🏠 SYNC NEW PROPERTY STATE
         updateDocumentNonBlocking(doc(db, 'properties', selectedPropertyId), { 
           isOccupied: true, 
           tenantIds: arrayUnion(placeholderUserId), 
           memberIds: arrayUnion(placeholderUserId), 
           updatedAt: serverTimestamp() 
         });
+
+        // 📧 WELCOME ORCHESTRATION
+        try {
+          await sendTenantWelcomeEmail({
+            tenantEmail: emailLower,
+            tenantName: firstName,
+            propertyAddress: property?.addressLine1 || 'Property Asset'
+          });
+        } catch (err) {}
       }
 
-      // Proactively grant visibility to relevant contacts
       const contactsRef = collection(db, 'emergencyContacts');
       const pq = query(contactsRef, where('propertyId', '==', selectedPropertyId));
       const pSnaps = await getDocs(pq);
@@ -195,7 +202,6 @@ export default function TenantsPage() {
   const handleDeleteTenant = (tenant: any) => {
     if (!user || !db) return;
 
-    // Remove tenant from property roster and update occupancy
     if (tenant.propertyId) {
       updateDocumentNonBlocking(doc(db, 'properties', tenant.propertyId), {
         tenantIds: arrayRemove(tenant.userId || tenant.email),
