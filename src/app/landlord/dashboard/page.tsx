@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,6 +80,7 @@ import {
  * Added: Tax Reporting Hub for HMRC self-assessment statements.
  * Integration: Stat cards wired with high-fidelity navigation.
  * Resolved: Expense visibility - Added Recent Outlays audit trail with Edit/Delete controls.
+ * Fixed: Temporal Integrity - Added isValid checks to prevent RangeError on invalid dates.
  */
 
 export default function LandlordDashboard() {
@@ -281,7 +281,7 @@ export default function LandlordDashboard() {
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
 
   const handleLogManualExpense = () => {
-    if (!user || !db || !expAmount || !expPropertyId || !expTitle || !expDate) return;
+    if (!user || !db || !expAmount || !expPropertyId || !expTitle || !expDate || !isValid(expDate)) return;
     setIsSavingExpense(true);
     
     const requestId = editingExpenseId || doc(collection(db, 'maintenanceRequests')).id;
@@ -334,7 +334,7 @@ export default function LandlordDashboard() {
     setExpAmount(exp.cost.toString());
     setExpPropertyId(exp.propertyId);
     setExpCategory(exp.category || 'other');
-    setExpDate(new Date(exp.scheduledDate));
+    setExpDate(exp.scheduledDate ? new Date(exp.scheduledDate) : new Date());
     setIsExpenseDialogOpen(true);
   };
 
@@ -432,7 +432,7 @@ export default function LandlordDashboard() {
       propertyExpenses.forEach((exp) => {
         if (y > 270) { pdf.addPage(); y = 20; }
         const d = new Date(exp.scheduledDate);
-        pdf.text(format(d, 'dd/MM/yyyy'), 20, y);
+        pdf.text(isValid(d) ? format(d, 'dd/MM/yyyy') : 'N/A', 20, y);
         pdf.text(exp.title.substring(0, 30), 50, y);
         pdf.text(exp.category || 'Other', 120, y);
         pdf.text(Number(exp.cost).toFixed(2), 170, y, { align: 'right' });
@@ -684,7 +684,7 @@ export default function LandlordDashboard() {
                           <CalendarIcon className="absolute left-4 top-4 h-5 w-5 text-accent opacity-60 z-10" />
                           <Input 
                             type="date"
-                            value={expDate ? format(expDate, 'yyyy-MM-dd') : ''}
+                            value={expDate && isValid(expDate) ? format(expDate, 'yyyy-MM-dd') : ''}
                             onChange={(e) => {
                               const d = e.target.value ? new Date(e.target.value) : undefined;
                               setExpDate(d);
@@ -716,7 +716,7 @@ export default function LandlordDashboard() {
                     </div>
                   </ScrollArea>
                   <DialogFooter className="p-8 bg-muted/5 border-t border-white/5 shrink-0">
-                    <Button onClick={handleLogManualExpense} type="button" className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.2em] text-[11px] border-none hover:scale-[1.01] transition-transform" disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle || !expDate}>
+                    <Button onClick={handleLogManualExpense} type="button" className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.2em] text-[11px] border-none hover:scale-[1.01] transition-transform" disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle || !expDate || !isValid(expDate)}>
                       {isSavingExpense ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
                       {editingExpenseId ? "Synchronize Record" : "Commit to Financial Ledger"}
                     </Button>
