@@ -46,7 +46,7 @@ import { useToast } from "@/hooks/use-toast";
 /**
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
  * Optimized for real-time financial tracking and elite inline management.
- * Features a vertically and horizontally scrollable "Month Ledge" with unified Status & Action cells.
+ * Features the "Tri-State Verification" protocol: Paid, Not Paid, Paid Late.
  */
 
 export default function LandlordDashboard() {
@@ -105,7 +105,10 @@ export default function LandlordDashboard() {
     if (!isClient || !properties || !maintenance) return { annualGross: 0, totalExpenses: 0, netAnnualForecast: 0, collectionRate: 0, actualCollectedThisMonth: 0 };
     const monthlyGrossPotential = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
     const annualGross = monthlyGrossPotential * 12;
-    const actualCollectedThisMonth = currentMonthPayments?.filter(p => p.status === 'paid').reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
+    
+    // TRI-STATE CALCULATION: Sum both "Paid" and "Paid Late" statuses
+    const actualCollectedThisMonth = currentMonthPayments?.filter(p => p.status === 'paid' || p.status === 'late').reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
+    
     const totalExpenses = maintenance.reduce((acc, r) => acc + (Number(r.cost) || 0), 0);
     const netAnnualForecast = annualGross - totalExpenses;
     const collectionRate = monthlyGrossPotential > 0 ? (actualCollectedThisMonth / monthlyGrossPotential) * 100 : 0;
@@ -148,7 +151,7 @@ export default function LandlordDashboard() {
       year: now.getFullYear(),
       memberIds: prop.memberIds || [user.uid],
       updatedAt: serverTimestamp(),
-      paidAt: status === 'paid' ? new Date().toISOString() : null
+      paidAt: (status === 'paid' || status === 'late') ? new Date().toISOString() : null
     };
 
     setDocumentNonBlocking(paymentRef, payload, { merge: true });
@@ -157,7 +160,7 @@ export default function LandlordDashboard() {
 
   const [activePaymentEdit, setActivePaymentEdit] = useState<any>(null);
   const [editAmount, setEditAmount] = useState('');
-  const [editStatus, setEditStatus] = useState<'paid' | 'pending'>('pending');
+  const [editStatus, setEditStatus] = useState<'paid' | 'pending' | 'late'>('pending');
   const [isSavingPayment, setIsSavingPayment] = useState(false);
 
   const handleOpenLedgerEdit = (prop: any, payment: any) => {
@@ -185,7 +188,7 @@ export default function LandlordDashboard() {
       year: now.getFullYear(),
       memberIds: prop.memberIds || [user.uid],
       updatedAt: serverTimestamp(),
-      paidAt: editStatus === 'paid' ? new Date().toISOString() : null
+      paidAt: (editStatus === 'paid' || editStatus === 'late') ? new Date().toISOString() : null
     };
 
     setDocumentNonBlocking(paymentRef, payload, { merge: true });
@@ -358,8 +361,11 @@ export default function LandlordDashboard() {
                      <tbody className="divide-y divide-white/5">
                        {properties?.filter(p => p.isOccupied).map(prop => {
                          const payment = currentMonthPayments?.find(pm => pm.propertyId === prop.id);
-                         const isPaid = payment?.status === 'paid';
+                         const status = payment?.status || 'pending';
+                         const isPaid = status === 'paid';
+                         const isLate = status === 'late';
                          const imageUrl = getResolvedImageUrl(prop.imageUrl, prop.imageUrls);
+                         
                          return (
                            <tr key={prop.id} className="hover:bg-white/[0.02] transition-colors group">
                              <td className="px-6 py-2.5 min-w-0">
@@ -390,16 +396,20 @@ export default function LandlordDashboard() {
                              </td>
                              <td className="px-6 py-2.5">
                                 <div className="flex items-center gap-4">
-                                  <Select defaultValue={payment?.status || 'pending'} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
+                                  {/* TRI-STATE STATUS DROPDOWN */}
+                                  <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
                                     <SelectTrigger className={cn(
-                                      "h-9 w-[220px] rounded-lg border-none font-bold text-[9px] uppercase tracking-widest shadow-sm px-4 shrink-0",
-                                      isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
+                                      "h-9 w-[200px] rounded-lg border-none font-bold text-[9px] uppercase tracking-widest shadow-sm px-4 shrink-0 transition-all",
+                                      isPaid ? "bg-emerald-500/10 text-emerald-500" : 
+                                      isLate ? "bg-sky-500/10 text-sky-500" :
+                                      "bg-amber-500/10 text-amber-500"
                                     )}>
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl border-white/5 bg-card">
-                                      <SelectItem value="pending" className="text-[9px] font-bold uppercase tracking-widest py-3">Pending</SelectItem>
-                                      <SelectItem value="paid" className="text-[9px] font-bold uppercase tracking-widest py-3">Receipted</SelectItem>
+                                      <SelectItem value="pending" className="text-[9px] font-bold uppercase tracking-widest py-3">Not Paid</SelectItem>
+                                      <SelectItem value="paid" className="text-[9px] font-bold uppercase tracking-widest py-3">Paid</SelectItem>
+                                      <SelectItem value="late" className="text-[9px] font-bold uppercase tracking-widest py-3">Paid Late</SelectItem>
                                     </SelectContent>
                                   </Select>
                                   
@@ -407,7 +417,7 @@ export default function LandlordDashboard() {
                                     <Button variant="ghost" size="icon" className="rounded-lg h-9 w-9 hover:bg-white/5 border border-white/5 shrink-0" onClick={() => handleOpenLedgerEdit(prop, payment)}>
                                       <Settings2 className="w-3.5 h-3.5 text-muted-foreground" />
                                     </Button>
-                                    {!isPaid && (
+                                    {!isPaid && !isLate && (
                                       <Button size="sm" className="rounded-lg h-9 px-4 font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-xl shadow-primary/10 shrink-0 uppercase tracking-widest text-[9px]" onClick={() => handleOpenLedgerEdit(prop, payment)}>
                                         Process
                                       </Button>
@@ -552,13 +562,13 @@ export default function LandlordDashboard() {
                           value={editAmount} 
                           onChange={(e) => setEditAmount(e.target.value)} 
                           className="rounded-2xl h-20 bg-background/80 border border-white/10 font-bold px-8 text-4xl shadow-2xl text-foreground focus:ring-2 focus:ring-accent transition-all" 
-                          placeholder="0.00" 
+                          placeholder="e.g. 1500.00" 
                        />
                        <div className="absolute right-8 top-6 opacity-20 font-bold text-xl">GBP</div>
                     </div>
                 </div>
 
-                {/* 🔄 COLLECTION STATE: No-overlap hierarchy */}
+                {/* 🔄 TRI-STATE COLLECTION STATE: Paid, Not Paid, Paid Late */}
                 <div className="space-y-5 bg-muted/30 p-8 rounded-[2.5rem] border border-border/50 shadow-inner">
                     <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-accent/10 rounded-xl text-accent border border-accent/20">
@@ -567,12 +577,15 @@ export default function LandlordDashboard() {
                         <Label className="font-bold text-[11px] uppercase text-foreground tracking-[0.2em] font-headline">Collection Status</Label>
                     </div>
                     <Tabs value={editStatus} onValueChange={(v) => setEditStatus(v as any)}>
-                        <TabsList className="grid grid-cols-2 h-16 bg-background/50 border-none p-2 gap-2 rounded-2xl shadow-inner">
-                            <TabsTrigger value="pending" className="rounded-xl font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-2xl transition-all h-full border-none">
-                                Pending
+                        <TabsList className="grid grid-cols-3 h-16 bg-background/50 border-none p-2 gap-2 rounded-2xl shadow-inner">
+                            <TabsTrigger value="pending" className="rounded-xl font-bold text-[9px] uppercase tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-2xl transition-all h-full border-none">
+                                Not Paid
                             </TabsTrigger>
-                            <TabsTrigger value="paid" className="rounded-xl font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-2xl transition-all h-full border-none">
-                                Receipted
+                            <TabsTrigger value="paid" className="rounded-xl font-bold text-[9px] uppercase tracking-widest data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-2xl transition-all h-full border-none">
+                                Paid
+                            </TabsTrigger>
+                            <TabsTrigger value="late" className="rounded-xl font-bold text-[9px] uppercase tracking-widest data-[state=active]:bg-sky-500 data-[state=active]:text-white data-[state=active]:shadow-2xl transition-all h-full border-none">
+                                Paid Late
                             </TabsTrigger>
                         </TabsList>
                     </Tabs>
