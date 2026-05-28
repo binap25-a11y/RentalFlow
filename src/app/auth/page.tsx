@@ -20,7 +20,7 @@ import { RENTALFLOW_LOGO_URL } from '@/lib/utils';
 /**
  * @fileOverview Hyper-Accelerated Authentication Pipeline.
  * Optimized for zero-flicker loading and atomic redirection.
- * 'Return Home' relocated below brand identity for superior vertical hierarchy.
+ * CALIBRATED: Loading animations and redirect logic optimized for extreme performance.
  */
 
 export default function AuthPage() {
@@ -68,7 +68,7 @@ export default function AuthPage() {
               return;
             }
             
-            // ATOMIC DASHBOARD JUMP
+            // ATOMIC DASHBOARD JUMP: Immediate routing
             router.replace(userData.role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
           } else {
             setNeedsProfile(true);
@@ -160,13 +160,13 @@ export default function AuthPage() {
     }
   };
 
-  // CINEMATIC SYNCHRONIZATION OVERLAY
+  // CINEMATIC SYNCHRONIZATION OVERLAY: Optimized for perceived speed (200ms)
   if (!mounted || isUserLoading || (user && !needsProfile)) {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center bg-background z-[100] animate-in fade-in duration-300">
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-background z-[100] animate-in fade-in duration-200">
         <div className="relative flex flex-col items-center">
-          <div className="relative w-24 h-24 mb-10 animate-in zoom-in duration-500">
-            <div className="absolute inset-0 bg-primary/10 rounded-[2rem] blur-3xl animate-pulse" />
+          <div className="relative w-24 h-24 mb-10 animate-in zoom-in duration-300">
+            <div className="absolute inset-0 bg-primary/10 rounded-[2rem] blur-3xl" />
             <div className="relative z-10 w-full h-full rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 bg-card">
               <Image src={RENTALFLOW_LOGO_URL} alt="RentalFlow" fill className="object-cover" unoptimized priority />
             </div>
@@ -182,7 +182,7 @@ export default function AuthPage() {
 
   if (needsProfile && user) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-left animate-in fade-in duration-500">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-left animate-in fade-in duration-300">
         <Card className="w-full max-w-xl border-none shadow-2xl bg-card overflow-hidden rounded-[2.5rem] ring-1 ring-border">
           <CardHeader className="text-center bg-primary/5 pb-10 pt-12 border-b">
             <CardTitle className="text-3xl font-headline font-bold text-foreground tracking-tight">Identity Establishment</CardTitle>
@@ -222,7 +222,7 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative animate-in fade-in duration-700">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative animate-in fade-in duration-500">
       <div className="max-w-xl w-full text-center">
         <div className="mb-12 inline-flex flex-col items-center">
           <div className="relative h-24 w-24 rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 mb-6 bg-card">
@@ -251,7 +251,7 @@ export default function AuthPage() {
                 <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground focus:ring-2 focus:ring-accent" />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Password Ledger</Label>
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Password Ledger</Label>
                 <div className="relative">
                   <Input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="h-12 rounded-xl bg-muted/20 border-none font-bold pr-12 text-foreground focus:ring-2 focus:ring-accent" />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-3 text-muted-foreground/40 hover:text-accent transition-colors">

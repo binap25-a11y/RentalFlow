@@ -28,6 +28,7 @@ import { useRouter } from 'next/navigation';
 /**
  * @fileOverview High-Fidelity Portfolio Entry Point.
  * Optimized for cinematic landing and intentional exposure before redirection.
+ * CALIBRATED: Redirection delay optimized to 1.5s for superior responsiveness.
  */
 
 export default function LandingPage() {
@@ -48,13 +49,13 @@ export default function LandingPage() {
     setMounted(true);
   }, []);
 
-  // CINEMATIC REDIRECTION: Intentional delay to allow landing page exposure
+  // CINEMATIC REDIRECTION: Optimized for professional speed (1.5s)
   useEffect(() => {
     if (mounted && user && !isProfileLoading && profile) {
       const timer = setTimeout(() => {
         setIsRedirecting(true);
         router.replace(profile.role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
-      }, 2500); // 2.5s delay to ensure the user can see the landing content
+      }, 1500); // Optimized from 2.5s to 1.5s for superior perceived performance
       
       return () => clearTimeout(timer);
     }
@@ -67,26 +68,24 @@ export default function LandingPage() {
     }
   };
 
-  // PREVENT HYDRATION FLICKER ONLY
+  // HYPER-ACCELERATED MOUNT: Zero-delay entry
   if (!mounted) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100]">
-        <Loader2 className="w-8 h-8 animate-spin text-accent opacity-20" />
-      </div>
+      <div className="fixed inset-0 bg-background z-[100] transition-opacity duration-300" />
     );
   }
 
   return (
     <div className={cn(
-      "min-h-screen bg-background font-body selection:bg-accent/30 selection:text-white overflow-x-hidden text-left transition-opacity duration-1000",
-      isRedirecting ? "opacity-0 scale-95" : "opacity-100"
+      "min-h-screen bg-background font-body selection:bg-accent/30 selection:text-white overflow-x-hidden text-left transition-all duration-1000",
+      isRedirecting ? "opacity-0 scale-[0.99] grayscale-[0.5]" : "opacity-100"
     )}>
-      {/* AUTH STATUS OVERLAY - DISCREET & THEMED */}
+      {/* AUTH STATUS OVERLAY - THEMED & ACCELERATED */}
       {user && !isProfileLoading && !isRedirecting && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] animate-in slide-in-from-bottom-10 duration-1000">
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] animate-in slide-in-from-bottom-5 duration-700">
            <div className="bg-background/80 backdrop-blur-xl border border-border px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl ring-1 ring-black/5">
               <Loader2 className="w-3.5 h-3.5 animate-spin text-accent" />
-              <span className="text-[10px] font-bold text-foreground uppercase tracking-[0.2em] font-headline">Synchronizing Your Vault...</span>
+              <span className="text-[10px] font-bold text-foreground uppercase tracking-[0.2em] font-headline">Synchronizing Vault</span>
            </div>
         </div>
       )}
@@ -119,7 +118,7 @@ export default function LandingPage() {
       <section className="relative pt-48 pb-40 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-accent/10 blur-[120px] rounded-full -z-10 opacity-30" />
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
-          <div className="text-left space-y-10 animate-in fade-in slide-in-from-bottom-12 duration-700">
+          <div className="text-left space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
             <div className="space-y-4">
               <Badge variant="outline" className="py-2 px-5 rounded-full border-accent/20 bg-accent/5 text-accent font-bold uppercase tracking-[0.25em] text-[10px]">
                 <Sparkles className="w-3.5 h-3.5 mr-2" /> High-Fidelity Operations
@@ -153,7 +152,7 @@ export default function LandingPage() {
                 <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/30 font-headline">Awaiting visual identity</p>
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60" />
-              <div className="absolute bottom-12 left-10 right-10 glass p-10 rounded-[2.5rem] animate-in slide-in-from-bottom-10 duration-1000 delay-500">
+              <div className="absolute bottom-12 left-10 right-10 glass p-10 rounded-[2.5rem] animate-in slide-in-from-bottom-10 duration-1000 delay-300">
                  <div className="flex justify-between items-center">
                     <div className="text-left space-y-1">
                       <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-accent font-headline">Verified Asset Identity</p>
@@ -200,7 +199,7 @@ export default function LandingPage() {
                 bg: "bg-emerald-500/10" 
               }
             ].map((f, i) => (
-              <Card key={i} className="border-none shadow-sm rounded-[3rem] p-12 bg-card hover:shadow-2xl transition-all duration-500 group text-left ring-1 ring-white/5 hover:ring-white/10 hover:scale-[1.02]">
+              <Card key={i} className="border-none shadow-sm rounded-[3rem] p-12 bg-card hover:shadow-2xl transition-all duration-500 group text-left ring-1 ring-white/5 hover:ring-white/10 hover:scale-[1.01]">
                 <div className={cn("p-6 rounded-[2rem] w-fit mb-10 group-hover:scale-110 transition-transform duration-500", f.bg, f.color)}>
                    <f.icon className="w-10 h-10" />
                 </div>
