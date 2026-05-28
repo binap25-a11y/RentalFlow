@@ -7,9 +7,9 @@ import {
   ShieldAlert, Loader2, CheckCircle2,
   Plus, Save, ReceiptText,
   Crown, ShieldCheck, PoundSterling, ArrowUpRight, ArrowDownRight,
-  Activity, BarChart3, CalendarDays, X
+  Activity, BarChart3, CalendarDays
 } from "lucide-react";
-import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -208,13 +208,13 @@ export default function LandlordDashboard() {
   }
 
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const years = Array.from({length: 5}, (_, i) => new Date().getFullYear() - 2 + i);
+  const yearsList = Array.from({length: 5}, (_, i) => new Date().getFullYear() - 2 + i);
 
   const statConfig = [
     { title: "Gross Annual Potential", val: `£${financialStats.annualGross.toLocaleString()}`, Icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5", Indicator: ArrowUpRight },
     { title: "Portfolio Expenses (YTD)", val: `£${financialStats.totalExpenses.toLocaleString()}`, Icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", Indicator: ArrowDownRight },
     { title: "Net Annual Forecast", val: `£${financialStats.netAnnualForecast.toLocaleString()}`, Icon: TrendingUp, color: "text-primary-foreground", bg: "bg-primary", isPrimary: true },
-    { title: `${format(new Date(selectedYear, selectedMonth - 1), 'MMM')} Collected`, val: `£${financialStats.actualCollectedThisPeriod.toLocaleString()}`, Icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats.collectionRate }
+    { title: `${months[selectedMonth - 1].substring(0, 3)} Collected`, val: `£${financialStats.actualCollectedThisPeriod.toLocaleString()}`, Icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats.collectionRate }
   ];
 
   return (
@@ -326,7 +326,7 @@ export default function LandlordDashboard() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-white/5 bg-card">
-                    {years.map(y => <SelectItem key={y} value={y.toString()} className="text-[10px] font-bold py-2">{y}</SelectItem>)}
+                    {yearsList.map(y => <SelectItem key={y} value={y.toString()} className="text-[10px] font-bold py-2">{y}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -496,16 +496,16 @@ export default function LandlordDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-2xl rounded-[2.5rem] bg-accent text-white overflow-hidden p-8 text-left relative group">
-             <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+          <Card className="border-none shadow-2xl rounded-[2.5rem] bg-card ring-1 ring-border text-card-foreground overflow-hidden p-8 text-left relative group">
+             <div className="absolute -top-10 -right-10 w-32 h-32 bg-accent/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             <div className="relative z-10 space-y-6">
                <div className="space-y-1.5">
-                 <h3 className="font-bold font-headline text-xl tracking-tight">Financial Hub</h3>
-                 <p className="text-xs text-white/70 font-medium leading-relaxed">Orchestrate portfolio expenses and insurance records.</p>
+                 <h3 className="font-bold font-headline text-xl tracking-tight text-foreground">Financial Hub</h3>
+                 <p className="text-xs text-muted-foreground font-medium leading-relaxed">Orchestrate portfolio expenses and insurance records.</p>
                </div>
                
                <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
-                <Button className="w-full rounded-[1.25rem] bg-white text-accent font-bold h-12 hover:bg-white/90 transition-all shadow-2xl shadow-black/20 text-[10px] uppercase tracking-[0.15em] border-none" onClick={() => setIsExpenseDialogOpen(true)}>
+                <Button className="w-full rounded-xl bg-accent text-white font-bold h-12 hover:bg-accent/90 transition-all shadow-xl shadow-accent/10 text-[10px] uppercase tracking-[0.15em] border-none" onClick={() => setIsExpenseDialogOpen(true)}>
                   <Plus className="w-4 h-4 mr-2" /> Register Ledger Item
                 </Button>
                 <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[85vh] max-w-[500px] ring-1 ring-white/10">

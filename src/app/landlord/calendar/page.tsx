@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -245,18 +246,18 @@ export default function LandlordCalendarPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm rounded-[2rem] bg-primary text-primary-foreground overflow-hidden p-8 relative group">
-            <div className="absolute -top-10 -right-10 opacity-10 group-hover:rotate-12 transition-transform duration-700 text-foreground">
+          <Card className="border-none shadow-sm rounded-[2rem] bg-card text-card-foreground ring-1 ring-border overflow-hidden p-8 relative group">
+            <div className="absolute -top-10 -right-10 opacity-5 group-hover:rotate-12 transition-transform duration-700 text-foreground">
                <Clock className="w-32 h-32" />
             </div>
             <div className="relative z-10 space-y-4">
               <h3 className="text-lg font-bold font-headline flex items-center gap-3 text-accent uppercase tracking-widest">
                  <Clock className="w-5 h-5" /> Quick Actions
               </h3>
-              <p className="text-xs opacity-80 leading-relaxed font-body font-medium">Select a date to view current site visits or log a new repair directly to the roadmap.</p>
+              <p className="text-xs text-muted-foreground opacity-80 leading-relaxed font-body font-medium">Select a date to view current site visits or log a new repair directly to the roadmap.</p>
               <Button 
                 variant="outline"
-                className="w-full rounded-xl bg-white text-primary hover:bg-white/90 hover:text-primary font-bold h-12 shadow-lg transition-all hover:scale-[1.02] text-xs uppercase tracking-widest font-headline border-none" 
+                className="w-full rounded-xl bg-accent text-white hover:bg-accent/90 border-none font-bold h-12 shadow-lg transition-all hover:scale-[1.02] text-xs uppercase tracking-widest font-headline" 
                 onClick={() => setIsAddRepairOpen(true)}
               >
                  <Plus className="w-4 h-4 mr-2" /> Schedule Task
