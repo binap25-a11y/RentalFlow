@@ -7,7 +7,7 @@ import {
   ShieldAlert, Loader2, CheckCircle2,
   Plus, Save, ReceiptText,
   Crown, ShieldCheck, PoundSterling, ArrowUpRight, ArrowDownRight,
-  Activity, BarChart3, Settings2
+  Activity, BarChart3, CalendarDays
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
@@ -45,8 +45,8 @@ import { useToast } from "@/hooks/use-toast";
 
 /**
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
- * Optimized for real-time financial tracking and elite inline management.
- * Features the "Tri-State Verification" protocol: Paid, Not Paid, Paid Late.
+ * Optimized for real-time financial tracking and historical ledger navigation.
+ * Implements the Deterministic Monthly Ledger Protocol (DMLP).
  */
 
 export default function LandlordDashboard() {
@@ -55,6 +55,10 @@ export default function LandlordDashboard() {
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
   const [isAdminEscalated, setIsAdminEscalated] = useState(false);
+
+  // LEDGER PERIOD STATE
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
   useEffect(() => {
     setIsClient(true);
@@ -89,31 +93,31 @@ export default function LandlordDashboard() {
   }, [db, user]);
   const { data: maintenance } = useCollection(maintenanceQuery);
 
+  // DETERMINISTIC LEDGER QUERY
   const paymentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    const now = new Date();
     return query(
       collection(db, 'rentPayments'),
       where('landlordId', '==', user.uid),
-      where('month', '==', now.getMonth() + 1),
-      where('year', '==', now.getFullYear())
+      where('month', '==', selectedMonth),
+      where('year', '==', selectedYear)
     );
-  }, [db, user]);
-  const { data: currentMonthPayments } = useCollection(paymentsQuery);
+  }, [db, user, selectedMonth, selectedYear]);
+  const { data: periodPayments } = useCollection(paymentsQuery);
 
   const financialStats = useMemo(() => {
-    if (!isClient || !properties || !maintenance) return { annualGross: 0, totalExpenses: 0, netAnnualForecast: 0, collectionRate: 0, actualCollectedThisMonth: 0 };
+    if (!isClient || !properties || !maintenance) return { annualGross: 0, totalExpenses: 0, netAnnualForecast: 0, collectionRate: 0, actualCollectedThisPeriod: 0 };
     const monthlyGrossPotential = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
     const annualGross = monthlyGrossPotential * 12;
     
-    // TRI-STATE CALCULATION: Sum both "Paid" and "Paid Late" statuses
-    const actualCollectedThisMonth = currentMonthPayments?.filter(p => p.status === 'paid' || p.status === 'late').reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
+    // TRI-STATE CALCULATION: Aggregate Paid + Paid Late for the VIEWED period
+    const actualCollectedThisPeriod = periodPayments?.filter(p => p.status === 'paid' || p.status === 'late').reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
     
     const totalExpenses = maintenance.reduce((acc, r) => acc + (Number(r.cost) || 0), 0);
     const netAnnualForecast = annualGross - totalExpenses;
-    const collectionRate = monthlyGrossPotential > 0 ? (actualCollectedThisMonth / monthlyGrossPotential) * 100 : 0;
-    return { annualGross, totalExpenses, netAnnualForecast, collectionRate, actualCollectedThisMonth };
-  }, [properties, maintenance, currentMonthPayments, isClient]);
+    const collectionRate = monthlyGrossPotential > 0 ? (actualCollectedThisPeriod / monthlyGrossPotential) * 100 : 0;
+    return { annualGross, totalExpenses, netAnnualForecast, collectionRate, actualCollectedThisPeriod };
+  }, [properties, maintenance, periodPayments, isClient]);
 
   const chartData = useMemo(() => {
     if (!isClient || !properties) return [];
@@ -123,7 +127,7 @@ export default function LandlordDashboard() {
     })).slice(0, 8);
   }, [properties, isClient]);
 
-  // INLINE LEDGER ACTIONS
+  // INLINE LEDGER ACTIONS (Deterministic Month/Year)
   const handleQuickRentUpdate = (propertyId: string, amount: string) => {
     if (!db) return;
     const propertyRef = doc(db, 'properties', propertyId);
@@ -136,8 +140,8 @@ export default function LandlordDashboard() {
 
   const handleQuickStatusUpdate = (prop: any, status: string) => {
     if (!user || !db) return;
-    const now = new Date();
-    const paymentId = `${prop.id}-${now.getMonth() + 1}-${now.getFullYear()}`;
+    // DETERMINISTIC ID PROTOCOL: propertyId-month-year
+    const paymentId = `${prop.id}-${selectedMonth}-${selectedYear}`;
     const paymentRef = doc(db, 'rentPayments', paymentId);
 
     const payload = {
@@ -147,15 +151,15 @@ export default function LandlordDashboard() {
       tenantId: prop.tenantIds?.[0] || 'landlord-direct',
       amount: prop.rentAmount || 0,
       status: status,
-      month: now.getMonth() + 1,
-      year: now.getFullYear(),
+      month: selectedMonth,
+      year: selectedYear,
       memberIds: prop.memberIds || [user.uid],
       updatedAt: serverTimestamp(),
       paidAt: (status === 'paid' || status === 'late') ? new Date().toISOString() : null
     };
 
     setDocumentNonBlocking(paymentRef, payload, { merge: true });
-    toast({ title: "Ledger Synchronized" });
+    toast({ title: "Ledger Synchronized", description: `Record updated for ${format(new Date(selectedYear, selectedMonth - 1), 'MMMM yyyy')}` });
   };
 
   const [activePaymentEdit, setActivePaymentEdit] = useState<any>(null);
@@ -163,18 +167,11 @@ export default function LandlordDashboard() {
   const [editStatus, setEditStatus] = useState<'paid' | 'pending' | 'late'>('pending');
   const [isSavingPayment, setIsSavingPayment] = useState(false);
 
-  const handleOpenLedgerEdit = (prop: any, payment: any) => {
-    setActivePaymentEdit({ prop, payment });
-    setEditAmount(payment?.amount?.toString() || prop.rentAmount?.toString() || '');
-    setEditStatus(payment?.status || 'pending');
-  };
-
   const handleSavePayment = async () => {
     if (!user || !db || !activePaymentEdit) return;
     setIsSavingPayment(true);
     const { prop, payment } = activePaymentEdit;
-    const now = new Date();
-    const paymentId = payment?.id || `${prop.id}-${now.getMonth() + 1}-${now.getFullYear()}`;
+    const paymentId = payment?.id || `${prop.id}-${selectedMonth}-${selectedYear}`;
     const paymentRef = doc(db, 'rentPayments', paymentId);
 
     const payload = {
@@ -184,8 +181,8 @@ export default function LandlordDashboard() {
       tenantId: prop.tenantIds?.[0] || 'landlord-direct',
       amount: Number(editAmount),
       status: editStatus,
-      month: now.getMonth() + 1,
-      year: now.getFullYear(),
+      month: selectedMonth,
+      year: selectedYear,
       memberIds: prop.memberIds || [user.uid],
       updatedAt: serverTimestamp(),
       paidAt: (editStatus === 'paid' || editStatus === 'late') ? new Date().toISOString() : null
@@ -246,20 +243,23 @@ export default function LandlordDashboard() {
 
   const statConfig = [
     { title: "Gross Annual Potential", val: `£${financialStats.annualGross.toLocaleString()}`, Icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5", Indicator: ArrowUpRight },
-    { title: "Portfolio Expenses (Year To Date)", val: `£${financialStats.totalExpenses.toLocaleString()}`, Icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", Indicator: ArrowDownRight },
+    { title: "Portfolio Expenses (YTD)", val: `£${financialStats.totalExpenses.toLocaleString()}`, Icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", Indicator: ArrowDownRight },
     { title: "Net Annual Forecast", val: `£${financialStats.netAnnualForecast.toLocaleString()}`, Icon: TrendingUp, color: "text-primary-foreground", bg: "bg-primary", isPrimary: true },
-    { title: "Current Month Collected", val: `£${financialStats.actualCollectedThisMonth.toLocaleString()}`, Icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats.collectionRate }
+    { title: `${format(new Date(selectedYear, selectedMonth - 1), 'MMM')} Collected`, val: `£${financialStats.actualCollectedThisPeriod.toLocaleString()}`, Icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats.collectionRate }
   ];
+
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const years = Array.from({length: 5}, (_, i) => new Date().getFullYear() - 2 + i);
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-12">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4 text-left border-b border-white/5 pb-6">
         <div className="min-w-0 flex-1">
            <Badge variant="outline" className="bg-accent/5 text-accent border-accent/20 px-3 py-1 rounded-full font-bold uppercase tracking-[0.2em] text-[9px] mb-3">
-              <Activity className="w-3.5 h-3.5 mr-2" /> Real-Time Command Hub
+              <Activity className="w-3.5 h-3.5 mr-2" /> Financial Pulse Hub
            </Badge>
           <h1 className="text-3xl md:text-4xl font-headline font-bold text-foreground mb-1 tracking-tight">Portfolio Insights</h1>
-          <p className="text-muted-foreground font-medium font-body max-w-xl opacity-70 text-sm">Unified financial command and operational analytics.</p>
+          <p className="text-muted-foreground font-medium font-body max-w-xl opacity-70 text-sm">Unified command and monthly collection analytics.</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           {!isPro && (
@@ -311,9 +311,9 @@ export default function LandlordDashboard() {
               <div className="flex justify-between items-center">
                  <CardTitle className="text-xl font-headline flex items-center text-foreground tracking-tight">
                    <BarChart3 className="w-6 h-6 mr-3 text-accent" />
-                   Rent Distribution
-                 </CardTitle>
-                 <Badge variant="outline" className="border-white/10 text-[8px] font-bold uppercase tracking-[0.15em] font-headline opacity-60 shrink-0">Asset Performance</Badge>
+                   Yield Distribution
+                 </BarChart3>
+                 <Badge variant="outline" className="border-white/10 text-[8px] font-bold uppercase tracking-[0.15em] font-headline opacity-60 shrink-0">Performance Snapshot</Badge>
               </div>
             </CardHeader>
             <CardContent className="h-[380px] p-8">
@@ -339,26 +339,46 @@ export default function LandlordDashboard() {
           </Card>
 
           <Card className="border-none shadow-2xl rounded-[2.5rem] bg-card overflow-hidden ring-1 ring-white/5">
-            <CardHeader className="text-left px-8 pt-8 pb-4 border-b border-white/5 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 bg-white/[0.01]">
+            <CardHeader className="text-left px-8 pt-8 pb-4 border-b border-white/5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-white/[0.01]">
               <CardTitle className="text-xl font-headline flex items-center text-foreground tracking-tight">
                 <ReceiptText className="w-6 h-6 mr-3 text-accent" />
                 Monthly Rent Ledger
               </CardTitle>
-              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em] font-headline opacity-40 shrink-0">{format(new Date(), 'MMMM yyyy')} Registry</p>
+              
+              {/* PERIOD SELECTOR HUB */}
+              <div className="flex items-center gap-2 bg-muted/20 p-1.5 rounded-2xl border border-white/5 shadow-inner shrink-0">
+                <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(Number(v))}>
+                  <SelectTrigger className="h-9 w-[130px] border-none bg-transparent font-bold text-[10px] uppercase tracking-widest text-foreground focus:ring-0">
+                    <CalendarDays className="w-3.5 h-3.5 mr-2 opacity-40" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-white/5 bg-card">
+                    {months.map((m, i) => <SelectItem key={m} value={(i + 1).toString()} className="text-[10px] font-bold uppercase py-2">{m}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(Number(v))}>
+                  <SelectTrigger className="h-9 w-[90px] border-none bg-transparent font-bold text-[10px] uppercase tracking-widest text-foreground focus:ring-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-white/5 bg-card">
+                    {years.map(y => <SelectItem key={y} value={y.toString()} className="text-[10px] font-bold py-2">{y}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
                <div className="h-[600px] w-full overflow-auto custom-scrollbar">
                  <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
                    <thead>
                      <tr className="bg-white/[0.02] sticky top-0 z-10 shadow-sm">
-                       <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[40%] bg-card">Property Identity</th>
-                       <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[20%] bg-card text-center">Monthly Rent</th>
-                       <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[40%] bg-card">Status & Management</th>
+                       <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[40%] bg-card">Asset Registry</th>
+                       <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[20%] bg-card text-center">Monthly Yield</th>
+                       <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[40%] bg-card">Verification State</th>
                      </tr>
                    </thead>
                    <tbody className="divide-y divide-white/5">
                      {properties?.filter(p => p.isOccupied).map(prop => {
-                       const payment = currentMonthPayments?.find(pm => pm.propertyId === prop.id);
+                       const payment = periodPayments?.find(pm => pm.propertyId === prop.id);
                        const status = payment?.status || 'pending';
                        const isPaid = status === 'paid';
                        const isLate = status === 'late';
@@ -387,7 +407,7 @@ export default function LandlordDashboard() {
                                  <Input 
                                     type="number" 
                                     defaultValue={prop.rentAmount} 
-                                    className="h-10 rounded-lg bg-muted/30 border-none font-bold text-sm px-3 shadow-inner focus:ring-1 focus:ring-accent text-center"
+                                    className="h-10 rounded-lg bg-muted/30 border-none font-bold text-sm px-3 shadow-inner focus:ring-1 focus:ring-accent text-center text-foreground"
                                     onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)}
                                     placeholder="0.00"
                                  />
@@ -404,10 +424,10 @@ export default function LandlordDashboard() {
                                   )}>
                                     <SelectValue />
                                   </SelectTrigger>
-                                  <SelectContent className="rounded-xl border-white/5 bg-card">
-                                    <SelectItem value="pending" className="text-[9px] font-bold uppercase tracking-widest py-3">Not Paid</SelectItem>
-                                    <SelectItem value="paid" className="text-[9px] font-bold uppercase tracking-widest py-3">Paid</SelectItem>
-                                    <SelectItem value="late" className="text-[9px] font-bold uppercase tracking-widest py-3">Paid Late</SelectItem>
+                                  <SelectContent className="rounded-xl border-white/5 bg-card shadow-2xl">
+                                    <SelectItem value="pending" className="text-[9px] font-bold uppercase tracking-widest py-3 focus:bg-amber-500/10">Not Paid</SelectItem>
+                                    <SelectItem value="paid" className="text-[9px] font-bold uppercase tracking-widest py-3 focus:bg-emerald-500/10">Paid</SelectItem>
+                                    <SelectItem value="late" className="text-[9px] font-bold uppercase tracking-widest py-3 focus:bg-sky-500/10">Paid Late</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
@@ -464,12 +484,12 @@ export default function LandlordDashboard() {
             <div className="relative z-10 space-y-6">
                <div className="space-y-1.5">
                  <h3 className="font-bold font-headline text-xl tracking-tight">Financial Hub</h3>
-                 <p className="text-xs text-white/70 font-medium leading-relaxed">Orchestrate manual portfolio expenses and insurance records.</p>
+                 <p className="text-xs text-white/70 font-medium leading-relaxed">Orchestrate portfolio expenses and insurance records.</p>
                </div>
                
                <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
                 <Button className="w-full rounded-[1.25rem] bg-white text-accent font-bold h-12 hover:bg-white/90 transition-all shadow-2xl shadow-black/20 text-[10px] uppercase tracking-[0.15em] border-none" onClick={() => setIsExpenseDialogOpen(true)}>
-                  <Plus className="w-4 h-4 mr-2" /> Log Ledger Entry
+                  <Plus className="w-4 h-4 mr-2" /> Register Ledger Item
                 </Button>
                 <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[85vh] max-w-[500px] ring-1 ring-white/10">
                   <form className="flex flex-col h-full overflow-hidden" onSubmit={(e) => { e.preventDefault(); handleLogManualExpense(); }}>
@@ -481,12 +501,12 @@ export default function LandlordDashboard() {
                       <div className="p-8 space-y-6 text-left">
                         <div className="space-y-2">
                           <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Expense Identifier</Label>
-                          <Input value={expTitle} onChange={(e) => setExpTitle(e.target.value)} placeholder="e.g. Landlord Insurance 2026" className="rounded-xl h-12 bg-muted/30 border-none font-bold px-5 text-sm" />
+                          <Input value={expTitle} onChange={(e) => setExpTitle(e.target.value)} placeholder="e.g. Portfolio Insurance 2026" className="rounded-xl h-12 bg-muted/30 border-none font-bold px-5 text-sm text-foreground" />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Capital Amount (£)</Label>
-                            <Input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="0.00" className="rounded-xl h-12 bg-muted/30 border-none font-bold px-5 text-sm" />
+                            <Input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="0.00" className="rounded-xl h-12 bg-muted/30 border-none font-bold px-5 text-sm text-foreground" />
                           </div>
                           <div className="space-y-2">
                             <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Category</Label>
@@ -527,7 +547,7 @@ export default function LandlordDashboard() {
              <div className="absolute top-0 right-0 p-10 opacity-5"><PoundSterling className="w-24 h-24" /></div>
              <DialogHeader>
                 <DialogTitle className="text-3xl font-bold font-headline tracking-tighter">Manage Ledger</DialogTitle>
-                <DialogDescription className="text-secondary-foreground/70 font-bold text-sm mt-2">Adjust monthly rent and collection state.</DialogDescription>
+                <DialogDescription className="text-secondary-foreground/70 font-bold text-sm mt-2">Adjust yield and verify collection state for {format(new Date(selectedYear, selectedMonth - 1), 'MMMM yyyy')}.</DialogDescription>
              </DialogHeader>
            </div>
            
@@ -538,14 +558,14 @@ export default function LandlordDashboard() {
                         <div className="p-2.5 bg-accent/10 rounded-xl text-accent border border-accent/20">
                             <PoundSterling className="w-5 h-5" />
                         </div>
-                        <Label className="font-bold text-[11px] uppercase text-foreground tracking-[0.2em] font-headline">Monthly Rent Adjustment</Label>
+                        <Label className="font-bold text-[11px] uppercase text-foreground tracking-[0.2em] font-headline">Yield Adjustment</Label>
                     </div>
                     <div className="relative group">
                        <Input 
                           type="number" 
                           value={editAmount} 
                           onChange={(e) => setEditAmount(e.target.value)} 
-                          className="rounded-2xl h-20 bg-background border border-white/10 font-bold px-8 text-3xl shadow-2xl text-foreground focus:ring-2 focus:ring-accent transition-all" 
+                          className="rounded-2xl h-20 bg-background/80 border border-white/10 font-bold px-8 text-3xl shadow-2xl text-foreground focus:ring-2 focus:ring-accent transition-all" 
                           placeholder="e.g. 1500.00" 
                        />
                        <div className="absolute right-8 top-6 opacity-20 font-bold text-xl">GBP</div>
@@ -557,7 +577,7 @@ export default function LandlordDashboard() {
                         <div className="p-2.5 bg-accent/10 rounded-xl text-accent border border-accent/20">
                             <Activity className="w-5 h-5" />
                         </div>
-                        <Label className="font-bold text-[11px] uppercase text-foreground tracking-[0.2em] font-headline">Collection Status</Label>
+                        <Label className="font-bold text-[11px] uppercase text-foreground tracking-[0.2em] font-headline">Verification State</Label>
                     </div>
                     <Tabs value={editStatus} onValueChange={(v) => setEditStatus(v as any)}>
                         <TabsList className="grid grid-cols-3 h-16 bg-background/50 border-none p-2 gap-2 rounded-2xl shadow-inner">
