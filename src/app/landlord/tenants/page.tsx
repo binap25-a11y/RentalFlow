@@ -186,7 +186,7 @@ export default function TenantsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="min-w-0 flex-1">
           <h1 className="text-3xl font-headline font-bold text-foreground mb-2 tracking-tight">Portfolio Residents</h1>
-          <p className="text-muted-foreground font-medium font-body text-sm truncate opacity-70">Managing tenant identities and high-fidelity lease assignments.</p>
+          <p className="text-muted-foreground font-medium font-body text-sm opacity-70">Managing tenant identities and high-fidelity lease assignments.</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
@@ -342,4 +342,3 @@ export default function TenantsPage() {
     </div>
   );
 }
-
