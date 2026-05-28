@@ -17,7 +17,7 @@ import {
   CalendarDays, Loader2, Wrench, ShieldCheck, 
   ChevronRight, Clock, MapPin, 
   Plus, Building2, Save, Activity,
-  ArrowRight
+  ArrowRight, Search
 } from "lucide-react";
 import { format, isSameDay, isAfter, startOfDay, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
