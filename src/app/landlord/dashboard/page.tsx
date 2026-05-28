@@ -108,7 +108,6 @@ export default function LandlordDashboard() {
     const monthlyGrossPotential = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
     const annualGross = monthlyGrossPotential * 12;
     
-    // Aggregating Paid + Paid Late for the VIEWED period
     const actualCollectedThisPeriod = periodPayments?.filter(p => p.status === 'paid' || p.status === 'late').reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
     
     const totalExpenses = maintenance.reduce((acc, r) => acc + (Number(r.cost) || 0), 0);
@@ -125,7 +124,6 @@ export default function LandlordDashboard() {
     })).slice(0, 8);
   }, [properties, isClient]);
 
-  // INLINE LEDGER ACTIONS
   const handleQuickRentUpdate = (propertyId: string, amount: string) => {
     if (!db) return;
     const propertyRef = doc(db, 'properties', propertyId);
@@ -332,7 +330,6 @@ export default function LandlordDashboard() {
             </CardHeader>
             <CardContent className="p-0">
                <ScrollArea className="h-[600px] w-full overflow-auto">
-                 {/* RESPONSIVE ADAPTIVE REGISTRY: Cards on Mobile, Table on Desktop */}
                  <div className="block lg:hidden p-4 space-y-4">
                    {properties?.filter(p => p.isOccupied).map(prop => {
                      const payment = periodPayments?.find(pm => pm.propertyId === prop.id);
@@ -388,7 +385,6 @@ export default function LandlordDashboard() {
                    })}
                  </div>
 
-                 {/* DESKTOP VIEW: Structured Balanced Table */}
                  <div className="hidden lg:block">
                     <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
                       <thead>
@@ -482,12 +478,6 @@ export default function LandlordDashboard() {
                        </Button>
                     </div>
                   ))}
-                  {maintenance?.filter(m => m.status !== 'completed').length === 0 && (
-                    <div className="text-center py-8 opacity-20 flex flex-col items-center">
-                       <CheckCircle2 className="w-10 h-10 mb-3" />
-                       <p className="text-[9px] font-bold uppercase tracking-[0.2em] font-headline">Roadmap Clear</p>
-                    </div>
-                  )}
                </div>
                <Button variant="ghost" className="w-full rounded-xl h-10 font-bold text-[9px] uppercase tracking-[0.15em] text-muted-foreground hover:bg-white/5 mt-2" asChild>
                   <Link href="/landlord/maintenance">View All Repairs</Link>
@@ -496,7 +486,6 @@ export default function LandlordDashboard() {
           </Card>
 
           <Card className="border-none shadow-2xl rounded-[2.5rem] bg-card ring-1 ring-border text-card-foreground overflow-hidden p-8 text-left relative group">
-             <div className="absolute -top-10 -right-10 w-32 h-32 bg-accent/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             <div className="relative z-10 space-y-6">
                <div className="space-y-1.5">
                  <h3 className="font-bold font-headline text-xl tracking-tight text-foreground">Financial Hub</h3>
