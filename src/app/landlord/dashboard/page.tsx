@@ -347,15 +347,15 @@ export default function LandlordDashboard() {
               <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em] font-headline opacity-40 shrink-0">{format(new Date(), 'MMMM yyyy')} Registry</p>
             </CardHeader>
             <CardContent className="p-0">
-               {/* 🏢 MONTH LEDGE SCROLLBAR: Vertical internal scroll bar for the ledge assets */}
+               {/* 🏢 MONTH LEDGE SCROLLBAR: Optimized for visibility and zero horizontal friction */}
                <ScrollArea className="h-[600px] w-full">
                  <div className="overflow-x-auto">
-                   <table className="w-full text-left border-collapse min-w-[1200px]">
+                   <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
                      <thead>
                        <tr className="bg-white/[0.02] sticky top-0 z-10">
-                         <th className="px-6 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[30%] bg-card">Property Identity</th>
-                         <th className="px-6 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[15%] bg-card">Monthly Rent</th>
-                         <th className="px-6 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[55%] bg-card">Status & Management</th>
+                         <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[40%] bg-card">Property Identity</th>
+                         <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[20%] bg-card">Monthly Rent</th>
+                         <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[40%] bg-card">Status & Management</th>
                        </tr>
                      </thead>
                      <tbody className="divide-y divide-white/5">
@@ -384,7 +384,7 @@ export default function LandlordDashboard() {
                                </div>
                              </td>
                              <td className="px-6 py-2.5">
-                                <div className="flex items-center gap-2 max-w-[120px]">
+                                <div className="flex items-center gap-2 max-w-[140px]">
                                    <span className="text-muted-foreground opacity-40 font-bold text-xs">£</span>
                                    <Input 
                                       type="number" 
@@ -395,11 +395,11 @@ export default function LandlordDashboard() {
                                 </div>
                              </td>
                              <td className="px-6 py-2.5">
-                                <div className="flex items-center gap-4">
-                                  {/* TRI-STATE STATUS DROPDOWN */}
+                                <div className="flex items-center gap-3">
+                                  {/* TRI-STATE STATUS DROPDOWN: High visibility verified menu */}
                                   <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
                                     <SelectTrigger className={cn(
-                                      "h-9 w-[200px] rounded-lg border-none font-bold text-[9px] uppercase tracking-widest shadow-sm px-4 shrink-0 transition-all",
+                                      "h-9 w-[170px] rounded-lg border-none font-bold text-[9px] uppercase tracking-widest shadow-sm px-4 shrink-0 transition-all",
                                       isPaid ? "bg-emerald-500/10 text-emerald-500" : 
                                       isLate ? "bg-sky-500/10 text-sky-500" :
                                       "bg-amber-500/10 text-amber-500"
@@ -561,7 +561,7 @@ export default function LandlordDashboard() {
                           type="number" 
                           value={editAmount} 
                           onChange={(e) => setEditAmount(e.target.value)} 
-                          className="rounded-2xl h-20 bg-background/80 border border-white/10 font-bold px-8 text-4xl shadow-2xl text-foreground focus:ring-2 focus:ring-accent transition-all" 
+                          className="rounded-2xl h-20 bg-background/80 border border-white/10 font-bold px-8 text-3xl shadow-2xl text-foreground focus:ring-2 focus:ring-accent transition-all" 
                           placeholder="e.g. 1500.00" 
                        />
                        <div className="absolute right-8 top-6 opacity-20 font-bold text-xl">GBP</div>
