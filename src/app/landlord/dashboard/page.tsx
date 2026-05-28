@@ -348,90 +348,89 @@ export default function LandlordDashboard() {
             </CardHeader>
             <CardContent className="p-0">
                {/* 🏢 MONTH LEDGE SCROLLBAR: Optimized for visibility and zero horizontal friction */}
-               <ScrollArea className="h-[600px] w-full">
-                 <div className="overflow-x-auto">
-                   <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
-                     <thead>
-                       <tr className="bg-white/[0.02] sticky top-0 z-10">
-                         <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[40%] bg-card">Property Identity</th>
-                         <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[20%] bg-card">Monthly Rent</th>
-                         <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[40%] bg-card">Status & Management</th>
-                       </tr>
-                     </thead>
-                     <tbody className="divide-y divide-white/5">
-                       {properties?.filter(p => p.isOccupied).map(prop => {
-                         const payment = currentMonthPayments?.find(pm => pm.propertyId === prop.id);
-                         const status = payment?.status || 'pending';
-                         const isPaid = status === 'paid';
-                         const isLate = status === 'late';
-                         const imageUrl = getResolvedImageUrl(prop.imageUrl, prop.imageUrls);
-                         
-                         return (
-                           <tr key={prop.id} className="hover:bg-white/[0.02] transition-colors group">
-                             <td className="px-6 py-2.5 min-w-0">
-                               <div className="flex items-center gap-4">
-                                 <div className="relative h-11 w-11 rounded-xl overflow-hidden shadow-xl ring-1 ring-white/5 group-hover:scale-105 transition-transform bg-muted shrink-0 flex items-center justify-center">
-                                   {imageUrl ? (
-                                     <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
-                                   ) : (
-                                     <Building2 className="w-5 h-5 text-muted-foreground/30" />
-                                   )}
-                                 </div>
-                                 <div className="min-w-0 flex-1">
-                                   <span className="font-bold text-sm text-foreground truncate block">{prop.addressLine1}</span>
-                                   <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 truncate block">{prop.city}</span>
-                                 </div>
+               <div className="h-[600px] w-full overflow-auto custom-scrollbar">
+                 <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
+                   <thead>
+                     <tr className="bg-white/[0.02] sticky top-0 z-10 shadow-sm">
+                       <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[40%] bg-card">Property Identity</th>
+                       <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[20%] bg-card text-center">Monthly Rent</th>
+                       <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[40%] bg-card">Status & Management</th>
+                     </tr>
+                   </thead>
+                   <tbody className="divide-y divide-white/5">
+                     {properties?.filter(p => p.isOccupied).map(prop => {
+                       const payment = currentMonthPayments?.find(pm => pm.propertyId === prop.id);
+                       const status = payment?.status || 'pending';
+                       const isPaid = status === 'paid';
+                       const isLate = status === 'late';
+                       const imageUrl = getResolvedImageUrl(prop.imageUrl, prop.imageUrls);
+                       
+                       return (
+                         <tr key={prop.id} className="hover:bg-white/[0.02] transition-colors group">
+                           <td className="px-6 py-4 min-w-0">
+                             <div className="flex items-center gap-4">
+                               <div className="relative h-12 w-12 rounded-xl overflow-hidden shadow-xl ring-1 ring-white/5 group-hover:scale-105 transition-transform bg-muted shrink-0 flex items-center justify-center">
+                                 {imageUrl ? (
+                                   <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                                 ) : (
+                                   <Building2 className="w-6 h-6 text-muted-foreground/30" />
+                                 )}
                                </div>
-                             </td>
-                             <td className="px-6 py-2.5">
-                                <div className="flex items-center gap-2 max-w-[140px]">
-                                   <span className="text-muted-foreground opacity-40 font-bold text-xs">£</span>
-                                   <Input 
-                                      type="number" 
-                                      defaultValue={prop.rentAmount} 
-                                      className="h-9 rounded-lg bg-muted/30 border-none font-bold text-sm px-3 shadow-inner focus:ring-1 focus:ring-accent"
-                                      onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)}
-                                   />
-                                </div>
-                             </td>
-                             <td className="px-6 py-2.5">
-                                <div className="flex items-center gap-3">
-                                  {/* TRI-STATE STATUS DROPDOWN: High visibility verified menu */}
-                                  <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
-                                    <SelectTrigger className={cn(
-                                      "h-9 w-[170px] rounded-lg border-none font-bold text-[9px] uppercase tracking-widest shadow-sm px-4 shrink-0 transition-all",
-                                      isPaid ? "bg-emerald-500/10 text-emerald-500" : 
-                                      isLate ? "bg-sky-500/10 text-sky-500" :
-                                      "bg-amber-500/10 text-amber-500"
-                                    )}>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-xl border-white/5 bg-card">
-                                      <SelectItem value="pending" className="text-[9px] font-bold uppercase tracking-widest py-3">Not Paid</SelectItem>
-                                      <SelectItem value="paid" className="text-[9px] font-bold uppercase tracking-widest py-3">Paid</SelectItem>
-                                      <SelectItem value="late" className="text-[9px] font-bold uppercase tracking-widest py-3">Paid Late</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  
-                                  <div className="flex items-center gap-2 shrink-0">
-                                    <Button variant="ghost" size="icon" className="rounded-lg h-9 w-9 hover:bg-white/5 border border-white/5 shrink-0" onClick={() => handleOpenLedgerEdit(prop, payment)}>
-                                      <Settings2 className="w-3.5 h-3.5 text-muted-foreground" />
+                               <div className="min-w-0 flex-1">
+                                 <span className="font-bold text-sm text-foreground truncate block">{prop.addressLine1}</span>
+                                 <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 truncate block">{prop.city}</span>
+                               </div>
+                             </div>
+                           </td>
+                           <td className="px-6 py-4">
+                              <div className="flex items-center justify-center gap-2 max-w-[140px] mx-auto">
+                                 <span className="text-muted-foreground opacity-40 font-bold text-xs">£</span>
+                                 <Input 
+                                    type="number" 
+                                    defaultValue={prop.rentAmount} 
+                                    className="h-10 rounded-lg bg-muted/30 border-none font-bold text-sm px-3 shadow-inner focus:ring-1 focus:ring-accent text-center"
+                                    onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)}
+                                    placeholder="0.00"
+                                 />
+                              </div>
+                           </td>
+                           <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                {/* TRI-STATE STATUS DROPDOWN: High visibility verified menu */}
+                                <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
+                                  <SelectTrigger className={cn(
+                                    "h-10 w-full max-w-[180px] rounded-lg border-none font-bold text-[9px] uppercase tracking-widest shadow-sm px-4 shrink-0 transition-all",
+                                    isPaid ? "bg-emerald-500/10 text-emerald-500" : 
+                                    isLate ? "bg-sky-500/10 text-sky-500" :
+                                    "bg-amber-500/10 text-amber-500"
+                                  )}>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="rounded-xl border-white/5 bg-card">
+                                    <SelectItem value="pending" className="text-[9px] font-bold uppercase tracking-widest py-3">Not Paid</SelectItem>
+                                    <SelectItem value="paid" className="text-[9px] font-bold uppercase tracking-widest py-3">Paid</SelectItem>
+                                    <SelectItem value="late" className="text-[9px] font-bold uppercase tracking-widest py-3">Paid Late</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <Button variant="ghost" size="icon" className="rounded-lg h-10 w-10 hover:bg-white/5 border border-white/5 shrink-0" onClick={() => handleOpenLedgerEdit(prop, payment)}>
+                                    <Settings2 className="w-4 h-4 text-muted-foreground" />
+                                  </Button>
+                                  {!isPaid && !isLate && (
+                                    <Button size="sm" className="rounded-lg h-10 px-4 font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-xl shadow-primary/10 shrink-0 uppercase tracking-widest text-[9px]" onClick={() => handleOpenLedgerEdit(prop, payment)}>
+                                      Process
                                     </Button>
-                                    {!isPaid && !isLate && (
-                                      <Button size="sm" className="rounded-lg h-9 px-4 font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-xl shadow-primary/10 shrink-0 uppercase tracking-widest text-[9px]" onClick={() => handleOpenLedgerEdit(prop, payment)}>
-                                        Process
-                                      </Button>
-                                    )}
-                                  </div>
+                                  )}
                                 </div>
-                             </td>
-                           </tr>
-                         );
-                       })}
-                     </tbody>
-                   </table>
-                 </div>
-               </ScrollArea>
+                              </div>
+                           </td>
+                         </tr>
+                       );
+                     })}
+                   </tbody>
+                 </table>
+               </div>
             </CardContent>
           </Card>
         </div>
@@ -548,8 +547,8 @@ export default function LandlordDashboard() {
            
            <ScrollArea className="flex-1">
              <div className="p-8 space-y-12 text-left pb-24">
-                {/* 🏠 RENT ADJUSTMENT: High-contrast visibility, oversized text */}
-                <div className="space-y-5 bg-muted/30 p-8 rounded-[2.5rem] border border-border/50 shadow-inner">
+                {/* 🏠 RENT ADJUSTMENT: High-contrast visibility, correctly resized placeholder */}
+                <div className="space-y-5 bg-muted/30 p-6 rounded-[2.5rem] border border-border/50 shadow-inner">
                     <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-accent/10 rounded-xl text-accent border border-accent/20">
                             <PoundSterling className="w-5 h-5" />
@@ -561,7 +560,7 @@ export default function LandlordDashboard() {
                           type="number" 
                           value={editAmount} 
                           onChange={(e) => setEditAmount(e.target.value)} 
-                          className="rounded-2xl h-20 bg-background/80 border border-white/10 font-bold px-8 text-3xl shadow-2xl text-foreground focus:ring-2 focus:ring-accent transition-all" 
+                          className="rounded-2xl h-20 bg-background border border-white/10 font-bold px-8 text-3xl shadow-2xl text-foreground focus:ring-2 focus:ring-accent transition-all" 
                           placeholder="e.g. 1500.00" 
                        />
                        <div className="absolute right-8 top-6 opacity-20 font-bold text-xl">GBP</div>
@@ -569,7 +568,7 @@ export default function LandlordDashboard() {
                 </div>
 
                 {/* 🔄 TRI-STATE COLLECTION STATE: Paid, Not Paid, Paid Late */}
-                <div className="space-y-5 bg-muted/30 p-8 rounded-[2.5rem] border border-border/50 shadow-inner">
+                <div className="space-y-5 bg-muted/30 p-6 rounded-[2.5rem] border border-border/50 shadow-inner">
                     <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-accent/10 rounded-xl text-accent border border-accent/20">
                             <Activity className="w-5 h-5" />
