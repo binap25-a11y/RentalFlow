@@ -145,7 +145,7 @@ export default function TenantPaymentsPage() {
                         
                         <div className="text-right shrink-0">
                           <p className="text-3xl font-bold font-headline text-foreground tracking-tighter">£{payment.amount?.toLocaleString()}</p>
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 mt-1">Official Yield</p>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 mt-1">Monthly Rent</p>
                         </div>
                       </div>
                     </CardContent>

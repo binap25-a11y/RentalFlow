@@ -333,7 +333,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                     </Select>
                   </div>
                   <div className="space-y-3">
-                    <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Target Yield (£)</Label>
+                    <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Monthly Rent</Label>
                     <Input type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner" placeholder="0.00" />
                   </div>
                 </div>

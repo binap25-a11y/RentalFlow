@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useMemo, useEffect } from 'react';
@@ -398,7 +397,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
               <div className="flex flex-wrap gap-12 items-end border-t pt-10 border-white/5">
                 <div className="space-y-2">
-                  <Label className="text-muted-foreground font-bold text-[10px] uppercase tracking-[0.3em] font-headline opacity-50">Operational Yield</Label>
+                  <Label className="text-muted-foreground font-bold text-[10px] uppercase tracking-[0.3em] font-headline opacity-50">Monthly Rent</Label>
                   <div className="flex items-center gap-6">
                     {isEditingRent ? (
                       <Input type="number" value={rentAmount || property.rentAmount} onChange={(e) => setRentAmount(e.target.value)} className="rounded-2xl h-14 w-32 bg-muted/30 border-none font-bold text-xl px-6" />

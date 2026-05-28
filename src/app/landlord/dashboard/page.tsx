@@ -318,7 +318,7 @@ export default function LandlordDashboard() {
                     <thead>
                       <tr className="bg-white/[0.02] sticky top-0 z-10">
                         <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[40%] bg-card">Asset Identity</th>
-                        <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[25%] bg-card text-center">Monthly Yield</th>
+                        <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[25%] bg-card text-center">Monthly Rent</th>
                         <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[35%] bg-card">Verification Status</th>
                       </tr>
                     </thead>
