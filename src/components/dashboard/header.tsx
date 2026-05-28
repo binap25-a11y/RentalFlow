@@ -1,4 +1,3 @@
-
 "use client";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -6,7 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { 
   LogOut, User, Bell, LayoutDashboard, Search, X, 
   MessageSquare, AlertTriangle, Moon, Sun, Clock,
-  ShieldCheck, Settings, ChevronRight
+  ShieldCheck, Settings, ChevronRight, Loader2
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from "@/firebase";
@@ -44,16 +43,6 @@ import { collection, query, where, doc } from "firebase/firestore";
 interface HeaderProps {
   role: 'landlord' | 'tenant';
 }
-
-type Notification = {
-  id: string;
-  title: string;
-  description: string;
-  time?: string;
-  createdAt?: any;
-  type: 'grade' | 'message' | 'alert';
-  href: string;
-};
 
 export function Header({ role }: HeaderProps) {
   const { user } = useUser();
@@ -203,7 +192,7 @@ export function Header({ role }: HeaderProps) {
                             <p className="text-xs font-bold truncate text-foreground group-hover:text-accent transition-colors">{n.title}</p>
                             <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5 font-medium">{n.description}</p>
                             <p className="text-[9px] text-muted-foreground mt-1 opacity-60 font-bold uppercase tracking-tight">
-                              {n.createdAt ? format(new Date(n.createdAt.seconds * 1000), 'p') : 'Just now'}
+                              {n.createdAt ? new Date(n.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
                             </p>
                          </div>
                          <Button 
