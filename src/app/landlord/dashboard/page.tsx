@@ -55,7 +55,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { format, isValid, startOfYear } from "date-fns";
+import { format, isValid } from "date-fns";
 import { collection, doc, serverTimestamp, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { sendRentReceiptEmail } from "@/lib/actions/email-actions";
@@ -346,6 +346,10 @@ export default function LandlordDashboard() {
     toast({ title: "Expense Purged" });
   };
 
+  /**
+   * 📄 HMRC-Compliant Statement Generator
+   * Itemizes every property-specific expense and verified rent receipt.
+   */
   const handleDownloadTaxStatement = async () => {
     if (!taxPropertyId || !properties || !maintenance || !annualPayments) {
       toast({ variant: "destructive", title: "Missing Data", description: "Select property and ensure records are synced." });
@@ -357,11 +361,17 @@ export default function LandlordDashboard() {
       const property = properties.find(p => p.id === taxPropertyId);
       if (!property) throw new Error("Property not found");
 
+      // 1. FILTER RENTAL INCOME (VERIFIED ONLY)
       const propertyPayments = annualPayments.filter(p => p.propertyId === taxPropertyId && (p.status === 'paid' || p.status === 'late'));
-      const propertyExpenses = maintenance.filter(m => {
+      
+      // 2. FILTER PROPERTY-SPECIFIC EXPENSES (COMPLETED ONLY)
+      const propertyExpenses = (maintenance || []).filter(m => {
         if (m.propertyId !== taxPropertyId || m.status !== 'completed') return false;
+        
+        // Use scheduledDate (Manual entry) with fallback to createdAt (System log)
         const dateSource = m.scheduledDate || (m.createdAt?.seconds ? new Date(m.createdAt.seconds * 1000).toISOString() : null);
         if (!dateSource) return false;
+        
         const d = new Date(dateSource);
         return isValid(d) && d.getFullYear() === taxYear;
       });
@@ -373,8 +383,8 @@ export default function LandlordDashboard() {
       const pdf = new jsPDF();
       const pageWidth = pdf.internal.pageSize.getWidth();
 
-      // HEADER
-      pdf.setFillColor(30, 58, 138); // primary
+      // --- HEADER ---
+      pdf.setFillColor(30, 58, 138); // Brand Primary
       pdf.rect(0, 0, pageWidth, 50, "F");
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(24);
@@ -385,7 +395,7 @@ export default function LandlordDashboard() {
       pdf.text(`TAX COMPLIANCE RECORD | YEAR: ${taxYear}`, 20, 35);
       pdf.text(`Generated: ${format(new Date(), 'PPP')}`, 20, 42);
 
-      // PROPERTY IDENTITY
+      // --- PROPERTY IDENTITY ---
       pdf.setTextColor(0, 0, 0);
       pdf.setFontSize(14);
       pdf.setFont("helvetica", "bold");
@@ -396,7 +406,7 @@ export default function LandlordDashboard() {
       pdf.text(`${property.city}, ${property.zipCode}`, 20, 84);
       pdf.text(`Classification: ${property.propertyType}`, 20, 90);
 
-      // SUMMARY GRID
+      // --- FINANCIAL SUMMARY GRID ---
       pdf.setFillColor(248, 250, 252);
       pdf.rect(20, 105, 170, 45, "F");
       pdf.setDrawColor(226, 232, 240);
@@ -418,7 +428,7 @@ export default function LandlordDashboard() {
       pdf.text("Net Rental Profit / (Loss)", 30, 144);
       pdf.text(`£${netIncome.toLocaleString(undefined, {minimumFractionDigits: 2})}`, 150, 144, { align: 'right' });
 
-      // EXPENSE BREAKDOWN
+      // --- EXPENSE LEDGER BREAKDOWN ---
       pdf.setFontSize(14);
       pdf.text("EXPENSE LEDGER BREAKDOWN", 20, 170);
       pdf.setFontSize(9);
@@ -454,9 +464,9 @@ export default function LandlordDashboard() {
       pdf.text("Disclaimer: This statement is generated based on digital ledger entries and is intended for informational support during HMRC Self Assessment.", 20, 285);
 
       pdf.save(`Tax_Statement_${property.addressLine1.replace(/\s+/g, '_')}_${taxYear}.pdf`);
-      toast({ title: "Tax Statement Generated", description: "Professional report downloaded." });
-    } catch (err) {
-      toast({ variant: "destructive", title: "Generation Failure" });
+      toast({ title: "Tax Statement Generated", description: "All property-specific expenses included." });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Generation Failure", description: err.message });
     } finally {
       setIsGeneratingTax(false);
     }
