@@ -82,6 +82,7 @@ export default function MaintenancePage() {
   const [editRequestId, setEditRequestId] = useState('');
   const [editTitle, setEditTitle] = useState('');
   const [editDesc, setEditDesc] = useState('');
+  const [editPropertyId, setEditPropertyId] = useState('');
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -135,18 +136,20 @@ export default function MaintenancePage() {
     setEditRequestId(request.id);
     setEditTitle(request.title);
     setEditDesc(request.description);
+    setEditPropertyId(request.propertyId);
     setIsEditDialogOpen(true);
   };
 
   const handleUpdateTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!db || !editRequestId) return;
+    if (!db || !editRequestId || !editPropertyId) return;
     setIsSubmitting(true);
 
     const requestRef = doc(db, 'maintenanceRequests', editRequestId);
     updateDocumentNonBlocking(requestRef, {
       title: editTitle,
       description: editDesc,
+      propertyId: editPropertyId,
       updatedAt: serverTimestamp(),
     });
 
@@ -447,13 +450,25 @@ export default function MaintenancePage() {
           <form onSubmit={handleUpdateTask} className="flex flex-col h-full overflow-hidden">
             <div className="p-10 bg-primary/5 border-b text-left shrink-0">
               <DialogTitle className="font-headline text-2xl font-bold text-foreground tracking-tight">Modify Task Records</DialogTitle>
-              <DialogDescription className="font-medium text-muted-foreground mt-1 text-sm">Refine the identifier and context for this maintenance roadmap event.</DialogDescription>
+              <DialogDescription className="font-medium text-muted-foreground mt-1 text-sm">Refine the identifier, asset location, and context for this maintenance roadmap event.</DialogDescription>
             </div>
             
             <ScrollArea className="flex-1">
               <div className="grid gap-8 p-10 text-left">
                 <div className="space-y-3">
-                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Repair Identifier</Label>
+                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Target Inventory Asset</Label>
+                  <select 
+                    className="flex h-14 w-full rounded-2xl border-none bg-muted/40 px-6 py-2 text-base focus:ring-2 focus:ring-primary outline-none font-bold text-foreground shadow-inner ring-1 ring-white/10" 
+                    value={editPropertyId} 
+                    onChange={(e) => setEditPropertyId(e.target.value)} 
+                    required
+                  >
+                    <option value="">Choose an inventory item...</option>
+                    {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-3">
+                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Repair Identifier</Label>
                   <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required placeholder="e.g. Electrical Fault discovery" className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/10 text-foreground" />
                 </div>
                 <div className="space-y-3">

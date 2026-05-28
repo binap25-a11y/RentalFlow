@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, use, useMemo, useEffect } from 'react';
@@ -323,7 +324,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
           <Button variant="outline" className="rounded-xl font-bold h-11 border-border bg-card shadow-lg font-headline text-[10px] uppercase tracking-widest px-8 hover:bg-white/5 transition-all" asChild>
             <Link href={`/landlord/properties/${propertyId}/edit`}>
-              <Edit3 className="w-4 h-4 mr-2 text-accent" /> Modify Specs
+              <Edit3 className="w-4 h-4 mr-2 text-accent" /> Edit Asset
             </Link>
           </Button>
         </div>
