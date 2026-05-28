@@ -28,6 +28,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+/**
+ * @fileOverview High-Fidelity Portfolio Registry.
+ * Implements Cascading Delete Protocol for financial and operational consistency.
+ */
+
 export default function PropertiesPage() {
   const { user } = useUser();
   const db = useFirestore();
@@ -65,7 +70,7 @@ export default function PropertiesPage() {
       deletedAt: serverTimestamp(),
       updatedAt: serverTimestamp() 
     });
-    toast({ title: "Asset Archived", description: "Record moved to the Recovery Vault." });
+    toast({ title: "Asset Archived", description: "Financial overview will be updated automatically." });
   };
 
   const handleRestoreProperty = (propertyId: string) => {
@@ -86,7 +91,7 @@ export default function PropertiesPage() {
     const propertyRef = doc(db, 'properties', propertyId);
     deleteDocumentNonBlocking(propertyRef);
 
-    // 2. Cascade Delete all related relational records
+    // 2. Cascade Delete all related relational records to sync financial history
     const relatedCollections = [
       'maintenanceRequests',
       'inspections',
@@ -229,7 +234,7 @@ export default function PropertiesPage() {
                <ShieldAlert className="w-6 h-6 text-accent shrink-0 mt-0.5" />
                <div>
                   <p className="text-sm font-bold text-foreground font-headline">Recovery Vault</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed mt-1 font-medium">Assets in this vault are hidden from your operational roadmap but can be restored instantly. Records will remain here until permanently deleted.</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed mt-1 font-medium">Assets in this vault are hidden from your operational roadmap and excluded from financial overview. Records can be restored instantly.</p>
                </div>
             </div>
 
@@ -279,7 +284,7 @@ export default function PropertiesPage() {
                               <AlertDialogHeader className="text-left">
                                 <AlertDialogTitle className="text-2xl font-headline font-bold text-foreground">Purge Asset Record?</AlertDialogTitle>
                                 <AlertDialogDescription className="text-muted-foreground font-medium text-base mt-2">
-                                  This action is irreversible. All maintenance history, financial ledgers, and site audits associated with <strong>{property.addressLine1}</strong> will be permanently synchronized and deleted.
+                                  This action is irreversible. All maintenance history, financial ledgers, and site audits associated with <strong>{property.addressLine1}</strong> will be permanently purged and dashboard statistics will update.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter className="mt-8 gap-3">
@@ -306,4 +311,3 @@ export default function PropertiesPage() {
     </div>
   );
 }
-

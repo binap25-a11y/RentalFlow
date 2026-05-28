@@ -48,6 +48,11 @@ type PortfolioEvent = {
   priority?: string;
 };
 
+/**
+ * @fileOverview High-Fidelity Portfolio Calendar.
+ * Supports interactive Site Visit selection and expanded maintenance scheduling.
+ */
+
 export default function LandlordCalendarPage() {
   const { user } = useUser();
   const db = useFirestore();
@@ -256,7 +261,7 @@ export default function LandlordCalendarPage() {
               <div className="space-y-4">
                 <div className="p-4 bg-muted/50 rounded-2xl border border-border shadow-inner">
                   <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-1 opacity-60">Selection Portal</p>
-                  <p className="text-xs text-foreground font-medium leading-relaxed">Click any date on the calendar above to view Site Visits and specific Audit records.</p>
+                  <p className="text-xs text-foreground font-medium leading-relaxed">Select a date on the calendar to view Site Visits and specific Audit records.</p>
                 </div>
 
                 <div className="flex flex-col gap-3">

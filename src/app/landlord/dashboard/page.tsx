@@ -41,6 +41,11 @@ import {
 import { collection, doc, serverTimestamp, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
+/**
+ * @fileOverview High-Fidelity Landlord Insight Hub.
+ * Features cascading financial sync: Archived properties are excluded from live stats.
+ */
+
 export default function LandlordDashboard() {
   const { user } = useUser();
   const db = useFirestore();
@@ -74,6 +79,7 @@ export default function LandlordDashboard() {
   }, [db, user]);
   const { data: allProperties, loading: propLoading } = useCollection(propertiesQuery);
 
+  // FINANCIAL SYNC: Only include properties that are NOT archived/deleted
   const properties = useMemo(() => 
     allProperties?.filter(p => !p.isDeleted) || [], 
   [allProperties]);
@@ -97,14 +103,26 @@ export default function LandlordDashboard() {
 
   const financialStats = useMemo(() => {
     if (!isClient || !properties || !maintenance) return { annualGross: 0, totalExpenses: 0, netAnnualForecast: 0, collectionRate: 0, actualCollectedThisPeriod: 0 };
+    
+    const activePropertyIds = new Set(properties.map(p => p.id));
+    
+    // 1. Annual Potential from ACTIVE properties
     const monthlyGrossPotential = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
     const annualGross = monthlyGrossPotential * 12;
     
-    const actualCollectedThisPeriod = periodPayments?.filter(p => p.status === 'paid' || p.status === 'late').reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
+    // 2. Expenses filtered by ACTIVE properties
+    const totalExpenses = maintenance
+      .filter(m => activePropertyIds.has(m.propertyId))
+      .reduce((acc, r) => acc + (Number(r.cost) || 0), 0);
+
+    // 3. Collection filtered by ACTIVE properties
+    const actualCollectedThisPeriod = periodPayments
+      ?.filter(p => activePropertyIds.has(p.propertyId) && (p.status === 'paid' || p.status === 'late'))
+      .reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
     
-    const totalExpenses = maintenance.reduce((acc, r) => acc + (Number(r.cost) || 0), 0);
     const netAnnualForecast = annualGross - totalExpenses;
     const collectionRate = monthlyGrossPotential > 0 ? (actualCollectedThisPeriod / monthlyGrossPotential) * 100 : 0;
+    
     return { annualGross, totalExpenses, netAnnualForecast, collectionRate, actualCollectedThisPeriod };
   }, [properties, maintenance, periodPayments, isClient, selectedMonth, selectedYear]);
 
@@ -322,6 +340,7 @@ export default function LandlordDashboard() {
             </CardHeader>
             <CardContent className="p-0">
                <ScrollArea className="h-[600px] w-full overflow-auto">
+                 {/* Mobile Responsive Registry: High-Contrast Cards */}
                  <div className="block lg:hidden p-4 space-y-4">
                    {properties?.filter(p => p.isOccupied).map(prop => {
                      const payment = periodPayments?.find(pm => pm.propertyId === prop.id);
@@ -377,6 +396,7 @@ export default function LandlordDashboard() {
                    })}
                  </div>
 
+                 {/* Desktop Registry: Precision Rows */}
                  <div className="hidden lg:block">
                     <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
                       <thead>
@@ -540,4 +560,3 @@ export default function LandlordDashboard() {
     </div>
   );
 }
-

@@ -30,6 +30,11 @@ interface SidebarNavProps {
   userAvatar?: string;
 }
 
+/**
+ * @fileOverview Hyper-Accelerated Navigation Registry.
+ * Implements hardware-accelerated transforms for a premium user experience.
+ */
+
 export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
   const pathname = usePathname();
   const auth = useAuth();
