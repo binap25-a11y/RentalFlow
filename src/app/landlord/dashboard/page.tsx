@@ -47,6 +47,7 @@ import { useToast } from "@/hooks/use-toast";
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
  * Optimized for real-time financial tracking and historical ledger navigation.
  * Implements the Deterministic Monthly Ledger Protocol (DMLP) with Scroll Authority.
+ * Responsive Adaptive Registry: Removes horizontal scrolling for an elite mobile experience.
  */
 
 export default function LandlordDashboard() {
@@ -335,77 +336,128 @@ export default function LandlordDashboard() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-               <div className="h-[600px] w-full overflow-auto custom-scrollbar">
-                 <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
-                   <thead>
-                     <tr className="bg-white/[0.02] sticky top-0 z-10 shadow-sm">
-                       <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[40%] bg-card">Asset Registry</th>
-                       <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[20%] bg-card text-center">Monthly Yield</th>
-                       <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[40%] bg-card">Verification State</th>
-                     </tr>
-                   </thead>
-                   <tbody className="divide-y divide-white/5">
-                     {properties?.filter(p => p.isOccupied).map(prop => {
-                       const payment = periodPayments?.find(pm => pm.propertyId === prop.id);
-                       const status = payment?.status || 'pending';
-                       const isPaid = status === 'paid';
-                       const isLate = status === 'late';
-                       const imageUrl = getResolvedImageUrl(prop.imageUrl, prop.imageUrls);
-                       
-                       return (
-                         <tr key={prop.id} className="hover:bg-white/[0.02] transition-colors group">
-                           <td className="px-6 py-4 min-w-0">
-                             <div className="flex items-center gap-4">
-                               <div className="relative h-12 w-12 rounded-xl overflow-hidden shadow-xl ring-1 ring-white/5 group-hover:scale-105 transition-transform bg-muted shrink-0 flex items-center justify-center">
-                                 {imageUrl ? (
-                                   <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
-                                 ) : (
-                                   <Building2 className="w-6 h-6 text-muted-foreground/30" />
-                                 )}
-                               </div>
-                               <div className="min-w-0 flex-1">
-                                 <span className="font-bold text-sm text-foreground truncate block">{prop.addressLine1}</span>
-                                 <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 truncate block">{prop.city}</span>
-                               </div>
-                             </div>
-                           </td>
-                           <td className="px-6 py-4">
-                              <div className="flex items-center justify-center gap-2 max-w-[140px] mx-auto">
-                                 <span className="text-muted-foreground opacity-40 font-bold text-xs">£</span>
-                                 <Input 
+               {/* RESPONSIVE ADAPTIVE REGISTRY: Cards on Mobile, Table on Desktop */}
+               <ScrollArea className="h-[600px] w-full">
+                 <div className="block md:hidden p-4 space-y-4">
+                   {/* MOBILE VIEW: Vertical Stack Cards */}
+                   {properties?.filter(p => p.isOccupied).map(prop => {
+                     const payment = periodPayments?.find(pm => pm.propertyId === prop.id);
+                     const status = payment?.status || 'pending';
+                     const isPaid = status === 'paid';
+                     const isLate = status === 'late';
+                     const imageUrl = getResolvedImageUrl(prop.imageUrl, prop.imageUrls);
+
+                     return (
+                       <Card key={prop.id} className="border-none shadow-sm rounded-2xl bg-muted/10 ring-1 ring-white/5 p-5 space-y-4 text-left">
+                         <div className="flex items-center gap-4">
+                           <div className="relative h-14 w-14 rounded-xl overflow-hidden shadow-lg bg-muted shrink-0 flex items-center justify-center">
+                             {imageUrl ? <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" /> : <Building2 className="w-6 h-6 text-muted-foreground/30" />}
+                           </div>
+                           <div className="min-w-0 flex-1">
+                             <span className="font-bold text-sm text-foreground block truncate">{prop.addressLine1}</span>
+                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 block">{prop.city}</span>
+                           </div>
+                         </div>
+
+                         <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/5">
+                            <div className="space-y-1.5">
+                               <Label className="text-[8px] font-bold uppercase text-muted-foreground opacity-50 font-headline">Monthly Yield</Label>
+                               <div className="flex items-center gap-2 bg-muted/30 rounded-lg px-3 h-10 border border-white/5">
+                                  <span className="text-muted-foreground opacity-30 text-xs">£</span>
+                                  <Input 
                                     type="number" 
                                     defaultValue={prop.rentAmount} 
-                                    className="h-10 rounded-lg bg-muted/30 border-none font-bold text-sm px-3 shadow-inner focus:ring-1 focus:ring-accent text-center text-foreground"
+                                    className="h-8 border-none bg-transparent font-bold text-xs p-0 focus:ring-0 text-foreground"
                                     onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)}
-                                    placeholder="0.00"
-                                 />
-                              </div>
-                           </td>
-                           <td className="px-6 py-4">
-                              <div className="flex items-center gap-3">
-                                <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
+                                  />
+                               </div>
+                            </div>
+                            <div className="space-y-1.5">
+                               <Label className="text-[8px] font-bold uppercase text-muted-foreground opacity-50 font-headline">Verification</Label>
+                               <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
                                   <SelectTrigger className={cn(
-                                    "h-10 w-full max-w-[180px] rounded-lg border-none font-bold text-[9px] uppercase tracking-widest shadow-sm px-4 shrink-0 transition-all",
-                                    isPaid ? "bg-emerald-500/10 text-emerald-500" : 
-                                    isLate ? "bg-sky-500/10 text-sky-500" :
-                                    "bg-amber-500/10 text-amber-500"
+                                    "h-10 w-full rounded-lg border-none font-bold text-[8px] uppercase tracking-widest shadow-inner px-3",
+                                    isPaid ? "bg-emerald-500/10 text-emerald-500" : isLate ? "bg-sky-500/10 text-sky-500" : "bg-amber-500/10 text-amber-500"
                                   )}>
                                     <SelectValue />
                                   </SelectTrigger>
-                                  <SelectContent className="rounded-xl border-white/5 bg-card shadow-2xl">
-                                    <SelectItem value="pending" className="text-[9px] font-bold uppercase tracking-widest py-3 focus:bg-amber-500/10">Not Paid</SelectItem>
-                                    <SelectItem value="paid" className="text-[9px] font-bold uppercase tracking-widest py-3 focus:bg-emerald-500/10">Paid</SelectItem>
-                                    <SelectItem value="late" className="text-[9px] font-bold uppercase tracking-widest py-3 focus:bg-sky-500/10">Paid Late</SelectItem>
+                                  <SelectContent className="rounded-xl border-white/5 bg-card">
+                                    <SelectItem value="pending" className="text-[8px] font-bold uppercase py-2">Not Paid</SelectItem>
+                                    <SelectItem value="paid" className="text-[8px] font-bold uppercase py-2">Paid</SelectItem>
+                                    <SelectItem value="late" className="text-[8px] font-bold uppercase py-2">Paid Late</SelectItem>
                                   </SelectContent>
-                                </Select>
-                              </div>
-                           </td>
-                         </tr>
-                       );
-                     })}
-                   </tbody>
-                 </table>
-               </div>
+                               </Select>
+                            </div>
+                         </div>
+                       </Card>
+                     );
+                   })}
+                 </div>
+
+                 {/* DESKTOP VIEW: Structured Table Row */}
+                 <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-left border-collapse table-fixed min-w-[800px]">
+                      <thead>
+                        <tr className="bg-white/[0.02] sticky top-0 z-10">
+                          <th className="px-8 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[45%] bg-card">Asset Registry</th>
+                          <th className="px-8 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[20%] bg-card text-center">Monthly Yield</th>
+                          <th className="px-8 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[35%] bg-card">Verification State</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {properties?.filter(p => p.isOccupied).map(prop => {
+                          const payment = periodPayments?.find(pm => pm.propertyId === prop.id);
+                          const status = payment?.status || 'pending';
+                          const isPaid = status === 'paid';
+                          const isLate = status === 'late';
+                          const imageUrl = getResolvedImageUrl(prop.imageUrl, prop.imageUrls);
+                          
+                          return (
+                            <tr key={prop.id} className="hover:bg-white/[0.02] transition-colors group">
+                              <td className="px-8 py-5">
+                                <div className="flex items-center gap-4">
+                                  <div className="relative h-12 w-12 rounded-xl overflow-hidden shadow-xl ring-1 ring-white/5 bg-muted shrink-0 flex items-center justify-center">
+                                    {imageUrl ? <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" /> : <Building2 className="w-6 h-6 text-muted-foreground/30" />}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <span className="font-bold text-sm text-foreground truncate block">{prop.addressLine1}</span>
+                                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 truncate block">{prop.city}</span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-8 py-5">
+                                 <div className="flex items-center justify-center gap-2 max-w-[140px] mx-auto bg-muted/20 rounded-lg px-3 h-10 border border-white/5">
+                                    <span className="text-muted-foreground opacity-30 font-bold text-xs">£</span>
+                                    <Input 
+                                       type="number" 
+                                       defaultValue={prop.rentAmount} 
+                                       className="h-8 border-none bg-transparent font-bold text-sm focus:ring-0 text-center text-foreground"
+                                       onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)}
+                                    />
+                                 </div>
+                              </td>
+                              <td className="px-8 py-5">
+                                 <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
+                                   <SelectTrigger className={cn(
+                                     "h-10 w-full max-w-[200px] rounded-lg border-none font-bold text-[9px] uppercase tracking-widest shadow-inner px-4 transition-all",
+                                     isPaid ? "bg-emerald-500/10 text-emerald-500" : isLate ? "bg-sky-500/10 text-sky-500" : "bg-amber-500/10 text-amber-500"
+                                   )}>
+                                     <SelectValue />
+                                   </SelectTrigger>
+                                   <SelectContent className="rounded-xl border-white/5 bg-card">
+                                     <SelectItem value="pending" className="text-[9px] font-bold uppercase tracking-widest py-3">Not Paid</SelectItem>
+                                     <SelectItem value="paid" className="text-[9px] font-bold uppercase tracking-widest py-3">Paid</SelectItem>
+                                     <SelectItem value="late" className="text-[9px] font-bold uppercase tracking-widest py-3">Paid Late</SelectItem>
+                                   </SelectContent>
+                                 </Select>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                 </div>
+               </ScrollArea>
             </CardContent>
           </Card>
         </div>
