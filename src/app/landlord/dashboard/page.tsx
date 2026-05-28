@@ -7,7 +7,9 @@ import {
   Plus, Save, ReceiptText,
   Crown, ShieldCheck, PoundSterling,
   Activity, BarChart3, CalendarDays,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  FileDown,
+  Calculator
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
@@ -38,17 +40,17 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { collection, doc, serverTimestamp, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { sendRentReceiptEmail } from "@/lib/actions/email-actions";
+import { jsPDF } from "jspdf";
 
 /**
  * @fileOverview Landlord Insight Hub.
  * Optimized for vertical fidelity: Period-based Rent Ledger refactored for mobile compatibility.
- * Removes horizontal scroll by stacking rent/status controls vertically per asset.
  * Persistence: Remembers user's last selected month and year.
- * Updated: Manual date entry for expense registration to replace calendar picker.
+ * Added: Tax Reporting Hub for HMRC self-assessment statements.
  */
 
 export default function LandlordDashboard() {
@@ -60,6 +62,11 @@ export default function LandlordDashboard() {
 
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  
+  // Tax Reporting State
+  const [taxPropertyId, setTaxPropertyId] = useState('');
+  const [taxYear, setTaxYear] = useState<number>(new Date().getFullYear());
+  const [isGeneratingTax, setIsGeneratingTax] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -123,6 +130,17 @@ export default function LandlordDashboard() {
     );
   }, [db, user, selectedMonth, selectedYear]);
   const { data: periodPayments } = useCollection(paymentsQuery);
+
+  // Annual payments for tax reporting
+  const annualPaymentsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return query(
+      collection(db, 'rentPayments'),
+      where('landlordId', '==', user.uid),
+      where('year', '==', taxYear)
+    );
+  }, [db, user, taxYear]);
+  const { data: annualPayments } = useCollection(annualPaymentsQuery);
 
   const financialStats = useMemo(() => {
     if (!isClient || !properties || !maintenance) return { annualGross: 0, totalExpenses: 0, netAnnualForecast: 0, collectionRate: 0, actualCollectedThisPeriod: 0 };
@@ -242,6 +260,119 @@ export default function LandlordDashboard() {
     setExpTitle('');
     setExpPropertyId('');
     setExpDate(new Date());
+  };
+
+  const handleDownloadTaxStatement = async () => {
+    if (!taxPropertyId || !properties || !maintenance || !annualPayments) {
+      toast({ variant: "destructive", title: "Missing Data", description: "Select property and ensure records are synced." });
+      return;
+    }
+
+    setIsGeneratingTax(true);
+    try {
+      const property = properties.find(p => p.id === taxPropertyId);
+      if (!property) throw new Error("Property not found");
+
+      const propertyPayments = annualPayments.filter(p => p.propertyId === taxPropertyId && (p.status === 'paid' || p.status === 'late'));
+      const propertyExpenses = maintenance.filter(m => {
+        if (m.propertyId !== taxPropertyId || m.status !== 'completed' || !m.scheduledDate) return false;
+        const d = new Date(m.scheduledDate);
+        return isValid(d) && d.getFullYear() === taxYear;
+      });
+
+      const totalRent = propertyPayments.reduce((acc, p) => acc + (p.amount || 0), 0);
+      const totalExpenses = propertyExpenses.reduce((acc, m) => acc + (Number(m.cost) || 0), 0);
+      const netIncome = totalRent - totalExpenses;
+
+      const pdf = new jsPDF();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+
+      // HEADER
+      pdf.setFillColor(30, 58, 138); // primary
+      pdf.rect(0, 0, pageWidth, 50, "F");
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(24);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("ANNUAL RENTAL STATEMENT", 20, 25);
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`TAX COMPLIANCE RECORD | YEAR: ${taxYear}`, 20, 35);
+      pdf.text(`Generated: ${format(new Date(), 'PPP')}`, 20, 42);
+
+      // PROPERTY IDENTITY
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("PROPERTY IDENTITY", 20, 70);
+      pdf.setFontSize(11);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`${property.addressLine1}`, 20, 78);
+      pdf.text(`${property.city}, ${property.zipCode}`, 20, 84);
+      pdf.text(`Classification: ${property.propertyType}`, 20, 90);
+
+      // SUMMARY GRID
+      pdf.setFillColor(248, 250, 252);
+      pdf.rect(20, 105, 170, 45, "F");
+      pdf.setDrawColor(226, 232, 240);
+      pdf.rect(20, 105, 170, 45, "D");
+
+      pdf.setFont("helvetica", "bold");
+      pdf.text("FINANCIAL SUMMARY", 30, 115);
+      pdf.setFont("helvetica", "normal");
+      pdf.text("Gross Rental Income", 30, 125);
+      pdf.text(`£${totalRent.toLocaleString(undefined, {minimumFractionDigits: 2})}`, 150, 125, { align: 'right' });
+      
+      pdf.text("Allowable Portfolio Expenses", 30, 132);
+      pdf.text(`(£${totalExpenses.toLocaleString(undefined, {minimumFractionDigits: 2})})`, 150, 132, { align: 'right' });
+      
+      pdf.setDrawColor(30, 58, 138);
+      pdf.line(30, 136, 160, 136);
+      
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Net Rental Profit / (Loss)", 30, 144);
+      pdf.text(`£${netIncome.toLocaleString(undefined, {minimumFractionDigits: 2})}`, 150, 144, { align: 'right' });
+
+      // EXPENSE BREAKDOWN
+      pdf.setFontSize(14);
+      pdf.text("EXPENSE LEDGER BREAKDOWN", 20, 170);
+      pdf.setFontSize(9);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("DATE", 20, 180);
+      pdf.text("IDENTIFIER", 50, 180);
+      pdf.text("CATEGORY", 120, 180);
+      pdf.text("AMOUNT (£)", 170, 180, { align: 'right' });
+      
+      pdf.setDrawColor(226, 232, 240);
+      pdf.line(20, 182, 180, 182);
+
+      let y = 190;
+      pdf.setFont("helvetica", "normal");
+      propertyExpenses.forEach((exp) => {
+        if (y > 270) { pdf.addPage(); y = 20; }
+        const d = new Date(exp.scheduledDate);
+        pdf.text(format(d, 'dd/MM/yyyy'), 20, y);
+        pdf.text(exp.title.substring(0, 30), 50, y);
+        pdf.text(exp.category || 'Other', 120, y);
+        pdf.text(Number(exp.cost).toFixed(2), 170, y, { align: 'right' });
+        y += 8;
+      });
+
+      if (propertyExpenses.length === 0) {
+        pdf.setFont("helvetica", "italic");
+        pdf.text("No allowable expenses recorded for this period.", 20, 190);
+      }
+
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text("Disclaimer: This statement is generated based on digital ledger entries and is intended for informational support during HMRC Self Assessment.", 20, 285);
+
+      pdf.save(`Tax_Statement_${property.addressLine1.replace(/\s+/g, '_')}_${taxYear}.pdf`);
+      toast({ title: "Tax Statement Generated", description: "Professional report downloaded." });
+    } catch (err) {
+      toast({ variant: "destructive", title: "Generation Failure" });
+    } finally {
+      setIsGeneratingTax(false);
+    }
   };
 
   if (!isClient || propLoading) {
@@ -498,6 +629,52 @@ export default function LandlordDashboard() {
                   </DialogFooter>
                 </DialogContent>
                </Dialog>
+            </div>
+          </Card>
+
+          <Card className="border-none shadow-2xl rounded-[2.5rem] bg-card ring-1 ring-border text-card-foreground overflow-hidden p-8 text-left relative group">
+            <div className="relative z-10 space-y-6">
+               <div className="space-y-1.5">
+                 <h3 className="font-bold font-headline text-xl tracking-tight text-foreground flex items-center gap-3">
+                    <Calculator className="w-6 h-6 text-emerald-500" /> Tax Reporting
+                 </h3>
+                 <p className="text-xs text-muted-foreground font-medium opacity-70 leading-relaxed">Generate annual statements for HMRC self-assessment records.</p>
+               </div>
+
+               <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Select Asset</Label>
+                    <Select value={taxPropertyId} onValueChange={setTaxPropertyId}>
+                      <SelectTrigger className="h-12 w-full rounded-xl bg-muted/40 border-none font-bold text-xs">
+                        <SelectValue placeholder="Select Property..." />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-border bg-card">
+                         {properties?.map(p => <SelectItem key={p.id} value={p.id} className="font-bold text-xs">{p.addressLine1}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Tax Year</Label>
+                    <Select value={taxYear.toString()} onValueChange={(v) => setTaxYear(Number(v))}>
+                      <SelectTrigger className="h-12 w-full rounded-xl bg-muted/40 border-none font-bold text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-border bg-card">
+                        {years.map(y => <SelectItem key={y} value={y.toString()} className="font-bold text-xs">{y}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button 
+                    onClick={handleDownloadTaxStatement} 
+                    disabled={isGeneratingTax || !taxPropertyId} 
+                    className="w-full rounded-xl bg-emerald-600 text-white font-bold h-12 hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-500/10 text-[10px] uppercase tracking-[0.15em] border-none"
+                  >
+                    {isGeneratingTax ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <FileDown className="w-4 h-4 mr-2" />}
+                    Generate Official Statement
+                  </Button>
+               </div>
             </div>
           </Card>
         </div>
