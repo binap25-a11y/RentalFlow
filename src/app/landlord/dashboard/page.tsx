@@ -44,7 +44,6 @@ import { useToast } from "@/hooks/use-toast";
 /**
  * @fileOverview High-Fidelity Landlord Insight Hub.
  * Optimized for zero-latency financial sync and adaptive registry views.
- * Corrected syntax to resolve JSX parsing errors.
  */
 
 export default function LandlordDashboard() {

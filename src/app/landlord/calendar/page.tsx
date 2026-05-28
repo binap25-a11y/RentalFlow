@@ -50,8 +50,7 @@ type PortfolioEvent = {
 
 /**
  * @fileOverview High-Fidelity Portfolio Calendar.
- * Supports interactive Site Visit selection and expanded maintenance scheduling.
- * Expanded Dialog height and reduced button size for a premium administrative footprint.
+ * Optimized for real-time site audit selection and administrative visibility.
  */
 
 export default function LandlordCalendarPage() {
@@ -261,8 +260,8 @@ export default function LandlordCalendarPage() {
               
               <div className="space-y-4">
                 <div className="p-4 bg-muted/50 rounded-2xl border border-border shadow-inner">
-                  <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-1 opacity-60">Selection Portal</p>
-                  <p className="text-xs text-foreground font-medium leading-relaxed">Select a date on the calendar grid to view scheduled Site Audits and operational records.</p>
+                  <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-1 opacity-60">Audit Instructions</p>
+                  <p className="text-xs text-foreground font-medium leading-relaxed">Select a date on the calendar grid to focus the ledger on scheduled site visits and repairs.</p>
                 </div>
 
                 <div className="flex flex-col gap-3">
@@ -307,7 +306,7 @@ export default function LandlordCalendarPage() {
                       <CalendarDays className="w-16 h-16 text-foreground" />
                    </div>
                    <h3 className="text-lg font-bold font-headline text-foreground uppercase tracking-widest">Empty Ledger</h3>
-                   <p className="text-xs font-medium text-foreground">No audits or maintenance recorded for this date.</p>
+                   <p className="text-xs font-medium text-foreground">No site visits or maintenance recorded for this date.</p>
                 </div>
               ) : (
                 <div className="grid gap-4">
@@ -367,7 +366,7 @@ export default function LandlordCalendarPage() {
                   onChange={(e) => setRepairTitle(e.target.value)} 
                   required 
                   placeholder="e.g. Electrical Fault Discovery" 
-                  className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/10 text-foreground" 
+                  className="rounded-2xl h-14 bg-background/80 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/10 text-foreground" 
                 />
               </div>
               <div className="space-y-3">
@@ -376,7 +375,7 @@ export default function LandlordCalendarPage() {
                   value={repairDesc} 
                   onChange={(e) => setRepairDesc(e.target.value)} 
                   placeholder="Provide full context for contractor access..." 
-                  className="rounded-2xl min-h-[220px] bg-muted/40 border-none font-medium px-6 py-6 text-base leading-relaxed shadow-inner ring-1 ring-white/10 text-foreground" 
+                  className="rounded-2xl min-h-[220px] bg-background/80 border-none font-medium px-6 py-6 text-base leading-relaxed shadow-inner ring-1 ring-white/10 text-foreground" 
                 />
               </div>
             </form>
@@ -387,7 +386,7 @@ export default function LandlordCalendarPage() {
               form="maintenance-scheduler"
               type="submit" 
               disabled={isSaving || !selectedPropertyId || !repairTitle} 
-              className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:opacity-90 transition-all font-headline uppercase tracking-widest text-[10px] border-none hover:scale-[1.01]"
+              className="w-full rounded-xl h-11 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:opacity-90 transition-all font-headline uppercase tracking-widest text-[10px] border-none hover:scale-[1.01]"
             >
               {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
               Synchronize to Ledger

@@ -87,36 +87,37 @@ export default function PropertiesPage() {
   const handlePermanentDelete = async (propertyId: string) => {
     if (!user || !db) return;
     
-    // 1. Delete Primary Asset
-    const propertyRef = doc(db, 'properties', propertyId);
-    deleteDocumentNonBlocking(propertyRef);
+    try {
+      // 1. Delete Primary Asset
+      const propertyRef = doc(db, 'properties', propertyId);
+      deleteDocumentNonBlocking(propertyRef);
 
-    // 2. Cascade Delete all related records (Inspections/Compliance, Repairs, Finance)
-    const relatedCollections = [
-      'maintenanceRequests',
-      'inspections',
-      'emergencyContacts',
-      'tenantProfiles',
-      'documents',
-      'rentPayments'
-    ];
+      // 2. Cascade Delete all related records (Inspections, Tenants, Repairs, Finance)
+      const relatedCollections = [
+        'maintenanceRequests',
+        'inspections',
+        'emergencyContacts',
+        'tenantProfiles',
+        'documents',
+        'rentPayments'
+      ];
 
-    for (const collName of relatedCollections) {
-      try {
+      for (const collName of relatedCollections) {
         const q = query(collection(db, collName), where('propertyId', '==', propertyId));
         const snaps = await getDocs(q);
         snaps.docs.forEach(d => {
           deleteDocumentNonBlocking(doc(db, collName, d.id));
         });
-      } catch (e) {
-        console.warn(`Cascading Purge Warning: Failed to clean ${collName}`);
       }
-    }
 
-    toast({ 
-      title: "Asset Purged", 
-      description: "Compliance Ledger and financial records updated." 
-    });
+      toast({ 
+        title: "Asset Purged", 
+        description: "Compliance Ledger, tenants, and financial records updated." 
+      });
+    } catch (error) {
+      console.error('Cascading Purge Error:', error);
+      toast({ variant: "destructive", title: "Sync Interrupted" });
+    }
   };
 
   if (!isClient) return null;
@@ -271,7 +272,7 @@ export default function PropertiesPage() {
                               <AlertDialogHeader className="text-left">
                                 <AlertDialogTitle className="text-2xl font-headline font-bold text-foreground">Purge Asset Record?</AlertDialogTitle>
                                 <AlertDialogDescription className="text-muted-foreground font-medium text-base mt-2">
-                                  This action is irreversible. All <strong>Compliance Ledger</strong> entries (Inspections), maintenance history, and financial ledgers for <strong>{property.addressLine1}</strong> will be permanently purged.
+                                  This action is irreversible. All <strong>Compliance Ledger</strong> entries (Inspections), associated <strong>tenants</strong>, maintenance history, and financial ledgers for <strong>{property.addressLine1}</strong> will be permanently purged.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter className="mt-8 gap-3">
