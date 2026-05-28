@@ -45,12 +45,14 @@ import { collection, doc, serverTimestamp, query, where } from "firebase/firesto
 import { useToast } from "@/hooks/use-toast";
 import { sendRentReceiptEmail } from "@/lib/actions/email-actions";
 import { jsPDF } from "jspdf";
+import Link from "next/link";
 
 /**
  * @fileOverview Landlord Insight Hub.
  * Optimized for vertical fidelity: Period-based Rent Ledger refactored for mobile compatibility.
  * Persistence: Remembers user's last selected month and year.
  * Added: Tax Reporting Hub for HMRC self-assessment statements.
+ * Integration: Stat cards wired with high-fidelity navigation.
  */
 
 export default function LandlordDashboard() {
@@ -416,14 +418,14 @@ export default function LandlordDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { title: "Gross Annual Potential", val: `£${financialStats.annualGross.toLocaleString()}`, Icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5" },
-          { title: "Portfolio Expenses (YTD)", val: `£${financialStats.totalExpenses.toLocaleString()}`, Icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5" },
+          { title: "Gross Annual Potential", val: `£${financialStats.annualGross.toLocaleString()}`, Icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5", href: "/landlord/properties" },
+          { title: "Portfolio Expenses (YTD)", val: `£${financialStats.totalExpenses.toLocaleString()}`, Icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", href: "/landlord/maintenance" },
           { title: "Net Annual Forecast", val: `£${financialStats.netAnnualForecast.toLocaleString()}`, Icon: TrendingUp, color: "text-accent", bg: "bg-accent/5" },
-          { title: `${months[selectedMonth - 1].substring(0, 3)} Collected`, val: `£${financialStats.actualCollectedThisPeriod.toLocaleString()}`, Icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats.collectionRate }
+          { title: `${months[selectedMonth - 1].substring(0, 3)} Collected`, val: `£${financialStats.actualCollectedThisPeriod.toLocaleString()}`, Icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats.collectionRate, href: "#rent-ledger" }
         ].map((stat, i) => {
           const IconComp = stat.Icon;
-          return (
-            <Card key={i} className="border-none shadow-sm rounded-[2rem] overflow-hidden group hover:scale-[1.01] transition-all bg-card ring-1 ring-white/5">
+          const CardContentComp = (
+            <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden group hover:scale-[1.01] transition-all bg-card ring-1 ring-white/5 h-full">
               <CardContent className="pt-8 text-left px-6">
                 <div className="flex items-center justify-between mb-6">
                   <div className={cn("p-3 rounded-xl shadow-inner border border-white/5 transition-transform group-hover:scale-110", stat.bg, stat.color)}>
@@ -438,6 +440,16 @@ export default function LandlordDashboard() {
               </CardContent>
             </Card>
           );
+
+          if (stat.href) {
+            return (
+              <Link key={i} href={stat.href} className="block h-full transition-transform active:scale-[0.98]">
+                {CardContentComp}
+              </Link>
+            );
+          }
+
+          return <div key={i}>{CardContentComp}</div>;
         })}
       </div>
 
@@ -471,7 +483,7 @@ export default function LandlordDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-2xl rounded-[2.5rem] bg-card overflow-hidden ring-1 ring-white/5">
+          <Card id="rent-ledger" className="border-none shadow-2xl rounded-[2.5rem] bg-card overflow-hidden ring-1 ring-white/5">
             <CardHeader className="text-left px-8 pt-8 pb-4 border-b border-white/5 flex flex-col items-start gap-6 bg-white/[0.01]">
               <CardTitle className="text-xl font-headline flex items-center text-foreground tracking-tight">
                 <ReceiptText className="w-6 h-6 mr-3 text-accent" />
