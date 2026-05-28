@@ -316,7 +316,7 @@ export default function LandlordDashboard() {
           </Card>
 
           <Card className="border-none shadow-2xl rounded-[2.5rem] bg-card overflow-hidden ring-1 ring-white/5">
-            <CardHeader className="text-left px-8 pt-8 pb-4 border-b border-white/5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-white/[0.01]">
+            <CardHeader className="text-left px-8 pt-8 pb-4 border-b border-white/5 flex flex-col items-start gap-6 bg-white/[0.01]">
               <CardTitle className="text-xl font-headline flex items-center text-foreground tracking-tight">
                 <ReceiptText className="w-6 h-6 mr-3 text-accent" />
                 Monthly Rent Ledger
