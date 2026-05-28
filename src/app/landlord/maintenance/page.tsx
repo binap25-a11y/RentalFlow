@@ -418,7 +418,7 @@ export default function MaintenancePage() {
       </div>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card max-w-[650px] flex flex-col h-[850px] max-h-[90vh] ring-1 ring-white/10">
+        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card max-w-[650px] flex flex-col h-[850px] max-h-[95vh] ring-1 ring-white/10">
           <form onSubmit={handleCreateRequest} className="flex flex-col h-full overflow-hidden">
             <div className="p-10 bg-primary/5 border-b text-left shrink-0">
               <DialogTitle className="font-headline text-2xl font-bold text-foreground tracking-tight">Log Maintenance Event</DialogTitle>
@@ -426,7 +426,7 @@ export default function MaintenancePage() {
             </div>
             
             <ScrollArea className="flex-1">
-              <div className="grid gap-8 p-10 text-left">
+              <div className="grid gap-8 p-10 text-left pb-20">
                 <div className="space-y-3">
                   <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Target Inventory Asset</Label>
                   <select 
@@ -461,7 +461,7 @@ export default function MaintenancePage() {
       </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card max-w-[650px] flex flex-col h-[850px] max-h-[90vh] ring-1 ring-white/10">
+        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card max-w-[650px] flex flex-col h-[850px] max-h-[95vh] ring-1 ring-white/10">
           <form onSubmit={handleUpdateTask} className="flex flex-col h-full overflow-hidden">
             <div className="p-10 bg-primary/5 border-b text-left shrink-0">
               <DialogTitle className="font-headline text-2xl font-bold text-foreground tracking-tight">Modify Task Records</DialogTitle>
@@ -469,7 +469,7 @@ export default function MaintenancePage() {
             </div>
             
             <ScrollArea className="flex-1">
-              <div className="grid gap-8 p-10 text-left">
+              <div className="grid gap-8 p-10 text-left pb-20">
                 <div className="space-y-3">
                   <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Target Inventory Asset</Label>
                   <select 

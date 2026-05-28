@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -35,6 +36,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type PortfolioEvent = {
   id: string;
@@ -344,8 +346,8 @@ export default function LandlordCalendarPage() {
             <DialogDescription className="text-sm font-medium text-muted-foreground mt-1">Registering a site event for {format(selectedDate, 'PPP')}</DialogDescription>
           </div>
           
-          <div className="flex-1 overflow-y-auto min-h-0 bg-white/[0.01]">
-            <form id="maintenance-scheduler" onSubmit={handleAddRepair} className="p-8 space-y-10 text-left pb-20">
+          <ScrollArea className="flex-1 min-h-0 bg-white/[0.01]">
+            <form id="maintenance-scheduler" onSubmit={handleAddRepair} className="p-8 space-y-10 text-left pb-24">
               <div className="space-y-3">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Target Inventory Asset</Label>
                 <select 
@@ -378,7 +380,7 @@ export default function LandlordCalendarPage() {
                 />
               </div>
             </form>
-          </div>
+          </ScrollArea>
 
           <DialogFooter className="p-6 bg-muted/5 border-t border-white/5 shrink-0">
             <Button 

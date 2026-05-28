@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -385,7 +386,7 @@ export default function InspectionsPage() {
                               <DialogDescription className="font-medium text-muted-foreground font-body mt-1">Conducting full safety audit with high-fidelity evidence capture.</DialogDescription>
                             </div>
                             <ScrollArea className="flex-1 text-left">
-                              <div className="p-8 space-y-8">
+                              <div className="p-8 space-y-8 pb-24">
                                 <Tabs defaultValue="exterior" className="w-full">
                                   <div className="overflow-x-auto pb-4 no-scrollbar">
                                     <TabsList className="inline-flex w-max min-w-full bg-muted/50 p-1.5 rounded-2xl h-auto gap-1">
@@ -488,34 +489,36 @@ export default function InspectionsPage() {
 
       {/* Edit Metadata Dialog */}
       <Dialog open={!!editingMetadata} onOpenChange={(open) => !open && setEditingMetadata(null)}>
-        <DialogContent className="sm:max-w-[500px] p-0 rounded-[2.5rem] border-none shadow-2xl flex flex-col overflow-hidden bg-card">
+        <DialogContent className="sm:max-w-[500px] p-0 rounded-[2.5rem] border-none shadow-2xl flex flex-col h-[600px] max-h-[90vh] overflow-hidden bg-card">
           <div className="p-8 bg-primary/5 border-b text-left shrink-0">
             <DialogTitle className="text-2xl font-headline font-bold text-foreground tracking-tight">Modify Audit Record</DialogTitle>
             <DialogDescription className="font-medium text-muted-foreground font-body mt-1">Adjust property assignment and scheduling for this inspection.</DialogDescription>
           </div>
-          <div className="p-8 space-y-8 text-left">
-            <div className="space-y-2">
-              <Label className="text-xs uppercase font-bold text-muted-foreground font-headline tracking-widest opacity-60">Target Asset</Label>
-              <select className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" value={editPropertyId} onChange={(e) => setEditPropertyId(e.target.value)}>
-                <option value="">Choose a property...</option>
-                {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
-              </select>
+          <ScrollArea className="flex-1 min-h-0 bg-white/[0.01]">
+            <div className="p-8 space-y-8 text-left pb-24">
+              <div className="space-y-2">
+                <Label className="text-xs uppercase font-bold text-muted-foreground font-headline tracking-widest opacity-60">Target Asset</Label>
+                <select className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" value={editPropertyId} onChange={(e) => setEditPropertyId(e.target.value)}>
+                  <option value="">Choose a property...</option>
+                  {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs uppercase font-bold text-muted-foreground font-headline tracking-widest opacity-60">Audit Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant={"outline"} className={cn("w-full justify-start text-left font-bold h-12 rounded-xl border-border bg-muted/20 hover:bg-muted/30 transition-colors font-body", !editDate && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {editDate ? format(editDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl border-none overflow-hidden" align="start">
+                    <Calendar mode="single" selected={editDate} onSelect={setEditDate} initialFocus />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs uppercase font-bold text-muted-foreground font-headline tracking-widest opacity-60">Audit Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant={"outline"} className={cn("w-full justify-start text-left font-bold h-12 rounded-xl border-border bg-muted/20 hover:bg-muted/30 transition-colors font-body", !editDate && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {editDate ? format(editDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl border-none overflow-hidden" align="start">
-                  <Calendar mode="single" selected={editDate} onSelect={setEditDate} initialFocus />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
+          </ScrollArea>
           <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
             <Button className="w-full rounded-xl h-12 font-bold shadow-lg shadow-accent/10 font-headline bg-background text-foreground border border-border hover:bg-primary hover:text-primary-foreground transition-all uppercase tracking-widest text-[10px]" onClick={handleUpdateMetadata} disabled={!editDate || !editPropertyId}>
               <Save className="w-4 h-4 mr-2" />
