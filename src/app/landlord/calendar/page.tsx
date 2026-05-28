@@ -357,12 +357,12 @@ export default function LandlordCalendarPage() {
             </form>
           </div>
 
-          <DialogFooter className="p-10 bg-muted/5 border-t border-white/5 shrink-0">
+          <DialogFooter className="p-8 bg-muted/5 border-t border-white/5 shrink-0">
             <Button 
               form="maintenance-scheduler"
               type="submit" 
               disabled={isSaving || !selectedPropertyId || !repairTitle} 
-              className="w-full rounded-[1.5rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:opacity-90 transition-all font-headline uppercase tracking-widest text-[11px] border-none hover:scale-[1.01]"
+              className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:opacity-90 transition-all font-headline uppercase tracking-widest text-[10px] border-none hover:scale-[1.01]"
             >
               {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
               Synchronize to Ledger
