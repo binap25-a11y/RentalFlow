@@ -404,7 +404,7 @@ export default function LandlordDashboard() {
            <Card className="border-none shadow-2xl rounded-[2.5rem] bg-card ring-1 ring-border text-card-foreground overflow-hidden p-8 text-left relative group">
             <div className="relative z-10 space-y-6">
                <div className="space-y-1.5">
-                 <h3 className="font-bold font-headline text-xl tracking-tight text-foreground">Financial Hub</h3>
+                 <h3 className="font-bold font-headline text-xl tracking-tight text-foreground">Expense Hub</h3>
                  <p className="text-xs text-muted-foreground font-medium opacity-70 leading-relaxed">Orchestrate portfolio expenses and insurance records.</p>
                </div>
                <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
