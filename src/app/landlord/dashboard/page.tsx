@@ -270,7 +270,7 @@ export default function LandlordDashboard() {
             <CardHeader className="text-left px-8 pt-8 pb-4 border-b border-white/5 bg-white/[0.02]">
               <CardTitle className="text-xl font-headline flex items-center text-foreground tracking-tight">
                 <BarChart3 className="w-6 h-6 mr-3 text-accent" />
-                Yield Distribution
+                Rent Distribution
               </CardTitle>
             </CardHeader>
             <CardContent className="h-[380px] p-8">

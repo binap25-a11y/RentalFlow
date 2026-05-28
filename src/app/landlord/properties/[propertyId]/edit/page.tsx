@@ -226,9 +226,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
             <p className="text-muted-foreground font-medium font-body text-sm mt-1 opacity-60">Updating {address || 'Property Record'}.</p>
           </div>
         </div>
-        <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 px-5 py-2 rounded-full font-bold uppercase tracking-[0.25em] text-[10px]">
-          <Sparkles className="w-3.5 h-3.5 mr-2" /> Atomic Sync Active
-        </Badge>
       </div>
 
       <Card className="border-none shadow-2xl overflow-hidden rounded-[3rem] bg-card ring-1 ring-white/5">

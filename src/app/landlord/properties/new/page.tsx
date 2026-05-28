@@ -184,9 +184,6 @@ export default function NewPropertyPage() {
             <p className="text-muted-foreground font-medium font-body text-sm">Adding a high-value property with professional visual orchestration.</p>
           </div>
         </div>
-        <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[9px]">
-          <Sparkles className="w-3 h-3 mr-2 text-accent" /> Atomic Sync Active
-        </Badge>
       </div>
 
       <Card className="border-none shadow-2xl overflow-hidden rounded-[2.5rem] bg-card ring-1 ring-border">
