@@ -61,10 +61,11 @@ export function Header({ role }: HeaderProps) {
   const [sessionTime, setSessionTime] = useState("60");
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   
   const userName = user?.displayName || user?.email?.split('@')[0] || 'User';
 
-  const initialNotifications: Notification[] = useMemo(() => {
+  const defaultNotifications: Notification[] = useMemo(() => {
     if (role === 'landlord') {
       return [
         { id: '1', title: 'Portfolio Grade Updated', description: 'Verification engine complete.', time: '15 mins ago', type: 'grade', href: '/landlord/dashboard' },
@@ -80,8 +81,6 @@ export function Header({ role }: HeaderProps) {
     }
   }, [role]);
 
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
-
   useEffect(() => {
     setMounted(true);
     const isDark = document.documentElement.classList.contains('dark');
@@ -89,7 +88,18 @@ export function Header({ role }: HeaderProps) {
     
     const savedSession = localStorage.getItem('session_duration');
     if (savedSession) setSessionTime(savedSession);
-  }, []);
+
+    // PERSISTENCE PROTOCOL: Synchronize notifications with local registry
+    const registryKey = `notifications_${role}_${user?.uid || 'guest'}`;
+    const savedNotifications = localStorage.getItem(registryKey);
+    
+    if (savedNotifications) {
+      setNotifications(JSON.parse(savedNotifications));
+    } else {
+      setNotifications(defaultNotifications);
+      localStorage.setItem(registryKey, JSON.stringify(defaultNotifications));
+    }
+  }, [role, defaultNotifications, user?.uid]);
 
   const toggleDarkMode = (checked: boolean) => {
     setIsDarkMode(checked);
@@ -121,7 +131,10 @@ export function Header({ role }: HeaderProps) {
 
   const deleteNotification = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    const updated = notifications.filter(n => n.id !== id);
+    setNotifications(updated);
+    const registryKey = `notifications_${role}_${user?.uid || 'guest'}`;
+    localStorage.setItem(registryKey, JSON.stringify(updated));
   };
 
   const handleNotificationClick = (href: string) => {
@@ -131,6 +144,8 @@ export function Header({ role }: HeaderProps) {
 
   const clearAll = () => {
     setNotifications([]);
+    const registryKey = `notifications_${role}_${user?.uid || 'guest'}`;
+    localStorage.setItem(registryKey, JSON.stringify([]));
   };
 
   return (
@@ -195,7 +210,7 @@ export function Header({ role }: HeaderProps) {
                          <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            className="h-7 w-7 rounded-lg opacity-40 group-hover:opacity-100 transition-opacity absolute top-2 right-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                             onClick={(e) => deleteNotification(n.id, e)}
                           >
                             <X className="h-3 w-3" />
