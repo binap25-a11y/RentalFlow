@@ -347,7 +347,6 @@ export default function LandlordDashboard() {
               <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em] font-headline opacity-40 shrink-0">{format(new Date(), 'MMMM yyyy')} Registry</p>
             </CardHeader>
             <CardContent className="p-0">
-               {/* 🏢 MONTH LEDGE SCROLLBAR: Optimized for visibility and zero horizontal friction */}
                <div className="h-[600px] w-full overflow-auto custom-scrollbar">
                  <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
                    <thead>
@@ -396,7 +395,6 @@ export default function LandlordDashboard() {
                            </td>
                            <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
-                                {/* TRI-STATE STATUS DROPDOWN: High visibility verified menu */}
                                 <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
                                   <SelectTrigger className={cn(
                                     "h-10 w-full max-w-[180px] rounded-lg border-none font-bold text-[9px] uppercase tracking-widest shadow-sm px-4 shrink-0 transition-all",
@@ -412,17 +410,6 @@ export default function LandlordDashboard() {
                                     <SelectItem value="late" className="text-[9px] font-bold uppercase tracking-widest py-3">Paid Late</SelectItem>
                                   </SelectContent>
                                 </Select>
-                                
-                                <div className="flex items-center gap-2 shrink-0">
-                                  <Button variant="ghost" size="icon" className="rounded-lg h-10 w-10 hover:bg-white/5 border border-white/5 shrink-0" onClick={() => handleOpenLedgerEdit(prop, payment)}>
-                                    <Settings2 className="w-4 h-4 text-muted-foreground" />
-                                  </Button>
-                                  {!isPaid && !isLate && (
-                                    <Button size="sm" className="rounded-lg h-10 px-4 font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-xl shadow-primary/10 shrink-0 uppercase tracking-widest text-[9px]" onClick={() => handleOpenLedgerEdit(prop, payment)}>
-                                      Process
-                                    </Button>
-                                  )}
-                                </div>
                               </div>
                            </td>
                          </tr>
@@ -536,7 +523,6 @@ export default function LandlordDashboard() {
 
       <Dialog open={!!activePaymentEdit} onOpenChange={(o) => !o && setActivePaymentEdit(null)}>
         <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh] max-w-[500px] ring-1 ring-white/10">
-           {/* THEME-CONSISTENT HEADING */}
            <div className="p-8 bg-secondary text-secondary-foreground border-b border-border text-left shrink-0 relative overflow-hidden">
              <div className="absolute top-0 right-0 p-10 opacity-5"><PoundSterling className="w-24 h-24" /></div>
              <DialogHeader>
@@ -547,7 +533,6 @@ export default function LandlordDashboard() {
            
            <ScrollArea className="flex-1">
              <div className="p-8 space-y-12 text-left pb-24">
-                {/* 🏠 RENT ADJUSTMENT: High-contrast visibility, correctly resized placeholder */}
                 <div className="space-y-5 bg-muted/30 p-6 rounded-[2.5rem] border border-border/50 shadow-inner">
                     <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-accent/10 rounded-xl text-accent border border-accent/20">
@@ -567,7 +552,6 @@ export default function LandlordDashboard() {
                     </div>
                 </div>
 
-                {/* 🔄 TRI-STATE COLLECTION STATE: Paid, Not Paid, Paid Late */}
                 <div className="space-y-5 bg-muted/30 p-6 rounded-[2.5rem] border border-border/50 shadow-inner">
                     <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-accent/10 rounded-xl text-accent border border-accent/20">
