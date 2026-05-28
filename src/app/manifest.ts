@@ -2,7 +2,8 @@ import { MetadataRoute } from 'next'
 
 /**
  * 📱 Web App Manifest Configuration
- * Optimized for high-fidelity Android and iOS "Add to Home Screen" experiences.
+ * Optimized for high-fidelity Android and iOS "Standalone" experiences.
+ * Setting display: standalone allows the OS to preserve app state when moving away.
  */
 export default function manifest(): MetadataRoute.Manifest {
   const LOGO_URL = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=512&h=512&auto=format&fit=crop";
@@ -13,6 +14,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Professional Rental Management & AI-Driven Maintenance',
     start_url: '/',
     display: 'standalone',
+    orientation: 'portrait',
     background_color: '#ffffff',
     theme_color: '#1e3a8a',
     icons: [

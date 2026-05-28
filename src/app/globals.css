@@ -80,7 +80,10 @@
   }
   body {
     @apply bg-background text-foreground font-body antialiased transition-colors duration-300;
+    /* Prevent Pull-to-Refresh on mobile browsers for a more native feel */
     overscroll-behavior-y: none;
+    /* Account for hardware notches and status bars on mobile */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline font-bold tracking-tight text-foreground;
