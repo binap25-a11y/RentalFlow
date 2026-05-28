@@ -230,16 +230,17 @@ export default function LandlordEmergencyContactsPage() {
         </div>
         
         <div className="flex flex-wrap items-center gap-3 pt-2">
-          <div className="flex items-center gap-2 bg-card rounded-xl border border-border px-3 h-11 shadow-sm">
+          {/* THEMED CONTEXT SELECTOR: Light on Light / Dark on Dark */}
+          <div className="flex items-center gap-2 bg-background rounded-xl border border-border px-4 h-11 shadow-sm transition-colors duration-300">
              <Filter className="w-4 h-4 text-primary/60" />
-             <Label className="text-[10px] font-bold uppercase text-muted-foreground">Context:</Label>
+             <Label className="text-[10px] font-bold uppercase text-muted-foreground font-headline tracking-widest">Context:</Label>
              <select 
-               className="bg-transparent text-sm font-bold outline-none cursor-pointer text-foreground"
+               className="bg-transparent text-sm font-bold outline-none cursor-pointer text-foreground font-headline"
                value={selectedPropertyId}
                onChange={(e) => setSelectedPropertyId(e.target.value)}
              >
-               <option value="">Full Portfolio</option>
-               {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+               <option value="" className="bg-card">Full Portfolio</option>
+               {properties?.map(p => <option key={p.id} value={p.id} className="bg-card">{p.addressLine1}</option>)}
              </select>
           </div>
           <Button variant="outline" onClick={downloadPDF} className="rounded-xl font-bold h-11 border-border bg-card shadow-sm">
@@ -438,4 +439,3 @@ export default function LandlordEmergencyContactsPage() {
     </div>
   );
 }
-

@@ -44,7 +44,7 @@ import { useToast } from "@/hooks/use-toast";
 /**
  * @fileOverview Landlord Insight Hub.
  * Optimized for active-asset financials and structural stability.
- * Thematic update: Forecast card now follows light/dark mode protocols.
+ * Thematic update: Selectors follow light/dark mode protocols (bg-background).
  */
 
 export default function LandlordDashboard() {
@@ -301,13 +301,14 @@ export default function LandlordDashboard() {
                 <ReceiptText className="w-6 h-6 mr-3 text-accent" />
                 Monthly Rent Ledger
               </CardTitle>
-              <div className="flex items-center gap-2 bg-muted/20 p-1.5 rounded-2xl border border-white/5 shrink-0">
+              {/* THEMED MONTH SELECTOR: Light on Light / Dark on Dark */}
+              <div className="flex items-center gap-2 bg-background p-1.5 rounded-2xl border border-border shrink-0 transition-colors duration-300 shadow-sm">
                 <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(Number(v))}>
                   <SelectTrigger className="h-9 w-[130px] border-none bg-transparent font-bold text-[10px] uppercase tracking-widest focus:ring-0">
                     <CalendarDays className="w-3.5 h-3.5 mr-2 opacity-40" />
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border-white/5 bg-card">
+                  <SelectContent className="rounded-xl border-border bg-card">
                     {months.map((m, i) => <SelectItem key={m} value={(i + 1).toString()} className="text-[10px] font-bold uppercase py-2">{m}</SelectItem>)}
                   </SelectContent>
                 </Select>
