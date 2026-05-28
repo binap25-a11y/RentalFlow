@@ -17,8 +17,7 @@ import { Button } from "@/components/ui/button";
 import { 
   CalendarDays, Loader2, Wrench, ShieldCheck, 
   ChevronRight, Clock, MapPin, 
-  LayoutDashboard, Plus,
-  Building2, Save, Activity, ShieldAlert,
+  Plus, Building2, Save, Activity,
   ArrowRight
 } from "lucide-react";
 import { format, isSameDay, isAfter, startOfDay, isValid } from "date-fns";
@@ -324,27 +323,43 @@ export default function LandlordCalendarPage() {
               <DialogDescription className="text-xs font-medium text-muted-foreground mt-1">Registering an operational event for {format(selectedDate, 'PPP')}</DialogDescription>
             </div>
             <ScrollArea className="flex-1">
-              <div className="p-8 space-y-6 text-left">
-                <div className="space-y-2">
-                  <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Target Inventory Asset</Label>
-                  <select className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-foreground font-headline" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
+              <div className="p-8 space-y-8 text-left pb-16">
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Target Inventory Asset</Label>
+                  <select 
+                    className="flex h-14 w-full rounded-2xl border-none bg-muted/30 px-5 py-2 text-base focus:ring-2 focus:ring-primary outline-none font-bold text-foreground font-headline shadow-inner" 
+                    value={selectedPropertyId} 
+                    onChange={(e) => setSelectedPropertyId(e.target.value)} 
+                    required
+                  >
                     <option value="">Choose an asset...</option>
                     {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
                   </select>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Repair Subject</Label>
-                  <Input value={repairTitle} onChange={(e) => setRepairTitle(e.target.value)} required placeholder="e.g. Electrical Fault Discovery" className="rounded-xl h-12 bg-muted/20 border-none font-bold text-sm px-4" />
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Repair Subject</Label>
+                  <Input 
+                    value={repairTitle} 
+                    onChange={(e) => setRepairTitle(e.target.value)} 
+                    required 
+                    placeholder="e.g. Electrical Fault Discovery" 
+                    className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner" 
+                  />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Operational Context</Label>
-                  <Textarea value={repairDesc} onChange={(e) => setRepairDesc(e.target.value)} placeholder="Provide full context for contractor access..." className="rounded-xl min-h-[120px] bg-muted/20 border-none font-medium px-4 py-4 text-sm leading-relaxed" />
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Operational Context</Label>
+                  <Textarea 
+                    value={repairDesc} 
+                    onChange={(e) => setRepairDesc(e.target.value)} 
+                    placeholder="Provide full context for contractor access..." 
+                    className="rounded-2xl min-h-[160px] bg-muted/30 border-none font-medium px-6 py-6 text-base leading-relaxed shadow-inner" 
+                  />
                 </div>
               </div>
             </ScrollArea>
             <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
-              <Button type="submit" disabled={isSaving || !selectedPropertyId || !repairTitle} className="w-full rounded-xl h-14 font-bold bg-primary text-primary-foreground shadow-lg hover:opacity-90 transition-all font-headline uppercase tracking-widest text-xs">
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+              <Button type="submit" disabled={isSaving || !selectedPropertyId || !repairTitle} className="w-full rounded-2xl h-16 font-bold bg-primary text-primary-foreground shadow-2xl hover:opacity-90 transition-all font-headline uppercase tracking-widest text-[11px] border-none">
+                {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
                 Synchronize to Ledger
               </Button>
             </DialogFooter>
