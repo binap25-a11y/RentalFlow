@@ -211,7 +211,7 @@ export default function LandlordDashboard() {
     };
     
     setDocumentNonBlocking(requestRef, payload, { merge: true });
-    toast({ title: "Ledger Item Registered" });
+    toast({ title: "Expense Registered" });
     setIsExpenseDialogOpen(false);
     setIsSavingExpense(false);
     setExpAmount('');
@@ -243,17 +243,17 @@ export default function LandlordDashboard() {
              <Activity className="w-3.5 h-3.5 mr-2" /> Financial Pulse Hub
           </Badge>
           
-          {!isPro && (
-            <Button variant="outline" className="rounded-xl h-9 px-6 font-bold border-accent/30 text-accent bg-accent/5 hover:bg-accent/10 transition-all shadow-xl shadow-accent/5 text-[9px] uppercase tracking-widest">
-              <Crown className="w-3.5 h-3.5 mr-2" /> Upgrade to Premium
-            </Button>
-          )}
-          
           {isPro && (
             <div className="flex items-center gap-2.5 px-5 py-1.5 bg-emerald-500/10 text-emerald-500 rounded-full border border-emerald-500/20 shadow-sm">
                {isAdminEscalated ? <ShieldCheck className="w-3.5 h-3.5" /> : <Crown className="w-3.5 h-3.5" />}
                <span className="text-[9px] font-bold uppercase tracking-[0.15em] font-headline">Premium Plan Active</span>
             </div>
+          )}
+
+          {!isPro && (
+            <Button variant="outline" className="rounded-xl h-9 px-6 font-bold border-accent/30 text-accent bg-accent/5 hover:bg-accent/10 transition-all shadow-xl shadow-accent/5 text-[9px] uppercase tracking-widest">
+              <Crown className="w-3.5 h-3.5 mr-2" /> Upgrade to Premium
+            </Button>
           )}
         </div>
       </div>
@@ -410,7 +410,7 @@ export default function LandlordDashboard() {
                <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="w-full rounded-xl bg-accent text-white font-bold h-12 hover:bg-accent/90 transition-all shadow-xl shadow-accent/10 text-[10px] uppercase tracking-[0.15em] border-none">
-                    <Plus className="w-4 h-4 mr-2" /> Register Ledger Item
+                    <Plus className="w-4 h-4 mr-2" /> Register Expense
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col h-[700px] max-h-[90vh] max-w-[500px] ring-1 ring-white/10">
