@@ -7,7 +7,7 @@ import {
   ShieldAlert, Loader2, CheckCircle2,
   Plus, Save, ReceiptText,
   Crown, ShieldCheck, PoundSterling, ArrowUpRight, ArrowDownRight,
-  Activity, BarChart3, CalendarDays
+  Activity, BarChart3, CalendarDays, X
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, setDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
@@ -43,10 +43,9 @@ import { collection, doc, serverTimestamp, query, where } from "firebase/firesto
 import { useToast } from "@/hooks/use-toast";
 
 /**
- * @fileOverview High-Fidelity Portfolio Insights Dashboard.
- * Optimized for real-time financial tracking and historical ledger navigation.
- * Implements the Deterministic Monthly Ledger Protocol (DMLP) with Scroll Authority.
- * Responsive Adaptive Registry: Removes horizontal scrolling for an elite mobile experience.
+ * @fileOverview High-Fidelity Portfolio Command Hub.
+ * Optimized for Adaptive Registry: Elite Cards on Mobile, Refined Table on Desktop.
+ * Implements the Deterministic Monthly Ledger Protocol (DMLP).
  */
 
 export default function LandlordDashboard() {
@@ -110,7 +109,7 @@ export default function LandlordDashboard() {
     const monthlyGrossPotential = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
     const annualGross = monthlyGrossPotential * 12;
     
-    // TRI-STATE CALCULATION: Aggregate Paid + Paid Late for the VIEWED period
+    // Aggregating Paid + Paid Late for the VIEWED period
     const actualCollectedThisPeriod = periodPayments?.filter(p => p.status === 'paid' || p.status === 'late').reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
     
     const totalExpenses = maintenance.reduce((acc, r) => acc + (Number(r.cost) || 0), 0);
@@ -127,7 +126,7 @@ export default function LandlordDashboard() {
     })).slice(0, 8);
   }, [properties, isClient]);
 
-  // INLINE LEDGER ACTIONS (Deterministic Month/Year)
+  // INLINE LEDGER ACTIONS
   const handleQuickRentUpdate = (propertyId: string, amount: string) => {
     if (!db) return;
     const propertyRef = doc(db, 'properties', propertyId);
@@ -208,15 +207,15 @@ export default function LandlordDashboard() {
     );
   }
 
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const years = Array.from({length: 5}, (_, i) => new Date().getFullYear() - 2 + i);
+
   const statConfig = [
     { title: "Gross Annual Potential", val: `£${financialStats.annualGross.toLocaleString()}`, Icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5", Indicator: ArrowUpRight },
     { title: "Portfolio Expenses (YTD)", val: `£${financialStats.totalExpenses.toLocaleString()}`, Icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", Indicator: ArrowDownRight },
     { title: "Net Annual Forecast", val: `£${financialStats.netAnnualForecast.toLocaleString()}`, Icon: TrendingUp, color: "text-primary-foreground", bg: "bg-primary", isPrimary: true },
     { title: `${format(new Date(selectedYear, selectedMonth - 1), 'MMM')} Collected`, val: `£${financialStats.actualCollectedThisPeriod.toLocaleString()}`, Icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats.collectionRate }
   ];
-
-  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const years = Array.from({length: 5}, (_, i) => new Date().getFullYear() - 2 + i);
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-12">
@@ -312,7 +311,6 @@ export default function LandlordDashboard() {
                 Monthly Rent Ledger
               </CardTitle>
               
-              {/* PERIOD SELECTOR HUB */}
               <div className="flex items-center gap-2 bg-muted/20 p-1.5 rounded-2xl border border-white/5 shadow-inner shrink-0">
                 <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(Number(v))}>
                   <SelectTrigger className="h-9 w-[130px] border-none bg-transparent font-bold text-[10px] uppercase tracking-widest text-foreground focus:ring-0">
@@ -334,55 +332,54 @@ export default function LandlordDashboard() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-               {/* RESPONSIVE ADAPTIVE REGISTRY: Cards on Mobile, Table on Desktop */}
-               <ScrollArea className="h-[600px] w-full">
-                 <div className="block md:hidden p-4 space-y-4">
-                   {/* MOBILE VIEW: Vertical Stack Cards */}
+               <ScrollArea className="h-[600px] w-full overflow-auto">
+                 {/* RESPONSIVE ADAPTIVE REGISTRY: Cards on Mobile, Table on Desktop */}
+                 <div className="block lg:hidden p-4 space-y-4">
                    {properties?.filter(p => p.isOccupied).map(prop => {
                      const payment = periodPayments?.find(pm => pm.propertyId === prop.id);
-                     const status = payment?.status || 'pending';
+                     const status = payment?.status || 'not-paid';
                      const isPaid = status === 'paid';
                      const isLate = status === 'late';
                      const imageUrl = getResolvedImageUrl(prop.imageUrl, prop.imageUrls);
 
                      return (
-                       <Card key={prop.id} className="border-none shadow-sm rounded-2xl bg-muted/10 ring-1 ring-white/5 p-5 space-y-4 text-left">
+                       <Card key={prop.id} className="border-none shadow-sm rounded-2xl bg-muted/10 ring-1 ring-white/5 p-5 space-y-5 text-left">
                          <div className="flex items-center gap-4">
-                           <div className="relative h-14 w-14 rounded-xl overflow-hidden shadow-lg bg-muted shrink-0 flex items-center justify-center">
+                           <div className="relative h-16 w-16 rounded-xl overflow-hidden shadow-lg bg-muted shrink-0 flex items-center justify-center">
                              {imageUrl ? <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" /> : <Building2 className="w-6 h-6 text-muted-foreground/30" />}
                            </div>
                            <div className="min-w-0 flex-1">
-                             <span className="font-bold text-sm text-foreground block truncate">{prop.addressLine1}</span>
-                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 block">{prop.city}</span>
+                             <span className="font-bold text-base text-foreground block truncate">{prop.addressLine1}</span>
+                             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 block">{prop.city}</span>
                            </div>
                          </div>
 
-                         <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/5">
-                            <div className="space-y-1.5">
-                               <Label className="text-[8px] font-bold uppercase text-muted-foreground opacity-50 font-headline">Monthly Yield</Label>
-                               <div className="flex items-center gap-2 bg-muted/30 rounded-lg px-3 h-10 border border-white/5">
-                                  <span className="text-muted-foreground opacity-30 text-xs">£</span>
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                            <div className="space-y-2">
+                               <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-50 font-headline tracking-widest">Target Yield</Label>
+                               <div className="flex items-center gap-2 bg-background/80 rounded-xl px-4 h-12 border border-white/10 shadow-inner">
+                                  <span className="text-muted-foreground opacity-30 font-bold text-sm">£</span>
                                   <Input 
                                     type="number" 
                                     defaultValue={prop.rentAmount} 
-                                    className="h-8 border-none bg-transparent font-bold text-xs p-0 focus:ring-0 text-foreground"
+                                    className="h-10 border-none bg-transparent font-bold text-sm p-0 focus:ring-0 text-foreground"
                                     onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)}
                                   />
                                </div>
                             </div>
-                            <div className="space-y-1.5">
-                               <Label className="text-[8px] font-bold uppercase text-muted-foreground opacity-50 font-headline">Verification</Label>
+                            <div className="space-y-2">
+                               <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-50 font-headline tracking-widest">Verification Status</Label>
                                <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
                                   <SelectTrigger className={cn(
-                                    "h-10 w-full rounded-lg border-none font-bold text-[8px] uppercase tracking-widest shadow-inner px-3",
+                                    "h-12 w-full rounded-xl border-none font-bold text-[10px] uppercase tracking-widest shadow-inner px-4",
                                     isPaid ? "bg-emerald-500/10 text-emerald-500" : isLate ? "bg-sky-500/10 text-sky-500" : "bg-amber-500/10 text-amber-500"
                                   )}>
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent className="rounded-xl border-white/5 bg-card">
-                                    <SelectItem value="pending" className="text-[8px] font-bold uppercase py-2">Not Paid</SelectItem>
-                                    <SelectItem value="paid" className="text-[8px] font-bold uppercase py-2">Paid</SelectItem>
-                                    <SelectItem value="late" className="text-[8px] font-bold uppercase py-2">Paid Late</SelectItem>
+                                    <SelectItem value="not-paid" className="text-[10px] font-bold uppercase py-3">Not Paid</SelectItem>
+                                    <SelectItem value="paid" className="text-[10px] font-bold uppercase py-3">Paid</SelectItem>
+                                    <SelectItem value="late" className="text-[10px] font-bold uppercase py-3">Paid Late</SelectItem>
                                   </SelectContent>
                                </Select>
                             </div>
@@ -392,62 +389,64 @@ export default function LandlordDashboard() {
                    })}
                  </div>
 
-                 {/* DESKTOP VIEW: Structured Table Row */}
-                 <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full text-left border-collapse table-fixed min-w-[800px]">
+                 {/* DESKTOP VIEW: Structured Balanced Table */}
+                 <div className="hidden lg:block">
+                    <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
                       <thead>
                         <tr className="bg-white/[0.02] sticky top-0 z-10">
-                          <th className="px-8 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[45%] bg-card">Asset Registry</th>
-                          <th className="px-8 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[20%] bg-card text-center">Monthly Yield</th>
-                          <th className="px-8 py-4 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[35%] bg-card">Verification State</th>
+                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[40%] bg-card">Asset Registry</th>
+                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[25%] bg-card text-center">Monthly Yield</th>
+                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[35%] bg-card">Status & Management</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
                         {properties?.filter(p => p.isOccupied).map(prop => {
                           const payment = periodPayments?.find(pm => pm.propertyId === prop.id);
-                          const status = payment?.status || 'pending';
+                          const status = payment?.status || 'not-paid';
                           const isPaid = status === 'paid';
                           const isLate = status === 'late';
                           const imageUrl = getResolvedImageUrl(prop.imageUrl, prop.imageUrls);
                           
                           return (
                             <tr key={prop.id} className="hover:bg-white/[0.02] transition-colors group">
-                              <td className="px-8 py-5">
-                                <div className="flex items-center gap-4">
-                                  <div className="relative h-12 w-12 rounded-xl overflow-hidden shadow-xl ring-1 ring-white/5 bg-muted shrink-0 flex items-center justify-center">
+                              <td className="px-8 py-6">
+                                <div className="flex items-center gap-5">
+                                  <div className="relative h-14 w-14 rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/5 bg-muted shrink-0 flex items-center justify-center">
                                     {imageUrl ? <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" /> : <Building2 className="w-6 h-6 text-muted-foreground/30" />}
                                   </div>
                                   <div className="min-w-0 flex-1">
-                                    <span className="font-bold text-sm text-foreground truncate block">{prop.addressLine1}</span>
-                                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 truncate block">{prop.city}</span>
+                                    <span className="font-bold text-base text-foreground truncate block">{prop.addressLine1}</span>
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 truncate block mt-0.5">{prop.city}</span>
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-8 py-5">
-                                 <div className="flex items-center justify-center gap-2 max-w-[140px] mx-auto bg-muted/20 rounded-lg px-3 h-10 border border-white/5">
-                                    <span className="text-muted-foreground opacity-30 font-bold text-xs">£</span>
+                              <td className="px-8 py-6">
+                                 <div className="flex items-center justify-center gap-3 max-w-[160px] mx-auto bg-background/80 rounded-xl px-4 h-12 border border-white/10 shadow-inner">
+                                    <span className="text-muted-foreground opacity-30 font-bold text-sm">£</span>
                                     <Input 
                                        type="number" 
                                        defaultValue={prop.rentAmount} 
-                                       className="h-8 border-none bg-transparent font-bold text-sm focus:ring-0 text-center text-foreground"
+                                       className="h-10 border-none bg-transparent font-bold text-base focus:ring-0 text-center text-foreground"
                                        onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)}
                                     />
                                  </div>
                               </td>
-                              <td className="px-8 py-5">
-                                 <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
-                                   <SelectTrigger className={cn(
-                                     "h-10 w-full max-w-[200px] rounded-lg border-none font-bold text-[9px] uppercase tracking-widest shadow-inner px-4 transition-all",
-                                     isPaid ? "bg-emerald-500/10 text-emerald-500" : isLate ? "bg-sky-500/10 text-sky-500" : "bg-amber-500/10 text-amber-500"
-                                   )}>
-                                     <SelectValue />
-                                   </SelectTrigger>
-                                   <SelectContent className="rounded-xl border-white/5 bg-card">
-                                     <SelectItem value="pending" className="text-[9px] font-bold uppercase tracking-widest py-3">Not Paid</SelectItem>
-                                     <SelectItem value="paid" className="text-[9px] font-bold uppercase tracking-widest py-3">Paid</SelectItem>
-                                     <SelectItem value="late" className="text-[9px] font-bold uppercase tracking-widest py-3">Paid Late</SelectItem>
-                                   </SelectContent>
-                                 </Select>
+                              <td className="px-8 py-6">
+                                 <div className="flex items-center gap-3">
+                                   <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
+                                     <SelectTrigger className={cn(
+                                       "h-12 w-full rounded-xl border-none font-bold text-[10px] uppercase tracking-[0.15em] shadow-inner px-5 transition-all",
+                                       isPaid ? "bg-emerald-500/10 text-emerald-500" : isLate ? "bg-sky-500/10 text-sky-500" : "bg-amber-500/10 text-amber-500"
+                                     )}>
+                                       <SelectValue />
+                                     </SelectTrigger>
+                                     <SelectContent className="rounded-xl border-white/5 bg-card">
+                                       <SelectItem value="not-paid" className="text-[10px] font-bold uppercase tracking-widest py-3">Not Paid</SelectItem>
+                                       <SelectItem value="paid" className="text-[10px] font-bold uppercase tracking-widest py-3">Paid</SelectItem>
+                                       <SelectItem value="late" className="text-[10px] font-bold uppercase tracking-widest py-3">Paid Late</SelectItem>
+                                     </SelectContent>
+                                   </Select>
+                                 </div>
                               </td>
                             </tr>
                           );
