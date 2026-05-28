@@ -46,7 +46,7 @@ import { useToast } from "@/hooks/use-toast";
 /**
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
  * Optimized for real-time financial tracking and elite inline management.
- * Features a horizontally scrollable "Month Ledge" with direct entry textboxes.
+ * Features a horizontally scrollable "Month Ledge" with unified Status & Action cells.
  */
 
 export default function LandlordDashboard() {
@@ -349,9 +349,8 @@ export default function LandlordDashboard() {
                    <thead>
                      <tr className="bg-white/[0.02]">
                        <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[35%]">Property Identity</th>
-                       <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[20%]">Rent Entry</th>
-                       <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[25%]">Collection State</th>
-                       <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground w-[20%]">Actions</th>
+                       <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[20%]">Monthly Rent</th>
+                       <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[45%]">Status & Management</th>
                      </tr>
                    </thead>
                    <tbody className="divide-y divide-white/5">
@@ -388,29 +387,30 @@ export default function LandlordDashboard() {
                               </div>
                            </td>
                            <td className="px-4 py-3">
-                              <Select defaultValue={payment?.status || 'pending'} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
-                                <SelectTrigger className={cn(
-                                  "h-9 w-[180px] rounded-lg border-none font-bold text-[9px] uppercase tracking-widest shadow-sm px-4",
-                                  isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
-                                )}>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-xl border-white/5 bg-card">
-                                  <SelectItem value="pending" className="text-[9px] font-bold uppercase tracking-widest py-3">Pending</SelectItem>
-                                  <SelectItem value="paid" className="text-[9px] font-bold uppercase tracking-widest py-3">Receipted</SelectItem>
-                                </SelectContent>
-                              </Select>
-                           </td>
-                           <td className="px-4 py-3 shrink-0">
-                              <div className="flex items-center gap-2">
-                                <Button variant="ghost" size="icon" className="rounded-lg h-9 w-9 hover:bg-white/5 border border-white/5 shrink-0" onClick={() => handleOpenLedgerEdit(prop, payment)}>
-                                  <Settings2 className="w-3.5 h-3.5 text-muted-foreground" />
-                                </Button>
-                                {!isPaid && (
-                                  <Button size="sm" className="rounded-lg h-9 px-4 font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-xl shadow-primary/10 shrink-0 uppercase tracking-widest text-[9px]" onClick={() => handleOpenLedgerEdit(prop, payment)}>
-                                    Process
+                              <div className="flex items-center gap-4">
+                                <Select defaultValue={payment?.status || 'pending'} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
+                                  <SelectTrigger className={cn(
+                                    "h-9 w-[180px] rounded-lg border-none font-bold text-[9px] uppercase tracking-widest shadow-sm px-4",
+                                    isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
+                                  )}>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="rounded-xl border-white/5 bg-card">
+                                    <SelectItem value="pending" className="text-[9px] font-bold uppercase tracking-widest py-3">Pending</SelectItem>
+                                    <SelectItem value="paid" className="text-[9px] font-bold uppercase tracking-widest py-3">Receipted</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                
+                                <div className="flex items-center gap-2">
+                                  <Button variant="ghost" size="icon" className="rounded-lg h-9 w-9 hover:bg-white/5 border border-white/5 shrink-0" onClick={() => handleOpenLedgerEdit(prop, payment)}>
+                                    <Settings2 className="w-3.5 h-3.5 text-muted-foreground" />
                                   </Button>
-                                )}
+                                  {!isPaid && (
+                                    <Button size="sm" className="rounded-lg h-9 px-4 font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-xl shadow-primary/10 shrink-0 uppercase tracking-widest text-[9px]" onClick={() => handleOpenLedgerEdit(prop, payment)}>
+                                      Process
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                            </td>
                          </tr>
@@ -523,7 +523,7 @@ export default function LandlordDashboard() {
       </div>
 
       <Dialog open={!!activePaymentEdit} onOpenChange={(o) => !o && setActivePaymentEdit(null)}>
-        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[85vh] max-w-[450px] ring-1 ring-white/10">
+        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh] max-w-[500px] ring-1 ring-white/10">
            {/* THEME-CONSISTENT HEADING */}
            <div className="p-6 bg-secondary text-secondary-foreground border-b border-border text-left shrink-0 relative overflow-hidden">
              <div className="absolute top-0 right-0 p-6 opacity-5"><PoundSterling className="w-20 h-20" /></div>
@@ -534,7 +534,7 @@ export default function LandlordDashboard() {
            </div>
            
            <ScrollArea className="flex-1">
-             <div className="p-6 space-y-12 text-left pb-24">
+             <div className="p-6 space-y-10 text-left pb-24">
                 {/* RENT SECTION */}
                 <div className="space-y-4 bg-muted/30 p-5 rounded-[2rem] border border-border/50 shadow-inner">
                     <div className="flex items-center gap-2.5">
@@ -547,7 +547,7 @@ export default function LandlordDashboard() {
                         type="number" 
                         value={editAmount} 
                         onChange={(e) => setEditAmount(e.target.value)} 
-                        className="rounded-xl h-16 bg-background border-none font-bold px-6 text-2xl shadow-2xl text-foreground focus:ring-accent" 
+                        className="rounded-xl h-16 bg-background/80 border border-white/10 font-bold px-6 text-2xl shadow-2xl text-foreground focus:ring-accent" 
                         placeholder="e.g. 1500.00" 
                     />
                 </div>
@@ -558,7 +558,7 @@ export default function LandlordDashboard() {
                         <div className="p-2 bg-accent/10 rounded-lg text-accent">
                             <Activity className="w-4 h-4" />
                         </div>
-                        <Label className="font-bold text-[10px] uppercase text-foreground tracking-[0.15em] font-headline">Collection State</Label>
+                        <Label className="font-bold text-[10px] uppercase text-foreground tracking-[0.15em] font-headline">Collection Status</Label>
                     </div>
                     <Tabs value={editStatus} onValueChange={(v) => setEditStatus(v as any)}>
                         <TabsList className="grid grid-cols-2 h-14 bg-background/50 border-none p-1.5 gap-1.5 rounded-xl">
