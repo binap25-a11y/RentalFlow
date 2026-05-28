@@ -38,12 +38,6 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { collection, doc, serverTimestamp, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
@@ -54,7 +48,7 @@ import { sendRentReceiptEmail } from "@/lib/actions/email-actions";
  * Optimized for vertical fidelity: Period-based Rent Ledger refactored for mobile compatibility.
  * Removes horizontal scroll by stacking rent/status controls vertically per asset.
  * Persistence: Remembers user's last selected month and year.
- * Added: Date picker for manual expense registration.
+ * Updated: Manual date entry for expense registration to replace calendar picker.
  */
 
 export default function LandlordDashboard() {
@@ -461,28 +455,18 @@ export default function LandlordDashboard() {
 
                       <div className="space-y-3">
                         <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Transaction Date</Label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full justify-start text-left h-14 rounded-xl border-none bg-muted/40 px-6 font-bold text-base shadow-inner ring-1 ring-white/5 text-foreground hover:bg-muted/50",
-                                !expDate && "text-muted-foreground"
-                              )}
-                            >
-                              <CalendarIcon className="mr-3 h-5 w-5 text-accent opacity-60" />
-                              {expDate ? format(expDate, "PPP") : <span>Select date...</span>}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl border-none" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={expDate}
-                              onSelect={setExpDate}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
+                        <div className="relative">
+                          <CalendarIcon className="absolute left-4 top-4 h-5 w-5 text-accent opacity-60 z-10" />
+                          <Input 
+                            type="date"
+                            value={expDate ? format(expDate, 'yyyy-MM-dd') : ''}
+                            onChange={(e) => {
+                              const d = e.target.value ? new Date(e.target.value) : undefined;
+                              setExpDate(d);
+                            }}
+                            className="rounded-xl h-14 bg-muted/40 border-none font-bold px-12 text-base shadow-inner ring-1 ring-white/5 text-foreground focus:ring-2 focus:ring-accent"
+                          />
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
