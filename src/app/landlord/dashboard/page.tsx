@@ -117,7 +117,7 @@ export default function LandlordDashboard() {
     const netAnnualForecast = annualGross - totalExpenses;
     const collectionRate = monthlyGrossPotential > 0 ? (actualCollectedThisPeriod / monthlyGrossPotential) * 100 : 0;
     return { annualGross, totalExpenses, netAnnualForecast, collectionRate, actualCollectedThisPeriod };
-  }, [properties, maintenance, periodPayments, isClient]);
+  }, [properties, maintenance, periodPayments, isClient, selectedMonth, selectedYear]);
 
   const chartData = useMemo(() => {
     if (!isClient || !properties) return [];
@@ -160,38 +160,6 @@ export default function LandlordDashboard() {
 
     setDocumentNonBlocking(paymentRef, payload, { merge: true });
     toast({ title: "Ledger Synchronized", description: `Record updated for ${format(new Date(selectedYear, selectedMonth - 1), 'MMMM yyyy')}` });
-  };
-
-  const [activePaymentEdit, setActivePaymentEdit] = useState<any>(null);
-  const [editAmount, setEditAmount] = useState('');
-  const [editStatus, setEditStatus] = useState<'paid' | 'pending' | 'late'>('pending');
-  const [isSavingPayment, setIsSavingPayment] = useState(false);
-
-  const handleSavePayment = async () => {
-    if (!user || !db || !activePaymentEdit) return;
-    setIsSavingPayment(true);
-    const { prop, payment } = activePaymentEdit;
-    const paymentId = payment?.id || `${prop.id}-${selectedMonth}-${selectedYear}`;
-    const paymentRef = doc(db, 'rentPayments', paymentId);
-
-    const payload = {
-      id: paymentId,
-      propertyId: prop.id,
-      landlordId: user.uid,
-      tenantId: prop.tenantIds?.[0] || 'landlord-direct',
-      amount: Number(editAmount),
-      status: editStatus,
-      month: selectedMonth,
-      year: selectedYear,
-      memberIds: prop.memberIds || [user.uid],
-      updatedAt: serverTimestamp(),
-      paidAt: (editStatus === 'paid' || editStatus === 'late') ? new Date().toISOString() : null
-    };
-
-    setDocumentNonBlocking(paymentRef, payload, { merge: true });
-    toast({ title: "Ledger Updated" });
-    setActivePaymentEdit(null);
-    setIsSavingPayment(false);
   };
 
   const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
@@ -312,7 +280,7 @@ export default function LandlordDashboard() {
                  <CardTitle className="text-xl font-headline flex items-center text-foreground tracking-tight">
                    <BarChart3 className="w-6 h-6 mr-3 text-accent" />
                    Yield Distribution
-                 </BarChart3>
+                 </CardTitle>
                  <Badge variant="outline" className="border-white/10 text-[8px] font-bold uppercase tracking-[0.15em] font-headline opacity-60 shrink-0">Performance Snapshot</Badge>
               </div>
             </CardHeader>
@@ -540,70 +508,6 @@ export default function LandlordDashboard() {
           </Card>
         </div>
       </div>
-
-      <Dialog open={!!activePaymentEdit} onOpenChange={(o) => !o && setActivePaymentEdit(null)}>
-        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh] max-w-[500px] ring-1 ring-white/10">
-           <div className="p-8 bg-secondary text-secondary-foreground border-b border-border text-left shrink-0 relative overflow-hidden">
-             <div className="absolute top-0 right-0 p-10 opacity-5"><PoundSterling className="w-24 h-24" /></div>
-             <DialogHeader>
-                <DialogTitle className="text-3xl font-bold font-headline tracking-tighter">Manage Ledger</DialogTitle>
-                <DialogDescription className="text-secondary-foreground/70 font-bold text-sm mt-2">Adjust yield and verify collection state for {format(new Date(selectedYear, selectedMonth - 1), 'MMMM yyyy')}.</DialogDescription>
-             </DialogHeader>
-           </div>
-           
-           <ScrollArea className="flex-1">
-             <div className="p-8 space-y-12 text-left pb-24">
-                <div className="space-y-5 bg-muted/30 p-6 rounded-[2.5rem] border border-border/50 shadow-inner">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2.5 bg-accent/10 rounded-xl text-accent border border-accent/20">
-                            <PoundSterling className="w-5 h-5" />
-                        </div>
-                        <Label className="font-bold text-[11px] uppercase text-foreground tracking-[0.2em] font-headline">Yield Adjustment</Label>
-                    </div>
-                    <div className="relative group">
-                       <Input 
-                          type="number" 
-                          value={editAmount} 
-                          onChange={(e) => setEditAmount(e.target.value)} 
-                          className="rounded-2xl h-20 bg-background/80 border border-white/10 font-bold px-8 text-3xl shadow-2xl text-foreground focus:ring-2 focus:ring-accent transition-all" 
-                          placeholder="e.g. 1500.00" 
-                       />
-                       <div className="absolute right-8 top-6 opacity-20 font-bold text-xl">GBP</div>
-                    </div>
-                </div>
-
-                <div className="space-y-5 bg-muted/30 p-6 rounded-[2.5rem] border border-border/50 shadow-inner">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2.5 bg-accent/10 rounded-xl text-accent border border-accent/20">
-                            <Activity className="w-5 h-5" />
-                        </div>
-                        <Label className="font-bold text-[11px] uppercase text-foreground tracking-[0.2em] font-headline">Verification State</Label>
-                    </div>
-                    <Tabs value={editStatus} onValueChange={(v) => setEditStatus(v as any)}>
-                        <TabsList className="grid grid-cols-3 h-16 bg-background/50 border-none p-2 gap-2 rounded-2xl shadow-inner">
-                            <TabsTrigger value="pending" className="rounded-xl font-bold text-[9px] uppercase tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-2xl transition-all h-full border-none">
-                                Not Paid
-                            </TabsTrigger>
-                            <TabsTrigger value="paid" className="rounded-xl font-bold text-[9px] uppercase tracking-widest data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-2xl transition-all h-full border-none">
-                                Paid
-                            </TabsTrigger>
-                            <TabsTrigger value="late" className="rounded-xl font-bold text-[9px] uppercase tracking-widest data-[state=active]:bg-sky-500 data-[state=active]:text-white data-[state=active]:shadow-2xl transition-all h-full border-none">
-                                Paid Late
-                            </TabsTrigger>
-                        </TabsList>
-                    </Tabs>
-                </div>
-             </div>
-           </ScrollArea>
-
-           <DialogFooter className="p-8 bg-muted/5 border-t border-white/5 shrink-0">
-              <Button className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:opacity-90 font-headline uppercase tracking-[0.2em] text-[10px] border-none transition-all hover:scale-[1.01]" onClick={handleSavePayment} disabled={isSavingPayment}>
-                 {isSavingPayment ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-4 h-4 mr-3" />}
-                 Synchronize Ledger
-              </Button>
-           </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
