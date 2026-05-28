@@ -1,3 +1,4 @@
+
 "use client";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -8,7 +9,7 @@ import {
   ShieldCheck, Settings, ChevronRight
 } from "lucide-react";
 import Link from "next/link";
-import { useAuth, useUser } from "@/firebase";
+import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from "@/firebase";
 import { initiateSignOut } from "@/firebase/non-blocking-login";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { collection, query, where, doc } from "firebase/firestore";
 
 interface HeaderProps {
   role: 'landlord' | 'tenant';
@@ -47,39 +49,41 @@ type Notification = {
   id: string;
   title: string;
   description: string;
-  time: string;
+  time?: string;
+  createdAt?: any;
   type: 'grade' | 'message' | 'alert';
   href: string;
 };
 
 export function Header({ role }: HeaderProps) {
   const { user } = useUser();
+  const db = useFirestore();
   const auth = useAuth();
   const router = useRouter();
+  
   const [search, setSearch] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [sessionTime, setSessionTime] = useState("60");
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
   
   const userName = user?.displayName || user?.email?.split('@')[0] || 'User';
 
-  const defaultNotifications: Notification[] = useMemo(() => {
-    if (role === 'landlord') {
-      return [
-        { id: '1', title: 'Portfolio Grade Updated', description: 'Verification engine complete.', time: '15 mins ago', type: 'grade', href: '/landlord/dashboard' },
-        { id: '2', title: 'New Direct Message', description: 'Resident has a question about rent.', time: '1 hour ago', type: 'message', href: '/landlord/messages' },
-        { id: '3', title: 'Inspection Reminder', description: 'Property Audit scheduled for tomorrow.', time: '2 hours ago', type: 'alert', href: '/landlord/calendar' }
-      ];
-    } else {
-      return [
-        { id: '1', title: 'Rent Receipted', description: 'Monthly collection verified by management.', time: '20 mins ago', type: 'grade', href: '/tenant/payments' },
-        { id: '2', title: 'Management Message', description: 'New update regarding your tenancy.', time: '2 hours ago', type: 'message', href: '/tenant/messages' },
-        { id: '3', title: 'Repair Scheduled', description: 'Trade partner dispatched for Tuesday.', time: '5 hours ago', type: 'alert', href: '/tenant/maintenance' }
-      ];
-    }
-  }, [role]);
+  // REAL-TIME NOTIFICATION LEDGER
+  const notificationsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return query(collection(db, 'notifications'), where('recipientId', '==', user.uid));
+  }, [db, user]);
+
+  const { data: notificationsData, loading: isNotifLoading } = useCollection(notificationsQuery);
+
+  const notifications = useMemo(() => {
+    return [...notificationsData].sort((a, b) => {
+      const timeA = a.createdAt?.seconds || 0;
+      const timeB = b.createdAt?.seconds || 0;
+      return timeB - timeA;
+    });
+  }, [notificationsData]);
 
   useEffect(() => {
     setMounted(true);
@@ -88,18 +92,7 @@ export function Header({ role }: HeaderProps) {
     
     const savedSession = localStorage.getItem('session_duration');
     if (savedSession) setSessionTime(savedSession);
-
-    // PERSISTENCE PROTOCOL: Synchronize notifications with local registry
-    const registryKey = `notifications_${role}_${user?.uid || 'guest'}`;
-    const savedNotifications = localStorage.getItem(registryKey);
-    
-    if (savedNotifications) {
-      setNotifications(JSON.parse(savedNotifications));
-    } else {
-      setNotifications(defaultNotifications);
-      localStorage.setItem(registryKey, JSON.stringify(defaultNotifications));
-    }
-  }, [role, defaultNotifications, user?.uid]);
+  }, []);
 
   const toggleDarkMode = (checked: boolean) => {
     setIsDarkMode(checked);
@@ -131,10 +124,8 @@ export function Header({ role }: HeaderProps) {
 
   const deleteNotification = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const updated = notifications.filter(n => n.id !== id);
-    setNotifications(updated);
-    const registryKey = `notifications_${role}_${user?.uid || 'guest'}`;
-    localStorage.setItem(registryKey, JSON.stringify(updated));
+    if (!db) return;
+    deleteDocumentNonBlocking(doc(db, 'notifications', id));
   };
 
   const handleNotificationClick = (href: string) => {
@@ -143,9 +134,10 @@ export function Header({ role }: HeaderProps) {
   };
 
   const clearAll = () => {
-    setNotifications([]);
-    const registryKey = `notifications_${role}_${user?.uid || 'guest'}`;
-    localStorage.setItem(registryKey, JSON.stringify([]));
+    if (!db || !notifications.length) return;
+    notifications.forEach(n => {
+      deleteDocumentNonBlocking(doc(db, 'notifications', n.id));
+    });
   };
 
   return (
@@ -183,7 +175,12 @@ export function Header({ role }: HeaderProps) {
                 <Badge variant="outline" className="text-[9px] text-primary-foreground border-primary-foreground/20 font-bold">{notifications.length} New</Badge>
              </div>
              <div className="max-h-[400px] overflow-y-auto no-scrollbar bg-card">
-               {notifications.length > 0 ? (
+               {isNotifLoading ? (
+                 <div className="p-12 flex flex-col items-center justify-center opacity-30 gap-3">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Synchronizing...</p>
+                 </div>
+               ) : notifications.length > 0 ? (
                  <div className="p-2 space-y-1 text-left">
                     {notifications.map((n) => (
                       <div 
@@ -205,7 +202,9 @@ export function Header({ role }: HeaderProps) {
                          <div className="flex-1 min-w-0 pr-6">
                             <p className="text-xs font-bold truncate text-foreground group-hover:text-accent transition-colors">{n.title}</p>
                             <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5 font-medium">{n.description}</p>
-                            <p className="text-[9px] text-muted-foreground mt-1 opacity-60 font-bold uppercase tracking-tight">{n.time}</p>
+                            <p className="text-[9px] text-muted-foreground mt-1 opacity-60 font-bold uppercase tracking-tight">
+                              {n.createdAt ? format(new Date(n.createdAt.seconds * 1000), 'p') : 'Just now'}
+                            </p>
                          </div>
                          <Button 
                             variant="ghost" 
@@ -221,7 +220,7 @@ export function Header({ role }: HeaderProps) {
                ) : (
                  <div className="p-12 text-center flex flex-col items-center justify-center opacity-30">
                     <Bell className="w-8 h-8 mb-2 text-foreground" />
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground">Clear Ledger</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground">Ledger Clear</p>
                  </div>
                )}
              </div>
@@ -232,7 +231,7 @@ export function Header({ role }: HeaderProps) {
                     className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground h-8 w-full"
                     onClick={clearAll}
                   >
-                    Clear Feed
+                    Clear Ledger Feed
                   </Button>
                </div>
              )}

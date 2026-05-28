@@ -67,5 +67,13 @@ service cloud.firestore {
       allow write: if isSignedIn() && request.auth.uid == resource.data.landlordId;
       allow create: if isSignedIn();
     }
+
+    match /notifications/{id} {
+      allow read, write: if isSignedIn() && (
+        request.auth.uid == resource.data.recipientId || 
+        request.auth.uid == request.resource.data.recipientId
+      );
+      allow create: if isSignedIn();
+    }
   }
 }

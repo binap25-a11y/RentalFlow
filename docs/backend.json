@@ -119,6 +119,21 @@
         "memberIds": { "type": "array", "items": { "type": "string" } },
         "paidAt": { "type": "string", "format": "date-time" }
       }
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Real-time system alert or message.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "recipientId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "type": "string", "enum": ["grade", "message", "alert"] },
+        "href": { "type": "string" },
+        "isRead": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -160,6 +175,10 @@
     "/rentPayments/{paymentId}": {
       "schema": { "$ref": "#/backend/entities/RentPayment" },
       "description": "Real-time monthly rent collection ledger."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/backend/entities/Notification" },
+      "description": "Real-time user notifications."
     }
   }
 }
