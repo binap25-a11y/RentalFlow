@@ -20,6 +20,7 @@ import { RENTALFLOW_LOGO_URL } from '@/lib/utils';
 /**
  * @fileOverview Hyper-Accelerated Authentication Pipeline.
  * Optimized for zero-flicker loading and atomic redirection.
+ * 'Return Home' relocated below brand identity for superior vertical hierarchy.
  */
 
 export default function AuthPage() {
@@ -222,15 +223,17 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative animate-in fade-in duration-700">
-      <div className="absolute top-8 left-8">
-         <Button variant="ghost" asChild className="rounded-xl font-bold text-foreground hover:bg-primary/5"><Link href="/"><ArrowLeft className="w-4 h-4 mr-2" /> Return Home</Link></Button>
-      </div>
       <div className="max-w-xl w-full text-center">
         <div className="mb-12 inline-flex flex-col items-center">
           <div className="relative h-24 w-24 rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 mb-6 bg-card">
             <Image src={RENTALFLOW_LOGO_URL} alt="Logo" fill className="object-cover" unoptimized priority />
           </div>
           <h1 className="text-4xl font-headline font-bold text-foreground tracking-tighter">RentalFlow</h1>
+          <Button variant="ghost" asChild className="mt-4 rounded-xl font-bold text-muted-foreground hover:text-foreground hover:bg-primary/5">
+            <Link href="/">
+              <ArrowLeft className="w-4 h-4 mr-2" /> Return Home
+            </Link>
+          </Button>
         </div>
         <Card className="border-none shadow-2xl rounded-[3rem] p-2 bg-card ring-1 ring-border">
           <CardHeader className="pt-10 pb-6 text-center">
@@ -256,7 +259,7 @@ export default function AuthPage() {
                   </button>
                 </div>
               </div>
-              <Button type="submit" className="w-full h-14 rounded-2xl font-extrabold bg-primary hover:bg-primary/90 text-primary-foreground text-lg shadow-xl shadow-primary/20 border-none transition-all hover:scale-[1.01] active:scale-[0.98]" disabled={isLoading}>
+              <Button type="submit" className="w-full h-14 rounded-2xl font-extrabold bg-primary hover:bg-primary/90 text-primary-foreground text-lg shadow-xl shadow-primary/20 border-none transition-all hover:scale-[1.01] active:scale-0.98" disabled={isLoading}>
                 {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : (authMode === 'login' ? 'Enter Vault' : 'Initialize Credentials')}
               </Button>
             </form>
