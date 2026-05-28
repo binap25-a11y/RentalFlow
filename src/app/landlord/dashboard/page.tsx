@@ -76,12 +76,7 @@ import {
 /**
  * @fileOverview Landlord Insight Hub.
  * Optimized for vertical fidelity: Period-based Rent Ledger refactored for mobile compatibility.
- * Persistence: Remembers user's last selected month and year.
- * Added: Tax Reporting Hub for HMRC self-assessment statements.
- * Integration: Stat cards wired with high-fidelity navigation.
- * Resolved: Expense visibility - Added Recent Outlays audit trail with Edit/Delete controls.
- * Fixed: Temporal Integrity - Added isValid checks to prevent RangeError on invalid dates.
- * Performance: Synchronized for real-time financial updates.
+ * Real-Time Sync: Portfolio Expenses (YTD) optimized for resilient multi-source detection.
  */
 
 export default function LandlordDashboard() {
@@ -174,7 +169,7 @@ export default function LandlordDashboard() {
   const { data: annualPayments } = useCollection(annualPaymentsQuery);
 
   const financialStats = useMemo(() => {
-    if (!isClient || !properties || !maintenance) return { annualGross: 0, totalExpenses: 0, netAnnualForecast: 0, collectionRate: 0, actualCollectedThisPeriod: 0 };
+    if (!isClient || !properties) return { annualGross: 0, totalExpenses: 0, netAnnualForecast: 0, collectionRate: 0, actualCollectedThisPeriod: 0 };
     
     const activePropertyIds = new Set(properties.map(p => p.id));
     const currentYear = new Date().getFullYear();
@@ -182,17 +177,23 @@ export default function LandlordDashboard() {
     const monthlyGrossPotential = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
     const annualGross = monthlyGrossPotential * 12;
     
-    // REFINED YTD EXPENSE CALCULATION - Reactive to maintenance collection
-    const totalExpenses = maintenance
+    // HIGH-FIDELITY YTD EXPENSE CALCULATION
+    const totalExpenses = (maintenance || [])
       .filter(m => {
-        if (!activePropertyIds.has(m.propertyId) || m.status !== 'completed' || !m.scheduledDate) return false;
-        const d = new Date(m.scheduledDate);
+        // Must be associated with an active property and marked as completed
+        if (!activePropertyIds.has(m.propertyId) || m.status !== 'completed') return false;
+        
+        // Resilience: Use scheduledDate or fallback to createdAt for the year check
+        const dateSource = m.scheduledDate || (m.createdAt?.seconds ? new Date(m.createdAt.seconds * 1000).toISOString() : null);
+        if (!dateSource) return false;
+        
+        const d = new Date(dateSource);
         return isValid(d) && d.getFullYear() === currentYear;
       })
       .reduce((acc, r) => acc + (Number(r.cost) || 0), 0);
 
-    const actualCollectedThisPeriod = periodPayments
-      ?.filter(p => activePropertyIds.has(p.propertyId) && (p.status === 'paid' || p.status === 'late'))
+    const actualCollectedThisPeriod = (periodPayments || [])
+      .filter(p => activePropertyIds.has(p.propertyId) && (p.status === 'paid' || p.status === 'late'))
       .reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
     
     const netAnnualForecast = annualGross - totalExpenses;
@@ -208,8 +209,8 @@ export default function LandlordDashboard() {
     return maintenance
       .filter(m => activePropertyIds.has(m.propertyId) && m.status === 'completed' && Number(m.cost) > 0)
       .sort((a, b) => {
-        const dateA = a.scheduledDate ? new Date(a.scheduledDate).getTime() : 0;
-        const dateB = b.scheduledDate ? new Date(b.scheduledDate).getTime() : 0;
+        const dateA = a.scheduledDate ? new Date(a.scheduledDate).getTime() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+        const dateB = b.scheduledDate ? new Date(b.scheduledDate).getTime() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
         return dateB - dateA;
       })
       .slice(0, 8);
@@ -358,8 +359,10 @@ export default function LandlordDashboard() {
 
       const propertyPayments = annualPayments.filter(p => p.propertyId === taxPropertyId && (p.status === 'paid' || p.status === 'late'));
       const propertyExpenses = maintenance.filter(m => {
-        if (m.propertyId !== taxPropertyId || m.status !== 'completed' || !m.scheduledDate) return false;
-        const d = new Date(m.scheduledDate);
+        if (m.propertyId !== taxPropertyId || m.status !== 'completed') return false;
+        const dateSource = m.scheduledDate || (m.createdAt?.seconds ? new Date(m.createdAt.seconds * 1000).toISOString() : null);
+        if (!dateSource) return false;
+        const d = new Date(dateSource);
         return isValid(d) && d.getFullYear() === taxYear;
       });
 
@@ -432,8 +435,9 @@ export default function LandlordDashboard() {
       pdf.setFont("helvetica", "normal");
       propertyExpenses.forEach((exp) => {
         if (y > 270) { pdf.addPage(); y = 20; }
-        const d = new Date(exp.scheduledDate);
-        pdf.text(isValid(d) ? format(d, 'dd/MM/yyyy') : 'N/A', 20, y);
+        const dateSource = exp.scheduledDate || (exp.createdAt?.seconds ? new Date(exp.createdAt.seconds * 1000).toISOString() : null);
+        const d = dateSource ? new Date(dateSource) : null;
+        pdf.text(d && isValid(d) ? format(d, 'dd/MM/yyyy') : 'N/A', 20, y);
         pdf.text(exp.title.substring(0, 30), 50, y);
         pdf.text(exp.category || 'Other', 120, y);
         pdf.text(Number(exp.cost).toFixed(2), 170, y, { align: 'right' });
