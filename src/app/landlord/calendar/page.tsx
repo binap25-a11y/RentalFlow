@@ -35,7 +35,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 type PortfolioEvent = {
   id: string;
@@ -339,14 +338,14 @@ export default function LandlordCalendarPage() {
       </div>
 
       <Dialog open={isAddRepairOpen} onOpenChange={setIsAddRepairOpen}>
-        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-[550px] bg-card flex flex-col h-[750px] max-h-[90vh] ring-1 ring-white/10">
+        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-[550px] bg-card flex flex-col h-[850px] max-h-[95vh] ring-1 ring-white/10">
           <div className="p-8 bg-primary/5 border-b border-white/5 text-left shrink-0">
             <DialogTitle className="text-2xl font-bold font-headline text-foreground tracking-tight">Schedule Maintenance</DialogTitle>
             <DialogDescription className="text-sm font-medium text-muted-foreground mt-1">Registering a site event for {format(selectedDate, 'PPP')}</DialogDescription>
           </div>
           
           <div className="flex-1 overflow-y-auto min-h-0 bg-white/[0.01]">
-            <form id="maintenance-scheduler" onSubmit={handleAddRepair} className="p-8 space-y-8 text-left pb-20">
+            <form id="maintenance-scheduler" onSubmit={handleAddRepair} className="p-8 space-y-10 text-left pb-20">
               <div className="space-y-3">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Target Inventory Asset</Label>
                 <select 
@@ -375,7 +374,7 @@ export default function LandlordCalendarPage() {
                   value={repairDesc} 
                   onChange={(e) => setRepairDesc(e.target.value)} 
                   placeholder="Provide full context for contractor access..." 
-                  className="rounded-xl min-h-[180px] bg-background/80 border-none font-medium px-5 py-5 text-sm leading-relaxed shadow-inner ring-1 ring-white/10 text-foreground" 
+                  className="rounded-xl min-h-[220px] bg-background/80 border-none font-medium px-5 py-5 text-sm leading-relaxed shadow-inner ring-1 ring-white/10 text-foreground" 
                 />
               </div>
             </form>

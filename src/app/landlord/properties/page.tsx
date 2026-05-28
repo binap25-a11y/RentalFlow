@@ -96,7 +96,7 @@ export default function PropertiesPage() {
       const relatedCollections = [
         'maintenanceRequests',  // Scrub Maintenance Hub
         'inspections',          // Scrub Compliance Ledger
-        'tenantProfiles',       // Scrub Residency Identity
+        'tenantProfiles',       // Scrub Residency Identity & Tenant profiles
         'documents',            // Scrub Property Vault
         'rentPayments',         // Scrub Financial Ledger
         'emergencyContacts'     // Scrub Support Directory

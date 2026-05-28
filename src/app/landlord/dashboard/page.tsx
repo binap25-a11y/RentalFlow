@@ -18,7 +18,7 @@ import {
 } from 'recharts';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { cn, getResolvedImageUrl } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { 
   Dialog, 
   DialogContent, 
@@ -211,7 +211,6 @@ export default function LandlordDashboard() {
   }
 
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const yearsList = Array.from({length: 5}, (_, i) => new Date().getFullYear() - 2 + i);
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-500 pb-12">
