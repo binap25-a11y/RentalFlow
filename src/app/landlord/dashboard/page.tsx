@@ -494,7 +494,7 @@ export default function LandlordDashboard() {
                
                <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="w-full rounded-xl bg-accent text-white font-bold h-12 hover:bg-accent/90 transition-all shadow-xl shadow-accent/10 text-[10px] uppercase tracking-[0.15em] border-none" onClick={() => setIsExpenseDialogOpen(true)}>
+                  <Button className="w-full rounded-xl bg-accent text-white font-bold h-12 hover:bg-accent/90 transition-all shadow-xl shadow-accent/10 text-[10px] uppercase tracking-[0.15em] border-none">
                     <Plus className="w-4 h-4 mr-2" /> Register Ledger Item
                   </Button>
                 </DialogTrigger>

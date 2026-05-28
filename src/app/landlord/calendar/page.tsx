@@ -249,18 +249,37 @@ export default function LandlordCalendarPage() {
             <div className="absolute -top-10 -right-10 opacity-5 group-hover:rotate-12 transition-transform duration-700 text-foreground">
                <Clock className="w-32 h-32" />
             </div>
-            <div className="relative z-10 space-y-4 text-left">
+            <div className="relative z-10 space-y-6 text-left">
               <h3 className="text-lg font-bold font-headline flex items-center gap-3 text-accent uppercase tracking-widest">
                  <Clock className="w-5 h-5" /> Quick Actions
               </h3>
-              <p className="text-xs text-muted-foreground opacity-80 leading-relaxed font-body font-medium">Select a date to view current site visits or log a new repair directly to the roadmap.</p>
-              <Button 
-                variant="outline"
-                className="w-full rounded-xl bg-accent text-white hover:bg-accent/90 border-none font-bold h-12 shadow-lg transition-all hover:scale-[1.02] text-xs uppercase tracking-widest font-headline" 
-                onClick={() => setIsAddRepairOpen(true)}
-              >
-                 <Plus className="w-4 h-4 mr-2" /> Schedule Task
-              </Button>
+              
+              <div className="space-y-4">
+                <div className="p-4 bg-muted/50 rounded-2xl border border-border shadow-inner">
+                  <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-1 opacity-60">Selection Portal</p>
+                  <p className="text-xs text-foreground font-medium leading-relaxed">Click any date on the calendar above to view Site Visits and specific Audit records.</p>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <Button 
+                    variant="outline"
+                    className="w-full rounded-xl bg-accent text-white hover:bg-accent/90 border-none font-bold h-12 shadow-lg transition-all hover:scale-[1.02] text-xs uppercase tracking-widest font-headline" 
+                    onClick={() => setIsAddRepairOpen(true)}
+                  >
+                     <Plus className="w-4 h-4 mr-2" /> Schedule Task
+                  </Button>
+                  
+                  {selectedDate && (
+                    <Button 
+                      variant="ghost"
+                      className="w-full rounded-xl font-bold h-12 text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:bg-primary/5 transition-all border border-transparent hover:border-border"
+                      onClick={() => ledgerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    >
+                      <Search className="w-3.5 h-3.5 mr-2" /> Jump to Daily Ledger
+                    </Button>
+                  )}
+                </div>
+              </div>
             </div>
           </Card>
         </div>
