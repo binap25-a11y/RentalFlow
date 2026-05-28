@@ -42,6 +42,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+/**
+ * @fileOverview High-Fidelity Resident Directory.
+ * Optimized with Real-Time Occupancy Synchronization: Updating a resident ensures the assigned property is "Occupied".
+ */
+
 export default function TenantsPage() {
   const { user } = useUser();
   const db = useFirestore();
@@ -116,6 +121,16 @@ export default function TenantsPage() {
       if (editingTenant) {
         targetTenantId = editingTenant.userId || emailLower;
         updateDocumentNonBlocking(doc(db, 'tenantProfiles', editingTenant.id), tenantPayload);
+        
+        // 🏠 SYNC PROPERTY STATE (OCCUPANCY ENFORCEMENT)
+        // Ensure the assigned property is marked as occupied and includes this resident's identity
+        updateDocumentNonBlocking(doc(db, 'properties', selectedPropertyId), { 
+          isOccupied: true, 
+          tenantIds: arrayUnion(targetTenantId), 
+          memberIds: arrayUnion(targetTenantId), 
+          updatedAt: serverTimestamp() 
+        });
+
         toast({ title: "Resident Record Updated" });
       } else {
         const tenantId = doc(collection(db, 'tenantProfiles')).id;
@@ -133,7 +148,7 @@ export default function TenantsPage() {
           createdAt: serverTimestamp() 
         }, { merge: true });
 
-        // Update Property Membership
+        // Update Property Membership & Occupancy
         updateDocumentNonBlocking(doc(db, 'properties', selectedPropertyId), { 
           isOccupied: true, 
           tenantIds: arrayUnion(placeholderUserId), 
@@ -159,7 +174,7 @@ export default function TenantsPage() {
         updateDocumentNonBlocking(sDoc.ref, { memberIds: arrayUnion(targetTenantId) });
       });
 
-      toast({ title: "Resident Permissions Synchronized", description: "Support directory access granted." });
+      toast({ title: "Residency Synchronized", description: "Property occupancy and permissions updated." });
       
       setIsDialogOpen(false); 
       resetForm();
@@ -200,7 +215,7 @@ export default function TenantsPage() {
             <form onSubmit={handleSaveTenant} className="flex flex-col h-full overflow-hidden">
               <DialogHeader className="p-10 text-left bg-primary/5 border-b border-white/5 shrink-0">
                 <DialogTitle className="text-3xl font-bold font-headline text-foreground tracking-tight">{editingTenant ? "Update Resident" : "Assign Resident"}</DialogTitle>
-                <DialogDescription className="font-medium text-muted-foreground mt-2 text-base">Initialize a resident profile for your professional portfolio.</DialogDescription>
+                <DialogDescription className="font-medium text-muted-foreground mt-2 text-base">Initialize or refine a resident profile for your professional portfolio.</DialogDescription>
               </DialogHeader>
               
               <ScrollArea className="flex-1 min-h-0 bg-white/[0.01]">
@@ -244,7 +259,7 @@ export default function TenantsPage() {
               <DialogFooter className="p-10 bg-muted/5 border-t border-white/5 shrink-0">
                 <Button type="submit" disabled={isSubmitting || !selectedPropertyId} className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/20 font-headline text-sm uppercase tracking-widest hover:opacity-90 hover:scale-[1.01] transition-transform">
                   {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
-                  {editingTenant ? "Update Resident Record" : "Confirm Assignment"}
+                  {editingTenant ? "Update Resident & Occupancy" : "Confirm Assignment"}
                 </Button>
               </DialogFooter>
             </form>
