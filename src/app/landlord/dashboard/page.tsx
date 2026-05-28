@@ -45,7 +45,7 @@ import { sendRentReceiptEmail } from "@/lib/actions/email-actions";
 /**
  * @fileOverview Landlord Insight Hub.
  * Optimized for active-asset financials and professional verification.
- * Header alignment updated to match high-fidelity intensity protocols.
+ * Dialog structure hardened with explicit scrolling constraints for high-fidelity fill-in.
  */
 
 export default function LandlordDashboard() {
@@ -413,45 +413,54 @@ export default function LandlordDashboard() {
                     <Plus className="w-4 h-4 mr-2" /> Register Ledger Item
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[85vh] max-w-[500px] ring-1 ring-white/10">
+                <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col h-[700px] max-h-[90vh] max-w-[500px] ring-1 ring-white/10">
                   <div className="p-8 bg-primary/5 border-b border-white/5 text-left shrink-0">
                     <DialogTitle className="text-xl font-bold font-headline text-foreground tracking-tight">Register Expense</DialogTitle>
                     <DialogDescription className="text-xs font-medium text-muted-foreground mt-1.5">Record insurance, maintenance, or portfolio costs.</DialogDescription>
                   </div>
                   <ScrollArea className="flex-1">
-                    <div className="p-8 space-y-6 text-left">
-                      <div className="space-y-2">
-                        <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Expense Identifier</Label>
-                        <Input value={expTitle} onChange={(e) => setExpTitle(e.target.value)} placeholder="e.g. Portfolio Insurance 2026" className="rounded-xl h-12 bg-muted/30 border-none font-bold px-5 text-sm text-foreground" />
+                    <div className="p-8 space-y-10 text-left pb-20">
+                      <div className="space-y-3">
+                        <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Expense Identifier</Label>
+                        <Input value={expTitle} onChange={(e) => setExpTitle(e.target.value)} placeholder="e.g. Portfolio Insurance 2026" className="rounded-xl h-14 bg-muted/40 border-none font-bold px-6 text-base shadow-inner ring-1 ring-white/5 text-foreground" />
                       </div>
-                      <div className="space-y-2">
-                        <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Target Asset</Label>
-                        <select className="flex h-12 w-full rounded-xl border-none bg-muted/30 px-5 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" value={expPropertyId} onChange={(e) => setExpPropertyId(e.target.value)} required>
-                          <option value="">Select Asset...</option>
+                      <div className="space-y-3">
+                        <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Target Asset</Label>
+                        <select 
+                          className="flex h-14 w-full rounded-xl border-none bg-muted/40 px-6 py-2 text-base focus:ring-2 focus:ring-accent outline-none font-bold text-foreground shadow-inner ring-1 ring-white/5" 
+                          value={expPropertyId} 
+                          onChange={(e) => setExpPropertyId(e.target.value)} 
+                          required
+                        >
+                          <option value="">Select Portfolio Asset...</option>
                           {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
                         </select>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Amount (£)</Label>
-                          <Input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="0.00" className="rounded-xl h-12 bg-muted/30 border-none font-bold px-5 text-sm text-foreground" />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                          <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Amount (£)</Label>
+                          <Input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="0.00" className="rounded-xl h-14 bg-muted/40 border-none font-bold px-6 text-base shadow-inner ring-1 ring-white/5 text-foreground" />
                         </div>
-                        <div className="space-y-2">
-                          <Label className="font-bold text-[9px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Category</Label>
-                          <select className="flex h-12 w-full rounded-xl border-none bg-muted/30 px-5 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" value={expCategory} onChange={(e) => setExpCategory(e.target.value)}>
-                            <option value="insurance">Insurance</option>
-                            <option value="maintenance">Maintenance</option>
+                        <div className="space-y-3">
+                          <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Category</Label>
+                          <select 
+                            className="flex h-14 w-full rounded-xl border-none bg-muted/40 px-6 py-2 text-base focus:ring-2 focus:ring-accent outline-none font-bold text-foreground shadow-inner ring-1 ring-white/5" 
+                            value={expCategory} 
+                            onChange={(e) => setExpCategory(e.target.value)}
+                          >
+                            <option value="insurance">Insurance Premium</option>
+                            <option value="maintenance">Maintenance Cost</option>
                             <option value="tax">Tax/Compliance</option>
-                            <option value="other">Other Capital</option>
+                            <option value="other">Other Capital Outlay</option>
                           </select>
                         </div>
                       </div>
                     </div>
                   </ScrollArea>
                   <DialogFooter className="p-8 bg-muted/5 border-t border-white/5 shrink-0">
-                    <Button onClick={handleLogManualExpense} type="button" className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.2em] text-[10px] border-none" disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
-                      {isSavingExpense ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                      Commit to Ledger
+                    <Button onClick={handleLogManualExpense} type="button" className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.2em] text-[11px] border-none hover:scale-[1.01] transition-transform" disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
+                      {isSavingExpense ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
+                      Commit to Financial Ledger
                     </Button>
                   </DialogFooter>
                 </DialogContent>
