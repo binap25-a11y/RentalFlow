@@ -29,7 +29,6 @@ import {
   DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -141,7 +140,6 @@ export default function LandlordDashboard() {
 
   const handleQuickStatusUpdate = (prop: any, status: string) => {
     if (!user || !db) return;
-    // DETERMINISTIC ID PROTOCOL: propertyId-month-year
     const paymentId = `${prop.id}-${selectedMonth}-${selectedYear}`;
     const paymentRef = doc(db, 'rentPayments', paymentId);
 
@@ -160,7 +158,7 @@ export default function LandlordDashboard() {
     };
 
     setDocumentNonBlocking(paymentRef, payload, { merge: true });
-    toast({ title: "Ledger Synchronized", description: `Record updated for ${format(new Date(selectedYear, selectedMonth - 1), 'MMMM yyyy')}` });
+    toast({ title: "Ledger Synchronized" });
   };
 
   const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
