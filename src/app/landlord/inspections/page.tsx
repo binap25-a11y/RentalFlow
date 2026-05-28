@@ -20,13 +20,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { 
   Calendar as CalendarIcon, Loader2, 
   CheckCircle2, ClipboardList, ShieldAlert, Home, Wrench, 
-  Check, X, AlertTriangle, Info, Trash2, Edit3, PlayCircle, Camera, Clock
+  Check, X, AlertTriangle, Info, Trash2, Edit3, PlayCircle, Camera, Clock,
+  Save
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn, compressImage, withRetry } from "@/lib/utils";
@@ -120,9 +122,37 @@ export default function InspectionsPage() {
   const [structuredFindings, setStructuredFindings] = useState<Record<string, { status: 'pass' | 'fail', notes: string, imageUrl?: string, isSyncing?: boolean }>>({});
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Edit Metadata State
+  const [editingMetadata, setEditingMetadata] = useState<any>(null);
+  const [editDate, setEditDate] = useState<Date>();
+  const [editPropertyId, setEditPropertyId] = useState('');
+
   const handleOpenAudit = (inspection: any) => {
     setActiveInspection(inspection);
     setStructuredFindings(inspection.structuredFindings || {});
+  };
+
+  const handleOpenEditMetadata = (inspection: any) => {
+    setEditingMetadata(inspection);
+    setEditDate(new Date(inspection.scheduledDate));
+    setEditPropertyId(inspection.propertyId);
+  };
+
+  const handleUpdateMetadata = async () => {
+    if (!db || !editingMetadata || !editDate || !editPropertyId) return;
+
+    const inspectionRef = doc(db, 'inspections', editingMetadata.id);
+    const property = properties?.find(p => p.id === editPropertyId);
+
+    updateDocumentNonBlocking(inspectionRef, {
+      propertyId: editPropertyId,
+      scheduledDate: editDate.toISOString(),
+      memberIds: property?.memberIds || [user?.uid],
+      updatedAt: serverTimestamp(),
+    });
+
+    toast({ title: "Audit Records Synchronized", description: "Metadata updated successfully." });
+    setEditingMetadata(null);
   };
 
   const handleStatusChange = (itemId: string, status: 'pass' | 'fail') => {
@@ -206,7 +236,7 @@ export default function InspectionsPage() {
     if (!db) return;
     const inspectionRef = doc(db, 'inspections', id);
     deleteDocumentNonBlocking(inspectionRef);
-    toast({ title: "Audit Record Removed" });
+    toast({ title: "Delete Record", description: "Audit record removed from ledger." });
   };
 
   const handleFinalizeAudit = async () => {
@@ -311,13 +341,14 @@ export default function InspectionsPage() {
                         <div className="flex items-center justify-between">
                           <Badge variant={inspection.status === 'completed' ? 'secondary' : 'default'} className="uppercase font-bold text-[10px] font-headline tracking-widest rounded-full">{inspection.status}</Badge>
                           <div className="flex gap-2">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 p-0 text-muted-foreground hover:text-accent hover:bg-accent/5 rounded-lg" onClick={() => handleOpenEditMetadata(inspection)}><Edit3 className="w-4 h-4" /></Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button variant="ghost" size="icon" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-lg"><Trash2 className="w-4 h-4" /></Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent className="rounded-3xl border-none shadow-2xl bg-card">
                                 <AlertDialogHeader className="text-left">
-                                  <AlertDialogTitle className="font-headline font-bold text-xl text-foreground">Remove Audit Record?</AlertDialogTitle>
+                                  <AlertDialogTitle className="font-headline font-bold text-xl text-foreground">Delete Record?</AlertDialogTitle>
                                   <AlertDialogDescription className="text-muted-foreground font-medium mt-2">
                                     This will permanently remove the audit roadmap and findings for this property. This action cannot be reversed.
                                   </AlertDialogDescription>
@@ -328,7 +359,7 @@ export default function InspectionsPage() {
                                     onClick={() => handleDeleteInspection(inspection.id)}
                                     className="rounded-xl h-12 font-bold bg-red-600 text-white uppercase tracking-widest text-[10px] hover:bg-red-700 border-none"
                                   >
-                                    Purge Audit
+                                    Delete Record
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
@@ -454,7 +485,45 @@ export default function InspectionsPage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Metadata Dialog */}
+      <Dialog open={!!editingMetadata} onOpenChange={(open) => !open && setEditingMetadata(null)}>
+        <DialogContent className="sm:max-w-[500px] p-0 rounded-[2.5rem] border-none shadow-2xl flex flex-col overflow-hidden bg-card">
+          <div className="p-8 bg-primary/5 border-b text-left shrink-0">
+            <DialogTitle className="text-2xl font-headline font-bold text-foreground tracking-tight">Modify Audit Record</DialogTitle>
+            <DialogDescription className="font-medium text-muted-foreground font-body mt-1">Adjust property assignment and scheduling for this inspection.</DialogDescription>
+          </div>
+          <div className="p-8 space-y-8 text-left">
+            <div className="space-y-2">
+              <Label className="text-xs uppercase font-bold text-muted-foreground font-headline tracking-widest opacity-60">Target Asset</Label>
+              <select className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" value={editPropertyId} onChange={(e) => setEditPropertyId(e.target.value)}>
+                <option value="">Choose a property...</option>
+                {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs uppercase font-bold text-muted-foreground font-headline tracking-widest opacity-60">Audit Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant={"outline"} className={cn("w-full justify-start text-left font-bold h-12 rounded-xl border-border bg-muted/20 hover:bg-muted/30 transition-colors font-body", !editDate && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {editDate ? format(editDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl border-none overflow-hidden" align="start">
+                  <Calendar mode="single" selected={editDate} onSelect={setEditDate} initialFocus />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+          <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
+            <Button className="w-full rounded-xl h-12 font-bold shadow-lg shadow-accent/10 font-headline bg-primary text-white hover:bg-primary/90 transition-all uppercase tracking-widest text-[10px] border-none" onClick={handleUpdateMetadata} disabled={!editDate || !editPropertyId}>
+              <Save className="w-4 h-4 mr-2" />
+              Synchronize Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
