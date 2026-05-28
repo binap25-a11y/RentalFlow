@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,9 +13,21 @@ import {
   Calculator,
   ArrowRight,
   History,
-  Tag
+  Tag,
+  Edit3,
+  Trash2
 } from "lucide-react";
-import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
+import { 
+  useUser, 
+  useFirestore, 
+  useCollection, 
+  useDoc, 
+  useMemoFirebase, 
+  getLandlordCollectionQuery, 
+  updateDocumentNonBlocking, 
+  setDocumentNonBlocking,
+  deleteDocumentNonBlocking
+} from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { useMemo, useState, useEffect } from "react";
 import { 
@@ -49,6 +62,17 @@ import { useToast } from "@/hooks/use-toast";
 import { sendRentReceiptEmail } from "@/lib/actions/email-actions";
 import { jsPDF } from "jspdf";
 import Link from "next/link";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 /**
  * @fileOverview Landlord Insight Hub.
@@ -56,7 +80,7 @@ import Link from "next/link";
  * Persistence: Remembers user's last selected month and year.
  * Added: Tax Reporting Hub for HMRC self-assessment statements.
  * Integration: Stat cards wired with high-fidelity navigation.
- * Resolved: Expense visibility - Added Recent Outlays audit trail and clarified YTD logic.
+ * Resolved: Expense visibility - Added Recent Outlays audit trail with Edit/Delete controls.
  */
 
 export default function LandlordDashboard() {
@@ -157,7 +181,7 @@ export default function LandlordDashboard() {
     const monthlyGrossPotential = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
     const annualGross = monthlyGrossPotential * 12;
     
-    // REFINED YTD EXPENSE CALCULATION: Strictly filtering by current year and 'completed' status
+    // REFINED YTD EXPENSE CALCULATION
     const totalExpenses = maintenance
       .filter(m => {
         if (!activePropertyIds.has(m.propertyId) || m.status !== 'completed' || !m.scheduledDate) return false;
@@ -187,7 +211,7 @@ export default function LandlordDashboard() {
         const dateB = b.scheduledDate ? new Date(b.scheduledDate).getTime() : 0;
         return dateB - dateA;
       })
-      .slice(0, 5);
+      .slice(0, 8);
   }, [maintenance, properties]);
 
   const chartData = useMemo(() => {
@@ -254,10 +278,13 @@ export default function LandlordDashboard() {
   const [expTitle, setExpTitle] = useState('');
   const [expDate, setExpDate] = useState<Date | undefined>(new Date());
 
+  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
+
   const handleLogManualExpense = () => {
     if (!user || !db || !expAmount || !expPropertyId || !expTitle || !expDate) return;
     setIsSavingExpense(true);
-    const requestId = doc(collection(db, 'maintenanceRequests')).id;
+    
+    const requestId = editingExpenseId || doc(collection(db, 'maintenanceRequests')).id;
     const requestRef = doc(db, 'maintenanceRequests', requestId);
     const property = properties?.find(p => p.id === expPropertyId);
     
@@ -274,18 +301,47 @@ export default function LandlordDashboard() {
       category: expCategory,
       cost: Number(expAmount),
       scheduledDate: expDate.toISOString(),
-      createdAt: serverTimestamp(), 
       updatedAt: serverTimestamp(),
     };
     
-    setDocumentNonBlocking(requestRef, payload, { merge: true });
-    toast({ title: "Expense Registered" });
+    if (editingExpenseId) {
+      updateDocumentNonBlocking(requestRef, payload);
+    } else {
+      setDocumentNonBlocking(requestRef, {
+        ...payload,
+        createdAt: serverTimestamp(),
+      }, { merge: true });
+    }
+
+    toast({ title: editingExpenseId ? "Expense Updated" : "Expense Registered" });
     setIsExpenseDialogOpen(false);
     setIsSavingExpense(false);
+    resetExpenseForm();
+  };
+
+  const resetExpenseForm = () => {
     setExpAmount('');
     setExpTitle('');
     setExpPropertyId('');
     setExpDate(new Date());
+    setExpCategory('other');
+    setEditingExpenseId(null);
+  };
+
+  const handleEditExpense = (exp: any) => {
+    setEditingExpenseId(exp.id);
+    setExpTitle(exp.title);
+    setExpAmount(exp.cost.toString());
+    setExpPropertyId(exp.propertyId);
+    setExpCategory(exp.category || 'other');
+    setExpDate(new Date(exp.scheduledDate));
+    setIsExpenseDialogOpen(true);
+  };
+
+  const handleDeleteExpense = (id: string) => {
+    if (!db) return;
+    deleteDocumentNonBlocking(doc(db, 'maintenanceRequests', id));
+    toast({ title: "Expense Purged" });
   };
 
   const handleDownloadTaxStatement = async () => {
@@ -590,7 +646,7 @@ export default function LandlordDashboard() {
                  <h3 className="font-bold font-headline text-xl tracking-tight text-foreground">Expense Hub</h3>
                  <p className="text-xs text-muted-foreground font-medium opacity-70 leading-relaxed">Orchestrate portfolio expenses and insurance records.</p>
                </div>
-               <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
+               <Dialog open={isExpenseDialogOpen} onOpenChange={(o) => { setIsExpenseDialogOpen(o); if(!o) resetExpenseForm(); }}>
                 <DialogTrigger asChild>
                   <Button className="w-full rounded-xl bg-accent text-white font-bold h-12 hover:bg-accent/90 transition-all shadow-xl shadow-accent/10 text-[10px] uppercase tracking-[0.15em] border-none">
                     <Plus className="w-4 h-4 mr-2" /> Register Expense
@@ -598,7 +654,9 @@ export default function LandlordDashboard() {
                 </DialogTrigger>
                 <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col h-[750px] max-h-[90vh] max-w-[500px] ring-1 ring-white/10">
                   <div className="p-8 bg-primary/5 border-b border-white/5 text-left shrink-0">
-                    <DialogTitle className="text-xl font-bold font-headline text-foreground tracking-tight">Register Expense</DialogTitle>
+                    <DialogTitle className="text-xl font-bold font-headline text-foreground tracking-tight">
+                      {editingExpenseId ? "Modify Expense Record" : "Register Expense"}
+                    </DialogTitle>
                     <DialogDescription className="text-xs font-medium text-muted-foreground mt-1.5">Record insurance, maintenance, or portfolio costs.</DialogDescription>
                   </div>
                   <ScrollArea className="flex-1">
@@ -660,7 +718,7 @@ export default function LandlordDashboard() {
                   <DialogFooter className="p-8 bg-muted/5 border-t border-white/5 shrink-0">
                     <Button onClick={handleLogManualExpense} type="button" className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.2em] text-[11px] border-none hover:scale-[1.01] transition-transform" disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle || !expDate}>
                       {isSavingExpense ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
-                      Commit to Financial Ledger
+                      {editingExpenseId ? "Synchronize Record" : "Commit to Financial Ledger"}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -677,18 +735,49 @@ export default function LandlordDashboard() {
                       <p className="text-[10px] text-muted-foreground italic font-medium">No recorded expenses found.</p>
                     ) : (
                       recentExpenses.map((exp) => (
-                        <div key={exp.id} className="p-4 bg-muted/30 rounded-2xl border border-border shadow-inner group hover:bg-muted/50 transition-colors">
-                           <div className="flex justify-between items-start">
-                              <div className="space-y-1">
-                                <p className="text-xs font-bold text-foreground truncate max-w-[150px]">{exp.title}</p>
-                                <p className="text-[9px] text-muted-foreground font-medium flex items-center">
-                                   <Building2 className="w-2.5 h-2.5 mr-1 opacity-40" /> 
-                                   {properties.find(p => p.id === exp.propertyId)?.addressLine1?.split(' ')[0]}...
+                        <div key={exp.id} className="p-5 bg-muted/30 rounded-2xl border border-border shadow-inner group hover:bg-muted/50 transition-colors relative">
+                           <div className="flex justify-between items-start gap-4">
+                              <div className="space-y-1 flex-1 min-w-0">
+                                <p className="text-xs font-bold text-foreground leading-tight break-words">{exp.title}</p>
+                                <p className="text-[9px] text-muted-foreground font-medium flex items-start leading-relaxed">
+                                   <Building2 className="w-2.5 h-2.5 mr-1.5 opacity-40 shrink-0 mt-0.5" /> 
+                                   <span className="break-words">
+                                     {properties.find(p => p.id === exp.propertyId)?.addressLine1}
+                                   </span>
                                 </p>
+                                <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                   <button onClick={() => handleEditExpense(exp)} className="p-1.5 bg-background rounded-lg border border-border hover:text-accent transition-colors">
+                                      <Edit3 className="w-3 h-3" />
+                                   </button>
+                                   <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                         <button className="p-1.5 bg-background rounded-lg border border-border hover:text-red-500 transition-colors">
+                                            <Trash2 className="w-3 h-3" />
+                                         </button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl bg-card">
+                                        <AlertDialogHeader className="text-left">
+                                          <AlertDialogTitle className="font-headline font-bold text-xl text-foreground">Purge Expense Record?</AlertDialogTitle>
+                                          <AlertDialogDescription className="text-muted-foreground font-medium mt-2">
+                                            This will permanently remove the outlay for <strong>{exp.title}</strong> from your financial ledger. This action cannot be reversed.
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter className="mt-6 gap-3">
+                                          <AlertDialogCancel className="rounded-xl h-12 font-bold uppercase tracking-widest text-[10px]">Cancel</AlertDialogCancel>
+                                          <AlertDialogAction 
+                                            onClick={() => handleDeleteExpense(exp.id)}
+                                            className="rounded-xl h-12 font-bold bg-red-600 text-white uppercase tracking-widest text-[10px] hover:bg-red-700 border-none"
+                                          >
+                                            Confirm Removal
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                   </AlertDialog>
+                                </div>
                               </div>
-                              <div className="text-right">
+                              <div className="text-right shrink-0">
                                 <p className="text-sm font-bold text-foreground">£{Number(exp.cost).toLocaleString()}</p>
-                                <p className="text-[8px] font-bold uppercase text-accent tracking-widest">{exp.category}</p>
+                                <p className="text-[8px] font-bold uppercase text-accent tracking-widest mt-0.5">{exp.category}</p>
                               </div>
                            </div>
                         </div>
