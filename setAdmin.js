@@ -32,10 +32,15 @@ async function initialize() {
   }
 }
 
-// TARGET UIDs FOR ESCALATION
+/**
+ * 📋 TARGET REGISTRY
+ * Add the UIDs of the users you wish to elevate here.
+ * You can find these UIDs in the Firebase Console -> Authentication -> Users tab.
+ */
 const targetUids = [
   "E9WTQfSqRNf64HzOlCoYXuAsBuH2",
-  "CKG5dqFs9pcFEdJjF9DVqvhiTHj1"
+  "CKG5dqFs9pcFEdJjF9DVqvhiTHj1",
+  // "ADD_NEW_USER_UID_HERE"
 ];
 
 async function escalateUsers() {
@@ -46,6 +51,8 @@ async function escalateUsers() {
   
   for (const uid of targetUids) {
     try {
+      // SET CUSTOM CLAIMS: { admin: true, premium: true }
+      // These are checked in the frontend via getIdTokenResult()
       await admin.auth().setCustomUserClaims(uid, {
         admin: true,
         premium: true,
