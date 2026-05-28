@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { 
   LogOut, User, Bell, LayoutDashboard, Search, X, 
   MessageSquare, AlertTriangle, Moon, Sun, Clock,
-  ShieldCheck, Settings
+  ShieldCheck, Settings, ChevronRight
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth, useUser } from "@/firebase";
@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
 
 interface HeaderProps {
@@ -49,25 +49,38 @@ type Notification = {
   description: string;
   time: string;
   type: 'grade' | 'message' | 'alert';
+  href: string;
 };
-
-const INITIAL_NOTIFICATIONS: Notification[] = [
-  { id: '1', title: 'Portfolio Grade Updated', description: 'Verification engine complete.', time: '15 mins ago', type: 'grade' },
-  { id: '2', title: 'New Direct Message', description: 'Resident has a question about rent.', time: '1 hour ago', type: 'message' },
-  { id: '3', title: 'Inspection Reminder', description: 'Property Audit scheduled for tomorrow.', time: '2 hours ago', type: 'alert' }
-];
 
 export function Header({ role }: HeaderProps) {
   const { user } = useUser();
   const auth = useAuth();
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [notifications, setNotifications] = useState<Notification[]>(INITIAL_NOTIFICATIONS);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [sessionTime, setSessionTime] = useState("60");
   const [mounted, setMounted] = useState(false);
+  const [open, setOpen] = useState(false);
   
   const userName = user?.displayName || user?.email?.split('@')[0] || 'User';
+
+  const initialNotifications: Notification[] = useMemo(() => {
+    if (role === 'landlord') {
+      return [
+        { id: '1', title: 'Portfolio Grade Updated', description: 'Verification engine complete.', time: '15 mins ago', type: 'grade', href: '/landlord/dashboard' },
+        { id: '2', title: 'New Direct Message', description: 'Resident has a question about rent.', time: '1 hour ago', type: 'message', href: '/landlord/messages' },
+        { id: '3', title: 'Inspection Reminder', description: 'Property Audit scheduled for tomorrow.', time: '2 hours ago', type: 'alert', href: '/landlord/calendar' }
+      ];
+    } else {
+      return [
+        { id: '1', title: 'Rent Receipted', description: 'Monthly collection verified by management.', time: '20 mins ago', type: 'grade', href: '/tenant/payments' },
+        { id: '2', title: 'Management Message', description: 'New update regarding your tenancy.', time: '2 hours ago', type: 'message', href: '/tenant/messages' },
+        { id: '3', title: 'Repair Scheduled', description: 'Trade partner dispatched for Tuesday.', time: '5 hours ago', type: 'alert', href: '/tenant/maintenance' }
+      ];
+    }
+  }, [role]);
+
+  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
 
   useEffect(() => {
     setMounted(true);
@@ -106,8 +119,14 @@ export function Header({ role }: HeaderProps) {
     }
   };
 
-  const deleteNotification = (id: string) => {
+  const deleteNotification = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const handleNotificationClick = (href: string) => {
+    router.push(href);
+    setOpen(false);
   };
 
   const clearAll = () => {
@@ -134,7 +153,7 @@ export function Header({ role }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-3">
-        <Popover>
+        <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-xl text-muted-foreground hover:text-foreground relative">
               <Bell className="h-5 w-5" />
@@ -150,9 +169,16 @@ export function Header({ role }: HeaderProps) {
              </div>
              <div className="max-h-[400px] overflow-y-auto no-scrollbar bg-card">
                {notifications.length > 0 ? (
-                 <div className="p-4 space-y-4 text-left">
+                 <div className="p-2 space-y-1 text-left">
                     {notifications.map((n) => (
-                      <div key={n.id} className="flex gap-3 items-start group relative">
+                      <div 
+                        key={n.id} 
+                        onClick={() => handleNotificationClick(n.href)}
+                        className={cn(
+                          "flex gap-3 items-start p-3 rounded-xl transition-all cursor-pointer group relative active:scale-[0.98]",
+                          "hover:bg-primary/5"
+                        )}
+                      >
                          <div className={cn(
                            "p-2 rounded-lg shrink-0",
                            n.type === 'grade' ? "bg-emerald-500/10 text-emerald-500" :
@@ -162,18 +188,15 @@ export function Header({ role }: HeaderProps) {
                              n.type === 'message' ? <MessageSquare className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
                          </div>
                          <div className="flex-1 min-w-0 pr-6">
-                            <p className="text-xs font-bold truncate text-foreground">{n.title}</p>
-                            <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">{n.description}</p>
+                            <p className="text-xs font-bold truncate text-foreground group-hover:text-accent transition-colors">{n.title}</p>
+                            <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5 font-medium">{n.description}</p>
                             <p className="text-[9px] text-muted-foreground mt-1 opacity-60 font-bold uppercase tracking-tight">{n.time}</p>
                          </div>
                          <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-6 w-6 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity absolute top-0 right-0 text-muted-foreground hover:text-destructive"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteNotification(n.id);
-                            }}
+                            className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            onClick={(e) => deleteNotification(n.id, e)}
                           >
                             <X className="h-3 w-3" />
                          </Button>
