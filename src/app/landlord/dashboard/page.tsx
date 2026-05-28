@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { 
   Select, 
   SelectContent, 
@@ -44,7 +44,7 @@ import { useToast } from "@/hooks/use-toast";
 /**
  * @fileOverview Landlord Insight Hub.
  * Optimized for active-asset financials and structural stability.
- * Thematic update: Selectors follow light/dark mode protocols (bg-background).
+ * Enhanced: Monthly Rent Ledger now features Month/Year selection and horizontal scroll capability.
  */
 
 export default function LandlordDashboard() {
@@ -212,6 +212,7 @@ export default function LandlordDashboard() {
   }
 
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const years = [2024, 2025, 2026, 2027];
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-500 pb-12">
@@ -272,7 +273,7 @@ export default function LandlordDashboard() {
               <CardTitle className="text-xl font-headline flex items-center text-foreground tracking-tight">
                 <BarChart3 className="w-6 h-6 mr-3 text-accent" />
                 Rent Distribution
-              </CardTitle>
+              </BarChart3>
             </CardHeader>
             <CardContent className="h-[380px] p-8">
                <ResponsiveContainer width="100%" height="100%">
@@ -301,69 +302,81 @@ export default function LandlordDashboard() {
                 <ReceiptText className="w-6 h-6 mr-3 text-accent" />
                 Monthly Rent Ledger
               </CardTitle>
-              {/* THEMED MONTH SELECTOR: Light on Light / Dark on Dark */}
-              <div className="flex items-center gap-2 bg-background p-1.5 rounded-2xl border border-border shrink-0 transition-colors duration-300 shadow-sm">
+              {/* THEMED PERIOD SELECTOR: Light on Light / Dark on Dark */}
+              <div className="flex items-center gap-1 bg-background p-1.5 rounded-2xl border border-border shrink-0 transition-colors duration-300 shadow-sm">
                 <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(Number(v))}>
-                  <SelectTrigger className="h-9 w-[130px] border-none bg-transparent font-bold text-[10px] uppercase tracking-widest focus:ring-0">
-                    <CalendarDays className="w-3.5 h-3.5 mr-2 opacity-40" />
+                  <SelectTrigger className="h-9 w-[115px] border-none bg-transparent font-bold text-[10px] uppercase tracking-widest focus:ring-0">
+                    <CalendarDays className="w-3.5 h-3.5 mr-2 opacity-40 text-accent" />
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-border bg-card">
                     {months.map((m, i) => <SelectItem key={m} value={(i + 1).toString()} className="text-[10px] font-bold uppercase py-2">{m}</SelectItem>)}
                   </SelectContent>
                 </Select>
+                <div className="w-px h-4 bg-border mx-1 opacity-20" />
+                <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(Number(v))}>
+                  <SelectTrigger className="h-9 w-[80px] border-none bg-transparent font-bold text-[10px] uppercase tracking-widest focus:ring-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-border bg-card">
+                    {years.map((y) => <SelectItem key={y} value={y.toString()} className="text-[10px] font-bold uppercase py-2">{y}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
             </CardHeader>
             <CardContent className="p-0">
-               <ScrollArea className="h-[600px] w-full overflow-auto">
-                  <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
-                    <thead>
-                      <tr className="bg-muted/10 sticky top-0 z-10">
-                        <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[40%] bg-card">Asset Identity</th>
-                        <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[25%] bg-card text-center">Monthly Rent</th>
-                        <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[35%] bg-card">Verification Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                      {properties?.filter(p => p.isOccupied).map(prop => {
-                        const payment = periodPayments?.find(pm => pm.propertyId === prop.id);
-                        const status = payment?.status || 'not-paid';
-                        return (
-                          <tr key={prop.id} className="hover:bg-muted/5 transition-colors group">
-                            <td className="px-8 py-6">
-                              <div className="flex items-center gap-5">
-                                <div className="relative h-14 w-14 rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/5 bg-muted shrink-0 flex items-center justify-center">
-                                  {prop.imageUrl ? <img src={prop.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" /> : <Building2 className="w-6 h-6 text-muted-foreground/30" />}
+               <ScrollArea className="h-[600px] w-full">
+                  <div className="min-w-full inline-block align-middle">
+                    <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
+                      <thead>
+                        <tr className="bg-muted/10 sticky top-0 z-10">
+                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[40%] bg-card">Asset Identity</th>
+                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[25%] bg-card text-center">Monthly Rent</th>
+                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[35%] bg-card">Verification Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {properties?.filter(p => p.isOccupied).map(prop => {
+                          const payment = periodPayments?.find(pm => pm.propertyId === prop.id);
+                          const status = payment?.status || 'not-paid';
+                          return (
+                            <tr key={prop.id} className="hover:bg-muted/5 transition-colors group">
+                              <td className="px-8 py-6">
+                                <div className="flex items-center gap-5">
+                                  <div className="relative h-14 w-14 rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/5 bg-muted shrink-0 flex items-center justify-center">
+                                    {prop.imageUrl ? <img src={prop.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" /> : <Building2 className="w-6 h-6 text-muted-foreground/30" />}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <span className="font-bold text-base text-foreground truncate block">{prop.addressLine1}</span>
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 truncate block mt-0.5">{prop.city}</span>
+                                  </div>
                                 </div>
-                                <div className="min-w-0 flex-1">
-                                  <span className="font-bold text-base text-foreground truncate block">{prop.addressLine1}</span>
-                                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 truncate block mt-0.5">{prop.city}</span>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-8 py-6">
-                               <div className="flex items-center justify-center gap-3 max-w-[160px] mx-auto bg-background/80 rounded-xl px-4 h-12 border border-white/10 shadow-inner">
-                                  <span className="text-muted-foreground opacity-30 font-bold text-sm">£</span>
-                                  <Input type="number" defaultValue={prop.rentAmount} className="h-10 border-none bg-transparent font-bold text-base focus:ring-0 text-center text-foreground" onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)} />
-                               </div>
-                            </td>
-                            <td className="px-8 py-6">
-                               <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
-                                 <SelectTrigger className={cn("h-12 w-full rounded-xl border-none font-bold text-[10px] uppercase tracking-[0.15em] shadow-inner px-5", status === 'paid' ? "bg-emerald-500/10 text-emerald-500" : status === 'late' ? "bg-sky-500/10 text-sky-500" : "bg-amber-500/10 text-amber-500")}>
-                                   <SelectValue />
-                                 </SelectTrigger>
-                                 <SelectContent className="rounded-xl border-white/5 bg-card">
-                                   <SelectItem value="not-paid" className="text-[10px] font-bold uppercase py-3">Not Paid</SelectItem>
-                                   <SelectItem value="paid" className="text-[10px] font-bold uppercase py-3">Paid</SelectItem>
-                                   <SelectItem value="late" className="text-[10px] font-bold uppercase py-3">Paid Late</SelectItem>
-                                 </SelectContent>
-                               </Select>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                              </td>
+                              <td className="px-8 py-6">
+                                 <div className="flex items-center justify-center gap-3 max-w-[160px] mx-auto bg-background/80 rounded-xl px-4 h-12 border border-white/10 shadow-inner">
+                                    <span className="text-muted-foreground opacity-30 font-bold text-sm">£</span>
+                                    <Input type="number" defaultValue={prop.rentAmount} className="h-10 border-none bg-transparent font-bold text-base focus:ring-0 text-center text-foreground" onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)} />
+                                 </div>
+                              </td>
+                              <td className="px-8 py-6">
+                                 <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
+                                   <SelectTrigger className={cn("h-12 w-full rounded-xl border-none font-bold text-[10px] uppercase tracking-[0.15em] shadow-inner px-5", status === 'paid' ? "bg-emerald-500/10 text-emerald-500" : status === 'late' ? "bg-sky-500/10 text-sky-500" : "bg-amber-500/10 text-amber-500")}>
+                                     <SelectValue />
+                                   </SelectTrigger>
+                                   <SelectContent className="rounded-xl border-white/5 bg-card">
+                                     <SelectItem value="not-paid" className="text-[10px] font-bold uppercase py-3">Not Paid</SelectItem>
+                                     <SelectItem value="paid" className="text-[10px] font-bold uppercase py-3">Paid</SelectItem>
+                                     <SelectItem value="late" className="text-[10px] font-bold uppercase py-3">Paid Late</SelectItem>
+                                   </SelectContent>
+                                 </Select>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  <ScrollBar orientation="horizontal" />
                </ScrollArea>
             </CardContent>
           </Card>
