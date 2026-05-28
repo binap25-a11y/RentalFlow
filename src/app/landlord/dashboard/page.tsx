@@ -46,7 +46,7 @@ import { useToast } from "@/hooks/use-toast";
 /**
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
  * Optimized for real-time financial tracking and historical ledger navigation.
- * Implements the Deterministic Monthly Ledger Protocol (DMLP).
+ * Implements the Deterministic Monthly Ledger Protocol (DMLP) with Scroll Authority.
  */
 
 export default function LandlordDashboard() {
@@ -259,7 +259,7 @@ export default function LandlordDashboard() {
               <Activity className="w-3.5 h-3.5 mr-2" /> Financial Pulse Hub
            </Badge>
           <h1 className="text-3xl md:text-4xl font-headline font-bold text-foreground mb-1 tracking-tight">Portfolio Insights</h1>
-          <p className="text-muted-foreground font-medium font-body max-w-xl opacity-70 text-sm">Unified command and monthly collection analytics.</p>
+          <p className="text-muted-foreground font-medium font-body max-xl opacity-70 text-sm">Unified command and monthly collection analytics.</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           {!isPro && (
