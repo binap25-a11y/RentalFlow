@@ -31,6 +31,7 @@ import {
 /**
  * @fileOverview High-Fidelity Portfolio Registry.
  * Implements Cascading Delete Protocol for financial and operational consistency.
+ * Optimized: Deleting a property now purges all scheduled inspections.
  */
 
 export default function PropertiesPage() {
@@ -70,7 +71,7 @@ export default function PropertiesPage() {
       deletedAt: serverTimestamp(),
       updatedAt: serverTimestamp() 
     });
-    toast({ title: "Asset Archived", description: "Financial overview will be updated automatically." });
+    toast({ title: "Asset Archived", description: "Financial overview updated." });
   };
 
   const handleRestoreProperty = (propertyId: string) => {
@@ -81,7 +82,7 @@ export default function PropertiesPage() {
       deletedAt: null,
       updatedAt: serverTimestamp() 
     });
-    toast({ title: "Asset Restored", description: "Identity synchronized back to inventory." });
+    toast({ title: "Asset Restored", description: "Synchronized back to inventory." });
   };
 
   const handlePermanentDelete = async (propertyId: string) => {
@@ -91,7 +92,7 @@ export default function PropertiesPage() {
     const propertyRef = doc(db, 'properties', propertyId);
     deleteDocumentNonBlocking(propertyRef);
 
-    // 2. Cascade Delete all related relational records to sync financial history
+    // 2. Cascade Delete all related records (Inspections, Repairs, Finance)
     const relatedCollections = [
       'maintenanceRequests',
       'inspections',
@@ -105,7 +106,7 @@ export default function PropertiesPage() {
       try {
         const q = query(collection(db, collName), where('propertyId', '==', propertyId));
         const snaps = await getDocs(q);
-        snaps.forEach(d => {
+        snaps.docs.forEach(d => {
           deleteDocumentNonBlocking(doc(db, collName, d.id));
         });
       } catch (e) {
@@ -115,7 +116,7 @@ export default function PropertiesPage() {
 
     toast({ 
       title: "Asset Purged", 
-      description: "All site logs and financial records have been removed." 
+      description: "Scheduled inspections and all historical records removed." 
     });
   };
 
@@ -126,7 +127,7 @@ export default function PropertiesPage() {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div className="space-y-1">
           <h1 className="text-3xl font-headline font-bold text-foreground tracking-tight">Portfolio Inventory</h1>
-          <p className="text-muted-foreground font-medium font-body text-sm">Monitoring and managing your high-fidelity property assets.</p>
+          <p className="text-muted-foreground font-medium font-body text-sm opacity-70">Managing your high-fidelity property assets.</p>
         </div>
         <div className="flex items-center gap-3 w-full lg:w-auto">
           <div className="relative flex-1 lg:w-64">
@@ -146,20 +147,20 @@ export default function PropertiesPage() {
 
       <Tabs defaultValue="inventory" className="w-full">
         <TabsList className="bg-muted/30 p-1 rounded-xl h-11 border border-border mb-8">
-          <TabsTrigger value="inventory" className="rounded-lg px-8 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs uppercase tracking-widest font-headline">
-            Active Inventory ({activeProperties.length})
+          <TabsTrigger value="inventory" className="rounded-lg px-8 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs uppercase tracking-widest font-headline transition-all">
+            Active ({activeProperties.length})
           </TabsTrigger>
-          <TabsTrigger value="archive" className="rounded-lg px-8 font-bold data-[state=active]:bg-accent data-[state=active]:text-white text-xs uppercase tracking-widest font-headline">
-            Recovery Vault ({archivedProperties.length})
+          <TabsTrigger value="archive" className="rounded-lg px-8 font-bold data-[state=active]:bg-accent data-[state=active]:text-white text-xs uppercase tracking-widest font-headline transition-all">
+            Recovery ({archivedProperties.length})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="inventory" className="mt-0 outline-none">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {loading ? (
-              <div className="col-span-full py-24 text-center flex flex-col items-center justify-center">
-                <Loader2 className="w-10 h-10 animate-spin text-primary mb-4 opacity-20" />
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Syncing Ledger</p>
+              <div className="col-span-full py-24 text-center flex flex-col items-center justify-center opacity-40">
+                <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em] font-headline">Syncing Ledger</p>
               </div>
             ) : activeProperties.length === 0 ? (
               <div className="col-span-full py-24 text-center flex flex-col items-center justify-center bg-card rounded-[2.5rem] border-2 border-dashed border-border group hover:border-primary/20 transition-colors">
@@ -189,7 +190,6 @@ export default function PropertiesPage() {
                           <Building2 className="w-12 h-12 text-muted-foreground/20" />
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <Badge className={cn("absolute top-6 right-6 font-bold shadow-2xl py-1.5 px-4 text-[9px] uppercase tracking-widest rounded-full border-none", property.isOccupied ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white')}>
                         {property.isOccupied ? 'Occupied' : 'Vacant'}
                       </Badge>
@@ -202,13 +202,11 @@ export default function PropertiesPage() {
                       <p className="text-xs text-muted-foreground flex items-center font-medium font-body opacity-60 truncate w-full"><MapPin className="w-3.5 h-3.5 mr-1.5 text-accent shrink-0" /> {property.city}, {property.zipCode}</p>
                     </CardHeader>
                     <CardContent className="pb-6 text-left px-8">
-                      <div className="flex gap-6 items-center mb-6 py-4 border-y border-border/50 overflow-hidden">
-                        <span className="flex items-center text-[10px] font-bold text-muted-foreground font-headline uppercase tracking-widest whitespace-nowrap"><Bed className="w-4 h-4 mr-2 text-primary opacity-40" /> {property.numberOfBedrooms || 1} Bed</span>
-                        <span className="flex items-center text-[10px] font-bold text-muted-foreground font-headline uppercase tracking-widest whitespace-nowrap"><Bath className="w-4 h-4 mr-2 text-primary opacity-40" /> {property.numberOfBathrooms || 1} Bath</span>
+                      <div className="flex gap-6 items-center mb-6 py-4 border-y border-border/50">
+                        <span className="flex items-center text-[10px] font-bold text-muted-foreground font-headline uppercase tracking-widest"><Bed className="w-4 h-4 mr-2 text-primary opacity-40" /> {property.numberOfBedrooms || 1} Bed</span>
+                        <span className="flex items-center text-[10px] font-bold text-muted-foreground font-headline uppercase tracking-widest"><Bath className="w-4 h-4 mr-2 text-primary opacity-40" /> {property.numberOfBathrooms || 1} Bath</span>
                       </div>
-                      <div className="flex items-end justify-between min-w-0">
-                         <p className="text-2xl font-bold text-foreground font-headline tracking-tighter truncate">£{property.rentAmount?.toLocaleString()}<span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest ml-2 opacity-40">/ month</span></p>
-                      </div>
+                      <p className="text-2xl font-bold text-foreground font-headline tracking-tighter truncate">£{property.rentAmount?.toLocaleString()}<span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest ml-2 opacity-40">/ month</span></p>
                     </CardContent>
                     <CardFooter className="flex gap-2 p-6 pt-2 bg-muted/5 border-t border-border">
                       <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-11 font-headline uppercase tracking-widest text-[9px] border-border bg-card hover:bg-primary/5 transition-all" asChild>
@@ -234,7 +232,7 @@ export default function PropertiesPage() {
                <ShieldAlert className="w-6 h-6 text-accent shrink-0 mt-0.5" />
                <div>
                   <p className="text-sm font-bold text-foreground font-headline">Recovery Vault</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed mt-1 font-medium">Assets in this vault are hidden from your operational roadmap and excluded from financial overview. Records can be restored instantly.</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed mt-1 font-medium">Assets in this vault are excluded from analytics. Records can be restored instantly.</p>
                </div>
             </div>
 
@@ -252,17 +250,7 @@ export default function PropertiesPage() {
                       <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-6">
                         <div className="flex items-center gap-5 w-full text-left min-w-0">
                           <div className="relative h-16 w-24 rounded-xl overflow-hidden bg-muted shrink-0">
-                            {imageUrl ? (
-                              <img 
-                                src={imageUrl} 
-                                alt="" 
-                                className="absolute inset-0 h-full w-full object-cover grayscale" 
-                              />
-                            ) : (
-                              <div className="absolute inset-0 bg-muted/50 flex items-center justify-center">
-                                <Building2 className="w-6 h-6 text-muted-foreground/30" />
-                              </div>
-                            )}
+                            {imageUrl ? <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover grayscale" /> : <Building2 className="w-6 h-6 text-muted-foreground/30" />}
                           </div>
                           <div className="min-w-0 flex-1">
                              <h4 className="font-bold text-base font-headline text-foreground truncate block">{property.addressLine1}</h4>
@@ -277,14 +265,14 @@ export default function PropertiesPage() {
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="ghost" className="flex-1 md:flex-none rounded-xl font-bold h-11 px-6 text-destructive/60 hover:text-white hover:bg-red-500">
-                                <Trash2 className="w-4 h-4 mr-2" /> Permanently Delete
+                                <Trash2 className="w-4 h-4 mr-2" /> Purge Asset
                               </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl bg-card p-10">
                               <AlertDialogHeader className="text-left">
                                 <AlertDialogTitle className="text-2xl font-headline font-bold text-foreground">Purge Asset Record?</AlertDialogTitle>
                                 <AlertDialogDescription className="text-muted-foreground font-medium text-base mt-2">
-                                  This action is irreversible. All maintenance history, financial ledgers, and site audits associated with <strong>{property.addressLine1}</strong> will be permanently purged and dashboard statistics will update.
+                                  This action is irreversible. All <strong>scheduled inspections</strong>, maintenance history, and financial ledgers for <strong>{property.addressLine1}</strong> will be permanently purged.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter className="mt-8 gap-3">
@@ -293,7 +281,7 @@ export default function PropertiesPage() {
                                   onClick={() => handlePermanentDelete(property.id)}
                                   className="rounded-xl h-12 font-bold bg-red-600 hover:bg-red-700 text-white font-headline uppercase tracking-widest text-[10px] border-none"
                                 >
-                                  Purge Record
+                                  Purge All Records
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>

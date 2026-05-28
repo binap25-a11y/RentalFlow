@@ -51,6 +51,7 @@ type PortfolioEvent = {
 /**
  * @fileOverview High-Fidelity Portfolio Calendar.
  * Supports interactive Site Visit selection and expanded maintenance scheduling.
+ * Optimized vertical real estate for administrative forms.
  */
 
 export default function LandlordCalendarPage() {
@@ -201,8 +202,8 @@ export default function LandlordCalendarPage() {
 
   if (!isClient || isInspLoading || isMaintLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[70vh] space-y-6">
-        <Loader2 className="animate-spin text-primary w-12 h-12 opacity-60" />
+      <div className="flex flex-col items-center justify-center h-[70vh] space-y-6 opacity-40">
+        <Loader2 className="animate-spin text-primary w-12 h-12" />
         <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground font-headline">Synchronizing Roadmap</p>
       </div>
     );
@@ -216,7 +217,7 @@ export default function LandlordCalendarPage() {
              <Activity className="w-3 h-3 mr-2" /> Timeline Orchestration
           </Badge>
           <h1 className="text-3xl font-headline font-bold text-foreground tracking-tight">Portfolio Calendar</h1>
-          <p className="text-muted-foreground font-medium font-body max-w-lg mt-1 text-sm">Managing site audits and high-fidelity repair timelines.</p>
+          <p className="text-muted-foreground font-medium font-body max-w-lg mt-1 text-sm opacity-70">Managing site audits and high-fidelity repair timelines.</p>
         </div>
       </div>
 
@@ -261,7 +262,7 @@ export default function LandlordCalendarPage() {
               <div className="space-y-4">
                 <div className="p-4 bg-muted/50 rounded-2xl border border-border shadow-inner">
                   <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-1 opacity-60">Selection Portal</p>
-                  <p className="text-xs text-foreground font-medium leading-relaxed">Select a date on the calendar to view Site Visits and specific Audit records.</p>
+                  <p className="text-xs text-foreground font-medium leading-relaxed">Select a date on the calendar grid to view scheduled Site Audits and operational records.</p>
                 </div>
 
                 <div className="flex flex-col gap-3">
@@ -319,7 +320,7 @@ export default function LandlordCalendarPage() {
           </Card>
 
           <div className="space-y-6 text-left">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between px-2">
               <h3 className="text-xl font-bold font-headline flex items-center text-foreground tracking-tight">
                 <ChevronRight className="w-5 h-5 mr-1 text-accent" /> Portfolio Future State
               </h3>
@@ -327,7 +328,7 @@ export default function LandlordCalendarPage() {
             </div>
             <div className="grid grid-cols-1 gap-6">
                {allEvents.filter(e => isAfter(e.date, startOfDay(new Date()))).slice(0, 8).length === 0 ? (
-                  <p className="text-center py-16 text-muted-foreground italic text-xs font-medium bg-muted/5 rounded-[2rem] border-2 border-dashed border-border">No future operations synchronized.</p>
+                  <p className="text-center py-16 text-muted-foreground italic text-xs font-medium bg-muted/5 rounded-[2rem] border-2 border-dashed border-border opacity-40">No future operations synchronized.</p>
                ) : (
                  allEvents.filter(e => isAfter(e.date, startOfDay(new Date()))).slice(0, 8).map(event => (
                     <EventCard key={event.id} event={event} compact />

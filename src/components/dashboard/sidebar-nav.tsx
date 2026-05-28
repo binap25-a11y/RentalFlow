@@ -33,6 +33,7 @@ interface SidebarNavProps {
 /**
  * @fileOverview Hyper-Accelerated Navigation Registry.
  * Implements hardware-accelerated transforms for a premium user experience.
+ * Optimized for snappy 150ms transitions and tactile feedback.
  */
 
 export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
@@ -140,7 +141,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
               className="w-full justify-start h-10 rounded-lg hover:bg-destructive/10 hover:text-destructive text-sidebar-foreground/60 transition-colors font-headline font-bold active:scale-[0.98]"
             >
               <LogOut className="w-4 h-4 shrink-0" />
-              <span>Logout</span>
+              <span>Deactivate Session</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

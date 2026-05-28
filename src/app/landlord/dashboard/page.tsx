@@ -44,6 +44,7 @@ import { useToast } from "@/hooks/use-toast";
 /**
  * @fileOverview High-Fidelity Landlord Insight Hub.
  * Features cascading financial sync: Archived properties are excluded from live stats.
+ * Corrected syntax to ensure stable JSX structural parsing.
  */
 
 export default function LandlordDashboard() {
@@ -208,8 +209,8 @@ export default function LandlordDashboard() {
 
   if (!isClient || propLoading) {
     return (
-      <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="animate-spin text-primary w-10 h-10 opacity-40" />
+      <div className="flex h-[70vh] items-center justify-center opacity-40">
+        <Loader2 className="animate-spin text-primary w-10 h-10" />
       </div>
     );
   }
@@ -232,7 +233,7 @@ export default function LandlordDashboard() {
               <Activity className="w-3.5 h-3.5 mr-2" /> Financial Pulse Hub
            </Badge>
           <h1 className="text-3xl md:text-4xl font-headline font-bold text-foreground mb-1 tracking-tight">Portfolio Insights</h1>
-          <p className="text-muted-foreground font-medium font-body max-xl opacity-70 text-sm">Unified command and monthly collection analytics.</p>
+          <p className="text-muted-foreground font-medium font-body opacity-70 text-sm">Unified command and monthly collection analytics.</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           {!isPro && (
@@ -340,7 +341,7 @@ export default function LandlordDashboard() {
             </CardHeader>
             <CardContent className="p-0">
                <ScrollArea className="h-[600px] w-full overflow-auto">
-                 {/* Mobile Responsive Registry: High-Contrast Cards */}
+                 {/* Adaptive Registry: Mobile Cards */}
                  <div className="block lg:hidden p-4 space-y-4">
                    {properties?.filter(p => p.isOccupied).map(prop => {
                      const payment = periodPayments?.find(pm => pm.propertyId === prop.id);
@@ -363,7 +364,7 @@ export default function LandlordDashboard() {
 
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/5">
                             <div className="space-y-2">
-                               <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-50 font-headline tracking-widest">Target Yield</Label>
+                               <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-50 font-headline tracking-widest">Monthly Yield</Label>
                                <div className="flex items-center gap-2 bg-background/80 rounded-xl px-4 h-12 border border-white/10 shadow-inner">
                                   <span className="text-muted-foreground opacity-30 font-bold text-sm">£</span>
                                   <Input 
@@ -375,7 +376,7 @@ export default function LandlordDashboard() {
                                </div>
                             </div>
                             <div className="space-y-2">
-                               <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-50 font-headline tracking-widest">Verification Status</Label>
+                               <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-50 font-headline tracking-widest">Verification</Label>
                                <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
                                   <SelectTrigger className={cn(
                                     "h-12 w-full rounded-xl border-none font-bold text-[10px] uppercase tracking-widest shadow-inner px-4",
@@ -396,14 +397,14 @@ export default function LandlordDashboard() {
                    })}
                  </div>
 
-                 {/* Desktop Registry: Precision Rows */}
+                 {/* Adaptive Registry: Desktop Rows */}
                  <div className="hidden lg:block">
                     <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
                       <thead>
                         <tr className="bg-white/[0.02] sticky top-0 z-10">
-                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[40%] bg-card">Asset Registry</th>
+                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[40%] bg-card">Asset Identity</th>
                           <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[25%] bg-card text-center">Monthly Yield</th>
-                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[35%] bg-card">Status & Management</th>
+                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[35%] bg-card">Verification Status</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
@@ -501,7 +502,7 @@ export default function LandlordDashboard() {
             <div className="relative z-10 space-y-6">
                <div className="space-y-1.5">
                  <h3 className="font-bold font-headline text-xl tracking-tight text-foreground">Financial Hub</h3>
-                 <p className="text-xs text-muted-foreground font-medium leading-relaxed">Orchestrate portfolio expenses and insurance records.</p>
+                 <p className="text-xs text-muted-foreground font-medium opacity-70 leading-relaxed">Orchestrate portfolio expenses and insurance records.</p>
                </div>
                
                <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
