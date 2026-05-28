@@ -11,6 +11,11 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { RENTALFLOW_LOGO_URL } from "@/lib/utils";
 
+/**
+ * @fileOverview Resident Portfolio Layout.
+ * Optimized for low-latency session validation.
+ */
+
 export default function TenantLayout({
   children,
 }: {
@@ -55,7 +60,7 @@ export default function TenantLayout({
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-300">
         <div className="relative flex flex-col items-center">
-          <div className="relative w-24 h-24 mb-10 animate-in fade-in zoom-in duration-700">
+          <div className="relative w-24 h-24 mb-10 animate-in fade-in zoom-in duration-500">
             <div className="absolute inset-0 bg-primary/10 rounded-[2rem] blur-3xl animate-pulse" />
             <div className="relative z-10 w-full h-full rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 bg-card">
               <Image 
@@ -68,7 +73,7 @@ export default function TenantLayout({
               />
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Loader2 className="w-4 h-4 animate-spin text-primary opacity-60" />
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Orchestrating Portal</p>
           </div>
@@ -79,7 +84,7 @@ export default function TenantLayout({
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-screen w-full bg-background font-body animate-in fade-in duration-700">
+      <div className="flex min-h-screen w-full bg-background font-body animate-in fade-in duration-500">
         <SidebarNav 
           role="tenant" 
           userName={user?.displayName || user?.email?.split('@')[0] || 'Resident'} 

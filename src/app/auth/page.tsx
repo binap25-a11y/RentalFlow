@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Loader2, Eye, EyeOff, ArrowLeft, ShieldCheck } from "lucide-react";
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { doc, getDoc, serverTimestamp, setDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -19,7 +19,7 @@ import { RENTALFLOW_LOGO_URL } from '@/lib/utils';
 
 /**
  * @fileOverview Hyper-Accelerated Authentication Pipeline.
- * Optimized for zero-flicker mobile loading and atomic redirection.
+ * Optimized for zero-flicker loading and atomic redirection.
  */
 
 export default function AuthPage() {
@@ -59,7 +59,7 @@ export default function AuthPage() {
 
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            const isProfileComplete = !!(userData.firstName && userData.lastName && userData.role && userData.phoneNumber);
+            const isProfileComplete = !!(userData.firstName && userData.lastName && userData.role);
             
             if (!isProfileComplete) {
               setNeedsProfile(true);
@@ -84,8 +84,8 @@ export default function AuthPage() {
 
   const handleCreateProfile = async () => {
     if (!user || !db) return;
-    if (!firstName.trim() || !lastName.trim() || !phoneNumber.trim()) {
-      toast({ variant: "destructive", title: "Missing Info", description: "All fields required." });
+    if (!firstName.trim() || !lastName.trim()) {
+      toast({ variant: "destructive", title: "Incomplete Profile", description: "Identity details required." });
       return;
     }
 
@@ -162,17 +162,17 @@ export default function AuthPage() {
   // CINEMATIC SYNCHRONIZATION OVERLAY
   if (!mounted || isUserLoading || (user && !needsProfile)) {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center bg-background z-[100] animate-in fade-in duration-500">
-        <div className="relative w-32 h-32 mb-12 animate-in zoom-in duration-1000">
-          <div className="absolute inset-0 bg-primary/10 rounded-[2.5rem] blur-3xl animate-pulse" />
-          <div className="relative z-10 w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 bg-card flex items-center justify-center">
-            <Image src={RENTALFLOW_LOGO_URL} alt="RentalFlow" fill className="object-cover" unoptimized priority />
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-background z-[100] animate-in fade-in duration-300">
+        <div className="relative flex flex-col items-center">
+          <div className="relative w-24 h-24 mb-10 animate-in zoom-in duration-500">
+            <div className="absolute inset-0 bg-primary/10 rounded-[2rem] blur-3xl animate-pulse" />
+            <div className="relative z-10 w-full h-full rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 bg-card">
+              <Image src={RENTALFLOW_LOGO_URL} alt="RentalFlow" fill className="object-cover" unoptimized priority />
+            </div>
           </div>
-        </div>
-        <div className="flex flex-col items-center gap-3">
           <div className="flex items-center gap-3">
-            <Loader2 className="w-4 h-4 animate-spin text-accent" />
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Synchronizing Ledger</p>
+            <Loader2 className="w-4 h-4 animate-spin text-primary opacity-60" />
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Synchronizing Identity</p>
           </div>
         </div>
       </div>
@@ -181,38 +181,38 @@ export default function AuthPage() {
 
   if (needsProfile && user) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-left animate-in fade-in duration-700">
-        <Card className="w-full max-w-xl border-none shadow-2xl bg-card overflow-hidden rounded-[3rem]">
-          <CardHeader className="text-center bg-primary/5 pb-10 pt-12">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-left animate-in fade-in duration-500">
+        <Card className="w-full max-w-xl border-none shadow-2xl bg-card overflow-hidden rounded-[2.5rem] ring-1 ring-border">
+          <CardHeader className="text-center bg-primary/5 pb-10 pt-12 border-b">
             <CardTitle className="text-3xl font-headline font-bold text-foreground tracking-tight">Identity Establishment</CardTitle>
-            <CardDescription className="font-medium text-muted-foreground">Define your management or residency role.</CardDescription>
+            <CardDescription className="font-medium text-muted-foreground">Define your operational or residency role.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-8 pt-10 px-10 pb-12">
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground opacity-60 font-headline">First Name</Label>
-                <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground" />
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-60 font-headline">First Name</Label>
+                <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground focus:ring-2 focus:ring-accent" />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Last Name</Label>
-                <Input value={lastName} onChange={(e) => setLastName(e.target.value)} className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground" />
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Last Name</Label>
+                <Input value={lastName} onChange={(e) => setLastName(e.target.value)} className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground focus:ring-2 focus:ring-accent" />
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Account Role</Label>
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Account Role</Label>
               <Tabs value={role} onValueChange={(v) => setRole(v as any)}>
-                <TabsList className="grid w-full grid-cols-2 h-12 bg-muted/20 rounded-xl">
-                  <TabsTrigger value="landlord" className="rounded-lg font-bold data-[state=active]:bg-accent data-[state=active]:text-white">Landlord</TabsTrigger>
-                  <TabsTrigger value="tenant" className="rounded-lg font-bold data-[state=active]:bg-accent data-[state=active]:text-white">Resident</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 h-12 bg-muted/20 rounded-xl p-1">
+                  <TabsTrigger value="landlord" className="rounded-lg font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground uppercase tracking-widest text-[10px]">Landlord</TabsTrigger>
+                  <TabsTrigger value="tenant" className="rounded-lg font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground uppercase tracking-widest text-[10px]">Resident</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Mobile Registry</Label>
-              <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground" />
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-60 font-headline">Contact Registry</Label>
+              <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+44 ..." className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground focus:ring-2 focus:ring-accent" />
             </div>
             <Button className="w-full h-14 rounded-2xl font-bold bg-accent hover:bg-accent/90 text-white text-lg shadow-xl shadow-accent/20 border-none transition-all hover:scale-[1.01]" onClick={handleCreateProfile} disabled={isLoading}>
-              {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Complete Registration"}
+              {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Complete Registry Entry"}
             </Button>
           </CardContent>
         </Card>
@@ -221,47 +221,47 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative animate-in fade-in duration-1000">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative animate-in fade-in duration-700">
       <div className="absolute top-8 left-8">
          <Button variant="ghost" asChild className="rounded-xl font-bold text-foreground hover:bg-primary/5"><Link href="/"><ArrowLeft className="w-4 h-4 mr-2" /> Return Home</Link></Button>
       </div>
       <div className="max-w-xl w-full text-center">
         <div className="mb-12 inline-flex flex-col items-center">
-          <div className="relative h-24 w-24 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 mb-6 bg-card">
+          <div className="relative h-24 w-24 rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 mb-6 bg-card">
             <Image src={RENTALFLOW_LOGO_URL} alt="Logo" fill className="object-cover" unoptimized priority />
           </div>
-          <h1 className="text-5xl font-headline font-bold text-foreground tracking-tighter">RentalFlow</h1>
+          <h1 className="text-4xl font-headline font-bold text-foreground tracking-tighter">RentalFlow</h1>
         </div>
-        <Card className="border-none shadow-2xl rounded-[3rem] p-2 bg-card">
+        <Card className="border-none shadow-2xl rounded-[3rem] p-2 bg-card ring-1 ring-border">
           <CardHeader className="pt-10 pb-6 text-center">
-            <CardTitle className="text-3xl font-headline font-bold text-foreground">Authentication</CardTitle>
-            <CardDescription className="font-medium">Secure access to your property vault.</CardDescription>
+            <CardTitle className="text-3xl font-headline font-bold text-foreground tracking-tight">Access Portal</CardTitle>
+            <CardDescription className="font-medium">Secure entry to your property vault.</CardDescription>
           </CardHeader>
           <CardContent className="px-10 pb-12 space-y-6">
-            <Button variant="outline" className="w-full h-14 rounded-2xl font-bold border-border bg-muted/10 hover:bg-muted/20 text-foreground" onClick={handleGoogleSignIn} disabled={isLoading}>
-              Access with Google
+            <Button variant="outline" className="w-full h-14 rounded-2xl font-bold border-border bg-muted/10 hover:bg-muted/20 text-foreground transition-all active:scale-[0.98]" onClick={handleGoogleSignIn} disabled={isLoading}>
+              <ShieldCheck className="w-5 h-5 mr-3 text-accent" /> Verify with Google
             </Button>
-            <div className="relative my-4"><div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/10"></span></div><div className="relative flex justify-center text-[10px] uppercase font-bold text-muted-foreground tracking-widest"><span className="bg-card px-4">or use internal mail</span></div></div>
+            <div className="relative my-4"><div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/10"></span></div><div className="relative flex justify-center text-[9px] uppercase font-bold text-muted-foreground tracking-[0.2em]"><span className="bg-card px-4">or internal mail</span></div></div>
             <form onSubmit={handleSubmit} className="space-y-6 text-left">
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-muted-foreground opacity-60 font-headline">Email</Label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground" />
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Email Address</Label>
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 rounded-xl bg-muted/20 border-none font-bold text-foreground focus:ring-2 focus:ring-accent" />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-muted-foreground opacity-60 font-headline">Password</Label>
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Password Ledger</Label>
                 <div className="relative">
-                  <Input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="h-12 rounded-xl bg-muted/20 border-none font-bold pr-12 text-foreground" />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-3 text-muted-foreground/40 hover:text-accent">
+                  <Input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="h-12 rounded-xl bg-muted/20 border-none font-bold pr-12 text-foreground focus:ring-2 focus:ring-accent" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-3 text-muted-foreground/40 hover:text-accent transition-colors">
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
               </div>
-              <Button type="submit" className="w-full h-14 rounded-2xl font-extrabold bg-accent hover:bg-accent/90 text-white text-xl shadow-xl shadow-accent/20 border-none transition-all hover:scale-[1.01]" disabled={isLoading}>
+              <Button type="submit" className="w-full h-14 rounded-2xl font-extrabold bg-primary hover:bg-primary/90 text-primary-foreground text-lg shadow-xl shadow-primary/20 border-none transition-all hover:scale-[1.01] active:scale-[0.98]" disabled={isLoading}>
                 {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : (authMode === 'login' ? 'Enter Vault' : 'Initialize Credentials')}
               </Button>
             </form>
-            <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full text-xs font-bold text-muted-foreground hover:text-accent transition-all font-headline uppercase tracking-widest mt-6">
-              {authMode === 'login' ? "Register Professional Portfolio" : "Return to Access Hub"}
+            <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full text-[10px] font-bold text-muted-foreground hover:text-accent transition-all font-headline uppercase tracking-[0.2em] mt-6">
+              {authMode === 'login' ? "Register New Portfolio" : "Return to Access Hub"}
             </button>
           </CardContent>
         </Card>

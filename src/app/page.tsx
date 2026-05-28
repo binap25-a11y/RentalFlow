@@ -1,9 +1,9 @@
 "use client";
 
-import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, getLandlordCollectionQuery } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { 
   ArrowRight, 
   ShieldCheck, 
@@ -19,11 +19,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { 
   cn, 
-  RENTALFLOW_LOGO_URL, 
-  getResolvedImageUrl 
+  RENTALFLOW_LOGO_URL 
 } from '@/lib/utils';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { doc } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
 
 /**
  * @fileOverview High-Fidelity Portfolio Entry Point.
@@ -33,6 +33,7 @@ import { doc } from 'firebase/firestore';
 export default function LandingPage() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
   const userDocRef = useMemoFirebase(() => {
@@ -42,26 +43,16 @@ export default function LandingPage() {
 
   const { data: profile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
-  const propertiesQuery = useMemoFirebase(() => {
-    if (!db || !user || profile?.role !== 'landlord') return null;
-    return getLandlordCollectionQuery(db, "properties", user.uid);
-  }, [db, user, profile]);
-
-  const { data: properties } = useCollection(propertiesQuery);
-
-  const heroImage = useMemo(() => {
-    if (properties && properties.length > 0) {
-      const sorted = [...properties].sort((a, b) => 
-        (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)
-      );
-      return getResolvedImageUrl(sorted[0].imageUrl, sorted[0].imageUrls);
-    }
-    return null;
-  }, [properties]);
-
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // ATOMIC REDIRECTION: Rapid bypass for authenticated users
+  useEffect(() => {
+    if (mounted && user && !isProfileLoading && profile) {
+      router.replace(profile.role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
+    }
+  }, [mounted, user, isProfileLoading, profile, router]);
 
   const scrollToFeatures = () => {
     const section = document.getElementById('features');
@@ -70,14 +61,18 @@ export default function LandingPage() {
     }
   };
 
+  // CINEMATIC ENTRY: Premium initial sync
   if (!mounted || isUserLoading || (user && isProfileLoading)) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-500">
-        <div className="flex flex-col items-center gap-4">
-          <div className="relative w-24 h-24 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 bg-card">
+      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-300">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative w-24 h-24 rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 bg-card animate-in zoom-in duration-500">
             <Image src={RENTALFLOW_LOGO_URL} alt="RentalFlow" fill className="object-cover" unoptimized priority />
           </div>
-          <Loader2 className="w-6 h-6 animate-spin text-accent opacity-40" />
+          <div className="flex items-center gap-3">
+            <Loader2 className="w-4 h-4 animate-spin text-accent opacity-40" />
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Synchronizing Vault</p>
+          </div>
         </div>
       </div>
     );
@@ -113,9 +108,9 @@ export default function LandingPage() {
       <section className="relative pt-48 pb-40 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-accent/10 blur-[120px] rounded-full -z-10 opacity-30" />
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
-          <div className="text-left space-y-10 animate-in fade-in slide-in-from-bottom-12 duration-1000">
+          <div className="text-left space-y-10 animate-in fade-in slide-in-from-bottom-12 duration-700">
             <div className="space-y-4">
-              <Badge variant="outline" className="py-2 px-5 rounded-full border-accent/20 bg-accent/5 text-accent font-bold uppercase tracking-[0.25em] text-[10px] animate-pulse">
+              <Badge variant="outline" className="py-2 px-5 rounded-full border-accent/20 bg-accent/5 text-accent font-bold uppercase tracking-[0.25em] text-[10px]">
                 <Sparkles className="w-3.5 h-3.5 mr-2" /> High-Fidelity Operations
               </Badge>
               <h1 className="text-7xl md:text-[5.5rem] font-headline font-bold tracking-tighter leading-[0.85] text-foreground">
@@ -128,52 +123,24 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-6 pt-4">
-              {user && profile ? (
-                <Button size="lg" asChild className="h-16 px-8 md:px-16 rounded-[1.75rem] bg-accent hover:bg-accent/90 text-white text-lg md:text-xl font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95 border-none">
-                  <Link href={profile.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
-                      Access Portfolio Vault <ArrowRight className="w-6 h-6 ml-3" />
-                  </Link>
-                </Button>
-              ) : (
-                <Button size="lg" asChild className="h-16 px-8 md:px-16 rounded-[1.75rem] bg-accent hover:bg-accent/90 text-white text-lg md:text-xl font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95 border-none">
-                  <Link href="/auth">Access Portfolio Vault <ArrowRight className="w-6 h-6 ml-3" /></Link>
-                </Button>
-              )}
+              <Button size="lg" asChild className="h-16 px-8 md:px-16 rounded-[1.75rem] bg-accent hover:bg-accent/90 text-white text-lg md:text-xl font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95 border-none">
+                <Link href="/auth">Access Portfolio Vault <ArrowRight className="w-6 h-6 ml-3" /></Link>
+              </Button>
               <Button size="lg" variant="outline" className="h-16 px-8 md:px-12 rounded-[1.75rem] border-white/10 bg-white/5 hover:bg-white/10 text-foreground font-bold text-lg backdrop-blur-md cursor-pointer transition-all" onClick={scrollToFeatures}>
                  Explore Intelligence
               </Button>
-            </div>
-
-            <div className="flex items-center gap-10 opacity-40">
-               <div className="flex flex-col gap-1">
-                  <span className="text-2xl font-bold font-headline">99.9%</span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest">Uptime Sync</span>
-               </div>
-               <div className="w-px h-10 bg-white/10" />
-               <div className="flex flex-col gap-1">
-                  <span className="text-2xl font-bold font-headline">5k+</span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest">Assets Managed</span>
-               </div>
             </div>
           </div>
           
           <div className="relative group">
             <div className="absolute -inset-1 bg-accent/20 rounded-[4rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-1000" />
             <div className="relative h-[650px] rounded-[3.5rem] overflow-hidden shadow-2xl ring-1 ring-white/10 animate-in fade-in zoom-in duration-1000 bg-muted">
-              {heroImage ? (
-                <img 
-                  src={heroImage} 
-                  alt="Portfolio Identity" 
-                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                />
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 flex flex-col items-center justify-center gap-4">
-                  <div className="p-8 bg-white/5 rounded-[2rem] border border-white/5 shadow-inner">
-                     <Building2 className="w-24 h-24 text-primary/10" />
-                  </div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/30 font-headline">Awaiting visual identity</p>
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 flex flex-col items-center justify-center gap-4">
+                <div className="p-8 bg-white/5 rounded-[2rem] border border-white/5 shadow-inner">
+                   <Building2 className="w-24 h-24 text-primary/10" />
                 </div>
-              )}
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/30 font-headline">Awaiting visual identity</p>
+              </div>
               <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60" />
               <div className="absolute bottom-12 left-10 right-10 glass p-10 rounded-[2.5rem] animate-in slide-in-from-bottom-10 duration-1000 delay-500">
                  <div className="flex justify-between items-center">
@@ -231,21 +198,6 @@ export default function LandingPage() {
               </Card>
             ))}
           </div>
-        </div>
-      </section>
-
-      <section className="py-24 md:py-40 relative">
-        <div className="max-w-7xl mx-auto px-6">
-           <Card className="rounded-[2.5rem] md:rounded-[4rem] bg-accent p-10 md:p-24 text-center relative overflow-hidden border-none shadow-2xl">
-              <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
-              <div className="relative z-10 space-y-8 md:space-y-10">
-                 <h2 className="text-4xl md:text-7xl font-headline font-bold text-white tracking-tighter leading-tight">Ready to orchestrate?</h2>
-                 <p className="text-lg md:text-xl text-white/80 font-medium max-w-2xl mx-auto">Initialize your professional portfolio identity today and join the leading property managers.</p>
-                 <Button size="lg" asChild className="h-14 md:h-16 px-10 md:px-16 rounded-xl md:rounded-2xl bg-white text-accent hover:bg-white/90 text-lg md:text-xl font-bold shadow-2xl transition-all hover:scale-105 active:scale-95 border-none w-fit mx-auto">
-                    <Link href="/auth">Access Portfolio Vault</Link>
-                 </Button>
-              </div>
-           </Card>
         </div>
       </section>
 
