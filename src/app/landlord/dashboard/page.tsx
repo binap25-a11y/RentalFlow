@@ -44,7 +44,7 @@ import { useToast } from "@/hooks/use-toast";
 /**
  * @fileOverview Landlord Insight Hub.
  * Optimized for active-asset financials and structural stability.
- * Enhanced: Monthly Rent Ledger now features Month/Year selection and horizontal scroll capability.
+ * Features: Themed Period Selectors (Light/Dark mode responsive) and Horizontal Scroll Ledger.
  */
 
 export default function LandlordDashboard() {
@@ -241,8 +241,8 @@ export default function LandlordDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { title: "Gross Annual Potential", val: `£${financialStats.annualGross.toLocaleString()}`, Icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5", Indicator: ArrowUpRight },
-          { title: "Portfolio Expenses (YTD)", val: `£${financialStats.totalExpenses.toLocaleString()}`, Icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5", Indicator: ArrowDownRight },
+          { title: "Gross Annual Potential", val: `£${financialStats.annualGross.toLocaleString()}`, Icon: PoundSterling, color: "text-emerald-500", bg: "bg-emerald-500/5" },
+          { title: "Portfolio Expenses (YTD)", val: `£${financialStats.totalExpenses.toLocaleString()}`, Icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/5" },
           { title: "Net Annual Forecast", val: `£${financialStats.netAnnualForecast.toLocaleString()}`, Icon: TrendingUp, color: "text-accent", bg: "bg-accent/5" },
           { title: `${months[selectedMonth - 1].substring(0, 3)} Collected`, val: `£${financialStats.actualCollectedThisPeriod.toLocaleString()}`, Icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/5", progress: financialStats.collectionRate }
         ].map((stat, i) => {
