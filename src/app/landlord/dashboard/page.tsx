@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,6 +45,7 @@ import { sendRentReceiptEmail } from "@/lib/actions/email-actions";
 /**
  * @fileOverview Landlord Insight Hub.
  * Optimized for active-asset financials and professional verification.
+ * Header alignment updated to match high-fidelity intensity protocols.
  */
 
 export default function LandlordDashboard() {
@@ -232,24 +232,27 @@ export default function LandlordDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-500 pb-12">
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4 text-left border-b border-white/5 pb-6">
-        <div className="min-w-0 flex-1">
-           <Badge variant="outline" className="bg-accent/5 text-accent border-accent/20 px-3 py-1 rounded-full font-bold uppercase tracking-[0.2em] text-[9px] mb-3">
-              <Activity className="w-3.5 h-3.5 mr-2" /> Financial Pulse Hub
-           </Badge>
-          <h1 className="text-3xl md:text-4xl font-headline font-bold text-foreground mb-1 tracking-tight">Portfolio Insights</h1>
+      <div className="flex flex-col gap-6 text-left border-b border-white/5 pb-6">
+        <div className="space-y-1">
+          <h1 className="text-3xl md:text-4xl font-headline font-bold text-foreground tracking-tight">Portfolio Insights</h1>
           <p className="text-muted-foreground font-medium font-body opacity-70 text-sm">Unified command and monthly collection analytics.</p>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+        
+        <div className="flex flex-wrap items-center gap-3">
+          <Badge variant="outline" className="bg-accent/5 text-accent border-accent/20 px-3 py-1.5 rounded-full font-bold uppercase tracking-[0.2em] text-[9px]">
+             <Activity className="w-3.5 h-3.5 mr-2" /> Financial Pulse Hub
+          </Badge>
+          
           {!isPro && (
-            <Button variant="outline" className="rounded-xl h-10 px-6 font-bold border-accent/30 text-accent bg-accent/5 hover:bg-accent/10 transition-all shadow-xl shadow-accent/5 text-xs">
+            <Button variant="outline" className="rounded-xl h-9 px-6 font-bold border-accent/30 text-accent bg-accent/5 hover:bg-accent/10 transition-all shadow-xl shadow-accent/5 text-[9px] uppercase tracking-widest">
               <Crown className="w-3.5 h-3.5 mr-2" /> Upgrade to Premium
             </Button>
           )}
+          
           {isPro && (
-            <div className="flex items-center gap-2.5 px-5 py-2.5 bg-emerald-500/10 text-emerald-500 rounded-full border border-emerald-500/20 shadow-2xl">
-               {isAdminEscalated ? <ShieldCheck className="w-4 h-4" /> : <Crown className="w-4 h-4" />}
-               <span className="text-[10px] font-bold uppercase tracking-[0.15em] font-headline">Premium Plan Active</span>
+            <div className="flex items-center gap-2.5 px-5 py-1.5 bg-emerald-500/10 text-emerald-500 rounded-full border border-emerald-500/20 shadow-sm">
+               {isAdminEscalated ? <ShieldCheck className="w-3.5 h-3.5" /> : <Crown className="w-3.5 h-3.5" />}
+               <span className="text-[9px] font-bold uppercase tracking-[0.15em] font-headline">Premium Plan Active</span>
             </div>
           )}
         </div>
