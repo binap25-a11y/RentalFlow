@@ -135,6 +135,7 @@ export default function LandlordCalendarPage() {
   const handleDateSelect = (d: Date | undefined) => {
     if (d) {
       setSelectedDate(d);
+      // SMOOTH NAVIGATION: Selection triggers vault focus
       setTimeout(() => {
         ledgerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);

@@ -25,7 +25,8 @@ import {
   DialogDescription, 
   DialogFooter, 
   DialogHeader, 
-  DialogTitle 
+  DialogTitle,
+  DialogTrigger
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -492,9 +493,11 @@ export default function LandlordDashboard() {
                </div>
                
                <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
-                <Button className="w-full rounded-xl bg-accent text-white font-bold h-12 hover:bg-accent/90 transition-all shadow-xl shadow-accent/10 text-[10px] uppercase tracking-[0.15em] border-none" onClick={() => setIsExpenseDialogOpen(true)}>
-                  <Plus className="w-4 h-4 mr-2" /> Register Ledger Item
-                </Button>
+                <DialogTrigger asChild>
+                  <Button className="w-full rounded-xl bg-accent text-white font-bold h-12 hover:bg-accent/90 transition-all shadow-xl shadow-accent/10 text-[10px] uppercase tracking-[0.15em] border-none" onClick={() => setIsExpenseDialogOpen(true)}>
+                    <Plus className="w-4 h-4 mr-2" /> Register Ledger Item
+                  </Button>
+                </DialogTrigger>
                 <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[85vh] max-w-[500px] ring-1 ring-white/10">
                   <form className="flex flex-col h-full overflow-hidden" onSubmit={(e) => { e.preventDefault(); handleLogManualExpense(); }}>
                     <div className="p-8 bg-primary/5 border-b border-white/5 text-left shrink-0">
