@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, getLandlordCollectionQuery, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
-import { doc, serverTimestamp } from 'firebase/firestore';
+import { doc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,7 +43,7 @@ export default function PropertiesPage() {
   [allProperties, searchQuery]);
 
   const archivedProperties = useMemo(() => 
-    allProperties?.filter(p => !p.isDeleted) || [], 
+    allProperties?.filter(p => p.isDeleted) || [], 
   [allProperties]);
 
   const handleArchiveProperty = (propertyId: string) => {
@@ -68,17 +68,45 @@ export default function PropertiesPage() {
     toast({ title: "Asset Restored", description: "Identity synchronized back to inventory." });
   };
 
-  const handlePermanentDelete = (propertyId: string) => {
+  const handlePermanentDelete = async (propertyId: string) => {
     if (!user || !db) return;
+    
+    // 1. Delete Primary Asset
     const propertyRef = doc(db, 'properties', propertyId);
     deleteDocumentNonBlocking(propertyRef);
-    toast({ title: "Record Removed", description: "Record permanently removed from database." });
+
+    // 2. Cascade Delete all related relational records
+    const relatedCollections = [
+      'maintenanceRequests',
+      'inspections',
+      'emergencyContacts',
+      'tenantProfiles',
+      'documents',
+      'rentPayments'
+    ];
+
+    for (const collName of relatedCollections) {
+      try {
+        const q = query(collection(db, collName), where('propertyId', '==', propertyId));
+        const snaps = await getDocs(q);
+        snaps.forEach(d => {
+          deleteDocumentNonBlocking(doc(db, collName, d.id));
+        });
+      } catch (e) {
+        console.warn(`Cascading Purge Warning: Failed to clean ${collName}`);
+      }
+    }
+
+    toast({ 
+      title: "Asset Purged", 
+      description: "All site logs and financial records have been removed." 
+    });
   };
 
   if (!isClient) return null;
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 text-left">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div className="space-y-1">
           <h1 className="text-3xl font-headline font-bold text-foreground tracking-tight">Portfolio Inventory</h1>

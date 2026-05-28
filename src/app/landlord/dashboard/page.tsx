@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
-  Building2, TrendingUp, ArrowRight, 
+  Building2, TrendingUp, 
   ShieldAlert, Loader2, CheckCircle2,
   Plus, Save, ReceiptText,
   Crown, ShieldCheck, PoundSterling, ArrowUpRight, ArrowDownRight,
@@ -466,7 +466,7 @@ export default function LandlordDashboard() {
                           </div>
                        </div>
                        <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9 hover:bg-white/5 border border-white/5 shrink-0" asChild>
-                         <Link href="/landlord/maintenance"><ArrowRight className="w-4 h-4 text-foreground" /></Link>
+                         <Link href="/landlord/maintenance"><Activity className="w-4 h-4 text-foreground" /></Link>
                        </Button>
                     </div>
                   ))}
@@ -491,7 +491,7 @@ export default function LandlordDashboard() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[85vh] max-w-[500px] ring-1 ring-white/10">
-                  <form className="flex flex-col h-full overflow-hidden" onSubmit={(e) => { e.preventDefault(); handleLogManualExpense(); }}>
+                  <div className="flex flex-col h-full overflow-hidden">
                     <div className="p-8 bg-primary/5 border-b border-white/5 text-left shrink-0">
                       <DialogTitle className="text-xl font-bold font-headline text-foreground tracking-tight">Register Expense</DialogTitle>
                       <DialogDescription className="text-xs font-medium text-muted-foreground mt-1.5">Record insurance, maintenance, or portfolio costs.</DialogDescription>
@@ -527,12 +527,12 @@ export default function LandlordDashboard() {
                       </div>
                     </ScrollArea>
                     <DialogFooter className="p-8 bg-muted/5 border-t border-white/5 shrink-0">
-                      <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.2em] text-[10px] border-none" disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
+                      <Button onClick={handleLogManualExpense} type="button" className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.2em] text-[10px] border-none" disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
                         {isSavingExpense ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                         Commit to Ledger
                       </Button>
                     </DialogFooter>
-                  </form>
+                  </div>
                 </DialogContent>
                </Dialog>
             </div>
