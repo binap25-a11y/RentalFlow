@@ -12,6 +12,7 @@ import {
   useMemoFirebase, 
   updateDocumentNonBlocking, 
   setDocumentNonBlocking, 
+  deleteDocumentNonBlocking,
   getLandlordCollectionQuery 
 } from "@/firebase";
 import { doc, serverTimestamp, collection } from "firebase/firestore";
@@ -19,7 +20,7 @@ import {
   Wrench, Sparkles, Clock, BrainCircuit, Loader2, 
   CheckCircle2, PlayCircle, Plus,
   Calendar as CalendarIcon, Building2,
-  Activity, Save, Settings, Lightbulb, Edit3
+  Activity, Save, Lightbulb, Edit3, Trash2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -38,6 +39,17 @@ import {
   DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -140,6 +152,13 @@ export default function MaintenancePage() {
     toast({ title: "Task Updated", description: "Ledger details modified." });
     setIsEditDialogOpen(false);
     setIsSubmitting(false);
+  };
+
+  const handleDeleteRequest = (id: string) => {
+    if (!db) return;
+    const requestRef = doc(db, 'maintenanceRequests', id);
+    deleteDocumentNonBlocking(requestRef);
+    toast({ title: "Task Purged", description: "Record removed from portfolio ledger." });
   };
 
   const handleTriage = async (request: any) => {
@@ -294,7 +313,7 @@ export default function MaintenancePage() {
               <CardFooter className="bg-muted/5 p-6 flex flex-wrap gap-4 border-t border-border">
                 <Button 
                   variant="outline" 
-                  className="flex-1 min-w-[180px] bg-card text-foreground rounded-xl font-bold h-12 border border-border transition-all text-xs font-headline hover:bg-primary/5" 
+                  className="flex-1 min-w-[160px] bg-card text-foreground rounded-xl font-bold h-12 border border-border transition-all text-xs font-headline hover:bg-primary/5" 
                   onClick={() => handleTriage(request)} 
                   disabled={isTriaging === request.id}
                 >
@@ -304,7 +323,7 @@ export default function MaintenancePage() {
                 
                 <Button 
                   variant="outline" 
-                  className="flex-1 min-w-[180px] rounded-xl font-bold h-12 border-border bg-card shadow-sm hover:bg-primary/5 text-foreground text-xs font-headline" 
+                  className="flex-1 min-w-[160px] rounded-xl font-bold h-12 border-border bg-card shadow-sm hover:bg-primary/5 text-foreground text-xs font-headline" 
                   onClick={() => openEditDialog(request)}
                 >
                   <Edit3 className="w-4 h-4 mr-2" /> Edit Task
@@ -312,7 +331,7 @@ export default function MaintenancePage() {
 
                 <Button 
                   variant="outline" 
-                  className="flex-1 min-w-[180px] rounded-xl font-bold h-12 border-border bg-card shadow-sm hover:bg-primary/5 text-foreground text-xs font-headline" 
+                  className="flex-1 min-w-[160px] rounded-xl font-bold h-12 border-border bg-card shadow-sm hover:bg-primary/5 text-foreground text-xs font-headline" 
                   onClick={() => setIsScheduling(request.id)}
                 >
                   <CalendarIcon className="w-4 h-4 mr-2" /> Target Roadmap
@@ -320,7 +339,7 @@ export default function MaintenancePage() {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="flex-1 min-w-[180px] rounded-xl font-bold h-12 border-border bg-card shadow-sm hover:bg-primary/5 text-foreground text-xs font-headline">Update Status</Button>
+                    <Button variant="outline" className="flex-1 min-w-[160px] rounded-xl font-bold h-12 border-border bg-card shadow-sm hover:bg-primary/5 text-foreground text-xs font-headline">Update Status</Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="rounded-xl border-border shadow-xl min-w-[220px] p-2 bg-card" align="end">
                     <DropdownMenuItem className="py-3 px-4 font-bold text-xs cursor-pointer rounded-lg focus:bg-accent focus:text-accent-foreground group" onClick={() => updateStatus(request, 'in-progress')}>
@@ -331,6 +350,31 @@ export default function MaintenancePage() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl text-destructive/40 hover:text-white hover:bg-red-500 transition-all shrink-0 border border-border">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl bg-card p-10">
+                    <AlertDialogHeader className="text-left">
+                      <AlertDialogTitle className="text-2xl font-headline font-bold text-foreground">Purge Maintenance Record?</AlertDialogTitle>
+                      <AlertDialogDescription className="text-muted-foreground font-medium text-base mt-2">
+                        This will permanently remove the repair log for <strong>{request.title}</strong>. This action cannot be reversed.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="mt-8 gap-3">
+                      <AlertDialogCancel className="rounded-xl h-12 font-bold font-headline uppercase tracking-widest text-[10px] border-border">Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={() => handleDeleteRequest(request.id)}
+                        className="rounded-xl h-12 font-bold bg-red-600 hover:bg-red-700 text-white font-headline uppercase tracking-widest text-[10px] border-none"
+                      >
+                        Purge Record
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </CardFooter>
 
               <Dialog open={isScheduling === request.id} onOpenChange={(open) => !open && setIsScheduling(null)}>
@@ -377,11 +421,11 @@ export default function MaintenancePage() {
                   </select>
                 </div>
                 <div className="space-y-3">
-                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Repair Identifier</Label>
+                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Repair Identifier</Label>
                   <Input value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="e.g. Electrical Fault discovery" className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/10 text-foreground" />
                 </div>
                 <div className="space-y-3">
-                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Context</Label>
+                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Context</Label>
                   <Textarea value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Details for triage and fix strategy..." className="rounded-2xl min-h-[160px] bg-muted/40 border-none font-medium px-6 py-5 text-base leading-relaxed shadow-inner ring-1 ring-white/10 text-foreground" />
                 </div>
               </div>
@@ -412,7 +456,7 @@ export default function MaintenancePage() {
                   <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required placeholder="e.g. Electrical Fault discovery" className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/10 text-foreground" />
                 </div>
                 <div className="space-y-3">
-                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Operational Context</Label>
+                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Operational Context</Label>
                   <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} required placeholder="Updated details for this repair log..." className="rounded-2xl min-h-[220px] bg-muted/40 border-none font-medium px-6 py-5 text-base leading-relaxed shadow-inner ring-1 ring-white/10 text-foreground" />
                 </div>
               </div>
