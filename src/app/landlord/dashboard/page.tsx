@@ -5,12 +5,11 @@ import {
   Building2, TrendingUp, 
   ShieldAlert, Loader2, CheckCircle2,
   Plus, Save, ReceiptText,
-  Crown, ShieldCheck, PoundSterling, ArrowUpRight, ArrowDownRight,
+  Crown, ShieldCheck, PoundSterling,
   Activity, BarChart3, CalendarDays
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { useMemo, useState, useEffect } from "react";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, 
@@ -30,7 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Select, 
   SelectContent, 
@@ -44,8 +43,8 @@ import { sendRentReceiptEmail } from "@/lib/actions/email-actions";
 
 /**
  * @fileOverview Landlord Insight Hub.
- * Optimized for active-asset financials and professional verification.
- * Dialog structure hardened with explicit scrolling constraints for high-fidelity fill-in.
+ * Optimized for vertical fidelity: Period-based Rent Ledger refactored for mobile compatibility.
+ * Removes horizontal scroll by stacking rent/status controls vertically per asset.
  */
 
 export default function LandlordDashboard() {
@@ -344,57 +343,50 @@ export default function LandlordDashboard() {
             </CardHeader>
             <CardContent className="p-0">
                <ScrollArea className="h-[600px] w-full">
-                  <div className="min-w-full inline-block align-middle">
-                    <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
-                      <thead>
-                        <tr className="bg-muted/10 sticky top-0 z-10">
-                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[40%] bg-card">Asset Identity</th>
-                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[25%] bg-card text-center">Monthly Rent</th>
-                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 w-[35%] bg-card">Verification Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/5">
-                        {properties?.filter(p => p.isOccupied).map(prop => {
-                          const payment = periodPayments?.find(pm => pm.propertyId === prop.id);
-                          const status = payment?.status || 'not-paid';
-                          return (
-                            <tr key={prop.id} className="hover:bg-muted/5 transition-colors group">
-                              <td className="px-8 py-6">
-                                <div className="flex items-center gap-5">
-                                  <div className="relative h-14 w-14 rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/5 bg-muted shrink-0 flex items-center justify-center">
-                                    {prop.imageUrl ? <img src={prop.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" /> : <Building2 className="w-6 h-6 text-muted-foreground/30" />}
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <span className="font-bold text-base text-foreground truncate block">{prop.addressLine1}</span>
-                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 truncate block mt-0.5">{prop.city}</span>
-                                  </div>
+                  <div className="flex flex-col divide-y divide-white/5">
+                    {properties?.filter(p => p.isOccupied).map(prop => {
+                      const payment = periodPayments?.find(pm => pm.propertyId === prop.id);
+                      const status = payment?.status || 'not-paid';
+                      return (
+                        <div key={prop.id} className="p-8 flex flex-col gap-8 hover:bg-muted/5 transition-colors group">
+                          {/* TOP ROW: ASSET IDENTITY */}
+                          <div className="flex items-center gap-6">
+                            <div className="relative h-16 w-16 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/5 bg-muted shrink-0 flex items-center justify-center">
+                              {prop.imageUrl ? <img src={prop.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" /> : <Building2 className="w-8 h-8 text-muted-foreground/30" />}
+                            </div>
+                            <div className="min-w-0 flex-1 text-left">
+                              <span className="font-bold text-xl text-foreground truncate block font-headline tracking-tight">{prop.addressLine1}</span>
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] opacity-40 truncate block mt-1 font-headline">{prop.city}</span>
+                            </div>
+                          </div>
+
+                          {/* BOTTOM ROW: STACKED CONTROLS */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <div className="space-y-2 text-left">
+                                <Label className="text-[9px] font-bold uppercase text-muted-foreground tracking-[0.2em] opacity-40 font-headline pl-1">Monthly Rent</Label>
+                                <div className="flex items-center gap-3 bg-background/80 rounded-xl px-5 h-14 border border-white/10 shadow-inner">
+                                   <span className="text-muted-foreground opacity-30 font-bold text-base font-headline">£</span>
+                                   <Input type="number" defaultValue={prop.rentAmount} className="h-10 border-none bg-transparent font-bold text-lg focus:ring-0 text-foreground font-headline" onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)} />
                                 </div>
-                              </td>
-                              <td className="px-8 py-6">
-                                 <div className="flex items-center justify-center gap-3 max-w-[160px] mx-auto bg-background/80 rounded-xl px-4 h-12 border border-white/10 shadow-inner">
-                                    <span className="text-muted-foreground opacity-30 font-bold text-sm">£</span>
-                                    <Input type="number" defaultValue={prop.rentAmount} className="h-10 border-none bg-transparent font-bold text-base focus:ring-0 text-center text-foreground" onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)} />
-                                 </div>
-                              </td>
-                              <td className="px-8 py-6">
-                                 <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
-                                   <SelectTrigger className={cn("h-12 w-full rounded-xl border-none font-bold text-[10px] uppercase tracking-[0.15em] shadow-inner px-5", status === 'paid' ? "bg-emerald-500/10 text-emerald-500" : status === 'late' ? "bg-sky-500/10 text-sky-500" : "bg-amber-500/10 text-amber-500")}>
-                                     <SelectValue />
-                                   </SelectTrigger>
-                                   <SelectContent className="rounded-xl border-white/5 bg-card">
-                                     <SelectItem value="not-paid" className="text-[10px] font-bold uppercase py-3">Not Paid</SelectItem>
-                                     <SelectItem value="paid" className="text-[10px] font-bold uppercase py-3">Paid</SelectItem>
-                                     <SelectItem value="late" className="text-[10px] font-bold uppercase py-3">Paid Late</SelectItem>
-                                   </SelectContent>
-                                 </Select>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                             </div>
+                             <div className="space-y-2 text-left">
+                                <Label className="text-[9px] font-bold uppercase text-muted-foreground tracking-[0.2em] opacity-40 font-headline pl-1">Verification Status</Label>
+                                <Select value={status} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
+                                  <SelectTrigger className={cn("h-14 w-full rounded-xl border-none font-bold text-[10px] uppercase tracking-[0.15em] shadow-inner px-6", status === 'paid' ? "bg-emerald-500/10 text-emerald-500" : status === 'late' ? "bg-sky-500/10 text-sky-500" : "bg-amber-500/10 text-amber-500")}>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="rounded-xl border-white/5 bg-card">
+                                    <SelectItem value="not-paid" className="text-[10px] font-bold uppercase py-4">Not Paid</SelectItem>
+                                    <SelectItem value="paid" className="text-[10px] font-bold uppercase py-4">Paid</SelectItem>
+                                    <SelectItem value="late" className="text-[10px] font-bold uppercase py-4">Paid Late</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                             </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <ScrollBar orientation="horizontal" />
                </ScrollArea>
             </CardContent>
           </Card>
