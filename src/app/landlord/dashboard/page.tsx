@@ -46,7 +46,7 @@ import { useToast } from "@/hooks/use-toast";
 /**
  * @fileOverview High-Fidelity Portfolio Insights Dashboard.
  * Optimized for real-time financial tracking and elite inline management.
- * Features a horizontally scrollable "Month Ledge" with unified Status & Action cells.
+ * Features a vertically and horizontally scrollable "Month Ledge" with unified Status & Action cells.
  */
 
 export default function LandlordDashboard() {
@@ -155,6 +155,11 @@ export default function LandlordDashboard() {
     toast({ title: "Ledger Synchronized" });
   };
 
+  const [activePaymentEdit, setActivePaymentEdit] = useState<any>(null);
+  const [editAmount, setEditAmount] = useState('');
+  const [editStatus, setEditStatus] = useState<'paid' | 'pending'>('pending');
+  const [isSavingPayment, setIsSavingPayment] = useState(false);
+
   const handleOpenLedgerEdit = (prop: any, payment: any) => {
     setActivePaymentEdit({ prop, payment });
     setEditAmount(payment?.amount?.toString() || prop.rentAmount?.toString() || '');
@@ -188,11 +193,6 @@ export default function LandlordDashboard() {
     setActivePaymentEdit(null);
     setIsSavingPayment(false);
   };
-
-  const [activePaymentEdit, setActivePaymentEdit] = useState<any>(null);
-  const [editAmount, setEditAmount] = useState('');
-  const [editStatus, setEditStatus] = useState<'paid' | 'pending'>('pending');
-  const [isSavingPayment, setIsSavingPayment] = useState(false);
 
   const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
   const [isSavingExpense, setIsSavingExpense] = useState(false);
@@ -344,81 +344,84 @@ export default function LandlordDashboard() {
               <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em] font-headline opacity-40 shrink-0">{format(new Date(), 'MMMM yyyy')} Registry</p>
             </CardHeader>
             <CardContent className="p-0">
-               <div className="overflow-x-auto">
-                 <table className="w-full text-left border-collapse min-w-[1200px]">
-                   <thead>
-                     <tr className="bg-white/[0.02]">
-                       <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[35%]">Property Identity</th>
-                       <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[20%]">Monthly Rent</th>
-                       <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[45%]">Status & Management</th>
-                     </tr>
-                   </thead>
-                   <tbody className="divide-y divide-white/5">
-                     {properties?.filter(p => p.isOccupied).map(prop => {
-                       const payment = currentMonthPayments?.find(pm => pm.propertyId === prop.id);
-                       const isPaid = payment?.status === 'paid';
-                       const imageUrl = getResolvedImageUrl(prop.imageUrl, prop.imageUrls);
-                       return (
-                         <tr key={prop.id} className="hover:bg-white/[0.02] transition-colors group">
-                           <td className="px-4 py-3 min-w-0">
-                             <div className="flex items-center gap-4">
-                               <div className="relative h-11 w-11 rounded-xl overflow-hidden shadow-xl ring-1 ring-white/5 group-hover:scale-105 transition-transform bg-muted shrink-0 flex items-center justify-center">
-                                 {imageUrl ? (
-                                   <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
-                                 ) : (
-                                   <Building2 className="w-5 h-5 text-muted-foreground/30" />
-                                 )}
+               {/* 🏢 MONTH LEDGE SCROLLBAR: Vertical internal scroll bar for the ledge assets */}
+               <ScrollArea className="h-[600px] w-full">
+                 <div className="overflow-x-auto">
+                   <table className="w-full text-left border-collapse min-w-[1200px]">
+                     <thead>
+                       <tr className="bg-white/[0.02] sticky top-0 z-10">
+                         <th className="px-6 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[30%] bg-card">Property Identity</th>
+                         <th className="px-6 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[15%] bg-card">Monthly Rent</th>
+                         <th className="px-6 py-3 text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground opacity-50 w-[55%] bg-card">Status & Management</th>
+                       </tr>
+                     </thead>
+                     <tbody className="divide-y divide-white/5">
+                       {properties?.filter(p => p.isOccupied).map(prop => {
+                         const payment = currentMonthPayments?.find(pm => pm.propertyId === prop.id);
+                         const isPaid = payment?.status === 'paid';
+                         const imageUrl = getResolvedImageUrl(prop.imageUrl, prop.imageUrls);
+                         return (
+                           <tr key={prop.id} className="hover:bg-white/[0.02] transition-colors group">
+                             <td className="px-6 py-2.5 min-w-0">
+                               <div className="flex items-center gap-4">
+                                 <div className="relative h-11 w-11 rounded-xl overflow-hidden shadow-xl ring-1 ring-white/5 group-hover:scale-105 transition-transform bg-muted shrink-0 flex items-center justify-center">
+                                   {imageUrl ? (
+                                     <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                                   ) : (
+                                     <Building2 className="w-5 h-5 text-muted-foreground/30" />
+                                   )}
+                                 </div>
+                                 <div className="min-w-0 flex-1">
+                                   <span className="font-bold text-sm text-foreground truncate block">{prop.addressLine1}</span>
+                                   <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 truncate block">{prop.city}</span>
+                                 </div>
                                </div>
-                               <div className="min-w-0 flex-1">
-                                 <span className="font-bold text-sm text-foreground truncate block">{prop.addressLine1}</span>
-                                 <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 truncate block">{prop.city}</span>
-                               </div>
-                             </div>
-                           </td>
-                           <td className="px-4 py-3">
-                              <div className="flex items-center gap-2 max-w-[120px]">
-                                 <span className="text-muted-foreground opacity-40 font-bold text-xs">£</span>
-                                 <Input 
-                                    type="number" 
-                                    defaultValue={prop.rentAmount} 
-                                    className="h-9 rounded-lg bg-muted/30 border-none font-bold text-sm px-3 shadow-inner focus:ring-1 focus:ring-accent"
-                                    onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)}
-                                 />
-                              </div>
-                           </td>
-                           <td className="px-4 py-3">
-                              <div className="flex items-center gap-4">
-                                <Select defaultValue={payment?.status || 'pending'} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
-                                  <SelectTrigger className={cn(
-                                    "h-9 w-[180px] rounded-lg border-none font-bold text-[9px] uppercase tracking-widest shadow-sm px-4",
-                                    isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
-                                  )}>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent className="rounded-xl border-white/5 bg-card">
-                                    <SelectItem value="pending" className="text-[9px] font-bold uppercase tracking-widest py-3">Pending</SelectItem>
-                                    <SelectItem value="paid" className="text-[9px] font-bold uppercase tracking-widest py-3">Receipted</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                
-                                <div className="flex items-center gap-2">
-                                  <Button variant="ghost" size="icon" className="rounded-lg h-9 w-9 hover:bg-white/5 border border-white/5 shrink-0" onClick={() => handleOpenLedgerEdit(prop, payment)}>
-                                    <Settings2 className="w-3.5 h-3.5 text-muted-foreground" />
-                                  </Button>
-                                  {!isPaid && (
-                                    <Button size="sm" className="rounded-lg h-9 px-4 font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-xl shadow-primary/10 shrink-0 uppercase tracking-widest text-[9px]" onClick={() => handleOpenLedgerEdit(prop, payment)}>
-                                      Process
-                                    </Button>
-                                  )}
+                             </td>
+                             <td className="px-6 py-2.5">
+                                <div className="flex items-center gap-2 max-w-[120px]">
+                                   <span className="text-muted-foreground opacity-40 font-bold text-xs">£</span>
+                                   <Input 
+                                      type="number" 
+                                      defaultValue={prop.rentAmount} 
+                                      className="h-9 rounded-lg bg-muted/30 border-none font-bold text-sm px-3 shadow-inner focus:ring-1 focus:ring-accent"
+                                      onBlur={(e) => handleQuickRentUpdate(prop.id, e.target.value)}
+                                   />
                                 </div>
-                              </div>
-                           </td>
-                         </tr>
-                       );
-                     })}
-                   </tbody>
-                 </table>
-               </div>
+                             </td>
+                             <td className="px-6 py-2.5">
+                                <div className="flex items-center gap-4">
+                                  <Select defaultValue={payment?.status || 'pending'} onValueChange={(v) => handleQuickStatusUpdate(prop, v)}>
+                                    <SelectTrigger className={cn(
+                                      "h-9 w-[220px] rounded-lg border-none font-bold text-[9px] uppercase tracking-widest shadow-sm px-4 shrink-0",
+                                      isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
+                                    )}>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl border-white/5 bg-card">
+                                      <SelectItem value="pending" className="text-[9px] font-bold uppercase tracking-widest py-3">Pending</SelectItem>
+                                      <SelectItem value="paid" className="text-[9px] font-bold uppercase tracking-widest py-3">Receipted</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <Button variant="ghost" size="icon" className="rounded-lg h-9 w-9 hover:bg-white/5 border border-white/5 shrink-0" onClick={() => handleOpenLedgerEdit(prop, payment)}>
+                                      <Settings2 className="w-3.5 h-3.5 text-muted-foreground" />
+                                    </Button>
+                                    {!isPaid && (
+                                      <Button size="sm" className="rounded-lg h-9 px-4 font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-xl shadow-primary/10 shrink-0 uppercase tracking-widest text-[9px]" onClick={() => handleOpenLedgerEdit(prop, payment)}>
+                                        Process
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                             </td>
+                           </tr>
+                         );
+                       })}
+                     </tbody>
+                   </table>
+                 </div>
+               </ScrollArea>
             </CardContent>
           </Card>
         </div>
@@ -525,47 +528,50 @@ export default function LandlordDashboard() {
       <Dialog open={!!activePaymentEdit} onOpenChange={(o) => !o && setActivePaymentEdit(null)}>
         <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col max-h-[90vh] max-w-[500px] ring-1 ring-white/10">
            {/* THEME-CONSISTENT HEADING */}
-           <div className="p-6 bg-secondary text-secondary-foreground border-b border-border text-left shrink-0 relative overflow-hidden">
-             <div className="absolute top-0 right-0 p-6 opacity-5"><PoundSterling className="w-20 h-20" /></div>
+           <div className="p-8 bg-secondary text-secondary-foreground border-b border-border text-left shrink-0 relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-10 opacity-5"><PoundSterling className="w-24 h-24" /></div>
              <DialogHeader>
-                <DialogTitle className="text-2xl font-bold font-headline tracking-tighter">Manage Ledger</DialogTitle>
-                <DialogDescription className="text-secondary-foreground/70 font-bold text-sm mt-1.5">Adjust monthly rent and collection state.</DialogDescription>
+                <DialogTitle className="text-3xl font-bold font-headline tracking-tighter">Manage Ledger</DialogTitle>
+                <DialogDescription className="text-secondary-foreground/70 font-bold text-sm mt-2">Adjust monthly rent and collection state.</DialogDescription>
              </DialogHeader>
            </div>
            
            <ScrollArea className="flex-1">
-             <div className="p-6 space-y-10 text-left pb-24">
-                {/* RENT SECTION */}
-                <div className="space-y-4 bg-muted/30 p-5 rounded-[2rem] border border-border/50 shadow-inner">
-                    <div className="flex items-center gap-2.5">
-                        <div className="p-2 bg-accent/10 rounded-lg text-accent">
-                            <PoundSterling className="w-4 h-4" />
+             <div className="p-8 space-y-12 text-left pb-24">
+                {/* 🏠 RENT ADJUSTMENT: High-contrast visibility, oversized text */}
+                <div className="space-y-5 bg-muted/30 p-8 rounded-[2.5rem] border border-border/50 shadow-inner">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-accent/10 rounded-xl text-accent border border-accent/20">
+                            <PoundSterling className="w-5 h-5" />
                         </div>
-                        <Label className="font-bold text-[10px] uppercase text-foreground tracking-[0.15em] font-headline">Monthly Rent Adjustment</Label>
+                        <Label className="font-bold text-[11px] uppercase text-foreground tracking-[0.2em] font-headline">Monthly Rent Adjustment</Label>
                     </div>
-                    <Input 
-                        type="number" 
-                        value={editAmount} 
-                        onChange={(e) => setEditAmount(e.target.value)} 
-                        className="rounded-xl h-16 bg-background/80 border border-white/10 font-bold px-6 text-2xl shadow-2xl text-foreground focus:ring-accent" 
-                        placeholder="e.g. 1500.00" 
-                    />
+                    <div className="relative group">
+                       <Input 
+                          type="number" 
+                          value={editAmount} 
+                          onChange={(e) => setEditAmount(e.target.value)} 
+                          className="rounded-2xl h-20 bg-background/80 border border-white/10 font-bold px-8 text-4xl shadow-2xl text-foreground focus:ring-2 focus:ring-accent transition-all" 
+                          placeholder="0.00" 
+                       />
+                       <div className="absolute right-8 top-6 opacity-20 font-bold text-xl">GBP</div>
+                    </div>
                 </div>
 
-                {/* STATUS SECTION */}
-                <div className="space-y-4 bg-muted/30 p-5 rounded-[2rem] border border-border/50 shadow-inner">
-                    <div className="flex items-center gap-2.5">
-                        <div className="p-2 bg-accent/10 rounded-lg text-accent">
-                            <Activity className="w-4 h-4" />
+                {/* 🔄 COLLECTION STATE: No-overlap hierarchy */}
+                <div className="space-y-5 bg-muted/30 p-8 rounded-[2.5rem] border border-border/50 shadow-inner">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-accent/10 rounded-xl text-accent border border-accent/20">
+                            <Activity className="w-5 h-5" />
                         </div>
-                        <Label className="font-bold text-[10px] uppercase text-foreground tracking-[0.15em] font-headline">Collection Status</Label>
+                        <Label className="font-bold text-[11px] uppercase text-foreground tracking-[0.2em] font-headline">Collection Status</Label>
                     </div>
                     <Tabs value={editStatus} onValueChange={(v) => setEditStatus(v as any)}>
-                        <TabsList className="grid grid-cols-2 h-14 bg-background/50 border-none p-1.5 gap-1.5 rounded-xl">
-                            <TabsTrigger value="pending" className="rounded-lg font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-xl transition-all h-full border-none">
+                        <TabsList className="grid grid-cols-2 h-16 bg-background/50 border-none p-2 gap-2 rounded-2xl shadow-inner">
+                            <TabsTrigger value="pending" className="rounded-xl font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-2xl transition-all h-full border-none">
                                 Pending
                             </TabsTrigger>
-                            <TabsTrigger value="paid" className="rounded-lg font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-xl transition-all h-full border-none">
+                            <TabsTrigger value="paid" className="rounded-xl font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-2xl transition-all h-full border-none">
                                 Receipted
                             </TabsTrigger>
                         </TabsList>
@@ -574,7 +580,7 @@ export default function LandlordDashboard() {
              </div>
            </ScrollArea>
 
-           <DialogFooter className="p-6 bg-muted/5 border-t border-white/5 shrink-0">
+           <DialogFooter className="p-8 bg-muted/5 border-t border-white/5 shrink-0">
               <Button className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:opacity-90 font-headline uppercase tracking-[0.2em] text-[10px] border-none transition-all hover:scale-[1.01]" onClick={handleSavePayment} disabled={isSavingPayment}>
                  {isSavingPayment ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-4 h-4 mr-3" />}
                  Synchronize Ledger
