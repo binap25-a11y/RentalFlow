@@ -11,7 +11,7 @@ import {
   deleteDocumentNonBlocking, 
   getLandlordCollectionQuery 
 } from '@/firebase';
-import { collection, doc, serverTimestamp, arrayUnion, query, where, getDocs } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, arrayUnion, arrayRemove, query, where, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +44,7 @@ import {
 
 /**
  * @fileOverview High-Fidelity Resident Directory.
- * Optimized with Real-Time Occupancy Synchronization: Updating a resident ensures the assigned property is "Occupied".
+ * Optimized with Real-Time Occupancy Synchronization: Updating a resident ensures the assigned property is "Occupied" on the Portfolio Inventory.
  */
 
 export default function TenantsPage() {
@@ -120,10 +120,19 @@ export default function TenantsPage() {
 
       if (editingTenant) {
         targetTenantId = editingTenant.userId || emailLower;
+        
+        // If property changed, handle the old property cleanup
+        if (editingTenant.propertyId !== selectedPropertyId) {
+          updateDocumentNonBlocking(doc(db, 'properties', editingTenant.propertyId), {
+            tenantIds: arrayRemove(targetTenantId),
+            memberIds: arrayRemove(targetTenantId),
+            updatedAt: serverTimestamp()
+          });
+        }
+
         updateDocumentNonBlocking(doc(db, 'tenantProfiles', editingTenant.id), tenantPayload);
         
         // 🏠 SYNC PROPERTY STATE (OCCUPANCY ENFORCEMENT)
-        // Ensure the assigned property is marked as occupied and includes this resident's identity
         updateDocumentNonBlocking(doc(db, 'properties', selectedPropertyId), { 
           isOccupied: true, 
           tenantIds: arrayUnion(targetTenantId), 
@@ -148,7 +157,7 @@ export default function TenantsPage() {
           createdAt: serverTimestamp() 
         }, { merge: true });
 
-        // Update Property Membership & Occupancy
+        // 🏠 SYNC NEW PROPERTY STATE
         updateDocumentNonBlocking(doc(db, 'properties', selectedPropertyId), { 
           isOccupied: true, 
           tenantIds: arrayUnion(placeholderUserId), 
@@ -157,24 +166,21 @@ export default function TenantsPage() {
         });
       }
 
-      // 🏠 SOS & PARTNER SYNC: Proactively grant visibility to relevant contacts
+      // Proactively grant visibility to relevant contacts
       const contactsRef = collection(db, 'emergencyContacts');
-      
-      // 1. Property Specific Contacts
       const pq = query(contactsRef, where('propertyId', '==', selectedPropertyId));
       const pSnaps = await getDocs(pq);
       pSnaps.docs.forEach(cDoc => {
         updateDocumentNonBlocking(cDoc.ref, { memberIds: arrayUnion(targetTenantId) });
       });
 
-      // 2. Landlord Standard SOS Services
       const sq = query(contactsRef, where('landlordId', '==', user.uid), where('category', '==', 'standard'));
       const sSnaps = await getDocs(sq);
       sSnaps.docs.forEach(sDoc => {
         updateDocumentNonBlocking(sDoc.ref, { memberIds: arrayUnion(targetTenantId) });
       });
 
-      toast({ title: "Residency Synchronized", description: "Property occupancy and permissions updated." });
+      toast({ title: "Residency Synchronized", description: "Portfolio Inventory updated to Occupied." });
       
       setIsDialogOpen(false); 
       resetForm();
@@ -187,8 +193,18 @@ export default function TenantsPage() {
 
   const handleDeleteTenant = (tenant: any) => {
     if (!user || !db) return;
+
+    // Remove tenant from property roster and update occupancy
+    if (tenant.propertyId) {
+      updateDocumentNonBlocking(doc(db, 'properties', tenant.propertyId), {
+        tenantIds: arrayRemove(tenant.userId || tenant.email),
+        memberIds: arrayRemove(tenant.userId || tenant.email),
+        updatedAt: serverTimestamp()
+      });
+    }
+
     deleteDocumentNonBlocking(doc(db, 'tenantProfiles', tenant.id));
-    toast({ title: "Resident Identity Removed" });
+    toast({ title: "Resident Identity Removed", description: "Property roster updated." });
   };
 
   const filteredTenants = tenants?.filter(t => 
@@ -201,7 +217,9 @@ export default function TenantsPage() {
       <div className="space-y-6">
         <div className="min-w-0">
           <h1 className="text-3xl font-headline font-bold text-foreground mb-2 tracking-tight">Portfolio Residents</h1>
-          <p className="text-muted-foreground font-medium font-body text-sm opacity-70">Managing tenant identities and high-fidelity lease assignments.</p>
+          <p className="text-muted-foreground font-medium font-body text-sm opacity-70">
+            Managing tenant identities and high-fidelity lease assignments.
+          </p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
