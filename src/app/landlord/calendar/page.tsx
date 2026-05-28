@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -386,7 +385,7 @@ export default function LandlordCalendarPage() {
               form="maintenance-scheduler"
               type="submit" 
               disabled={isSaving || !selectedPropertyId || !repairTitle} 
-              className="w-full rounded-xl h-11 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:opacity-90 transition-all font-headline uppercase tracking-widest text-[10px] border-none hover:scale-[1.01]"
+              className="w-full rounded-xl h-11 font-bold bg-background text-foreground border border-border shadow-2xl shadow-primary/20 hover:bg-primary hover:text-primary-foreground transition-all font-headline uppercase tracking-widest text-[10px] hover:scale-[1.01]"
             >
               {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
               Synchronize to Ledger

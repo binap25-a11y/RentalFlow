@@ -390,7 +390,7 @@ export default function MaintenancePage() {
                     <Calendar mode="single" selected={scheduledDate} onSelect={setScheduledDate} className="rounded-2xl border-none shadow-inner bg-background p-0" />
                   </div>
                   <DialogFooter className="p-6 bg-muted/5 border-t">
-                     <Button className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-lg font-headline text-sm hover:bg-primary/90" disabled={!scheduledDate} onClick={() => handleSetSchedule(request.id)}>
+                     <Button className="w-full rounded-xl h-12 font-bold bg-background text-foreground border border-border shadow-lg font-headline text-sm hover:bg-primary hover:text-primary-foreground" disabled={!scheduledDate} onClick={() => handleSetSchedule(request.id)}>
                         <Save className="w-4 h-4 mr-2" /> Synchronize Timeline
                      </Button>
                   </DialogFooter>
@@ -435,7 +435,7 @@ export default function MaintenancePage() {
             </ScrollArea>
 
             <DialogFooter className="p-10 bg-muted/5 border-t shrink-0">
-              <Button type="submit" className="w-full rounded-2xl h-16 font-bold bg-primary shadow-2xl text-primary-foreground font-headline text-sm hover:bg-primary/90 transition-all hover:scale-[1.01]" disabled={isSubmitting}>
+              <Button type="submit" className="w-full rounded-2xl h-16 font-bold bg-background text-foreground border border-border shadow-2xl font-headline text-sm hover:bg-primary hover:text-primary-foreground transition-all hover:scale-[1.01]" disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
                 Register Roadmap Task
               </Button>
@@ -478,7 +478,7 @@ export default function MaintenancePage() {
             </ScrollArea>
 
             <DialogFooter className="p-10 bg-muted/5 border-t shrink-0">
-              <Button type="submit" className="w-full rounded-2xl h-16 font-bold bg-primary shadow-2xl text-primary-foreground font-headline text-sm hover:bg-primary/90 transition-all hover:scale-[1.01]" disabled={isSubmitting || !editTitle}>
+              <Button type="submit" className="w-full rounded-2xl h-16 font-bold bg-background text-foreground border border-border shadow-2xl font-headline text-sm hover:bg-primary hover:text-primary-foreground transition-all hover:scale-[1.01]" disabled={isSubmitting || !editTitle}>
                 {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
                 Synchronize Changes
               </Button>

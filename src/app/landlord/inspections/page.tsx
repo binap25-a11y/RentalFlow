@@ -517,7 +517,7 @@ export default function InspectionsPage() {
             </div>
           </div>
           <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
-            <Button className="w-full rounded-xl h-12 font-bold shadow-lg shadow-accent/10 font-headline bg-primary text-white hover:bg-primary/90 transition-all uppercase tracking-widest text-[10px] border-none" onClick={handleUpdateMetadata} disabled={!editDate || !editPropertyId}>
+            <Button className="w-full rounded-xl h-12 font-bold shadow-lg shadow-accent/10 font-headline bg-background text-foreground border border-border hover:bg-primary hover:text-primary-foreground transition-all uppercase tracking-widest text-[10px]" onClick={handleUpdateMetadata} disabled={!editDate || !editPropertyId}>
               <Save className="w-4 h-4 mr-2" />
               Synchronize Changes
             </Button>

@@ -309,7 +309,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   </div>
                   <div className="space-y-3">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Bathrooms</Label>
-                    <Select value={bathrooms} onValueChange={setBathrooms}>
+                    <Select value={bathrooms} onValueChange={setBedrooms}>
                       <SelectTrigger className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner focus:ring-accent text-foreground"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-xl border-white/5 bg-card">
                         {[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={n.toString()} className="font-bold">{n} Bathroom{n > 1 ? 's' : ''}</SelectItem>)}
@@ -343,7 +343,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           </div>
           <CardFooter className="p-10 bg-white/[0.01] border-t border-white/5 flex flex-col md:flex-row justify-end gap-5 shrink-0">
             <Button type="button" variant="ghost" className="w-full md:w-auto rounded-2xl h-14 px-10 font-bold font-headline text-muted-foreground hover:bg-white/5 hover:text-foreground border border-white/5 transition-all" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" disabled={isSaving} className="w-full md:w-auto rounded-2xl font-bold bg-accent h-14 px-14 shadow-2xl shadow-accent/20 font-headline text-white transition-all hover:bg-accent/90 uppercase tracking-[0.2em] text-[11px] border-none hover:scale-[1.02]">
+            <Button type="submit" disabled={isSaving} className="w-full md:w-auto rounded-2xl font-bold bg-background text-foreground border border-border h-14 px-14 shadow-2xl shadow-accent/20 font-headline transition-all hover:bg-primary hover:text-primary-foreground uppercase tracking-[0.2em] text-[11px] hover:scale-[1.02]">
               {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
               Save & Synchronize
             </Button>
