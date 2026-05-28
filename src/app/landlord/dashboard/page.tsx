@@ -465,7 +465,7 @@ export default function LandlordDashboard() {
             <CardContent className="space-y-4 p-6 text-left">
                <div className="space-y-3">
                   {maintenance?.filter(m => m.status !== 'completed').slice(0, 6).map(req => (
-                    <div key={req.id} className="p-4 bg-white/[0.02] rounded-[1.5rem] border border-white/5 flex items-center justify-between text-left group hover:border-accent/30 transition-all min-w-0">
+                    <div key={req.id} className="p-4 bg-white/[0.02] rounded-[1.5rem] border border-white/5 border-white/5 flex items-center justify-between text-left group hover:border-accent/30 transition-all min-w-0">
                        <div className="min-w-0 flex-1 pr-3">
                           <p className="font-bold text-xs text-foreground truncate group-hover:text-accent transition-colors block">{req.title}</p>
                           <div className="flex items-center gap-2 mt-1 overflow-hidden">
