@@ -9,7 +9,10 @@ import {
   Activity, BarChart3, CalendarDays,
   Calendar as CalendarIcon,
   FileDown,
-  Calculator
+  Calculator,
+  ArrowRight,
+  History,
+  Tag
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
@@ -40,7 +43,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { format, isValid } from "date-fns";
+import { format, isValid, startOfYear } from "date-fns";
 import { collection, doc, serverTimestamp, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { sendRentReceiptEmail } from "@/lib/actions/email-actions";
@@ -53,6 +56,7 @@ import Link from "next/link";
  * Persistence: Remembers user's last selected month and year.
  * Added: Tax Reporting Hub for HMRC self-assessment statements.
  * Integration: Stat cards wired with high-fidelity navigation.
+ * Resolved: Expense visibility - Added Recent Outlays audit trail and clarified YTD logic.
  */
 
 export default function LandlordDashboard() {
@@ -148,12 +152,18 @@ export default function LandlordDashboard() {
     if (!isClient || !properties || !maintenance) return { annualGross: 0, totalExpenses: 0, netAnnualForecast: 0, collectionRate: 0, actualCollectedThisPeriod: 0 };
     
     const activePropertyIds = new Set(properties.map(p => p.id));
+    const currentYear = new Date().getFullYear();
     
     const monthlyGrossPotential = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
     const annualGross = monthlyGrossPotential * 12;
     
+    // REFINED YTD EXPENSE CALCULATION: Strictly filtering by current year and 'completed' status
     const totalExpenses = maintenance
-      .filter(m => activePropertyIds.has(m.propertyId))
+      .filter(m => {
+        if (!activePropertyIds.has(m.propertyId) || m.status !== 'completed' || !m.scheduledDate) return false;
+        const d = new Date(m.scheduledDate);
+        return isValid(d) && d.getFullYear() === currentYear;
+      })
       .reduce((acc, r) => acc + (Number(r.cost) || 0), 0);
 
     const actualCollectedThisPeriod = periodPayments
@@ -165,6 +175,20 @@ export default function LandlordDashboard() {
     
     return { annualGross, totalExpenses, netAnnualForecast, collectionRate, actualCollectedThisPeriod };
   }, [properties, maintenance, periodPayments, isClient, selectedMonth, selectedYear]);
+
+  // RECENT EXPENSES FOR AUDIT TRAIL
+  const recentExpenses = useMemo(() => {
+    if (!maintenance || !properties) return [];
+    const activePropertyIds = new Set(properties.map(p => p.id));
+    return maintenance
+      .filter(m => activePropertyIds.has(m.propertyId) && m.status === 'completed' && Number(m.cost) > 0)
+      .sort((a, b) => {
+        const dateA = a.scheduledDate ? new Date(a.scheduledDate).getTime() : 0;
+        const dateB = b.scheduledDate ? new Date(b.scheduledDate).getTime() : 0;
+        return dateB - dateA;
+      })
+      .slice(0, 5);
+  }, [maintenance, properties]);
 
   const chartData = useMemo(() => {
     if (!isClient || !properties) return [];
@@ -641,6 +665,37 @@ export default function LandlordDashboard() {
                   </DialogFooter>
                 </DialogContent>
                </Dialog>
+
+               {/* EXPENSE AUDIT TRAIL: Provides visibility for items like the £160 outlay */}
+               <div className="pt-6 border-t border-border space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50 font-headline">Recent Outlays</p>
+                    <Link href="/landlord/maintenance" className="text-[10px] font-bold text-accent hover:underline uppercase tracking-widest font-headline">View All</Link>
+                  </div>
+                  <div className="space-y-3">
+                    {recentExpenses.length === 0 ? (
+                      <p className="text-[10px] text-muted-foreground italic font-medium">No recorded expenses found.</p>
+                    ) : (
+                      recentExpenses.map((exp) => (
+                        <div key={exp.id} className="p-4 bg-muted/30 rounded-2xl border border-border shadow-inner group hover:bg-muted/50 transition-colors">
+                           <div className="flex justify-between items-start">
+                              <div className="space-y-1">
+                                <p className="text-xs font-bold text-foreground truncate max-w-[150px]">{exp.title}</p>
+                                <p className="text-[9px] text-muted-foreground font-medium flex items-center">
+                                   <Building2 className="w-2.5 h-2.5 mr-1 opacity-40" /> 
+                                   {properties.find(p => p.id === exp.propertyId)?.addressLine1?.split(' ')[0]}...
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-bold text-foreground">£{Number(exp.cost).toLocaleString()}</p>
+                                <p className="text-[8px] font-bold uppercase text-accent tracking-widest">{exp.category}</p>
+                              </div>
+                           </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+               </div>
             </div>
           </Card>
 
