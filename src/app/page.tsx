@@ -27,7 +27,7 @@ import { useRouter } from 'next/navigation';
 
 /**
  * @fileOverview High-Fidelity Portfolio Entry Point.
- * Optimized for cinematic landing and zero-latency redirection.
+ * Optimized for cinematic landing and intentional exposure before redirection.
  */
 
 export default function LandingPage() {
@@ -35,6 +35,7 @@ export default function LandingPage() {
   const db = useFirestore();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const userDocRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -47,10 +48,15 @@ export default function LandingPage() {
     setMounted(true);
   }, []);
 
-  // ATOMIC REDIRECTION: Rapid bypass for authenticated users
+  // CINEMATIC REDIRECTION: Intentional delay to allow landing page exposure
   useEffect(() => {
     if (mounted && user && !isProfileLoading && profile) {
-      router.replace(profile.role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
+      const timer = setTimeout(() => {
+        setIsRedirecting(true);
+        router.replace(profile.role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
+      }, 2500); // 2.5s delay to ensure the user can see the landing content
+      
+      return () => clearTimeout(timer);
     }
   }, [mounted, user, isProfileLoading, profile, router]);
 
@@ -61,25 +67,30 @@ export default function LandingPage() {
     }
   };
 
-  // CINEMATIC ENTRY: Premium initial sync
-  if (!mounted || isUserLoading || (user && isProfileLoading)) {
+  // PREVENT HYDRATION FLICKER ONLY
+  if (!mounted) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100] animate-in fade-in duration-300">
-        <div className="flex flex-col items-center gap-6">
-          <div className="relative w-24 h-24 rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-primary/5 bg-card animate-in zoom-in duration-500">
-            <Image src={RENTALFLOW_LOGO_URL} alt="RentalFlow" fill className="object-cover" unoptimized priority />
-          </div>
-          <div className="flex items-center gap-3">
-            <Loader2 className="w-4 h-4 animate-spin text-accent opacity-40" />
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] font-headline">Synchronizing Vault</p>
-          </div>
-        </div>
+      <div className="fixed inset-0 flex items-center justify-center bg-background z-[100]">
+        <Loader2 className="w-8 h-8 animate-spin text-accent opacity-20" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background font-body selection:bg-accent/30 selection:text-white overflow-x-hidden text-left">
+    <div className={cn(
+      "min-h-screen bg-background font-body selection:bg-accent/30 selection:text-white overflow-x-hidden text-left transition-opacity duration-1000",
+      isRedirecting ? "opacity-0 scale-95" : "opacity-100"
+    )}>
+      {/* AUTH STATUS OVERLAY - DISCREET */}
+      {user && !isProfileLoading && !isRedirecting && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] animate-in slide-in-from-bottom-10 duration-1000">
+           <div className="bg-primary/90 backdrop-blur-xl border border-white/10 px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-accent" />
+              <span className="text-[10px] font-bold text-white uppercase tracking-[0.2em] font-headline">Synchronizing Your Vault...</span>
+           </div>
+        </div>
+      )}
+
       <nav className="fixed top-0 w-full z-50 bg-background/60 backdrop-blur-xl border-b h-20 border-white/5">
         <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
