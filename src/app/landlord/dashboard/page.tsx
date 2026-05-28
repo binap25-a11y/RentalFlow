@@ -45,6 +45,7 @@ import { sendRentReceiptEmail } from "@/lib/actions/email-actions";
  * @fileOverview Landlord Insight Hub.
  * Optimized for vertical fidelity: Period-based Rent Ledger refactored for mobile compatibility.
  * Removes horizontal scroll by stacking rent/status controls vertically per asset.
+ * Persistence: Remembers user's last selected month and year.
  */
 
 export default function LandlordDashboard() {
@@ -59,12 +60,31 @@ export default function LandlordDashboard() {
 
   useEffect(() => {
     setIsClient(true);
+    
+    // Load persisted ledger selection from local registry
+    try {
+      const savedMonth = localStorage.getItem('ledger_month');
+      const savedYear = localStorage.getItem('ledger_year');
+      if (savedMonth) setSelectedMonth(Number(savedMonth));
+      if (savedYear) setSelectedYear(Number(savedYear));
+    } catch (e) {
+      console.warn("Registry access restricted.");
+    }
+
     if (user) {
       user.getIdTokenResult(true).then(result => {
         setIsAdminEscalated(!!result.claims.admin || !!result.claims.premium);
       });
     }
   }, [user]);
+
+  // Persist selection to local registry on change
+  useEffect(() => {
+    if (isClient) {
+      localStorage.setItem('ledger_month', selectedMonth.toString());
+      localStorage.setItem('ledger_year', selectedYear.toString());
+    }
+  }, [selectedMonth, selectedYear, isClient]);
 
   const userDocRef = useMemoFirebase(() => {
     if (!db || !user) return null;
