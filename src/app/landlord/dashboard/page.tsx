@@ -6,7 +6,8 @@ import {
   ShieldAlert, Loader2, CheckCircle2,
   Plus, Save, ReceiptText,
   Crown, ShieldCheck, PoundSterling,
-  Activity, BarChart3, CalendarDays
+  Activity, BarChart3, CalendarDays,
+  Calendar as CalendarIcon
 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, getLandlordCollectionQuery, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,13 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
 import { collection, doc, serverTimestamp, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { sendRentReceiptEmail } from "@/lib/actions/email-actions";
@@ -46,6 +54,7 @@ import { sendRentReceiptEmail } from "@/lib/actions/email-actions";
  * Optimized for vertical fidelity: Period-based Rent Ledger refactored for mobile compatibility.
  * Removes horizontal scroll by stacking rent/status controls vertically per asset.
  * Persistence: Remembers user's last selected month and year.
+ * Added: Date picker for manual expense registration.
  */
 
 export default function LandlordDashboard() {
@@ -205,9 +214,10 @@ export default function LandlordDashboard() {
   const [expCategory, setExpCategory] = useState('other');
   const [expPropertyId, setExpPropertyId] = useState('');
   const [expTitle, setExpTitle] = useState('');
+  const [expDate, setExpDate] = useState<Date | undefined>(new Date());
 
   const handleLogManualExpense = () => {
-    if (!user || !db || !expAmount || !expPropertyId || !expTitle) return;
+    if (!user || !db || !expAmount || !expPropertyId || !expTitle || !expDate) return;
     setIsSavingExpense(true);
     const requestId = doc(collection(db, 'maintenanceRequests')).id;
     const requestRef = doc(db, 'maintenanceRequests', requestId);
@@ -224,7 +234,8 @@ export default function LandlordDashboard() {
       status: 'completed', 
       priority: 'routine', 
       category: expCategory,
-      cost: Number(expAmount), 
+      cost: Number(expAmount),
+      scheduledDate: expDate.toISOString(),
       createdAt: serverTimestamp(), 
       updatedAt: serverTimestamp(),
     };
@@ -236,6 +247,7 @@ export default function LandlordDashboard() {
     setExpAmount('');
     setExpTitle('');
     setExpPropertyId('');
+    setExpDate(new Date());
   };
 
   if (!isClient || propLoading) {
@@ -369,7 +381,6 @@ export default function LandlordDashboard() {
                       const status = payment?.status || 'not-paid';
                       return (
                         <div key={prop.id} className="p-8 flex flex-col gap-8 hover:bg-muted/5 transition-colors group">
-                          {/* TOP ROW: ASSET IDENTITY */}
                           <div className="flex items-center gap-6">
                             <div className="relative h-16 w-16 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/5 bg-muted shrink-0 flex items-center justify-center">
                               {prop.imageUrl ? <img src={prop.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" /> : <Building2 className="w-8 h-8 text-muted-foreground/30" />}
@@ -380,7 +391,6 @@ export default function LandlordDashboard() {
                             </div>
                           </div>
 
-                          {/* BOTTOM ROW: STACKED CONTROLS */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                              <div className="space-y-2 text-left">
                                 <Label className="text-[9px] font-bold uppercase text-muted-foreground tracking-[0.2em] opacity-40 font-headline pl-1">Monthly Rent</Label>
@@ -425,7 +435,7 @@ export default function LandlordDashboard() {
                     <Plus className="w-4 h-4 mr-2" /> Register Expense
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col h-[700px] max-h-[90vh] max-w-[500px] ring-1 ring-white/10">
+                <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card flex flex-col h-[750px] max-h-[90vh] max-w-[500px] ring-1 ring-white/10">
                   <div className="p-8 bg-primary/5 border-b border-white/5 text-left shrink-0">
                     <DialogTitle className="text-xl font-bold font-headline text-foreground tracking-tight">Register Expense</DialogTitle>
                     <DialogDescription className="text-xs font-medium text-muted-foreground mt-1.5">Record insurance, maintenance, or portfolio costs.</DialogDescription>
@@ -448,6 +458,33 @@ export default function LandlordDashboard() {
                           {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
                         </select>
                       </div>
+
+                      <div className="space-y-3">
+                        <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Transaction Date</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full justify-start text-left h-14 rounded-xl border-none bg-muted/40 px-6 font-bold text-base shadow-inner ring-1 ring-white/5 text-foreground hover:bg-muted/50",
+                                !expDate && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-3 h-5 w-5 text-accent opacity-60" />
+                              {expDate ? format(expDate, "PPP") : <span>Select date...</span>}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl border-none" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={expDate}
+                              onSelect={setExpDate}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-3">
                           <Label className="font-bold text-[10px] uppercase text-muted-foreground font-headline tracking-[0.15em] opacity-40">Amount (£)</Label>
@@ -470,7 +507,7 @@ export default function LandlordDashboard() {
                     </div>
                   </ScrollArea>
                   <DialogFooter className="p-8 bg-muted/5 border-t border-white/5 shrink-0">
-                    <Button onClick={handleLogManualExpense} type="button" className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.2em] text-[11px] border-none hover:scale-[1.01] transition-transform" disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
+                    <Button onClick={handleLogManualExpense} type="button" className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.2em] text-[11px] border-none hover:scale-[1.01] transition-transform" disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle || !expDate}>
                       {isSavingExpense ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
                       Commit to Financial Ledger
                     </Button>
