@@ -81,12 +81,12 @@ export default function LandingPage() {
       "min-h-screen bg-background font-body selection:bg-accent/30 selection:text-white overflow-x-hidden text-left transition-opacity duration-1000",
       isRedirecting ? "opacity-0 scale-95" : "opacity-100"
     )}>
-      {/* AUTH STATUS OVERLAY - DISCREET */}
+      {/* AUTH STATUS OVERLAY - DISCREET & THEMED */}
       {user && !isProfileLoading && !isRedirecting && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] animate-in slide-in-from-bottom-10 duration-1000">
-           <div className="bg-primary/90 backdrop-blur-xl border border-white/10 px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl">
+           <div className="bg-background/80 backdrop-blur-xl border border-border px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl ring-1 ring-black/5">
               <Loader2 className="w-3.5 h-3.5 animate-spin text-accent" />
-              <span className="text-[10px] font-bold text-white uppercase tracking-[0.2em] font-headline">Synchronizing Your Vault...</span>
+              <span className="text-[10px] font-bold text-foreground uppercase tracking-[0.2em] font-headline">Synchronizing Your Vault...</span>
            </div>
         </div>
       )}
