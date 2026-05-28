@@ -41,12 +41,6 @@ import {
 import { collection, doc, serverTimestamp, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
-/**
- * @fileOverview High-Fidelity Portfolio Command Hub.
- * Optimized for Adaptive Registry: Elite Cards on Mobile, Refined Table on Desktop.
- * Implements the Deterministic Monthly Ledger Protocol (DMLP).
- */
-
 export default function LandlordDashboard() {
   const { user } = useUser();
   const db = useFirestore();
@@ -54,7 +48,6 @@ export default function LandlordDashboard() {
   const [isClient, setIsClient] = useState(false);
   const [isAdminEscalated, setIsAdminEscalated] = useState(false);
 
-  // LEDGER PERIOD STATE
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
@@ -91,7 +84,6 @@ export default function LandlordDashboard() {
   }, [db, user]);
   const { data: maintenance } = useCollection(maintenanceQuery);
 
-  // DETERMINISTIC LEDGER QUERY
   const paymentsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -215,7 +207,7 @@ export default function LandlordDashboard() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-12">
+    <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-500 pb-12">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4 text-left border-b border-white/5 pb-6">
         <div className="min-w-0 flex-1">
            <Badge variant="outline" className="bg-accent/5 text-accent border-accent/20 px-3 py-1 rounded-full font-bold uppercase tracking-[0.2em] text-[9px] mb-3">
@@ -283,7 +275,7 @@ export default function LandlordDashboard() {
                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeights: 700, fill: 'rgba(255,255,255,0.3)'}} dy={15} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: 'rgba(255,255,255,0.3)'}} dy={15} />
                     <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: 'rgba(255,255,255,0.3)'}} />
                     <Tooltip 
                       cursor={{fill: 'rgba(255,255,255,0.03)', radius: 12}}

@@ -74,7 +74,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
   const LOGO_URL = RENTALFLOW_LOGO_URL;
 
   return (
-    <Sidebar className="border-r border-sidebar-border shadow-2xl">
+    <Sidebar className="border-r border-sidebar-border shadow-2xl transition-all duration-300">
       <SidebarHeader className="p-6">
         <Link 
           href={dashboardHref} 
@@ -102,9 +102,9 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
                 asChild 
                 isActive={pathname === item.href}
                 className={cn(
-                  "h-11 rounded-lg transition-all duration-200",
+                  "h-11 rounded-lg transition-all duration-150 active:scale-[0.98] hover:scale-[1.02]",
                   pathname === item.href 
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg shadow-primary/20" 
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg shadow-primary/20 border-l-4 border-l-accent" 
                     : "hover:bg-sidebar-accent text-sidebar-foreground/80 hover:text-sidebar-foreground"
                 )}
               >
@@ -132,7 +132,7 @@ export function SidebarNav({ role, userName, userAvatar }: SidebarNavProps) {
           <SidebarMenuItem>
             <SidebarMenuButton 
               onClick={handleLogout}
-              className="w-full justify-start h-10 rounded-lg hover:bg-destructive/10 hover:text-destructive text-sidebar-foreground/60 transition-colors font-headline font-bold"
+              className="w-full justify-start h-10 rounded-lg hover:bg-destructive/10 hover:text-destructive text-sidebar-foreground/60 transition-colors font-headline font-bold active:scale-[0.98]"
             >
               <LogOut className="w-4 h-4 shrink-0" />
               <span>Logout</span>

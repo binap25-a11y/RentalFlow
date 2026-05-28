@@ -135,7 +135,6 @@ export default function LandlordCalendarPage() {
   const handleDateSelect = (d: Date | undefined) => {
     if (d) {
       setSelectedDate(d);
-      // SMOOTH NAVIGATION: Selection triggers vault focus
       setTimeout(() => {
         ledgerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
@@ -205,7 +204,7 @@ export default function LandlordCalendarPage() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-7xl mx-auto pb-12 text-left">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-500 max-w-7xl mx-auto pb-12 text-left">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1.5 rounded-full font-bold mb-3 uppercase tracking-[0.2em] text-[9px]">
