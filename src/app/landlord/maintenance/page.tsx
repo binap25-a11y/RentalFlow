@@ -158,7 +158,7 @@ export default function MaintenancePage() {
     if (!db) return;
     const requestRef = doc(db, 'maintenanceRequests', id);
     deleteDocumentNonBlocking(requestRef);
-    toast({ title: "Task Purged", description: "Record removed from portfolio ledger." });
+    toast({ title: "Task Deleted", description: "Record removed from portfolio ledger." });
   };
 
   const handleTriage = async (request: any) => {
@@ -359,7 +359,7 @@ export default function MaintenancePage() {
                   </AlertDialogTrigger>
                   <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl bg-card p-10">
                     <AlertDialogHeader className="text-left">
-                      <AlertDialogTitle className="text-2xl font-headline font-bold text-foreground">Purge Maintenance Record?</AlertDialogTitle>
+                      <AlertDialogTitle className="text-2xl font-headline font-bold text-foreground">Delete Maintenance Record?</AlertDialogTitle>
                       <AlertDialogDescription className="text-muted-foreground font-medium text-base mt-2">
                         This will permanently remove the repair log for <strong>{request.title}</strong>. This action cannot be reversed.
                       </AlertDialogDescription>
@@ -370,7 +370,7 @@ export default function MaintenancePage() {
                         onClick={() => handleDeleteRequest(request.id)}
                         className="rounded-xl h-12 font-bold bg-red-600 hover:bg-red-700 text-white font-headline uppercase tracking-widest text-[10px] border-none"
                       >
-                        Purge Record
+                        Delete Record
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
