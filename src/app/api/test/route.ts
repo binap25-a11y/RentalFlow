@@ -3,16 +3,15 @@ import { googleAI } from "@genkit-ai/google-genai";
 
 /**
  * 🤖 AI Connectivity Diagnostic Engine
- * Verifies model accessibility and credential status.
- * Performs a live handshake with Gemini 1.5 Flash for maximum availability.
+ * SECURED: Hardcoded fallback keys removed.
  */
 
 export async function GET() {
-  const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GEMINI_API_KEY || 'AIzaSyAtSuJUp7grUeDfLmuFZeax3_MFUzaVxeM';
+  const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GEMINI_API_KEY;
 
   try {
     if (!apiKey || apiKey.length < 10) {
-      throw new Error("API Key is missing or invalid.");
+      throw new Error("API Key is missing or invalid in environment.");
     }
 
     // Attempt a real content generation to verify connectivity
@@ -35,7 +34,7 @@ export async function GET() {
       success: false,
       error: String(error),
       details: error.message || "Unknown Failure",
-      hint: "Ensure GEMINI_API_KEY is correctly set. Check quota status if hitting 429 RESOURCE_EXHAUSTED."
+      hint: "Ensure GEMINI_API_KEY is correctly set in environment variables."
     }, { status: 500 });
   }
 }

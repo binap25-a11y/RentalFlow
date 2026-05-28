@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "UserProfile": {
@@ -11,7 +10,8 @@
         "firstName": { "type": "string" },
         "lastName": { "type": "string" },
         "role": { "type": "string", "enum": ["landlord", "tenant"] },
-        "phoneNumber": { "type": "string" }
+        "phoneNumber": { "type": "string" },
+        "plan": { "type": "string", "enum": ["free", "pro"] }
       }
     },
     "Property": {
@@ -30,10 +30,12 @@
         "numberOfBedrooms": { "type": "number" },
         "numberOfBathrooms": { "type": "number" },
         "isOccupied": { "type": "boolean" },
+        "landlordId": { "type": "string" },
         "tenantIds": { "type": "array", "items": { "type": "string" } },
         "memberIds": { "type": "array", "items": { "type": "string" } },
-        "connectivityStatus": { "type": "string", "description": "Real-time internet status (e.g. Ultra-Fast Fiber Enabled)" },
-        "complianceStatus": { "type": "string", "description": "Real-time certification status (e.g. EPC Grade B / Certified)" }
+        "connectivityStatus": { "type": "string" },
+        "complianceStatus": { "type": "string" },
+        "complianceStatusMap": { "type": "object" }
       }
     },
     "PropertyDocument": {
@@ -48,7 +50,6 @@
         "propertyId": { "type": "string" },
         "landlordId": { "type": "string" },
         "memberIds": { "type": "array", "items": { "type": "string" } },
-        "expiryDate": { "type": "string", "format": "date-time" },
         "uploadDate": { "type": "string", "format": "date-time" }
       }
     },
@@ -59,6 +60,8 @@
       "properties": {
         "id": { "type": "string" },
         "propertyId": { "type": "string" },
+        "landlordId": { "type": "string" },
+        "tenantId": { "type": "string" },
         "title": { "type": "string" },
         "description": { "type": "string" },
         "status": { "type": "string" },
@@ -66,7 +69,6 @@
         "category": { "type": "string" },
         "memberIds": { "type": "array", "items": { "type": "string" } },
         "cost": { "type": "number" },
-        "assignedContractorId": { "type": "string" },
         "scheduledDate": { "type": "string", "format": "date-time" },
         "aiTriageNotes": { "type": "string" },
         "aiSuggestions": { "type": "array", "items": { "type": "string" } }
@@ -81,43 +83,11 @@
         "propertyId": { "type": "string" },
         "landlordId": { "type": "string" },
         "scheduledDate": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["scheduled", "completed"] },
+        "status": { "type": "string" },
         "memberIds": { "type": "array", "items": { "type": "string" } },
         "healthScore": { "type": "number" },
-        "summary": { "type": "string" }
-      }
-    },
-    "EmergencyContact": {
-      "title": "EmergencyContact",
-      "description": "Service partner or emergency resource contact details.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "role": { "type": "string" },
-        "phone": { "type": "string" },
-        "email": { "type": "string" },
-        "website": { "type": "string" },
-        "category": { "type": "string", "enum": ["standard", "professional"] },
-        "propertyId": { "type": "string" },
-        "memberIds": { "type": "array", "items": { "type": "string" } }
-      }
-    },
-    "RentPayment": {
-      "title": "RentPayment",
-      "description": "Real-time monthly rent record.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "propertyId": { "type": "string" },
-        "landlordId": { "type": "string" },
-        "tenantId": { "type": "string" },
-        "amount": { "type": "number" },
-        "status": { "type": "string", "enum": ["paid", "pending", "overdue"] },
-        "month": { "type": "number" },
-        "year": { "type": "number" },
-        "memberIds": { "type": "array", "items": { "type": "string" } },
-        "paidAt": { "type": "string", "format": "date-time" }
+        "summary": { "type": "string" },
+        "structuredFindings": { "type": "object" }
       }
     },
     "Notification": {
@@ -131,7 +101,6 @@
         "description": { "type": "string" },
         "type": { "type": "string", "enum": ["grade", "message", "alert"] },
         "href": { "type": "string" },
-        "isRead": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" }
       }
     }
@@ -141,44 +110,22 @@
   },
   "firestore": {
     "/users/{userId}": {
-      "schema": { "$ref": "#/backend/entities/UserProfile" },
-      "description": "User profiles."
+      "schema": { "$ref": "#/backend/entities/UserProfile" }
     },
     "/properties/{propertyId}": {
-      "schema": { "$ref": "#/backend/entities/Property" },
-      "description": "Portfolio assets."
+      "schema": { "$ref": "#/backend/entities/Property" }
     },
     "/maintenanceRequests/{requestId}": {
-      "schema": { "$ref": "#/backend/entities/MaintenanceRequest" },
-      "description": "Maintenance tracking records."
+      "schema": { "$ref": "#/backend/entities/MaintenanceRequest" }
     },
     "/inspections/{inspectionId}": {
-      "schema": { "$ref": "#/backend/entities/Inspection" },
-      "description": "Compliance audit records."
-    },
-    "/emergencyContacts/{contactId}": {
-      "schema": { "$ref": "#/backend/entities/EmergencyContact" },
-      "description": "Authorized property partners and contractors."
-    },
-    "/tenantProfiles/{profileId}": {
-      "schema": { "type": "object" },
-      "description": "Resident assignment records."
+      "schema": { "$ref": "#/backend/entities/Inspection" }
     },
     "/documents/{documentId}": {
-      "schema": { "$ref": "#/backend/entities/PropertyDocument" },
-      "description": "Shared property vault documents."
-    },
-    "/messages/{messageId}": {
-      "schema": { "type": "object" },
-      "description": "Secure direct messages."
-    },
-    "/rentPayments/{paymentId}": {
-      "schema": { "$ref": "#/backend/entities/RentPayment" },
-      "description": "Real-time monthly rent collection ledger."
+      "schema": { "$ref": "#/backend/entities/PropertyDocument" }
     },
     "/notifications/{notificationId}": {
-      "schema": { "$ref": "#/backend/entities/Notification" },
-      "description": "Real-time user notifications."
+      "schema": { "$ref": "#/backend/entities/Notification" }
     }
   }
 }

@@ -4,17 +4,17 @@ import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 /**
  * 🤖 Hardened Gemini Streaming Chatbot
  * Optimized for Genkit 1.x with explicit Quota (429) detection.
- * Corrected streaming implementation for prompt-based evaluated execution.
+ * SECURED: Hardcoded fallback keys removed.
  */
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GEMINI_API_KEY || 'AIzaSyAtSuJUp7grUeDfLmuFZeax3_MFUzaVxeM';
+    const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GEMINI_API_KEY;
     
     if (!apiKey) {
-      console.error("AI CONFIG ERROR: Gemini API Key is missing.");
+      console.error("AI CONFIG ERROR: Gemini API Key is missing from environment.");
       return new Response(JSON.stringify({ error: 'System intelligence is currently offline.' }), { 
         status: 503,
         headers: { 'Content-Type': 'application/json' }
@@ -34,8 +34,6 @@ export async function POST(req: Request) {
     const encoder = new TextEncoder();
 
     try {
-      // GENKIT 1.x STREAMING: Definitive iteration pattern using evaluated prompt
-      // This pattern ensures the model is correctly supplied to the engine.
       const { stream } = ai.generateStream(conciergePrompt({
         query,
         residentName,
