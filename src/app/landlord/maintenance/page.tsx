@@ -19,7 +19,7 @@ import {
   Wrench, Sparkles, Clock, BrainCircuit, Loader2, 
   CheckCircle2, PlayCircle, Plus,
   Calendar as CalendarIcon, Building2,
-  Activity, Save, Settings, Lightbulb
+  Activity, Save, Settings, Lightbulb, Edit3
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -57,6 +57,7 @@ export default function MaintenancePage() {
   
   const [isTriaging, setIsTriaging] = useState<string | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isScheduling, setIsScheduling] = useState<string | null>(null);
   const [scheduledDate, setScheduledDate] = useState<Date>();
@@ -64,6 +65,10 @@ export default function MaintenancePage() {
   const [newRequestTitle, setNewRequestTitle] = useState('');
   const [newRequestDesc, setNewRequestDesc] = useState('');
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
+
+  const [editRequestId, setEditRequestId] = useState('');
+  const [editTitle, setEditTitle] = useState('');
+  const [editDesc, setEditDesc] = useState('');
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -111,6 +116,30 @@ export default function MaintenancePage() {
     setNewRequestTitle('');
     setNewRequestDesc('');
     setSelectedPropertyId('');
+  };
+
+  const openEditDialog = (request: any) => {
+    setEditRequestId(request.id);
+    setEditTitle(request.title);
+    setEditDesc(request.description);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || !editRequestId) return;
+    setIsSubmitting(true);
+
+    const requestRef = doc(db, 'maintenanceRequests', editRequestId);
+    updateDocumentNonBlocking(requestRef, {
+      title: editTitle,
+      description: editDesc,
+      updatedAt: serverTimestamp(),
+    });
+
+    toast({ title: "Task Updated", description: "Ledger details modified." });
+    setIsEditDialogOpen(false);
+    setIsSubmitting(false);
   };
 
   const handleTriage = async (request: any) => {
@@ -209,12 +238,6 @@ export default function MaintenancePage() {
                     </span>
                   </div>
                 </div>
-
-                <div className="absolute top-8 right-8 shrink-0">
-                  <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 text-muted-foreground hover:bg-primary/5 hover:text-foreground" asChild>
-                    <Link href={`/landlord/properties/${request.propertyId}`}><Settings className="w-4 h-4" /></Link>
-                  </Button>
-                </div>
                 
                 <div className="space-y-4 min-w-0">
                   <h3 className="text-xl font-bold font-headline group-hover:text-primary transition-colors tracking-tight leading-tight text-foreground truncate block w-full">{request.title}</h3>
@@ -279,6 +302,14 @@ export default function MaintenancePage() {
                   Triage Request
                 </Button>
                 
+                <Button 
+                  variant="outline" 
+                  className="flex-1 min-w-[180px] rounded-xl font-bold h-12 border-border bg-card shadow-sm hover:bg-primary/5 text-foreground text-xs font-headline" 
+                  onClick={() => openEditDialog(request)}
+                >
+                  <Edit3 className="w-4 h-4 mr-2" /> Edit Task
+                </Button>
+
                 <Button 
                   variant="outline" 
                   className="flex-1 min-w-[180px] rounded-xl font-bold h-12 border-border bg-card shadow-sm hover:bg-primary/5 text-foreground text-xs font-headline" 
@@ -360,6 +391,37 @@ export default function MaintenancePage() {
               <Button type="submit" className="w-full rounded-2xl h-16 font-bold bg-primary shadow-2xl text-primary-foreground font-headline text-sm hover:bg-primary/90 transition-all hover:scale-[1.01]" disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
                 Register Roadmap Task
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card max-w-[650px] flex flex-col max-h-[90vh] ring-1 ring-white/10">
+          <form onSubmit={handleUpdateTask} className="flex flex-col h-full overflow-hidden">
+            <div className="p-10 bg-primary/5 border-b text-left shrink-0">
+              <DialogTitle className="font-headline text-2xl font-bold text-foreground tracking-tight">Modify Task Records</DialogTitle>
+              <DialogDescription className="font-medium text-muted-foreground mt-1 text-sm">Refine the identifier and context for this maintenance roadmap event.</DialogDescription>
+            </div>
+            
+            <ScrollArea className="flex-1">
+              <div className="grid gap-8 p-10 text-left">
+                <div className="space-y-3">
+                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Repair Identifier</Label>
+                  <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required placeholder="e.g. Electrical Fault discovery" className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/10 text-foreground" />
+                </div>
+                <div className="space-y-3">
+                  <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Operational Context</Label>
+                  <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} required placeholder="Updated details for this repair log..." className="rounded-2xl min-h-[220px] bg-muted/40 border-none font-medium px-6 py-5 text-base leading-relaxed shadow-inner ring-1 ring-white/10 text-foreground" />
+                </div>
+              </div>
+            </ScrollArea>
+
+            <DialogFooter className="p-10 bg-muted/5 border-t shrink-0">
+              <Button type="submit" className="w-full rounded-2xl h-16 font-bold bg-primary shadow-2xl text-primary-foreground font-headline text-sm hover:bg-primary/90 transition-all hover:scale-[1.01]" disabled={isSubmitting || !editTitle}>
+                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
+                Synchronize Changes
               </Button>
             </DialogFooter>
           </form>
