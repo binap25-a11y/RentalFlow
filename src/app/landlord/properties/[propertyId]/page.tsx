@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, use, useMemo, useEffect } from 'react';
@@ -24,7 +25,8 @@ import {
   Bed, Bath, X, FileText, Wrench, 
   ClipboardList, Plus, Download, Trash2,
   ShieldCheck, AlertCircle, Clock,
-  CheckCircle2, FileUp, Users, Building2, Sparkles, Camera
+  CheckCircle2, FileUp, Users, Building2, Sparkles, Camera,
+  Flame, Zap, Home, Bell, PoundSterling, Wind, Droplets, ListChecks
 } from "lucide-react";
 import { 
   Dialog, 
@@ -62,6 +64,19 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+
+const COMPLIANCE_REQUIREMENTS = [
+  { id: 'rtr', task: "Right to Rent", freq: "Before tenancy", icon: ShieldCheck },
+  { id: 'gas', task: "Gas Safety", freq: "Every year", icon: Flame },
+  { id: 'eicr', task: "EICR", freq: "Every 5 years", icon: Zap },
+  { id: 'epc', task: "EPC", freq: "Every 10 years", icon: Home },
+  { id: 'smoke', task: "Smoke alarm test", freq: "Start of tenancy", icon: Bell },
+  { id: 'deposit', task: "Deposit protection", freq: "Within 30 days", icon: PoundSterling },
+  { id: 'co', task: "CO alarms", icon: Wind, freq: "Ongoing" },
+  { id: 'legionella', task: "Legionella assessment", freq: "Periodically", icon: Droplets },
+  { id: 'docs', task: "Prescribed documents", freq: "Before/start of tenancy", icon: FileText }
+];
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -149,6 +164,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const [uploadedDocUrl, setUploadedDocUrl] = useState<string | null>(null);
   const [isDocDialogOpen, setIsDocDialogOpen] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  const [complianceChecks, setComplianceChecks] = useState<Record<string, boolean>>({});
+
+  const handleToggleCheck = (id: string) => {
+    setComplianceChecks(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -270,7 +291,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     toast({ title: "Document Purged" });
   };
 
-  if (!isClient || isPropLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+  if (!isClient || isPropLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!property) return <div className="p-20 text-center font-bold font-headline text-foreground opacity-40">Asset record not found.</div>;
 
   return (
@@ -400,9 +421,9 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
           <Tabs defaultValue="tenants" className="w-full">
             <ScrollArea className="w-full">
               <TabsList className="flex w-full bg-muted/40 p-2 rounded-[2rem] h-auto gap-2 border border-white/5">
-                {['tenants', 'docs', 'maintenance', 'inspections'].map((tab) => (
+                {['tenants', 'onboarding', 'docs', 'maintenance', 'inspections'].map((tab) => (
                   <TabsTrigger key={tab} value={tab} className="flex-1 rounded-[1.5rem] py-3.5 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-headline text-[10px] uppercase tracking-[0.2em] transition-all">
-                    {tab === 'tenants' ? 'Residents' : tab === 'docs' ? 'Vault' : tab === 'maintenance' ? 'Repairs' : 'Audits'}
+                    {tab === 'tenants' ? 'Residents' : tab === 'onboarding' ? 'Onboarding' : tab === 'docs' ? 'Vault' : tab === 'maintenance' ? 'Repairs' : 'Audits'}
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -435,6 +456,42 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     </Button>
                  </div>
                )}
+            </TabsContent>
+
+            <TabsContent value="onboarding" className="mt-10 space-y-8">
+               <div className="flex items-center justify-between px-2">
+                 <div className="text-left">
+                   <h3 className="font-bold font-headline text-2xl text-foreground tracking-tight">Compliance Roadmap</h3>
+                   <p className="text-sm text-muted-foreground font-medium mt-1">Mandatory checks before a tenant moves into the property.</p>
+                 </div>
+                 <Badge variant="outline" className="h-10 px-5 rounded-xl border-accent/20 text-accent font-bold uppercase text-[9px] tracking-widest bg-accent/5">
+                    <ListChecks className="w-3.5 h-3.5 mr-2" /> Quick Checklist
+                 </Badge>
+               </div>
+
+               <div className="grid gap-4">
+                  {COMPLIANCE_REQUIREMENTS.map((req) => (
+                    <div key={req.id} className="p-6 bg-card rounded-[2rem] border border-white/5 shadow-xl flex items-center justify-between group hover:border-accent/20 transition-all">
+                       <div className="flex items-center gap-5 text-left">
+                          <div className={cn("p-4 rounded-2xl shadow-inner border transition-all", complianceChecks[req.id] ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" : "bg-primary/5 border-white/5 text-primary opacity-40")}>
+                             <req.icon className="w-6 h-6" />
+                          </div>
+                          <div>
+                             <p className="font-bold text-lg text-foreground tracking-tight">{req.task}</p>
+                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-50">{req.freq}</p>
+                          </div>
+                       </div>
+                       <div className="flex items-center gap-4">
+                          <Checkbox 
+                            id={req.id} 
+                            checked={complianceChecks[req.id]} 
+                            onCheckedChange={() => handleToggleCheck(req.id)}
+                            className="w-8 h-8 rounded-xl border-2 border-border data-[state=checked]:bg-emerald-500 data-[state=checked]:border-transparent transition-all"
+                          />
+                       </div>
+                    </div>
+                  ))}
+               </div>
             </TabsContent>
 
             <TabsContent value="docs" className="mt-10 space-y-8">
@@ -683,4 +740,3 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
     </div>
   );
 }
-
