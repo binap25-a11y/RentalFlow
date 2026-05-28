@@ -509,7 +509,7 @@ export default function LandlordDashboard() {
                       </div>
                     </ScrollArea>
                     <DialogFooter className="p-8 bg-muted/5 border-t border-white/5 shrink-0">
-                      <Button type="submit" className="w-full rounded-[1.5rem] h-14 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.2em] text-[10px] border-none" disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
+                      <Button type="submit" className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/10 hover:opacity-90 font-headline uppercase tracking-[0.2em] text-[10px] border-none" disabled={isSavingExpense || !expAmount || !expPropertyId || !expTitle}>
                         {isSavingExpense ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                         Commit to Ledger
                       </Button>
@@ -575,8 +575,8 @@ export default function LandlordDashboard() {
            </ScrollArea>
 
            <DialogFooter className="p-6 bg-muted/5 border-t border-white/5 shrink-0">
-              <Button className="w-full rounded-[2rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:opacity-90 font-headline uppercase tracking-[0.2em] text-[11px] border-none transition-all hover:scale-[1.01]" onClick={handleSavePayment} disabled={isSavingPayment}>
-                 {isSavingPayment ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
+              <Button className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:opacity-90 font-headline uppercase tracking-[0.2em] text-[10px] border-none transition-all hover:scale-[1.01]" onClick={handleSavePayment} disabled={isSavingPayment}>
+                 {isSavingPayment ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-4 h-4 mr-3" />}
                  Synchronize Ledger
               </Button>
            </DialogFooter>
