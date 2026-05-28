@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, use, useMemo, useEffect } from 'react';
@@ -98,6 +97,16 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
 
   const { data: property, isLoading: isPropLoading } = useDoc(propertyRef);
 
+  const [complianceChecks, setComplianceChecks] = useState<Record<string, boolean>>({});
+  const [isSavingCompliance, setIsSavingCompliance] = useState(false);
+
+  // Initialize compliance checks from document data
+  useEffect(() => {
+    if (property?.complianceStatusMap) {
+      setComplianceChecks(property.complianceStatusMap);
+    }
+  }, [property]);
+
   const gallery = useMemo(() => {
     if (!property) return [];
     return getResolvedGallery(property.imageUrl, property.imageUrls);
@@ -165,10 +174,24 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const [isDocDialogOpen, setIsDocDialogOpen] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-  const [complianceChecks, setComplianceChecks] = useState<Record<string, boolean>>({});
-
   const handleToggleCheck = (id: string) => {
     setComplianceChecks(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleSaveCompliance = async () => {
+    if (!propertyRef) return;
+    setIsSavingCompliance(true);
+    try {
+      updateDocumentNonBlocking(propertyRef, {
+        complianceStatusMap: complianceChecks,
+        updatedAt: serverTimestamp(),
+      });
+      toast({ title: "Compliance Roadmap Synchronized" });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Sync Failed" });
+    } finally {
+      setIsSavingCompliance(false);
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -214,7 +237,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
       updatedAt: serverTimestamp(),
     });
     setIsEditingRent(false);
-    toast({ title: "Yield Adjusted" });
+    toast({ title: "Rent Adjusted" });
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -459,14 +482,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
             </TabsContent>
 
             <TabsContent value="onboarding" className="mt-10 space-y-8">
-               <div className="flex items-center justify-between px-2">
-                 <div className="text-left">
-                   <h3 className="font-bold font-headline text-2xl text-foreground tracking-tight">Compliance Roadmap</h3>
-                   <p className="text-sm text-muted-foreground font-medium mt-1">Mandatory checks before a tenant moves into the property.</p>
-                 </div>
-                 <Badge variant="outline" className="h-10 px-5 rounded-xl border-accent/20 text-accent font-bold uppercase text-[9px] tracking-widest bg-accent/5">
+               <div className="text-left px-2">
+                  <h3 className="font-bold font-headline text-2xl text-foreground tracking-tight">Compliance Roadmap</h3>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">Mandatory checks before a tenant moves into the property.</p>
+                  <Badge variant="outline" className="h-10 px-5 rounded-xl border-accent/20 text-accent font-bold uppercase text-[9px] tracking-widest bg-accent/5 mt-4">
                     <ListChecks className="w-3.5 h-3.5 mr-2" /> Quick Checklist
-                 </Badge>
+                  </Badge>
                </div>
 
                <div className="grid gap-4">
@@ -484,13 +505,24 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                        <div className="flex items-center gap-4">
                           <Checkbox 
                             id={req.id} 
-                            checked={complianceChecks[req.id]} 
+                            checked={complianceChecks[req.id] || false} 
                             onCheckedChange={() => handleToggleCheck(req.id)}
                             className="w-8 h-8 rounded-xl border-2 border-border data-[state=checked]:bg-emerald-500 data-[state=checked]:border-transparent transition-all"
                           />
                        </div>
                     </div>
                   ))}
+               </div>
+
+               <div className="pt-8 border-t border-white/5 flex justify-end px-2 pb-10">
+                  <Button 
+                    onClick={handleSaveCompliance} 
+                    disabled={isSavingCompliance}
+                    className="w-full md:w-auto rounded-xl h-12 font-bold bg-background text-foreground border border-border shadow-2xl shadow-primary/10 hover:bg-primary hover:text-primary-foreground transition-all font-headline uppercase tracking-widest text-[10px] px-12"
+                  >
+                    {isSavingCompliance ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ShieldCheck className="w-4 h-4 mr-2" />}
+                    Save & Synchronize Roadmap
+                  </Button>
                </div>
             </TabsContent>
 
