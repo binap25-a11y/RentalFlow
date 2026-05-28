@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -249,7 +248,7 @@ export default function LandlordCalendarPage() {
             <div className="absolute -top-10 -right-10 opacity-5 group-hover:rotate-12 transition-transform duration-700 text-foreground">
                <Clock className="w-32 h-32" />
             </div>
-            <div className="relative z-10 space-y-4">
+            <div className="relative z-10 space-y-4 text-left">
               <h3 className="text-lg font-bold font-headline flex items-center gap-3 text-accent uppercase tracking-widest">
                  <Clock className="w-5 h-5" /> Quick Actions
               </h3>
@@ -317,53 +316,56 @@ export default function LandlordCalendarPage() {
 
       <Dialog open={isAddRepairOpen} onOpenChange={setIsAddRepairOpen}>
         <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-[550px] bg-card flex flex-col max-h-[90vh]">
-          <form onSubmit={handleAddRepair} className="flex flex-col h-full overflow-hidden">
-            <div className="p-8 bg-primary/5 border-b text-left shrink-0">
-              <DialogTitle className="text-xl font-bold font-headline text-foreground tracking-tight">Schedule Maintenance</DialogTitle>
-              <DialogDescription className="text-xs font-medium text-muted-foreground mt-1">Registering an operational event for {format(selectedDate, 'PPP')}</DialogDescription>
-            </div>
-            <ScrollArea className="flex-1">
-              <div className="p-8 space-y-8 text-left pb-16">
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Target Inventory Asset</Label>
-                  <select 
-                    className="flex h-14 w-full rounded-2xl border-none bg-muted/30 px-5 py-2 text-base focus:ring-2 focus:ring-primary outline-none font-bold text-foreground font-headline shadow-inner" 
-                    value={selectedPropertyId} 
-                    onChange={(e) => setSelectedPropertyId(e.target.value)} 
-                    required
-                  >
-                    <option value="">Choose an asset...</option>
-                    {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Repair Subject</Label>
-                  <Input 
-                    value={repairTitle} 
-                    onChange={(e) => setRepairTitle(e.target.value)} 
-                    required 
-                    placeholder="e.g. Electrical Fault Discovery" 
-                    className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner" 
-                  />
-                </div>
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Operational Context</Label>
-                  <Textarea 
-                    value={repairDesc} 
-                    onChange={(e) => setRepairDesc(e.target.value)} 
-                    placeholder="Provide full context for contractor access..." 
-                    className="rounded-2xl min-h-[160px] bg-muted/30 border-none font-medium px-6 py-6 text-base leading-relaxed shadow-inner" 
-                  />
-                </div>
+          <div className="p-8 bg-primary/5 border-b text-left shrink-0">
+            <DialogTitle className="text-xl font-bold font-headline text-foreground tracking-tight">Schedule Maintenance</DialogTitle>
+            <DialogDescription className="text-xs font-medium text-muted-foreground mt-1">Registering an operational event for {format(selectedDate, 'PPP')}</DialogDescription>
+          </div>
+          <ScrollArea className="flex-1">
+            <form id="maintenance-scheduler" onSubmit={handleAddRepair} className="p-8 space-y-8 text-left pb-16">
+              <div className="space-y-3">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Target Inventory Asset</Label>
+                <select 
+                  className="flex h-14 w-full rounded-2xl border-none bg-muted/30 px-5 py-2 text-base focus:ring-2 focus:ring-primary outline-none font-bold text-foreground font-headline shadow-inner" 
+                  value={selectedPropertyId} 
+                  onChange={(e) => setSelectedPropertyId(e.target.value)} 
+                  required
+                >
+                  <option value="">Choose an asset...</option>
+                  {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                </select>
               </div>
-            </ScrollArea>
-            <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
-              <Button type="submit" disabled={isSaving || !selectedPropertyId || !repairTitle} className="w-full rounded-2xl h-16 font-bold bg-primary text-primary-foreground shadow-2xl hover:opacity-90 transition-all font-headline uppercase tracking-widest text-[11px] border-none">
-                {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
-                Synchronize to Ledger
-              </Button>
-            </DialogFooter>
-          </form>
+              <div className="space-y-3">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Repair Subject</Label>
+                <Input 
+                  value={repairTitle} 
+                  onChange={(e) => setRepairTitle(e.target.value)} 
+                  required 
+                  placeholder="e.g. Electrical Fault Discovery" 
+                  className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner text-foreground" 
+                />
+              </div>
+              <div className="space-y-3">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Operational Context</Label>
+                <Textarea 
+                  value={repairDesc} 
+                  onChange={(e) => setRepairDesc(e.target.value)} 
+                  placeholder="Provide full context for contractor access..." 
+                  className="rounded-2xl min-h-[160px] bg-muted/30 border-none font-medium px-6 py-6 text-base leading-relaxed shadow-inner text-foreground" 
+                />
+              </div>
+            </form>
+          </ScrollArea>
+          <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
+            <Button 
+              form="maintenance-scheduler"
+              type="submit" 
+              disabled={isSaving || !selectedPropertyId || !repairTitle} 
+              className="w-full rounded-2xl h-16 font-bold bg-primary text-primary-foreground shadow-2xl hover:opacity-90 transition-all font-headline uppercase tracking-widest text-[11px] border-none"
+            >
+              {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
+              Synchronize to Ledger
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

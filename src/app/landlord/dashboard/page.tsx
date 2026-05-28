@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -286,7 +285,7 @@ export default function LandlordDashboard() {
                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: 'rgba(255,255,255,0.3)'}} dy={15} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeights: 700, fill: 'rgba(255,255,255,0.3)'}} dy={15} />
                     <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: 'rgba(255,255,255,0.3)'}} />
                     <Tooltip 
                       cursor={{fill: 'rgba(255,255,255,0.03)', radius: 12}}
@@ -467,7 +466,7 @@ export default function LandlordDashboard() {
                 Portfolio Roadmap
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 p-6">
+            <CardContent className="space-y-4 p-6 text-left">
                <div className="space-y-3">
                   {maintenance?.filter(m => m.status !== 'completed').slice(0, 6).map(req => (
                     <div key={req.id} className="p-4 bg-white/[0.02] rounded-[1.5rem] border border-white/5 flex items-center justify-between text-left group hover:border-accent/30 transition-all min-w-0">
