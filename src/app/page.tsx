@@ -29,6 +29,7 @@ import { useRouter } from 'next/navigation';
  * @fileOverview High-Fidelity Portfolio Entry Point.
  * Optimized for cinematic landing and intentional exposure before redirection.
  * CALIBRATED: Centered hero layout with reduced top padding for immediate engagement.
+ * REFINED: Smaller action triggers positioned directly below the descriptive text.
  */
 
 export default function LandingPage() {
@@ -114,16 +115,16 @@ export default function LandingPage() {
                 The professional orchestration layer for modern property managers. Automated maintenance triage, verified visual ledgers, and cinematic resident experiences.
               </p>
             </div>
-          </div>
 
-          {/* Command Trigger Stack */}
-          <div className="flex flex-col sm:flex-row gap-6 pt-4">
-            <Button size="lg" asChild className="h-20 px-12 md:px-20 rounded-[2.25rem] bg-accent hover:bg-accent/90 text-white text-lg md:text-xl font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95 border-none">
-              <Link href="/auth">Sign In <ArrowRight className="w-6 h-6 ml-4" /></Link>
-            </Button>
-            <Button size="lg" variant="outline" className="h-20 px-12 md:px-16 rounded-[2.25rem] border-white/10 bg-white/5 hover:bg-white/10 text-foreground font-bold text-lg backdrop-blur-md cursor-pointer transition-all" onClick={scrollToFeatures}>
-               Explore Intelligence
-            </Button>
+            {/* Command Trigger Stack - Positioned below text and resized to be smaller */}
+            <div className="flex flex-col sm:flex-row gap-6 pt-4">
+              <Button size="lg" asChild className="h-16 px-12 md:px-14 rounded-[1.75rem] bg-accent hover:bg-accent/90 text-white text-base md:text-lg font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95 border-none">
+                <Link href="/auth">Sign In <ArrowRight className="w-5 h-5 ml-4" /></Link>
+              </Button>
+              <Button size="lg" variant="outline" className="h-16 px-10 md:px-12 rounded-[1.75rem] border-white/10 bg-white/5 hover:bg-white/10 text-foreground font-bold text-base backdrop-blur-md cursor-pointer transition-all" onClick={scrollToFeatures}>
+                 Explore Intelligence
+              </Button>
+            </div>
           </div>
           
           {/* Hardware-Accelerated Preview */}
