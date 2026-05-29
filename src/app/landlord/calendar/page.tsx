@@ -223,7 +223,7 @@ export default function LandlordCalendarPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-4 space-y-6">
-          <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-card ring-1 ring-border">
+          <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-card ring-1 ring-border">
             <CardContent className="p-6">
               <Calendar
                 mode="single"
@@ -322,7 +322,7 @@ export default function LandlordCalendarPage() {
           <div className="space-y-6 text-left">
             <div className="flex items-center justify-between px-2">
               <h3 className="text-xl font-bold font-headline flex items-center text-foreground tracking-tight">
-                <ChevronRight className="w-5 h-5 mr-1 text-accent" /> Portfolio Future State
+                Portfolio Future Audits
               </h3>
               <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 font-headline shrink-0">Upcoming Roadmap</p>
             </div>
