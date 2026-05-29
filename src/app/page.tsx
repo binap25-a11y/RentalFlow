@@ -28,7 +28,7 @@ import { useRouter } from 'next/navigation';
 /**
  * @fileOverview High-Fidelity Portfolio Entry Point.
  * Optimized for cinematic landing and intentional exposure before redirection.
- * CALIBRATED: Redirection delay optimized to 1.5s for superior responsiveness.
+ * CALIBRATED: Centered hero layout with stacked branding and command logic.
  */
 
 export default function LandingPage() {
@@ -55,7 +55,7 @@ export default function LandingPage() {
       const timer = setTimeout(() => {
         setIsRedirecting(true);
         router.replace(profile.role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
-      }, 1500); // Optimized from 2.5s to 1.5s for superior perceived performance
+      }, 1500);
       
       return () => clearTimeout(timer);
     }
@@ -68,7 +68,6 @@ export default function LandingPage() {
     }
   };
 
-  // HYPER-ACCELERATED MOUNT: Zero-delay entry
   if (!mounted) {
     return (
       <div className="fixed inset-0 bg-background z-[100] transition-opacity duration-300" />
@@ -117,34 +116,42 @@ export default function LandingPage() {
 
       <section className="relative pt-48 pb-40 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-accent/10 blur-[120px] rounded-full -z-10 opacity-30" />
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
-          <div className="text-left space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <div className="space-y-4">
-              <Badge variant="outline" className="py-2 px-5 rounded-full border-accent/20 bg-accent/5 text-accent font-bold uppercase tracking-[0.25em] text-[10px]">
-                <Sparkles className="w-3.5 h-3.5 mr-2" /> High-Fidelity Operations
-              </Badge>
-              <h1 className="text-7xl md:text-[5.5rem] font-headline font-bold tracking-tighter leading-[0.85] text-foreground">
-                Command Your <br/><span className="text-accent">Portfolio.</span>
-              </h1>
+        
+        <div className="max-w-5xl mx-auto px-6 flex flex-col items-center text-center space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+          
+          {/* Logo and Identity Stack in the middle */}
+          <div className="flex flex-col items-center gap-10">
+            <div className="relative h-28 w-28 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-white/10 bg-card transition-transform hover:scale-105 duration-700">
+               <Image src={RENTALFLOW_LOGO_URL} alt="Logo" fill className="object-cover" unoptimized priority />
             </div>
             
-            <p className="text-xl text-muted-foreground font-medium max-w-xl leading-relaxed opacity-80">
-              The professional orchestration layer for modern property managers. Automated maintenance triage, verified visual ledgers, and cinematic resident experiences.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-6 pt-4">
-              <Button size="lg" asChild className="h-16 px-8 md:px-16 rounded-[1.75rem] bg-accent hover:bg-accent/90 text-white text-lg md:text-xl font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95 border-none">
-                <Link href="/auth">Access Portfolio Vault <ArrowRight className="w-6 h-6 ml-3" /></Link>
-              </Button>
-              <Button size="lg" variant="outline" className="h-16 px-8 md:px-12 rounded-[1.75rem] border-white/10 bg-white/5 hover:bg-white/10 text-foreground font-bold text-lg backdrop-blur-md cursor-pointer transition-all" onClick={scrollToFeatures}>
-                 Explore Intelligence
-              </Button>
+            <div className="space-y-6">
+              <Badge variant="outline" className="py-2 px-6 rounded-full border-accent/20 bg-accent/5 text-accent font-bold uppercase tracking-[0.25em] text-[10px]">
+                <Sparkles className="w-3.5 h-3.5 mr-2" /> High-Fidelity Operations
+              </Badge>
+              <h1 className="text-6xl md:text-[5.5rem] font-headline font-bold tracking-tighter leading-[0.85] text-foreground">
+                Command Your <br/><span className="text-accent">Portfolio.</span>
+              </h1>
+              <p className="text-xl text-muted-foreground font-medium max-w-2xl mx-auto leading-relaxed opacity-80">
+                The professional orchestration layer for modern property managers. Automated maintenance triage, verified visual ledgers, and cinematic resident experiences.
+              </p>
             </div>
           </div>
+
+          {/* Command Trigger Stack */}
+          <div className="flex flex-col sm:flex-row gap-6 pt-4">
+            <Button size="lg" asChild className="h-20 px-12 md:px-20 rounded-[2.25rem] bg-accent hover:bg-accent/90 text-white text-lg md:text-xl font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95 border-none">
+              <Link href="/auth">Portfolio Command <ArrowRight className="w-6 h-6 ml-4" /></Link>
+            </Button>
+            <Button size="lg" variant="outline" className="h-20 px-12 md:px-16 rounded-[2.25rem] border-white/10 bg-white/5 hover:bg-white/10 text-foreground font-bold text-lg backdrop-blur-md cursor-pointer transition-all" onClick={scrollToFeatures}>
+               Explore Intelligence
+            </Button>
+          </div>
           
-          <div className="relative group">
+          {/* Hardware-Accelerated Preview */}
+          <div className="relative group w-full mt-16">
             <div className="absolute -inset-1 bg-accent/20 rounded-[4rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-1000" />
-            <div className="relative h-[650px] rounded-[3.5rem] overflow-hidden shadow-2xl ring-1 ring-white/10 animate-in fade-in zoom-in duration-1000 bg-muted">
+            <div className="relative h-[550px] md:h-[650px] rounded-[3.5rem] overflow-hidden shadow-2xl ring-1 ring-white/10 bg-muted">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 flex flex-col items-center justify-center gap-4">
                 <div className="p-8 bg-white/5 rounded-[2rem] border border-white/5 shadow-inner">
                    <Building2 className="w-24 h-24 text-primary/10" />
