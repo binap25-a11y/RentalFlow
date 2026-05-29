@@ -28,7 +28,7 @@ import { useRouter } from 'next/navigation';
 /**
  * @fileOverview High-Fidelity Portfolio Entry Point.
  * Optimized for cinematic landing and intentional exposure before redirection.
- * CALIBRATED: Centered hero layout with stacked branding and command logic.
+ * CALIBRATED: Centered hero layout with reduced top padding for immediate engagement.
  */
 
 export default function LandingPage() {
@@ -89,7 +89,7 @@ export default function LandingPage() {
         </div>
       )}
 
-      <section className="relative pt-48 pb-40 overflow-hidden">
+      <section className="relative pt-24 pb-40 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-accent/10 blur-[120px] rounded-full -z-10 opacity-30" />
         
         <div className="max-w-5xl mx-auto px-6 flex flex-col items-center text-center space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
