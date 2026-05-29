@@ -96,8 +96,11 @@ export default function LandingPage() {
           
           {/* Logo and Identity Stack in the middle */}
           <div className="flex flex-col items-center gap-10">
-            <div className="relative h-28 w-28 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-white/10 bg-card transition-transform hover:scale-105 duration-700">
-               <Image src={RENTALFLOW_LOGO_URL} alt="Logo" fill className="object-cover" unoptimized priority />
+            <div className="flex flex-col items-center">
+              <div className="relative h-28 w-28 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-white/10 bg-card transition-transform hover:scale-105 duration-700">
+                 <Image src={RENTALFLOW_LOGO_URL} alt="Logo" fill className="object-cover" unoptimized priority />
+              </div>
+              <h1 className="text-4xl font-headline font-bold text-foreground tracking-tighter mt-6">RentalFlow</h1>
             </div>
             
             <div className="space-y-6">
