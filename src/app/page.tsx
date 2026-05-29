@@ -89,31 +89,6 @@ export default function LandingPage() {
         </div>
       )}
 
-      <nav className="fixed top-0 w-full z-50 bg-background/60 backdrop-blur-xl border-b h-20 border-white/5">
-        <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-             <div className="relative h-11 w-11 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
-                <Image src={RENTALFLOW_LOGO_URL} alt="Logo" fill className="object-cover" unoptimized />
-             </div>
-             <span className="font-headline font-bold text-2xl tracking-tighter text-foreground">RentalFlow</span>
-          </div>
-          <div className="flex items-center gap-4">
-             {user ? (
-               <Button asChild className="rounded-2xl font-bold bg-accent hover:bg-accent/90 text-white px-8 h-12 shadow-2xl shadow-accent/20 transition-all active:scale-95 border-none">
-                 <Link href={profile?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
-                    Sign In <ChevronRight className="w-4 h-4 ml-1" />
-                 </Link>
-               </Button>
-             ) : (
-               <>
-                 <Button variant="ghost" asChild className="rounded-xl font-bold hidden sm:inline-flex text-muted-foreground hover:text-foreground hover:bg-white/5"><Link href="/auth">Sign In</Link></Button>
-                 <Button asChild className="rounded-2xl font-bold bg-accent hover:bg-accent/90 text-white px-8 h-12 shadow-2xl shadow-accent/20 transition-all active:scale-95 border-none"><Link href="/auth">Initialize Access</Link></Button>
-               </>
-             )}
-          </div>
-        </div>
-      </nav>
-
       <section className="relative pt-48 pb-40 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-accent/10 blur-[120px] rounded-full -z-10 opacity-30" />
         
