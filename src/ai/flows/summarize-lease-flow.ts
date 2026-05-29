@@ -1,7 +1,7 @@
-
 'use server';
 /**
  * @fileOverview An AI agent for summarizing lease agreements.
+ * Updated to Gemini 2.5 Flash for decommissioned model mitigation.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -23,7 +23,7 @@ export type SummarizeLeaseOutput = z.infer<typeof SummarizeLeaseOutputSchema>;
 
 const summarizeLeasePrompt = ai.definePrompt({
   name: 'summarizeLeasePrompt',
-  model: googleAI.model('gemini-2.0-flash'),
+  model: googleAI.model('gemini-2.5-flash'),
   input: { schema: SummarizeLeaseInputSchema },
   output: { schema: SummarizeLeaseOutputSchema },
   prompt: `You are an expert legal AI specializing in residential property law.
@@ -36,7 +36,10 @@ Extract the monthly rent, start/end dates (YYYY-MM-DD), and top 5 key terms/obli
 
 export async function summarizeLease(input: SummarizeLeaseInput): Promise<SummarizeLeaseOutput> {
   try {
-    const { output } = await summarizeLeasePrompt(input);
+    const { output } = await ai.generate({
+      prompt: summarizeLeasePrompt,
+      input
+    });
     if (!output) throw new Error("Lease processing failed.");
     return output;
   } catch (error: any) {

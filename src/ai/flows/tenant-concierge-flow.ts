@@ -1,8 +1,7 @@
 'use server';
 /**
  * @fileOverview A premium resident AI concierge agent (Flow).
- * Features a real-time streaming intelligence layer specialized in UK residential property.
- * Enhanced with Gemini 2.0 Flash for maximum availability and stability.
+ * Updated to Gemini 2.5 Flash for decommissioned model mitigation.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -24,7 +23,7 @@ export type TenantConciergeOutput = z.infer<typeof TenantConciergeOutputSchema>;
 
 export const conciergePrompt = ai.definePrompt({
   name: 'tenantConciergePrompt',
-  model: googleAI.model('gemini-2.0-flash'),
+  model: googleAI.model('gemini-2.5-flash'),
   input: { schema: TenantConciergeInputSchema },
   config: { 
     temperature: 0.7,
@@ -65,7 +64,10 @@ Resident Query: {{{query}}}`,
  */
 export async function tenantConcierge(input: TenantConciergeInput): Promise<TenantConciergeOutput> {
   try {
-    const { text } = await ai.generate(conciergePrompt(input));
+    const { text } = await ai.generate({
+      prompt: conciergePrompt,
+      input
+    });
     return { answer: text || "I am currently coordinating several property updates. Please try again in a moment." };
   } catch (error) {
     console.error("AI Concierge Failure:", error);

@@ -4,7 +4,7 @@ import { conciergePrompt } from '@/ai/flows/tenant-concierge-flow';
 /**
  * 🤖 Hardened Gemini Streaming Chatbot
  * Optimized for Genkit 1.x with explicit Quota (429) detection.
- * SECURED: Hardcoded fallback keys removed.
+ * Aligned with v1.x generateStream syntax.
  */
 
 export const dynamic = 'force-dynamic';
@@ -34,12 +34,16 @@ export async function POST(req: Request) {
     const encoder = new TextEncoder();
 
     try {
-      const { stream } = ai.generateStream(conciergePrompt({
-        query,
-        residentName,
-        propertyAddress,
-        propertyContext
-      }));
+      // Correct Genkit 1.x stream syntax
+      const { stream } = ai.generateStream({
+        prompt: conciergePrompt,
+        input: {
+          query,
+          residentName,
+          propertyAddress,
+          propertyContext
+        }
+      });
 
       const responseStream = new ReadableStream({
         async start(controller) {

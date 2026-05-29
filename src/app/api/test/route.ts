@@ -3,7 +3,7 @@ import { googleAI } from "@genkit-ai/google-genai";
 
 /**
  * 🤖 AI Connectivity Diagnostic Engine
- * SECURED: Hardcoded fallback keys removed.
+ * Updated to Gemini 2.5 Flash for decommissioned model mitigation.
  */
 
 export async function GET() {
@@ -16,7 +16,7 @@ export async function GET() {
 
     // Attempt a real content generation to verify connectivity
     const result = await ai.generate({
-      model: googleAI.model("gemini-1.5-flash"),
+      model: googleAI.model("gemini-2.5-flash"),
       prompt: "Confirm connectivity with 'Identity Verified'. Respond only with those two words.",
     });
 
@@ -24,7 +24,7 @@ export async function GET() {
       success: true,
       handshake: result.text,
       status: "Operational",
-      engine: "gemini-1.5-flash",
+      engine: "gemini-2.5-flash",
       key_preview: `${apiKey.substring(0, 8)}...`
     });
 

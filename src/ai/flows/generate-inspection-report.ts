@@ -1,7 +1,7 @@
-
 'use server';
 /**
  * @fileOverview An AI agent for generating professional property inspection reports.
+ * Updated to Gemini 2.5 Flash for decommissioned model mitigation.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -22,7 +22,7 @@ export type GenerateInspectionReportOutput = z.infer<typeof GenerateInspectionRe
 
 const inspectionReportPrompt = ai.definePrompt({
   name: 'generateInspectionReportPrompt',
-  model: googleAI.model('gemini-2.0-flash'),
+  model: googleAI.model('gemini-2.5-flash'),
   input: { schema: GenerateInspectionReportInputSchema },
   output: { schema: GenerateInspectionReportOutputSchema },
   prompt: `You are an expert property surveyor.
@@ -35,7 +35,10 @@ Output a professional summary, a list of priority maintenance items, and an over
 
 export async function generateInspectionReport(input: GenerateInspectionReportInput): Promise<GenerateInspectionReportOutput> {
   try {
-    const { output } = await inspectionReportPrompt(input);
+    const { output } = await ai.generate({
+      prompt: inspectionReportPrompt,
+      input
+    });
     if (!output) throw new Error("Reporting engine failed.");
     return output;
   } catch (error: any) {

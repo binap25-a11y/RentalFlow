@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview A resilient property operations agent for triaging maintenance requests.
- * Refined to provide professional, actionable Fix Strategies without technical jargon.
+ * Updated to Gemini 2.5 Flash for decommissioned model mitigation.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -22,7 +22,7 @@ export type MaintenanceRequestTriageOutput = z.infer<typeof MaintenanceRequestTr
 
 const triagePrompt = ai.definePrompt({
   name: 'maintenanceRequestTriagePrompt',
-  model: googleAI.model('gemini-2.0-flash'),
+  model: googleAI.model('gemini-2.5-flash'),
   input: { schema: MaintenanceRequestTriageInputSchema },
   output: { schema: MaintenanceRequestTriageOutputSchema },
   config: { temperature: 0 },
@@ -80,7 +80,10 @@ export async function triageMaintenanceRequest(input: MaintenanceRequestTriageIn
 
   while (retries >= 0) {
     try {
-      const { output } = await triagePrompt(input);
+      const { output } = await ai.generate({
+        prompt: triagePrompt,
+        input
+      });
       if (!output) throw new Error("Intelligence engine returned empty classification.");
       return output;
     } catch (error: any) {

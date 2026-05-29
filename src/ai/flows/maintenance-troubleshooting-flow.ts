@@ -1,7 +1,7 @@
-
 'use server';
 /**
  * @fileOverview An AI agent for troubleshooting issues before reporting.
+ * Updated to Gemini 2.5 Flash for decommissioned model mitigation.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -22,7 +22,7 @@ export type MaintenanceTroubleshootOutput = z.infer<typeof MaintenanceTroublesho
 
 const troubleshootPrompt = ai.definePrompt({
   name: 'maintenanceTroubleshootPrompt',
-  model: googleAI.model('gemini-2.0-flash'),
+  model: googleAI.model('gemini-2.5-flash'),
   input: { schema: MaintenanceTroubleshootInputSchema },
   output: { schema: MaintenanceTroubleshootOutputSchema },
   prompt: `You are 'Flow Support', an expert home maintenance assistant.
@@ -35,7 +35,10 @@ If the issue is obviously serious, set canSelfFix to false and provide immediate
 
 export async function maintenanceTroubleshoot(input: MaintenanceTroubleshootInput): Promise<MaintenanceTroubleshootOutput> {
   try {
-    const { output } = await troubleshootPrompt(input);
+    const { output } = await ai.generate({
+      prompt: troubleshootPrompt,
+      input
+    });
     if (!output) throw new Error("Troubleshooting engine offline.");
     return output;
   } catch (error: any) {
