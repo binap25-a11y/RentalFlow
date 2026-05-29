@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -90,7 +89,12 @@ export default function MaintenancePage() {
     return getLandlordCollectionQuery(db, "properties", user.uid);
   }, [db, user]);
 
-  const { data: properties } = useCollection(propertiesQuery);
+  const { data: allProperties } = useCollection(propertiesQuery);
+
+  // HIGH-FIDELITY ASSET FILTER: Exclude deleted or incomplete records
+  const properties = useMemo(() => 
+    allProperties?.filter(p => !p.isDeleted && p.addressLine1) || [], 
+  [allProperties]);
 
   const maintenanceQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -406,7 +410,7 @@ export default function MaintenancePage() {
                     <Calendar mode="single" selected={scheduledDate} onSelect={setScheduledDate} className="rounded-2xl border-none shadow-inner bg-background p-0" />
                   </div>
                   <DialogFooter className="p-6 bg-muted/5 border-t">
-                     <Button className="w-full rounded-xl h-12 font-bold bg-background text-foreground border border-border shadow-lg font-headline text-sm hover:bg-primary hover:text-primary-foreground" disabled={!scheduledDate} onClick={() => handleSetSchedule(request.id)}>
+                     <Button className="w-full rounded-xl h-12 font-bold bg-background text-foreground border border-border shadow-lg font-headline text-sm hover:bg-primary hover:text-primary-foreground" disabled={!scheduledDate} onClick={handleSetSchedule}>
                         <Save className="w-4 h-4 mr-2" /> Synchronize Timeline
                      </Button>
                   </DialogFooter>

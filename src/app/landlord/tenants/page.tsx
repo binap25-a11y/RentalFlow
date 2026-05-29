@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { 
   useUser, 
   useFirestore, 
@@ -59,7 +58,12 @@ export default function TenantsPage() {
     return getLandlordCollectionQuery(db, "properties", user.uid);
   }, [db, user]);
 
-  const { data: properties } = useCollection(propertiesQuery);
+  const { data: allProperties } = useCollection(propertiesQuery);
+
+  // HIGH-FIDELITY ASSET FILTER: Exclude deleted or incomplete records
+  const properties = useMemo(() => 
+    allProperties?.filter(p => !p.isDeleted && p.addressLine1) || [], 
+  [allProperties]);
 
   const tenantsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;

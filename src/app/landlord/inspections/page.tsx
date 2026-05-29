@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   useUser, 
   useFirestore, 
@@ -108,7 +107,12 @@ export default function InspectionsPage() {
     return getLandlordCollectionQuery(db, "properties", user.uid);
   }, [db, user]);
 
-  const { data: properties, loading: isPropLoading } = useCollection(propertiesQuery);
+  const { data: allProperties, loading: isPropLoading } = useCollection(propertiesQuery);
+
+  // HIGH-FIDELITY ASSET FILTER: Exclude deleted or incomplete records
+  const properties = useMemo(() => 
+    allProperties?.filter(p => !p.isDeleted && p.addressLine1) || [], 
+  [allProperties]);
 
   const inspectionsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -368,7 +372,7 @@ export default function InspectionsPage() {
                           </div>
                         </div>
                         <div className="text-left">
-                          <h4 className="text-lg font-bold font-headline text-foreground tracking-tight">{properties?.find(p => p.id === inspection.propertyId)?.addressLine1 || 'Property Asset'}</h4>
+                          <h4 className="text-lg font-bold font-headline text-foreground tracking-tight">{allProperties?.find(p => p.id === inspection.propertyId)?.addressLine1 || 'Property Asset'}</h4>
                           <p className="text-[10px] text-muted-foreground font-bold flex items-center mt-1 font-body uppercase tracking-widest opacity-60">
                             <Clock className="w-3.5 h-3.5 mr-1.5" />
                             {inspection.conductedDate ? `Recorded: ${format(new Date(inspection.conductedDate), 'PPp')}` : `Scheduled: ${format(new Date(inspection.scheduledDate), 'PPP')}`}
