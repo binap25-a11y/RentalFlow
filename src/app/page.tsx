@@ -101,7 +101,7 @@ export default function LandingPage() {
              {user ? (
                <Button asChild className="rounded-2xl font-bold bg-accent hover:bg-accent/90 text-white px-8 h-12 shadow-2xl shadow-accent/20 transition-all active:scale-95 border-none">
                  <Link href={profile?.role === 'landlord' ? '/landlord/properties' : '/tenant/hub'}>
-                    Portfolio Command <ChevronRight className="w-4 h-4 ml-1" />
+                    Sign In <ChevronRight className="w-4 h-4 ml-1" />
                  </Link>
                </Button>
              ) : (
@@ -141,7 +141,7 @@ export default function LandingPage() {
           {/* Command Trigger Stack */}
           <div className="flex flex-col sm:flex-row gap-6 pt-4">
             <Button size="lg" asChild className="h-20 px-12 md:px-20 rounded-[2.25rem] bg-accent hover:bg-accent/90 text-white text-lg md:text-xl font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-95 border-none">
-              <Link href="/auth">Portfolio Command <ArrowRight className="w-6 h-6 ml-4" /></Link>
+              <Link href="/auth">Sign In <ArrowRight className="w-6 h-6 ml-4" /></Link>
             </Button>
             <Button size="lg" variant="outline" className="h-20 px-12 md:px-16 rounded-[2.25rem] border-white/10 bg-white/5 hover:bg-white/10 text-foreground font-bold text-lg backdrop-blur-md cursor-pointer transition-all" onClick={scrollToFeatures}>
                Explore Intelligence
