@@ -407,15 +407,17 @@ function EventCard({ event, compact = false }: { event: PortfolioEvent, compact?
   return (
     <div className={cn(
       "flex transition-all bg-card ring-1 ring-border group min-w-0 shadow-sm",
-      compact ? "flex-col p-8 rounded-[2.5rem] gap-6" : "flex-row items-center justify-between p-8 rounded-[3rem]"
+      compact 
+        ? "flex-col p-8 rounded-[2.5rem] gap-6" 
+        : "flex-col md:flex-row md:items-center justify-between p-6 md:p-8 rounded-[2.5rem] md:rounded-[3rem] gap-6 md:gap-4"
     )}>
-      <div className={cn("flex items-start gap-5 text-left min-w-0", compact ? "w-full" : "flex-1 items-center")}>
+      <div className={cn("flex items-start gap-5 text-left min-w-0", compact ? "w-full" : "flex-1 items-start")}>
         <div className={cn(
           "rounded-xl flex items-center justify-center transform group-hover:scale-105 transition-transform shrink-0 shadow-sm",
-          compact ? "w-14 h-14" : "w-16 h-16",
+          compact ? "w-14 h-14" : "w-14 h-14 md:w-16 md:h-16",
           colorClass
         )}>
-           <Icon className={compact ? "w-7 h-7" : "w-8 h-8"} />
+           <Icon className={compact ? "w-7 h-7" : "w-7 h-7 md:w-8 md:h-8"} />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-1">
@@ -428,7 +430,7 @@ function EventCard({ event, compact = false }: { event: PortfolioEvent, compact?
           </div>
           <h4 className={cn(
             "font-bold font-headline leading-tight mb-1 tracking-tight text-foreground block",
-            compact ? "text-lg" : "text-xl"
+            compact ? "text-lg" : "text-base md:text-xl"
           )}>{event.title}</h4>
           <div className="flex flex-wrap items-center gap-3 min-w-0">
             <p className="text-[10px] text-muted-foreground font-bold flex items-center font-body opacity-60 uppercase tracking-widest font-headline">
@@ -437,10 +439,10 @@ function EventCard({ event, compact = false }: { event: PortfolioEvent, compact?
           </div>
         </div>
       </div>
-      <div className={cn("shrink-0", compact ? "w-full" : "ml-6")}>
+      <div className={cn("shrink-0", compact ? "w-full" : "w-full md:w-auto md:ml-6")}>
          <Button variant="outline" size="sm" asChild className={cn(
            "rounded-xl font-bold border-border bg-card shadow-sm hover:bg-primary hover:text-primary-foreground text-[10px] uppercase tracking-widest transition-all",
-           compact ? "w-full h-14" : "h-12 px-8"
+           compact ? "w-full h-14" : "w-full h-12 md:h-12 md:px-8"
          )}>
             <Link href={linkHref}>
                {event.type === 'inspection' ? 'Jump to Audit' : 'Jump to Repair'}
