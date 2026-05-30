@@ -351,19 +351,14 @@ export default function InspectionsPage() {
                         {inspection.summary && (
                           <div className="p-8 bg-primary/[0.03] rounded-3xl border border-border mt-6 text-left shadow-inner relative overflow-hidden group/summary">
                              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover/summary:rotate-12 transition-transform duration-700"><ShieldAlert className="w-20 h-20" /></div>
-                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
-                               <div className="space-y-1">
-                                 <p className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest">Executive Summary</p>
-                                 <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[11px] h-8 px-4 rounded-full">{inspection.healthScore}/100 Health Score</Badge>
-                               </div>
-                               <Button 
-                                onClick={() => handleDownloadReport(inspection)}
-                                className="rounded-xl h-10 bg-primary text-primary-foreground font-bold uppercase tracking-widest text-[9px] px-6 shadow-xl transition-all hover:scale-[1.02]"
-                               >
-                                 <FileDown className="w-4 h-4 mr-2" /> Download Professional Report
-                               </Button>
+                             
+                             <div className="space-y-1 mb-6">
+                               <p className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest">Executive Summary</p>
+                               <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[11px] h-8 px-4 rounded-full">{inspection.healthScore}/100 Health Score</Badge>
                              </div>
+                             
                              <p className="text-base text-foreground/80 italic leading-relaxed font-medium">"{inspection.summary}"</p>
+                             
                              {inspection.priorityItems && inspection.priorityItems.length > 0 && (
                                <div className="mt-8 pt-6 border-t border-border/50">
                                   <p className="text-[9px] font-bold text-red-500 uppercase tracking-widest mb-4">Critical Fix Strategy</p>
@@ -376,6 +371,15 @@ export default function InspectionsPage() {
                                   </div>
                                </div>
                              )}
+
+                             <div className="mt-8 pt-6 border-t border-border/50 flex justify-end">
+                               <Button 
+                                onClick={() => handleDownloadReport(inspection)}
+                                className="rounded-xl h-10 bg-primary text-primary-foreground font-bold uppercase tracking-widest text-[9px] px-8 shadow-xl transition-all hover:scale-[1.02]"
+                               >
+                                 <FileDown className="w-4 h-4 mr-2" /> Download Professional Report
+                               </Button>
+                             </div>
                           </div>
                         )}
                       </div>
