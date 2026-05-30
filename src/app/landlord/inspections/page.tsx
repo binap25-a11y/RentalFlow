@@ -154,18 +154,43 @@ export default function InspectionsPage() {
     setEditingMetadata(null);
   };
 
+  /**
+   * 🔄 Instant Persistence Protocol
+   * Synchronizes manual findings to Firestore immediately to ensure data integrity.
+   */
+  const syncFindingsToFirestore = (updatedFindings: any) => {
+    if (!db || !activeInspection) return;
+    const inspectionRef = doc(db, 'inspections', activeInspection.id);
+    updateDocumentNonBlocking(inspectionRef, {
+      structuredFindings: updatedFindings,
+      updatedAt: serverTimestamp(),
+    });
+  };
+
   const handleStatusChange = (itemId: string, status: 'pass' | 'fail') => {
-    setStructuredFindings(prev => ({
-      ...prev,
-      [itemId]: { ...prev[itemId], status }
-    }));
+    setStructuredFindings(prev => {
+      const updated = {
+        ...prev,
+        [itemId]: { ...prev[itemId], status }
+      };
+      syncFindingsToFirestore(updated);
+      return updated;
+    });
   };
 
   const handleNotesChange = (itemId: string, notes: string) => {
-    setStructuredFindings(prev => ({
-      ...prev,
-      [itemId]: { ...prev[itemId], notes }
-    }));
+    setStructuredFindings(prev => {
+      const updated = {
+        ...prev,
+        [itemId]: { ...prev[itemId], notes }
+      };
+      // Note: Typically synchronized on blur in the UI, but handled here via local state update
+      return updated;
+    });
+  };
+
+  const handleNotesBlur = (itemId: string) => {
+    syncFindingsToFirestore(structuredFindings);
   };
 
   const handleImageUpload = async (itemId: string, file: File | null) => {
@@ -181,10 +206,15 @@ export default function InspectionsPage() {
       formData.append('file', optimizedBlob, file.name);
       const result = await uploadToSupabase(formData, 'Property-Images-', path);
       if (!result.success) throw new Error(result.error);
-      setStructuredFindings(prev => ({
-        ...prev,
-        [itemId]: { ...prev[itemId], imageUrl: result.url, isSyncing: false }
-      }));
+      
+      setStructuredFindings(prev => {
+        const updated = {
+          ...prev,
+          [itemId]: { ...prev[itemId], imageUrl: result.url, isSyncing: false }
+        };
+        syncFindingsToFirestore(updated);
+        return updated;
+      });
       toast({ title: "Evidence Synchronized" });
     } catch (err: any) {
       setStructuredFindings(prev => ({
@@ -215,14 +245,9 @@ export default function InspectionsPage() {
     setDate(undefined);
   };
 
-  /**
-   * 📄 Finalize Audit Protocol
-   * Orchestrates high-fidelity checklist data into a professional AI-driven report.
-   */
   const handleFinalizeAudit = async () => {
     if (!db || !activeInspection || !user) return;
     
-    // Defensive Guard: Ensure at least some context is provided before invoking AI
     const entries = Object.entries(structuredFindings);
     if (entries.length === 0) {
       toast({ variant: "destructive", title: "Audit Context Missing", description: "Please mark at least one checklist item (Pass/Fail) before finalizing." });
@@ -260,7 +285,7 @@ export default function InspectionsPage() {
       toast({ 
         variant: "destructive", 
         title: "Reporting Engine Error", 
-        description: "An unexpected error occurred. Please try finalizing once more or save your findings and refresh." 
+        description: "An unexpected error occurred. Your manual findings have been saved." 
       });
     } finally {
       setIsGenerating(false);
@@ -273,8 +298,7 @@ export default function InspectionsPage() {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
 
-    // 1. Header
-    pdf.setFillColor(30, 58, 138); // RentalFlow Blue
+    pdf.setFillColor(30, 58, 138); 
     pdf.rect(0, 0, pageWidth, 40, "F");
     pdf.setTextColor(255, 255, 255);
     pdf.setFont("helvetica", "bold");
@@ -284,7 +308,6 @@ export default function InspectionsPage() {
     pdf.setFont("helvetica", "normal");
     pdf.text("CONFIDENTIAL COMPLIANCE RECORD", 20, 32);
 
-    // 2. Identity Section
     pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(14);
     pdf.setFont("helvetica", "bold");
@@ -299,7 +322,6 @@ export default function InspectionsPage() {
     pdf.setFont("helvetica", "normal");
     pdf.text(format(new Date(inspection.conductedDate || inspection.scheduledDate), 'PPP'), 130, 69);
 
-    // 3. Health Score Banner
     pdf.setFillColor(248, 250, 252);
     pdf.rect(20, 80, 170, 20, "F");
     pdf.setDrawColor(226, 232, 240);
@@ -311,7 +333,6 @@ export default function InspectionsPage() {
     pdf.setFontSize(16);
     pdf.text(`${inspection.healthScore}/100`, 160, 92, { align: 'right' });
 
-    // 4. Executive Summary
     pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(14);
     pdf.setFont("helvetica", "bold");
@@ -321,7 +342,6 @@ export default function InspectionsPage() {
     const summaryLines = pdf.splitTextToSize(inspection.summary || "No automated summary available.", 170);
     pdf.text(summaryLines, 20, 125);
 
-    // 5. Findings Checklist
     let y = 125 + (summaryLines.length * 5) + 15;
     pdf.setFontSize(14);
     pdf.setFont("helvetica", "bold");
@@ -356,7 +376,7 @@ export default function InspectionsPage() {
     pdf.text("Generated via RentalFlow Intelligence Engine. Strictly for internal compliance records.", 20, 285);
 
     pdf.save(`Audit_Report_${property?.addressLine1.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
-    toast({ title: "Report Exported", description: "PDF generated successfully." });
+    toast({ title: "Report Exported" });
   };
 
   if (!isClient || isPropLoading || isInspLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-accent" /></div>;
@@ -463,28 +483,29 @@ export default function InspectionsPage() {
                           <DialogContent className="sm:max-w-[850px] p-0 rounded-2xl border-none shadow-2xl flex flex-col h-[90vh] overflow-hidden bg-card">
                             <div className="p-8 bg-primary/5 border-b text-left shrink-0">
                               <DialogTitle className="text-2xl font-headline font-bold text-foreground tracking-tight">Professional Property Audit</DialogTitle>
-                              <DialogDescription className="font-medium text-muted-foreground font-body mt-1">Conducting full safety audit with high-fidelity evidence capture.</DialogDescription>
+                              <DialogDescription className="font-medium text-muted-foreground font-body mt-1 text-sm">Synchronizing high-fidelity binary evidence and checklist data.</DialogDescription>
                             </div>
                             
-                            <div className="overflow-x-auto bg-muted/30 border-b border-border no-scrollbar py-1">
+                            {/* CATEGORY NAV: Optimized to wrap and fit on screen for mobile rather than scrolling */}
+                            <div className="bg-muted/30 border-b border-border py-2">
                                 <Tabs defaultValue="exterior" className="w-full">
-                                    <div className="flex w-max px-4">
-                                        <TabsList className="inline-flex h-14 items-center bg-transparent p-0 gap-1">
+                                    <div className="px-4">
+                                        <TabsList className="flex flex-wrap h-auto items-center bg-transparent p-0 gap-1.5">
                                           {INSPECTION_SECTIONS.map(s => (
                                             <TabsTrigger 
                                               key={s.id} 
                                               value={s.id} 
-                                              className="rounded-xl h-11 px-6 flex items-center gap-2.5 data-[state=active]:bg-card data-[state=active]:text-accent data-[state=active]:shadow-md transition-all whitespace-nowrap"
+                                              className="rounded-xl h-9 px-4 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-accent data-[state=active]:shadow-sm transition-all"
                                             >
-                                              <s.icon className="w-4 h-4 shrink-0" />
-                                              <span className="text-[10px] font-bold uppercase tracking-[0.15em]">{s.title}</span>
+                                              <s.icon className="w-3.5 h-3.5 shrink-0 hidden xs:block" />
+                                              <span className="text-[9px] font-extrabold uppercase tracking-widest">{s.title.split(' ')[0]}</span>
                                             </TabsTrigger>
                                           ))}
                                         </TabsList>
                                     </div>
 
-                                    <ScrollArea className="flex-1 text-left h-[calc(90vh-14rem)]">
-                                      <div className="p-6 md:p-8 space-y-8 pb-24">
+                                    <ScrollArea className="flex-1 text-left h-[calc(90vh-16rem)]">
+                                      <div className="p-6 md:p-10 space-y-8 pb-32">
                                           {INSPECTION_SECTIONS.map(section => (
                                             <TabsContent key={section.id} value={section.id} className="mt-0 space-y-8 animate-in fade-in duration-300">
                                               <div className="grid gap-6">
@@ -500,7 +521,13 @@ export default function InspectionsPage() {
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-border">
                                                       <div className="space-y-3">
                                                         <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.2em] opacity-40">Findings Ledger</Label>
-                                                        <Textarea placeholder="Notes..." className="rounded-2xl min-h-[120px] bg-muted/20 border-none font-medium text-sm leading-relaxed" value={structuredFindings[item]?.notes || ''} onChange={(e) => handleNotesChange(item, e.target.value)} />
+                                                        <Textarea 
+                                                          placeholder="Notes..." 
+                                                          className="rounded-2xl min-h-[120px] bg-muted/20 border-none font-medium text-sm leading-relaxed" 
+                                                          value={structuredFindings[item]?.notes || ''} 
+                                                          onChange={(e) => handleNotesChange(item, e.target.value)}
+                                                          onBlur={() => handleNotesBlur(item)}
+                                                        />
                                                       </div>
                                                       <div className="space-y-3">
                                                         <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.2em] opacity-40">Visual Evidence</Label>
@@ -569,35 +596,50 @@ export default function InspectionsPage() {
       </div>
 
       <Dialog open={!!editingMetadata} onOpenChange={(open) => !open && setEditingMetadata(null)}>
-        <DialogContent className="sm:max-w-[500px] p-0 rounded-[2.5rem] border-none shadow-2xl flex flex-col h-[600px] bg-card overflow-hidden">
+        <DialogContent className="sm:max-w-[500px] p-0 rounded-[2.5rem] border-none shadow-2xl flex flex-col h-[700px] max-h-[90vh] bg-card overflow-hidden">
           <div className="p-8 bg-primary/5 border-b text-left shrink-0">
             <DialogTitle className="text-2xl font-headline font-bold text-foreground tracking-tight">Modify Audit Record</DialogTitle>
+            <DialogDescription className="text-sm font-medium text-muted-foreground mt-1">Refining operational metadata for this compliance asset.</DialogDescription>
           </div>
-          <div className="p-8 space-y-8 text-left">
-            <div className="space-y-2">
-              <Label className="text-xs uppercase font-bold text-muted-foreground opacity-60">Target Asset</Label>
-              <select className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm font-bold text-foreground" value={editPropertyId} onChange={(e) => setEditPropertyId(e.target.value)}>
-                <option value="">Choose property...</option>
-                {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
-              </select>
+          
+          <ScrollArea className="flex-1">
+            <div className="p-10 space-y-10 text-left pb-20">
+              <div className="space-y-4">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Target Asset</Label>
+                <select 
+                  className="flex h-14 w-full rounded-2xl border-none bg-muted/30 px-6 py-2 text-base font-bold text-foreground shadow-inner ring-1 ring-white/5 focus:ring-2 focus:ring-accent outline-none" 
+                  value={editPropertyId} 
+                  onChange={(e) => setEditPropertyId(e.target.value)}
+                >
+                  <option value="">Choose property...</option>
+                  {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                </select>
+              </div>
+              <div className="space-y-4">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Audit Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant={"outline"} className="w-full justify-start text-left font-bold h-14 rounded-2xl border-none bg-muted/30 px-6 text-base shadow-inner ring-1 ring-white/5">
+                      <CalendarIcon className="mr-3 h-5 w-5 text-accent" />
+                      {editDate ? format(editDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 rounded-[2rem] border-none shadow-2xl overflow-hidden" align="start">
+                    <Calendar mode="single" selected={editDate} onSelect={setEditDate} initialFocus />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs uppercase font-bold text-muted-foreground opacity-60">Audit Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant={"outline"} className="w-full justify-start text-left font-bold h-12 rounded-xl border-border bg-muted/20">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {editDate ? format(editDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={editDate} onSelect={setEditDate} initialFocus />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
+          </ScrollArea>
+
           <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
-            <Button className="w-full rounded-xl h-12 font-bold bg-primary text-white transition-all active:scale-[0.98]" onClick={handleUpdateMetadata} disabled={!editDate || !editPropertyId}>Synchronize Changes</Button>
+            <Button 
+              className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground transition-all active:scale-[0.98] shadow-2xl shadow-primary/10 font-headline uppercase tracking-[0.2em] text-[11px] border-none" 
+              onClick={handleUpdateMetadata} 
+              disabled={!editDate || !editPropertyId}
+            >
+              Synchronize Changes
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
