@@ -30,7 +30,7 @@ import {
   Save, Download, FileDown
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { cn, compressImage, withRetry } from "@/lib/utils";
+import { cn, compressImage } from "@/lib/utils";
 import { generateInspectionReport } from "@/ai/flows/generate-inspection-report";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 import Image from 'next/image';
@@ -447,47 +447,57 @@ export default function InspectionsPage() {
                             <ScrollArea className="flex-1 text-left">
                               <div className="p-8 space-y-8 pb-24">
                                 <Tabs defaultValue="exterior" className="w-full">
+                                  {/* HORIZONTAL SCROLL RAIL FOR MOBILE TABS */}
                                   <div className="overflow-x-auto pb-4 no-scrollbar">
-                                    <TabsList className="inline-flex w-max min-w-full bg-muted/50 p-1.5 rounded-2xl h-auto gap-1">
+                                    <TabsList className="inline-flex w-max min-w-full bg-muted/50 p-1.5 rounded-2xl h-auto gap-1 border border-border/50">
                                       {INSPECTION_SECTIONS.map(s => (
-                                        <TabsTrigger key={s.id} value={s.id} className="rounded-xl py-3 px-6 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-foreground">
+                                        <TabsTrigger 
+                                          key={s.id} 
+                                          value={s.id} 
+                                          className="rounded-xl py-3.5 px-6 flex items-center gap-2.5 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-lg transition-all"
+                                        >
                                           <s.icon className="w-4 h-4 shrink-0" />
-                                          <span className="text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">{s.title}</span>
+                                          <span className="text-[10px] font-bold uppercase tracking-[0.15em] whitespace-nowrap">{s.title}</span>
                                         </TabsTrigger>
                                       ))}
                                     </TabsList>
                                   </div>
                                   {INSPECTION_SECTIONS.map(section => (
-                                    <TabsContent key={section.id} value={section.id} className="mt-8 space-y-8">
+                                    <TabsContent key={section.id} value={section.id} className="mt-8 space-y-8 animate-in fade-in duration-300">
                                       <div className="grid gap-6">
                                         {section.items.map(item => (
-                                          <div key={item} className="p-6 bg-primary/[0.02] rounded-[2rem] space-y-6 border border-border">
+                                          <div key={item} className="p-6 bg-primary/[0.02] rounded-[2.5rem] space-y-6 border border-border shadow-sm">
                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                              <Label className="font-bold text-base text-left font-headline text-foreground">{item}</Label>
-                                              <div className="flex gap-2">
-                                                <Button size="sm" variant={structuredFindings[item]?.status === 'pass' ? 'default' : 'outline'} className="rounded-xl font-bold h-10 px-6 text-[10px]" onClick={() => handleStatusChange(item, 'pass')}><Check className="w-4 h-4 mr-2" /> PASS</Button>
-                                                <Button size="sm" variant={structuredFindings[item]?.status === 'fail' ? 'destructive' : 'outline'} className="rounded-xl font-bold h-10 px-6 text-[10px]" onClick={() => handleStatusChange(item, 'fail')}><X className="w-4 h-4 mr-2" /> FAIL</Button>
+                                              <Label className="font-bold text-base text-left font-headline text-foreground leading-tight">{item}</Label>
+                                              <div className="flex gap-2 shrink-0">
+                                                <Button size="sm" variant={structuredFindings[item]?.status === 'pass' ? 'default' : 'outline'} className="flex-1 md:flex-none rounded-xl font-bold h-11 px-8 text-[10px] uppercase tracking-widest" onClick={() => handleStatusChange(item, 'pass')}><Check className="w-4 h-4 mr-2" /> PASS</Button>
+                                                <Button size="sm" variant={structuredFindings[item]?.status === 'fail' ? 'destructive' : 'outline'} className="flex-1 md:flex-none rounded-xl font-bold h-11 px-8 text-[10px] uppercase tracking-widest" onClick={() => handleStatusChange(item, 'fail')}><X className="w-4 h-4 mr-2" /> FAIL</Button>
                                               </div>
                                             </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border">
-                                              <div className="space-y-2">
-                                                <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-60">Findings</Label>
-                                                <Textarea placeholder="Notes..." className="rounded-2xl min-h-[100px] bg-muted/20 border-none" value={structuredFindings[item]?.notes || ''} onChange={(e) => handleNotesChange(item, e.target.value)} />
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-border">
+                                              <div className="space-y-3">
+                                                <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.2em] opacity-40">Findings Ledger</Label>
+                                                <Textarea placeholder="Notes..." className="rounded-2xl min-h-[120px] bg-muted/20 border-none font-medium text-sm leading-relaxed" value={structuredFindings[item]?.notes || ''} onChange={(e) => handleNotesChange(item, e.target.value)} />
                                               </div>
-                                              <div className="space-y-2">
-                                                <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-60">Evidence</Label>
-                                                <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-dashed border-border bg-muted/10 flex items-center justify-center cursor-pointer">
+                                              <div className="space-y-3">
+                                                <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.2em] opacity-40">Visual Evidence</Label>
+                                                <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-dashed border-border bg-muted/10 flex items-center justify-center cursor-pointer group hover:bg-muted/20 transition-all">
                                                   {structuredFindings[item]?.isSyncing ? (
-                                                    <div className="flex flex-col items-center gap-3">
-                                                       <Loader2 className="w-8 h-8 animate-spin text-accent" />
-                                                       <span className="text-[10px] font-bold text-accent uppercase tracking-widest">Uploading...</span>
+                                                    <div className="flex flex-col items-center gap-4">
+                                                       <Loader2 className="w-10 h-10 animate-spin text-accent" />
+                                                       <span className="text-[10px] font-bold text-accent uppercase tracking-[0.3em]">Syncing Binary...</span>
                                                     </div>
                                                   ) : structuredFindings[item]?.imageUrl ? (
-                                                    <Image src={structuredFindings[item].imageUrl} alt="Evidence" fill className="object-cover" unoptimized />
+                                                    <div className="relative w-full h-full">
+                                                      <Image src={structuredFindings[item].imageUrl} alt="Evidence" fill className="object-cover" unoptimized />
+                                                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                         <Camera className="w-8 h-8 text-white" />
+                                                      </div>
+                                                    </div>
                                                   ) : (
-                                                    <label htmlFor={`upload-${item}`} className="flex flex-col items-center gap-2 text-muted-foreground opacity-40">
-                                                      <Camera className="w-8 h-8" />
-                                                      <span className="text-[10px] font-bold">Select Photo</span>
+                                                    <label htmlFor={`upload-${item}`} className="flex flex-col items-center gap-3 text-muted-foreground opacity-30 group-hover:opacity-60 transition-opacity cursor-pointer">
+                                                      <Camera className="w-10 h-10" />
+                                                      <span className="text-[10px] font-bold uppercase tracking-widest">Capture Asset</span>
                                                       <input id={`upload-${item}`} type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(item, e.target.files?.[0] || null)} />
                                                     </label>
                                                   )}
@@ -503,8 +513,8 @@ export default function InspectionsPage() {
                               </div>
                             </ScrollArea>
                             <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
-                              <Button className="w-full rounded-2xl h-14 font-bold bg-accent text-white hover:bg-accent/90 transition-all border-none" onClick={handleFinalizeAudit} disabled={isGenerating}>
-                                {isGenerating ? <><Loader2 className="w-5 h-5 mr-3 animate-spin" /> Finalizing...</> : <><CheckCircle2 className="w-5 h-5 mr-3" /> Finalize Audit Report</>}
+                              <Button className="w-full rounded-2xl h-16 font-bold bg-accent text-white hover:bg-accent/90 transition-all border-none shadow-2xl shadow-accent/20 uppercase tracking-[0.3em] text-[12px]" onClick={handleFinalizeAudit} disabled={isGenerating}>
+                                {isGenerating ? <><Loader2 className="w-5 h-5 mr-4 animate-spin" /> Orchestrating Records...</> : <><CheckCircle2 className="w-5 h-5 mr-4" /> Finalize Audit Report</>}
                               </Button>
                             </DialogFooter>
                           </DialogContent>
