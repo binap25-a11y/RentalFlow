@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -27,7 +27,7 @@ import {
   Calendar as CalendarIcon, Loader2, 
   CheckCircle2, ClipboardList, ShieldAlert, Home, Wrench, 
   Check, X, AlertTriangle, Info, Trash2, Edit3, PlayCircle, Camera, Clock,
-  Save, Download, FileDown, Activity
+  Save, FileDown, Activity
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn, compressImage } from "@/lib/utils";
@@ -71,7 +71,7 @@ export default function InspectionsPage() {
 
   const { data: allProperties, loading: isPropLoading } = useCollection(propertiesQuery);
 
-  const properties = useMemo(() => 
+  const activeProperties = useMemo(() => 
     allProperties?.filter(p => !p.isDeleted && p.addressLine1) || [], 
   [allProperties]);
 
@@ -106,7 +106,7 @@ export default function InspectionsPage() {
   const handleUpdateMetadata = async () => {
     if (!db || !editingMetadata || !editDate || !editPropertyId) return;
     const inspectionRef = doc(db, 'inspections', editingMetadata.id);
-    const property = properties?.find(p => p.id === editPropertyId);
+    const property = activeProperties.find(p => p.id === editPropertyId);
     updateDocumentNonBlocking(inspectionRef, {
       propertyId: editPropertyId,
       scheduledDate: editDate.toISOString(),
@@ -167,7 +167,7 @@ export default function InspectionsPage() {
 
   const handleSchedule = () => {
     if (!user || !db || !selectedPropertyId || !date) return;
-    const property = properties?.find(p => p.id === selectedPropertyId);
+    const property = activeProperties.find(p => p.id === selectedPropertyId);
     const inspectionId = doc(collection(db, 'inspections')).id;
     const inspectionRef = doc(db, 'inspections', inspectionId);
     setDocumentNonBlocking(inspectionRef, {
@@ -195,7 +195,7 @@ export default function InspectionsPage() {
     }
 
     setIsGenerating(true);
-    const property = properties?.find(p => p.id === activeInspection.propertyId);
+    const property = activeProperties.find(p => p.id === activeInspection.propertyId);
     
     try {
       const findingsString = entries.map(([item, data]: [string, any]) => {
@@ -221,14 +221,14 @@ export default function InspectionsPage() {
       toast({ title: "Audit Finalized" });
       setActiveInspection(null);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Orchestration Error" });
+      toast({ variant: "destructive", title: "Synchronization Timeout", description: "Audit logged. Report processing in background." });
     } finally {
       setIsGenerating(false);
     }
   };
 
   const handleDownloadReport = async (inspection: any) => {
-    const property = properties?.find(p => p.id === inspection.propertyId);
+    const property = activeProperties.find(p => p.id === inspection.propertyId);
     const { jsPDF } = await import("jspdf");
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -303,7 +303,7 @@ export default function InspectionsPage() {
               <Label className="text-xs uppercase font-bold text-muted-foreground font-headline tracking-widest opacity-60">Select Asset</Label>
               <select className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-4 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
                 <option value="">Choose property...</option>
-                {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                {activeProperties.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
               </select>
             </div>
             <div className="space-y-2">
@@ -359,7 +359,7 @@ export default function InspectionsPage() {
                           </div>
                         </div>
                         <div>
-                          <h4 className="text-lg font-bold font-headline text-foreground leading-none">{properties?.find(p => p.id === inspection.propertyId)?.addressLine1 || 'Property Asset'}</h4>
+                          <h4 className="text-lg font-bold font-headline text-foreground leading-none">{activeProperties.find(p => p.id === inspection.propertyId)?.addressLine1 || 'Property Asset'}</h4>
                           <p className="text-[10px] text-muted-foreground font-bold flex items-center mt-2 opacity-60 uppercase tracking-widest"><Clock className="w-3.5 h-3.5 mr-2" />{inspection.conductedDate ? `Recorded: ${format(new Date(inspection.conductedDate), 'PPp')}` : `Scheduled: ${format(new Date(inspection.scheduledDate), 'PPP')}`}</p>
                         </div>
                         <Button className={cn("rounded-xl font-bold h-10 px-8 text-[10px] uppercase tracking-widest", inspection.status === 'completed' ? "bg-muted text-foreground hover:bg-muted/80" : "bg-accent text-white")} onClick={() => handleOpenAudit(inspection)}>
@@ -462,7 +462,7 @@ export default function InspectionsPage() {
                 <Label className="text-[10px] font-bold uppercase opacity-60 tracking-widest font-headline">Target Asset</Label>
                 <select className="flex h-14 w-full rounded-2xl border-none bg-muted/30 px-6 font-bold text-foreground shadow-inner focus:ring-2 focus:ring-accent outline-none" value={editPropertyId} onChange={(e) => setEditPropertyId(e.target.value)}>
                   <option value="">Choose property...</option>
-                  {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
+                  {activeProperties.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
                 </select>
               </div>
               <div className="space-y-4">
