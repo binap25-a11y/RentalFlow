@@ -240,7 +240,7 @@ export default function InspectionsPage() {
         img.crossOrigin = "Anonymous";
         img.src = url;
         img.onload = () => resolve(img);
-        img.onerror = reject;
+        img.onerror = () => reject(new Error("Visual Asset Resolution Failure"));
       });
     };
 
@@ -280,9 +280,9 @@ export default function InspectionsPage() {
     pdf.text("PROPERTY HEALTH SCORE:", 30, 100);
     
     const score = inspection.healthScore || 0;
-    if (score >= 80) pdf.setTextColor(22, 101, 52); // Green
-    else if (score >= 60) pdf.setTextColor(180, 83, 9); // Amber
-    else pdf.setTextColor(185, 28, 28); // Red
+    if (score >= 80) pdf.setTextColor(22, 101, 52); 
+    else if (score >= 60) pdf.setTextColor(180, 83, 9); 
+    else pdf.setTextColor(185, 28, 28); 
     
     pdf.setFontSize(18); 
     pdf.text(`${score}/100`, 160, 100, { align: 'right' });
@@ -391,7 +391,7 @@ export default function InspectionsPage() {
             pdf.addImage(img, 'JPEG', 20, y, imgWidth, imgHeight);
             y += imgHeight + 15;
           } catch (e) {
-            console.error("Failed to load image for PDF", e);
+            console.error("Failed to load visual asset for binary synchronization", e);
           }
         }
       }
@@ -406,8 +406,8 @@ export default function InspectionsPage() {
         pdf.text(`RentalFlow Property Operations | Compliance Record | Page ${i} of ${pageCount}`, pageWidth / 2, 285, { align: 'center' });
     }
 
-    pdf.save(`Audit_${property?.addressLine1.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
-    toast({ title: "Full Report Generated" });
+    pdf.save(`Audit_${property?.addressLine1.replace(/\s+/g, '_') || 'Portfolio_Asset'}.pdf`);
+    toast({ title: "Report Saved Successfully" });
   };
 
   if (!isClient || isPropLoading || isInspLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-accent" /></div>;

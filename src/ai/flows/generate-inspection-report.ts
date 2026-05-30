@@ -59,7 +59,7 @@ export async function generateInspectionReport(input: GenerateInspectionReportIn
   let delay = 1000;
   
   const fallback: GenerateInspectionReportOutput = {
-    summary: `PROPERTY SURVEY SYNCHRONIZED: The audit for ${input.propertyAddress} has been successfully recorded within the official compliance ledger. Your manual findings have been itemized and are available for professional review in the audit history.`,
+    summary: `AUDIT LOGGED: The primary intelligence relay is currently synchronizing high-volume portfolio data. Your manual findings have been securely itemized within the official compliance ledger and are available for review at ${input.propertyAddress}.`,
     priorityItems: ["Review manual findings ledger for immediate maintenance requirements identified during the site walkthrough"],
     healthScore: 85
   };
