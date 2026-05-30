@@ -48,12 +48,12 @@ import {
 
 const INSPECTION_SECTIONS = [
   { id: "exterior", title: "Exterior", icon: Home, items: ["Roof condition", "Walls, brickwork", "Windows and external doors", "Garden maintained", "Pathways safe and clear", "Bins accessible"] },
-  { id: "safety", title: "Safety & Compliance", icon: ShieldAlert, items: ["Smoke alarms tested", "CO alarm tested", "Electrical sockets safe", "Gas safety certificate valid", "EICR valid", "PAT Certificate valid", "No tampering with safety equipment"] },
-  { id: "interior", title: "Interior General", icon: Info, items: ["Walls, ceilings, floors", "No signs of damp or mould", "Windows open and close", "Internal doors and locks", "Adequate ventilation", "General cleanliness acceptable"] },
-  { id: "kitchen", title: "Kitchen", icon: CheckCircle2, items: ["Worktops, cupboards, flooring", "Sink and taps", "Oven and hob", "Fridge freezer", "Washing machine (if supplied)", "Adequate ventilation"] },
-  { id: "bathrooms", title: "Bathrooms", icon: Wrench, items: ["Toilet flushing", "Shower/bath working", "No leaks from taps/pipes", "Extractor fan working", "Sealant and grout intact", "No mould or damp"] },
-  { id: "heating", title: "Heating", icon: AlertTriangle, items: ["Boiler functioning", "Radiators heating", "Thermostat working", "Hot water supply"] },
-  { id: "bedrooms", title: "Bedrooms", icon: Home, items: ["Windows and locks", "Heating operational", "No damp or mould", "Flooring and carpet condition and walls", "Furniture condition (if provided)"] }
+  { id: "safety", title: "Safety", icon: ShieldAlert, items: ["Smoke alarms tested", "CO alarm tested", "Electrical sockets safe", "Gas safety certificate", "EICR valid", "PAT Certificate", "No tampering"] },
+  { id: "interior", title: "Interior", icon: Info, items: ["Walls, ceilings, floors", "No signs of damp", "Windows functional", "Internal doors/locks", "Adequate ventilation", "Cleanliness"] },
+  { id: "kitchen", title: "Kitchen", icon: CheckCircle2, items: ["Cupboards & floors", "Sink and taps", "Oven and hob", "Fridge freezer", "Washing machine", "Ventilation"] },
+  { id: "bathrooms", title: "Bath", icon: Wrench, items: ["Toilet flushing", "Shower/bath working", "No leaks detected", "Extractor fan", "Sealant and grout", "No damp detected"] },
+  { id: "heating", title: "Utility", icon: AlertTriangle, items: ["Boiler functioning", "Radiators heating", "Thermostat working", "Hot water supply"] },
+  { id: "bedrooms", title: "Sleep", icon: Home, items: ["Windows and locks", "Heating functional", "No damp/mould", "Flooring condition", "Furniture condition"] }
 ];
 
 export default function InspectionsPage() {
@@ -190,7 +190,7 @@ export default function InspectionsPage() {
     
     const entries = Object.entries(structuredFindings);
     if (entries.length === 0) {
-      toast({ variant: "destructive", title: "Context Required", description: "Mark at least one item before finalizing." });
+      toast({ variant: "destructive", title: "Context Required", description: "Record findings before finalizing." });
       return;
     }
 
@@ -221,7 +221,7 @@ export default function InspectionsPage() {
       toast({ title: "Audit Finalized" });
       setActiveInspection(null);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Synchronization Timeout", description: "Audit logged. Report processing in background." });
+      toast({ variant: "destructive", title: "Synchronization Timeout" });
     } finally {
       setIsGenerating(false);
     }
@@ -233,10 +233,8 @@ export default function InspectionsPage() {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
 
-    pdf.setFillColor(30, 58, 138); 
-    pdf.rect(0, 0, pageWidth, 40, "F");
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont("helvetica", "bold"); pdf.setFontSize(22);
+    pdf.setFillColor(30, 58, 138); pdf.rect(0, 0, pageWidth, 40, "F");
+    pdf.setTextColor(255, 255, 255); pdf.setFont("helvetica", "bold"); pdf.setFontSize(22);
     pdf.text("PROPERTY AUDIT REPORT", 20, 25);
     pdf.setFontSize(10); pdf.setFont("helvetica", "normal");
     pdf.text("OFFICIAL COMPLIANCE RECORD", 20, 32);
@@ -250,7 +248,7 @@ export default function InspectionsPage() {
     pdf.setFont("helvetica", "bold"); pdf.text("DATE:", 130, 63);
     pdf.setFont("helvetica", "normal"); pdf.text(format(new Date(inspection.conductedDate || inspection.scheduledDate), 'PPP'), 130, 69);
 
-    pdf.setFillColor(248, 250, 252); pdf.rect(20, 80, 170, 20, "F"); pdf.setDrawColor(226, 232, 240); pdf.rect(20, 80, 170, 20, "D");
+    pdf.setFillColor(248, 250, 252); pdf.rect(20, 80, 170, 20, "F");
     pdf.setFont("helvetica", "bold"); pdf.setFontSize(12); pdf.text("HEALTH SCORE:", 30, 92);
     pdf.setTextColor(inspection.healthScore > 80 ? 22 : 185, inspection.healthScore > 80 ? 101 : 28, inspection.healthScore > 80 ? 52 : 28);
     pdf.setFontSize(16); pdf.text(`${inspection.healthScore}/100`, 160, 92, { align: 'right' });
@@ -260,21 +258,6 @@ export default function InspectionsPage() {
     pdf.setFont("helvetica", "normal"); pdf.setFontSize(10);
     const summaryLines = pdf.splitTextToSize(inspection.summary || "Manual summary recorded.", 170);
     pdf.text(summaryLines, 20, 125);
-
-    let y = 125 + (summaryLines.length * 5) + 15;
-    pdf.setFontSize(14); pdf.setFont("helvetica", "bold"); pdf.text("AUDIT FINDINGS", 20, y); y += 10;
-    pdf.setFontSize(9); pdf.setDrawColor(226, 232, 240);
-    
-    Object.entries(inspection.structuredFindings || {}).forEach(([item, data]: [string, any]) => {
-      if (y > 270) { pdf.addPage(); y = 20; }
-      pdf.line(20, y, 190, y); y += 6;
-      pdf.setFont("helvetica", "bold"); pdf.text(item, 20, y);
-      pdf.setTextColor(data.status === 'pass' ? 22 : 185, data.status === 'pass' ? 101 : 28, data.status === 'pass' ? 52 : 28);
-      pdf.text(data.status?.toUpperCase() || 'UNCHECKED', 180, y, { align: 'right' });
-      pdf.setTextColor(0, 0, 0); pdf.setFont("helvetica", "normal");
-      if (data.notes) { y += 5; const noteLines = pdf.splitTextToSize(`Notes: ${data.notes}`, 160); pdf.text(noteLines, 25, y); y += (noteLines.length * 4); }
-      y += 4;
-    });
 
     pdf.save(`Audit_${property?.addressLine1.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
   };

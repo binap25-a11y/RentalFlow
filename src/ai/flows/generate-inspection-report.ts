@@ -1,8 +1,8 @@
 'use server';
 /**
- * @fileOverview An AI agent for generating professional property inspection reports.
- * Hardened for production resilience and Genkit 1.x stability.
- * Implements a resilient retry protocol to mitigate intermittent 429/Quota errors.
+ * @fileOverview A resilient AI agent for generating professional property inspection reports.
+ * Hardened for production stability with Genkit 1.x.
+ * Implements a High-Priority retry protocol to mitigate 429/Quota errors.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -26,8 +26,16 @@ const inspectionReportPrompt = ai.definePrompt({
   model: googleAI.model('gemini-2.5-flash'),
   input: { schema: GenerateInspectionReportInputSchema },
   output: { schema: GenerateInspectionReportOutputSchema },
-  config: { temperature: 0.2 },
-  prompt: `You are an expert professional property surveyor for a high-end UK property management firm.
+  config: { 
+    temperature: 0.2,
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+    ]
+  },
+  prompt: `You are an expert professional property surveyor.
 Based on the following raw notes from a property inspection at {{{propertyAddress}}}, generate a high-fidelity, polished inspection report.
 
 Landlord Findings:
@@ -35,19 +43,19 @@ Landlord Findings:
 
 INSTRUCTIONS:
 1. Output a professional summary (3-4 sophisticated sentences) that synthesizes the condition.
-2. Identify a list of specific priority maintenance items (e.g., "Address damp in master ensuite", "Validate CO alarm timestamp").
-3. Assign an overall health score (0-100) where 100 is pristine condition and anything below 70 indicates urgent neglect.
+2. Identify a list of specific priority maintenance items.
+3. Assign an overall health score (0-100) where 100 is pristine condition.
 
-CRITICAL: Provide a neutral, authoritative assessment based strictly on the available findings.`,
+CRITICAL: Provide a neutral, authoritative assessment based strictly on the findings.`,
 });
 
 /**
- * 🚀 High-Fidelity Report Orchestrator
+ * 🚀 High-Priority Report Orchestrator
  * Implements a "Zero-Failure" protocol with retries for quota resilience (429 mitigation).
  */
 export async function generateInspectionReport(input: GenerateInspectionReportInput): Promise<GenerateInspectionReportOutput> {
-  let retries = 3;
-  let delay = 1500; // Exponential backoff starting at 1.5s
+  let retries = 4; // Increased retry count for high-traffic resilience
+  let delay = 1000;
   
   const fallback: GenerateInspectionReportOutput = {
     summary: "AUDIT LOGGED: The primary intelligence relay is currently synchronizing high-volume portfolio data. Your manual findings have been securely itemized within the official compliance ledger and are available for review.",
@@ -59,21 +67,17 @@ export async function generateInspectionReport(input: GenerateInspectionReportIn
 
   while (retries >= 0) {
     try {
-      // Use the standard ai.generate with the prompt object for maximum 1.x reliability
-      const { output } = await ai.generate({
-        prompt: inspectionReportPrompt,
-        input
-      });
+      // Direct call to prompt action for maximum Genkit 1.x reliability
+      const { output } = await inspectionReportPrompt(input);
       
-      if (!output) throw new Error("Intelligence engine returned empty classification.");
+      if (!output) throw new Error("Empty classification returned.");
       return output;
     } catch (error: any) {
-      console.error(`AI REPORT ORCHESTRATION ATTEMPT FAILURE (${retries} left):`, error.message);
+      console.error(`ORCHESTRATION ATTEMPT FAILURE (${retries} left):`, error.message);
       
-      const errorMsg = error.message || "";
-      // Detect common capacity/quota errors for triggering retry
+      const errorMsg = (error.message || "").toUpperCase();
       const isRetryable = errorMsg.includes('429') || 
-                          errorMsg.includes('quota') || 
+                          errorMsg.includes('QUOTA') || 
                           errorMsg.includes('RESOURCE_EXHAUSTED') ||
                           errorMsg.includes('503') ||
                           errorMsg.includes('500');
@@ -81,11 +85,10 @@ export async function generateInspectionReport(input: GenerateInspectionReportIn
       if (isRetryable && retries > 0) {
         await new Promise(resolve => setTimeout(resolve, delay));
         retries--;
-        delay *= 2; // Exponential increase
+        delay *= 2; 
         continue;
       }
       
-      // On final failure or non-retryable error, return the professional fallback
       return fallback;
     }
   }
