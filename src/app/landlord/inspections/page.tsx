@@ -387,10 +387,10 @@ export default function InspectionsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-1 border-none shadow-sm h-fit rounded-[2rem] overflow-hidden bg-card ring-1 ring-border">
-          <CardHeader className="bg-primary/5 p-8 border-b">
+          <CardHeader className="bg-primary/5 p-8 border-b text-left">
             <CardTitle className="text-xl font-headline text-foreground tracking-tight">Schedule Audit</CardTitle>
           </CardHeader>
-          <CardContent className="p-8 space-y-6">
+          <CardContent className="p-8 space-y-6 text-left">
             <div className="space-y-2">
               <Label className="text-xs uppercase font-bold text-muted-foreground font-headline tracking-widest opacity-60">Select Asset</Label>
               <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none transition-shadow font-bold text-foreground" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
@@ -417,7 +417,7 @@ export default function InspectionsPage() {
         </Card>
 
         <div className="lg:col-span-2 space-y-6">
-          <h3 className="text-xl font-bold font-headline flex items-center text-foreground tracking-tight">
+          <h3 className="text-xl font-bold font-headline flex items-center text-foreground tracking-tight px-2">
             <ClipboardList className="w-5 h-5 mr-2 text-accent" />
             Compliance Ledger
           </h3>
@@ -476,71 +476,71 @@ export default function InspectionsPage() {
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="sm:max-w-[1000px] p-0 rounded-[2.5rem] border-none shadow-2xl flex flex-col h-[90vh] overflow-hidden bg-card">
-                            <div className="p-8 bg-primary/5 border-b text-left shrink-0">
-                              <DialogTitle className="text-2xl font-headline font-bold text-foreground tracking-tight">Professional Property Audit</DialogTitle>
-                              <DialogDescription className="font-medium text-muted-foreground font-body mt-1 text-sm">Synchronizing high-fidelity binary evidence and checklist data.</DialogDescription>
+                            <div className="p-6 bg-primary/5 border-b text-left shrink-0">
+                              <DialogTitle className="text-xl font-headline font-bold text-foreground tracking-tight">Professional Property Audit</DialogTitle>
+                              <DialogDescription className="font-medium text-muted-foreground font-body mt-0.5 text-xs">Synchronizing high-fidelity binary evidence and checklist data.</DialogDescription>
                             </div>
                             
                             <Tabs defaultValue="exterior" className="flex-1 flex flex-col min-h-0">
-                                <div className="bg-muted/30 border-b border-border py-4 px-6 shrink-0">
-                                    <TabsList className="flex flex-wrap h-auto items-center bg-transparent p-0 gap-2">
+                                <div className="bg-muted/30 border-b border-border p-2 shrink-0">
+                                    <TabsList className="flex flex-wrap h-auto items-center bg-transparent p-0 gap-1 justify-center md:justify-start">
                                       {INSPECTION_SECTIONS.map(s => (
                                         <TabsTrigger 
                                           key={s.id} 
                                           value={s.id} 
-                                          className="rounded-xl h-10 px-5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-accent data-[state=active]:shadow-sm transition-all border border-transparent data-[state=active]:border-border"
+                                          className="rounded-lg h-8 px-3 flex items-center gap-1.5 data-[state=active]:bg-card data-[state=active]:text-accent data-[state=active]:shadow-sm transition-all border border-transparent data-[state=active]:border-border"
                                         >
-                                          <s.icon className="w-4 h-4 shrink-0" />
-                                          <span className="text-[10px] font-extrabold uppercase tracking-widest">{s.title}</span>
+                                          <s.icon className="w-3.5 h-3.5 shrink-0" />
+                                          <span className="text-[9px] font-extrabold uppercase tracking-widest">{s.title}</span>
                                         </TabsTrigger>
                                       ))}
                                     </TabsList>
                                 </div>
 
                                 <ScrollArea className="flex-1 text-left">
-                                  <div className="p-4 md:p-8 space-y-8 pb-32">
+                                  <div className="p-4 md:p-6 space-y-6 pb-32">
                                       {INSPECTION_SECTIONS.map(section => (
-                                        <TabsContent key={section.id} value={section.id} className="mt-0 space-y-8 animate-in fade-in duration-300">
-                                          <div className="grid gap-6">
+                                        <TabsContent key={section.id} value={section.id} className="mt-0 space-y-6 animate-in fade-in duration-300">
+                                          <div className="grid gap-4">
                                             {section.items.map(item => (
-                                              <div key={item} className="p-6 bg-primary/[0.02] rounded-[2.5rem] space-y-6 border border-border shadow-sm">
-                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                                  <Label className="font-bold text-base text-left font-headline text-foreground leading-tight">{item}</Label>
-                                                  <div className="flex gap-2 shrink-0">
-                                                    <Button size="sm" variant={structuredFindings[item]?.status === 'pass' ? 'default' : 'outline'} className="flex-1 md:flex-none rounded-xl font-bold h-11 px-8 text-[10px] uppercase tracking-widest transition-all" onClick={() => handleStatusChange(item, 'pass')}><Check className="w-4 h-4 mr-2" /> PASS</Button>
-                                                    <Button size="sm" variant={structuredFindings[item]?.status === 'fail' ? 'destructive' : 'outline'} className="flex-1 md:flex-none rounded-xl font-bold h-11 px-8 text-[10px] uppercase tracking-widest transition-all" onClick={() => handleStatusChange(item, 'fail')}><X className="w-4 h-4 mr-2" /> FAIL</Button>
+                                              <div key={item} className="p-4 bg-primary/[0.02] rounded-[1.5rem] space-y-4 border border-border shadow-sm">
+                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                  <Label className="font-bold text-sm text-left font-headline text-foreground leading-tight flex-1">{item}</Label>
+                                                  <div className="flex gap-1 shrink-0">
+                                                    <Button size="sm" variant={structuredFindings[item]?.status === 'pass' ? 'default' : 'outline'} className="flex-1 md:flex-none rounded-lg font-bold h-9 px-4 text-[9px] uppercase tracking-widest transition-all" onClick={() => handleStatusChange(item, 'pass')}><Check className="w-3.5 h-3.5 mr-1.5" /> PASS</Button>
+                                                    <Button size="sm" variant={structuredFindings[item]?.status === 'fail' ? 'destructive' : 'outline'} className="flex-1 md:flex-none rounded-lg font-bold h-9 px-4 text-[9px] uppercase tracking-widest transition-all" onClick={() => handleStatusChange(item, 'fail')}><X className="w-3.5 h-3.5 mr-1.5" /> FAIL</Button>
                                                   </div>
                                                 </div>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-border">
-                                                  <div className="space-y-3">
-                                                    <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.2em] opacity-40">Findings Ledger</Label>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border/50">
+                                                  <div className="space-y-2">
+                                                    <Label className="text-[8px] font-bold uppercase text-muted-foreground tracking-[0.2em] opacity-40">Findings Ledger</Label>
                                                     <Textarea 
                                                       placeholder="Notes..." 
-                                                      className="rounded-2xl min-h-[120px] bg-muted/20 border-none font-medium text-sm leading-relaxed" 
+                                                      className="rounded-xl min-h-[80px] bg-muted/20 border-none font-medium text-xs leading-relaxed" 
                                                       value={structuredFindings[item]?.notes || ''} 
                                                       onChange={(e) => handleNotesChange(item, e.target.value)}
                                                       onBlur={() => handleNotesBlur(item)}
                                                     />
                                                   </div>
-                                                  <div className="space-y-3">
-                                                    <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.2em] opacity-40">Visual Evidence</Label>
-                                                    <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-dashed border-border bg-muted/10 flex items-center justify-center cursor-pointer group hover:bg-muted/20 transition-all">
+                                                  <div className="space-y-2">
+                                                    <Label className="text-[8px] font-bold uppercase text-muted-foreground tracking-[0.2em] opacity-40">Visual Evidence</Label>
+                                                    <div className="relative aspect-video rounded-xl overflow-hidden border border-dashed border-border bg-muted/10 flex items-center justify-center cursor-pointer group hover:bg-muted/20 transition-all">
                                                       {structuredFindings[item]?.isSyncing ? (
-                                                        <div className="flex flex-col items-center gap-4 animate-in fade-in">
-                                                           <Loader2 className="w-10 h-10 animate-spin text-accent" />
-                                                           <span className="text-[10px] font-bold text-accent uppercase tracking-[0.3em]">Syncing Binary...</span>
+                                                        <div className="flex flex-col items-center gap-2 animate-in fade-in">
+                                                           <Loader2 className="w-6 h-6 animate-spin text-accent" />
+                                                           <span className="text-[8px] font-bold text-accent uppercase tracking-[0.2em]">Syncing...</span>
                                                         </div>
                                                       ) : structuredFindings[item]?.imageUrl ? (
                                                         <div className="relative w-full h-full">
                                                           <Image src={structuredFindings[item].imageUrl} alt="Evidence" fill className="object-cover transition-transform group-hover:scale-105 duration-500" unoptimized />
                                                           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                             <Camera className="w-8 h-8 text-white" />
+                                                             <Camera className="w-6 h-6 text-white" />
                                                           </div>
                                                         </div>
                                                       ) : (
-                                                        <label htmlFor={`upload-${item}`} className="flex flex-col items-center gap-3 text-muted-foreground opacity-30 group-hover:opacity-60 transition-opacity cursor-pointer">
-                                                          <Camera className="w-10 h-10" />
-                                                          <span className="text-[10px] font-bold uppercase tracking-widest">Capture Asset</span>
+                                                        <label htmlFor={`upload-${item}`} className="flex flex-col items-center gap-2 text-muted-foreground opacity-30 group-hover:opacity-60 transition-opacity cursor-pointer">
+                                                          <Camera className="w-8 h-8" />
+                                                          <span className="text-[8px] font-bold uppercase tracking-widest">Capture Asset</span>
                                                           <input id={`upload-${item}`} type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(item, e.target.files?.[0] || null)} />
                                                         </label>
                                                       )}
@@ -556,9 +556,9 @@ export default function InspectionsPage() {
                                 </ScrollArea>
                             </Tabs>
 
-                            <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
-                              <Button className="w-full md:w-auto rounded-xl h-12 px-12 font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all border-none shadow-2xl shadow-primary/20 uppercase tracking-widest text-[10px]" onClick={handleFinalizeAudit} disabled={isGenerating}>
-                                {isGenerating ? <><Loader2 className="w-4 h-4 mr-3 animate-spin" /> Orchestrating Records...</> : <><CheckCircle2 className="w-4 h-4 mr-3" /> Finalize Audit Report</>}
+                            <DialogFooter className="p-4 bg-muted/5 border-t shrink-0">
+                              <Button className="w-full md:w-auto rounded-xl h-10 px-10 font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all border-none shadow-xl shadow-primary/10 uppercase tracking-widest text-[9px]" onClick={handleFinalizeAudit} disabled={isGenerating}>
+                                {isGenerating ? <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Orchestrating Records...</> : <><CheckCircle2 className="w-3.5 h-3.5 mr-2" /> Finalize Audit Report</>}
                               </Button>
                             </DialogFooter>
                           </DialogContent>
