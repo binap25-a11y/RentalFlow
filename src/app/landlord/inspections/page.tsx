@@ -22,7 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { 
   Calendar as CalendarIcon, Loader2, 
   CheckCircle2, ClipboardList, ShieldAlert, Home, Wrench, 
@@ -233,33 +233,132 @@ export default function InspectionsPage() {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
 
-    pdf.setFillColor(30, 58, 138); pdf.rect(0, 0, pageWidth, 40, "F");
-    pdf.setTextColor(255, 255, 255); pdf.setFont("helvetica", "bold"); pdf.setFontSize(22);
-    pdf.text("PROPERTY AUDIT REPORT", 20, 25);
-    pdf.setFontSize(10); pdf.setFont("helvetica", "normal");
-    pdf.text("OFFICIAL COMPLIANCE RECORD", 20, 32);
+    // --- HEADER ---
+    pdf.setFillColor(30, 58, 138); 
+    pdf.rect(0, 0, pageWidth, 45, "F");
+    pdf.setTextColor(255, 255, 255); 
+    pdf.setFont("helvetica", "bold"); 
+    pdf.setFontSize(24);
+    pdf.text("PROPERTY AUDIT REPORT", 20, 28);
+    pdf.setFontSize(10); 
+    pdf.setFont("helvetica", "normal");
+    pdf.text("OFFICIAL COMPLIANCE RECORD", 20, 36);
 
-    pdf.setTextColor(0, 0, 0); pdf.setFontSize(14); pdf.setFont("helvetica", "bold");
-    pdf.text("ASSET IDENTITY", 20, 55);
-    pdf.setFontSize(11); pdf.setFont("helvetica", "normal");
-    pdf.text(`${property?.addressLine1 || 'Property Asset'}`, 20, 63);
-    pdf.text(`${property?.city || ''}, ${property?.zipCode || ''}`, 20, 69);
+    // --- ASSET IDENTITY ---
+    pdf.setTextColor(0, 0, 0); 
+    pdf.setFontSize(14); 
+    pdf.setFont("helvetica", "bold");
+    pdf.text("ASSET IDENTITY", 20, 60);
+    pdf.setFontSize(11); 
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`${property?.addressLine1 || 'Property Asset'}`, 20, 68);
+    pdf.text(`${property?.city || ''}, ${property?.zipCode || ''}`, 20, 74);
     
-    pdf.setFont("helvetica", "bold"); pdf.text("DATE:", 130, 63);
-    pdf.setFont("helvetica", "normal"); pdf.text(format(new Date(inspection.conductedDate || inspection.scheduledDate), 'PPP'), 130, 69);
+    pdf.setFont("helvetica", "bold"); 
+    pdf.text("DATE CONDUCTED:", 130, 68);
+    pdf.setFont("helvetica", "normal"); 
+    pdf.text(format(new Date(inspection.conductedDate || inspection.scheduledDate), 'PPP'), 130, 74);
 
-    pdf.setFillColor(248, 250, 252); pdf.rect(20, 80, 170, 20, "F");
-    pdf.setFont("helvetica", "bold"); pdf.setFontSize(12); pdf.text("HEALTH SCORE:", 30, 92);
-    pdf.setTextColor(inspection.healthScore > 80 ? 22 : 185, inspection.healthScore > 80 ? 101 : 28, inspection.healthScore > 80 ? 52 : 28);
-    pdf.setFontSize(16); pdf.text(`${inspection.healthScore}/100`, 160, 92, { align: 'right' });
+    // --- HEALTH SCORE BANNER ---
+    pdf.setFillColor(248, 250, 252); 
+    pdf.rect(20, 85, 170, 25, "F");
+    pdf.setDrawColor(226, 232, 240);
+    pdf.rect(20, 85, 170, 25, "D");
+    pdf.setFont("helvetica", "bold"); 
+    pdf.setFontSize(12); 
+    pdf.text("PROPERTY HEALTH SCORE:", 30, 100);
+    
+    const score = inspection.healthScore || 0;
+    if (score >= 80) pdf.setTextColor(22, 101, 52); // Green
+    else if (score >= 60) pdf.setTextColor(180, 83, 9); // Amber
+    else pdf.setTextColor(185, 28, 28); // Red
+    
+    pdf.setFontSize(18); 
+    pdf.text(`${score}/100`, 160, 100, { align: 'right' });
+    pdf.setTextColor(0, 0, 0);
 
-    pdf.setTextColor(0, 0, 0); pdf.setFontSize(14); pdf.setFont("helvetica", "bold");
-    pdf.text("EXECUTIVE SUMMARY", 20, 115);
-    pdf.setFont("helvetica", "normal"); pdf.setFontSize(10);
-    const summaryLines = pdf.splitTextToSize(inspection.summary || "Manual summary recorded.", 170);
-    pdf.text(summaryLines, 20, 125);
+    // --- EXECUTIVE SUMMARY ---
+    pdf.setFontSize(14); 
+    pdf.setFont("helvetica", "bold");
+    pdf.text("EXECUTIVE SUMMARY", 20, 125);
+    pdf.setFont("helvetica", "normal"); 
+    pdf.setFontSize(10);
+    const summaryLines = pdf.splitTextToSize(inspection.summary || "Manual compliance summary recorded within the ledger.", 170);
+    pdf.text(summaryLines, 20, 135);
+
+    let y = 135 + (summaryLines.length * 6);
+
+    // --- PRIORITY ACTIONS ---
+    if (inspection.priorityItems && inspection.priorityItems.length > 0) {
+      if (y > 250) { pdf.addPage(); y = 25; }
+      pdf.setFontSize(14); 
+      pdf.setFont("helvetica", "bold");
+      pdf.text("CRITICAL FIX STRATEGY", 20, y + 10);
+      y += 20;
+      pdf.setFontSize(10); 
+      pdf.setFont("helvetica", "normal");
+      inspection.priorityItems.forEach((item: string) => {
+        if (y > 270) { pdf.addPage(); y = 25; }
+        pdf.text(`• ${item}`, 25, y);
+        y += 7;
+      });
+      y += 10;
+    }
+
+    // --- DETAILED AUDIT LEDGER ---
+    if (inspection.structuredFindings) {
+      if (y > 240) { pdf.addPage(); y = 25; }
+      pdf.setFontSize(14); 
+      pdf.setFont("helvetica", "bold");
+      pdf.text("DETAILED AUDIT LEDGER", 20, y + 10);
+      y += 22;
+      
+      pdf.setFontSize(8);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(100, 100, 100);
+      pdf.text("INVENTORY ITEM", 20, y);
+      pdf.text("STATUS", 170, y, { align: 'right' });
+      pdf.setDrawColor(226, 232, 240);
+      pdf.line(20, y + 2, 190, y + 2);
+      y += 10;
+
+      Object.entries(inspection.structuredFindings).forEach(([item, data]: [string, any]) => {
+        if (y > 270) { pdf.addPage(); y = 25; }
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(10);
+        pdf.text(item, 20, y);
+        
+        const isPass = data.status === 'pass';
+        if (isPass) pdf.setTextColor(22, 101, 52);
+        else pdf.setTextColor(185, 28, 28);
+        
+        pdf.text(data.status?.toUpperCase() || 'UNCHECKED', 170, y, { align: 'right' });
+        
+        pdf.setTextColor(100, 100, 100);
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(9);
+        if (data.notes) {
+          y += 6;
+          const noteLines = pdf.splitTextToSize(`Notes: ${data.notes}`, 160);
+          pdf.text(noteLines, 25, y);
+          y += (noteLines.length * 5);
+        }
+        y += 10;
+      });
+    }
+
+    // --- FOOTER ---
+    const pageCount = (pdf as any).internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(`RentalFlow Property Operations | Compliance Record | Page ${i} of ${pageCount}`, pageWidth / 2, 285, { align: 'center' });
+    }
 
     pdf.save(`Audit_${property?.addressLine1.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
+    toast({ title: "Full Report Generated" });
   };
 
   if (!isClient || isPropLoading || isInspLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-accent" /></div>;
