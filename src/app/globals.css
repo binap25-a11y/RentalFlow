@@ -102,17 +102,17 @@
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-foreground/10 rounded-full;
+  @apply bg-foreground/15 rounded-full;
 }
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-foreground/20;
+  @apply bg-foreground/25;
 }
 
 .no-scrollbar::-webkit-scrollbar {

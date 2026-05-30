@@ -498,7 +498,7 @@ export default function InspectionsPage() {
                                 </div>
 
                                 <ScrollArea className="flex-1 text-left">
-                                  <div className="p-6 md:p-10 space-y-8 pb-32">
+                                  <div className="p-4 md:p-8 space-y-8 pb-32">
                                       {INSPECTION_SECTIONS.map(section => (
                                         <TabsContent key={section.id} value={section.id} className="mt-0 space-y-8 animate-in fade-in duration-300">
                                           <div className="grid gap-6">
@@ -588,7 +588,7 @@ export default function InspectionsPage() {
       </div>
 
       <Dialog open={!!editingMetadata} onOpenChange={(open) => !open && setEditingMetadata(null)}>
-        <DialogContent className="sm:max-w-[500px] p-0 rounded-[2.5rem] border-none shadow-2xl flex flex-col h-[700px] max-h-[90vh] bg-card overflow-hidden">
+        <DialogContent className="sm:max-w-[550px] p-0 rounded-[2.5rem] border-none shadow-2xl flex flex-col h-[800px] max-h-[90vh] bg-card overflow-hidden">
           <div className="p-8 bg-primary/5 border-b text-left shrink-0">
             <DialogTitle className="text-2xl font-headline font-bold text-foreground tracking-tight">Modify Audit Record</DialogTitle>
             <DialogDescription className="text-sm font-medium text-muted-foreground mt-1">Refining operational metadata for this compliance asset.</DialogDescription>
@@ -626,7 +626,7 @@ export default function InspectionsPage() {
 
           <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
             <Button 
-              className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground transition-all active:scale-[0.98] shadow-2xl shadow-primary/10 font-headline uppercase tracking-[0.2em] text-[11px] border-none" 
+              className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground transition-all active:scale-[0.98] shadow-2xl shadow-primary/20 font-headline uppercase tracking-[0.2em] text-[11px] border-none" 
               onClick={handleUpdateMetadata} 
               disabled={!editDate || !editPropertyId}
             >
