@@ -27,7 +27,7 @@ import {
   Calendar as CalendarIcon, Loader2, 
   CheckCircle2, ClipboardList, ShieldAlert, Home, Wrench, 
   Check, X, AlertTriangle, Info, Trash2, Edit3, PlayCircle, Camera, Clock,
-  Save, Download, FileDown
+  Save, Download, FileDown, Activity
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn, compressImage } from "@/lib/utils";
@@ -47,48 +47,13 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const INSPECTION_SECTIONS = [
-  {
-    id: "exterior",
-    title: "Exterior",
-    icon: Home,
-    items: ["Roof condition", "Walls, brickwork", "Windows and external doors", "Garden maintained", "Pathways safe and clear", "Bins accessible"]
-  },
-  {
-    id: "safety",
-    title: "Safety & Compliance",
-    icon: ShieldAlert,
-    items: ["Smoke alarms tested", "CO alarm tested", "Electrical sockets safe", "Gas safety certificate valid", "EICR valid", "PAT Certificate valid", "No tampering with safety equipment"]
-  },
-  {
-    id: "interior",
-    title: "Interior General",
-    icon: Info,
-    items: ["Walls, ceilings, floors", "No signs of damp or mould", "Windows open and close", "Internal doors and locks", "Adequate ventilation", "General cleanliness acceptable"]
-  },
-  {
-    id: "kitchen",
-    title: "Kitchen",
-    icon: CheckCircle2,
-    items: ["Worktops, cupboards, flooring", "Sink and taps", "Oven and hob", "Fridge freezer", "Washing machine (if supplied)", "Adequate ventilation"]
-  },
-  {
-    id: "bathrooms",
-    title: "Bathrooms",
-    icon: Wrench,
-    items: ["Toilet flushing", "Shower/bath working", "No leaks from taps/pipes", "Extractor fan working", "Sealant and grout intact", "No mould or damp"]
-  },
-  {
-    id: "heating",
-    title: "Heating",
-    icon: AlertTriangle,
-    items: ["Boiler functioning", "Radiators heating", "Thermostat working", "Hot water supply"]
-  },
-  {
-    id: "bedrooms",
-    title: "Bedrooms",
-    icon: Home,
-    items: ["Windows and locks", "Heating operational", "No damp or mould", "Flooring and carpet condition and walls", "Furniture condition (if provided)"]
-  }
+  { id: "exterior", title: "Exterior", icon: Home, items: ["Roof condition", "Walls, brickwork", "Windows and external doors", "Garden maintained", "Pathways safe and clear", "Bins accessible"] },
+  { id: "safety", title: "Safety & Compliance", icon: ShieldAlert, items: ["Smoke alarms tested", "CO alarm tested", "Electrical sockets safe", "Gas safety certificate valid", "EICR valid", "PAT Certificate valid", "No tampering with safety equipment"] },
+  { id: "interior", title: "Interior General", icon: Info, items: ["Walls, ceilings, floors", "No signs of damp or mould", "Windows open and close", "Internal doors and locks", "Adequate ventilation", "General cleanliness acceptable"] },
+  { id: "kitchen", title: "Kitchen", icon: CheckCircle2, items: ["Worktops, cupboards, flooring", "Sink and taps", "Oven and hob", "Fridge freezer", "Washing machine (if supplied)", "Adequate ventilation"] },
+  { id: "bathrooms", title: "Bathrooms", icon: Wrench, items: ["Toilet flushing", "Shower/bath working", "No leaks from taps/pipes", "Extractor fan working", "Sealant and grout intact", "No mould or damp"] },
+  { id: "heating", title: "Heating", icon: AlertTriangle, items: ["Boiler functioning", "Radiators heating", "Thermostat working", "Hot water supply"] },
+  { id: "bedrooms", title: "Bedrooms", icon: Home, items: ["Windows and locks", "Heating operational", "No damp or mould", "Flooring and carpet condition and walls", "Furniture condition (if provided)"] }
 ];
 
 export default function InspectionsPage() {
@@ -97,9 +62,7 @@ export default function InspectionsPage() {
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  useEffect(() => { setIsClient(true); }, []);
 
   const propertiesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -165,23 +128,14 @@ export default function InspectionsPage() {
 
   const handleStatusChange = (itemId: string, status: 'pass' | 'fail') => {
     setStructuredFindings(prev => {
-      const updated = {
-        ...prev,
-        [itemId]: { ...prev[itemId], status }
-      };
+      const updated = { ...prev, [itemId]: { ...prev[itemId], status } };
       syncFindingsToFirestore(updated);
       return updated;
     });
   };
 
   const handleNotesChange = (itemId: string, notes: string) => {
-    setStructuredFindings(prev => {
-      const updated = {
-        ...prev,
-        [itemId]: { ...prev[itemId], notes }
-      };
-      return updated;
-    });
+    setStructuredFindings(prev => ({ ...prev, [itemId]: { ...prev[itemId], notes } }));
   };
 
   const handleNotesBlur = (itemId: string) => {
@@ -190,10 +144,7 @@ export default function InspectionsPage() {
 
   const handleImageUpload = async (itemId: string, file: File | null) => {
     if (!file || !user || !activeInspection) return;
-    setStructuredFindings(prev => ({
-      ...prev,
-      [itemId]: { ...prev[itemId], isSyncing: true }
-    }));
+    setStructuredFindings(prev => ({ ...prev, [itemId]: { ...prev[itemId], isSyncing: true } }));
     try {
       const optimizedBlob = await compressImage(file);
       const path = `${user.uid}/${activeInspection.propertyId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
@@ -203,19 +154,13 @@ export default function InspectionsPage() {
       if (!result.success) throw new Error(result.error);
       
       setStructuredFindings(prev => {
-        const updated = {
-          ...prev,
-          [itemId]: { ...prev[itemId], imageUrl: result.url, isSyncing: false }
-        };
+        const updated = { ...prev, [itemId]: { ...prev[itemId], imageUrl: result.url, isSyncing: false } };
         syncFindingsToFirestore(updated);
         return updated;
       });
       toast({ title: "Evidence Synchronized" });
     } catch (err: any) {
-      setStructuredFindings(prev => ({
-        ...prev,
-        [itemId]: { ...prev[itemId], isSyncing: false }
-      }));
+      setStructuredFindings(prev => ({ ...prev, [itemId]: { ...prev[itemId], isSyncing: false } }));
       toast({ variant: "destructive", title: "Sync Failed", description: err.message });
     }
   };
@@ -235,7 +180,7 @@ export default function InspectionsPage() {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     }, { merge: true });
-    toast({ title: "Inspection Scheduled", description: `Set for ${format(date, 'PPP')}` });
+    toast({ title: "Inspection Scheduled" });
     setSelectedPropertyId('');
     setDate(undefined);
   };
@@ -245,7 +190,7 @@ export default function InspectionsPage() {
     
     const entries = Object.entries(structuredFindings);
     if (entries.length === 0) {
-      toast({ variant: "destructive", title: "Context Required", description: "Please mark at least one checklist item (Pass/Fail) before finalizing." });
+      toast({ variant: "destructive", title: "Context Required", description: "Mark at least one item before finalizing." });
       return;
     }
 
@@ -253,13 +198,13 @@ export default function InspectionsPage() {
     const property = properties?.find(p => p.id === activeInspection.propertyId);
     
     try {
-      const flatFindingsString = entries.map(([item, data]: [string, any]) => {
+      const findingsString = entries.map(([item, data]: [string, any]) => {
         return `${item}: ${data.status?.toUpperCase() || 'UNCHECKED'} ${data.notes ? `(Notes: ${data.notes})` : ''}`;
       }).join('\n');
 
       const aiReport = await generateInspectionReport({
         propertyAddress: property?.addressLine1 || 'Property Asset',
-        findings: flatFindingsString
+        findings: findingsString
       });
 
       const inspectionRef = doc(db, 'inspections', activeInspection.id);
@@ -273,15 +218,10 @@ export default function InspectionsPage() {
         updatedAt: serverTimestamp(),
       });
 
-      toast({ title: "Audit Finalized", description: "Compliance records synchronized." });
+      toast({ title: "Audit Finalized" });
       setActiveInspection(null);
     } catch (error: any) {
-      console.error("Audit Finalization Error:", error);
-      toast({ 
-        variant: "destructive", 
-        title: "Reporting Engine Error", 
-        description: "An unexpected error occurred. Your manual findings have been saved." 
-      });
+      toast({ variant: "destructive", title: "Orchestration Error" });
     } finally {
       setIsGenerating(false);
     }
@@ -296,82 +236,47 @@ export default function InspectionsPage() {
     pdf.setFillColor(30, 58, 138); 
     pdf.rect(0, 0, pageWidth, 40, "F");
     pdf.setTextColor(255, 255, 255);
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(22);
+    pdf.setFont("helvetica", "bold"); pdf.setFontSize(22);
     pdf.text("PROPERTY AUDIT REPORT", 20, 25);
-    pdf.setFontSize(10);
-    pdf.setFont("helvetica", "normal");
-    pdf.text("CONFIDENTIAL COMPLIANCE RECORD", 20, 32);
+    pdf.setFontSize(10); pdf.setFont("helvetica", "normal");
+    pdf.text("OFFICIAL COMPLIANCE RECORD", 20, 32);
 
-    pdf.setTextColor(0, 0, 0);
-    pdf.setFontSize(14);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("PORTFOLIO ASSET IDENTITY", 20, 55);
-    pdf.setFontSize(11);
-    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(0, 0, 0); pdf.setFontSize(14); pdf.setFont("helvetica", "bold");
+    pdf.text("ASSET IDENTITY", 20, 55);
+    pdf.setFontSize(11); pdf.setFont("helvetica", "normal");
     pdf.text(`${property?.addressLine1 || 'Property Asset'}`, 20, 63);
     pdf.text(`${property?.city || ''}, ${property?.zipCode || ''}`, 20, 69);
     
-    pdf.setFont("helvetica", "bold");
-    pdf.text("AUDIT TIMESTAMP:", 130, 63);
-    pdf.setFont("helvetica", "normal");
-    pdf.text(format(new Date(inspection.conductedDate || inspection.scheduledDate), 'PPP'), 130, 69);
+    pdf.setFont("helvetica", "bold"); pdf.text("DATE:", 130, 63);
+    pdf.setFont("helvetica", "normal"); pdf.text(format(new Date(inspection.conductedDate || inspection.scheduledDate), 'PPP'), 130, 69);
 
-    pdf.setFillColor(248, 250, 252);
-    pdf.rect(20, 80, 170, 20, "F");
-    pdf.setDrawColor(226, 232, 240);
-    pdf.rect(20, 80, 170, 20, "D");
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(12);
-    pdf.text("PROPERTY HEALTH SCORE:", 30, 92);
+    pdf.setFillColor(248, 250, 252); pdf.rect(20, 80, 170, 20, "F"); pdf.setDrawColor(226, 232, 240); pdf.rect(20, 80, 170, 20, "D");
+    pdf.setFont("helvetica", "bold"); pdf.setFontSize(12); pdf.text("HEALTH SCORE:", 30, 92);
     pdf.setTextColor(inspection.healthScore > 80 ? 22 : 185, inspection.healthScore > 80 ? 101 : 28, inspection.healthScore > 80 ? 52 : 28);
-    pdf.setFontSize(16);
-    pdf.text(`${inspection.healthScore}/100`, 160, 92, { align: 'right' });
+    pdf.setFontSize(16); pdf.text(`${inspection.healthScore}/100`, 160, 92, { align: 'right' });
 
-    pdf.setTextColor(0, 0, 0);
-    pdf.setFontSize(14);
-    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(0, 0, 0); pdf.setFontSize(14); pdf.setFont("helvetica", "bold");
     pdf.text("EXECUTIVE SUMMARY", 20, 115);
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(10);
-    const summaryLines = pdf.splitTextToSize(inspection.summary || "No automated summary available.", 170);
+    pdf.setFont("helvetica", "normal"); pdf.setFontSize(10);
+    const summaryLines = pdf.splitTextToSize(inspection.summary || "Manual summary recorded.", 170);
     pdf.text(summaryLines, 20, 125);
 
     let y = 125 + (summaryLines.length * 5) + 15;
-    pdf.setFontSize(14);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("AUDIT FINDINGS CHECKLIST", 20, y);
-    y += 10;
+    pdf.setFontSize(14); pdf.setFont("helvetica", "bold"); pdf.text("AUDIT FINDINGS", 20, y); y += 10;
+    pdf.setFontSize(9); pdf.setDrawColor(226, 232, 240);
     
-    pdf.setFontSize(9);
-    pdf.setDrawColor(226, 232, 240);
-    
-    const findings = Object.entries(inspection.structuredFindings || {});
-    findings.forEach(([item, data]: [string, any]) => {
+    Object.entries(inspection.structuredFindings || {}).forEach(([item, data]: [string, any]) => {
       if (y > 270) { pdf.addPage(); y = 20; }
-      pdf.line(20, y, 190, y);
-      y += 6;
-      pdf.setFont("helvetica", "bold");
-      pdf.text(item, 20, y);
+      pdf.line(20, y, 190, y); y += 6;
+      pdf.setFont("helvetica", "bold"); pdf.text(item, 20, y);
       pdf.setTextColor(data.status === 'pass' ? 22 : 185, data.status === 'pass' ? 101 : 28, data.status === 'pass' ? 52 : 28);
       pdf.text(data.status?.toUpperCase() || 'UNCHECKED', 180, y, { align: 'right' });
-      pdf.setTextColor(0, 0, 0);
-      pdf.setFont("helvetica", "normal");
-      if (data.notes) {
-        y += 5;
-        const noteLines = pdf.splitTextToSize(`Notes: ${data.notes}`, 160);
-        pdf.text(noteLines, 25, y);
-        y += (noteLines.length * 4);
-      }
+      pdf.setTextColor(0, 0, 0); pdf.setFont("helvetica", "normal");
+      if (data.notes) { y += 5; const noteLines = pdf.splitTextToSize(`Notes: ${data.notes}`, 160); pdf.text(noteLines, 25, y); y += (noteLines.length * 4); }
       y += 4;
     });
 
-    pdf.setFontSize(8);
-    pdf.setTextColor(150, 150, 150);
-    pdf.text("Generated via RentalFlow Intelligence Engine. Strictly for internal compliance records.", 20, 285);
-
-    pdf.save(`Audit_Report_${property?.addressLine1.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
-    toast({ title: "Report Exported" });
+    pdf.save(`Audit_${property?.addressLine1.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
   };
 
   if (!isClient || isPropLoading || isInspLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-accent" /></div>;
@@ -380,21 +285,24 @@ export default function InspectionsPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-left bg-background">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-headline font-bold text-foreground mb-2 tracking-tight">Inspections & Audits</h1>
-          <p className="text-muted-foreground font-medium font-body">Official portfolio compliance tracking and safety records.</p>
+          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-3 py-1 rounded-full font-bold uppercase tracking-[0.15em] text-[9px] mb-2">
+             <Activity className="w-3 h-3 mr-2" /> Compliance Monitoring
+          </Badge>
+          <h1 className="text-3xl font-headline font-bold text-foreground tracking-tight">Inspections & Audits</h1>
+          <p className="text-muted-foreground font-medium font-body text-sm opacity-70">Official portfolio compliance tracking and safety records.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-1 border-none shadow-sm h-fit rounded-[2rem] overflow-hidden bg-card ring-1 ring-border">
+        <Card className="lg:col-span-1 border-none shadow-sm h-fit rounded-[2.5rem] overflow-hidden bg-card ring-1 ring-border">
           <CardHeader className="bg-primary/5 p-8 border-b text-left">
             <CardTitle className="text-xl font-headline text-foreground tracking-tight">Schedule Audit</CardTitle>
           </CardHeader>
-          <CardContent className="p-8 space-y-6 text-left">
+          <CardContent className="p-8 space-y-6">
             <div className="space-y-2">
               <Label className="text-xs uppercase font-bold text-muted-foreground font-headline tracking-widest opacity-60">Select Asset</Label>
-              <select className="flex h-11 w-full rounded-xl border-none bg-muted/20 px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none transition-shadow font-bold text-foreground" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
-                <option value="">Choose a property...</option>
+              <select className="flex h-12 w-full rounded-xl border-none bg-muted/20 px-4 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-bold text-foreground" value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)}>
+                <option value="">Choose property...</option>
                 {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
               </select>
             </div>
@@ -402,9 +310,8 @@ export default function InspectionsPage() {
               <Label className="text-xs uppercase font-bold text-muted-foreground font-headline tracking-widest opacity-60">Audit Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant={"outline"} className={cn("w-full justify-start text-left font-bold h-11 rounded-xl border-border bg-muted/20 hover:bg-muted/30 transition-colors font-body", !date && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : <span>Pick a date</span>}
+                  <Button variant="outline" className={cn("w-full justify-start text-left font-bold h-12 rounded-xl border-border bg-muted/20 font-body", !date && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" /> {date ? format(date, "PPP") : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl border-none overflow-hidden" align="start">
@@ -412,169 +319,59 @@ export default function InspectionsPage() {
                 </PopoverContent>
               </Popover>
             </div>
-            <Button className="w-full rounded-xl h-11 font-bold shadow-lg shadow-accent/10 font-headline bg-accent text-white hover:bg-accent/90 transition-all uppercase tracking-widest text-[10px] border-none" onClick={handleSchedule} disabled={!date || !selectedPropertyId}>Confirm Schedule</Button>
+            <Button className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-lg uppercase tracking-widest text-[10px] transition-all hover:scale-[1.01]" onClick={handleSchedule} disabled={!date || !selectedPropertyId}>Confirm Schedule</Button>
           </CardContent>
         </Card>
 
         <div className="lg:col-span-2 space-y-6">
-          <h3 className="text-xl font-bold font-headline flex items-center text-foreground tracking-tight px-2">
-            <ClipboardList className="w-5 h-5 mr-2 text-accent" />
-            Compliance Ledger
+          <h3 className="text-xl font-bold font-headline flex items-center text-foreground px-2">
+            <ClipboardList className="w-5 h-5 mr-3 text-accent" /> Compliance Ledger
           </h3>
           <div className="grid gap-4">
             {!inspections || inspections.length === 0 ? (
-              <div className="py-20 text-center bg-muted/20 rounded-2xl border-2 border-dashed border-border">
-                <p className="text-muted-foreground font-medium font-body uppercase tracking-widest text-xs opacity-40">No audit records found.</p>
+              <div className="py-20 text-center bg-muted/10 rounded-[2.5rem] border-2 border-dashed border-border opacity-40">
+                <p className="text-xs font-bold uppercase tracking-widest font-headline">No audit records found.</p>
               </div>
             ) : (
               inspections.slice().sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime()).map((inspection) => (
-                <Card key={inspection.id} className="border-none shadow-sm overflow-hidden group hover:shadow-md transition-shadow rounded-[2rem] bg-card ring-1 ring-border">
+                <Card key={inspection.id} className="border-none shadow-sm overflow-hidden bg-card rounded-[2.5rem] ring-1 ring-border group hover:shadow-md transition-all">
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row gap-6">
-                      <div className="bg-primary/5 p-4 rounded-2xl flex flex-col items-center justify-center text-foreground min-w-[100px] h-fit font-headline shadow-inner ring-1 ring-border">
-                        <span className="text-xs font-bold uppercase tracking-widest opacity-60">{format(new Date(inspection.scheduledDate), 'MMM')}</span>
+                      <div className="bg-primary/5 p-4 rounded-2xl flex flex-col items-center justify-center text-foreground min-w-[90px] h-fit font-headline shadow-inner ring-1 ring-border">
+                        <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">{format(new Date(inspection.scheduledDate), 'MMM')}</span>
                         <span className="text-3xl font-bold">{format(new Date(inspection.scheduledDate), 'dd')}</span>
                       </div>
-                      <div className="flex-1 space-y-3">
+                      <div className="flex-1 space-y-4 text-left">
                         <div className="flex items-center justify-between">
-                          <Badge variant={inspection.status === 'completed' ? 'secondary' : 'default'} className="uppercase font-bold text-[10px] font-headline tracking-widest rounded-full">{inspection.status}</Badge>
+                          <Badge variant={inspection.status === 'completed' ? 'secondary' : 'default'} className="uppercase font-bold text-[10px] tracking-widest px-4 py-1 rounded-full">{inspection.status}</Badge>
                           <div className="flex gap-2">
                             {inspection.status === 'completed' && (
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-accent hover:bg-accent/10" onClick={() => handleDownloadReport(inspection)}>
-                                <FileDown className="w-4 h-4" />
-                              </Button>
+                              <Button variant="ghost" size="icon" className="h-9 w-9 text-accent hover:bg-accent/5 rounded-lg" onClick={() => handleDownloadReport(inspection)}><FileDown className="w-4 h-4" /></Button>
                             )}
-                            <Button variant="ghost" size="icon" className="h-8 w-8 p-0 text-muted-foreground hover:text-accent hover:bg-accent/5 rounded-lg" onClick={() => handleOpenEditMetadata(inspection)}><Edit3 className="w-4 h-4" /></Button>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-primary/5 rounded-lg" onClick={() => handleOpenEditMetadata(inspection)}><Edit3 className="w-4 h-4" /></Button>
                             <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-lg"><Trash2 className="w-4 h-4" /></Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent className="rounded-3xl border-none shadow-2xl bg-card">
-                                <AlertDialogHeader className="text-left">
-                                  <AlertDialogTitle className="font-headline font-bold text-xl text-foreground">Delete Record?</AlertDialogTitle>
-                                  <AlertDialogDescription className="text-muted-foreground font-medium mt-2">Permanently remove the audit findings for this property. Irreversible.</AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter className="mt-6 gap-3">
-                                  <AlertDialogCancel className="rounded-xl h-12 font-bold uppercase tracking-widest text-[10px] border-border">Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => { if(db) deleteDocumentNonBlocking(doc(db, 'inspections', inspection.id)); toast({ title: "Record Removed" }); }} className="rounded-xl h-12 font-bold bg-red-600 text-white uppercase tracking-widest text-[10px] hover:bg-red-700 border-none">Delete</AlertDialogAction>
-                                </AlertDialogFooter>
+                              <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-9 w-9 text-destructive/40 hover:bg-destructive/5 rounded-lg"><Trash2 className="w-4 h-4" /></Button></AlertDialogTrigger>
+                              <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl bg-card">
+                                <AlertDialogHeader className="text-left"><AlertDialogTitle className="font-headline font-bold text-xl">Delete Record?</AlertDialogTitle><AlertDialogDescription className="text-muted-foreground font-medium mt-2">Permanently remove this audit. Irreversible.</AlertDialogDescription></AlertDialogHeader>
+                                <AlertDialogFooter className="mt-6 gap-3"><AlertDialogCancel className="rounded-xl h-12 font-bold text-[10px] uppercase">Cancel</AlertDialogCancel><AlertDialogAction onClick={() => { if(db) deleteDocumentNonBlocking(doc(db, 'inspections', inspection.id)); toast({ title: "Record Removed" }); }} className="rounded-xl h-12 font-bold bg-red-600 text-white uppercase text-[10px] border-none">Delete</AlertDialogAction></AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
                           </div>
                         </div>
-                        <div className="text-left">
-                          <h4 className="text-lg font-bold font-headline text-foreground tracking-tight">{properties?.find(p => p.id === inspection.propertyId)?.addressLine1 || 'Property Asset'}</h4>
-                          <p className="text-[10px] text-muted-foreground font-bold flex items-center mt-1 font-body uppercase tracking-widest opacity-60">
-                            <Clock className="w-3.5 h-3.5 mr-1.5" />
-                            {inspection.conductedDate ? `Recorded: ${format(new Date(inspection.conductedDate), 'PPp')}` : `Scheduled: ${format(new Date(inspection.scheduledDate), 'PPP')}`}
-                          </p>
+                        <div>
+                          <h4 className="text-lg font-bold font-headline text-foreground leading-none">{properties?.find(p => p.id === inspection.propertyId)?.addressLine1 || 'Property Asset'}</h4>
+                          <p className="text-[10px] text-muted-foreground font-bold flex items-center mt-2 opacity-60 uppercase tracking-widest"><Clock className="w-3.5 h-3.5 mr-2" />{inspection.conductedDate ? `Recorded: ${format(new Date(inspection.conductedDate), 'PPp')}` : `Scheduled: ${format(new Date(inspection.scheduledDate), 'PPP')}`}</p>
                         </div>
-                        <Dialog open={activeInspection?.id === inspection.id} onOpenChange={(open) => !open && setActiveInspection(null)}>
-                          <DialogTrigger asChild>
-                            <Button className={cn("w-full md:w-auto rounded-xl font-bold h-10 px-8 font-headline uppercase tracking-widest text-[10px] transition-all", inspection.status === 'completed' ? "bg-muted hover:bg-muted/80 text-foreground" : "bg-accent hover:bg-accent/90 text-white shadow-lg")} onClick={() => handleOpenAudit(inspection)}>
-                              {inspection.status === 'completed' ? <><Edit3 className="w-4 h-4 mr-2" /> Edit Audit</> : <><PlayCircle className="w-4 h-4 mr-2" /> Start Audit</>}
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-[1000px] p-0 rounded-[2.5rem] border-none shadow-2xl flex flex-col h-[90vh] overflow-hidden bg-card">
-                            <div className="p-6 bg-primary/5 border-b text-left shrink-0">
-                              <DialogTitle className="text-xl font-headline font-bold text-foreground tracking-tight">Professional Property Audit</DialogTitle>
-                              <DialogDescription className="font-medium text-muted-foreground font-body mt-0.5 text-xs">Synchronizing high-fidelity binary evidence and checklist data.</DialogDescription>
-                            </div>
-                            
-                            <Tabs defaultValue="exterior" className="flex-1 flex flex-col min-h-0">
-                                <div className="bg-muted/30 border-b border-border p-2 shrink-0">
-                                    <TabsList className="flex flex-wrap h-auto items-center bg-transparent p-0 gap-1 justify-center md:justify-start">
-                                      {INSPECTION_SECTIONS.map(s => (
-                                        <TabsTrigger 
-                                          key={s.id} 
-                                          value={s.id} 
-                                          className="rounded-lg h-8 px-3 flex items-center gap-1.5 data-[state=active]:bg-card data-[state=active]:text-accent data-[state=active]:shadow-sm transition-all border border-transparent data-[state=active]:border-border"
-                                        >
-                                          <s.icon className="w-3.5 h-3.5 shrink-0" />
-                                          <span className="text-[9px] font-extrabold uppercase tracking-widest">{s.title}</span>
-                                        </TabsTrigger>
-                                      ))}
-                                    </TabsList>
-                                </div>
-
-                                <ScrollArea className="flex-1 text-left">
-                                  <div className="p-4 md:p-6 space-y-6 pb-32">
-                                      {INSPECTION_SECTIONS.map(section => (
-                                        <TabsContent key={section.id} value={section.id} className="mt-0 space-y-6 animate-in fade-in duration-300">
-                                          <div className="grid gap-4">
-                                            {section.items.map(item => (
-                                              <div key={item} className="p-4 bg-primary/[0.02] rounded-[1.5rem] space-y-4 border border-border shadow-sm">
-                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                                  <Label className="font-bold text-sm text-left font-headline text-foreground leading-tight flex-1">{item}</Label>
-                                                  <div className="flex gap-1 shrink-0">
-                                                    <Button size="sm" variant={structuredFindings[item]?.status === 'pass' ? 'default' : 'outline'} className="flex-1 md:flex-none rounded-lg font-bold h-9 px-4 text-[9px] uppercase tracking-widest transition-all" onClick={() => handleStatusChange(item, 'pass')}><Check className="w-3.5 h-3.5 mr-1.5" /> PASS</Button>
-                                                    <Button size="sm" variant={structuredFindings[item]?.status === 'fail' ? 'destructive' : 'outline'} className="flex-1 md:flex-none rounded-lg font-bold h-9 px-4 text-[9px] uppercase tracking-widest transition-all" onClick={() => handleStatusChange(item, 'fail')}><X className="w-3.5 h-3.5 mr-1.5" /> FAIL</Button>
-                                                  </div>
-                                                </div>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border/50">
-                                                  <div className="space-y-2">
-                                                    <Label className="text-[8px] font-bold uppercase text-muted-foreground tracking-[0.2em] opacity-40">Findings Ledger</Label>
-                                                    <Textarea 
-                                                      placeholder="Notes..." 
-                                                      className="rounded-xl min-h-[80px] bg-muted/20 border-none font-medium text-xs leading-relaxed" 
-                                                      value={structuredFindings[item]?.notes || ''} 
-                                                      onChange={(e) => handleNotesChange(item, e.target.value)}
-                                                      onBlur={() => handleNotesBlur(item)}
-                                                    />
-                                                  </div>
-                                                  <div className="space-y-2">
-                                                    <Label className="text-[8px] font-bold uppercase text-muted-foreground tracking-[0.2em] opacity-40">Visual Evidence</Label>
-                                                    <div className="relative aspect-video rounded-xl overflow-hidden border border-dashed border-border bg-muted/10 flex items-center justify-center cursor-pointer group hover:bg-muted/20 transition-all">
-                                                      {structuredFindings[item]?.isSyncing ? (
-                                                        <div className="flex flex-col items-center gap-2 animate-in fade-in">
-                                                           <Loader2 className="w-6 h-6 animate-spin text-accent" />
-                                                           <span className="text-[8px] font-bold text-accent uppercase tracking-[0.2em]">Syncing...</span>
-                                                        </div>
-                                                      ) : structuredFindings[item]?.imageUrl ? (
-                                                        <div className="relative w-full h-full">
-                                                          <Image src={structuredFindings[item].imageUrl} alt="Evidence" fill className="object-cover transition-transform group-hover:scale-105 duration-500" unoptimized />
-                                                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                             <Camera className="w-6 h-6 text-white" />
-                                                          </div>
-                                                        </div>
-                                                      ) : (
-                                                        <label htmlFor={`upload-${item}`} className="flex flex-col items-center gap-2 text-muted-foreground opacity-30 group-hover:opacity-60 transition-opacity cursor-pointer">
-                                                          <Camera className="w-8 h-8" />
-                                                          <span className="text-[8px] font-bold uppercase tracking-widest">Capture Asset</span>
-                                                          <input id={`upload-${item}`} type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(item, e.target.files?.[0] || null)} />
-                                                        </label>
-                                                      )}
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            ))}
-                                          </div>
-                                        </TabsContent>
-                                      ))}
-                                  </div>
-                                </ScrollArea>
-                            </Tabs>
-
-                            <DialogFooter className="p-4 bg-muted/5 border-t shrink-0">
-                              <Button className="w-full md:w-auto rounded-xl h-10 px-10 font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all border-none shadow-xl shadow-primary/10 uppercase tracking-widest text-[9px]" onClick={handleFinalizeAudit} disabled={isGenerating}>
-                                {isGenerating ? <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Orchestrating Records...</> : <><CheckCircle2 className="w-3.5 h-3.5 mr-2" /> Finalize Audit Report</>}
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                        <Button className={cn("rounded-xl font-bold h-10 px-8 text-[10px] uppercase tracking-widest", inspection.status === 'completed' ? "bg-muted text-foreground hover:bg-muted/80" : "bg-accent text-white")} onClick={() => handleOpenAudit(inspection)}>
+                          {inspection.status === 'completed' ? <><Edit3 className="w-4 h-4 mr-2" /> Edit Audit</> : <><PlayCircle className="w-4 h-4 mr-2" /> Start Audit</>}
+                        </Button>
                         {inspection.summary && (
-                          <div className="p-5 bg-primary/[0.03] rounded-2xl border border-border mt-4 text-left shadow-inner group-hover:bg-primary/[0.05] transition-colors relative">
-                             <div className="flex justify-between items-center mb-2">
-                               <p className="text-[9px] font-bold text-muted-foreground/60 uppercase font-headline tracking-widest">Audit Executive Summary</p>
+                          <div className="p-5 bg-primary/[0.03] rounded-2xl border border-border mt-4 text-left shadow-inner">
+                             <div className="flex justify-between items-center mb-3">
+                               <p className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest">Executive Summary</p>
                                <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[9px]">{inspection.healthScore}/100 Health</Badge>
                              </div>
-                             <p className="text-sm text-foreground/80 italic leading-relaxed font-body font-medium">"{inspection.summary}"</p>
-                             <div className="mt-4 flex gap-2">
-                                <Button variant="outline" size="sm" className="h-9 rounded-lg font-bold text-[9px] uppercase tracking-widest px-4 transition-all" onClick={() => handleDownloadReport(inspection)}>
-                                  <Download className="w-3.5 h-3.5 mr-2" /> Download Official PDF
-                                </Button>
-                             </div>
+                             <p className="text-sm text-foreground/80 italic leading-relaxed font-medium">"{inspection.summary}"</p>
                           </div>
                         )}
                       </div>
@@ -587,33 +384,93 @@ export default function InspectionsPage() {
         </div>
       </div>
 
-      <Dialog open={!!editingMetadata} onOpenChange={(open) => !open && setEditingMetadata(null)}>
+      <Dialog open={activeInspection !== null} onOpenChange={(o) => !o && setActiveInspection(null)}>
+        <DialogContent className="sm:max-w-[1000px] p-0 rounded-[2.5rem] border-none shadow-2xl flex flex-col h-[90vh] overflow-hidden bg-card ring-1 ring-white/10">
+           <div className="p-6 bg-primary/5 border-b shrink-0 text-left">
+              <DialogTitle className="text-xl font-headline font-bold text-foreground tracking-tight">Professional Property Audit</DialogTitle>
+              <DialogDescription className="font-medium text-muted-foreground text-xs mt-1">Synchronizing compliance data and high-fidelity evidence.</DialogDescription>
+           </div>
+           <Tabs defaultValue="exterior" className="flex-1 flex flex-col min-h-0">
+              <div className="bg-muted/30 border-b p-2 shrink-0">
+                 <TabsList className="flex flex-wrap h-auto items-center bg-transparent p-0 gap-1 justify-center md:justify-start">
+                    {INSPECTION_SECTIONS.map(s => (
+                      <TabsTrigger key={s.id} value={s.id} className="rounded-lg h-9 px-4 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-accent border border-transparent data-[state=active]:border-border transition-all">
+                        <s.icon className="w-4 h-4 shrink-0" />
+                        <span className="text-[9px] font-extrabold uppercase tracking-widest">{s.title}</span>
+                      </TabsTrigger>
+                    ))}
+                 </TabsList>
+              </div>
+              <ScrollArea className="flex-1">
+                 <div className="p-4 md:p-8 space-y-6 pb-32">
+                    {INSPECTION_SECTIONS.map(section => (
+                      <TabsContent key={section.id} value={section.id} className="mt-0 space-y-6">
+                         {section.items.map(item => (
+                           <div key={item} className="p-6 bg-primary/[0.02] rounded-[2rem] border border-border shadow-sm text-left">
+                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                                 <Label className="font-bold text-base flex-1">{item}</Label>
+                                 <div className="flex gap-2">
+                                    <Button size="sm" variant={structuredFindings[item]?.status === 'pass' ? 'default' : 'outline'} className="rounded-lg font-bold px-6 text-[9px] uppercase tracking-widest" onClick={() => handleStatusChange(item, 'pass')}><Check className="w-3.5 h-3.5 mr-2" /> PASS</Button>
+                                    <Button size="sm" variant={structuredFindings[item]?.status === 'fail' ? 'destructive' : 'outline'} className="rounded-lg font-bold px-6 text-[9px] uppercase tracking-widest" onClick={() => handleStatusChange(item, 'fail')}><X className="w-3.5 h-3.5 mr-2" /> FAIL</Button>
+                                 </div>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border/50">
+                                 <div className="space-y-2">
+                                    <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-40 tracking-widest">Findings Ledger</Label>
+                                    <Textarea placeholder="Notes..." className="rounded-xl min-h-[90px] bg-muted/20 border-none font-medium text-xs" value={structuredFindings[item]?.notes || ''} onChange={(e) => handleNotesChange(item, e.target.value)} onBlur={() => handleNotesBlur(item)} />
+                                 </div>
+                                 <div className="space-y-2">
+                                    <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-40 tracking-widest">Evidence Capture</Label>
+                                    <div className="relative aspect-video rounded-xl overflow-hidden border border-dashed border-border bg-muted/10 flex items-center justify-center cursor-pointer group hover:bg-muted/20 transition-all">
+                                       {structuredFindings[item]?.isSyncing ? (
+                                         <div className="flex flex-col items-center gap-2"><Loader2 className="w-6 h-6 animate-spin text-accent" /><span className="text-[8px] font-bold text-accent uppercase tracking-widest">Syncing...</span></div>
+                                       ) : structuredFindings[item]?.imageUrl ? (
+                                         <Image src={structuredFindings[item].imageUrl} alt="Evidence" fill className="object-cover" unoptimized />
+                                       ) : (
+                                         <label htmlFor={`up-${item}`} className="flex flex-col items-center gap-2 text-muted-foreground opacity-30 cursor-pointer">
+                                           <Camera className="w-8 h-8" /><span className="text-[8px] font-bold uppercase tracking-widest">Capture Visual</span>
+                                           <input id={`up-${item}`} type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(item, e.target.files?.[0] || null)} />
+                                         </label>
+                                       )}
+                                    </div>
+                                 </div>
+                              </div>
+                           </div>
+                         ))}
+                      </TabsContent>
+                    ))}
+                 </div>
+              </ScrollArea>
+           </Tabs>
+           <DialogFooter className="p-4 bg-muted/5 border-t shrink-0">
+              <Button className="w-full md:w-auto rounded-xl h-10 px-10 font-bold bg-primary text-primary-foreground uppercase tracking-widest text-[9px] border-none shadow-xl transition-all hover:scale-[1.01]" onClick={handleFinalizeAudit} disabled={isGenerating}>
+                 {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Orchestrating Records...</> : <><CheckCircle2 className="w-4 h-4 mr-2" /> Finalize Audit Report</>}
+              </Button>
+           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editingMetadata !== null} onOpenChange={(o) => !o && setEditingMetadata(null)}>
         <DialogContent className="sm:max-w-[550px] p-0 rounded-[2.5rem] border-none shadow-2xl flex flex-col h-[800px] max-h-[90vh] bg-card overflow-hidden">
           <div className="p-8 bg-primary/5 border-b text-left shrink-0">
-            <DialogTitle className="text-2xl font-headline font-bold text-foreground tracking-tight">Modify Audit Record</DialogTitle>
-            <DialogDescription className="text-sm font-medium text-muted-foreground mt-1">Refining operational metadata for this compliance asset.</DialogDescription>
+            <DialogTitle className="text-2xl font-headline font-bold">Modify Audit Record</DialogTitle>
+            <DialogDescription className="text-sm font-medium mt-1">Refining operational metadata for this compliance asset.</DialogDescription>
           </div>
-          
           <ScrollArea className="flex-1">
             <div className="p-10 space-y-10 text-left pb-20">
               <div className="space-y-4">
-                <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Target Asset</Label>
-                <select 
-                  className="flex h-14 w-full rounded-2xl border-none bg-muted/30 px-6 py-2 text-base font-bold text-foreground shadow-inner ring-1 ring-white/5 focus:ring-2 focus:ring-accent outline-none" 
-                  value={editPropertyId} 
-                  onChange={(e) => setEditPropertyId(e.target.value)}
-                >
+                <Label className="text-[10px] font-bold uppercase opacity-60 tracking-widest font-headline">Target Asset</Label>
+                <select className="flex h-14 w-full rounded-2xl border-none bg-muted/30 px-6 font-bold text-foreground shadow-inner focus:ring-2 focus:ring-accent outline-none" value={editPropertyId} onChange={(e) => setEditPropertyId(e.target.value)}>
                   <option value="">Choose property...</option>
                   {properties?.map(p => <option key={p.id} value={p.id}>{p.addressLine1}</option>)}
                 </select>
               </div>
               <div className="space-y-4">
-                <Label className="text-[10px] font-bold uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Audit Date</Label>
+                <Label className="text-[10px] font-bold uppercase opacity-60 tracking-widest font-headline">Audit Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant={"outline"} className="w-full justify-start text-left font-bold h-14 rounded-2xl border-none bg-muted/30 px-6 text-base shadow-inner ring-1 ring-white/5">
-                      <CalendarIcon className="mr-3 h-5 w-5 text-accent" />
-                      {editDate ? format(editDate, "PPP") : <span>Pick a date</span>}
+                    <Button variant="outline" className="w-full justify-start text-left font-bold h-14 rounded-2xl border-none bg-muted/30 px-6 text-base shadow-inner">
+                      <CalendarIcon className="mr-3 h-5 w-5 text-accent" /> {editDate ? format(editDate, "PPP") : <span>Pick date</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0 rounded-[2rem] border-none shadow-2xl overflow-hidden" align="start">
@@ -623,15 +480,8 @@ export default function InspectionsPage() {
               </div>
             </div>
           </ScrollArea>
-
           <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
-            <Button 
-              className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground transition-all active:scale-[0.98] shadow-2xl shadow-primary/20 font-headline uppercase tracking-[0.2em] text-[11px] border-none" 
-              onClick={handleUpdateMetadata} 
-              disabled={!editDate || !editPropertyId}
-            >
-              Synchronize Changes
-            </Button>
+            <Button className="w-full rounded-2xl h-16 font-bold bg-primary text-primary-foreground font-headline uppercase tracking-[0.2em] text-[11px] border-none transition-all active:scale-[0.98]" onClick={handleUpdateMetadata} disabled={!editDate || !editPropertyId}>Synchronize Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
