@@ -439,7 +439,7 @@ export default function InspectionsPage() {
                               {inspection.status === 'completed' ? <><Edit3 className="w-4 h-4 mr-2" /> Edit Audit</> : <><PlayCircle className="w-4 h-4 mr-2" /> Start Audit</>}
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="sm:max-w-[850px] p-0 rounded-[3rem] border-none shadow-2xl flex flex-col h-[90vh] overflow-hidden bg-card">
+                          <DialogContent className="sm:max-w-[850px] p-0 rounded-2xl border-none shadow-2xl flex flex-col h-[90vh] overflow-hidden bg-card">
                             <div className="p-8 bg-primary/5 border-b text-left shrink-0">
                               <DialogTitle className="text-2xl font-headline font-bold text-foreground tracking-tight">Professional Property Audit</DialogTitle>
                               <DialogDescription className="font-medium text-muted-foreground font-body mt-1">Conducting full safety audit with high-fidelity evidence capture.</DialogDescription>
@@ -451,8 +451,8 @@ export default function InspectionsPage() {
                                     <TabsList className="inline-flex w-max min-w-full bg-muted/50 p-1.5 rounded-2xl h-auto gap-1">
                                       {INSPECTION_SECTIONS.map(s => (
                                         <TabsTrigger key={s.id} value={s.id} className="rounded-xl py-3 px-6 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-foreground">
-                                          <s.icon className="w-4 h-4" />
-                                          <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">{s.title}</span>
+                                          <s.icon className="w-4 h-4 shrink-0" />
+                                          <span className="text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">{s.title}</span>
                                         </TabsTrigger>
                                       ))}
                                     </TabsList>
@@ -477,7 +477,12 @@ export default function InspectionsPage() {
                                               <div className="space-y-2">
                                                 <Label className="text-[9px] font-bold uppercase text-muted-foreground opacity-60">Evidence</Label>
                                                 <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-dashed border-border bg-muted/10 flex items-center justify-center cursor-pointer">
-                                                  {structuredFindings[item]?.imageUrl ? (
+                                                  {structuredFindings[item]?.isSyncing ? (
+                                                    <div className="flex flex-col items-center gap-3">
+                                                       <Loader2 className="w-8 h-8 animate-spin text-accent" />
+                                                       <span className="text-[10px] font-bold text-accent uppercase tracking-widest">Uploading...</span>
+                                                    </div>
+                                                  ) : structuredFindings[item]?.imageUrl ? (
                                                     <Image src={structuredFindings[item].imageUrl} alt="Evidence" fill className="object-cover" unoptimized />
                                                   ) : (
                                                     <label htmlFor={`upload-${item}`} className="flex flex-col items-center gap-2 text-muted-foreground opacity-40">
