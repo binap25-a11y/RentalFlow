@@ -233,6 +233,17 @@ export default function InspectionsPage() {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
 
+    // Helper to load image as base64/dataURI for jspdf
+    const loadImage = (url: string): Promise<HTMLImageElement> => {
+      return new Promise((resolve, reject) => {
+        const img = new (window as any).Image();
+        img.crossOrigin = "Anonymous";
+        img.src = url;
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+      });
+    };
+
     // --- HEADER ---
     pdf.setFillColor(30, 58, 138); 
     pdf.rect(0, 0, pageWidth, 45, "F");
@@ -346,6 +357,44 @@ export default function InspectionsPage() {
         }
         y += 10;
       });
+
+      // --- VISUAL EVIDENCE GALLERY ---
+      const visualFindings = Object.entries(inspection.structuredFindings)
+        .filter(([_, data]: [string, any]) => data.imageUrl);
+      
+      if (visualFindings.length > 0) {
+        pdf.addPage();
+        y = 25;
+        pdf.setTextColor(30, 58, 138);
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(16);
+        pdf.text("VISUAL EVIDENCE GALLERY", 20, y);
+        y += 15;
+
+        for (const [item, data] of visualFindings as [string, any][]) {
+          if (y > 220) {
+            pdf.addPage();
+            y = 25;
+          }
+          
+          try {
+            const img = await loadImage(data.imageUrl);
+            const imgWidth = 80;
+            const imgHeight = (img.height * imgWidth) / img.width;
+            
+            pdf.setTextColor(0, 0, 0);
+            pdf.setFontSize(10);
+            pdf.setFont("helvetica", "bold");
+            pdf.text(`ITEM: ${item}`, 20, y);
+            y += 8;
+            
+            pdf.addImage(img, 'JPEG', 20, y, imgWidth, imgHeight);
+            y += imgHeight + 15;
+          } catch (e) {
+            console.error("Failed to load image for PDF", e);
+          }
+        }
+      }
     }
 
     // --- FOOTER ---
