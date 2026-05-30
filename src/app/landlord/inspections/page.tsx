@@ -475,7 +475,7 @@ export default function InspectionsPage() {
                               {inspection.status === 'completed' ? <><Edit3 className="w-4 h-4 mr-2" /> Edit Audit</> : <><PlayCircle className="w-4 h-4 mr-2" /> Start Audit</>}
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="sm:max-w-[850px] p-0 rounded-2xl border-none shadow-2xl flex flex-col h-[90vh] overflow-hidden bg-card">
+                          <DialogContent className="sm:max-w-[1000px] p-0 rounded-[2.5rem] border-none shadow-2xl flex flex-col h-[90vh] overflow-hidden bg-card">
                             <div className="p-8 bg-primary/5 border-b text-left shrink-0">
                               <DialogTitle className="text-2xl font-headline font-bold text-foreground tracking-tight">Professional Property Audit</DialogTitle>
                               <DialogDescription className="font-medium text-muted-foreground font-body mt-1 text-sm">Synchronizing high-fidelity binary evidence and checklist data.</DialogDescription>
@@ -557,8 +557,8 @@ export default function InspectionsPage() {
                             </Tabs>
 
                             <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
-                              <Button className="w-full rounded-2xl h-16 font-bold bg-accent text-white hover:bg-accent/90 transition-all border-none shadow-2xl shadow-accent/20 uppercase tracking-[0.3em] text-[12px]" onClick={handleFinalizeAudit} disabled={isGenerating}>
-                                {isGenerating ? <><Loader2 className="w-5 h-5 mr-4 animate-spin" /> Orchestrating Records...</> : <><CheckCircle2 className="w-5 h-5 mr-4" /> Finalize Audit Report</>}
+                              <Button className="w-full md:w-auto rounded-xl h-12 px-12 font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all border-none shadow-2xl shadow-primary/20 uppercase tracking-widest text-[10px]" onClick={handleFinalizeAudit} disabled={isGenerating}>
+                                {isGenerating ? <><Loader2 className="w-4 h-4 mr-3 animate-spin" /> Orchestrating Records...</> : <><CheckCircle2 className="w-4 h-4 mr-3" /> Finalize Audit Report</>}
                               </Button>
                             </DialogFooter>
                           </DialogContent>
