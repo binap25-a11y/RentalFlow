@@ -215,18 +215,33 @@ export default function InspectionsPage() {
     setDate(undefined);
   };
 
+  /**
+   * 📄 Finalize Audit Protocol
+   * Orchestrates high-fidelity checklist data into a professional AI-driven report.
+   */
   const handleFinalizeAudit = async () => {
     if (!db || !activeInspection || !user) return;
+    
+    // Defensive Guard: Ensure at least some context is provided before invoking AI
+    const entries = Object.entries(structuredFindings);
+    if (entries.length === 0) {
+      toast({ variant: "destructive", title: "Audit Context Missing", description: "Please mark at least one checklist item (Pass/Fail) before finalizing." });
+      return;
+    }
+
     setIsGenerating(true);
     const property = properties?.find(p => p.id === activeInspection.propertyId);
+    
     try {
-      const flatFindingsString = Object.entries(structuredFindings).map(([item, data]: [string, any]) => {
+      const flatFindingsString = entries.map(([item, data]: [string, any]) => {
         return `${item}: ${data.status?.toUpperCase() || 'UNCHECKED'} ${data.notes ? `(Notes: ${data.notes})` : ''}`;
       }).join('\n');
+
       const aiReport = await generateInspectionReport({
-        propertyAddress: property?.addressLine1 || 'Property',
+        propertyAddress: property?.addressLine1 || 'Property Asset',
         findings: flatFindingsString
       });
+
       const inspectionRef = doc(db, 'inspections', activeInspection.id);
       updateDocumentNonBlocking(inspectionRef, {
         status: 'completed',
@@ -237,10 +252,16 @@ export default function InspectionsPage() {
         conductedDate: new Date().toISOString(),
         updatedAt: serverTimestamp(),
       });
-      toast({ title: "Audit Finalized" });
+
+      toast({ title: "Audit Finalized", description: "Compliance records synchronized." });
       setActiveInspection(null);
-    } catch (error) {
-      toast({ variant: "destructive", title: "Reporting Failed" });
+    } catch (error: any) {
+      console.error("Audit Finalization Error:", error);
+      toast({ 
+        variant: "destructive", 
+        title: "Reporting Engine Error", 
+        description: "An unexpected error occurred. Please try finalizing once more or save your findings and refresh." 
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -445,7 +466,6 @@ export default function InspectionsPage() {
                               <DialogDescription className="font-medium text-muted-foreground font-body mt-1">Conducting full safety audit with high-fidelity evidence capture.</DialogDescription>
                             </div>
                             
-                            {/* MOBILE NAVIGATION RAIL */}
                             <div className="overflow-x-auto bg-muted/30 border-b border-border no-scrollbar py-1">
                                 <Tabs defaultValue="exterior" className="w-full">
                                     <div className="flex w-max px-4">
