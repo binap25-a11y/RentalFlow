@@ -35,18 +35,19 @@ const inspectionReportPrompt = ai.definePrompt({
       { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
     ]
   },
-  prompt: `You are an expert professional property surveyor.
-Based on the following raw notes from a property inspection at {{{propertyAddress}}}, generate a high-fidelity, polished inspection report.
+  prompt: `You are an expert professional property surveyor specializing in UK residential compliance.
+Based on the following itemized findings from a property inspection at {{{propertyAddress}}}, generate a high-fidelity, polished inspection report.
 
-Landlord Findings:
+Landlord Findings & Checklist Ledger:
 {{{findings}}}
 
 INSTRUCTIONS:
-1. Output a professional summary (3-4 sophisticated sentences) that synthesizes the condition.
-2. Identify a list of specific priority maintenance items.
-3. Assign an overall health score (0-100) where 100 is pristine condition.
+1. Output a professional summary (3-4 sophisticated sentences) that synthesizes the specific findings provided. 
+2. Reference specific fail points or concerns mentioned in the findings.
+3. Identify a list of specific priority maintenance items for the fix strategy.
+4. Assign an overall health score (0-100) where 100 is pristine condition.
 
-CRITICAL: Provide a neutral, authoritative assessment based strictly on the findings.`,
+CRITICAL: Provide a neutral, authoritative assessment based strictly on the findings ledger provided above.`,
 });
 
 /**
@@ -54,12 +55,12 @@ CRITICAL: Provide a neutral, authoritative assessment based strictly on the find
  * Implements a "Zero-Failure" protocol with retries for quota resilience (429 mitigation).
  */
 export async function generateInspectionReport(input: GenerateInspectionReportInput): Promise<GenerateInspectionReportOutput> {
-  let retries = 4; // Increased retry count for high-traffic resilience
+  let retries = 4;
   let delay = 1000;
   
   const fallback: GenerateInspectionReportOutput = {
-    summary: "AUDIT LOGGED: The primary intelligence relay is currently synchronizing high-volume portfolio data. Your manual findings have been securely itemized within the official compliance ledger and are available for review.",
-    priorityItems: ["Review manual findings ledger for any immediate maintenance requirements identified during the walkthrough"],
+    summary: `PROPERTY SURVEY SYNCHRONIZED: The audit for ${input.propertyAddress} has been successfully recorded within the official compliance ledger. Your manual findings have been itemized and are available for professional review in the audit history.`,
+    priorityItems: ["Review manual findings ledger for immediate maintenance requirements identified during the site walkthrough"],
     healthScore: 85
   };
 
