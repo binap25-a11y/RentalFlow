@@ -28,45 +28,49 @@ export async function withRetry<T>(
 }
 
 /**
+ * 🖼️ Asset Validation Engine
+ */
+export function isValidAssetUrl(url: any): boolean {
+  if (!url || typeof url !== 'string' || url.trim() === '') return false;
+  return (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:'));
+}
+
+/**
  * 🖼️ User Asset Identifier (Source-Positive Logic)
- * Strictly whitelists your Supabase project (wgezhbkkhamaawxgcqjf)
- * Updated to be case-insensitive for domain checks but precise for project identity.
+ * Whitelists trusted sources for visual identity.
  */
 export function isRealUserUpload(url: any): boolean {
-  if (!url || typeof url !== 'string' || url.trim() === '') return false;
+  if (!isValidAssetUrl(url)) return false;
   
   const u = url.toLowerCase();
   
   // Whitelist production project infrastructure and browser local blobs
-  const isTrustedSource = (
-    u.includes('wgezhbkkhamaawxgcqjf.supabase.co') || 
+  return (
+    u.includes('supabase.co') || 
     u.includes('firebasestorage') ||
     u.includes('googleapi') ||
+    u.includes('picsum.photos') ||
+    u.includes('unsplash.com') ||
     u.startsWith('blob:') ||
     u.startsWith('data:')
   );
-
-  return isTrustedSource;
-}
-
-/**
- * 🖼️ Asset Validation Engine
- */
-export function isValidAssetUrl(url: any): boolean {
-  return !!(url && typeof url === 'string' && url.trim() !== '' && (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')));
 }
 
 /**
  * 🖼️ Robust Asset Resolution Engine
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string | null {
-  if (imageUrl && isValidAssetUrl(imageUrl) && isRealUserUpload(imageUrl)) {
-    return imageUrl;
+  // Prefer the explicitly set imageUrl if it's valid
+  if (isValidAssetUrl(imageUrl)) {
+    return imageUrl as string;
   }
+  
+  // Fallback to the first item in the gallery if available
   if (imageUrls && Array.isArray(imageUrls)) {
-    const realGallery = imageUrls.filter(u => isValidAssetUrl(u) && isRealUserUpload(u));
-    if (realGallery.length > 0) return realGallery[0];
+    const validUrl = imageUrls.find(u => isValidAssetUrl(u));
+    if (validUrl) return validUrl;
   }
+  
   return null;
 }
 
@@ -83,7 +87,7 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
   
   if (imageUrls && Array.isArray(imageUrls)) {
     imageUrls.forEach(u => {
-      if (isValidAssetUrl(u) && isRealUserUpload(u)) {
+      if (isValidAssetUrl(u)) {
         assets.add(u);
       }
     });
