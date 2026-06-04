@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import Image from "next/image";
 import { cn, getResolvedImageUrl } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,7 +32,7 @@ import {
 
 /**
  * @fileOverview High-Fidelity Portfolio Registry.
- * Implements Full Cascading Purge Protocol for Maintenance, Compliance, and Residency integrity.
+ * Implements Full Cascading Purge Protocol and Optimized next/image Visual Identity.
  */
 
 export default function PropertiesPage() {
@@ -70,7 +72,7 @@ export default function PropertiesPage() {
       deletedAt: serverTimestamp(),
       updatedAt: serverTimestamp() 
     });
-    toast({ title: "Asset Archived", description: "Financial overview updated." });
+    toast({ title: "Asset Archived" });
   };
 
   const handleRestoreProperty = (propertyId: string) => {
@@ -81,25 +83,23 @@ export default function PropertiesPage() {
       deletedAt: null,
       updatedAt: serverTimestamp() 
     });
-    toast({ title: "Asset Restored", description: "Synchronized back to inventory." });
+    toast({ title: "Asset Restored" });
   };
 
   const handlePermanentDelete = async (propertyId: string) => {
     if (!user || !db) return;
     
     try {
-      // 1. Delete Primary Asset
       const propertyRef = doc(db, 'properties', propertyId);
       deleteDocumentNonBlocking(propertyRef);
 
-      // 2. FULL CASCADING PURGE: Remove all related portfolio records
       const relatedCollections = [
-        'maintenanceRequests',  // Scrub Maintenance Hub
-        'inspections',          // Scrub Compliance Ledger
-        'tenantProfiles',       // Scrub Residency Identity & Tenant profiles
-        'documents',            // Scrub Property Vault
-        'rentPayments',         // Scrub Financial Ledger
-        'emergencyContacts'     // Scrub Support Directory
+        'maintenanceRequests',
+        'inspections',
+        'tenantProfiles',
+        'documents',
+        'rentPayments',
+        'emergencyContacts'
       ];
 
       for (const collName of relatedCollections) {
@@ -110,12 +110,8 @@ export default function PropertiesPage() {
         });
       }
 
-      toast({ 
-        title: "Asset Purged", 
-        description: "Maintenance logs, Compliance Ledger, and tenants removed." 
-      });
+      toast({ title: "Asset Purged" });
     } catch (error) {
-      console.error('Cascading Purge Error:', error);
       toast({ variant: "destructive", title: "Sync Interrupted" });
     }
   };
@@ -168,7 +164,6 @@ export default function PropertiesPage() {
                    <Building2 className="w-16 h-16 text-primary opacity-20" />
                 </div>
                 <h3 className="text-xl font-headline font-bold text-foreground mb-2">No Active Assets</h3>
-                <p className="text-sm text-muted-foreground font-medium mb-8">Begin your roadmap by registering your first property.</p>
                 <Button variant="outline" asChild className="rounded-xl font-bold border-border text-foreground h-12 px-8 hover:bg-primary/5">
                   <Link href="/landlord/properties/new">Initialize First Asset</Link>
                 </Button>
@@ -179,17 +174,14 @@ export default function PropertiesPage() {
                 return (
                   <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-2xl transition-all duration-500 rounded-[2.5rem] bg-card ring-1 ring-border">
                     <div className="relative aspect-video w-full overflow-hidden bg-muted">
-                      {imageUrl ? (
-                        <img 
-                          src={imageUrl} 
-                          alt={property.addressLine1} 
-                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110" 
-                        />
-                      ) : (
-                        <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-muted flex items-center justify-center">
-                          <Building2 className="w-12 h-12 text-muted-foreground/20" />
-                        </div>
-                      )}
+                      <Image 
+                        src={imageUrl} 
+                        alt={property.addressLine1 || "Property Asset"} 
+                        fill
+                        unoptimized
+                        className="object-cover transition-transform duration-1000 group-hover:scale-110"
+                        data-ai-hint="modern house"
+                      />
                       <Badge className={cn("absolute top-6 right-6 font-bold shadow-2xl py-1.5 px-4 text-[9px] uppercase tracking-widest rounded-full border-none", property.isOccupied ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white')}>
                         {property.isOccupied ? 'Occupied' : 'Vacant'}
                       </Badge>
@@ -230,68 +222,55 @@ export default function PropertiesPage() {
           <div className="space-y-6">
             <div className="bg-accent/5 border border-accent/10 p-6 rounded-2xl flex gap-4 items-start shadow-inner">
                <ShieldAlert className="w-6 h-6 text-accent shrink-0 mt-0.5" />
-               <div>
+               <div className="text-left">
                   <p className="text-sm font-bold text-foreground font-headline">Recovery Vault</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed mt-1 font-medium">Assets in this vault are excluded from analytics. Records can be restored instantly.</p>
+                  <p className="text-xs text-muted-foreground font-medium">Records here are excluded from analytics but can be restored instantly.</p>
                </div>
             </div>
 
             <div className="grid gap-4">
-              {archivedProperties.length === 0 ? (
-                <div className="py-24 text-center bg-card rounded-[2.5rem] border border-border flex flex-col items-center justify-center opacity-40">
-                   <Archive className="w-12 h-12 text-foreground mb-4" />
-                   <p className="text-xs font-bold font-headline uppercase tracking-widest">Vault Empty</p>
-                </div>
-              ) : (
-                archivedProperties.map(property => {
-                  const imageUrl = getResolvedImageUrl(property.imageUrl, property.imageUrls);
-                  return (
-                    <Card key={property.id} className="border-none shadow-sm rounded-2xl bg-card ring-1 ring-border overflow-hidden">
-                      <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="flex items-center gap-5 w-full text-left min-w-0">
-                          <div className="relative h-16 w-24 rounded-xl overflow-hidden bg-muted shrink-0">
-                            {imageUrl ? <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover grayscale" /> : <Building2 className="w-6 h-6 text-muted-foreground/30" />}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                             <h4 className="font-bold text-base font-headline text-foreground truncate block">{property.addressLine1}</h4>
-                             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1 truncate">Archived: {property.deletedAt ? new Date(property.deletedAt.seconds * 1000).toLocaleDateString() : 'Recently'}</p>
-                          </div>
+              {archivedProperties.map(property => {
+                const imageUrl = getResolvedImageUrl(property.imageUrl, property.imageUrls);
+                return (
+                  <Card key={property.id} className="border-none shadow-sm rounded-2xl bg-card ring-1 ring-border overflow-hidden">
+                    <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-6">
+                      <div className="flex items-center gap-5 w-full text-left min-w-0">
+                        <div className="relative h-16 w-24 rounded-xl overflow-hidden bg-muted shrink-0">
+                          <Image src={imageUrl} alt="" fill unoptimized className="object-cover grayscale opacity-50" />
                         </div>
-                        <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
-                          <Button variant="outline" className="flex-1 md:flex-none rounded-xl font-bold h-11 px-6 border-border text-foreground hover:bg-accent/10 hover:text-accent" onClick={() => handleRestoreProperty(property.id)}>
-                            <RotateCcw className="w-4 h-4 mr-2" /> Restore
-                          </Button>
-
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" className="flex-1 md:flex-none rounded-xl font-bold h-11 px-6 text-destructive/60 hover:text-white hover:bg-red-500">
-                                <Trash2 className="w-4 h-4 mr-2" /> Purge Asset
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl bg-card p-10">
-                              <AlertDialogHeader className="text-left">
-                                <AlertDialogTitle className="text-2xl font-headline font-bold text-foreground">Purge Asset Record?</AlertDialogTitle>
-                                <AlertDialogDescription className="text-muted-foreground font-medium text-base mt-2">
-                                  This action is irreversible. Every related maintenance record, site audit, resident profile, and financial receipt for <strong>{property.addressLine1}</strong> will be permanently purged from the database.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter className="mt-8 gap-3">
-                                <AlertDialogCancel className="rounded-xl h-12 font-bold font-headline uppercase tracking-widest text-[10px] border-border">Cancel</AlertDialogCancel>
-                                <AlertDialogAction 
-                                  onClick={() => handlePermanentDelete(property.id)}
-                                  className="rounded-xl h-12 font-bold bg-red-600 hover:bg-red-700 text-white font-headline uppercase tracking-widest text-[10px] border-none"
-                                >
-                                  Purge All Records
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                        <div className="min-w-0 flex-1">
+                           <h4 className="font-bold text-base font-headline text-foreground truncate block">{property.addressLine1}</h4>
+                           <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1 truncate">Archived: {property.deletedAt ? new Date(property.deletedAt.seconds * 1000).toLocaleDateString() : 'Recently'}</p>
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })
-              )}
+                      </div>
+                      <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
+                        <Button variant="outline" className="flex-1 md:flex-none rounded-xl font-bold h-11 px-6 border-border text-foreground hover:bg-accent/10" onClick={() => handleRestoreProperty(property.id)}>
+                          <RotateCcw className="w-4 h-4 mr-2" /> Restore
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" className="flex-1 md:flex-none rounded-xl font-bold h-11 px-6 text-destructive/60 hover:text-white hover:bg-red-500">
+                              <Trash2 className="w-4 h-4 mr-2" /> Purge
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl bg-card p-10">
+                            <AlertDialogHeader className="text-left">
+                              <AlertDialogTitle className="text-2xl font-headline font-bold text-foreground">Purge Asset Record?</AlertDialogTitle>
+                              <AlertDialogDescription className="text-muted-foreground font-medium text-base mt-2">
+                                This will permanently remove all related maintenance, compliance, and resident profiles for <strong>{property.addressLine1}</strong>.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter className="mt-8 gap-3">
+                              <AlertDialogCancel className="rounded-xl h-12 font-bold uppercase text-[10px] border-border">Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handlePermanentDelete(property.id)} className="rounded-xl h-12 font-bold bg-red-600 hover:bg-red-700 text-white uppercase text-[10px] border-none">Purge All Records</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         </TabsContent>

@@ -1,5 +1,7 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import placeholderData from '@/app/lib/placeholder-images.json';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -9,6 +11,11 @@ export function cn(...inputs: ClassValue[]) {
  * 🏢 Brand Identity Asset
  */
 export const RENTALFLOW_LOGO_URL = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=512&h=512&auto=format&fit=crop";
+
+/**
+ * 🖼️ High-Fidelity Fallback Registry
+ */
+export const PROPERTY_PLACEHOLDER = placeholderData.placeholderImages[0]?.imageUrl || RENTALFLOW_LOGO_URL;
 
 /**
  * 🔄 Resilient Retry Wrapper
@@ -29,10 +36,15 @@ export async function withRetry<T>(
 
 /**
  * 🖼️ Asset Validation Engine
+ * Hardened to reject 'corrupt' strings like "undefined" or "null".
  */
 export function isValidAssetUrl(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
-  return (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:'));
+  
+  const lowerUrl = url.toLowerCase().trim();
+  if (lowerUrl === 'undefined' || lowerUrl === 'null' || lowerUrl === '[object object]') return false;
+  
+  return (lowerUrl.startsWith('http') || lowerUrl.startsWith('blob:') || lowerUrl.startsWith('data:'));
 }
 
 /**
@@ -44,7 +56,6 @@ export function isRealUserUpload(url: any): boolean {
   
   const u = url.toLowerCase();
   
-  // Whitelist production project infrastructure and browser local blobs
   return (
     u.includes('supabase.co') || 
     u.includes('firebasestorage') ||
@@ -59,19 +70,20 @@ export function isRealUserUpload(url: any): boolean {
 /**
  * 🖼️ Robust Asset Resolution Engine
  */
-export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string | null {
-  // Prefer the explicitly set imageUrl if it's valid
+export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
+  // 1. Check primary imageUrl
   if (isValidAssetUrl(imageUrl)) {
     return imageUrl as string;
   }
   
-  // Fallback to the first item in the gallery if available
+  // 2. Fallback to first gallery item
   if (imageUrls && Array.isArray(imageUrls)) {
     const validUrl = imageUrls.find(u => isValidAssetUrl(u));
     if (validUrl) return validUrl;
   }
   
-  return null;
+  // 3. Ultimate Fallback to Brand Placeholder
+  return PROPERTY_PLACEHOLDER;
 }
 
 /**
@@ -81,9 +93,7 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
   const assets = new Set<string>();
   
   const primary = getResolvedImageUrl(imageUrl, imageUrls);
-  if (primary) {
-    assets.add(primary);
-  }
+  assets.add(primary);
   
   if (imageUrls && Array.isArray(imageUrls)) {
     imageUrls.forEach(u => {
@@ -98,7 +108,6 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
 
 /**
  * 🖼️ Resilient Mobile Optimization Engine
- * Prevents memory-related crashes on mobile devices by resizing before upload.
  */
 export async function compressImage(file: File, maxWidth = 1200, quality = 0.85): Promise<Blob | File> {
   if (!file.type.startsWith('image/') || file.size < 1024 * 100) {
