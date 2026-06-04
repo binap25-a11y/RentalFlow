@@ -3,9 +3,9 @@
 import { getPool } from '@/lib/database';
 
 /**
- * @fileOverview Server Actions for synchronizing Firebase metadata to PostgreSQL.
+ * @fileOverview Server Actions for synchronizing Firebase metadata to Supabase PostgreSQL.
  * These actions ensure a redundant, relational record of all property assets and documents.
- * Updated to be resilient: if no DATABASE_URL is provided, it skips sync gracefully.
+ * High-Priority: Fails gracefully if DATABASE_URL is missing to avoid blocking UI flows.
  */
 
 export async function syncPropertyToDb(propertyData: {
@@ -23,10 +23,7 @@ export async function syncPropertyToDb(propertyData: {
   description?: string;
 }) {
   const pool = getPool();
-  if (!pool) {
-    console.warn('Relational Sync Skipped: Database pool not available.');
-    return { success: true, message: 'Sync skipped' };
-  }
+  if (!pool) return { success: true, message: 'Sync bypassed' };
 
   const { 
     id, landlordId, addressLine1, city, zipCode, 
@@ -67,8 +64,8 @@ export async function syncPropertyToDb(propertyData: {
       client.release();
     }
   } catch (error: any) {
-    console.error('Relational Sync Error (Property):', error);
-    return { success: false, error: error.message || 'Database synchronization failed' };
+    console.error('❌ Supabase Sync Error (Property):', error.message);
+    return { success: false, error: error.message };
   }
 }
 
@@ -82,7 +79,7 @@ export async function syncDocumentToDb(docData: {
   expiryDate?: string | null;
 }) {
   const pool = getPool();
-  if (!pool) return { success: true, message: 'Sync skipped' };
+  if (!pool) return { success: true, message: 'Sync bypassed' };
 
   const { id, propertyId, landlordId, fileName, fileUrl, documentType, expiryDate } = docData;
   
@@ -105,8 +102,8 @@ export async function syncDocumentToDb(docData: {
       client.release();
     }
   } catch (error: any) {
-    console.error('Relational Sync Error (Document):', error);
-    return { success: false, error: error.message || 'Document synchronization failed' };
+    console.error('❌ Supabase Sync Error (Document):', error.message);
+    return { success: false, error: error.message };
   }
 }
 
@@ -123,7 +120,7 @@ export async function deleteDocumentFromDb(docId: string) {
       client.release();
     }
   } catch (error: any) {
-    console.error('Relational Deletion Error (Document):', error);
-    return { success: false, error: error.message || 'Deletion failed' };
+    console.error('❌ Supabase Deletion Error (Document):', error.message);
+    return { success: false, error: error.message };
   }
 }

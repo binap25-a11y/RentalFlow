@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -28,7 +27,7 @@ import {
   Calendar as CalendarIcon, Loader2, 
   CheckCircle2, ClipboardList, ShieldAlert, Home, Wrench, 
   Check, X, AlertTriangle, Info, Trash2, Edit3, PlayCircle, Camera, Clock,
-  Save, FileDown, Activity, ChevronRight
+  Save, FileDown, Activity
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn, compressImage } from "@/lib/utils";
@@ -331,7 +330,7 @@ export default function InspectionsPage() {
       pdf.line(20, y + 2, 190, y + 2);
       y += 10;
 
-      Object.entries(inspection.structuredFindings).forEach(([item, data]: [string, any]) => {
+      for (const [item, data] of Object.entries(inspection.structuredFindings) as [string, any][]) {
         if (y > 270) { pdf.addPage(); y = 25; }
         pdf.setTextColor(0, 0, 0);
         pdf.setFont("helvetica", "bold");
@@ -353,7 +352,7 @@ export default function InspectionsPage() {
           y += (noteLines.length * 5);
         }
         y += 10;
-      });
+      }
 
       // --- IMAGES ---
       const visualFindings = Object.entries(inspection.structuredFindings)
@@ -381,7 +380,9 @@ export default function InspectionsPage() {
             y += 8;
             pdf.addImage(img, 'JPEG', 20, y, imgWidth, imgHeight);
             y += imgHeight + 15;
-          } catch (e) {}
+          } catch (e) {
+            console.warn("Visual sync failure for PDF:", e);
+          }
         }
       }
     }
@@ -391,11 +392,11 @@ export default function InspectionsPage() {
         pdf.setPage(i);
         pdf.setFontSize(8);
         pdf.setTextColor(150, 150, 150);
-        pdf.text(`Compliance Record | Page ${i} of ${pageCount}`, pageWidth / 2, 285, { align: 'center' });
+        pdf.text(`Official Compliance Record | Page ${i} of ${pageCount}`, pageWidth / 2, 285, { align: 'center' });
     }
 
-    pdf.save(`Audit_${property?.addressLine1.replace(/\s+/g, '_')}.pdf`);
-    toast({ title: "Report Saved Successfully" });
+    pdf.save(`Audit_${property?.addressLine1.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
+    toast({ title: "Compliance Report Saved" });
   };
 
   if (!isClient || isPropLoading || isInspLoading) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-accent" /></div>;
