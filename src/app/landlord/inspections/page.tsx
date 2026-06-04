@@ -27,7 +27,7 @@ import {
   Calendar as CalendarIcon, Loader2, 
   CheckCircle2, ClipboardList, ShieldAlert, Home, Wrench, 
   Check, X, AlertTriangle, Info, Trash2, Edit3, PlayCircle, Camera, Clock,
-  Save, FileDown, Activity
+  Save, FileDown, Activity, ImageOff
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn, compressImage } from "@/lib/utils";
@@ -84,7 +84,7 @@ export default function InspectionsPage() {
   const [date, setDate] = useState<Date>();
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
   const [activeInspection, setActiveInspection] = useState<any>(null);
-  const [structuredFindings, setStructuredFindings] = useState<Record<string, { status: 'pass' | 'fail', notes: string, imageUrl?: string, isSyncing?: boolean }>>({});
+  const [structuredFindings, setStructuredFindings] = useState<Record<string, { status: 'pass' | 'fail', notes: string, imageUrl?: string, isSyncing?: boolean, hasError?: boolean }>>({});
   const [isGenerating, setIsGenerating] = useState(false);
 
   const [editingMetadata, setEditingMetadata] = useState<any>(null);
@@ -143,25 +143,34 @@ export default function InspectionsPage() {
 
   const handleImageUpload = async (itemId: string, file: File | null) => {
     if (!file || !user || !activeInspection) return;
-    setStructuredFindings(prev => ({ ...prev, [itemId]: { ...prev[itemId], isSyncing: true } }));
+    setStructuredFindings(prev => ({ ...prev, [itemId]: { ...prev[itemId], isSyncing: true, hasError: false } }));
     try {
       const optimizedBlob = await compressImage(file);
-      const path = `${user.uid}/${activeInspection.propertyId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const path = `${user.uid}/${activeInspection.propertyId}/inspections/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       const formData = new FormData();
       formData.append('file', optimizedBlob, file.name);
       const result = await uploadToSupabase(formData, 'Property-Images-', path);
       if (!result.success) throw new Error(result.error);
       
       setStructuredFindings(prev => {
-        const updated = { ...prev, [itemId]: { ...prev[itemId], imageUrl: result.url, isSyncing: false } };
+        const updated = { ...prev, [itemId]: { ...prev[itemId], imageUrl: result.url, isSyncing: false, hasError: false } };
         syncFindingsToFirestore(updated);
         return updated;
       });
       toast({ title: "Evidence Synchronized" });
     } catch (err: any) {
-      setStructuredFindings(prev => ({ ...prev, [itemId]: { ...prev[itemId], isSyncing: false } }));
+      setStructuredFindings(prev => ({ ...prev, [itemId]: { ...prev[itemId], isSyncing: false, hasError: true } }));
       toast({ variant: "destructive", title: "Sync Failed", description: err.message });
     }
+  };
+
+  const handleRemoveImage = (itemId: string) => {
+    setStructuredFindings(prev => {
+      const updated = { ...prev, [itemId]: { ...prev[itemId], imageUrl: undefined, hasError: false } };
+      syncFindingsToFirestore(updated);
+      return updated;
+    });
+    toast({ title: "Evidence Removed" });
   };
 
   const handleSchedule = () => {
@@ -330,7 +339,7 @@ export default function InspectionsPage() {
       pdf.line(20, y + 2, 190, y + 2);
       y += 10;
 
-      for (const [item, data] of Object.entries(inspection.structuredFindings) as [string, any][]) {
+      for (const [item, data] of (Object.entries(inspection.structuredFindings) as [string, any][])) {
         if (y > 270) { pdf.addPage(); y = 25; }
         pdf.setTextColor(0, 0, 0);
         pdf.setFont("helvetica", "bold");
@@ -338,7 +347,8 @@ export default function InspectionsPage() {
         pdf.text(item, 20, y);
         
         if (data.status === 'pass') pdf.setTextColor(22, 101, 52);
-        else pdf.setTextColor(185, 28, 28);
+        else if (data.status === 'fail') pdf.setTextColor(185, 28, 28);
+        else pdf.setTextColor(100, 100, 100);
         
         pdf.text(data.status?.toUpperCase() || 'UNCHECKED', 170, y, { align: 'right' });
         
@@ -367,7 +377,7 @@ export default function InspectionsPage() {
         pdf.text("VISUAL EVIDENCE GALLERY", 20, y);
         y += 15;
 
-        for (const [item, data] of visualFindings as [string, any][]) {
+        for (const [item, data] of (visualFindings as [string, any][])) {
           if (y > 220) { pdf.addPage(); y = 25; }
           try {
             const img = await loadImage(data.imageUrl);
@@ -528,7 +538,7 @@ export default function InspectionsPage() {
       </div>
 
       <Dialog open={activeInspection !== null} onOpenChange={(o) => !o && setActiveInspection(null)}>
-        <DialogContent className="sm:max-w-[1000px] p-0 rounded-[2.5rem] border-none shadow-2xl flex flex-col h-[90vh] overflow-hidden bg-card ring-1 ring-white/10">
+        <DialogContent className="sm:max-w-[1200px] p-0 rounded-[2.5rem] border-none shadow-2xl flex flex-col h-[92vh] overflow-hidden bg-card ring-1 ring-white/10">
            <div className="p-6 bg-primary/5 border-b shrink-0 text-left">
               <DialogTitle className="text-xl font-headline font-bold text-foreground tracking-tight">Professional Property Audit</DialogTitle>
               <DialogDescription className="font-medium text-muted-foreground text-xs mt-1">Synchronizing compliance data and high-fidelity evidence.</DialogDescription>
@@ -547,7 +557,7 @@ export default function InspectionsPage() {
               </div>
               
               <ScrollArea className="flex-1">
-                 <div className="p-4 md:p-8 space-y-6 pb-48">
+                 <div className="p-4 md:p-8 space-y-6 pb-60">
                     {INSPECTION_SECTIONS.map(section => (
                       <TabsContent key={section.id} value={section.id} className="mt-0 space-y-6">
                          {section.items.map(item => (
@@ -570,7 +580,29 @@ export default function InspectionsPage() {
                                        {structuredFindings[item]?.isSyncing ? (
                                          <div className="flex flex-col items-center gap-2"><Loader2 className="w-6 h-6 animate-spin text-accent" /><span className="text-[8px] font-bold text-accent uppercase tracking-widest">Syncing...</span></div>
                                        ) : structuredFindings[item]?.imageUrl ? (
-                                         <img src={structuredFindings[item].imageUrl} alt="Evidence" className="absolute inset-0 h-full w-full object-cover" />
+                                         <div className="relative h-full w-full">
+                                           <img 
+                                             src={structuredFindings[item].imageUrl} 
+                                             alt="Evidence" 
+                                             className="absolute inset-0 h-full w-full object-cover" 
+                                             onError={(e) => {
+                                               e.currentTarget.style.display = 'none';
+                                               setStructuredFindings(prev => ({ ...prev, [item]: { ...prev[item], hasError: true } }));
+                                             }}
+                                           />
+                                           {structuredFindings[item]?.hasError && (
+                                             <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/40 gap-2">
+                                               <ImageOff className="w-8 h-8 text-muted-foreground/30" />
+                                               <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">Asset Resolution Failure</span>
+                                             </div>
+                                           )}
+                                           <button 
+                                             onClick={() => handleRemoveImage(item)}
+                                             className="absolute top-2 right-2 p-2 bg-black/60 backdrop-blur-xl text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                                           >
+                                             <Trash2 className="w-4 h-4" />
+                                           </button>
+                                         </div>
                                        ) : (
                                          <label htmlFor={`up-${item}`} className="flex flex-col items-center gap-2 text-muted-foreground opacity-30 cursor-pointer w-full h-full justify-center">
                                            <Camera className="w-8 h-8" /><span className="text-[8px] font-bold uppercase tracking-widest">Capture Visual</span>
@@ -589,7 +621,7 @@ export default function InspectionsPage() {
            </Tabs>
            
            <DialogFooter className="p-4 bg-muted/5 border-t shrink-0">
-              <Button className="w-full md:w-auto rounded-xl h-10 px-10 font-bold bg-primary text-primary-foreground uppercase tracking-widest text-[9px] border-none shadow-xl transition-all hover:scale-[1.01]" onClick={handleFinalizeAudit} disabled={isGenerating}>
+              <Button className="w-full md:w-auto rounded-xl h-11 px-10 font-bold bg-primary text-primary-foreground uppercase tracking-widest text-[9px] border-none shadow-xl transition-all hover:scale-[1.01]" onClick={handleFinalizeAudit} disabled={isGenerating}>
                  {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Orchestrating Records...</> : <><CheckCircle2 className="w-4 h-4 mr-2" /> Finalize Audit Report</>}
               </Button>
            </DialogFooter>
