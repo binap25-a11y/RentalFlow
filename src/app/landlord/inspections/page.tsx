@@ -233,7 +233,6 @@ export default function InspectionsPage() {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
 
-    // Helper to load image as base64/dataURI for jspdf
     const loadImage = (url: string): Promise<HTMLImageElement> => {
       return new Promise((resolve, reject) => {
         const img = new (window as any).Image();
@@ -270,13 +269,12 @@ export default function InspectionsPage() {
     pdf.setFont("helvetica", "normal"); 
     pdf.text(format(new Date(inspection.conductedDate || inspection.scheduledDate), 'PPP'), 130, 74);
 
-    // --- HEALTH SCORE BANNER ---
+    // --- HEALTH SCORE ---
     pdf.setFillColor(248, 250, 252); 
     pdf.rect(20, 85, 170, 25, "F");
     pdf.setDrawColor(226, 232, 240);
     pdf.rect(20, 85, 170, 25, "D");
     pdf.setFont("helvetica", "bold"); 
-    pdf.setFontSize(12); 
     pdf.text("PROPERTY HEALTH SCORE:", 30, 100);
     
     const score = inspection.healthScore || 0;
@@ -288,19 +286,19 @@ export default function InspectionsPage() {
     pdf.text(`${score}/100`, 160, 100, { align: 'right' });
     pdf.setTextColor(0, 0, 0);
 
-    // --- EXECUTIVE SUMMARY ---
+    // --- SUMMARY ---
     pdf.setFontSize(14); 
     pdf.setFont("helvetica", "bold");
     pdf.text("EXECUTIVE SUMMARY", 20, 125);
     pdf.setFont("helvetica", "normal"); 
     pdf.setFontSize(10);
-    const summaryLines = pdf.splitTextToSize(inspection.summary || "Manual compliance summary recorded within the ledger.", 170);
+    const summaryLines = pdf.splitTextToSize(inspection.summary || "Manual record.", 170);
     pdf.text(summaryLines, 20, 135);
 
     let y = 135 + (summaryLines.length * 6);
 
-    // --- PRIORITY ACTIONS ---
-    if (inspection.priorityItems && inspection.priorityItems.length > 0) {
+    // --- PRIORITY ---
+    if (inspection.priorityItems?.length > 0) {
       if (y > 250) { pdf.addPage(); y = 25; }
       pdf.setFontSize(14); 
       pdf.setFont("helvetica", "bold");
@@ -316,18 +314,18 @@ export default function InspectionsPage() {
       y += 10;
     }
 
-    // --- DETAILED AUDIT LEDGER ---
+    // --- FINDINGS LEDGER ---
     if (inspection.structuredFindings) {
       if (y > 240) { pdf.addPage(); y = 25; }
       pdf.setFontSize(14); 
       pdf.setFont("helvetica", "bold");
-      pdf.text("DETAILED AUDIT LEDGER", 20, y + 10);
+      pdf.text("ITEMIZED FINDINGS LEDGER", 20, y + 10);
       y += 22;
       
       pdf.setFontSize(8);
       pdf.setFont("helvetica", "bold");
       pdf.setTextColor(100, 100, 100);
-      pdf.text("INVENTORY ITEM", 20, y);
+      pdf.text("ITEM", 20, y);
       pdf.text("STATUS", 170, y, { align: 'right' });
       pdf.setDrawColor(226, 232, 240);
       pdf.line(20, y + 2, 190, y + 2);
@@ -340,8 +338,7 @@ export default function InspectionsPage() {
         pdf.setFontSize(10);
         pdf.text(item, 20, y);
         
-        const isPass = data.status === 'pass';
-        if (isPass) pdf.setTextColor(22, 101, 52);
+        if (data.status === 'pass') pdf.setTextColor(22, 101, 52);
         else pdf.setTextColor(185, 28, 28);
         
         pdf.text(data.status?.toUpperCase() || 'UNCHECKED', 170, y, { align: 'right' });
@@ -358,7 +355,7 @@ export default function InspectionsPage() {
         y += 10;
       });
 
-      // --- VISUAL EVIDENCE GALLERY ---
+      // --- IMAGES ---
       const visualFindings = Object.entries(inspection.structuredFindings)
         .filter(([_, data]: [string, any]) => data.imageUrl);
       
@@ -372,41 +369,32 @@ export default function InspectionsPage() {
         y += 15;
 
         for (const [item, data] of visualFindings as [string, any][]) {
-          if (y > 220) {
-            pdf.addPage();
-            y = 25;
-          }
-          
+          if (y > 220) { pdf.addPage(); y = 25; }
           try {
             const img = await loadImage(data.imageUrl);
             const imgWidth = 80;
             const imgHeight = (img.height * imgWidth) / img.width;
-            
             pdf.setTextColor(0, 0, 0);
             pdf.setFontSize(10);
             pdf.setFont("helvetica", "bold");
             pdf.text(`ITEM: ${item}`, 20, y);
             y += 8;
-            
             pdf.addImage(img, 'JPEG', 20, y, imgWidth, imgHeight);
             y += imgHeight + 15;
-          } catch (e) {
-            console.error("Failed to load visual asset for binary synchronization", e);
-          }
+          } catch (e) {}
         }
       }
     }
 
-    // --- FOOTER ---
     const pageCount = (pdf as any).internal.getNumberOfPages();
     for(let i = 1; i <= pageCount; i++) {
         pdf.setPage(i);
         pdf.setFontSize(8);
         pdf.setTextColor(150, 150, 150);
-        pdf.text(`RentalFlow Property Operations | Compliance Record | Page ${i} of ${pageCount}`, pageWidth / 2, 285, { align: 'center' });
+        pdf.text(`Compliance Record | Page ${i} of ${pageCount}`, pageWidth / 2, 285, { align: 'center' });
     }
 
-    pdf.save(`Audit_${property?.addressLine1.replace(/\s+/g, '_') || 'Portfolio_Asset'}.pdf`);
+    pdf.save(`Audit_${property?.addressLine1.replace(/\s+/g, '_')}.pdf`);
     toast({ title: "Report Saved Successfully" });
   };
 
@@ -464,7 +452,7 @@ export default function InspectionsPage() {
                 <p className="text-xs font-bold uppercase tracking-widest font-headline">No audit records found.</p>
               </div>
             ) : (
-              inspections.slice().sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime()).map((inspection) => (
+              [...inspections].sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime()).map((inspection) => (
                 <Card key={inspection.id} className="border-none shadow-sm overflow-hidden bg-card rounded-[2.5rem] ring-1 ring-border group hover:shadow-md transition-all">
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row gap-6">
@@ -497,9 +485,7 @@ export default function InspectionsPage() {
                           {inspection.status === 'completed' ? <><Edit3 className="w-4 h-4 mr-2" /> Edit Audit</> : <><PlayCircle className="w-4 h-4 mr-2" /> Start Audit</>}
                         </Button>
                         {inspection.summary && (
-                          <div className="p-8 bg-primary/[0.03] rounded-3xl border border-border mt-6 text-left shadow-inner relative overflow-hidden group/summary">
-                             <div className="absolute top-0 right-0 p-8 opacity-5 group-hover/summary:rotate-12 transition-transform duration-700"><ShieldAlert className="w-20 h-20" /></div>
-                             
+                          <div className="p-8 bg-primary/[0.03] rounded-3xl border border-border mt-6 text-left shadow-inner relative overflow-hidden">
                              <div className="space-y-1 mb-6">
                                <p className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest">Executive Summary</p>
                                <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[11px] h-8 px-4 rounded-full">{inspection.healthScore}/100 Health Score</Badge>
@@ -546,6 +532,7 @@ export default function InspectionsPage() {
               <DialogTitle className="text-xl font-headline font-bold text-foreground tracking-tight">Professional Property Audit</DialogTitle>
               <DialogDescription className="font-medium text-muted-foreground text-xs mt-1">Synchronizing compliance data and high-fidelity evidence.</DialogDescription>
            </div>
+           
            <Tabs defaultValue="exterior" className="flex-1 flex flex-col min-h-0">
               <div className="bg-muted/30 border-b p-2 shrink-0">
                  <TabsList className="flex flex-wrap h-auto items-center bg-transparent p-0 gap-1 justify-center md:justify-start">
@@ -557,8 +544,9 @@ export default function InspectionsPage() {
                     ))}
                  </TabsList>
               </div>
+              
               <ScrollArea className="flex-1">
-                 <div className="p-4 md:p-8 space-y-6 pb-32">
+                 <div className="p-4 md:p-8 space-y-6 pb-48">
                     {INSPECTION_SECTIONS.map(section => (
                       <TabsContent key={section.id} value={section.id} className="mt-0 space-y-6">
                          {section.items.map(item => (
@@ -583,7 +571,7 @@ export default function InspectionsPage() {
                                        ) : structuredFindings[item]?.imageUrl ? (
                                          <Image src={structuredFindings[item].imageUrl} alt="Evidence" fill className="object-cover" unoptimized />
                                        ) : (
-                                         <label htmlFor={`up-${item}`} className="flex flex-col items-center gap-2 text-muted-foreground opacity-30 cursor-pointer">
+                                         <label htmlFor={`up-${item}`} className="flex flex-col items-center gap-2 text-muted-foreground opacity-30 cursor-pointer w-full h-full justify-center">
                                            <Camera className="w-8 h-8" /><span className="text-[8px] font-bold uppercase tracking-widest">Capture Visual</span>
                                            <input id={`up-${item}`} type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(item, e.target.files?.[0] || null)} />
                                          </label>
@@ -598,6 +586,7 @@ export default function InspectionsPage() {
                  </div>
               </ScrollArea>
            </Tabs>
+           
            <DialogFooter className="p-4 bg-muted/5 border-t shrink-0">
               <Button className="w-full md:w-auto rounded-xl h-10 px-10 font-bold bg-primary text-primary-foreground uppercase tracking-widest text-[9px] border-none shadow-xl transition-all hover:scale-[1.01]" onClick={handleFinalizeAudit} disabled={isGenerating}>
                  {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Orchestrating Records...</> : <><CheckCircle2 className="w-4 h-4 mr-2" /> Finalize Audit Report</>}
