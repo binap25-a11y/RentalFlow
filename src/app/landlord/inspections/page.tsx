@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -33,7 +34,6 @@ import { useToast } from "@/hooks/use-toast";
 import { cn, compressImage } from "@/lib/utils";
 import { generateInspectionReport } from "@/ai/flows/generate-inspection-report";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import Image from 'next/image';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -569,7 +569,7 @@ export default function InspectionsPage() {
                                        {structuredFindings[item]?.isSyncing ? (
                                          <div className="flex flex-col items-center gap-2"><Loader2 className="w-6 h-6 animate-spin text-accent" /><span className="text-[8px] font-bold text-accent uppercase tracking-widest">Syncing...</span></div>
                                        ) : structuredFindings[item]?.imageUrl ? (
-                                         <Image src={structuredFindings[item].imageUrl} alt="Evidence" fill className="object-cover" unoptimized />
+                                         <img src={structuredFindings[item].imageUrl} alt="Evidence" className="absolute inset-0 h-full w-full object-cover" />
                                        ) : (
                                          <label htmlFor={`up-${item}`} className="flex flex-col items-center gap-2 text-muted-foreground opacity-30 cursor-pointer w-full h-full justify-center">
                                            <Camera className="w-8 h-8" /><span className="text-[8px] font-bold uppercase tracking-widest">Capture Visual</span>
