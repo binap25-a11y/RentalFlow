@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { cn, compressImage, withRetry, isRealUserUpload } from '@/lib/utils';
+import { cn, compressImage, withRetry, isRealUserUpload, isValidAssetUrl, PROPERTY_PLACEHOLDER } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -55,7 +55,6 @@ export default function NewPropertyPage() {
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // BINARY PRESENCE GUARD: Prevent destructive overwrites during transitions
     const isMidUpload = currentLedger.some(i => i.status === 'uploading');
     if (readyUrls.length === 0 && isMidUpload) return;
 
@@ -82,7 +81,6 @@ export default function NewPropertyPage() {
 
       try {
         const optimizedBlob = await compressImage(file);
-        // ATOMIC PATH PROTOCOL: uid/propertyId/timestamp-filename
         const path = `${user.uid}/${propertyId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
         
         const formData = new FormData();
@@ -199,33 +197,40 @@ export default function NewPropertyPage() {
 
               <ScrollArea className="h-[450px] pr-4">
                 <div className="grid grid-cols-2 gap-4">
-                  {ledger.map((item, index) => (
-                    <div key={item.id} className={cn(
-                      "relative aspect-video rounded-2xl overflow-hidden group shadow-sm bg-background border-2 transition-all",
-                      item.status === 'uploading' ? 'opacity-50 grayscale scale-[0.98]' : 'opacity-100',
-                      index === 0 ? "border-accent" : "border-transparent",
-                      item.status === 'error' && "border-destructive"
-                    )}>
-                      <img 
-                        src={item.cloudUrl || item.previewUrl} 
-                        alt="" 
-                        className="absolute inset-0 h-full w-full object-cover"
-                      />
-                      <div className="absolute top-2 right-2 flex gap-1 z-20">
-                        <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-card/90 text-accent p-2 rounded-xl hover:scale-110 transition-transform shadow-lg border border-border">
-                          <Star className={cn("w-3.5 h-3.5", index === 0 && "fill-accent")} />
-                        </button>
-                        <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 transition-all active:scale-90"><X className="w-3.5 h-3.5" /></button>
-                      </div>
-                      
-                      {item.status === 'uploading' && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-card/60 backdrop-blur-md gap-2">
-                           <Loader2 className="w-6 h-6 animate-spin text-accent" />
-                           <span className="text-[8px] font-bold text-accent uppercase tracking-[0.2em]">Syncing...</span>
+                  {ledger.map((item, index) => {
+                    const imageUrl = item.previewUrl || item.cloudUrl || PROPERTY_PLACEHOLDER;
+                    return (
+                      <div key={item.id} className={cn(
+                        "relative aspect-video rounded-2xl overflow-hidden group shadow-sm bg-background border-2 transition-all",
+                        item.status === 'uploading' ? 'opacity-70 scale-[0.98]' : 'opacity-100',
+                        index === 0 ? "border-accent" : "border-transparent",
+                        item.status === 'error' && "border-destructive"
+                      )}>
+                        <img 
+                          src={imageUrl} 
+                          alt="" 
+                          className="absolute inset-0 h-full w-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = PROPERTY_PLACEHOLDER;
+                            e.currentTarget.classList.add('opacity-40');
+                          }}
+                        />
+                        <div className="absolute top-2 right-2 flex gap-1 z-20">
+                          <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-black/40 backdrop-blur-xl text-accent p-2 rounded-xl hover:scale-110 transition-transform shadow-lg border border-border">
+                            <Star className={cn("w-3.5 h-3.5", index === 0 && "fill-accent")} />
+                          </button>
+                          <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/80 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 transition-all active:scale-90"><X className="w-3.5 h-3.5" /></button>
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        
+                        {item.status === 'uploading' && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/40 backdrop-blur-sm gap-2">
+                             <Loader2 className="w-6 h-6 animate-spin text-accent" />
+                             <span className="text-[8px] font-bold text-accent uppercase tracking-[0.2em]">Syncing...</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                   <label htmlFor="image-input" className="aspect-video rounded-2xl border-2 border-dashed border-accent/20 hover:border-accent/40 transition-all bg-muted/5 flex flex-col items-center justify-center gap-2 group cursor-pointer shadow-inner">
                     <Plus className="w-6 h-6 text-accent/20 group-hover:text-accent/40" />
                     <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">Gallery Select</span>
