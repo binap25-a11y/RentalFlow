@@ -254,7 +254,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                         onError={(e) => {
                           e.currentTarget.src = RENTALFLOW_LOGO_URL;
-                          e.currentTarget.classList.add('opacity-20');
+                          e.currentTarget.classList.add('opacity-40');
                         }}
                       />
                       <div className="absolute top-3 right-3 flex gap-2 z-20">
@@ -266,8 +266,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       {index === 0 && <div className="absolute bottom-3 left-3 px-3 py-1 bg-accent text-white text-[8px] font-bold uppercase rounded-full shadow-2xl font-headline z-20 tracking-widest">Cover</div>}
                       {item.status === 'uploading' && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-xl gap-3">
-                           <Loader2 className="w-8 h-8 animate-spin text-primary opacity-60" />
-                           <span className="text-[9px] font-bold text-primary uppercase tracking-[0.4em]">Syncing...</span>
+                           <Loader2 className="w-8 h-8 animate-spin text-accent" />
+                           <span className="text-[9px] font-bold text-accent uppercase tracking-[0.4em]">Syncing...</span>
                         </div>
                       )}
                     </div>

@@ -1,4 +1,3 @@
-
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import placeholderData from '@/app/lib/placeholder-images.json';
@@ -39,10 +38,15 @@ export async function withRetry<T>(
  * Hardened to reject 'corrupt' strings like "undefined" or "null".
  */
 export function isValidAssetUrl(url: any): boolean {
-  if (!url || typeof url !== 'string' || url.trim() === '') return false;
+  if (!url || typeof url !== 'string' || url.trim() === '' || url.length < 5) return false;
   
   const lowerUrl = url.toLowerCase().trim();
-  if (lowerUrl === 'undefined' || lowerUrl === 'null' || lowerUrl === '[object object]') return false;
+  if (
+    lowerUrl === 'undefined' || 
+    lowerUrl === 'null' || 
+    lowerUrl === '[object object]' || 
+    lowerUrl.includes('placeholder')
+  ) return false;
   
   return (lowerUrl.startsWith('http') || lowerUrl.startsWith('blob:') || lowerUrl.startsWith('data:'));
 }
@@ -93,7 +97,9 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
   const assets = new Set<string>();
   
   const primary = getResolvedImageUrl(imageUrl, imageUrls);
-  assets.add(primary);
+  if (isValidAssetUrl(primary) && !primary.includes('images.unsplash.com/photo-1560518883')) {
+    assets.add(primary);
+  }
   
   if (imageUrls && Array.isArray(imageUrls)) {
     imageUrls.forEach(u => {
@@ -101,6 +107,11 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
         assets.add(u);
       }
     });
+  }
+  
+  // Ensure we at least have the placeholder if nothing else exists
+  if (assets.size === 0) {
+    assets.add(PROPERTY_PLACEHOLDER);
   }
   
   return Array.from(assets);
