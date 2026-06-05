@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { cn, getResolvedImageUrl, PROPERTY_PLACEHOLDER } from "@/lib/utils";
+import { cn, getResolvedImageUrl, PROPERTY_PLACEHOLDER, isValidAssetUrl } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
@@ -27,10 +27,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import Image from "next/image";
 
 /**
  * @fileOverview High-Fidelity Portfolio Registry.
- * Hardened visual rendering: Using standard img tags without restrictive attributes to resolve "black box" issues in cloud workstations.
+ * Hardened visual rendering: Using next/image with unoptimized and priority flags for workstation stability.
  */
 export default function PropertiesPage() {
   const { user } = useUser();
@@ -171,15 +172,21 @@ export default function PropertiesPage() {
                 return (
                   <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-2xl transition-all duration-500 rounded-[2.5rem] bg-card ring-1 ring-border">
                     <div className="relative aspect-video w-full overflow-hidden bg-muted">
-                      <img 
-                        src={imageUrl} 
-                        alt="" 
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                        onError={(e) => {
-                          e.currentTarget.src = PROPERTY_PLACEHOLDER;
-                          e.currentTarget.classList.add('opacity-40');
-                        }}
-                      />
+                      {isValidAssetUrl(imageUrl) ? (
+                        <Image 
+                          src={imageUrl} 
+                          alt="" 
+                          fill 
+                          className="object-cover transition-transform duration-1000 group-hover:scale-110"
+                          unoptimized
+                          priority
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/40 gap-3">
+                           <Sparkles className="w-8 h-8 text-muted-foreground/30" />
+                           <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Awaiting Visuals</span>
+                        </div>
+                      )}
                       <Badge className={cn("absolute top-6 right-6 font-bold shadow-2xl py-1.5 px-4 text-[9px] uppercase tracking-widest rounded-full border-none", property.isOccupied ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white')}>
                         {property.isOccupied ? 'Occupied' : 'Vacant'}
                       </Badge>
@@ -234,11 +241,19 @@ export default function PropertiesPage() {
                     <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-6">
                       <div className="flex items-center gap-5 w-full text-left min-w-0">
                         <div className="relative h-16 w-24 rounded-xl overflow-hidden bg-muted shrink-0">
-                          <img 
-                            src={imageUrl} 
-                            alt="" 
-                            className="absolute inset-0 h-full w-full object-cover grayscale opacity-50" 
-                          />
+                          {isValidAssetUrl(imageUrl) ? (
+                            <Image 
+                              src={imageUrl} 
+                              alt="" 
+                              fill 
+                              className="object-cover grayscale opacity-50"
+                              unoptimized
+                            />
+                          ) : (
+                            <div className="absolute inset-0 bg-muted flex items-center justify-center">
+                              <Sparkles className="w-4 h-4 text-muted-foreground/20" />
+                            </div>
+                          )}
                         </div>
                         <div className="min-w-0 flex-1">
                            <h4 className="font-bold text-base font-headline text-foreground truncate block">{property.addressLine1}</h4>

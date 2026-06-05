@@ -16,13 +16,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star, ImageOff } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { cn, isRealUserUpload, compressImage, isValidAssetUrl, RENTALFLOW_LOGO_URL, PROPERTY_PLACEHOLDER } from "@/lib/utils";
+import { cn, isRealUserUpload, compressImage, isValidAssetUrl, PROPERTY_PLACEHOLDER } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Image from "next/image";
 
 type LedgerItem = {
   id: string;
@@ -33,7 +34,7 @@ type LedgerItem = {
 
 /**
  * @fileOverview Modify Asset Specs.
- * Hardened visual rendering: Standard img tags without restrictive attributes to resolve "black box" issues in cloud workstations.
+ * Hardened visual rendering: Utilized high-performance next/image components with absolute viewport fills.
  */
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -216,8 +217,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   if (isPropLoading || !isInitialized.current) return <div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-accent" /></div>;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-16 text-left bg-background">
-      <div className="flex items-center justify-between">
+    <div className="max-w-[1200px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-24 text-left bg-background">
+      <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-6">
           <button onClick={() => router.back()} className="h-12 w-12 rounded-2xl hover:bg-white/5 transition-all flex items-center justify-center border border-white/5 shadow-2xl">
             <ArrowLeft className="w-6 h-6 text-foreground" />
@@ -233,96 +234,105 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-1 lg:grid-cols-2">
             <div className="p-10 bg-white/[0.02] border-r border-white/5">
-              <div className="flex justify-between items-center mb-8">
+              <div className="flex justify-between items-center mb-10">
                 <Label className="font-bold text-[10px] uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">Visual Asset Ledger</Label>
-                <label htmlFor="image-input" className="h-11 rounded-2xl font-bold text-[10px] uppercase font-headline cursor-pointer px-6 bg-accent text-white shadow-2xl shadow-accent/20 flex items-center hover:bg-accent/90 transition-all active:scale-95">
+                <label htmlFor="image-input" className="h-11 rounded-2xl font-bold text-[10px] uppercase font-headline cursor-pointer px-8 bg-accent text-white shadow-2xl shadow-accent/20 flex items-center hover:bg-accent/90 transition-all active:scale-95">
                   <Plus className="w-4 h-4 mr-2" /> Register Assets
                 </label>
               </div>
 
-              <ScrollArea className="h-[600px] pr-4">
-                <div className="grid grid-cols-2 gap-5">
-                  {ledger.map((item, index) => (
-                    <div key={item.id} className={cn(
-                      "relative aspect-square rounded-[2rem] overflow-hidden group shadow-2xl bg-background border-2 transition-all duration-500",
-                      item.status === 'uploading' ? 'opacity-50 grayscale scale-[0.95]' : 'opacity-100',
-                      index === 0 ? "border-accent" : "border-transparent",
-                      item.status === 'error' && "border-destructive"
-                    )}>
-                      <img 
-                        src={item.previewUrl || item.cloudUrl} 
-                        alt="" 
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                        onError={(e) => {
-                          e.currentTarget.src = PROPERTY_PLACEHOLDER;
-                          e.currentTarget.classList.add('opacity-40');
-                        }}
-                      />
-                      <div className="absolute top-3 right-3 flex gap-2 z-20">
-                        <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-black/60 backdrop-blur-xl text-accent p-2.5 rounded-2xl hover:scale-110 transition-transform shadow-2xl border border-white/10">
-                          <Star className={cn("w-4 h-4", index === 0 && "fill-accent")} />
-                        </button>
-                        <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/80 backdrop-blur-xl text-white p-2.5 rounded-2xl shadow-2xl hover:bg-red-600 transition-all active:scale-90 border border-white/10"><X className="w-4 h-4" /></button>
-                      </div>
-                      {index === 0 && <div className="absolute bottom-3 left-3 px-3 py-1 bg-accent text-white text-[8px] font-bold uppercase rounded-full shadow-2xl font-headline z-20 tracking-widest">Cover</div>}
-                      {item.status === 'uploading' && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-xl gap-3">
-                           <Loader2 className="w-8 h-8 animate-spin text-accent" />
-                           <span className="text-[9px] font-bold text-accent uppercase tracking-[0.4em]">Syncing...</span>
+              <ScrollArea className="h-[650px] pr-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pb-20">
+                  {ledger.map((item, index) => {
+                    const imageUrl = item.previewUrl || item.cloudUrl || PROPERTY_PLACEHOLDER;
+                    return (
+                      <div key={item.id} className={cn(
+                        "relative aspect-square rounded-[2.5rem] overflow-hidden group shadow-2xl bg-background border-2 transition-all duration-500",
+                        item.status === 'uploading' ? 'opacity-50 grayscale scale-[0.95]' : 'opacity-100',
+                        index === 0 ? "border-accent" : "border-transparent",
+                        item.status === 'error' && "border-destructive"
+                      )}>
+                        {isValidAssetUrl(imageUrl) ? (
+                          <Image 
+                            src={imageUrl} 
+                            alt="" 
+                            fill 
+                            className="object-cover transition-transform duration-1000 group-hover:scale-110"
+                            unoptimized
+                            priority
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/40 gap-3">
+                             <Sparkles className="w-8 h-8 text-muted-foreground/30" />
+                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Awaiting Content</span>
+                          </div>
+                        )}
+                        <div className="absolute top-4 right-4 flex gap-2 z-20">
+                          <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-black/60 backdrop-blur-xl text-accent p-3 rounded-2xl hover:scale-110 transition-transform shadow-2xl border border-white/10">
+                            <Star className={cn("w-5 h-5", index === 0 && "fill-accent")} />
+                          </button>
+                          <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/80 backdrop-blur-xl text-white p-3 rounded-2xl shadow-2xl hover:bg-red-600 transition-all active:scale-90 border border-white/10"><X className="w-5 h-5" /></button>
                         </div>
-                      )}
-                    </div>
-                  ))}
-                  <label htmlFor="image-input" className="aspect-square rounded-[2rem] border-2 border-dashed border-white/5 hover:border-accent/40 transition-all duration-500 bg-white/[0.01] flex flex-col items-center justify-center gap-4 group cursor-pointer shadow-inner">
-                    <div className="p-5 bg-white/5 rounded-full group-hover:scale-110 transition-transform duration-500"><Plus className="w-8 h-8 text-white/10 group-hover:text-accent/40" /></div>
-                    <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-30">Gallery Select</span>
+                        {index === 0 && <div className="absolute bottom-4 left-4 px-4 py-1.5 bg-accent text-white text-[9px] font-bold uppercase rounded-full shadow-2xl font-headline z-20 tracking-widest">Cover Asset</div>}
+                        {item.status === 'uploading' && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-xl gap-4 z-30">
+                             <Loader2 className="w-10 h-10 animate-spin text-accent" />
+                             <span className="text-[10px] font-bold text-accent uppercase tracking-[0.4em]">Synchronizing...</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  <label htmlFor="image-input" className="aspect-square rounded-[2.5rem] border-2 border-dashed border-white/10 hover:border-accent/40 transition-all duration-500 bg-white/[0.01] flex flex-col items-center justify-center gap-4 group cursor-pointer shadow-inner">
+                    <div className="p-6 bg-white/5 rounded-full group-hover:scale-110 transition-transform duration-500"><Plus className="w-10 h-10 text-white/10 group-hover:text-accent/40" /></div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-30">Gallery Select</span>
                   </label>
                 </div>
               </ScrollArea>
               <input id="image-input" type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
             </div>
 
-            <div className="p-12 space-y-10">
-              <div className="space-y-8 text-left">
-                <div className="space-y-3">
+            <div className="p-12 space-y-12">
+              <div className="space-y-10 text-left">
+                <div className="space-y-4">
                   <Label className="font-bold text-[10px] uppercase tracking-[0.3em] text-muted-foreground opacity-40 font-headline">Operational Location</Label>
-                  <Input value={address} onChange={(e) => setAddress(e.target.value)} required className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner" placeholder="Street Address" />
+                  <Input value={address} onChange={(e) => setAddress(e.target.value)} required className="rounded-2xl h-16 bg-muted/30 border-none font-bold text-lg px-8 shadow-inner ring-1 ring-white/5" placeholder="Street Address" />
                 </div>
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-8">
+                  <div className="space-y-4">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Registry City</Label>
-                    <Input value={city} onChange={(e) => setCity(e.target.value)} required className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner" placeholder="City" />
+                    <Input value={city} onChange={(e) => setCity(e.target.value)} required className="rounded-2xl h-16 bg-muted/30 border-none font-bold text-lg px-8 shadow-inner ring-1 ring-white/5" placeholder="City" />
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Postcode Identity</Label>
-                    <Input value={zipCode} onChange={(e) => setZipCode(e.target.value)} required className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner" placeholder="Postcode" />
+                    <Input value={zipCode} onChange={(e) => setZipCode(e.target.value)} required className="rounded-2xl h-16 bg-muted/30 border-none font-bold text-lg px-8 shadow-inner ring-1 ring-white/5" placeholder="Postcode" />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-8">
+                  <div className="space-y-4">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Bedrooms</Label>
                     <Select value={bedrooms} onValueChange={setBedrooms}>
-                      <SelectTrigger className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner focus:ring-accent text-foreground"><SelectValue /></SelectTrigger>
-                      <SelectContent className="rounded-xl border-white/5 bg-card">
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map(n => <SelectItem key={n} value={n.toString()} className="font-bold">{n} Bedroom{n > 1 ? 's' : ''}</SelectItem>)}
+                      <SelectTrigger className="rounded-2xl h-16 bg-muted/30 border-none font-bold text-lg px-8 shadow-inner ring-1 ring-white/5 focus:ring-accent text-foreground"><SelectValue /></SelectTrigger>
+                      <SelectContent className="rounded-2xl border-white/5 bg-card shadow-2xl p-2">
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map(n => <SelectItem key={n} value={n.toString()} className="rounded-xl font-bold py-3">{n} Bedroom{n > 1 ? 's' : ''}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Bathrooms</Label>
-                    <Select value={bathrooms} onValueChange={setBedrooms}>
-                      <SelectTrigger className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner focus:ring-accent text-foreground"><SelectValue /></SelectTrigger>
-                      <SelectContent className="rounded-xl border-white/5 bg-card">
-                        {[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={n.toString()} className="font-bold">{n} Bathroom{n > 1 ? 's' : ''}</SelectItem>)}
+                    <Select value={bathrooms} onValueChange={setBathrooms}>
+                      <SelectTrigger className="rounded-2xl h-16 bg-muted/30 border-none font-bold text-lg px-8 shadow-inner ring-1 ring-white/5 focus:ring-accent text-foreground"><SelectValue /></SelectTrigger>
+                      <SelectContent className="rounded-2xl border-white/5 bg-card shadow-2xl p-2">
+                        {[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={n.toString()} className="rounded-xl font-bold py-3">{n} Bathroom{n > 1 ? 's' : ''}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-8">
+                  <div className="space-y-4">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Asset Classification</Label>
                     <Select value={propertyType} onValueChange={setPropertyType}>
-                      <SelectTrigger className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner focus:ring-accent text-foreground"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="rounded-2xl h-16 bg-muted/30 border-none font-bold text-lg px-8 shadow-inner ring-1 ring-white/5 focus:ring-accent text-foreground"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-2xl border-white/5 bg-card shadow-2xl p-2">
                         <SelectItem value="Apartment" className="rounded-xl font-bold py-3">Apartment Registry</SelectItem>
                         <SelectItem value="House" className="rounded-xl font-bold py-3">Residential House</SelectItem>
@@ -330,23 +340,23 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Monthly Rent</Label>
-                    <Input type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-2xl h-14 bg-muted/30 border-none font-bold text-base px-6 shadow-inner" placeholder="0.00" />
+                    <Input type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} required className="rounded-2xl h-16 bg-muted/30 border-none font-bold text-lg px-8 shadow-inner ring-1 ring-white/5" placeholder="0.00" />
                   </div>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Operational Narrative</Label>
-                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Internal narrative for this asset ledger..." className="rounded-2xl min-h-[160px] bg-muted/30 border-none font-medium text-base px-6 py-5 shadow-inner leading-relaxed text-foreground" />
+                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Internal narrative for this asset ledger..." className="rounded-[2rem] min-h-[180px] bg-muted/30 border-none font-medium text-lg px-8 py-8 shadow-inner ring-1 ring-white/5 leading-relaxed text-foreground" />
                 </div>
               </div>
             </div>
           </div>
-          <CardFooter className="p-10 bg-white/[0.01] border-t border-white/5 flex flex-col md:flex-row justify-end gap-5 shrink-0">
-            <Button type="button" variant="ghost" className="w-full md:w-auto rounded-2xl h-14 px-10 font-bold font-headline text-muted-foreground hover:bg-white/5 hover:text-foreground border border-white/5 transition-all" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" disabled={isSaving} className="w-full md:w-auto rounded-2xl font-bold bg-background text-foreground border border-border h-14 px-14 shadow-2xl shadow-accent/20 font-headline transition-all hover:bg-primary hover:text-primary-foreground uppercase tracking-[0.2em] text-[11px] hover:scale-[1.02]">
-              {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
-              Save & Synchronize
+          <CardFooter className="p-10 bg-white/[0.01] border-t border-white/5 flex flex-col md:flex-row justify-end gap-6 shrink-0">
+            <Button type="button" variant="ghost" className="w-full md:w-auto rounded-[1.5rem] h-16 px-12 font-bold font-headline text-muted-foreground hover:bg-white/5 hover:text-foreground border border-white/5 transition-all" onClick={() => router.back()}>Cancel Changes</Button>
+            <Button type="submit" disabled={isSaving} className="w-full md:w-auto rounded-[1.5rem] font-bold bg-background text-foreground border border-border h-16 px-16 shadow-2xl shadow-accent/20 font-headline transition-all hover:bg-primary hover:text-primary-foreground uppercase tracking-[0.2em] text-[11px] hover:scale-[1.01]">
+              {isSaving ? <Loader2 className="w-6 h-6 animate-spin mr-3" /> : <Save className="w-6 h-6 mr-3" />}
+              Synchronize Asset
             </Button>
           </CardFooter>
         </form>

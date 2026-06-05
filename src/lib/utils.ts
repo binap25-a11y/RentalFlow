@@ -1,6 +1,5 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import placeholderData from '@/app/lib/placeholder-images.json';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -36,13 +35,13 @@ export async function withRetry<T>(
 /**
  * 🖼️ Asset Validation Engine
  * Relaxed to ensure all cloud storage paths (Signed/Public) are authorized.
- * Simplified for higher reliability in proxied environments.
+ * Hardened to reject string-serialized null/undefined values.
  */
 export function isValidAssetUrl(url: any): boolean {
   if (!url || typeof url !== 'string') return false;
   
   const trimmed = url.trim();
-  if (trimmed === '' || trimmed.length < 5) return false;
+  if (trimmed.length < 5) return false; // blob: is 5, http: is 7
   
   const lower = trimmed.toLowerCase();
   
