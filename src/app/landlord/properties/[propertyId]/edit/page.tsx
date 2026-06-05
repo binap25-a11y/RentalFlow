@@ -33,8 +33,7 @@ type LedgerItem = {
 
 /**
  * @fileOverview Modify Asset Specs.
- * Hardened visual rendering: Flicker-free preview engine with resilient error handling.
- * Standardized on standard <img> tags for maximum reliability with blobs and signed URLs.
+ * Hardened visual rendering: Flicker-free preview engine using standard <img> tags for reliable resolution.
  */
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -256,25 +255,18 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                         index === 0 ? "border-accent" : "border-white/10",
                         item.status === 'error' && "border-destructive"
                       )}>
-                        {isValidAssetUrl(imageUrl) ? (
-                          <img 
-                            src={imageUrl} 
-                            alt="" 
-                            className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                            onError={(e) => {
-                              e.currentTarget.src = PROPERTY_PLACEHOLDER;
-                              e.currentTarget.classList.add('opacity-40');
-                            }}
-                          />
-                        ) : (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/40 gap-3">
-                             <Sparkles className="w-8 h-8 text-muted-foreground/30" />
-                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Awaiting Content</span>
-                          </div>
-                        )}
+                        <img 
+                          src={isValidAssetUrl(imageUrl) ? imageUrl : PROPERTY_PLACEHOLDER} 
+                          alt="" 
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                          onError={(e) => {
+                            e.currentTarget.src = PROPERTY_PLACEHOLDER;
+                            e.currentTarget.classList.add('opacity-40');
+                          }}
+                        />
                         
                         <div className="absolute top-4 right-4 flex gap-2 z-20">
-                          <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-black/60 backdrop-blur-xl text-accent p-3 rounded-2xl hover:scale-110 transition-transform shadow-2xl border border-white/10">
+                          <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-black/40 backdrop-blur-xl text-accent p-3 rounded-2xl hover:scale-110 transition-transform shadow-2xl border border-white/10">
                             <Star className={cn("w-5 h-5", index === 0 && "fill-accent")} />
                           </button>
                           <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/80 backdrop-blur-xl text-white p-3 rounded-2xl shadow-2xl hover:bg-red-600 transition-all active:scale-90 border border-white/10"><X className="w-5 h-5" /></button>
@@ -330,7 +322,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                   </div>
                   <div className="space-y-4">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-40 tracking-[0.3em] font-headline">Bathrooms</Label>
-                    <Select value={bathrooms} onValueChange={setBathrooms}>
+                    <Select value={bathrooms} onValueChange={setBedrooms}>
                       <SelectTrigger className="rounded-2xl h-16 bg-muted/30 border-none font-bold text-lg px-8 shadow-inner ring-1 ring-white/5 focus:ring-accent text-foreground"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-2xl border-white/5 bg-card shadow-2xl p-2">
                         {[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={n.toString()} className="rounded-xl font-bold py-3">{n} Bathroom{n > 1 ? 's' : ''}</SelectItem>)}

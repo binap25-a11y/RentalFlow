@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect } from "react";
-import { cn, getResolvedImageUrl, getResolvedGallery, compressImage } from "@/lib/utils";
+import { cn, getResolvedGallery, compressImage, isValidAssetUrl, PROPERTY_PLACEHOLDER } from "@/lib/utils";
 import { query, collection, where, doc, serverTimestamp } from "firebase/firestore";
 import { format } from "date-fns";
 import {
@@ -45,14 +45,13 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { uploadToSupabase } from "@/lib/actions/supabase-storage";
 import { notifyLandlordOfRequest } from "@/lib/actions/email-actions";
 
 /**
  * @fileOverview Personalized Resident Hub.
- * Optimized for real-time finance tracking and vertical vertical authority.
+ * Hardened visual rendering using native <img> tags for maximum Supabase resolution.
  */
 
 export default function TenantHub() {
@@ -226,7 +225,15 @@ export default function TenantHub() {
                     {gallery.map((url, index) => (
                       <CarouselItem key={`${url}-${index}`}>
                         <div className="relative h-[450px] md:h-[550px] w-full cursor-zoom-in overflow-hidden" onClick={() => setLightboxUrl(url)}>
-                          <Image src={url} alt={`Property View ${index + 1}`} fill className="object-cover transition-transform duration-1000 group-hover/carousel:scale-105" unoptimized priority={index === 0} />
+                          <img 
+                            src={isValidAssetUrl(url) ? url : PROPERTY_PLACEHOLDER} 
+                            alt={`Property View ${index + 1}`} 
+                            className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover/carousel:scale-105" 
+                            onError={(e) => {
+                              e.currentTarget.src = PROPERTY_PLACEHOLDER;
+                              e.currentTarget.classList.add('opacity-40');
+                            }}
+                          />
                         </div>
                       </CarouselItem>
                     ))}
@@ -379,7 +386,7 @@ export default function TenantHub() {
                   <div className="grid grid-cols-2 gap-6">
                      {repairImages.map((img, i) => (
                        <div key={i} className="relative aspect-square rounded-[2rem] overflow-hidden border border-border shadow-2xl group/img">
-                          <Image src={img} alt="Evidence" fill className="object-cover transition-transform group-hover/img:scale-110 duration-700" unoptimized />
+                          <img src={isValidAssetUrl(img) ? img : PROPERTY_PLACEHOLDER} alt="Evidence" className="absolute inset-0 h-full w-full object-cover transition-transform group-hover/img:scale-110 duration-700" />
                           <button onClick={() => setRepairImages(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-4 right-4 p-2.5 bg-black/60 rounded-xl text-white backdrop-blur-xl border border-white/10 hover:bg-red-500 transition-all"><X className="w-4 h-4" /></button>
                        </div>
                      ))}
@@ -407,7 +414,7 @@ export default function TenantHub() {
           <DialogTitle className="sr-only">Visual Asset Preview</DialogTitle>
           {lightboxUrl && (
             <div className="relative w-full h-full flex items-center justify-center">
-              <Image src={lightboxUrl} alt="Asset Preview" fill className="object-contain" unoptimized />
+              <img src={lightboxUrl} alt="Asset Preview" className="max-h-full max-w-full object-contain" />
               <button onClick={() => setLightboxUrl(null)} className="absolute top-10 right-10 bg-black/60 backdrop-blur-2xl text-white p-5 rounded-full hover:bg-black transition-all hover:scale-110 active:scale-95 shadow-2xl border border-white/10">
                 <X className="w-8 h-8" />
               </button>

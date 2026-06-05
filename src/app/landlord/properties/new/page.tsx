@@ -25,6 +25,10 @@ type LedgerItem = {
   status: 'uploading' | 'ready' | 'error';
 };
 
+/**
+ * @fileOverview Register Asset Hub.
+ * Hardened visual rendering: Using high-performance native <img> tags for reliable resolution of blobs and signed cloud binaries.
+ */
 export default function NewPropertyPage() {
   const { user } = useUser();
   const db = useFirestore();
@@ -207,7 +211,7 @@ export default function NewPropertyPage() {
                         item.status === 'error' && "border-destructive"
                       )}>
                         <img 
-                          src={imageUrl} 
+                          src={isValidAssetUrl(imageUrl) ? imageUrl : PROPERTY_PLACEHOLDER} 
                           alt="" 
                           className="absolute inset-0 h-full w-full object-cover"
                           onError={(e) => {

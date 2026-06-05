@@ -51,7 +51,7 @@ export function isValidAssetUrl(url: any): boolean {
     lower === 'undefined' || 
     lower === 'null' || 
     lower === '[object object]' ||
-    lower.includes('placeholder')
+    lower.includes('placeholder-empty')
   ) return false;
   
   return (

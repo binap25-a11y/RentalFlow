@@ -78,7 +78,7 @@ const COMPLIANCE_REQUIREMENTS = [
 
 /**
  * @fileOverview Property Management Hub.
- * Hardened visual rendering: Native img tags for absolute cloud binary resolution across cloud environments.
+ * Hardened visual rendering: Using standard <img> tags for maximum reliability with blobs and signed URLs.
  */
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
@@ -366,14 +366,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                     <CarouselItem key={`${url}-${index}`}>
                       <div className="relative h-[400px] md:h-[550px] w-full bg-muted cursor-zoom-in overflow-hidden" onClick={() => setLightboxUrl(url)}>
                         <img 
-                          src={url} 
+                          src={isValidAssetUrl(url) ? url : PROPERTY_PLACEHOLDER} 
                           alt="" 
                           className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105"
                           onError={(e) => {
-                            if (!isValidAssetUrl(url)) {
-                               e.currentTarget.src = PROPERTY_PLACEHOLDER;
-                               e.currentTarget.classList.add('opacity-40');
-                            }
+                            e.currentTarget.src = PROPERTY_PLACEHOLDER;
+                            e.currentTarget.classList.add('opacity-40');
                           }}
                         />
                         {index === 0 && (
