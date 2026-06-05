@@ -36,7 +36,7 @@ import {
   DialogFooter,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { cn, getResolvedGallery, isRealUserUpload, getResolvedImageUrl, compressImage } from "@/lib/utils";
+import { cn, getResolvedGallery, PROPERTY_PLACEHOLDER, compressImage } from "@/lib/utils";
 import {
   Carousel,
   CarouselContent,
@@ -76,6 +76,11 @@ const COMPLIANCE_REQUIREMENTS = [
   { id: 'docs', task: "Prescribed documents", freq: "Before/start of tenancy", icon: FileText }
 ];
 
+/**
+ * @fileOverview Property Management Hub.
+ * Hardened visual rendering: Standard img tags for absolute cloud binary resolution.
+ */
+
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
   const propertyId = resolvedParams.propertyId;
@@ -99,7 +104,6 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
   const [complianceChecks, setComplianceChecks] = useState<Record<string, boolean>>({});
   const [isSavingCompliance, setIsSavingCompliance] = useState(false);
 
-  // Initialize compliance checks from document data
   useEffect(() => {
     if (property?.complianceStatusMap) {
       setComplianceChecks(property.complianceStatusMap);
@@ -365,6 +369,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           src={url} 
                           alt="" 
                           className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                          onError={(e) => {
+                            e.currentTarget.src = PROPERTY_PLACEHOLDER;
+                            e.currentTarget.classList.add('opacity-40');
+                          }}
                         />
                         {index === 0 && (
                           <div className="absolute top-8 left-8 px-5 py-2 bg-accent text-white text-[11px] font-bold uppercase rounded-full shadow-2xl font-headline z-10 tracking-[0.1em] flex items-center gap-2">
@@ -388,7 +396,7 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                    {isUploadingImage ? <Loader2 className="w-16 h-16 animate-spin text-accent opacity-40" /> : <Building2 className="w-16 h-16 text-muted-foreground/30" />}
                 </div>
                 <div className="text-center px-8">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/30 font-headline mb-4">No Visual Identity Recorded</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/30 font-headline">No Visual Identity Recorded</p>
                   <label htmlFor="empty-state-upload" className="cursor-pointer">
                     <Button variant="outline" className="rounded-[1.25rem] font-bold h-12 px-8 border-accent/20 text-accent bg-accent/5 hover:bg-accent/10 transition-all pointer-events-none">
                       {isUploadingImage ? <Loader2 className="w-4 h-4 animate-spin mr-2 text-accent" /> : <Camera className="w-4 h-4 mr-2 text-accent" />}

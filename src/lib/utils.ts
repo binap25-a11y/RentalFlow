@@ -43,7 +43,7 @@ export function isValidAssetUrl(url: any): boolean {
   
   const lowerUrl = url.toLowerCase().trim();
   
-  // Explicitly reject common 'corrupt' metadata strings
+  // Explicitly reject common 'corrupt' metadata strings that bypass truthy checks
   if (
     lowerUrl === 'undefined' || 
     lowerUrl === 'null' || 
