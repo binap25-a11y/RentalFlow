@@ -1,9 +1,9 @@
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore, getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 /**
@@ -14,10 +14,19 @@ import { getStorage } from 'firebase/storage';
 export function initializeFirebase() {
   const firebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
   
+  // Hardened Firestore initialization for Cloud Workstations
+  // Enabling long polling resolves "Could not reach Cloud Firestore backend" errors
+  // often caused by proxy/websocket restrictions in restricted environments.
+  const firestore = !getApps().length 
+    ? initializeFirestore(firebaseApp, {
+        experimentalForceLongPolling: true,
+      })
+    : getFirestore(firebaseApp);
+  
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp),
+    firestore,
     storage: getStorage(firebaseApp)
   };
 }

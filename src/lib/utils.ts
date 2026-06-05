@@ -14,7 +14,7 @@ export const RENTALFLOW_LOGO_URL = "https://images.unsplash.com/photo-1560518883
 /**
  * 🖼️ High-Fidelity Fallback Registry
  */
-export const PROPERTY_PLACEHOLDER = placeholderData.placeholderImages[0]?.imageUrl || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&h=800&auto=format&fit=crop";
+export const PROPERTY_PLACEHOLDER = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&h=800&auto=format&fit=crop";
 
 /**
  * 🔄 Resilient Retry Wrapper
@@ -93,7 +93,7 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
   
-  if (isValidAssetUrl(imageUrl) && !imageUrl?.includes('photo-1560518883')) {
+  if (isValidAssetUrl(imageUrl)) {
     assets.add(imageUrl!);
   }
   
