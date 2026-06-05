@@ -34,14 +34,14 @@ export async function withRetry<T>(
 
 /**
  * 🖼️ Asset Validation Engine
- * Relaxed to ensure all cloud storage paths (Signed/Public) are authorized.
+ * Relaxed to ensure all cloud storage paths (Signed/Public) and blobs are authorized.
  * Hardened to reject string-serialized null/undefined values.
  */
 export function isValidAssetUrl(url: any): boolean {
   if (!url || typeof url !== 'string') return false;
   
   const trimmed = url.trim();
-  if (trimmed.length < 5) return false; // blob: is 5, http: is 7
+  if (trimmed.length < 5) return false; 
   
   const lower = trimmed.toLowerCase();
   

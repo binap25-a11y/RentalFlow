@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Building2, MapPin, Plus, Bed, Bath, 
   Loader2, Trash2, RotateCcw, Archive, 
-  Search, ShieldAlert
+  Search, ShieldAlert, Sparkles
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
@@ -27,11 +27,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import Image from "next/image";
 
 /**
  * @fileOverview High-Fidelity Portfolio Registry.
- * Hardened visual rendering: Using next/image with unoptimized and priority flags for workstation stability.
+ * Hardened visual rendering: Using standard img tags for instant binary resolution across cloud environments.
  */
 export default function PropertiesPage() {
   const { user } = useUser();
@@ -173,13 +172,10 @@ export default function PropertiesPage() {
                   <Card key={property.id} className="border-none shadow-sm overflow-hidden group hover:shadow-2xl transition-all duration-500 rounded-[2.5rem] bg-card ring-1 ring-border">
                     <div className="relative aspect-video w-full overflow-hidden bg-muted">
                       {isValidAssetUrl(imageUrl) ? (
-                        <Image 
+                        <img 
                           src={imageUrl} 
                           alt="" 
-                          fill 
-                          className="object-cover transition-transform duration-1000 group-hover:scale-110"
-                          unoptimized
-                          priority
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
                         />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/40 gap-3">
@@ -242,12 +238,10 @@ export default function PropertiesPage() {
                       <div className="flex items-center gap-5 w-full text-left min-w-0">
                         <div className="relative h-16 w-24 rounded-xl overflow-hidden bg-muted shrink-0">
                           {isValidAssetUrl(imageUrl) ? (
-                            <Image 
+                            <img 
                               src={imageUrl} 
                               alt="" 
-                              fill 
-                              className="object-cover grayscale opacity-50"
-                              unoptimized
+                              className="absolute inset-0 h-full w-full object-cover grayscale opacity-50"
                             />
                           ) : (
                             <div className="absolute inset-0 bg-muted flex items-center justify-center">

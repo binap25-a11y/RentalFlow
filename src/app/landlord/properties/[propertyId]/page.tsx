@@ -36,7 +36,7 @@ import {
   DialogFooter,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { cn, getResolvedGallery, PROPERTY_PLACEHOLDER, compressImage } from "@/lib/utils";
+import { cn, getResolvedGallery, PROPERTY_PLACEHOLDER, compressImage, isValidAssetUrl } from "@/lib/utils";
 import {
   Carousel,
   CarouselContent,
@@ -78,7 +78,7 @@ const COMPLIANCE_REQUIREMENTS = [
 
 /**
  * @fileOverview Property Management Hub.
- * Hardened visual rendering: Standard img tags for absolute cloud binary resolution.
+ * Hardened visual rendering: Native img tags for absolute cloud binary resolution across cloud environments.
  */
 
 export default function PropertyManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
@@ -370,8 +370,10 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
                           alt="" 
                           className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105"
                           onError={(e) => {
-                            e.currentTarget.src = PROPERTY_PLACEHOLDER;
-                            e.currentTarget.classList.add('opacity-40');
+                            if (!isValidAssetUrl(url)) {
+                               e.currentTarget.src = PROPERTY_PLACEHOLDER;
+                               e.currentTarget.classList.add('opacity-40');
+                            }
                           }}
                         />
                         {index === 0 && (

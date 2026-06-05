@@ -23,7 +23,6 @@ import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
 import { cn, isRealUserUpload, compressImage, isValidAssetUrl, PROPERTY_PLACEHOLDER } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Image from "next/image";
 
 type LedgerItem = {
   id: string;
@@ -34,7 +33,7 @@ type LedgerItem = {
 
 /**
  * @fileOverview Modify Asset Specs.
- * Hardened visual rendering: Utilized high-performance next/image components with absolute viewport fills.
+ * Hardened visual rendering: Transitioned to high-performance standard img tags for instant binary resolution.
  */
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -253,13 +252,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                         item.status === 'error' && "border-destructive"
                       )}>
                         {isValidAssetUrl(imageUrl) ? (
-                          <Image 
+                          <img 
                             src={imageUrl} 
                             alt="" 
-                            fill 
-                            className="object-cover transition-transform duration-1000 group-hover:scale-110"
-                            unoptimized
-                            priority
+                            className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                            loading="eager"
                           />
                         ) : (
                           <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/40 gap-3">
