@@ -30,9 +30,8 @@ import {
 
 /**
  * @fileOverview High-Fidelity Portfolio Registry.
- * Hardened visual rendering: Using standard img tags to resolve "black box" issues in cloud workstations.
+ * Hardened visual rendering: Using standard img tags with CORS/Referrer resolution to resolve "black box" issues in cloud workstations.
  */
-
 export default function PropertiesPage() {
   const { user } = useUser();
   const db = useFirestore();
@@ -175,6 +174,8 @@ export default function PropertiesPage() {
                       <img 
                         src={imageUrl} 
                         alt="" 
+                        crossOrigin="anonymous"
+                        referrerPolicy="no-referrer"
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
                         onError={(e) => {
                           e.currentTarget.src = PROPERTY_PLACEHOLDER;
@@ -235,7 +236,13 @@ export default function PropertiesPage() {
                     <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-6">
                       <div className="flex items-center gap-5 w-full text-left min-w-0">
                         <div className="relative h-16 w-24 rounded-xl overflow-hidden bg-muted shrink-0">
-                          <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover grayscale opacity-50" />
+                          <img 
+                            src={imageUrl} 
+                            alt="" 
+                            crossOrigin="anonymous"
+                            referrerPolicy="no-referrer"
+                            className="absolute inset-0 h-full w-full object-cover grayscale opacity-50" 
+                          />
                         </div>
                         <div className="min-w-0 flex-1">
                            <h4 className="font-bold text-base font-headline text-foreground truncate block">{property.addressLine1}</h4>

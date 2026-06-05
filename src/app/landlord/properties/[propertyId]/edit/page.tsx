@@ -31,6 +31,10 @@ type LedgerItem = {
   status: 'uploading' | 'ready' | 'error';
 };
 
+/**
+ * @fileOverview Modify Asset Specs.
+ * Hardened visual rendering: Standard img tags with CORS/Referrer resolution to fix black-box previews.
+ */
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
   const propertyId = resolvedParams.propertyId;
@@ -245,10 +249,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
-                      {/* Priority rendering: previewUrl during upload, cloudUrl after sync */}
                       <img 
                         src={item.previewUrl || item.cloudUrl} 
                         alt="" 
+                        crossOrigin="anonymous"
+                        referrerPolicy="no-referrer"
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                         onError={(e) => {
                           e.currentTarget.src = PROPERTY_PLACEHOLDER;

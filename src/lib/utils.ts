@@ -14,7 +14,7 @@ export const RENTALFLOW_LOGO_URL = "https://images.unsplash.com/photo-1560518883
 /**
  * 🖼️ High-Fidelity Fallback Registry
  */
-export const PROPERTY_PLACEHOLDER = placeholderData.placeholderImages[0]?.imageUrl || RENTALFLOW_LOGO_URL;
+export const PROPERTY_PLACEHOLDER = placeholderData.placeholderImages[0]?.imageUrl || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&h=800&auto=format&fit=crop";
 
 /**
  * 🔄 Resilient Retry Wrapper
@@ -35,15 +35,14 @@ export async function withRetry<T>(
 
 /**
  * 🖼️ Asset Validation Engine
- * Hardened to reject 'corrupt' strings like "undefined" or "null".
- * Inclusive of blob and cloud storage paths.
+ * Relaxed to ensure all cloud storage paths (Signed/Public) are authorized.
  */
 export function isValidAssetUrl(url: any): boolean {
-  if (!url || typeof url !== 'string' || url.trim() === '' || url.length < 5) return false;
+  if (!url || typeof url !== 'string' || url.trim() === '' || url.length < 4) return false;
   
   const lowerUrl = url.toLowerCase().trim();
   
-  // Explicitly reject common 'corrupt' metadata strings that bypass truthy checks
+  // Explicitly reject known corrupt metadata strings
   if (
     lowerUrl === 'undefined' || 
     lowerUrl === 'null' || 
@@ -58,14 +57,11 @@ export function isValidAssetUrl(url: any): boolean {
 }
 
 /**
- * 🖼️ User Asset Identifier (Source-Positive Logic)
- * Whitelists trusted sources for visual identity.
+ * 🖼️ User Asset Identifier
  */
 export function isRealUserUpload(url: any): boolean {
   if (!isValidAssetUrl(url)) return false;
-  
   const u = url.toLowerCase();
-  
   return (
     u.includes('supabase.co') || 
     u.includes('firebasestorage') ||
@@ -81,18 +77,13 @@ export function isRealUserUpload(url: any): boolean {
  * 🖼️ Robust Asset Resolution Engine
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
-  // 1. Check primary imageUrl
-  if (isValidAssetUrl(imageUrl)) {
-    return imageUrl as string;
-  }
+  if (isValidAssetUrl(imageUrl)) return imageUrl as string;
   
-  // 2. Fallback to first gallery item
   if (imageUrls && Array.isArray(imageUrls)) {
     const validUrl = imageUrls.find(u => isValidAssetUrl(u));
     if (validUrl) return validUrl;
   }
   
-  // 3. Ultimate Fallback to Brand Placeholder
   return PROPERTY_PLACEHOLDER;
 }
 
@@ -102,12 +93,10 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
   
-  // Add primary if valid and not the brand logo
   if (isValidAssetUrl(imageUrl) && !imageUrl?.includes('photo-1560518883')) {
     assets.add(imageUrl!);
   }
   
-  // Add all gallery URLs
   if (imageUrls && Array.isArray(imageUrls)) {
     imageUrls.forEach(u => {
       if (isValidAssetUrl(u)) {
@@ -116,7 +105,6 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
     });
   }
   
-  // Ensure we at least have the placeholder if nothing else exists
   if (assets.size === 0) {
     assets.add(PROPERTY_PLACEHOLDER);
   }
