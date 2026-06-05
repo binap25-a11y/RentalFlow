@@ -30,7 +30,7 @@ import {
 
 /**
  * @fileOverview High-Fidelity Portfolio Registry.
- * Hardened visual rendering: Using standard img tags for instant binary resolution across cloud environments.
+ * Hardened visual rendering: Using high-performance native <img> tags for reliable resolution of blobs and signed cloud binaries.
  */
 export default function PropertiesPage() {
   const { user } = useUser();
@@ -176,6 +176,10 @@ export default function PropertiesPage() {
                           src={imageUrl} 
                           alt="" 
                           className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                          onError={(e) => {
+                             e.currentTarget.src = PROPERTY_PLACEHOLDER;
+                             e.currentTarget.classList.add('opacity-40');
+                          }}
                         />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/40 gap-3">

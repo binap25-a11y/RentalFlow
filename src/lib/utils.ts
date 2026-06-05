@@ -12,6 +12,7 @@ export const RENTALFLOW_LOGO_URL = "https://images.unsplash.com/photo-1560518883
 
 /**
  * 🖼️ High-Fidelity Fallback Registry
+ * High-resolution architectural asset for a professional portfolio aesthetic.
  */
 export const PROPERTY_PLACEHOLDER = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&h=800&auto=format&fit=crop";
 
@@ -34,8 +35,8 @@ export async function withRetry<T>(
 
 /**
  * 🖼️ Asset Validation Engine
- * Relaxed to ensure all cloud storage paths (Signed/Public) and blobs are authorized.
- * Hardened to reject string-serialized null/undefined values.
+ * Relaxed to ensure all cloud storage paths (Signed/Public), blobs, and data URIs are authorized.
+ * Hardened to reject string-serialized null/undefined values that cause broken icons.
  */
 export function isValidAssetUrl(url: any): boolean {
   if (!url || typeof url !== 'string') return false;
@@ -45,11 +46,12 @@ export function isValidAssetUrl(url: any): boolean {
   
   const lower = trimmed.toLowerCase();
   
-  // Explicitly reject known corrupt metadata strings
+  // Explicitly reject known corrupt metadata strings often found in DB records
   if (
     lower === 'undefined' || 
     lower === 'null' || 
-    lower === '[object object]'
+    lower === '[object object]' ||
+    lower.includes('placeholder')
   ) return false;
   
   return (
@@ -61,6 +63,7 @@ export function isValidAssetUrl(url: any): boolean {
 
 /**
  * 🖼️ User Asset Identifier
+ * Verifies if the asset is a legitimate user upload or trusted external source.
  */
 export function isRealUserUpload(url: any): boolean {
   if (!isValidAssetUrl(url)) return false;
@@ -78,6 +81,7 @@ export function isRealUserUpload(url: any): boolean {
 
 /**
  * 🖼️ Robust Asset Resolution Engine
+ * Prioritizes designated primary images with a resilient gallery fallback.
  */
 export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string {
   if (isValidAssetUrl(imageUrl)) return imageUrl as string;
@@ -92,6 +96,7 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
 
 /**
  * 🖼️ Synchronized Gallery Resolver
+ * Deduplicates and validates all visual assets for a property.
  */
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
@@ -117,6 +122,7 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
 
 /**
  * 🖼️ Resilient Mobile Optimization Engine
+ * Compresses images client-side before cloud transmission to save bandwidth.
  */
 export async function compressImage(file: File, maxWidth = 1200, quality = 0.85): Promise<Blob | File> {
   if (!file.type.startsWith('image/') || file.size < 1024 * 100) {

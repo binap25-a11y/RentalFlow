@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star, RefreshCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
@@ -34,6 +34,7 @@ type LedgerItem = {
 /**
  * @fileOverview Modify Asset Specs.
  * Hardened visual rendering: Flicker-free preview engine with resilient error handling.
+ * Standardized on standard <img> tags for maximum reliability with blobs and signed URLs.
  */
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -86,15 +87,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       }
 
       setLedger(prev => {
-        // 1. Identify which existing items are currently in an 'uploading' state to preserve them
         const uploadingItems = prev.filter(item => item.status === 'uploading');
         const existingIds = new Set(uploadingItems.map(i => i.id));
         
-        // 2. Map current Firestore URLs to ready ledger items
         const syncedLedger = sortedUrls
           .filter(url => isValidAssetUrl(url))
           .map(url => {
-            // Flicker Prevention: If this URL is already in our ledger (perhaps as a preview), reuse its previewUrl
             const existing = prev.find(p => p.cloudUrl === url || p.previewUrl === url);
             return { 
               id: url, 
@@ -104,7 +102,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
             };
           });
 
-        // 3. Merge: Prioritize synced items but keep current uploading queue
         const filteredSynced = syncedLedger.filter(i => !existingIds.has(i.id));
         return [...filteredSynced, ...uploadingItems];
       });
@@ -118,7 +115,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // BINARY PRESENCE GUARD: Prevent destructive overwrites during transitions
     const isMidUpload = currentLedger.some(i => i.status === 'uploading');
     if (readyUrls.length === 0 && isMidUpload) return;
 
@@ -255,9 +251,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                     const imageUrl = item.previewUrl || item.cloudUrl || PROPERTY_PLACEHOLDER;
                     return (
                       <div key={item.id} className={cn(
-                        "relative aspect-square rounded-[2.5rem] overflow-hidden group shadow-2xl bg-background border-2 transition-all duration-500",
-                        item.status === 'uploading' ? 'opacity-70 scale-[0.98]' : 'opacity-100',
-                        index === 0 ? "border-accent" : "border-transparent",
+                        "relative aspect-square rounded-[2.5rem] overflow-hidden group shadow-2xl bg-muted border-2 transition-all duration-500",
+                        item.status === 'uploading' ? 'opacity-80 scale-[0.98]' : 'opacity-100',
+                        index === 0 ? "border-accent" : "border-white/10",
                         item.status === 'error' && "border-destructive"
                       )}>
                         {isValidAssetUrl(imageUrl) ? (
@@ -276,20 +272,24 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Awaiting Content</span>
                           </div>
                         )}
+                        
                         <div className="absolute top-4 right-4 flex gap-2 z-20">
-                          <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-black/40 backdrop-blur-xl text-accent p-3 rounded-2xl hover:scale-110 transition-transform shadow-2xl border border-white/10">
+                          <button type="button" onClick={() => setAsPrimary(item.id)} className="bg-black/60 backdrop-blur-xl text-accent p-3 rounded-2xl hover:scale-110 transition-transform shadow-2xl border border-white/10">
                             <Star className={cn("w-5 h-5", index === 0 && "fill-accent")} />
                           </button>
-                          <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/60 backdrop-blur-xl text-white p-3 rounded-2xl shadow-2xl hover:bg-red-600 transition-all active:scale-90 border border-white/10"><X className="w-5 h-5" /></button>
+                          <button type="button" onClick={() => removeFromLedger(item.id)} className="bg-red-500/80 backdrop-blur-xl text-white p-3 rounded-2xl shadow-2xl hover:bg-red-600 transition-all active:scale-90 border border-white/10"><X className="w-5 h-5" /></button>
                         </div>
-                        {index === 0 && <div className="absolute bottom-4 left-4 px-4 py-1.5 bg-accent text-white text-[9px] font-bold uppercase rounded-full shadow-2xl font-headline z-20 tracking-widest">Cover Asset</div>}
-                        
+
                         {item.status === 'uploading' && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/40 backdrop-blur-sm gap-3 z-30">
-                             <Loader2 className="w-8 h-8 animate-spin text-accent" />
-                             <span className="text-[8px] font-bold text-accent uppercase tracking-[0.4em]">Syncing...</span>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-primary/20 backdrop-blur-[2px] gap-3 z-30">
+                             <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-xl shadow-2xl border border-white/10">
+                               <Loader2 className="w-8 h-8 animate-spin text-accent" />
+                             </div>
+                             <span className="text-[9px] font-bold text-white uppercase tracking-[0.4em] drop-shadow-md">Synchronizing...</span>
                           </div>
                         )}
+                        
+                        {index === 0 && <div className="absolute bottom-4 left-4 px-4 py-1.5 bg-accent text-white text-[9px] font-bold uppercase rounded-full shadow-2xl font-headline z-20 tracking-widest">Cover Asset</div>}
                       </div>
                     );
                   })}

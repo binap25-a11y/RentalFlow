@@ -35,7 +35,7 @@ export async function uploadToSupabase(
     
     const supabase = getHardenedClient();
 
-    // 1. Binary Transmission
+    // 1. Binary Transmission to the specific Supabase bucket
     const { data, error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(path, buffer, {
@@ -49,7 +49,8 @@ export async function uploadToSupabase(
       throw new Error(`Storage Error: ${uploadError.message}.`);
     }
 
-    // 2. Private Access Orchestration: Use Signed URL for 1 Week
+    // 2. Secure Access Orchestration: Generate a Signed URL for 1 Week (604800 seconds)
+    // This URL will be stored in Firestore and used for cross-page rendering.
     const { data: signedData, error: signedError } = await supabase.storage
       .from(bucket)
       .createSignedUrl(path, 60 * 60 * 24 * 7);
