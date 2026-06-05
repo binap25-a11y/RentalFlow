@@ -1,7 +1,8 @@
+
 'use server';
 /**
  * @fileOverview A resilient AI agent for generating professional property inspection reports.
- * Hardened for production stability with a high-priority retry protocol.
+ * Hardened for production stability with a high-priority 4-tier retry protocol.
  * Synchronized to ensure manual findings are correctly synthesized into summaries.
  */
 
