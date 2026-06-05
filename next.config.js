@@ -35,8 +35,8 @@ const nextConfig = {
 
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: 'wgezhbkkhamaawxgcqjf.supabase.co', pathname: '/storage/v1/object/**' },
-      { protocol: 'https', hostname: '*.supabase.co', pathname: '/storage/v1/object/**' },
+      { protocol: 'https', hostname: 'wgezhbkkhamaawxgcqjf.supabase.co', pathname: '/**' },
+      { protocol: 'https', hostname: '*.supabase.co', pathname: '/**' },
       { protocol: 'https', hostname: 'placehold.co', pathname: '/**' },
       { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/**' },
       { protocol: 'https', hostname: 'picsum.photos', pathname: '/**' },

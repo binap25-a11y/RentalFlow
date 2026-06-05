@@ -16,12 +16,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star, ImageOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
 import { uploadToSupabase } from '@/lib/actions/supabase-storage';
-import { cn, isRealUserUpload, compressImage, isValidAssetUrl, RENTALFLOW_LOGO_URL } from "@/lib/utils";
+import { cn, isRealUserUpload, compressImage, isValidAssetUrl, RENTALFLOW_LOGO_URL, PROPERTY_PLACEHOLDER } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type LedgerItem = {
@@ -39,7 +39,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
   const { toast } = useToast();
   const router = useRouter();
 
-  // HIGH-FIDELITY STATE INITIALIZATION
   const [isSaving, setIsSaving] = useState(false);
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
@@ -83,7 +82,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       }
 
       const syncedLedger = sortedUrls
-        .filter(url => url && isValidAssetUrl(url))
+        .filter(url => isValidAssetUrl(url))
         .map(url => ({ 
           id: url, 
           previewUrl: url, 
@@ -107,7 +106,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       .filter(i => i.status === 'ready' && i.cloudUrl && isRealUserUpload(i.cloudUrl))
       .map(i => i.cloudUrl!);
 
-    // BINARY PRESENCE GUARD: Prevent destructive overwrites during transitions
     const isMidUpload = currentLedger.some(i => i.status === 'uploading');
     if (readyUrls.length === 0 && isMidUpload) return;
 
@@ -130,7 +128,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
 
       try {
         const optimizedBlob = await compressImage(file);
-        // ATOMIC PATH PROTOCOL: uid/propertyId/timestamp-filename
         const path = `${user.uid}/${propertyId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
         
         const formData = new FormData();
@@ -248,12 +245,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       index === 0 ? "border-accent" : "border-transparent",
                       item.status === 'error' && "border-destructive"
                     )}>
+                      {/* Priority rendering: previewUrl during upload, cloudUrl after sync */}
                       <img 
-                        src={item.cloudUrl || item.previewUrl} 
+                        src={item.previewUrl || item.cloudUrl} 
                         alt="" 
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                         onError={(e) => {
-                          e.currentTarget.src = RENTALFLOW_LOGO_URL;
+                          e.currentTarget.src = PROPERTY_PLACEHOLDER;
                           e.currentTarget.classList.add('opacity-40');
                         }}
                       />

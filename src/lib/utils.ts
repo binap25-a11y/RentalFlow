@@ -36,19 +36,25 @@ export async function withRetry<T>(
 /**
  * 🖼️ Asset Validation Engine
  * Hardened to reject 'corrupt' strings like "undefined" or "null".
+ * Inclusive of blob and cloud storage paths.
  */
 export function isValidAssetUrl(url: any): boolean {
   if (!url || typeof url !== 'string' || url.trim() === '' || url.length < 5) return false;
   
   const lowerUrl = url.toLowerCase().trim();
+  
+  // Explicitly reject common 'corrupt' metadata strings
   if (
     lowerUrl === 'undefined' || 
     lowerUrl === 'null' || 
-    lowerUrl === '[object object]' || 
-    lowerUrl.includes('placeholder')
+    lowerUrl === '[object object]'
   ) return false;
   
-  return (lowerUrl.startsWith('http') || lowerUrl.startsWith('blob:') || lowerUrl.startsWith('data:'));
+  return (
+    lowerUrl.startsWith('http') || 
+    lowerUrl.startsWith('blob:') || 
+    lowerUrl.startsWith('data:')
+  );
 }
 
 /**
@@ -96,11 +102,12 @@ export function getResolvedImageUrl(imageUrl: string | null | undefined, imageUr
 export function getResolvedGallery(imageUrl: string | null | undefined, imageUrls: string[] | null | undefined): string[] {
   const assets = new Set<string>();
   
-  const primary = getResolvedImageUrl(imageUrl, imageUrls);
-  if (isValidAssetUrl(primary) && !primary.includes('images.unsplash.com/photo-1560518883')) {
-    assets.add(primary);
+  // Add primary if valid and not the brand logo
+  if (isValidAssetUrl(imageUrl) && !imageUrl?.includes('photo-1560518883')) {
+    assets.add(imageUrl!);
   }
   
+  // Add all gallery URLs
   if (imageUrls && Array.isArray(imageUrls)) {
     imageUrls.forEach(u => {
       if (isValidAssetUrl(u)) {
