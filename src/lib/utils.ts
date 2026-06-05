@@ -36,23 +36,27 @@ export async function withRetry<T>(
 /**
  * 🖼️ Asset Validation Engine
  * Relaxed to ensure all cloud storage paths (Signed/Public) are authorized.
+ * Simplified for higher reliability in proxied environments.
  */
 export function isValidAssetUrl(url: any): boolean {
-  if (!url || typeof url !== 'string' || url.trim() === '' || url.length < 4) return false;
+  if (!url || typeof url !== 'string') return false;
   
-  const lowerUrl = url.toLowerCase().trim();
+  const trimmed = url.trim();
+  if (trimmed === '' || trimmed.length < 5) return false;
+  
+  const lower = trimmed.toLowerCase();
   
   // Explicitly reject known corrupt metadata strings
   if (
-    lowerUrl === 'undefined' || 
-    lowerUrl === 'null' || 
-    lowerUrl === '[object object]'
+    lower === 'undefined' || 
+    lower === 'null' || 
+    lower === '[object object]'
   ) return false;
   
   return (
-    lowerUrl.startsWith('http') || 
-    lowerUrl.startsWith('blob:') || 
-    lowerUrl.startsWith('data:')
+    lower.startsWith('http') || 
+    lower.startsWith('blob:') || 
+    lower.startsWith('data:')
   );
 }
 

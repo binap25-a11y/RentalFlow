@@ -30,7 +30,7 @@ import {
 
 /**
  * @fileOverview High-Fidelity Portfolio Registry.
- * Hardened visual rendering: Using standard img tags with CORS/Referrer resolution to resolve "black box" issues in cloud workstations.
+ * Hardened visual rendering: Using standard img tags without restrictive attributes to resolve "black box" issues in cloud workstations.
  */
 export default function PropertiesPage() {
   const { user } = useUser();
@@ -174,8 +174,6 @@ export default function PropertiesPage() {
                       <img 
                         src={imageUrl} 
                         alt="" 
-                        crossOrigin="anonymous"
-                        referrerPolicy="no-referrer"
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
                         onError={(e) => {
                           e.currentTarget.src = PROPERTY_PLACEHOLDER;
@@ -239,8 +237,6 @@ export default function PropertiesPage() {
                           <img 
                             src={imageUrl} 
                             alt="" 
-                            crossOrigin="anonymous"
-                            referrerPolicy="no-referrer"
                             className="absolute inset-0 h-full w-full object-cover grayscale opacity-50" 
                           />
                         </div>

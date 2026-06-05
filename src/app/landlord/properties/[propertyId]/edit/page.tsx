@@ -33,7 +33,7 @@ type LedgerItem = {
 
 /**
  * @fileOverview Modify Asset Specs.
- * Hardened visual rendering: Standard img tags with CORS/Referrer resolution to fix black-box previews.
+ * Hardened visual rendering: Standard img tags without restrictive attributes to resolve "black box" issues in cloud workstations.
  */
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -252,8 +252,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                       <img 
                         src={item.previewUrl || item.cloudUrl} 
                         alt="" 
-                        crossOrigin="anonymous"
-                        referrerPolicy="no-referrer"
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                         onError={(e) => {
                           e.currentTarget.src = PROPERTY_PLACEHOLDER;
