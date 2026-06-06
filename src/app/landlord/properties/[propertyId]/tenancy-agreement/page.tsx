@@ -34,7 +34,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 /**
  * @fileOverview Post-2026 Tenancy Compliance Orchestrator.
- * Optimized for professional resilience and smaller, more precise UI controls.
+ * Optimized for professional resilience and refined, solicitor-grade aesthetics.
  */
 
 export default function TenancyAgreementPage({ params }: { params: Promise<{ propertyId: string }> }) {
@@ -106,7 +106,7 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
         tenantName: `${activeTenant.firstName} ${activeTenant.lastName}`,
         rentAmount: property.rentAmount || 0,
         startDate: format(new Date(), 'yyyy-MM-dd'),
-        petPolicy: "Tenant has statutory right to request pets as per the Renters' Rights Act 2024. Landlord may require pet insurance."
+        petPolicy: "Tenant has statutory right to request pets as per the Renters' Rights Act 2024. Landlord may require pet insurance as a condition of consent."
       });
 
       setAgreementData(result);
@@ -181,7 +181,7 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
       <div className="flex flex-col gap-8 text-left border-b border-white/5 pb-12">
         <div className="flex items-center gap-6">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-2xl hover:bg-primary/5 transition-colors h-12 w-12 border border-white/5 shrink-0 shadow-sm">
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="min-w-0 flex-1 space-y-1">
             <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold uppercase tracking-[0.2em] text-[10px] mb-2">
