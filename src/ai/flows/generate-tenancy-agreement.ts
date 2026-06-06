@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview A high-fidelity Legal AI agent for generating UK Tenancy Agreements.
+ * @fileOverview A high-fidelity Legal AI agent for generating full UK Tenancy Agreements.
  * Calibrated for the Renters' Rights Act 2024 (effective May 2026).
  * Hardened with a resilient 4-tier retry protocol for production stability.
  */
@@ -19,7 +19,7 @@ const GenerateTenancyAgreementInputSchema = z.object({
 export type GenerateTenancyAgreementInput = z.infer<typeof GenerateTenancyAgreementInputSchema>;
 
 const GenerateTenancyAgreementOutputSchema = z.object({
-  agreementText: z.string().describe('The full, professionally formatted text of the tenancy agreement.'),
+  agreementText: z.string().describe('The full, professionally formatted text of the tenancy agreement including all clauses.'),
   keyComplianceNotes: z.array(z.string()).describe('A list of specific post-2026 compliance points addressed.'),
 });
 export type GenerateTenancyAgreementOutput = z.infer<typeof GenerateTenancyAgreementOutputSchema>;
@@ -30,7 +30,7 @@ const agreementPrompt = ai.definePrompt({
   input: { schema: GenerateTenancyAgreementInputSchema },
   output: { schema: GenerateTenancyAgreementOutputSchema },
   config: { 
-    temperature: 0.3,
+    temperature: 0.2,
     safetySettings: [
       { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
@@ -39,7 +39,7 @@ const agreementPrompt = ai.definePrompt({
     ]
   },
   prompt: `You are an expert UK Residential Property Solicitor specializing in the Renters' Rights Act 2024.
-Generate a comprehensive, legally compliant Assured Shorthold Tenancy (AST) agreement for a property in England, assuming the date is post-May 1st, 2026.
+Generate a comprehensive, FULL-LENGTH, legally compliant Assured Shorthold Tenancy (AST) agreement (or the 2026 periodic equivalent) for a property in England.
 
 TENANCY DETAILS:
 Property: {{{propertyAddress}}}
@@ -49,20 +49,36 @@ Rent: £{{{rentAmount}}} per calendar month
 Start Date: {{{startDate}}}
 Pet Policy: {{{petPolicy}}}
 
-INSTRUCTIONS:
-1. TENANCY TYPE: Must be a rolling periodic tenancy as required by the 2026 regulations. NO fixed-term language.
-2. EVICTION: Remove all references to Section 21 "no-fault" evictions. References must only include the updated Section 8 grounds for possession.
-3. RENT INCREASES: Rent increases must follow the new statutory section 13 procedure (once per year, aligned with market rates).
-4. PETS: Include the tenant's right to request a pet and the landlord's right to require pet insurance.
-5. DEPOSIT: Ensure references to mandatory deposit protection (DPS/TDS/MyDeposits) are present.
-6. FORMATTING: Use professional, itemized headings (1. Parties, 2. The Property, 3. The Rent, etc.).
+INSTRUCTIONS FOR FULL CLAUSES:
+You MUST provide the full legal text for the following sections. Do not summarize.
 
-Provide the full agreement text and a summary of key compliance notes.`,
+1. THE PARTIES AND THE PROPERTY: Full identification of the Landlord, Tenant, and the specific Asset Address.
+2. THE TERM: Must be a rolling periodic tenancy as required by the 2026 regulations. NO fixed-term language.
+3. THE RENT: Details of payment frequency, due date, and the mandatory Section 13 procedure for future rent increases (once per year maximum).
+4. DEPOSIT: Details of the Deposit amount (capped at 5 weeks' rent) and the mandatory requirement to protect it in a government-authorized scheme (DPS, TDS, or MyDeposits).
+5. TENANT'S OBLIGATIONS: Full clauses covering:
+   - Payment of Council Tax, Utilities, and TV License.
+   - Use of the Property (Private Residential Use only).
+   - Prohibitions on Sub-letting or Assignment.
+   - Maintenance of internal decoration and cleanliness.
+   - Reporting of repairs immediately to the Landlord.
+   - Rights of Access for the Landlord (24 hours notice required).
+6. PETS: The tenant's statutory right to request a pet and the landlord's right to require pet insurance as a condition of consent.
+7. LANDLORD'S OBLIGATIONS: Full clauses covering:
+   - Quiet Enjoyment.
+   - Section 11 Repairing Obligations (Structure and exterior, supply of water, gas, electricity, and space/water heating).
+8. ENDING THE TENANCY: 
+   - Explicitly REMOVE all references to Section 21 "no-fault" evictions.
+   - Include the Tenant's right to end the tenancy by giving 2 months' notice (post-2026 standard).
+   - Reference the Landlord's limited rights to end the tenancy using the updated Section 8 grounds (e.g., sale of property, moving back in, or serious rent arrears).
+9. SIGNATURE BLOCKS: Designated areas for all parties.
+
+FORMATTING: Use clear, numbered headers (e.g., 1. DEFINITIONS, 2. RENT, etc.) and professional legal prose. Provide the full text intended for a PDF document.`,
 });
 
 /**
  * 🚀 Resilient Legal AI Orchestrator
- * Implements exponential backoff to handle transient AI capacity errors.
+ * Implements exponential backoff to handle transient AI capacity errors and generates full-length legal text.
  */
 export async function generateTenancyAgreement(input: GenerateTenancyAgreementInput): Promise<GenerateTenancyAgreementOutput> {
   let retries = 4;
