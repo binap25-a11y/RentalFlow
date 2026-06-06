@@ -96,8 +96,8 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
       if (result.agreementText.includes('Synchronization Pending')) {
         toast({ 
           variant: "destructive",
-          title: "Peak Volume Delay", 
-          description: "The relay is handling high load. Please retry in 60 seconds." 
+          title: "Synchronization Delay", 
+          description: "The intelligence relay is handling peak load. Retrying now may succeed as high-volume requests clear." 
         });
       } else {
         toast({ title: "Agreement Synchronized", description: "Solicitor-grade draft finalized." });
@@ -277,11 +277,11 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
                           <AlertTriangle className="w-12 h-12 text-amber-500" />
                         </div>
                         <div className="space-y-2">
-                          <p className="text-lg font-bold font-headline text-foreground uppercase tracking-tight">Peak Load Detected</p>
-                          <p className="text-sm text-muted-foreground max-w-sm mx-auto">The intelligence relay is processing high volumes. Please wait 60 seconds and trigger the generation again.</p>
+                          <p className="text-lg font-bold font-headline text-foreground uppercase tracking-tight">Intelligence Relay Offline</p>
+                          <p className="text-sm text-muted-foreground max-w-sm mx-auto">The solicitor-grade engine is experiencing a peak volume cycle. Please re-trigger the generation now to clear the synchronization delay.</p>
                         </div>
-                        <Button onClick={handleGenerate} variant="outline" className="rounded-xl h-12 px-8 font-bold font-headline uppercase tracking-widest text-[10px]">
-                          Retry Orchestration
+                        <Button onClick={handleGenerate} variant="outline" className="rounded-xl h-12 px-8 font-bold font-headline uppercase tracking-widest text-[10px] border-border hover:bg-primary/5 transition-all">
+                          Re-trigger Orchestration
                         </Button>
                       </div>
                    ) : (
