@@ -180,11 +180,11 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
     <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-32 text-left bg-background">
       <div className="flex flex-col gap-8 text-left border-b border-white/5 pb-12">
         <div className="flex items-center gap-6">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-2xl hover:bg-primary/5 transition-colors h-12 w-12 border border-white/5 shrink-0 shadow-sm">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-2xl hover:bg-primary/5 transition-colors h-11 w-11 border border-white/5 shrink-0 shadow-sm">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="min-w-0 flex-1 space-y-1">
-            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold uppercase tracking-[0.2em] text-[10px] mb-2">
+            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1.5 rounded-full font-bold uppercase tracking-[0.2em] text-[10px] mb-2">
                <Gavel className="w-3.5 h-3.5 mr-2" /> Renters' Rights Act 2024
             </Badge>
             <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground tracking-tighter">Agreement Orchestrator</h1>
@@ -198,18 +198,18 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-4 space-y-10">
            <Card className="border-none shadow-sm rounded-[3rem] bg-card ring-1 ring-border overflow-hidden">
-             <CardHeader className="bg-primary/5 p-10 border-b text-left">
-               <CardTitle className="text-2xl font-headline text-foreground flex items-center gap-4 tracking-tight">
-                 <ShieldCheck className="w-7 h-7 text-accent" />
+             <CardHeader className="bg-primary/5 p-8 border-b text-left">
+               <CardTitle className="text-xl font-headline text-foreground flex items-center gap-4 tracking-tight">
+                 <ShieldCheck className="w-6 h-6 text-accent" />
                  Context Ledger
                </CardTitle>
              </CardHeader>
-             <CardContent className="p-10 space-y-10 text-left">
+             <CardContent className="p-8 space-y-10 text-left">
                 <div className="space-y-4">
-                   <p className="text-[11px] font-bold uppercase tracking-[0.4em] text-muted-foreground opacity-50 font-headline">Assigned Identity</p>
+                   <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground opacity-50 font-headline">Assigned Identity</p>
                    {activeTenant ? (
-                     <div className="flex items-center gap-5 p-6 bg-muted/30 rounded-[2rem] border border-border shadow-inner">
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold text-lg shadow-sm border border-primary/5">
+                     <div className="flex items-center gap-5 p-5 bg-muted/30 rounded-[2rem] border border-border shadow-inner">
+                        <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold text-base shadow-sm border border-primary/5">
                            {activeTenant.firstName[0]}{activeTenant.lastName[0]}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -218,7 +218,7 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
                         </div>
                      </div>
                    ) : (
-                     <div className="p-6 bg-red-500/5 rounded-[2rem] border border-red-500/10 flex items-center gap-4 text-red-600">
+                     <div className="p-5 bg-red-500/5 rounded-[2rem] border border-red-500/10 flex items-center gap-4 text-red-600">
                         <AlertTriangle className="w-6 h-6" />
                         <span className="text-[11px] font-bold uppercase tracking-widest">Resident pending</span>
                      </div>
@@ -226,7 +226,7 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
                 </div>
 
                 <div className="space-y-4 pt-10 border-t border-border/50">
-                   <p className="text-[11px] font-bold uppercase tracking-[0.4em] text-muted-foreground opacity-50 font-headline">Asset DNA</p>
+                   <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground opacity-50 font-headline">Asset DNA</p>
                    <div className="grid gap-4">
                       <div className="flex justify-between items-center text-sm font-bold text-foreground">
                          <span className="opacity-40">Monthly Rent</span>
@@ -242,15 +242,14 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
                 <Button 
                   onClick={handleGenerate} 
                   disabled={isGenerating || !activeTenant}
-                  className="w-full h-14 rounded-2xl font-bold bg-primary text-primary-foreground shadow-xl transition-all hover:scale-[1.01] border-none font-headline uppercase tracking-[0.2em] text-[11px] group"
+                  className="w-full h-12 rounded-2xl font-bold bg-primary text-primary-foreground shadow-xl transition-all hover:scale-[1.01] border-none font-headline uppercase tracking-[0.2em] text-[10px] group"
                 >
                   {isGenerating ? (
                     <div className="flex flex-col items-center gap-1">
                       <Loader2 className="w-5 h-5 animate-spin text-accent" />
-                      <span className="text-[8px] opacity-60 animate-pulse">{loadingMessages[loadingStep]}</span>
                     </div>
                   ) : (
-                    <><Sparkles className="w-5 h-5 mr-3 text-accent group-hover:rotate-12 transition-transform" /> Orchestrate AST Draft</>
+                    <><Sparkles className="w-4 h-4 mr-3 text-accent group-hover:rotate-12 transition-transform" /> Orchestrate AST Draft</>
                   )}
                 </Button>
              </CardContent>
@@ -258,10 +257,10 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
 
            <Card className="border-none shadow-sm rounded-[3rem] bg-accent text-white overflow-hidden text-left relative group">
              <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 blur-3xl rounded-full transition-transform duration-1000 group-hover:scale-150" />
-             <CardContent className="p-12 space-y-8 relative z-10">
+             <CardContent className="p-10 space-y-8 relative z-10">
                 <div className="p-8 bg-white/10 rounded-[2.5rem] border border-white/20 shadow-inner space-y-4 backdrop-blur-sm">
-                   <p className="text-[11px] font-bold uppercase opacity-60 tracking-[0.4em] font-headline">Renters' Rights Act 2024</p>
-                   <p className="text-base font-medium leading-relaxed opacity-90">Every draft is calibrated for the <strong className="text-white">May 2026 Enforcement</strong>, mandating rolling periodic structures and the abolition of Section 21.</p>
+                   <p className="text-[10px] font-bold uppercase opacity-60 tracking-[0.4em] font-headline">Renters' Rights Act 2024</p>
+                   <p className="text-base font-medium leading-relaxed opacity-90">Every draft is calibrated for the <strong className="text-white">May 2026 Enforcement</strong>, mandating rolling periodic structures.</p>
                 </div>
                 <div className="flex items-center gap-4 px-2">
                    <Gavel className="w-6 h-6 text-white/60" />
@@ -273,57 +272,57 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
 
         <div className="lg:col-span-8 space-y-10">
            <Card className="border-none shadow-2xl rounded-[3.5rem] bg-card overflow-hidden ring-1 ring-border h-full flex flex-col min-h-[850px]">
-             <CardHeader className="p-12 border-b border-border bg-white/[0.01] flex flex-row items-center justify-between gap-6">
+             <CardHeader className="p-10 border-b border-border bg-white/[0.01] flex flex-row items-center justify-between gap-6">
                 <div className="text-left space-y-1">
-                  <CardTitle className="text-3xl font-bold font-headline text-foreground tracking-tight">Official Draft Preview</CardTitle>
+                  <CardTitle className="text-2xl font-bold font-headline text-foreground tracking-tight">Official Draft Preview</CardTitle>
                   <div className="flex items-center gap-2">
-                    <Activity className="w-3.5 h-3.5 text-accent animate-pulse" />
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-60">Verified Statutory Residential Lease (Post-2026)</p>
+                    <Activity className="w-3 h-3 text-accent animate-pulse" />
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground opacity-60">Statutory Residential Lease (Post-2026)</p>
                   </div>
                 </div>
                 {agreementData && !agreementData.agreementText.includes('Synchronization Pending') && (
-                  <Button onClick={handleDownloadPDF} className="rounded-xl h-11 px-8 font-bold bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 transition-all font-headline text-[10px] uppercase tracking-widest shrink-0">
+                  <Button onClick={handleDownloadPDF} className="rounded-xl h-10 px-6 font-bold bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 transition-all font-headline text-[10px] uppercase tracking-widest shrink-0">
                      <FileDown className="w-4 h-4 mr-2" /> Save to Vault
                   </Button>
                 )}
              </CardHeader>
              <CardContent className="flex-1 p-0 relative bg-white/[0.01]">
                <ScrollArea className="h-[750px] w-full">
-                 <div className="p-16 text-left space-y-16">
+                 <div className="p-12 text-left space-y-12">
                    {!agreementData ? (
                      <div className="h-[500px] flex flex-col items-center justify-center text-center opacity-30 gap-10">
-                        <div className="p-10 bg-muted rounded-[3rem] shadow-inner">
-                           <History className="w-20 h-20 text-foreground" />
+                        <div className="p-8 bg-muted rounded-[3rem] shadow-inner">
+                           <History className="w-16 h-16 text-foreground" />
                         </div>
                         <div className="space-y-3">
-                          <p className="text-2xl font-bold font-headline text-foreground uppercase tracking-[0.2em]">Awaiting Intelligence Draft</p>
-                          <p className="text-base font-medium text-foreground max-w-sm mx-auto leading-relaxed">Initialize the orchestration layer to generate a high-fidelity agreement.</p>
+                          <p className="text-xl font-bold font-headline text-foreground uppercase tracking-[0.2em]">Awaiting Intelligence Draft</p>
+                          <p className="text-sm font-medium text-foreground max-w-sm mx-auto leading-relaxed">Initialize the orchestration layer to generate a high-fidelity agreement.</p>
                         </div>
                      </div>
                    ) : agreementData.agreementText.includes('Synchronization Pending') ? (
                       <div className="h-[500px] flex flex-col items-center justify-center text-center gap-10 animate-in fade-in duration-700">
-                        <div className="p-10 bg-amber-500/10 rounded-[3rem] shadow-inner ring-1 ring-amber-500/20">
-                          <AlertTriangle className="w-20 h-20 text-amber-500 animate-pulse" />
+                        <div className="p-8 bg-amber-500/10 rounded-[3rem] shadow-inner ring-1 ring-amber-500/20">
+                          <AlertTriangle className="w-16 h-16 text-amber-500 animate-pulse" />
                         </div>
                         <div className="space-y-4">
-                          <p className="text-3xl font-bold font-headline text-foreground uppercase tracking-tight">Sync Delay Encountered</p>
-                          <p className="text-lg text-muted-foreground font-medium max-w-md mx-auto leading-relaxed">The solicitor-grade engine is experiencing a peak volume cycle. Please re-trigger the generation now.</p>
+                          <p className="text-2xl font-bold font-headline text-foreground uppercase tracking-tight">Sync Delay Encountered</p>
+                          <p className="text-base text-muted-foreground font-medium max-w-md mx-auto leading-relaxed">The solicitor-grade engine is experiencing a peak volume cycle. Please re-trigger the generation now.</p>
                         </div>
-                        <Button onClick={handleGenerate} variant="outline" className="rounded-xl h-12 px-10 font-bold font-headline uppercase tracking-[0.2em] text-[10px] border-border hover:bg-primary/5 transition-all shadow-xl">
-                          Re-trigger Orchestration <ChevronRight className="w-4 h-4 ml-3" />
+                        <Button onClick={handleGenerate} variant="outline" className="rounded-xl h-11 px-10 font-bold font-headline uppercase tracking-[0.2em] text-[10px] border-border hover:bg-primary/5 transition-all shadow-xl">
+                          Re-trigger Orchestration <ChevronRight className="w-4 h-4 ml-2" />
                         </Button>
                       </div>
                    ) : (
                      <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
                         {agreementData.keyComplianceNotes.length > 0 && (
-                          <div className="mb-16 p-10 bg-emerald-500/5 rounded-[3rem] border border-emerald-500/10 space-y-8 shadow-inner">
+                          <div className="mb-12 p-8 bg-emerald-500/5 rounded-[2.5rem] border border-emerald-500/10 space-y-6 shadow-inner">
                              <div className="flex items-center gap-3">
-                               <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-                               <p className="text-[12px] font-bold uppercase tracking-[0.4em] text-emerald-600 font-headline">Compliance Verification Log</p>
+                               <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                               <p className="text-[11px] font-bold uppercase tracking-[0.4em] text-emerald-600 font-headline">Compliance Verification Log</p>
                              </div>
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {agreementData.keyComplianceNotes.map((note, i) => (
-                                  <div key={i} className="flex items-start gap-4 text-[13px] font-bold text-foreground/80 leading-tight">
+                                  <div key={i} className="flex items-start gap-4 text-[12px] font-bold text-foreground/80 leading-tight">
                                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" /> {note}
                                   </div>
                                 ))}
@@ -331,7 +330,7 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
                           </div>
                         )}
                         <div className="prose prose-blue dark:prose-invert max-w-none">
-                           <pre className="whitespace-pre-wrap font-body text-lg leading-loose text-foreground/80 bg-transparent p-0 border-none select-text">
+                           <pre className="whitespace-pre-wrap font-body text-base leading-relaxed text-foreground/80 bg-transparent p-0 border-none select-text">
                               {agreementData.agreementText}
                            </pre>
                         </div>

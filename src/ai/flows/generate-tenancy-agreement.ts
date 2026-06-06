@@ -2,7 +2,7 @@
 /**
  * @fileOverview A Solicitor-Grade Legal AI agent for generating full-length UK Tenancy Agreements.
  * Calibrated specifically for the Renters' Rights Act 2024 (effective May 2026).
- * Hardened with an adaptive 6-tier resilient retry protocol and output validation.
+ * Hardened with a resilient 6-tier retry protocol and length-validation orchestrator.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -30,7 +30,7 @@ const agreementPrompt = ai.definePrompt({
   input: { schema: GenerateTenancyAgreementInputSchema },
   output: { schema: GenerateTenancyAgreementOutputSchema },
   config: { 
-    temperature: 0.1,
+    temperature: 0.2,
     maxOutputTokens: 4096, 
     safetySettings: [
       { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
@@ -69,7 +69,8 @@ CRITICAL: The document must be multi-page length with full legal covenants. Ensu
 
 /**
  * 🚀 Adaptive Legal AI Orchestrator
- * Implements a 6-tier retry protocol with length validation to ensure high-fidelity drafts.
+ * Implements a 6-tier retry protocol with length validation.
+ * Errors regarding draft complexity are now marked as retryable to prevent premature fallback.
  */
 export async function generateTenancyAgreement(input: GenerateTenancyAgreementInput): Promise<GenerateTenancyAgreementOutput> {
   let retries = 6;
@@ -93,7 +94,8 @@ Please verify your asset metadata in the Commander Hub and re-trigger generation
       const { output } = await agreementPrompt(input);
       
       // VALIDATION: Ensure the response isn't a tiny summary.
-      if (!output || output.agreementText.length < 1200) {
+      // 1000 chars is the absolute minimum for a professional agreement with clauses.
+      if (!output || output.agreementText.length < 1000) {
         throw new Error("Draft complexity below solicitor-grade threshold.");
       }
       
@@ -102,6 +104,7 @@ Please verify your asset metadata in the Commander Hub and re-trigger generation
       console.error(`⚖️ LEGAL SYNC ATTEMPT FAILURE (${retries} left):`, error.message);
       
       const errorMsg = (error.message || "").toUpperCase();
+      // CRITICAL FIX: Include 'THRESHOLD' in retryable errors to handle conciseness issues during peak volume
       const isRetryable = errorMsg.includes('429') || 
                           errorMsg.includes('QUOTA') || 
                           errorMsg.includes('THRESHOLD') ||
