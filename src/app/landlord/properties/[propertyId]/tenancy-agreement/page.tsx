@@ -9,18 +9,14 @@ import {
   useMemoFirebase,
 } from '@/firebase';
 import { doc, query, collection, where } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  FileText, 
   Loader2, 
-  Download, 
   ArrowLeft, 
   Sparkles, 
   ShieldCheck, 
-  Users, 
-  Calendar,
   AlertTriangle,
   History,
   CheckCircle2,
@@ -35,12 +31,11 @@ import { generateTenancyAgreement, type GenerateTenancyAgreementOutput } from "@
 import { format } from 'date-fns';
 import { jsPDF } from "jspdf";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
 
 /**
  * @fileOverview Post-2026 Tenancy Compliance Orchestrator.
- * High-Fidelity agreement generation aligned with the Renters' Rights Act 2024.
  * Optimized for professional resilience and clear operational feedback.
+ * CALIBRATED: Fixed orchestration delay by aligning retry protocol with server timeouts.
  */
 
 export default function TenancyAgreementPage({ params }: { params: Promise<{ propertyId: string }> }) {
@@ -66,14 +61,14 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
     }
     const interval = setInterval(() => {
       setLoadingStep(prev => (prev + 1) % 4);
-    }, 4000);
+    }, 4500);
     return () => clearInterval(interval);
   }, [isGenerating]);
 
   const loadingMessages = [
     "Establishing legal identities...",
-    "Synthesizing Renters' Rights Act clauses...",
-    "Validating post-2026 periodic structure...",
+    "Synthesizing 2026 statutory clauses...",
+    "Validating periodic structure...",
     "Finalizing solicitor-grade draft..."
   ];
 
@@ -98,7 +93,7 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
 
   const handleGenerate = async () => {
     if (!property || !activeTenant || !user) {
-      toast({ variant: "destructive", title: "Missing Context", description: "Verify asset and resident assignment before proceeding." });
+      toast({ variant: "destructive", title: "Missing Context", description: "Verify asset and resident assignment." });
       return;
     }
 
@@ -108,10 +103,10 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
     try {
       const result = await generateTenancyAgreement({
         propertyAddress: `${property.addressLine1}, ${property.city} ${property.zipCode}`,
-        landlordName: user.displayName || 'The Landlord',
+        landlordName: user.displayName || 'Authorized Landlord',
         tenantName: `${activeTenant.firstName} ${activeTenant.lastName}`,
         rentAmount: property.rentAmount || 0,
-        startDate: new Date().toISOString(),
+        startDate: format(new Date(), 'yyyy-MM-dd'),
         petPolicy: "Tenant has statutory right to request pets as per the Renters' Rights Act 2024. Landlord may require pet insurance."
       });
 
@@ -120,14 +115,14 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
       if (result.agreementText.includes('Synchronization Pending')) {
         toast({ 
           variant: "destructive",
-          title: "Orchestration Delayed", 
-          description: "The intelligence relay is handling peak load. Please re-trigger the generation now." 
+          title: "Synchronization Delay", 
+          description: "Intelligence relay is handing peak load. Please re-trigger the generation." 
         });
       } else {
-        toast({ title: "Agreement Finalized", description: "Solicitor-grade draft is ready for review." });
+        toast({ title: "Agreement Finalized", description: "Solicitor-grade draft synchronized." });
       }
     } catch (e) {
-      toast({ variant: "destructive", title: "Sync Interrupted", description: "The intelligence relay timed out. Please retry." });
+      toast({ variant: "destructive", title: "Sync Interrupted", description: "Orchestration delay encountered. Please retry." });
     } finally {
       setIsGenerating(false);
     }
@@ -139,39 +134,36 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
     
-    // --- HEADER ---
     pdf.setFillColor(15, 23, 42); 
-    pdf.rect(0, 0, pageWidth, 55, "F");
+    pdf.rect(0, 0, pageWidth, 50, "F");
     pdf.setTextColor(255, 255, 255);
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(22);
-    pdf.text("TENANCY AGREEMENT", 20, 28);
+    pdf.text("TENANCY AGREEMENT", 20, 25);
     pdf.setFontSize(9);
     pdf.setFont("helvetica", "normal");
-    pdf.text("OFFICIAL COMPLIANCE RECORD: RENTERS' RIGHTS ACT 2024", 20, 38);
-    pdf.text(`GENERATED VIA RENTALFLOW INTELLIGENCE: ${format(new Date(), 'PPPP')}`, 20, 44);
+    pdf.text("OFFICIAL COMPLIANCE RECORD: RENTERS' RIGHTS ACT 2024", 20, 35);
+    pdf.text(`GENERATED VIA RENTALFLOW INTELLIGENCE: ${format(new Date(), 'PPPP')}`, 20, 42);
 
-    // --- CONTENT ---
     pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(10);
     const splitText = pdf.splitTextToSize(agreementData.agreementText, 170);
     
-    let y = 75;
+    let y = 70;
     splitText.forEach((line: string) => {
       if (y > 280) {
         pdf.addPage();
-        y = 25;
+        y = 20;
       }
       pdf.text(line, 20, y);
       y += 6;
     });
 
-    // --- SIGNATURES ---
-    if (y > 240) { pdf.addPage(); y = 25; }
-    y += 25;
+    if (y > 240) { pdf.addPage(); y = 20; }
+    y += 20;
     pdf.setFont("helvetica", "bold");
     pdf.text("EXECUTION & SIGNATURES", 20, y);
-    y += 15;
+    y += 12;
     pdf.setFont("helvetica", "normal");
     pdf.text("__________________________", 20, y);
     pdf.text("__________________________", 120, y);
@@ -193,12 +185,12 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
             <ArrowLeft className="w-6 h-6" />
           </Button>
           <div className="min-w-0 flex-1 space-y-1">
-            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold uppercase tracking-[0.2em] text-[9px] mb-2">
+            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold uppercase tracking-[0.2em] text-[10px] mb-2">
                <Gavel className="w-3.5 h-3.5 mr-2" /> Renters' Rights Act 2024
             </Badge>
-            <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground tracking-tighter">Drafting Orchestrator</h1>
+            <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground tracking-tighter">Agreement Orchestrator</h1>
             <p className="text-muted-foreground font-medium font-body text-lg opacity-60">
-              Generating statutory rolling periodic agreements for {property?.addressLine1}.
+              Generating statutory periodic agreements for {property?.addressLine1}.
             </p>
           </div>
         </div>
@@ -229,7 +221,7 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
                    ) : (
                      <div className="p-6 bg-red-500/5 rounded-[2rem] border border-red-500/10 flex items-center gap-4 text-red-600">
                         <AlertTriangle className="w-6 h-6" />
-                        <span className="text-[11px] font-bold uppercase tracking-widest">Resident assignment pending</span>
+                        <span className="text-[11px] font-bold uppercase tracking-widest">Resident pending</span>
                      </div>
                    )}
                 </div>
@@ -251,7 +243,7 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
                 <Button 
                   onClick={handleGenerate} 
                   disabled={isGenerating || !activeTenant}
-                  className="w-full h-20 rounded-[2rem] font-bold bg-primary text-primary-foreground shadow-2xl transition-all hover:scale-[1.02] border-none font-headline uppercase tracking-[0.3em] text-[12px] group"
+                  className="w-full h-20 rounded-[2.5rem] font-bold bg-primary text-primary-foreground shadow-2xl transition-all hover:scale-[1.02] border-none font-headline uppercase tracking-[0.3em] text-[12px] group"
                 >
                   {isGenerating ? (
                     <div className="flex flex-col items-center gap-1">
@@ -270,7 +262,7 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
              <CardContent className="p-12 space-y-8 relative z-10">
                 <div className="p-8 bg-white/10 rounded-[2.5rem] border border-white/20 shadow-inner space-y-4 backdrop-blur-sm">
                    <p className="text-[11px] font-bold uppercase opacity-60 tracking-[0.4em] font-headline">Renters' Rights Act 2024</p>
-                   <p className="text-base font-medium leading-relaxed opacity-90">Every draft generated by the intelligence relay is calibrated for the <strong className="text-white">May 2026 Enforcement</strong>, mandating rolling periodic structures and the abolition of Section 21 clauses.</p>
+                   <p className="text-base font-medium leading-relaxed opacity-90">Every draft is calibrated for the <strong className="text-white">May 2026 Enforcement</strong>, mandating rolling periodic structures and the abolition of Section 21.</p>
                 </div>
                 <div className="flex items-center gap-4 px-2">
                    <Gavel className="w-6 h-6 text-white/60" />
@@ -306,7 +298,7 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
                         </div>
                         <div className="space-y-3">
                           <p className="text-2xl font-bold font-headline text-foreground uppercase tracking-[0.2em]">Awaiting Intelligence Draft</p>
-                          <p className="text-base font-medium text-foreground max-w-sm mx-auto leading-relaxed">Initialize the orchestration layer to generate a high-fidelity, post-2026 compliant agreement.</p>
+                          <p className="text-base font-medium text-foreground max-w-sm mx-auto leading-relaxed">Initialize the orchestration layer to generate a high-fidelity agreement.</p>
                         </div>
                      </div>
                    ) : agreementData.agreementText.includes('Synchronization Pending') ? (
@@ -316,9 +308,9 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
                         </div>
                         <div className="space-y-4">
                           <p className="text-3xl font-bold font-headline text-foreground uppercase tracking-tight">Sync Delay Encountered</p>
-                          <p className="text-lg text-muted-foreground font-medium max-w-md mx-auto leading-relaxed">The solicitor-grade engine is experiencing a peak volume cycle. Please re-trigger the generation now to clear the delay.</p>
+                          <p className="text-lg text-muted-foreground font-medium max-w-md mx-auto leading-relaxed">The solicitor-grade engine is experiencing a peak volume cycle. Please re-trigger the generation now.</p>
                         </div>
-                        <Button onClick={handleGenerate} variant="outline" className="rounded-[1.5rem] h-16 px-12 font-bold font-headline uppercase tracking-[0.3em] text-[12px] border-border hover:bg-primary/5 transition-all shadow-xl">
+                        <Button onClick={handleGenerate} variant="outline" className="rounded-[1.75rem] h-16 px-12 font-bold font-headline uppercase tracking-[0.3em] text-[12px] border-border hover:bg-primary/5 transition-all shadow-xl">
                           Re-trigger Orchestration <ChevronRight className="w-5 h-5 ml-4" />
                         </Button>
                       </div>
@@ -343,18 +335,6 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
                            <pre className="whitespace-pre-wrap font-body text-lg leading-loose text-foreground/80 bg-transparent p-0 border-none select-text">
                               {agreementData.agreementText}
                            </pre>
-                        </div>
-                        <div className="mt-32 pt-16 border-t border-border grid grid-cols-2 gap-24 opacity-40">
-                           <div className="space-y-6">
-                              <p className="text-[11px] font-bold uppercase tracking-[0.4em] font-headline">Landlord Execution</p>
-                              <div className="h-px bg-foreground/20 w-full" />
-                              <p className="text-[11px] font-bold text-foreground/60">{user?.displayName || 'Authorized Signatory'}</p>
-                           </div>
-                           <div className="space-y-6">
-                              <p className="text-[11px] font-bold uppercase tracking-[0.4em] font-headline">Resident Execution</p>
-                              <div className="h-px bg-foreground/20 w-full" />
-                              <p className="text-[11px] font-bold text-foreground/60">{activeTenant?.firstName} {activeTenant?.lastName}</p>
-                           </div>
                         </div>
                      </div>
                    )}

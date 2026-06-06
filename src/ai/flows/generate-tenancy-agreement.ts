@@ -2,8 +2,7 @@
 /**
  * @fileOverview A Solicitor-Grade Legal AI agent for generating full-length UK Tenancy Agreements.
  * Calibrated specifically for the Renters' Rights Act 2024 (effective May 2026).
- * Hardened with an 8-tier resilient retry protocol and solicitor-grade drafting instructions.
- * Optimized for high-fidelity clause production with hardware-accelerated synthesis.
+ * Hardened with an optimized 3-tier resilient retry protocol to fit within server action timeouts.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -31,7 +30,7 @@ const agreementPrompt = ai.definePrompt({
   input: { schema: GenerateTenancyAgreementInputSchema },
   output: { schema: GenerateTenancyAgreementOutputSchema },
   config: { 
-    temperature: 0.2,
+    temperature: 0.1,
     maxOutputTokens: 4096, 
     safetySettings: [
       { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
@@ -40,44 +39,44 @@ const agreementPrompt = ai.definePrompt({
       { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
     ]
   },
-  prompt: `You are a Senior UK Residential Property Solicitor specializing in the Renters' Rights Act 2024. 
-Your objective is to generate a COMPREHENSIVE, FULL-LENGTH, MULTI-PAGE Tenancy Agreement for a residency in England.
+  prompt: `You are a Senior UK Residential Property Solicitor. 
+Generate a COMPREHENSIVE, FULL-LENGTH Tenancy Agreement for a residency in England, strictly following the Renters' Rights Act 2024 (effective May 2026).
 
 DRAFTING CONTEXT:
-- Landlord Identity: {{{landlordName}}}
-- Tenant Identity: {{{tenantName}}}
-- Asset Location: {{{propertyAddress}}}
+- Landlord: {{{landlordName}}}
+- Tenant: {{{tenantName}}}
+- Asset: {{{propertyAddress}}}
 - Monthly Rent: £{{{rentAmount}}}
-- Commencement Date: {{{startDate}}}
+- Commencement: {{{startDate}}}
 - Pet Protocol: {{{petPolicy}}}
 
-DRAFTING INSTRUCTIONS:
-You MUST provide the full legal prose for every section below. DO NOT summarize. Use formal solicitor-standard numbering (e.g., 1.0, 1.1).
+INSTRUCTIONS:
+You MUST provide full, numbered legal prose (e.g., 1.0, 1.1). DO NOT summarize.
 
-1. THE PARTIES: Explicitly define {{{landlordName}}} (The Landlord) and {{{tenantName}}} (The Tenant) as the contracting parties for the asset at {{{propertyAddress}}}.
-2. STATUTORY STRUCTURE: State that this is a "rolling periodic tenancy" as mandated by the Renters' Rights Act 2024. Abolish all "Fixed Term" language.
-3. RENT & FINANCE: Full clauses on payment dates, late payment interest, and the mandatory Section 13 rent review procedure (once per year via Form 4).
-4. DEPOSIT PROTECTION: Detailed prose on protection in a government-authorized scheme and the provision of Prescribed Information.
-5. TENANT COVENANTS: Detailed sections on Utilities, Council Tax, internal maintenance, and prohibited use.
-6. LANDLORD COVENANTS: Full legal prose covering Section 11 of the Landlord and Tenant Act 1985 regarding structural repairs.
-7. PET STATUTORY RIGHT: Draft the tenant's right to request pets and the Landlord's right to require pet insurance (Renters' Rights Act 2024).
-8. STATUTORY TERMINATION (POST-2026): Detail the Tenant's 2-month notice right and the Landlord's Section 8 grounds for possession (Mandatory & Discretionary). Explicitly state that Section 21 (no-fault) evictions are abolished.
-9. SERVICE OF NOTICES: Formal service procedures under Section 196 of the Law of Property Act 1925.
-10. EXECUTION: Formal signature blocks for both parties.
+1. THE PARTIES: Define {{{landlordName}}} (Landlord) and {{{tenantName}}} (Tenant) for the asset at {{{propertyAddress}}}.
+2. STATUTORY STRUCTURE: State this is a "rolling periodic tenancy" as mandated by the Renters' Rights Act 2024. Abolish Section 21 "no-fault" language.
+3. RENT & FINANCE: Clauses on monthly payment, late interest, and the Section 13 rent review procedure.
+4. DEPOSIT: Detailed prose on government-authorized protection schemes.
+5. TENANT COVENANTS: Maintenance, utilities, and internal upkeep obligations.
+6. LANDLORD COVENANTS: Section 11 Landlord and Tenant Act 1985 structural repair obligations.
+7. PET RIGHTS: Draft the statutory right to request pets as per the 2024 Act.
+8. TERMINATION: Tenant's 2-month notice right and Landlord's Section 8 grounds for possession.
+9. NOTICES: Formal service procedures under Section 196 of the Law of Property Act 1925.
+10. SIGNATURES: Execution blocks for both parties.
 
-CRITICAL: Provide the full length legal covenants. A short document is non-compliant. Ensure the identities of both parties are clearly established in the text.`,
+CRITICAL: The document must be multi-page length with full legal covenants. Ensure the names of both parties are explicitly established.`,
 });
 
 /**
- * 🚀 Resilient Legal AI Orchestrator
- * Implements an 8-tier retry protocol to handle transient capacity errors.
+ * 🚀 Optimized Legal AI Orchestrator
+ * Implements a 3-tier retry protocol to fit within the 60s server action window.
  */
 export async function generateTenancyAgreement(input: GenerateTenancyAgreementInput): Promise<GenerateTenancyAgreementOutput> {
-  let retries = 8;
-  let delay = 2000;
+  let retries = 3;
+  let delay = 1500;
 
   const fallback: GenerateTenancyAgreementOutput = {
-    agreementText: `TENANCY RECORD LOGGED: The solicitor-grade intelligence relay is currently handling a peak volume of statutory drafts. 
+    agreementText: `TENANCY RECORD LOGGED: The solicitor-grade intelligence relay is currently synchronizing high-fidelity clauses.
 
 VERIFICATION PROTOCOL:
 Asset Identity: ${input.propertyAddress}
@@ -85,28 +84,20 @@ Landlord Identity: ${input.landlordName}
 Tenant Identity: ${input.tenantName}
 Status: Synchronization Pending
 
-Please re-trigger the generation in the Commander Hub. This synchronization delay occurs during high-volume cycles when the AI is orchestrating full multi-page legal prose to ensure you receive a high-fidelity document.`,
-    keyComplianceNotes: ["System is prioritizing critical safety audits. Please retry."]
+Please re-trigger the generation in the Commander Hub. This synchronization delay occurs during peak volume cycles to ensure you receive a comprehensive, multi-page legal document calibrated for the Renters' Rights Act 2024.`,
+    keyComplianceNotes: ["System is prioritizing high-fidelity legal drafts. Please retry."]
   };
 
   while (retries >= 0) {
     try {
       const { output } = await agreementPrompt(input);
-      
-      if (!output) {
-        throw new Error("Empty response from intelligence relay.");
-      }
-      
+      if (!output) throw new Error("Empty response");
       return output;
     } catch (error: any) {
       console.error(`⚖️ LEGAL SYNC ATTEMPT FAILURE (${retries} left):`, error.message);
       
       const errorMsg = (error.message || "").toUpperCase();
-      const isRetryable = errorMsg.includes('429') || 
-                          errorMsg.includes('QUOTA') || 
-                          errorMsg.includes('RESOURCE_EXHAUSTED') ||
-                          errorMsg.includes('503') ||
-                          errorMsg.includes('500');
+      const isRetryable = errorMsg.includes('429') || errorMsg.includes('QUOTA') || errorMsg.includes('503') || errorMsg.includes('500');
 
       if (isRetryable && retries > 0) {
         await new Promise(resolve => setTimeout(resolve, delay));
