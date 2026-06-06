@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star, RefreshCcw } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Sparkles, X, Plus, Star, RefreshCcw, ImageOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { syncPropertyToDb } from "@/lib/actions/db-sync";
@@ -33,7 +33,8 @@ type LedgerItem = {
 
 /**
  * @fileOverview Modify Asset Specs.
- * Hardened visual rendering: Flicker-free preview engine using standard <img> tags for reliable resolution.
+ * Hardened visual rendering: Using standard <img> tags with resilient error fallbacks.
+ * Flicker-Free sync: Preserves local previews during cloud binary orchestration.
  */
 export default function EditPropertyPage({ params }: { params: Promise<{ propertyId: string }> }) {
   const resolvedParams = use(params);
@@ -273,11 +274,18 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                         </div>
 
                         {item.status === 'uploading' && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-primary/20 backdrop-blur-[2px] gap-3 z-30">
-                             <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-xl shadow-2xl border border-white/10">
-                               <Loader2 className="w-8 h-8 animate-spin text-accent" />
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-primary/10 backdrop-blur-[2px] gap-3 z-30">
+                             <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-xl shadow-2xl border border-white/20">
+                               <Loader2 className="w-8 h-8 animate-spin text-white" />
                              </div>
                              <span className="text-[9px] font-bold text-white uppercase tracking-[0.4em] drop-shadow-md">Synchronizing...</span>
+                          </div>
+                        )}
+
+                        {item.status === 'error' && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-500/20 backdrop-blur-[2px] gap-2 z-30">
+                             <ImageOff className="w-8 h-8 text-white" />
+                             <span className="text-[9px] font-bold text-white uppercase tracking-[0.2em]">Sync Error</span>
                           </div>
                         )}
                         
@@ -357,7 +365,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
           <CardFooter className="p-10 bg-white/[0.01] border-t border-white/5 flex flex-col md:flex-row justify-end gap-6 shrink-0">
             <Button type="button" variant="ghost" className="w-full md:w-auto rounded-[1.5rem] h-16 px-12 font-bold font-headline text-muted-foreground hover:bg-white/5 hover:text-foreground border border-white/5 transition-all" onClick={() => router.back()}>Cancel Changes</Button>
             <Button type="submit" disabled={isSaving} className="w-full md:w-auto rounded-[1.5rem] font-bold bg-background text-foreground border border-border h-16 px-16 shadow-2xl shadow-accent/20 font-headline transition-all hover:bg-primary hover:text-primary-foreground uppercase tracking-[0.2em] text-[11px] hover:scale-[1.01]">
-              {isSaving ? <Loader2 className="w-6 h-6 animate-spin mr-3" /> : <Save className="w-6 h-6 mr-3" />}
+              {isSaving ? <Loader2 className="w-6 h-6 mr-3" /> : <Save className="w-6 h-6 mr-3" />}
               Synchronize Asset
             </Button>
           </CardFooter>

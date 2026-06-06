@@ -41,7 +41,7 @@ export async function withRetry<T>(
 export function isValidAssetUrl(url: any): boolean {
   if (!url || typeof url !== 'string') return false;
   
-  const trimmed = (url || "").trim();
+  const trimmed = url.trim();
   if (trimmed.length < 5) return false; 
   
   const lower = trimmed.toLowerCase();
