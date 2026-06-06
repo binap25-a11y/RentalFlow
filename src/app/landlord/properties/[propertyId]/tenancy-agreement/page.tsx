@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use, useEffect, useMemo } from 'react';
+import { useState, use, useEffect } from 'react';
 import { 
   useUser, 
   useFirestore, 
@@ -24,7 +24,8 @@ import {
   AlertTriangle,
   History,
   CheckCircle2,
-  FileDown
+  FileDown,
+  Gavel
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -78,6 +79,8 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
     }
 
     setIsGenerating(true);
+    setAgreementData(null);
+    
     try {
       const result = await generateTenancyAgreement({
         propertyAddress: `${property.addressLine1}, ${property.city} ${property.zipCode}`,
@@ -89,9 +92,18 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
       });
 
       setAgreementData(result);
-      toast({ title: "Agreement Synchronized", description: "2026 Compliance Protocol Applied." });
+      
+      if (result.agreementText.includes('Synchronization Pending')) {
+        toast({ 
+          variant: "destructive",
+          title: "Peak Volume Delay", 
+          description: "The relay is handling high load. Please retry in 60 seconds." 
+        });
+      } else {
+        toast({ title: "Agreement Synchronized", description: "Solicitor-grade draft finalized." });
+      }
     } catch (e) {
-      toast({ variant: "destructive", title: "Generation Failure" });
+      toast({ variant: "destructive", title: "Orchestration Failure", description: "Connection interrupted. Please retry." });
     } finally {
       setIsGenerating(false);
     }
@@ -140,8 +152,8 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
     pdf.text("__________________________", 20, y);
     pdf.text("__________________________", 120, y);
     y += 8;
-    pdf.text("Landlord Signature", 20, y);
-    pdf.text("Tenant Signature", 120, y);
+    pdf.text(`Landlord: ${user?.displayName || 'Authorized Signatory'}`, 20, y);
+    pdf.text(`Tenant: ${activeTenant?.firstName} ${activeTenant?.lastName}`, 120, y);
 
     pdf.save(`Agreement_${property.addressLine1.replace(/\s+/g, '_')}_2026.pdf`);
     toast({ title: "Binary Record Saved" });
@@ -215,7 +227,7 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
                   className="w-full h-14 rounded-2xl font-bold bg-primary text-primary-foreground shadow-2xl transition-all hover:scale-[1.02] border-none font-headline uppercase tracking-[0.2em] text-[10px]"
                 >
                   {isGenerating ? <Loader2 className="w-4 h-4 mr-3 animate-spin" /> : <Sparkles className="w-4 h-4 mr-3" />}
-                  Orchestrate AI Draft
+                  Orchestrate Solicitor-Grade Draft
                 </Button>
              </CardContent>
            </Card>
@@ -225,7 +237,11 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
              <CardContent className="p-10 space-y-6">
                 <div className="p-6 bg-white/10 rounded-[2rem] border border-white/10 shadow-inner space-y-3">
                    <p className="text-[10px] font-bold uppercase opacity-60 tracking-[0.3em] font-headline">Act Compliance (2026)</p>
-                   <p className="text-sm font-medium leading-relaxed opacity-90">Drafts generated here exclude all Section 21 clauses and enforce rolling periodic structures as per the statutory updates.</p>
+                   <p className="text-sm font-medium leading-relaxed opacity-90">Drafts generated here exclude all Section 21 clauses and enforce rolling periodic structures as per the Renters' Rights Act 2024.</p>
+                </div>
+                <div className="flex items-center gap-3 px-2">
+                   <Gavel className="w-5 h-5 text-white/60" />
+                   <span className="text-[9px] font-bold uppercase tracking-widest text-white/70">Solicitor-Standard Clauses</span>
                 </div>
              </CardContent>
            </Card>
@@ -238,7 +254,7 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
                   <CardTitle className="text-2xl font-bold font-headline text-foreground tracking-tight">Agreement Preview</CardTitle>
                   <p className="text-xs font-medium text-muted-foreground opacity-60">Statutory Residential Lease Draft</p>
                 </div>
-                {agreementData && (
+                {agreementData && !agreementData.agreementText.includes('Synchronization Pending') && (
                   <Button onClick={handleDownloadPDF} className="rounded-xl h-11 px-8 font-bold bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 transition-all font-headline text-[10px] uppercase tracking-widest">
                      <FileDown className="w-4 h-4 mr-2" /> Download PDF Record
                   </Button>
@@ -255,6 +271,19 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
                           <p className="text-sm font-medium text-foreground max-w-xs mt-2">Use the side panel to initialize a post-2026 compliant agreement draft.</p>
                         </div>
                      </div>
+                   ) : agreementData.agreementText.includes('Synchronization Pending') ? (
+                      <div className="h-[400px] flex flex-col items-center justify-center text-center gap-6">
+                        <div className="p-6 bg-amber-500/10 rounded-full">
+                          <AlertTriangle className="w-12 h-12 text-amber-500" />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-lg font-bold font-headline text-foreground uppercase tracking-tight">Peak Load Detected</p>
+                          <p className="text-sm text-muted-foreground max-w-sm mx-auto">The intelligence relay is processing high volumes. Please wait 60 seconds and trigger the generation again.</p>
+                        </div>
+                        <Button onClick={handleGenerate} variant="outline" className="rounded-xl h-12 px-8 font-bold font-headline uppercase tracking-widest text-[10px]">
+                          Retry Orchestration
+                        </Button>
+                      </div>
                    ) : (
                      <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000">
                         {agreementData.keyComplianceNotes.length > 0 && (
@@ -276,12 +305,14 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
                         </div>
                         <div className="mt-24 pt-12 border-t border-border grid grid-cols-2 gap-20 opacity-40">
                            <div className="space-y-4">
-                              <p className="text-[10px] font-bold uppercase tracking-widest font-headline">Landlord Identity</p>
+                              <p className="text-[10px] font-bold uppercase tracking-widest font-headline">Landlord Signature</p>
                               <div className="h-px bg-foreground/20 w-full" />
+                              <p className="text-[10px] font-bold text-foreground/60">{user?.displayName || 'The Landlord'}</p>
                            </div>
                            <div className="space-y-4">
-                              <p className="text-[10px] font-bold uppercase tracking-widest font-headline">Resident Identity</p>
+                              <p className="text-[10px] font-bold uppercase tracking-widest font-headline">Resident Signature</p>
                               <div className="h-px bg-foreground/20 w-full" />
+                              <p className="text-[10px] font-bold text-foreground/60">{activeTenant?.firstName} {activeTenant?.lastName}</p>
                            </div>
                         </div>
                      </div>

@@ -30,7 +30,7 @@ const agreementPrompt = ai.definePrompt({
   input: { schema: GenerateTenancyAgreementInputSchema },
   output: { schema: GenerateTenancyAgreementOutputSchema },
   config: { 
-    temperature: 0.2, // Balanced for precision and flow
+    temperature: 0.2, // Prioritize precision
     safetySettings: [
       { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
@@ -50,19 +50,20 @@ Start Date: {{{startDate}}}
 Pet Policy: {{{petPolicy}}}
 
 DRAFTING INSTRUCTIONS:
-You MUST provide the full legal prose for the following sections. Use solicitor-standard numbering (e.g., 1.0, 1.1).
+You MUST provide the full, multi-page legal prose for the following sections. Do not summarize. Use solicitor-standard numbering (e.g., 1.0, 1.1).
 
-1. THE PARTIES: Clearly identify the Landlord ({{{landlordName}}}) and the Tenant ({{{tenantName}}}).
-2. THE STATUTORY TERM: Draft as a "rolling periodic tenancy" as mandated post-2026.
-3. RENT & FINANCE: Full clauses on payment, Section 13 rent review procedures, and late payment interest (capped at 3% above base).
-4. DEPOSIT: Full prose on protection in a government-authorized scheme within 30 days.
+1. THE PARTIES & DEFINITIONS: Explicitly identify {{{landlordName}}} as the Landlord and {{{tenantName}}} as the Tenant. Define the Property at {{{propertyAddress}}}.
+2. THE STATUTORY TERM: State clearly that this is a "rolling periodic tenancy" from {{{startDate}}} as mandated post-2026.
+3. RENT & FINANCE: Full clauses on payment dates, Section 13 rent review procedures (no more than once per year), and late payment interest (capped at 3% above base).
+4. DEPOSIT: Full prose on protection in a government-authorized scheme within 30 calendar days. Detail the lead tenant requirements.
 5. TENANT COVENANTS: Detailed sections on Utilities, Council Tax, internal maintenance, and prohibited illegal use.
-6. LANDLORD OBLIGATIONS: Full prose covering Section 11 of the Landlord and Tenant Act 1985.
-7. PET PROTOCOL: Statutory right to request pets with conditions for insurance.
-8. TERMINATION: Explicitly remove Section 21. Detail the Tenant's 2-month notice right and the Landlord's limited grounds for possession under Section 8 (Sale of property, etc).
-9. SIGNATURES: Formal blocks for all parties.
+6. LANDLORD OBLIGATIONS: Full prose covering Section 11 of the Landlord and Tenant Act 1985 regarding structural and utility repairs.
+7. PET PROTOCOL: Draft the statutory right to request pets with conditions for insurance and Landlord's requirement to not unreasonably withhold consent.
+8. TERMINATION & REPOSSESSION: Explicitly exclude Section 21. Detail the Tenant's 2-month notice right and the Landlord's limited grounds for possession under Section 8 (Sale, Personal use, etc) as per the 2024 Act.
+9. NOTICES: Full service of notice procedures.
+10. SIGNATURE BLOCKS: Formal blocks for all parties.
 
-CRITICAL: Generate a minimum of 1200 words. Do not summarize. Provide the full legal covenants.`,
+CRITICAL: Generate a minimum of 1500 words. Provide the full legal covenants and comprehensive clauses. Failure to provide full length prose is a breach of compliance.`,
 });
 
 /**
@@ -91,8 +92,9 @@ Please re-trigger generation in 60 seconds if the comprehensive draft does not a
       const { output } = await agreementPrompt(input);
       
       // VALIDATION: Ensure the model didn't return a truncated or summary version
-      if (!output || output.agreementText.length < 800) {
-        throw new Error("Insufficient document length generated.");
+      // Stricter check for 3000 characters (approx 500-600 words minimum) to ensure clauses exist
+      if (!output || output.agreementText.length < 3000) {
+        throw new Error("Insufficient document length generated for legal compliance.");
       }
       
       return output;
@@ -105,7 +107,8 @@ Please re-trigger generation in 60 seconds if the comprehensive draft does not a
                           errorMsg.includes('RESOURCE_EXHAUSTED') ||
                           errorMsg.includes('503') ||
                           errorMsg.includes('500') ||
-                          errorMsg.includes('LENGTH');
+                          errorMsg.includes('LENGTH') ||
+                          errorMsg.includes('COMPLIANCE');
 
       if (isRetryable && retries > 0) {
         await new Promise(resolve => setTimeout(resolve, delay));
