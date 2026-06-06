@@ -51,7 +51,7 @@ import { notifyLandlordOfRequest } from "@/lib/actions/email-actions";
 
 /**
  * @fileOverview Personalized Resident Hub.
- * Hardened visual rendering using native <img> tags for maximum Supabase resolution.
+ * Refined with professional standardized button sizes.
  */
 
 export default function TenantHub() {
@@ -270,7 +270,7 @@ export default function TenantHub() {
               <div className="space-y-8">
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold font-headline text-2xl text-foreground flex items-center tracking-tight"><ReceiptText className="w-7 h-7 mr-4 text-accent" /> Monthly Rent Ledger</h3>
-                  <Button variant="ghost" asChild className="rounded-2xl font-bold text-[10px] uppercase tracking-widest text-muted-foreground hover:bg-accent/10 hover:text-accent transition-all duration-500 px-6 h-11 border border-transparent hover:border-accent/20">
+                  <Button variant="ghost" asChild className="rounded-xl font-bold text-[10px] uppercase tracking-widest text-muted-foreground hover:bg-accent/10 hover:text-accent transition-all duration-500 px-6 h-10 border border-transparent hover:border-accent/20">
                     <Link href="/tenant/payments">View history <ChevronRight className="w-4 h-4 ml-1" /></Link>
                   </Button>
                 </div>
@@ -280,7 +280,7 @@ export default function TenantHub() {
                    </div>
                    <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.4em] font-headline opacity-50 mb-4">Official Payment Record</p>
                    <p className="text-7xl font-bold font-headline text-foreground tracking-tighter mb-6">£{property.rentAmount?.toLocaleString()}</p>
-                   <Badge className={cn("w-full h-16 flex items-center justify-center font-bold text-[12px] rounded-2xl shadow-lg uppercase tracking-[0.3em] border transition-all duration-1000 font-headline", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white border-transparent" : "bg-amber-500/10 text-amber-600 border-amber-500/20")}>
+                   <Badge className={cn("w-full h-14 flex items-center justify-center font-bold text-[11px] rounded-xl shadow-lg uppercase tracking-[0.2em] border transition-all duration-1000 font-headline", currentPayment?.status === 'paid' ? "bg-emerald-500 text-white border-transparent" : "bg-amber-500/10 text-amber-600 border-amber-500/20")}>
                      {currentPayment?.status === 'paid' ? "Receipted & Collected" : "Collection Pending"}
                    </Badge>
                 </div>
@@ -309,11 +309,11 @@ export default function TenantHub() {
 
               {/* ACTIONS */}
               <div className="pt-12 border-t border-border/50 space-y-6">
-                <Button className="w-full h-20 rounded-[2rem] bg-accent hover:bg-accent/90 text-white font-bold text-base uppercase tracking-[0.2em] shadow-2xl shadow-accent/20 border-none transition-all hover:scale-[1.01] active:scale-95" onClick={() => setIsRepairOpen(true)}>
-                   <Wrench className="w-6 h-6 mr-4" /> Report a Maintenance Issue
+                <Button className="w-full h-14 rounded-2xl bg-accent hover:bg-accent/90 text-white font-bold text-sm uppercase tracking-[0.2em] shadow-xl shadow-accent/20 border-none transition-all hover:scale-[1.01] active:scale-95" onClick={() => setIsRepairOpen(true)}>
+                   <Wrench className="w-5 h-5 mr-3" /> Report a Maintenance Issue
                 </Button>
-                <Button variant="ghost" className="w-full h-16 rounded-2xl text-muted-foreground hover:text-accent hover:bg-primary/5 font-bold text-[11px] uppercase tracking-widest font-headline transition-all" onClick={handleDownloadStatement}>
-                   <Download className="w-5 h-5 mr-4" /> Download Official Statement (PDF)
+                <Button variant="ghost" className="w-full h-11 rounded-xl text-muted-foreground hover:text-accent hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest font-headline transition-all" onClick={handleDownloadStatement}>
+                   <Download className="w-4 h-4 mr-3" /> Download Official Statement (PDF)
                 </Button>
               </div>
             </CardContent>
@@ -337,7 +337,7 @@ export default function TenantHub() {
                        999
                     </p>
                 </div>
-                <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground hover:text-primary hover:bg-primary/5 h-14 rounded-2xl transition-all border border-transparent hover:border-primary/10">
+                <Button variant="ghost" asChild className="w-full text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground hover:text-primary hover:bg-primary/5 h-12 rounded-xl transition-all border border-transparent hover:border-primary/10">
                    <Link href="/tenant/emergency-contacts">Full Support Directory <ChevronRight className="w-4 h-4 ml-2" /></Link>
                 </Button>
              </CardContent>
@@ -348,21 +348,21 @@ export default function TenantHub() {
       {/* REPAIR DIALOG */}
       <Dialog open={isRepairOpen} onOpenChange={setIsRepairOpen}>
         <DialogContent className="rounded-[3.5rem] border-none shadow-2xl p-0 overflow-hidden bg-card max-w-[650px] flex flex-col max-h-[90vh] ring-1 ring-white/10">
-          <div className="p-12 bg-primary text-primary-foreground border-b border-white/10 text-left shrink-0 relative">
-             <div className="absolute top-0 right-0 p-12 opacity-10"><Wrench className="w-24 h-24" /></div>
+          <div className="p-10 bg-primary text-primary-foreground border-b border-white/10 text-left shrink-0 relative">
+             <div className="absolute top-0 right-0 p-8 opacity-10"><Wrench className="w-20 h-20" /></div>
              <DialogHeader>
-                <DialogTitle className="text-3xl font-bold font-headline tracking-tighter flex items-center gap-5">
-                   <Wrench className="w-10 h-10 text-accent" /> Register Repair
+                <DialogTitle className="text-2xl font-bold font-headline tracking-tighter flex items-center gap-4">
+                   <Wrench className="w-8 h-8 text-accent" /> Register Repair
                 </DialogTitle>
-                <DialogDescription className="text-primary-foreground/70 font-medium text-base mt-3 leading-relaxed">Identity a property issue for immediate professional review.</DialogDescription>
+                <DialogDescription className="text-primary-foreground/70 font-medium text-sm mt-2 leading-relaxed">Identity a property issue for immediate professional review.</DialogDescription>
              </DialogHeader>
           </div>
           <ScrollArea className="flex-1">
-            <div className="p-12 space-y-12 text-left pb-24">
-               <div className="space-y-4">
+            <div className="p-10 space-y-10 text-left pb-24">
+               <div className="space-y-3">
                   <Label className="text-[11px] font-bold uppercase tracking-[0.4em] text-muted-foreground opacity-50 font-headline">Classification</Label>
                   <select 
-                    className="flex h-16 w-full rounded-2xl border-none bg-muted/40 px-8 py-2 text-base focus:ring-2 focus:ring-accent outline-none font-bold text-foreground shadow-inner ring-1 ring-white/10"
+                    className="flex h-12 w-full rounded-xl border-none bg-muted/40 px-6 py-2 text-sm focus:ring-2 focus:ring-accent outline-none font-bold text-foreground shadow-inner ring-1 ring-white/10"
                     value={repairCategory}
                     onChange={(e) => setRepairCategory(e.target.value)}
                   >
@@ -373,36 +373,36 @@ export default function TenantHub() {
                     <option value="General">General Site Maintenance</option>
                   </select>
                </div>
-               <div className="space-y-4">
+               <div className="space-y-3">
                   <Label className="text-[11px] font-bold uppercase tracking-[0.4em] text-muted-foreground opacity-50 font-headline">Fault Identifier</Label>
-                  <Input value={repairTitle} onChange={(e) => setRepairTitle(e.target.value)} placeholder="e.g. Master bathroom tap leak" className="rounded-2xl h-16 bg-muted/40 border-none font-bold px-8 shadow-inner ring-1 ring-white/10 text-lg" />
+                  <Input value={repairTitle} onChange={(e) => setRepairTitle(e.target.value)} placeholder="e.g. Master bathroom tap leak" className="rounded-xl h-12 bg-muted/40 border-none font-bold px-6 shadow-inner ring-1 ring-white/10 text-base" />
                </div>
-               <div className="space-y-4">
+               <div className="space-y-3">
                   <Label className="text-[11px] font-bold uppercase tracking-[0.4em] text-muted-foreground opacity-50 font-headline">Context Ledger</Label>
-                  <Textarea value={repairDesc} onChange={(e) => setRepairDesc(e.target.value)} placeholder="Provide a detailed narrative of the issue for the trade partner..." className="rounded-[2rem] min-h-[180px] bg-muted/40 border-none font-medium px-8 py-8 shadow-inner leading-relaxed text-base" />
+                  <Textarea value={repairDesc} onChange={(e) => setRepairDesc(e.target.value)} placeholder="Provide a detailed narrative of the issue for the trade partner..." className="rounded-2xl min-h-[160px] bg-muted/40 border-none font-medium px-6 py-6 shadow-inner leading-relaxed text-sm" />
                </div>
-               <div className="space-y-6">
+               <div className="space-y-5">
                   <Label className="text-[11px] font-bold uppercase tracking-[0.4em] text-muted-foreground opacity-50 font-headline">Visual Evidence Capture</Label>
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-5">
                      {repairImages.map((img, i) => (
-                       <div key={i} className="relative aspect-square rounded-[2rem] overflow-hidden border border-border shadow-2xl group/img">
+                       <div key={i} className="relative aspect-square rounded-[1.5rem] overflow-hidden border border-border shadow-xl group/img">
                           <img src={isValidAssetUrl(img) ? img : PROPERTY_PLACEHOLDER} alt="Evidence" className="absolute inset-0 h-full w-full object-cover transition-transform group-hover/img:scale-110 duration-700" />
-                          <button onClick={() => setRepairImages(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-4 right-4 p-2.5 bg-black/60 rounded-xl text-white backdrop-blur-xl border border-white/10 hover:bg-red-500 transition-all"><X className="w-4 h-4" /></button>
+                          <button onClick={() => setRepairImages(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-3 right-3 p-2 bg-black/60 rounded-lg text-white backdrop-blur-xl border border-white/10 hover:bg-red-500 transition-all"><X className="w-3.5 h-3.5" /></button>
                        </div>
                      ))}
-                     <label className="aspect-square rounded-[2rem] border-2 border-dashed border-border hover:border-accent transition-all duration-500 bg-muted/10 flex flex-col items-center justify-center gap-4 cursor-pointer group/upload shadow-inner">
-                        {isUploading ? <Loader2 className="w-10 h-10 animate-spin text-accent" /> : <Camera className="w-10 h-10 text-muted-foreground opacity-40 group-hover/upload:opacity-100 group-hover/upload:scale-110 transition-all duration-500" />}
-                        <span className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-40">Register Asset</span>
+                     <label className="aspect-square rounded-[1.5rem] border-2 border-dashed border-border hover:border-accent transition-all duration-500 bg-muted/10 flex flex-col items-center justify-center gap-3 cursor-pointer group/upload shadow-inner">
+                        {isUploading ? <Loader2 className="w-8 h-8 animate-spin text-accent" /> : <Camera className="w-8 h-8 text-muted-foreground opacity-40 group-hover/upload:opacity-100 group-hover/upload:scale-110 transition-all duration-500" />}
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-40 text-center">Capture</span>
                         <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
                      </label>
                   </div>
                </div>
             </div>
           </ScrollArea>
-          <DialogFooter className="p-12 bg-muted/5 border-t border-border shrink-0">
-             <Button className="w-full h-20 rounded-[2rem] bg-accent hover:bg-accent/90 text-white font-bold uppercase tracking-[0.2em] shadow-2xl shadow-accent/20 border-none transition-all hover:scale-[1.02] active:scale-95" onClick={handleSaveRepair} disabled={isSaving || !repairTitle}>
-                {isSaving ? <Loader2 className="w-6 h-6 animate-spin mr-4" /> : <Save className="w-6 h-6 mr-4" />}
-                Finalize & Notify Management
+          <DialogFooter className="p-10 bg-muted/5 border-t border-border shrink-0">
+             <Button className="w-full h-14 rounded-2xl bg-accent hover:bg-accent/90 text-white font-bold uppercase tracking-[0.2em] shadow-xl shadow-accent/20 border-none transition-all hover:scale-[1.01] active:scale-95 text-[11px]" onClick={handleSaveRepair} disabled={isSaving || !repairTitle}>
+                {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
+                Finalize & Notify
              </Button>
           </DialogFooter>
         </DialogContent>

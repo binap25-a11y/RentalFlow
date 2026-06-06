@@ -44,8 +44,8 @@ import {
 import { sendTenantWelcomeEmail } from '@/lib/actions/email-actions';
 
 /**
- * @fileOverview High-Fidelity Resident Directory.
- * Optimized with Real-Time Occupancy Synchronization and Welcome Orchestration.
+ * @fileOverview Resident Directory.
+ * Refined with professional standardized smaller buttons and precise layout.
  */
 
 export default function TenantsPage() {
@@ -60,7 +60,6 @@ export default function TenantsPage() {
 
   const { data: allProperties } = useCollection(propertiesQuery);
 
-  // HIGH-FIDELITY ASSET FILTER: Exclude deleted or incomplete records
   const properties = useMemo(() => 
     allProperties?.filter(p => !p.isDeleted && p.addressLine1) || [], 
   [allProperties]);
@@ -235,16 +234,16 @@ export default function TenantsPage() {
         
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20 font-headline text-primary-foreground px-6 transition-all hover:scale-[1.02] shrink-0 text-xs uppercase tracking-widest w-fit">
+            <Button className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold shadow-lg shadow-primary/20 font-headline text-primary-foreground px-6 transition-all hover:scale-[1.01] shrink-0 text-xs uppercase tracking-widest w-fit">
               <Plus className="w-4 h-4 mr-2" />
-              Assign New Resident
+              Assign Resident
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[550px] rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden flex flex-col h-[750px] max-h-[90vh] bg-card ring-1 ring-white/10">
             <form onSubmit={handleSaveTenant} className="flex flex-col h-full overflow-hidden">
               <DialogHeader className="p-10 text-left bg-primary/5 border-b border-white/5 shrink-0">
-                <DialogTitle className="text-3xl font-bold font-headline text-foreground tracking-tight">{editingTenant ? "Update Resident" : "Assign Resident"}</DialogTitle>
-                <DialogDescription className="font-medium text-muted-foreground mt-2 text-base">Initialize or refine a resident profile for your professional portfolio.</DialogDescription>
+                <DialogTitle className="text-2xl font-bold font-headline text-foreground tracking-tight">{editingTenant ? "Update Resident" : "Assign Resident"}</DialogTitle>
+                <DialogDescription className="font-medium text-muted-foreground mt-2 text-sm leading-relaxed">Initialize or refine a resident profile for your professional portfolio.</DialogDescription>
               </DialogHeader>
               
               <ScrollArea className="flex-1 min-h-0 bg-white/[0.01]">
@@ -252,28 +251,28 @@ export default function TenantsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
                       <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">First Name</Label>
-                      <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/10 text-foreground" placeholder="e.g. John" />
+                      <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="rounded-xl h-12 bg-muted/40 border-none font-bold text-sm px-5 shadow-inner ring-1 ring-white/10 text-foreground" placeholder="e.g. John" />
                     </div>
                     <div className="space-y-3">
                       <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Last Name</Label>
-                      <Input value={lastName} onChange={(e) => setLastName(e.target.value)} required className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/10 text-foreground" placeholder="e.g. Doe" />
+                      <Input value={lastName} onChange={(e) => setLastName(e.target.value)} required className="rounded-xl h-12 bg-muted/40 border-none font-bold text-sm px-5 shadow-inner ring-1 ring-white/10 text-foreground" placeholder="e.g. Doe" />
                     </div>
                   </div>
                   
                   <div className="space-y-3">
-                    <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Contact Electronic Mail</Label>
-                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/10 text-foreground" placeholder="tenant@example.com" />
+                    <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Email Address</Label>
+                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl h-12 bg-muted/40 border-none font-bold text-sm px-5 shadow-inner ring-1 ring-white/10 text-foreground" placeholder="tenant@example.com" />
                   </div>
                   
                   <div className="space-y-3">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Mobile Number</Label>
-                    <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/10 text-foreground" placeholder="+44 ..." />
+                    <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="rounded-xl h-12 bg-muted/40 border-none font-bold text-sm px-5 shadow-inner ring-1 ring-white/10 text-foreground" placeholder="+44 ..." />
                   </div>
 
                   <div className="space-y-3">
                     <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Target Inventory Asset</Label>
                     <select 
-                      className="flex h-14 w-full rounded-2xl border-none bg-muted/40 px-6 py-2 text-base focus:ring-2 focus:ring-primary outline-none font-bold text-foreground shadow-inner ring-1 ring-white/10" 
+                      className="flex h-12 w-full rounded-xl border-none bg-muted/40 px-5 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-foreground shadow-inner ring-1 ring-white/10" 
                       value={selectedPropertyId} 
                       onChange={(e) => setSelectedPropertyId(e.target.value)} 
                       required
@@ -286,9 +285,9 @@ export default function TenantsPage() {
               </ScrollArea>
 
               <DialogFooter className="p-10 bg-muted/5 border-t border-white/5 shrink-0">
-                <Button type="submit" disabled={isSubmitting || !selectedPropertyId} className="w-full rounded-[1.75rem] h-16 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/20 font-headline text-sm uppercase tracking-widest hover:opacity-90 hover:scale-[1.01] transition-transform">
+                <Button type="submit" disabled={isSubmitting || !selectedPropertyId} className="w-full rounded-2xl h-14 font-bold bg-primary text-primary-foreground shadow-2xl shadow-primary/20 font-headline text-[11px] uppercase tracking-widest hover:opacity-90 hover:scale-[1.01] transition-transform">
                   {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
-                  {editingTenant ? "Update Resident & Occupancy" : "Confirm Assignment"}
+                  {editingTenant ? "Update Resident" : "Confirm Assignment"}
                 </Button>
               </DialogFooter>
             </form>
@@ -297,10 +296,10 @@ export default function TenantsPage() {
       </div>
 
       <div className="relative">
-        <Search className="absolute left-4 top-4 h-6 w-6 text-muted-foreground opacity-30" />
+        <Search className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground opacity-30" />
         <Input 
           placeholder="Search resident directory..." 
-          className="pl-14 h-16 rounded-2xl bg-muted/20 border-none font-body shadow-sm text-lg text-foreground focus:ring-accent" 
+          className="pl-12 h-12 rounded-xl bg-muted/20 border-none font-body shadow-sm text-base text-foreground focus:ring-accent" 
           value={searchQuery} 
           onChange={(e) => setSearchQuery(e.target.value)} 
         />
@@ -333,27 +332,27 @@ export default function TenantsPage() {
                     <tr key={tenant.id} className="hover:bg-muted/10 transition-colors group">
                       <td className="px-10 py-8 min-w-0">
                         <div className="flex items-center gap-5">
-                          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold shadow-inner font-headline text-xl border border-primary/5 shrink-0">
+                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold shadow-inner font-headline text-lg border border-primary/5 shrink-0">
                             {tenant.firstName?.[0]}{tenant.lastName?.[0]}
                           </div>
                           <div className="text-left min-w-0 flex-1">
-                            <p className="font-bold text-lg font-headline text-foreground leading-tight truncate block">{tenant.firstName} {tenant.lastName}</p>
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1 opacity-60 truncate block">{tenant.email}</p>
+                            <p className="font-bold text-base font-headline text-foreground leading-tight truncate block">{tenant.firstName} {tenant.lastName}</p>
+                            <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest mt-1 opacity-60 truncate block">{tenant.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-10 py-8 text-left min-w-0">
-                        <Badge variant="secondary" className="bg-accent/10 text-accent border-none text-[10px] font-bold px-5 py-2 font-headline tracking-widest rounded-full shadow-inner truncate max-w-full block text-center">
+                        <Badge variant="secondary" className="bg-accent/10 text-accent border-none text-[9px] font-bold px-4 py-1.5 font-headline tracking-widest rounded-full shadow-inner truncate max-w-full block text-center">
                           {properties?.find(p => p.id === tenant.propertyId)?.addressLine1 || 'Pending Migration'}
                         </Badge>
                       </td>
                       <td className="px-10 py-8 text-right shrink-0">
-                        <div className="flex justify-end gap-3">
-                          <Button variant="ghost" size="icon" className="h-11 w-11 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-xl transition-all" onClick={() => handleEditClick(tenant)}><Edit3 className="w-5 h-5" /></Button>
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-lg transition-all" onClick={() => handleEditClick(tenant)}><Edit3 className="w-4 h-4" /></Button>
                           
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-11 w-11 text-destructive/40 hover:text-white hover:bg-red-500 rounded-xl transition-all"><Trash2 className="w-5 h-5" /></Button>
+                              <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive/40 hover:text-white hover:bg-red-500 rounded-lg transition-all"><Trash2 className="w-4 h-4" /></Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent className="rounded-3xl border-none shadow-2xl bg-card">
                               <AlertDialogHeader className="text-left">
@@ -363,10 +362,10 @@ export default function TenantsPage() {
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter className="mt-6 gap-3">
-                                <AlertDialogCancel className="rounded-xl h-12 font-bold uppercase tracking-widest text-[10px] border-border">Cancel</AlertDialogCancel>
+                                <AlertDialogCancel className="rounded-xl h-11 font-bold uppercase tracking-widest text-[10px] border-border">Cancel</AlertDialogCancel>
                                 <AlertDialogAction 
                                   onClick={() => handleDeleteTenant(tenant)}
-                                  className="rounded-xl h-12 font-bold bg-red-600 text-white uppercase tracking-widest text-[10px] hover:bg-red-700 border-none"
+                                  className="rounded-xl h-11 font-bold bg-red-600 text-white uppercase tracking-widest text-[10px] hover:bg-red-700 border-none"
                                 >
                                   Confirm Removal
                                 </AlertDialogAction>

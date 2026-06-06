@@ -34,8 +34,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 /**
  * @fileOverview Post-2026 Tenancy Compliance Orchestrator.
- * Optimized for professional resilience and clear operational feedback.
- * CALIBRATED: Fixed orchestration delay by aligning retry protocol with server timeouts.
+ * Optimized for professional resilience and smaller, more precise UI controls.
  */
 
 export default function TenancyAgreementPage({ params }: { params: Promise<{ propertyId: string }> }) {
@@ -243,15 +242,15 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
                 <Button 
                   onClick={handleGenerate} 
                   disabled={isGenerating || !activeTenant}
-                  className="w-full h-20 rounded-[2.5rem] font-bold bg-primary text-primary-foreground shadow-2xl transition-all hover:scale-[1.02] border-none font-headline uppercase tracking-[0.3em] text-[12px] group"
+                  className="w-full h-14 rounded-2xl font-bold bg-primary text-primary-foreground shadow-xl transition-all hover:scale-[1.01] border-none font-headline uppercase tracking-[0.2em] text-[11px] group"
                 >
                   {isGenerating ? (
                     <div className="flex flex-col items-center gap-1">
-                      <Loader2 className="w-6 h-6 animate-spin text-accent" />
+                      <Loader2 className="w-5 h-5 animate-spin text-accent" />
                       <span className="text-[8px] opacity-60 animate-pulse">{loadingMessages[loadingStep]}</span>
                     </div>
                   ) : (
-                    <><Sparkles className="w-6 h-6 mr-4 text-accent group-hover:rotate-12 transition-transform" /> Orchestrate Full AST Draft</>
+                    <><Sparkles className="w-5 h-5 mr-3 text-accent group-hover:rotate-12 transition-transform" /> Orchestrate AST Draft</>
                   )}
                 </Button>
              </CardContent>
@@ -283,8 +282,8 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
                   </div>
                 </div>
                 {agreementData && !agreementData.agreementText.includes('Synchronization Pending') && (
-                  <Button onClick={handleDownloadPDF} className="rounded-2xl h-14 px-10 font-bold bg-emerald-600 text-white shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 transition-all font-headline text-[11px] uppercase tracking-widest shrink-0">
-                     <FileDown className="w-5 h-5 mr-3" /> Save to Vault (PDF)
+                  <Button onClick={handleDownloadPDF} className="rounded-xl h-11 px-8 font-bold bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 transition-all font-headline text-[10px] uppercase tracking-widest shrink-0">
+                     <FileDown className="w-4 h-4 mr-2" /> Save to Vault
                   </Button>
                 )}
              </CardHeader>
@@ -310,8 +309,8 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
                           <p className="text-3xl font-bold font-headline text-foreground uppercase tracking-tight">Sync Delay Encountered</p>
                           <p className="text-lg text-muted-foreground font-medium max-w-md mx-auto leading-relaxed">The solicitor-grade engine is experiencing a peak volume cycle. Please re-trigger the generation now.</p>
                         </div>
-                        <Button onClick={handleGenerate} variant="outline" className="rounded-[1.75rem] h-16 px-12 font-bold font-headline uppercase tracking-[0.3em] text-[12px] border-border hover:bg-primary/5 transition-all shadow-xl">
-                          Re-trigger Orchestration <ChevronRight className="w-5 h-5 ml-4" />
+                        <Button onClick={handleGenerate} variant="outline" className="rounded-xl h-12 px-10 font-bold font-headline uppercase tracking-[0.2em] text-[10px] border-border hover:bg-primary/5 transition-all shadow-xl">
+                          Re-trigger Orchestration <ChevronRight className="w-4 h-4 ml-3" />
                         </Button>
                       </div>
                    ) : (

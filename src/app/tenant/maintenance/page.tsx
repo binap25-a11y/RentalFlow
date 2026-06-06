@@ -47,8 +47,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * @fileOverview High-Fidelity Resident Maintenance Hub.
- * Optimized vertical narrative: Diagnostic Command (Top) -> Operational Ledger (Below).
- * Flow Shield reorganized for immediate functional authority.
+ * Refined with smaller, professional-grade standardized buttons.
  */
 
 export default function TenantMaintenancePage() {
@@ -171,13 +170,12 @@ export default function TenantMaintenancePage() {
             <div className="flex items-center justify-between px-4">
                <h3 className="text-2xl font-bold font-headline flex items-center text-foreground tracking-tight">
                  <Sparkles className="w-8 h-8 mr-4 text-accent" />
-                 Diagnostic Command (Flow Shield)
+                 Diagnostic Command
                </h3>
                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] opacity-40 font-headline">AI-Powered Safety Triage</p>
             </div>
             
             <Card className="border-none shadow-2xl rounded-[3.5rem] overflow-hidden bg-card ring-1 ring-border">
-              {/* PREMIUM HEADER - COMMAND Header at Top */}
               <div className="bg-primary p-10 text-primary-foreground flex flex-col md:flex-row items-center gap-8 border-b border-white/10 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-10 opacity-5"><Sparkles className="w-48 h-48" /></div>
                 <div className="p-4 bg-white/10 rounded-2xl shadow-inner shrink-0 backdrop-blur-xl">
@@ -216,36 +214,36 @@ export default function TenantMaintenancePage() {
                           </div>
                         )}
                       </div>
-                      <div className="flex flex-col sm:flex-row gap-6 pt-4">
-                        <Button className="h-20 rounded-[2rem] font-bold bg-primary text-primary-foreground shadow-2xl px-16 border-none font-headline uppercase tracking-[0.3em] text-[12px] hover:scale-[1.02] transition-transform active:scale-95" onClick={() => handleSubmit()}>Notify Property Management</Button>
-                        <Button variant="ghost" className="h-20 rounded-[2rem] font-bold px-10 text-muted-foreground hover:bg-muted font-headline uppercase tracking-[0.2em] text-[11px]" onClick={() => setTroubleshootResult(null)}>Recalibrate Diagnostic</Button>
+                      <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                        <Button className="h-14 rounded-2xl font-bold bg-primary text-primary-foreground shadow-2xl px-12 border-none font-headline uppercase tracking-[0.2em] text-[11px] hover:scale-[1.01] transition-transform active:scale-95" onClick={() => handleSubmit()}>Notify Management</Button>
+                        <Button variant="ghost" className="h-14 rounded-2xl font-bold px-10 text-muted-foreground hover:bg-muted font-headline uppercase tracking-[0.2em] text-[10px]" onClick={() => setTroubleshootResult(null)}>Recalibrate Diagnostic</Button>
                       </div>
                     </div>
                   ) : (
-                    <form className="space-y-12 text-left" onSubmit={(e) => e.preventDefault()}>
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                        <div className="space-y-4">
+                    <form className="space-y-10 text-left" onSubmit={(e) => e.preventDefault()}>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        <div className="space-y-3">
                           <Label className="font-bold text-[11px] uppercase tracking-[0.4em] text-muted-foreground opacity-50 font-headline">Fault Identifier</Label>
-                          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Master bathroom utility fault" className="rounded-2xl h-16 bg-muted/30 border-none font-bold text-foreground px-8 shadow-inner ring-1 ring-white/10 text-lg" />
+                          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Master bathroom fault" className="rounded-xl h-12 bg-muted/30 border-none font-bold text-foreground px-6 shadow-inner ring-1 ring-white/10 text-base" />
                         </div>
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                            <Label className="font-bold text-[11px] uppercase tracking-[0.4em] text-muted-foreground opacity-50 font-headline">Residency Synchronization</Label>
-                           <div className="h-16 bg-primary/5 rounded-2xl border border-dashed border-primary/20 flex items-center px-8 gap-4">
-                              <div className="w-3 h-3 rounded-full bg-accent animate-pulse" />
-                              <span className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary/60 font-headline">Awaiting Fault Context Ledger</span>
+                           <div className="h-12 bg-primary/5 rounded-xl border border-dashed border-primary/20 flex items-center px-6 gap-4">
+                              <div className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
+                              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60 font-headline">Awaiting Ledger Context</span>
                            </div>
                         </div>
                       </div>
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         <Label className="font-bold text-[11px] uppercase tracking-[0.4em] text-muted-foreground opacity-50 font-headline">Detailed Narrative</Label>
-                        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Provide full professional context for the AI diagnostic engine..." className="rounded-[2.5rem] min-h-[220px] bg-muted/30 border-none font-medium text-foreground leading-relaxed px-8 py-8 shadow-inner ring-1 ring-white/10 text-lg" />
+                        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Provide full context for the AI engine..." className="rounded-[2rem] min-h-[180px] bg-muted/30 border-none font-medium text-foreground leading-relaxed px-6 py-6 shadow-inner ring-1 ring-white/10 text-base" />
                       </div>
-                      <div className="flex flex-col sm:flex-row gap-6 pt-4">
-                        <Button type="button" className="rounded-[2rem] h-20 bg-accent text-white font-bold shadow-2xl shadow-accent/20 transition-all hover:scale-[1.02] active:scale-95 border-none font-headline uppercase tracking-[0.3em] text-[12px] px-16" disabled={isTroubleshooting || !description} onClick={handleTroubleshoot}>
-                          {isTroubleshooting ? <Loader2 className="w-6 h-6 animate-spin mr-4" /> : <Sparkles className="w-6 h-6 mr-4" />}
+                      <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                        <Button type="button" className="rounded-2xl h-14 bg-accent text-white font-bold shadow-2xl shadow-accent/20 transition-all hover:scale-[1.01] active:scale-95 border-none font-headline uppercase tracking-[0.2em] text-[11px] px-12" disabled={isTroubleshooting || !description} onClick={handleTroubleshoot}>
+                          {isTroubleshooting ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Sparkles className="w-5 h-5 mr-3" />}
                           Orchestrate AI Diagnostic
                         </Button>
-                        <Button type="button" variant="ghost" className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.3em] hover:bg-muted/50 h-20 rounded-[2rem] transition-all px-12 font-headline" onClick={() => handleSubmit()} disabled={!title}>Skip & Direct Notify</Button>
+                        <Button type="button" variant="ghost" className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] hover:bg-muted/50 h-14 rounded-2xl transition-all px-10 font-headline" onClick={() => handleSubmit()} disabled={!title}>Skip & Direct Notify</Button>
                       </div>
                     </form>
                   )}
@@ -258,7 +256,7 @@ export default function TenantMaintenancePage() {
             <div className="flex items-center justify-between px-4">
               <h3 className="text-2xl font-bold font-headline flex items-center text-foreground tracking-tight">
                 <History className="w-8 h-8 mr-4 text-accent" />
-                Operational History Ledger
+                Operational Ledger
               </h3>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] opacity-40 font-headline hidden sm:block">Verified Audit Trail</p>
             </div>
@@ -278,13 +276,13 @@ export default function TenantMaintenancePage() {
                 sortedRequests.map(req => {
                   const scheduledDate = req.scheduledDate ? new Date(req.scheduledDate) : null;
                   return (
-                    <Card key={req.id} className="border-none shadow-sm group bg-card rounded-[3.5rem] overflow-hidden ring-1 ring-border transition-all hover:shadow-2xl hover:ring-accent/20">
-                      <CardContent className="p-12">
-                        <div className="flex flex-col md:flex-row justify-between items-start gap-10">
-                          <div className="space-y-8 flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-4">
+                    <Card key={req.id} className="border-none shadow-sm group bg-card rounded-[3rem] overflow-hidden ring-1 ring-border transition-all hover:shadow-2xl hover:ring-accent/20">
+                      <CardContent className="p-10">
+                        <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+                          <div className="space-y-6 flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-3">
                               <Badge className={cn(
-                                "uppercase text-[10px] font-bold px-6 py-2 tracking-[0.25em] rounded-full border-none shadow-md font-headline",
+                                "uppercase text-[9px] font-bold px-5 py-1.5 tracking-[0.2em] rounded-full border-none shadow-md font-headline",
                                 req.status === 'completed' ? 'bg-emerald-500 text-white' : 
                                 req.status === 'in-progress' ? 'bg-accent text-white animate-pulse' :
                                 'bg-primary/10 text-primary'
@@ -292,38 +290,38 @@ export default function TenantMaintenancePage() {
                                 {req.status}
                               </Badge>
                               <Badge variant="outline" className={cn(
-                                "uppercase text-[10px] font-bold border-border font-headline tracking-[0.25em] px-6 py-2 rounded-full shadow-sm",
+                                "uppercase text-[9px] font-bold border-border font-headline tracking-[0.2em] px-5 py-1.5 rounded-full shadow-sm",
                                 req.priority === 'critical' ? 'border-red-500/50 text-red-600 bg-red-500/5 font-extrabold' : 'text-muted-foreground opacity-60'
                               )}>
                                 {req.priority}
                               </Badge>
                             </div>
                             
-                            <div className="space-y-3 text-left">
-                              <h4 className="text-3xl font-bold font-headline text-foreground group-hover:text-accent transition-colors leading-[0.95] tracking-tighter block truncate w-full">{req.title}</h4>
-                              <p className="text-lg text-muted-foreground leading-relaxed font-body font-medium opacity-80 whitespace-normal break-words max-w-4xl">{req.description}</p>
+                            <div className="space-y-2 text-left">
+                              <h4 className="text-2xl font-bold font-headline text-foreground group-hover:text-accent transition-colors leading-[0.95] tracking-tighter block truncate w-full">{req.title}</h4>
+                              <p className="text-base text-muted-foreground leading-relaxed font-body font-medium opacity-80 whitespace-normal break-words max-w-4xl">{req.description}</p>
                             </div>
 
-                            <div className="flex flex-wrap gap-10 pt-10 border-t border-border/50">
-                               <div className="flex items-center gap-4">
-                                  <Clock className="w-5 h-5 text-muted-foreground opacity-40" />
-                                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.3em] font-headline">
-                                    Notified: {req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'PPp') : 'Just now'}
+                            <div className="flex flex-wrap gap-8 pt-8 border-t border-border/50">
+                               <div className="flex items-center gap-3">
+                                  <Clock className="w-4 h-4 text-muted-foreground opacity-40" />
+                                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] font-headline">
+                                    Notified: {req.createdAt ? format(new Date(req.createdAt.seconds * 1000), 'p') : 'Just now'}
                                   </span>
                                </div>
                                {scheduledDate && isValid(scheduledDate) && (
-                                 <div className="flex items-center gap-4 text-accent">
-                                    <CalendarDays className="w-5 h-5" />
-                                    <span className="text-[11px] font-bold uppercase tracking-[0.3em] font-headline">
-                                      Target Completion: {format(scheduledDate, 'PPP')}
+                                 <div className="flex items-center gap-3 text-accent">
+                                    <CalendarDays className="w-4 h-4" />
+                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] font-headline">
+                                      Target: {format(scheduledDate, 'PPP')}
                                     </span>
                                  </div>
                                )}
                                {req.assignedContractorId && (
-                                 <div className="flex items-center gap-4 text-emerald-600">
-                                    <HardHat className="w-5 h-5" />
-                                    <span className="text-[11px] font-bold uppercase tracking-[0.3em] font-headline">
-                                      Trade Partner Dispatched
+                                 <div className="flex items-center gap-3 text-emerald-600">
+                                    <HardHat className="w-4 h-4" />
+                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] font-headline">
+                                      Trade Dispatched
                                     </span>
                                  </div>
                                )}
@@ -331,10 +329,10 @@ export default function TenantMaintenancePage() {
                           </div>
                           
                           <div className={cn(
-                            "p-10 rounded-[3rem] shadow-inner transition-transform group-hover:scale-110 shrink-0 border border-transparent",
+                            "p-8 rounded-[2.5rem] shadow-inner transition-transform group-hover:scale-110 shrink-0 border border-transparent",
                             req.status === 'completed' ? "bg-emerald-500/5 text-emerald-500 border-emerald-500/10" : "bg-primary/5 text-primary border-primary/10"
                           )}>
-                            {req.status === 'completed' ? <CheckCircle2 className="w-14 h-14" /> : <Wrench className="w-14 h-14" />}
+                            {req.status === 'completed' ? <CheckCircle2 className="w-12 h-12" /> : <Wrench className="w-12 h-12" />}
                           </div>
                         </div>
                       </CardContent>

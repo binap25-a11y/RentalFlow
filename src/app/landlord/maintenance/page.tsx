@@ -58,6 +58,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from 'next/link';
 import { notifyTenantOfUpdate } from '@/lib/actions/email-actions';
 
+/**
+ * @fileOverview Maintenance Hub.
+ * Refined with professional standardized smaller buttons.
+ */
+
 export default function MaintenancePage() {
   const { user } = useUser();
   const db = useFirestore();
@@ -91,7 +96,6 @@ export default function MaintenancePage() {
 
   const { data: allProperties } = useCollection(propertiesQuery);
 
-  // HIGH-FIDELITY ASSET FILTER: Exclude deleted or incomplete records
   const properties = useMemo(() => 
     allProperties?.filter(p => !p.isDeleted && p.addressLine1) || [], 
   [allProperties]);
@@ -207,7 +211,7 @@ export default function MaintenancePage() {
       try {
         const property = properties?.find(p => p.id === request.propertyId);
         await notifyTenantOfUpdate({
-          tenantEmail: request.tenantId, // Fallback for email-based IDs
+          tenantEmail: request.tenantId,
           propertyAddress: property?.addressLine1 || 'Property Asset',
           status: newStatus,
           title: request.title
@@ -251,7 +255,7 @@ export default function MaintenancePage() {
         </div>
         <Button 
           onClick={() => setIsCreateDialogOpen(true)} 
-          className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-12 px-8 shadow-lg shadow-primary/20 text-primary-foreground text-sm transition-all hover:scale-[1.02] w-fit shrink-0"
+          className="rounded-xl bg-primary hover:bg-primary/90 font-bold h-11 px-8 shadow-lg shadow-primary/20 text-primary-foreground text-xs uppercase tracking-widest transition-all hover:scale-[1.01] w-fit shrink-0"
         >
           <Plus className="w-4 h-4 mr-2" /> Log New Request
         </Button>
@@ -336,39 +340,39 @@ export default function MaintenancePage() {
               <CardFooter className="bg-muted/5 p-6 flex flex-wrap gap-4 border-t border-border">
                 <Button 
                   variant="outline" 
-                  className="flex-1 min-w-[160px] bg-card text-foreground rounded-xl font-bold h-12 border border-border transition-all text-xs font-headline hover:bg-primary/5" 
+                  className="flex-1 min-w-[160px] bg-card text-foreground rounded-xl font-bold h-11 border border-border transition-all text-[10px] uppercase tracking-widest font-headline hover:bg-primary/5" 
                   onClick={() => handleTriage(request)} 
                   disabled={isTriaging === request.id}
                 >
-                  {isTriaging === request.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                  Triage Request
+                  {isTriaging === request.id ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <Sparkles className="w-3.5 h-3.5 mr-2" />}
+                  Triage
                 </Button>
                 
                 <Button 
                   variant="outline" 
-                  className="flex-1 min-w-[160px] rounded-xl font-bold h-12 border-border bg-card shadow-sm hover:bg-primary/5 text-foreground text-xs font-headline" 
+                  className="flex-1 min-w-[160px] rounded-xl font-bold h-11 border-border bg-card shadow-sm hover:bg-primary/5 text-foreground text-[10px] uppercase tracking-widest font-headline" 
                   onClick={() => openEditDialog(request)}
                 >
-                  <Edit3 className="w-4 h-4 mr-2" /> Edit Task
+                  <Edit3 className="w-3.5 h-3.5 mr-2" /> Edit Task
                 </Button>
 
                 <Button 
                   variant="outline" 
-                  className="flex-1 min-w-[160px] rounded-xl font-bold h-12 border-border bg-card shadow-sm hover:bg-primary/5 text-foreground text-xs font-headline" 
+                  className="flex-1 min-w-[160px] rounded-xl font-bold h-11 border-border bg-card shadow-sm hover:bg-primary/5 text-foreground text-[10px] uppercase tracking-widest font-headline" 
                   onClick={() => setIsScheduling(request.id)}
                 >
-                  <CalendarIcon className="w-4 h-4 mr-2" /> Target Roadmap
+                  <CalendarIcon className="w-3.5 h-3.5 mr-2" /> Roadmap
                 </Button>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="flex-1 min-w-[160px] rounded-xl font-bold h-12 border-border bg-card shadow-sm hover:bg-primary/5 text-foreground text-xs font-headline">Update Status</Button>
+                    <Button variant="outline" className="flex-1 min-w-[160px] rounded-xl font-bold h-11 border-border bg-card shadow-sm hover:bg-primary/5 text-foreground text-[10px] uppercase tracking-widest font-headline">Status</Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="rounded-xl border-border shadow-xl min-w-[220px] p-2 bg-card" align="end">
-                    <DropdownMenuItem className="py-3 px-4 font-bold text-xs cursor-pointer rounded-lg focus:bg-accent focus:text-accent-foreground group" onClick={() => updateStatus(request, 'in-progress')}>
+                  <DropdownMenuContent className="rounded-xl border-border shadow-xl min-w-[200px] p-2 bg-card" align="end">
+                    <DropdownMenuItem className="py-2.5 px-4 font-bold text-[10px] uppercase tracking-widest cursor-pointer rounded-lg focus:bg-accent focus:text-accent-foreground group" onClick={() => updateStatus(request, 'in-progress')}>
                       <PlayCircle className="w-4 h-4 mr-3 text-sky-600 group-focus:text-white" /> In Progress
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="py-3 px-4 font-bold text-xs cursor-pointer rounded-lg focus:bg-accent focus:text-accent-foreground group" onClick={() => updateStatus(request, 'completed')}>
+                    <DropdownMenuItem className="py-2.5 px-4 font-bold text-[10px] uppercase tracking-widest cursor-pointer rounded-lg focus:bg-accent focus:text-accent-foreground group" onClick={() => updateStatus(request, 'completed')}>
                       <CheckCircle2 className="w-4 h-4 mr-3 text-emerald-600 group-focus:text-white" /> Completed
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -376,7 +380,7 @@ export default function MaintenancePage() {
 
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl text-destructive/40 hover:text-white hover:bg-red-500 transition-all shrink-0 border border-border">
+                    <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl text-destructive/40 hover:text-white hover:bg-red-500 transition-all shrink-0 border border-border">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </AlertDialogTrigger>
@@ -388,10 +392,10 @@ export default function MaintenancePage() {
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-8 gap-3">
-                      <AlertDialogCancel className="rounded-xl h-12 font-bold font-headline uppercase tracking-widest text-[10px] border-border">Cancel</AlertDialogCancel>
+                      <AlertDialogCancel className="rounded-xl h-11 font-bold font-headline uppercase tracking-widest text-[10px] border-border">Cancel</AlertDialogCancel>
                       <AlertDialogAction 
                         onClick={() => handleDeleteRequest(request.id)}
-                        className="rounded-xl h-12 font-bold bg-red-600 hover:bg-red-700 text-white font-headline uppercase tracking-widest text-[10px] border-none"
+                        className="rounded-xl h-11 font-bold bg-red-600 hover:bg-red-700 text-white font-headline uppercase tracking-widest text-[10px] border-none"
                       >
                         Delete Record
                       </AlertDialogAction>
@@ -410,7 +414,7 @@ export default function MaintenancePage() {
                     <Calendar mode="single" selected={scheduledDate} onSelect={setScheduledDate} className="rounded-2xl border-none shadow-inner bg-background p-0" />
                   </div>
                   <DialogFooter className="p-6 bg-muted/5 border-t">
-                     <Button className="w-full rounded-xl h-12 font-bold bg-background text-foreground border border-border shadow-lg font-headline text-sm hover:bg-primary hover:text-primary-foreground" disabled={!scheduledDate} onClick={handleSetSchedule}>
+                     <Button className="w-full rounded-xl h-11 font-bold bg-background text-foreground border border-border shadow-lg font-headline text-[10px] uppercase tracking-widest hover:bg-primary hover:text-primary-foreground" disabled={!scheduledDate} onClick={handleSetSchedule}>
                         <Save className="w-4 h-4 mr-2" /> Synchronize Timeline
                      </Button>
                   </DialogFooter>
@@ -434,7 +438,7 @@ export default function MaintenancePage() {
                 <div className="space-y-3">
                   <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Target Inventory Asset</Label>
                   <select 
-                    className="flex h-14 w-full rounded-2xl border-none bg-muted/40 px-6 py-2 text-base focus:ring-2 focus:ring-primary outline-none font-bold text-foreground shadow-inner ring-1 ring-white/10" 
+                    className="flex h-12 w-full rounded-xl border-none bg-muted/40 px-5 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-foreground shadow-inner ring-1 ring-white/10" 
                     value={selectedPropertyId} 
                     onChange={(e) => setSelectedPropertyId(e.target.value)} 
                     required
@@ -445,17 +449,17 @@ export default function MaintenancePage() {
                 </div>
                 <div className="space-y-3">
                   <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Repair Identifier</Label>
-                  <Input value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="e.g. Electrical Fault discovery" className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/10 text-foreground" />
+                  <Input value={newRequestTitle} onChange={(e) => setNewRequestTitle(e.target.value)} required placeholder="e.g. Electrical Fault discovery" className="rounded-xl h-12 bg-muted/40 border-none font-bold text-sm px-6 shadow-inner ring-1 ring-white/10 text-foreground" />
                 </div>
                 <div className="space-y-3">
                   <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Context</Label>
-                  <Textarea value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Details for triage and fix strategy..." className="rounded-2xl min-h-[160px] bg-muted/40 border-none font-medium px-6 py-5 text-base leading-relaxed shadow-inner ring-1 ring-white/10 text-foreground" />
+                  <Textarea value={newRequestDesc} onChange={(e) => setNewRequestDesc(e.target.value)} required placeholder="Details for triage and fix strategy..." className="rounded-xl min-h-[160px] bg-muted/40 border-none font-medium px-6 py-5 text-sm leading-relaxed shadow-inner ring-1 ring-white/10 text-foreground" />
                 </div>
               </div>
             </ScrollArea>
 
             <DialogFooter className="p-10 bg-muted/5 border-t shrink-0">
-              <Button type="submit" className="w-full rounded-2xl h-16 font-bold bg-background text-foreground border border-border shadow-2xl font-headline text-sm hover:bg-primary hover:text-primary-foreground transition-all hover:scale-[1.01]" disabled={isSubmitting}>
+              <Button type="submit" className="w-full rounded-2xl h-14 font-bold bg-background text-foreground border border-border shadow-2xl font-headline text-[11px] uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all hover:scale-[1.01]" disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
                 Register Roadmap Task
               </Button>
@@ -477,7 +481,7 @@ export default function MaintenancePage() {
                 <div className="space-y-3">
                   <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 font-headline tracking-widest">Target Inventory Asset</Label>
                   <select 
-                    className="flex h-14 w-full rounded-2xl border-none bg-muted/40 px-6 py-2 text-base focus:ring-2 focus:ring-primary outline-none font-bold text-foreground shadow-inner ring-1 ring-white/10" 
+                    className="flex h-12 w-full rounded-xl border-none bg-muted/40 px-5 py-2 text-sm focus:ring-2 focus:ring-primary outline-none font-bold text-foreground shadow-inner ring-1 ring-white/10" 
                     value={editPropertyId} 
                     onChange={(e) => setEditPropertyId(e.target.value)} 
                     required
@@ -488,17 +492,17 @@ export default function MaintenancePage() {
                 </div>
                 <div className="space-y-3">
                   <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Repair Identifier</Label>
-                  <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required placeholder="e.g. Electrical Fault discovery" className="rounded-2xl h-14 bg-muted/40 border-none font-bold text-base px-6 shadow-inner ring-1 ring-white/10 text-foreground" />
+                  <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required placeholder="e.g. Electrical Fault discovery" className="rounded-xl h-12 bg-muted/40 border-none font-bold text-sm px-6 shadow-inner ring-1 ring-white/10 text-foreground" />
                 </div>
                 <div className="space-y-3">
                   <Label className="font-bold text-[10px] uppercase text-muted-foreground opacity-60 tracking-widest font-headline">Operational Context</Label>
-                  <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} required placeholder="Updated details for this repair log..." className="rounded-2xl min-h-[220px] bg-muted/40 border-none font-medium px-6 py-5 text-base leading-relaxed shadow-inner ring-1 ring-white/10 text-foreground" />
+                  <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} required placeholder="Updated details for this repair log..." className="rounded-xl min-h-[200px] bg-muted/40 border-none font-medium px-6 py-5 text-sm leading-relaxed shadow-inner ring-1 ring-white/10 text-foreground" />
                 </div>
               </div>
             </ScrollArea>
 
             <DialogFooter className="p-10 bg-muted/5 border-t shrink-0">
-              <Button type="submit" className="w-full rounded-2xl h-16 font-bold bg-background text-foreground border border-border shadow-2xl font-headline text-sm hover:bg-primary hover:text-primary-foreground transition-all hover:scale-[1.01]" disabled={isSubmitting || !editTitle}>
+              <Button type="submit" className="w-full rounded-2xl h-14 font-bold bg-background text-foreground border border-border shadow-2xl font-headline text-[11px] uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all hover:scale-[1.01]" disabled={isSubmitting || !editTitle}>
                 {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
                 Synchronize Changes
               </Button>
