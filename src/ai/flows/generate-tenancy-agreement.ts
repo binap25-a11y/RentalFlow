@@ -54,25 +54,23 @@ DRAFTING CONTEXT:
 DRAFTING INSTRUCTIONS:
 You MUST provide the full legal prose for every section below. DO NOT summarize. Use formal solicitor-standard numbering (e.g., 1.0, 1.1).
 
-1. THE PARTIES: Explicitly define {{{landlordName}}} (The Landlord) and {{{tenantName}}} (The Tenant) as the contracting parties.
-2. THE ASSET: Define the dwelling at {{{propertyAddress}}}.
-3. STATUTORY STRUCTURE: State that this is a "rolling periodic tenancy" as mandated by the 2024 Act.
-4. RENT & FINANCE: Full clauses on payment dates, late payment interest, and the Section 13 rent review procedure.
-5. DEPOSIT PROTECTION: Detailed prose on protection in a government-authorized scheme.
-6. TENANT COVENANTS: Detailed sections on Utilities, Council Tax, internal maintenance, and prohibited use.
-7. LANDLORD COVENANTS: Full legal prose covering Section 11 of the Landlord and Tenant Act 1985.
-8. PET STATUTORY RIGHT: Draft the tenant's right to request pets and the requirement for pet insurance.
-9. STATUTORY TERMINATION (POST-2026): Detail the Tenant's 2-month notice right and the Landlord's Section 8 grounds.
-10. SERVICE OF NOTICES: Formal service procedures.
-11. DATA PROTECTION: GDPR compliance for residential data.
-12. EXECUTION: Signature blocks for both parties.
+1. THE PARTIES: Explicitly define {{{landlordName}}} (The Landlord) and {{{tenantName}}} (The Tenant) as the contracting parties for the asset at {{{propertyAddress}}}.
+2. STATUTORY STRUCTURE: State that this is a "rolling periodic tenancy" as mandated by the Renters' Rights Act 2024. Abolish all "Fixed Term" language.
+3. RENT & FINANCE: Full clauses on payment dates, late payment interest, and the mandatory Section 13 rent review procedure (once per year via Form 4).
+4. DEPOSIT PROTECTION: Detailed prose on protection in a government-authorized scheme and the provision of Prescribed Information.
+5. TENANT COVENANTS: Detailed sections on Utilities, Council Tax, internal maintenance, and prohibited use.
+6. LANDLORD COVENANTS: Full legal prose covering Section 11 of the Landlord and Tenant Act 1985 regarding structural repairs.
+7. PET STATUTORY RIGHT: Draft the tenant's right to request pets and the Landlord's right to require pet insurance (Renters' Rights Act 2024).
+8. STATUTORY TERMINATION (POST-2026): Detail the Tenant's 2-month notice right and the Landlord's Section 8 grounds for possession (Mandatory & Discretionary). Explicitly state that Section 21 (no-fault) evictions are abolished.
+9. SERVICE OF NOTICES: Formal service procedures under Section 196 of the Law of Property Act 1925.
+10. EXECUTION: Formal signature blocks for both parties.
 
 CRITICAL: Provide the full length legal covenants. A short document is non-compliant. Minimum length required: 1500 words.`,
 });
 
 /**
- * 🚀 Resilient Legal AI Orchestrator (Version 3.0)
- * Implements an 8-tier retry protocol to ensure full-length document finalization during peak load.
+ * 🚀 Resilient Legal AI Orchestrator (Version 4.0)
+ * Implements an 8-tier retry protocol and 1000-character safety validation.
  */
 export async function generateTenancyAgreement(input: GenerateTenancyAgreementInput): Promise<GenerateTenancyAgreementOutput> {
   let retries = 8;
