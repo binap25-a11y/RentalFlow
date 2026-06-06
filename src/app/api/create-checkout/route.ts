@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
     // SANITIZATION: Robust extraction of price_ ID from full paths or dirty strings
     // Format handled: /v1/prices/price_... OR price_... OR whitespace strings
-    let priceId = rawPriceId.toString().trim();
+    let priceId = String(rawPriceId).trim();
     if (priceId.includes('/')) {
       priceId = priceId.split('/').pop() || priceId;
     }

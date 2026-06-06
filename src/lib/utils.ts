@@ -67,7 +67,7 @@ export function isValidAssetUrl(url: any): boolean {
  */
 export function isRealUserUpload(url: any): boolean {
   if (!isValidAssetUrl(url)) return false;
-  const u = url.toLowerCase();
+  const u = String(url).toLowerCase();
   return (
     u.includes('supabase.co') || 
     u.includes('firebasestorage') ||
@@ -125,7 +125,7 @@ export function getResolvedGallery(imageUrl: string | null | undefined, imageUrl
  * Compresses images client-side before cloud transmission to save bandwidth.
  */
 export async function compressImage(file: File, maxWidth = 1200, quality = 0.85): Promise<Blob | File> {
-  if (!file.type.startsWith('image/') || file.size < 1024 * 100) {
+  if (!file || !file.type.startsWith('image/') || file.size < 1024 * 100) {
     return file;
   }
 

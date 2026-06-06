@@ -56,7 +56,7 @@ export function Header({ role }: HeaderProps) {
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   
-  const userName = user?.displayName || user?.email?.split('@')[0] || 'User';
+  const userName = user?.displayName || (user?.email ? String(user.email).split('@')[0] : 'User');
 
   // REAL-TIME NOTIFICATION LEDGER
   const notificationsQuery = useMemoFirebase(() => {

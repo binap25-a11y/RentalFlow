@@ -85,23 +85,26 @@ export default function AuthPage() {
 
   const handleCreateProfile = async () => {
     if (!user || !db) return;
-    if (!firstName.trim() || !lastName.trim()) {
+    if (!String(firstName).trim() || !String(lastName).trim()) {
       toast({ variant: "destructive", title: "Incomplete Profile", description: "Identity details required." });
       return;
     }
 
     setIsLoading(true);
     try {
-      const displayName = `${firstName.trim()} ${lastName.trim()}`;
+      const cleanFirst = String(firstName).trim();
+      const cleanLast = String(lastName).trim();
+      const displayName = `${cleanFirst} ${cleanLast}`;
+      
       await updateProfile(user, { displayName });
 
       const userDocRef = doc(db, 'users', user.uid);
       await setDoc(userDocRef, {
         id: user.uid,
         email: user.email,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        phoneNumber: phoneNumber.trim(),
+        firstName: cleanFirst,
+        lastName: cleanLast,
+        phoneNumber: String(phoneNumber).trim(),
         role: role,
         plan: "free",
         createdAt: serverTimestamp(),
