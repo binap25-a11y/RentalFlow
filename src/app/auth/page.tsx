@@ -85,15 +85,18 @@ export default function AuthPage() {
 
   const handleCreateProfile = async () => {
     if (!user || !db) return;
-    if (!String(firstName).trim() || !String(lastName).trim()) {
+    
+    const cleanFirst = String(firstName || "").trim();
+    const cleanLast = String(lastName || "").trim();
+    const cleanPhone = String(phoneNumber || "").trim();
+
+    if (!cleanFirst || !cleanLast) {
       toast({ variant: "destructive", title: "Incomplete Profile", description: "Identity details required." });
       return;
     }
 
     setIsLoading(true);
     try {
-      const cleanFirst = String(firstName).trim();
-      const cleanLast = String(lastName).trim();
       const displayName = `${cleanFirst} ${cleanLast}`;
       
       await updateProfile(user, { displayName });
@@ -104,7 +107,7 @@ export default function AuthPage() {
         email: user.email,
         firstName: cleanFirst,
         lastName: cleanLast,
-        phoneNumber: String(phoneNumber).trim(),
+        phoneNumber: cleanPhone,
         role: role,
         plan: "free",
         createdAt: serverTimestamp(),

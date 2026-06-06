@@ -21,11 +21,11 @@ export async function POST(req: Request) {
 
     // SANITIZATION: Robust extraction of price_ ID from full paths or dirty strings
     // Format handled: /v1/prices/price_... OR price_... OR whitespace strings
-    let priceId = String(rawPriceId).trim();
+    let priceId = String(rawPriceId || "").trim();
     if (priceId.includes('/')) {
       priceId = priceId.split('/').pop() || priceId;
     }
-    priceId = priceId.trim();
+    priceId = (priceId || "").trim();
 
     // VALIDATION: Product IDs (prod_...) cannot be used as prices.
     if (priceId.startsWith('prod_')) {
