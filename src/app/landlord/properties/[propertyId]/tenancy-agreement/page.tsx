@@ -35,6 +35,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 /**
  * @fileOverview Post-2026 Tenancy Compliance Orchestrator.
  * Optimized for professional resilience and refined, solicitor-grade aesthetics.
+ * COMPRESSED UI: Professional compact h-11 controls.
  */
 
 export default function TenancyAgreementPage({ params }: { params: Promise<{ propertyId: string }> }) {
@@ -115,7 +116,7 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
         toast({ 
           variant: "destructive",
           title: "Synchronization Delay", 
-          description: "Intelligence relay is handing peak load. Please re-trigger the generation." 
+          description: "Intelligence relay is handing peak load. Please retry generation." 
         });
       } else {
         toast({ title: "Agreement Finalized", description: "Solicitor-grade draft synchronized." });
@@ -180,7 +181,7 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
     <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-32 text-left bg-background">
       <div className="flex flex-col gap-8 text-left border-b border-white/5 pb-12">
         <div className="flex items-center gap-6">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-2xl hover:bg-primary/5 transition-colors h-11 w-11 border border-white/5 shrink-0 shadow-sm">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-2xl hover:bg-primary/5 transition-colors h-10 w-10 border border-white/5 shrink-0 shadow-sm">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="min-w-0 flex-1 space-y-1">
@@ -242,7 +243,7 @@ export default function TenancyAgreementPage({ params }: { params: Promise<{ pro
                 <Button 
                   onClick={handleGenerate} 
                   disabled={isGenerating || !activeTenant}
-                  className="w-full h-12 rounded-2xl font-bold bg-primary text-primary-foreground shadow-xl transition-all hover:scale-[1.01] border-none font-headline uppercase tracking-[0.2em] text-[10px] group"
+                  className="w-full h-11 rounded-xl font-bold bg-primary text-primary-foreground shadow-xl transition-all hover:scale-[1.01] border-none font-headline uppercase tracking-[0.2em] text-[10px] group"
                 >
                   {isGenerating ? (
                     <div className="flex flex-col items-center gap-1">

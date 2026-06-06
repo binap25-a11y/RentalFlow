@@ -2,7 +2,7 @@
 /**
  * @fileOverview A Solicitor-Grade Legal AI agent for generating full-length UK Tenancy Agreements.
  * Calibrated specifically for the Renters' Rights Act 2024 (effective May 2026).
- * Hardened with a resilient 6-tier retry protocol and length-validation orchestrator.
+ * Hardened with a resilient 5-tier retry protocol and length-validation orchestrator.
  */
 
 import { ai, googleAI } from '@/ai/genkit';
@@ -30,7 +30,7 @@ const agreementPrompt = ai.definePrompt({
   input: { schema: GenerateTenancyAgreementInputSchema },
   output: { schema: GenerateTenancyAgreementOutputSchema },
   config: { 
-    temperature: 0.2,
+    temperature: 0.1, 
     maxOutputTokens: 4096, 
     safetySettings: [
       { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
@@ -39,7 +39,7 @@ const agreementPrompt = ai.definePrompt({
       { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
     ]
   },
-  prompt: `You are a Senior UK Residential Property Solicitor. 
+  prompt: `You are an elite Senior UK Residential Property Solicitor. 
 Generate a COMPREHENSIVE, FULL-LENGTH Tenancy Agreement for a residency in England, strictly following the Renters' Rights Act 2024 (effective May 2026).
 
 DRAFTING CONTEXT:
@@ -52,6 +52,7 @@ DRAFTING CONTEXT:
 
 INSTRUCTIONS:
 You MUST provide full, numbered legal prose (e.g., 1.0, 1.1). DO NOT provide a summary or a list of bullet points.
+The document MUST be multi-page length with full legal covenants.
 
 1. THE PARTIES: Explicitly define {{{landlordName}}} (the Landlord) and {{{tenantName}}} (the Tenant) for the asset at {{{propertyAddress}}}.
 2. STATUTORY STRUCTURE: State this is a "rolling periodic tenancy" as mandated by the Renters' Rights Act 2024. Abolish all Section 21 "no-fault" language.
@@ -64,17 +65,17 @@ You MUST provide full, numbered legal prose (e.g., 1.0, 1.1). DO NOT provide a s
 9. NOTICES: Formal service procedures under Section 196 of the Law of Property Act 1925.
 10. SIGNATURES: Formal execution blocks for both parties.
 
-CRITICAL: The document must be multi-page length with full legal covenants. Ensure the names of both parties are explicitly established in Section 1.0.`,
+CRITICAL: Ensure the names of both parties are explicitly established in Section 1.0. If the text is shorter than a full agreement, it will be rejected.`,
 });
 
 /**
  * 🚀 Adaptive Legal AI Orchestrator
- * Implements a 6-tier retry protocol with length validation.
- * Errors regarding draft complexity are now marked as retryable to prevent premature fallback.
+ * Implements a 5-tier retry protocol with length validation.
+ * Errors regarding draft complexity are marked as retryable.
  */
 export async function generateTenancyAgreement(input: GenerateTenancyAgreementInput): Promise<GenerateTenancyAgreementOutput> {
-  let retries = 6;
-  let delay = 2000;
+  let retries = 5;
+  let delay = 1500;
 
   const fallback: GenerateTenancyAgreementOutput = {
     agreementText: `TENANCY RECORD LOGGED: The solicitor-grade intelligence relay is currently handling a high volume of statutory drafts. 
@@ -94,17 +95,16 @@ Please verify your asset metadata in the Commander Hub and re-trigger generation
       const { output } = await agreementPrompt(input);
       
       // VALIDATION: Ensure the response isn't a tiny summary.
-      // 1000 chars is the absolute minimum for a professional agreement with clauses.
-      if (!output || output.agreementText.length < 1000) {
-        throw new Error("Draft complexity below solicitor-grade threshold.");
+      // 1200 chars is a robust minimum for a professional agreement with full clauses.
+      if (!output || output.agreementText.length < 1200) {
+        throw new Error("THRESHOLD: Draft complexity below solicitor-grade threshold.");
       }
       
       return output;
     } catch (error: any) {
-      console.error(`⚖️ LEGAL SYNC ATTEMPT FAILURE (${retries} left):`, error.message);
+      console.error(`🤖 LEGAL SYNC ATTEMPT FAILURE (${retries} left):`, error.message);
       
       const errorMsg = (error.message || "").toUpperCase();
-      // CRITICAL FIX: Include 'THRESHOLD' in retryable errors to handle conciseness issues during peak volume
       const isRetryable = errorMsg.includes('429') || 
                           errorMsg.includes('QUOTA') || 
                           errorMsg.includes('THRESHOLD') ||
