@@ -36,9 +36,10 @@ export async function withRetry<T>(
 /**
  * 🖼️ Asset Validation Engine
  * Relaxed to ensure all cloud storage paths (Signed/Public), blobs, and data URIs are authorized.
- * Hardened to reject string-serialized null/undefined values that cause broken icons.
+ * Hardened to reject string-serialized null/undefined values that cause broken icons or runtime crashes.
  */
 export function isValidAssetUrl(url: any): boolean {
+  // TYPE GUARD: Prevent trimEnd/toLowerCase on non-strings
   if (!url || typeof url !== 'string') return false;
   
   const trimmed = url.trim();
@@ -46,7 +47,7 @@ export function isValidAssetUrl(url: any): boolean {
   
   const lower = trimmed.toLowerCase();
   
-  // Explicitly reject known corrupt metadata strings often found in DB records
+  // Explicitly reject known corrupt metadata strings
   if (
     lower === 'undefined' || 
     lower === 'null' || 

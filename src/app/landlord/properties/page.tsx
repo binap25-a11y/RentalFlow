@@ -52,8 +52,8 @@ export default function PropertiesPage() {
 
   const activeProperties = useMemo(() => 
     allProperties?.filter(p => !p.isDeleted && (
-      p.addressLine1?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.city?.toLowerCase().includes(searchQuery.toLowerCase())
+      (p.addressLine1 || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.city || "").toLowerCase().includes(searchQuery.toLowerCase())
     )) || [], 
   [allProperties, searchQuery]);
 

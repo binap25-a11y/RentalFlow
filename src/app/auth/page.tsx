@@ -20,7 +20,6 @@ import { RENTALFLOW_LOGO_URL } from '@/lib/utils';
 /**
  * @fileOverview Hyper-Accelerated Authentication Pipeline.
  * Optimized for zero-flicker loading and atomic redirection.
- * CALIBRATED: Loading animations and redirect logic optimized for extreme performance.
  */
 
 export default function AuthPage() {
@@ -68,7 +67,6 @@ export default function AuthPage() {
               return;
             }
             
-            // ATOMIC DASHBOARD JUMP: Immediate routing
             router.replace(userData.role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
           } else {
             setNeedsProfile(true);
@@ -86,6 +84,7 @@ export default function AuthPage() {
   const handleCreateProfile = async () => {
     if (!user || !db) return;
     
+    // SAFE STRING GUARDING: Prevent trim() on undefined
     const cleanFirst = String(firstName || "").trim();
     const cleanLast = String(lastName || "").trim();
     const cleanPhone = String(phoneNumber || "").trim();
@@ -166,7 +165,6 @@ export default function AuthPage() {
     }
   };
 
-  // CINEMATIC SYNCHRONIZATION OVERLAY: Optimized for perceived speed (200ms)
   if (!mounted || isUserLoading || (user && !needsProfile)) {
     return (
       <div className="fixed inset-0 flex flex-col items-center justify-center bg-background z-[100] animate-in fade-in duration-200">

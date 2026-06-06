@@ -87,12 +87,14 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
       }
 
       setLedger(prev => {
+        // PRESERVE UPLOADING STATE: Don't overwrite locally active uploads
         const uploadingItems = prev.filter(item => item.status === 'uploading');
         const existingIds = new Set(uploadingItems.map(i => i.id));
         
         const syncedLedger = sortedUrls
           .filter(url => isValidAssetUrl(url))
           .map(url => {
+            // MATCHING PROTOCOL: Use local preview if available to prevent flash
             const existing = prev.find(p => p.cloudUrl === url || p.previewUrl === url);
             return { 
               id: url, 
@@ -274,11 +276,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ propert
                         </div>
 
                         {item.status === 'uploading' && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-primary/10 backdrop-blur-[2px] gap-3 z-30">
-                             <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-xl shadow-2xl border border-white/20">
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-primary/20 backdrop-blur-[4px] gap-3 z-30">
+                             <div className="p-3 bg-white/40 rounded-2xl backdrop-blur-xl shadow-2xl border border-white/20">
                                <Loader2 className="w-8 h-8 animate-spin text-white" />
                              </div>
-                             <span className="text-[9px] font-bold text-white uppercase tracking-[0.4em] drop-shadow-md">Synchronizing...</span>
+                             <span className="text-[10px] font-bold text-white uppercase tracking-[0.4em] drop-shadow-md">Synchronizing...</span>
                           </div>
                         )}
 
