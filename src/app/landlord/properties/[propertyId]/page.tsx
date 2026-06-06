@@ -25,7 +25,8 @@ import {
   ClipboardList, Plus, Download, Trash2,
   ShieldCheck, AlertCircle, Clock,
   CheckCircle2, FileUp, Users, Building2, Sparkles, Camera,
-  Flame, Zap, Home, Bell, PoundSterling, Wind, Droplets, ListChecks
+  Flame, Zap, Home, Bell, PoundSterling, Wind, Droplets, ListChecks,
+  Gavel
 } from "lucide-react";
 import { 
   Dialog, 
@@ -338,6 +339,12 @@ export default function PropertyManagementPage({ params }: { params: Promise<{ p
         <div className="flex flex-wrap gap-4 pl-14">
           <Button variant="outline" onClick={downloadRentStatement} className="rounded-xl font-bold h-11 border-border bg-card shadow-lg font-headline text-[10px] uppercase tracking-widest px-8 hover:bg-white/5 transition-all">
             <Download className="w-4 h-4 mr-2 text-accent" /> Rent Statement
+          </Button>
+
+          <Button variant="outline" className="rounded-xl font-bold h-11 border-border bg-card shadow-lg font-headline text-[10px] uppercase tracking-widest px-8 hover:bg-white/5 transition-all" asChild>
+            <Link href={`/landlord/properties/${propertyId}/tenancy-agreement`}>
+              <Gavel className="w-4 h-4 mr-2 text-accent" /> Agreement Generator
+            </Link>
           </Button>
           
           <label htmlFor="direct-gallery-upload" className="cursor-pointer">
