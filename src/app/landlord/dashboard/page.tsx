@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -75,7 +76,7 @@ import {
 
 /**
  * @fileOverview Landlord Insight Hub.
- * Refined with professional standardized smaller buttons and data-dense interactions.
+ * Connected to Stripe Billing for Pro Plan Upgrades.
  */
 
 export default function LandlordDashboard() {
@@ -84,6 +85,7 @@ export default function LandlordDashboard() {
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
   const [isAdminEscalated, setIsAdminEscalated] = useState(false);
+  const [isUpgrading, setIsUpgrading] = useState(false);
 
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
@@ -137,12 +139,6 @@ export default function LandlordDashboard() {
     allProperties?.filter(p => !p.isDeleted) || [], 
   [allProperties]);
 
-  const financialStats = useMemo(() => {
-    if (!isClient || !properties) return { totalExpenses: 0, actualCollectedThisPeriod: 0 };
-    const activePropertyIds = new Set(properties.map(p => p.id));
-    return { totalExpenses: 0, actualCollectedThisPeriod: 0 }; // Simplified for stats card rendering in this pass
-  }, [properties, isClient]);
-
   const chartData = useMemo(() => {
     if (!isClient || !properties) return [];
     return properties.map(p => ({
@@ -159,6 +155,35 @@ export default function LandlordDashboard() {
   const [expTitle, setExpTitle] = useState('');
   const [expDate, setExpDate] = useState<Date | undefined>(new Date());
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
+
+  const handleUpgrade = async () => {
+    if (!user || !user.email) return;
+    setIsUpgrading(true);
+    try {
+      const response = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.uid,
+          email: user.email,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Initialization Failure');
+      }
+    } catch (error: any) {
+      toast({ 
+        variant: "destructive", 
+        title: "Billing Unavailable", 
+        description: "Payments are not yet fully initialized in this environment." 
+      });
+      setIsUpgrading(false);
+    }
+  };
 
   const resetExpenseForm = () => {
     setExpAmount(''); setExpTitle(''); setExpPropertyId(''); setExpDate(new Date()); setExpCategory('other'); setEditingExpenseId(null);
@@ -185,9 +210,6 @@ export default function LandlordDashboard() {
 
   if (!isClient || propLoading) return <div className="flex h-[70vh] items-center justify-center opacity-40"><Loader2 className="animate-spin text-primary w-10 h-10" /></div>;
 
-  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const years = [2024, 2025, 2026, 2027];
-
   return (
     <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-12">
       <div className="flex flex-col gap-6 text-left border-b border-white/5 pb-6">
@@ -197,7 +219,22 @@ export default function LandlordDashboard() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Badge variant="outline" className="bg-accent/5 text-accent border-accent/20 px-3 py-1.5 rounded-full font-bold uppercase tracking-[0.2em] text-[9px]"><Activity className="w-3.5 h-3.5 mr-2" /> Financial Pulse</Badge>
-          <Button variant="outline" className="rounded-xl h-9 px-6 font-bold border-accent/30 text-accent bg-accent/5 hover:bg-accent/10 transition-all text-[9px] uppercase tracking-widest"><Crown className="w-3.5 h-3.5 mr-2" /> Upgrade</Button>
+          
+          {isPro ? (
+            <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20 px-4 py-1.5 rounded-full font-bold uppercase tracking-[0.2em] text-[9px]">
+               <Crown className="w-3.5 h-3.5 mr-2" /> Pro Portfolio Active
+            </Badge>
+          ) : (
+            <Button 
+              onClick={handleUpgrade}
+              disabled={isUpgrading}
+              variant="outline" 
+              className="rounded-xl h-9 px-6 font-bold border-accent/30 text-accent bg-accent/5 hover:bg-accent/10 transition-all text-[9px] uppercase tracking-widest"
+            >
+              {isUpgrading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <Crown className="w-3.5 h-3.5 mr-2" />}
+              Upgrade to Pro
+            </Button>
+          )}
         </div>
       </div>
 
