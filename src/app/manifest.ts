@@ -1,9 +1,9 @@
 import { MetadataRoute } from 'next'
 
 /**
- * 📱 Web App Manifest Configuration
- * Optimized for high-fidelity Android and iOS "Standalone" experiences.
- * Setting display: standalone allows the OS to preserve app state when moving away.
+ * 📱 High-Fidelity Web App Manifest
+ * Optimized for Google Play Store (Trusted Web Activity) and iOS Standalone.
+ * Includes mandatory ID and SCOPE identifiers for secure app store wrapping.
  */
 export default function manifest(): MetadataRoute.Manifest {
   const LOGO_URL = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=512&h=512&auto=format&fit=crop";
@@ -11,9 +11,12 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'RentalFlow | Premium Portfolio Management',
     short_name: 'RentalFlow',
-    description: 'Professional Rental Management & AI-Driven Maintenance',
+    description: 'Professional property management with AI-driven maintenance and high-fidelity visual ledgers.',
     start_url: '/',
+    id: '/',
+    scope: '/',
     display: 'standalone',
+    display_override: ['window-controls-overlay', 'standalone'],
     orientation: 'portrait',
     background_color: '#ffffff',
     theme_color: '#1e3a8a',
@@ -31,5 +34,25 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: 'any',
       },
     ],
+    shortcuts: [
+      {
+        name: 'Report Maintenance',
+        url: '/tenant/maintenance',
+        description: 'Open the AI Diagnostic Hub',
+      },
+      {
+        name: 'My Properties',
+        url: '/landlord/properties',
+        description: 'View active portfolio inventory',
+      }
+    ],
+    screenshots: [
+      {
+        src: 'https://picsum.photos/seed/rf1/1280/720',
+        sizes: '1280x720',
+        type: 'image/jpeg',
+        label: 'Commander Hub Overview'
+      }
+    ]
   }
 }
