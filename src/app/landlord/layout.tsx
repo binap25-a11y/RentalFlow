@@ -7,14 +7,14 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { Loader2 } from "lucide-react";
 import { doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { RENTALFLOW_LOGO_URL } from "@/lib/utils";
 
 /**
  * @fileOverview Landlord Portfolio Layout.
  * Optimized for low-latency auth guards and atomic resolution.
- * CALIBRATED: Redirection and mounting logic optimized for zero-delay performance.
+ * HYPER-STABLE: Implements redirection buffering to prevent auth flickers.
  */
 
 export default function LandlordLayout({
@@ -27,6 +27,7 @@ export default function LandlordLayout({
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
   const [isFullyAuthorized, setIsFullyAuthorized] = useState(false);
+  const redirectChecked = useRef(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -40,16 +41,22 @@ export default function LandlordLayout({
   const { data: profile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
   useEffect(() => {
-    if (!isClient || isUserLoading) return;
+    if (!isClient || isUserLoading || redirectChecked.current) return;
 
-    // ATOMIC REDIRECT: Zero-latency auth check
+    // Redirection Buffer: Allows Firebase session to settle before forcing a move
     if (!user) {
-      router.replace('/auth');
-      return;
+      const timer = setTimeout(() => {
+        if (!user) {
+          redirectChecked.current = true;
+          router.replace('/auth');
+        }
+      }, 800);
+      return () => clearTimeout(timer);
     }
 
     if (!isProfileLoading && profile) {
       if (profile.role !== 'landlord') {
+        redirectChecked.current = true;
         router.replace(profile.role === 'tenant' ? '/tenant/hub' : '/auth');
       } else {
         setIsFullyAuthorized(true);

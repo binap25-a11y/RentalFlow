@@ -53,7 +53,6 @@ export default function AuthPage() {
     if (user && db && mounted && !isLoading && !isRedirecting.current) {
       const checkAndRedirect = async () => {
         try {
-          isRedirecting.current = true;
           const userDocRef = doc(db, 'users', user.uid);
           const userDoc = await getDoc(userDocRef);
 
@@ -63,18 +62,16 @@ export default function AuthPage() {
             
             if (!isProfileComplete) {
               setNeedsProfile(true);
-              isRedirecting.current = false;
               return;
             }
             
+            isRedirecting.current = true;
             router.replace(userData.role === 'landlord' ? '/landlord/properties' : '/tenant/hub');
           } else {
             setNeedsProfile(true);
-            isRedirecting.current = false;
           }
         } catch (e) {
           setNeedsProfile(true);
-          isRedirecting.current = false;
         }
       };
       checkAndRedirect();
@@ -84,7 +81,6 @@ export default function AuthPage() {
   const handleCreateProfile = async () => {
     if (!user || !db) return;
     
-    // SAFE STRING GUARDING: Prevent trim() on undefined
     const cleanFirst = String(firstName || "").trim();
     const cleanLast = String(lastName || "").trim();
     const cleanPhone = String(phoneNumber || "").trim();
