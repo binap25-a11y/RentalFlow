@@ -90,7 +90,7 @@ export default function TenantInspectionsPage() {
     pdf.setTextColor(255, 255, 255); 
     pdf.setFont("helvetica", "bold"); 
     pdf.setFontSize(22);
-    pdf.text("RESIDENT AUDIT REVIEW", 20, 25);
+    pdf.text("RESIDENT INSPECTION REVIEW", 20, 25);
     pdf.setFontSize(9);
     pdf.text(`OFFICIAL PORTFOLIO COMPLIANCE RECORD | ASSET: ${property?.addressLine1 || 'Property'}`, 20, 35);
     
@@ -136,7 +136,7 @@ export default function TenantInspectionsPage() {
       pdf.setFontSize(10);
     }
 
-    pdf.save(`Audit_Review_${format(new Date(), 'yyyyMMdd')}.pdf`);
+    pdf.save(`Inspection_Review_${format(new Date(), 'yyyyMMdd')}.pdf`);
     toast({ title: "Compliance Review Saved" });
   };
 

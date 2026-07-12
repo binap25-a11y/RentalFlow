@@ -288,7 +288,7 @@ export default function InspectionsPage() {
     pdf.setTextColor(255, 255, 255); 
     pdf.setFont("helvetica", "bold"); 
     pdf.setFontSize(24);
-    pdf.text("PROPERTY AUDIT REPORT", 20, 28);
+    pdf.text("PROPERTY INSPECTION REPORT", 20, 28);
     pdf.setFontSize(10); 
     pdf.setFont("helvetica", "normal");
     pdf.text("OFFICIAL COMPLIANCE RECORD", 20, 36);
@@ -487,7 +487,7 @@ export default function InspectionsPage() {
         pdf.text(`Official Compliance Record | Page ${i} of ${pageCount}`, pageWidth / 2, 285, { align: 'center' });
     }
 
-    pdf.save(`Audit_${property?.addressLine1.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
+    pdf.save(`Inspection_${property?.addressLine1.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
     toast({ title: "Compliance Report Saved" });
   };
 
