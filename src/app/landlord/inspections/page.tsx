@@ -21,6 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, isValid } from "date-fns";
@@ -28,7 +29,7 @@ import {
   Calendar as CalendarIcon, Loader2, 
   CheckCircle2, ClipboardList, ShieldAlert, Home, Wrench, 
   Check, X, AlertTriangle, Info, Trash2, Edit3, PlayCircle, Camera, Clock,
-  Save, FileDown, Activity, ImageOff
+  Save, FileDown, Activity, ImageOff, Plus, FileText, Gavel
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn, compressImage } from "@/lib/utils";
@@ -88,6 +89,11 @@ export default function InspectionsPage() {
   const [structuredFindings, setStructuredFindings] = useState<Record<string, { status: 'pass' | 'fail', notes: string, imageUrl?: string, isSyncing?: boolean, hasError?: boolean }>>({});
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Editable Report State
+  const [editSummary, setEditSummary] = useState('');
+  const [editPriorityItems, setEditPriorityItems] = useState<string[]>([]);
+  const [editHealthScore, setEditHealthScore] = useState(85);
+
   const [editingMetadata, setEditingMetadata] = useState<any>(null);
   const [editDate, setEditDate] = useState<Date>();
   const [editPropertyId, setEditPropertyId] = useState('');
@@ -95,6 +101,9 @@ export default function InspectionsPage() {
   const handleOpenAudit = (inspection: any) => {
     setActiveInspection(inspection);
     setStructuredFindings(inspection.structuredFindings || {});
+    setEditSummary(inspection.summary || '');
+    setEditPriorityItems(inspection.priorityItems || []);
+    setEditHealthScore(inspection.healthScore || 85);
   };
 
   const handleOpenEditMetadata = (inspection: any) => {
@@ -194,12 +203,11 @@ export default function InspectionsPage() {
     setDate(undefined);
   };
 
-  const handleFinalizeAudit = async () => {
+  const handleAITriage = async () => {
     if (!db || !activeInspection || !user) return;
-    
     const entries = Object.entries(structuredFindings);
     if (entries.length === 0) {
-      toast({ variant: "destructive", title: "Context Required", description: "Record findings before finalizing." });
+      toast({ variant: "destructive", title: "Context Required", description: "Record findings before triaging." });
       return;
     }
 
@@ -216,24 +224,34 @@ export default function InspectionsPage() {
         findings: findingsString
       });
 
-      const inspectionRef = doc(db, 'inspections', activeInspection.id);
-      updateDocumentNonBlocking(inspectionRef, {
-        status: 'completed',
-        structuredFindings: structuredFindings,
-        summary: aiReport.summary,
-        priorityItems: aiReport.priorityItems,
-        healthScore: aiReport.healthScore,
-        conductedDate: new Date().toISOString(),
-        updatedAt: serverTimestamp(),
-      });
-
-      toast({ title: "Audit Finalized" });
-      setActiveInspection(null);
+      setEditSummary(aiReport.summary);
+      setEditPriorityItems(aiReport.priorityItems);
+      setEditHealthScore(aiReport.healthScore);
+      
+      toast({ title: "Intelligence Triage Complete" });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Synchronization Timeout" });
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleFinalizeAudit = async () => {
+    if (!db || !activeInspection || !user) return;
+    
+    const inspectionRef = doc(db, 'inspections', activeInspection.id);
+    updateDocumentNonBlocking(inspectionRef, {
+      status: 'completed',
+      structuredFindings: structuredFindings,
+      summary: editSummary,
+      priorityItems: editPriorityItems,
+      healthScore: editHealthScore,
+      conductedDate: new Date().toISOString(),
+      updatedAt: serverTimestamp(),
+    });
+
+    toast({ title: "Audit Finalized" });
+    setActiveInspection(null);
   };
 
   const handleDownloadReport = async (inspection: any) => {
@@ -308,7 +326,7 @@ export default function InspectionsPage() {
 
     // --- PRIORITY ---
     if (inspection.priorityItems?.length > 0) {
-      if (y > 250) { pdf.addPage(); y = 25; }
+      if (y > 240) { pdf.addPage(); y = 25; }
       pdf.setFontSize(14); 
       pdf.setFont("helvetica", "bold");
       pdf.text("CRITICAL FIX STRATEGY", 20, y + 10);
@@ -316,7 +334,7 @@ export default function InspectionsPage() {
       pdf.setFontSize(10); 
       pdf.setFont("helvetica", "normal");
       inspection.priorityItems.forEach((item: string) => {
-        if (y > 270) { pdf.addPage(); y = 25; }
+        if (y > 275) { pdf.addPage(); y = 25; }
         pdf.text(`• ${item}`, 25, y);
         y += 7;
       });
@@ -364,39 +382,64 @@ export default function InspectionsPage() {
         }
         y += 10;
       }
+    }
 
-      // --- IMAGES ---
-      const visualFindings = Object.entries(inspection.structuredFindings)
-        .filter(([_, data]: [string, any]) => data.imageUrl);
-      
-      if (visualFindings.length > 0) {
-        pdf.addPage();
-        y = 25;
-        pdf.setTextColor(30, 58, 138);
-        pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(16);
-        pdf.text("VISUAL EVIDENCE GALLERY", 20, y);
-        y += 15;
+    // --- VISUAL EVIDENCE ---
+    const visualFindings = Object.entries(inspection.structuredFindings || {})
+      .filter(([_, data]: [string, any]) => data.imageUrl);
+    
+    if (visualFindings.length > 0) {
+      pdf.addPage();
+      y = 25;
+      pdf.setTextColor(30, 58, 138);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(16);
+      pdf.text("VISUAL EVIDENCE GALLERY", 20, y);
+      y += 15;
 
-        for (const [item, data] of (visualFindings as [string, any][])) {
-          if (y > 220) { pdf.addPage(); y = 25; }
-          try {
-            const img = await loadImage(data.imageUrl);
-            const imgWidth = 80;
-            const imgHeight = (img.height * imgWidth) / img.width;
-            pdf.setTextColor(0, 0, 0);
-            pdf.setFontSize(10);
-            pdf.setFont("helvetica", "bold");
-            pdf.text(`ITEM: ${item}`, 20, y);
-            y += 8;
-            pdf.addImage(img, 'JPEG', 20, y, imgWidth, imgHeight);
-            y += imgHeight + 15;
-          } catch (e) {
-            console.warn("Visual sync failure for PDF:", e);
-          }
+      for (const [item, data] of (visualFindings as [string, any][])) {
+        if (y > 220) { pdf.addPage(); y = 25; }
+        try {
+          const img = await loadImage(data.imageUrl);
+          const imgWidth = 80;
+          const imgHeight = (img.height * imgWidth) / img.width;
+          pdf.setTextColor(0, 0, 0);
+          pdf.setFontSize(10);
+          pdf.setFont("helvetica", "bold");
+          pdf.text(`ITEM: ${item}`, 20, y);
+          y += 8;
+          pdf.addImage(img, 'JPEG', 20, y, imgWidth, imgHeight);
+          y += imgHeight + 15;
+        } catch (e) {
+          console.warn("Visual sync failure for PDF:", e);
         }
       }
     }
+
+    // --- SIGNATURES ---
+    if (y > 220) { pdf.addPage(); y = 25; } else { y += 20; }
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(14);
+    pdf.text("EXECUTION & HANDOVER", 20, y);
+    y += 15;
+    
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(10);
+    pdf.text("The undersigned parties confirm that the visual and narrative records accurately represent the condition of the property as of the audit date.", 20, y, { maxWidth: 170 });
+    y += 15;
+
+    // Landlord Sig
+    pdf.line(20, y + 15, 90, y + 15);
+    pdf.text("Authorized Landlord / Agent", 20, y + 22);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(user?.displayName || "Portfolio Manager", 20, y + 14);
+
+    // Tenant Sig
+    pdf.line(120, y + 15, 190, y + 15);
+    pdf.setFont("helvetica", "normal");
+    pdf.text("Acknowledging Resident", 120, y + 22);
+    pdf.text("__________________________", 120, y + 14);
 
     const pageCount = (pdf as any).internal.getNumberOfPages();
     for(let i = 1; i <= pageCount; i++) {
@@ -450,7 +493,7 @@ export default function InspectionsPage() {
                 </PopoverContent>
               </Popover>
             </div>
-            <Button className="w-full rounded-xl h-12 font-bold bg-primary text-primary-foreground shadow-lg uppercase tracking-widest text-[10px] transition-all hover:scale-[1.01]" onClick={handleSchedule} disabled={!date || !selectedPropertyId}>Confirm Schedule</Button>
+            <Button className="w-full rounded-xl h-11 font-bold bg-primary text-primary-foreground shadow-lg uppercase tracking-widest text-[10px] transition-all hover:scale-[1.01]" onClick={handleSchedule} disabled={!date || !selectedPropertyId}>Confirm Schedule</Button>
           </CardContent>
         </Card>
 
@@ -465,7 +508,7 @@ export default function InspectionsPage() {
               </div>
             ) : (
               [...inspections].sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime()).map((inspection) => (
-                <Card key={inspection.id} className="border-none shadow-sm overflow-hidden bg-card rounded-[2.5rem] ring-1 ring-border group hover:shadow-md transition-all">
+                <Card key={inspection.id} className="border-none shadow-sm overflow-hidden bg-card rounded-[2.5rem] group ring-1 ring-border transition-all hover:shadow-md relative">
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row gap-6">
                       <div className="bg-primary/5 p-4 rounded-2xl flex flex-col items-center justify-center text-foreground min-w-[90px] h-fit font-headline shadow-inner ring-1 ring-border">
@@ -484,7 +527,7 @@ export default function InspectionsPage() {
                               <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-9 w-9 text-destructive/40 hover:bg-destructive/5 rounded-lg"><Trash2 className="w-4 h-4" /></Button></AlertDialogTrigger>
                               <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl bg-card">
                                 <AlertDialogHeader className="text-left"><AlertDialogTitle className="font-headline font-bold text-xl">Delete Record?</AlertDialogTitle><AlertDialogDescription className="text-muted-foreground font-medium mt-2">Permanently remove this audit. Irreversible.</AlertDialogDescription></AlertDialogHeader>
-                                <AlertDialogFooter className="mt-6 gap-3"><AlertDialogCancel className="rounded-xl h-12 font-bold text-[10px] uppercase">Cancel</AlertDialogCancel><AlertDialogAction onClick={() => { if(db) deleteDocumentNonBlocking(doc(db, 'inspections', inspection.id)); toast({ title: "Record Removed" }); }} className="rounded-xl h-12 font-bold bg-red-600 text-white uppercase text-[10px] border-none">Delete</AlertDialogAction></AlertDialogFooter>
+                                <AlertDialogFooter className="mt-6 gap-3"><AlertDialogCancel className="rounded-xl h-11 font-bold text-[10px] uppercase">Cancel</AlertDialogCancel><AlertDialogAction onClick={() => { if(db) deleteDocumentNonBlocking(doc(db, 'inspections', inspection.id)); toast({ title: "Record Removed" }); }} className="rounded-xl h-11 font-bold bg-red-600 text-white uppercase text-[10px] border-none">Delete</AlertDialogAction></AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
                           </div>
@@ -494,7 +537,7 @@ export default function InspectionsPage() {
                           <p className="text-[10px] text-muted-foreground font-bold flex items-center mt-2 opacity-60 uppercase tracking-widest"><Clock className="w-3.5 h-3.5 mr-2" />{inspection.conductedDate ? `Recorded: ${format(new Date(inspection.conductedDate), 'PPp')}` : `Scheduled: ${format(new Date(inspection.scheduledDate), 'PPP')}`}</p>
                         </div>
                         <Button className={cn("rounded-xl font-bold h-10 px-8 text-[10px] uppercase tracking-widest", inspection.status === 'completed' ? "bg-muted text-foreground hover:bg-muted/80" : "bg-accent text-white")} onClick={() => handleOpenAudit(inspection)}>
-                          {inspection.status === 'completed' ? <><Edit3 className="w-4 h-4 mr-2" /> Edit Audit</> : <><PlayCircle className="w-4 h-4 mr-2" /> Start Audit</>}
+                          {inspection.status === 'completed' ? <><Edit3 className="w-4 h-4 mr-2" /> Edit Records</> : <><PlayCircle className="w-4 h-4 mr-2" /> Start Audit</>}
                         </Button>
                         {inspection.summary && (
                           <div className="p-8 bg-primary/[0.03] rounded-3xl border border-border mt-6 text-left shadow-inner relative overflow-hidden">
@@ -540,9 +583,17 @@ export default function InspectionsPage() {
 
       <Dialog open={activeInspection !== null} onOpenChange={(o) => !o && setActiveInspection(null)}>
         <DialogContent className="sm:max-w-[1200px] p-0 rounded-[2.5rem] border-none shadow-2xl flex flex-col h-[92vh] overflow-hidden bg-card ring-1 ring-white/10">
-           <div className="p-6 bg-primary/5 border-b shrink-0 text-left">
-              <DialogTitle className="text-xl font-headline font-bold text-foreground tracking-tight">Professional Property Audit</DialogTitle>
-              <DialogDescription className="font-medium text-muted-foreground text-xs mt-1">Synchronizing compliance data and high-fidelity evidence.</DialogDescription>
+           <div className="p-6 bg-primary/5 border-b shrink-0 text-left flex justify-between items-center">
+              <div>
+                <DialogTitle className="text-xl font-headline font-bold text-foreground tracking-tight">Professional Property Audit</DialogTitle>
+                <DialogDescription className="font-medium text-muted-foreground text-xs mt-1">Synchronizing compliance data and high-fidelity evidence.</DialogDescription>
+              </div>
+              <div className="flex gap-2">
+                 <Button variant="outline" size="sm" className="h-9 rounded-xl font-bold text-[10px] uppercase tracking-widest px-6" onClick={handleAITriage} disabled={isGenerating}>
+                    {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <Sparkles className="w-3.5 h-3.5 mr-2 text-accent" />}
+                    AI Triage
+                 </Button>
+              </div>
            </div>
            
            <Tabs defaultValue="exterior" className="flex-1 flex flex-col min-h-0">
@@ -554,6 +605,10 @@ export default function InspectionsPage() {
                         <span className="text-[9px] font-extrabold uppercase tracking-widest">{s.title}</span>
                       </TabsTrigger>
                     ))}
+                    <TabsTrigger value="report" className="rounded-lg h-9 px-4 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-emerald-500 border border-transparent data-[state=active]:border-border transition-all">
+                        <FileText className="w-4 h-4 shrink-0" />
+                        <span className="text-[9px] font-extrabold uppercase tracking-widest">Report Editor</span>
+                    </TabsTrigger>
                  </TabsList>
               </div>
               
@@ -617,12 +672,77 @@ export default function InspectionsPage() {
                          ))}
                       </TabsContent>
                     ))}
+
+                    <TabsContent value="report" className="mt-0 space-y-10 text-left">
+                        <div className="p-8 bg-emerald-500/5 rounded-[2.5rem] border border-emerald-500/10 space-y-8">
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-xl font-bold font-headline text-emerald-900 dark:text-emerald-100 flex items-center gap-3">
+                                   <FileText className="w-6 h-6" /> Executive Configuration
+                                </h4>
+                                <Badge className="bg-emerald-500 text-white font-bold h-7 px-4 rounded-full uppercase text-[9px] tracking-widest">Pre-Handover Draft</Badge>
+                            </div>
+
+                            <div className="space-y-4">
+                                <Label className="text-[10px] font-bold uppercase tracking-widest text-emerald-800 opacity-60">Property Health Score (0-100)</Label>
+                                <Input type="number" min="0" max="100" value={editHealthScore} onChange={(e) => setEditHealthScore(Number(e.target.value))} className="rounded-xl h-12 bg-white/40 border-emerald-500/20 font-bold px-6 text-emerald-900" />
+                            </div>
+
+                            <div className="space-y-4">
+                                <Label className="text-[10px] font-bold uppercase tracking-widest text-emerald-800 opacity-60">Professional Summary Narrative</Label>
+                                <Textarea value={editSummary} onChange={(e) => setEditSummary(e.target.value)} className="rounded-[2rem] min-h-[160px] bg-white/40 border-emerald-500/20 font-medium px-6 py-6 leading-relaxed text-sm text-emerald-950" placeholder="Summarize the overall condition..." />
+                            </div>
+
+                            <div className="space-y-6">
+                                <div className="flex justify-between items-center">
+                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-emerald-800 opacity-60">Critical Fix Strategy (Priority Items)</Label>
+                                    <Button variant="ghost" size="sm" className="h-8 rounded-lg text-emerald-600 hover:bg-emerald-500/10" onClick={() => setEditPriorityItems([...editPriorityItems, ''])}>
+                                        <Plus className="w-3.5 h-3.5 mr-2" /> Add Item
+                                    </Button>
+                                </div>
+                                <div className="grid gap-3">
+                                    {editPriorityItems.map((item, idx) => (
+                                        <div key={idx} className="flex gap-3">
+                                            <Input value={item} onChange={(e) => {
+                                                const updated = [...editPriorityItems];
+                                                updated[idx] = e.target.value;
+                                                setEditPriorityItems(updated);
+                                            }} className="rounded-xl h-11 bg-white/40 border-emerald-500/20 font-bold px-6 text-sm" placeholder="e.g. Test smoke alarm batteries" />
+                                            <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl text-red-500 hover:bg-red-500/10" onClick={() => setEditPriorityItems(editPriorityItems.filter((_, i) => i !== idx))}>
+                                                <X className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-border flex items-center justify-between">
+                            <div className="flex items-center gap-5">
+                                <div className="p-4 bg-white dark:bg-muted rounded-2xl shadow-xl text-accent border border-border">
+                                   <Gavel className="w-7 h-7" />
+                                </div>
+                                <div className="text-left">
+                                   <p className="text-lg font-bold text-foreground font-headline tracking-tight">Legal Execution Blocks</p>
+                                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Signatures will be appended to PDF</p>
+                                </div>
+                            </div>
+                            <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+                        </div>
+                    </TabsContent>
                  </div>
               </ScrollArea>
            </Tabs>
            
-           <DialogFooter className="p-4 bg-muted/5 border-t shrink-0">
-              <Button className="w-full md:w-auto rounded-xl h-11 px-10 font-bold bg-primary text-primary-foreground uppercase tracking-widest text-[9px] border-none shadow-xl transition-all hover:scale-[1.01]" onClick={handleFinalizeAudit} disabled={isGenerating}>
+           <DialogFooter className="p-4 bg-muted/5 border-t shrink-0 flex flex-col md:flex-row gap-3">
+              <Button variant="outline" className="rounded-xl h-11 px-8 font-bold uppercase tracking-widest text-[9px] border-border" onClick={() => handleDownloadReport({
+                  ...activeInspection,
+                  summary: editSummary,
+                  priorityItems: editPriorityItems,
+                  healthScore: editHealthScore
+              })}>
+                 <FileDown className="w-4 h-4 mr-2" /> Preview Generated PDF
+              </Button>
+              <Button className="rounded-xl h-11 px-10 font-bold bg-primary text-primary-foreground uppercase tracking-widest text-[9px] border-none shadow-xl transition-all hover:scale-[1.01]" onClick={handleFinalizeAudit} disabled={isGenerating}>
                  {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Orchestrating Records...</> : <><CheckCircle2 className="w-4 h-4 mr-2" /> Finalize Audit Report</>}
               </Button>
            </DialogFooter>
@@ -660,7 +780,7 @@ export default function InspectionsPage() {
             </div>
           </ScrollArea>
           <DialogFooter className="p-8 bg-muted/5 border-t shrink-0">
-            <Button className="w-full rounded-2xl h-16 font-bold bg-primary text-primary-foreground font-headline uppercase tracking-[0.2em] text-[11px] border-none transition-all active:scale-[0.98]" onClick={handleUpdateMetadata} disabled={!editDate || !editPropertyId}>Synchronize Changes</Button>
+            <Button className="w-full rounded-2xl h-14 font-bold bg-primary text-primary-foreground font-headline uppercase tracking-[0.2em] text-[11px] border-none transition-all active:scale-0.98" onClick={handleUpdateMetadata} disabled={!editDate || !editPropertyId}>Synchronize Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
