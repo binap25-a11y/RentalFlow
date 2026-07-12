@@ -472,7 +472,7 @@ export default function InspectionsPage() {
     } else if (inspection.targetResidentName) {
       pdf.setFontSize(9);
       pdf.setTextColor(150, 150, 150);
-      pdf.text(`Awaiting: ${inspection.targetResidentName}`, 120, y + 14);
+      pdf.text(`${inspection.targetResidentName}`, 120, y + 14);
       pdf.setTextColor(0, 0, 0);
       pdf.setFontSize(10);
     } else {
