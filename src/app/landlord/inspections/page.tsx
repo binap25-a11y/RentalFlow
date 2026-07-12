@@ -28,7 +28,8 @@ import {
   Calendar as CalendarIcon, Loader2, 
   CheckCircle2, ClipboardList, ShieldAlert, Home, Wrench, 
   Check, X, AlertTriangle, Info, Trash2, Edit3, PlayCircle, Camera, Clock,
-  Save, FileDown, Activity, ImageOff, Plus, FileText, Gavel, Sparkles, PenTool
+  Save, FileDown, Activity, ImageOff, Plus, FileText, Gavel, Sparkles, PenTool,
+  Users
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn, compressImage } from "@/lib/utils";
@@ -96,6 +97,7 @@ export default function InspectionsPage() {
   
   // Signature State
   const [signatureName, setSignatureName] = useState('');
+  const [targetResidentName, setTargetResidentName] = useState('');
   const [isSigned, setIsSigned] = useState(false);
 
   const [editingMetadata, setEditingMetadata] = useState<any>(null);
@@ -109,6 +111,7 @@ export default function InspectionsPage() {
     setEditPriorityItems(inspection.priorityItems || []);
     setEditHealthScore(inspection.healthScore || 85);
     setSignatureName(inspection.landlordSignature || user?.displayName || '');
+    setTargetResidentName(inspection.targetResidentName || '');
     setIsSigned(!!inspection.landlordSignature);
   };
 
@@ -253,6 +256,7 @@ export default function InspectionsPage() {
       priorityItems: editPriorityItems,
       healthScore: editHealthScore,
       landlordSignature: signatureName,
+      targetResidentName: targetResidentName,
       landlordSignedAt: isSigned ? new Date().toISOString() : null,
       conductedDate: new Date().toISOString(),
       updatedAt: serverTimestamp(),
@@ -425,7 +429,7 @@ export default function InspectionsPage() {
     }
 
     // --- SIGNATURES ---
-    if (y > 220) { pdf.addPage(); y = 25; } else { y += 20; }
+    if (y > 200) { pdf.addPage(); y = 25; } else { y += 20; }
     pdf.setTextColor(0, 0, 0);
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(14);
@@ -445,8 +449,9 @@ export default function InspectionsPage() {
       pdf.setFont("courier", "bolditalic");
       pdf.text(inspection.landlordSignature, 20, y + 14);
       pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(8);
-      pdf.text(`Digitally Signed: ${inspection.landlordSignedAt ? format(new Date(inspection.landlordSignedAt), 'PPp') : format(new Date(), 'PPp')}`, 20, y + 27);
+      pdf.setFontSize(7);
+      const ts = inspection.landlordSignedAt ? format(new Date(inspection.landlordSignedAt), 'PPp') : format(new Date(), 'PPp');
+      pdf.text(`Digitally Verified: ${ts}`, 20, y + 27);
       pdf.setFontSize(10);
     } else {
       pdf.text("__________________________", 20, y + 14);
@@ -460,8 +465,15 @@ export default function InspectionsPage() {
       pdf.setFont("courier", "bolditalic");
       pdf.text(inspection.tenantSignature, 120, y + 14);
       pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(8);
-      pdf.text(`Digitally Signed: ${format(new Date(inspection.tenantSignedAt), 'PPp')}`, 120, y + 27);
+      pdf.setFontSize(7);
+      const ts = format(new Date(inspection.tenantSignedAt), 'PPp');
+      pdf.text(`Digitally Verified: ${ts}`, 120, y + 27);
+      pdf.setFontSize(10);
+    } else if (inspection.targetResidentName) {
+      pdf.setFontSize(9);
+      pdf.setTextColor(150, 150, 150);
+      pdf.text(`Awaiting: ${inspection.targetResidentName}`, 120, y + 14);
+      pdf.setTextColor(0, 0, 0);
       pdf.setFontSize(10);
     } else {
       pdf.text("__________________________", 120, y + 14);
@@ -759,34 +771,58 @@ export default function InspectionsPage() {
                         <div className="p-10 bg-amber-500/5 rounded-[3rem] border border-amber-500/10 space-y-10">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h4 className="text-2xl font-bold font-headline text-amber-900 dark:text-amber-100">Landlord Handover Signature</h4>
-                                    <p className="text-sm text-amber-800/60 font-medium mt-1">Affix your digital stamp to certify the accuracy of these records.</p>
+                                    <h4 className="text-2xl font-bold font-headline text-amber-900 dark:text-amber-100">Execution Identity Registry</h4>
+                                    <p className="text-sm text-amber-800/60 font-medium mt-1">Establish the contracting identities and high-precision timestamps for this audit.</p>
                                 </div>
-                                <PenTool className="w-10 h-10 text-amber-600 opacity-40" />
+                                <Gavel className="w-10 h-10 text-amber-600 opacity-40" />
                             </div>
 
-                            <div className="space-y-8 max-w-xl">
-                                <div className="space-y-3">
-                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-amber-800/40">Full Legal Name (Digital Stamp)</Label>
-                                    <Input 
-                                      value={signatureName} 
-                                      onChange={(e) => setSignatureName(e.target.value)} 
-                                      placeholder="e.g. Johnathan Smith"
-                                      className="h-14 rounded-2xl border-amber-500/20 bg-white/40 font-bold text-lg px-8 text-amber-950 font-headline italic"
-                                    />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <div className="space-y-6">
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-2">
+                                           <Label className="text-[10px] font-bold uppercase tracking-widest text-amber-800/60 font-headline">Landlord Digital Stamp</Label>
+                                           <Badge variant="outline" className="text-[7px] border-amber-500/20 text-amber-600 px-2 h-4">Authorized Agent</Badge>
+                                        </div>
+                                        <Input 
+                                          value={signatureName} 
+                                          onChange={(e) => setSignatureName(e.target.value)} 
+                                          placeholder="Enter full legal name..."
+                                          className="h-14 rounded-2xl border-amber-500/20 bg-white/40 font-bold text-lg px-8 text-amber-950 font-headline italic"
+                                        />
+                                    </div>
+                                    
+                                    <div className="flex items-start gap-4 p-6 bg-white/60 rounded-2xl border border-amber-500/10 shadow-sm">
+                                        <Checkbox 
+                                          id="certify" 
+                                          checked={isSigned} 
+                                          onCheckedChange={(checked) => setIsSigned(!!checked)}
+                                          className="w-6 h-6 rounded-lg border-amber-500/40 data-[state=checked]:bg-amber-600"
+                                        />
+                                        <div className="grid gap-1.5 leading-none">
+                                            <label htmlFor="certify" className="text-xs font-bold text-amber-900 leading-relaxed cursor-pointer">
+                                                I certify that I have conducted this audit at the property asset on {format(new Date(), 'PPp')}.
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="flex items-start gap-4 p-6 bg-white/60 rounded-2xl border border-amber-500/10 shadow-sm">
-                                    <Checkbox 
-                                      id="certify" 
-                                      checked={isSigned} 
-                                      onCheckedChange={(checked) => setIsSigned(!!checked)}
-                                      className="w-6 h-6 rounded-lg border-amber-500/40 data-[state=checked]:bg-amber-600"
-                                    />
-                                    <div className="grid gap-1.5 leading-none">
-                                        <label htmlFor="certify" className="text-sm font-bold text-amber-900 leading-relaxed cursor-pointer">
-                                            I certify that I have conducted this audit at the property asset and that the findings captured represent a true and accurate reflection of the property condition as of {format(new Date(), 'PPP')}.
-                                        </label>
+                                <div className="space-y-6">
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-2">
+                                           <Label className="text-[10px] font-bold uppercase tracking-widest text-amber-800/60 font-headline">Target Resident Identity</Label>
+                                           <Badge variant="outline" className="text-[7px] border-amber-500/20 text-amber-600 px-2 h-4">Acknowledging Resident</Badge>
+                                        </div>
+                                        <div className="relative">
+                                          <Users className="absolute left-6 top-4.5 h-5 w-5 text-amber-800/20" />
+                                          <Input 
+                                            value={targetResidentName} 
+                                            onChange={(e) => setTargetResidentName(e.target.value)} 
+                                            placeholder="Resident's legal name..."
+                                            className="h-14 rounded-2xl border-amber-500/20 bg-white/40 font-bold text-lg pl-14 pr-8 text-amber-950 font-headline"
+                                          />
+                                        </div>
+                                        <p className="text-[9px] font-bold text-amber-800/40 uppercase tracking-widest px-2">This name will be displayed in the resident's signing portal.</p>
                                     </div>
                                 </div>
                             </div>
@@ -795,14 +831,17 @@ export default function InspectionsPage() {
                         <div className="p-10 bg-primary/5 rounded-[3rem] border border-border flex items-center justify-between group">
                             <div className="flex items-center gap-6">
                                 <div className="p-5 bg-white dark:bg-muted rounded-[1.5rem] shadow-xl text-accent border border-border transition-transform group-hover:scale-105">
-                                   <Gavel className="w-8 h-8" />
+                                   <PenTool className="w-8 h-8" />
                                 </div>
                                 <div className="text-left">
-                                   <p className="text-xl font-bold text-foreground font-headline tracking-tight">Legal Signature Blocks</p>
-                                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Verified names and timestamps will be appended to the final PDF.</p>
+                                   <p className="text-xl font-bold text-foreground font-headline tracking-tight">Verified Digital Handshake</p>
+                                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">High-precision timestamps and legal signatures will be appended to the finalized binary record.</p>
                                 </div>
                             </div>
-                            <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+                            <div className="flex flex-col items-end gap-1">
+                               <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+                               <span className="text-[8px] font-bold text-emerald-600 uppercase tracking-widest">Timestamp Active</span>
+                            </div>
                         </div>
                     </TabsContent>
                  </div>
@@ -815,7 +854,9 @@ export default function InspectionsPage() {
                   summary: editSummary,
                   priorityItems: editPriorityItems,
                   healthScore: editHealthScore,
-                  landlordSignature: isSigned ? signatureName : null
+                  landlordSignature: isSigned ? signatureName : null,
+                  targetResidentName: targetResidentName,
+                  landlordSignedAt: isSigned ? new Date().toISOString() : null
               })}>
                  <FileDown className="w-4 h-4 mr-2" /> Preview Generated PDF
               </Button>

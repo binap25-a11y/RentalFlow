@@ -20,7 +20,8 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   ShieldCheck, Loader2, ClipboardList, CheckCircle2, 
-  FileDown, Clock, MapPin, Activity, PenTool, Sparkles, AlertTriangle
+  FileDown, Clock, MapPin, Activity, PenTool, Sparkles, AlertTriangle,
+  Gavel
 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -58,7 +59,7 @@ export default function TenantInspectionsPage() {
 
   const handleOpenReport = (inspection: any) => {
     setActiveInspection(inspection);
-    setSignatureName(inspection.tenantSignature || user?.displayName || '');
+    setSignatureName(inspection.tenantSignature || user?.displayName || inspection.targetResidentName || '');
     setIsCertified(!!inspection.tenantSignature);
   };
 
@@ -79,7 +80,6 @@ export default function TenantInspectionsPage() {
   };
 
   const handleDownloadPDF = async (inspection: any) => {
-    // Re-using the professional PDF logic from landlord side but calibrated for resident needs
     const property = properties.find(p => p.id === inspection.propertyId);
     const { jsPDF } = await import("jspdf");
     const pdf = new jsPDF();
@@ -103,15 +103,38 @@ export default function TenantInspectionsPage() {
     pdf.text(summaryLines, 20, 80);
 
     let y = 100 + (summaryLines.length * 6);
+    if (y > 220) { pdf.addPage(); y = 25; }
+    
     pdf.setFont("helvetica", "bold");
     pdf.text("EXECUTION & SIGNATURES", 20, y);
-    y += 12;
-    pdf.setFont("helvetica", "normal");
-    pdf.text("__________________________", 20, y);
-    pdf.text("__________________________", 120, y);
-    y += 8;
-    pdf.text(`Landlord Verified: ${inspection.landlordSignature || 'Pending'}`, 20, y);
-    pdf.text(`Resident Verified: ${inspection.tenantSignature || 'Pending'}`, 120, y);
+    y += 15;
+
+    // Landlord Sig Row
+    pdf.line(20, y + 15, 90, y + 15);
+    pdf.text("Landlord Verified", 20, y + 22);
+    pdf.setFont("helvetica", "bold");
+    if (inspection.landlordSignature) {
+      pdf.setFont("courier", "bolditalic");
+      pdf.text(inspection.landlordSignature, 20, y + 14);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(7);
+      const ts = inspection.landlordSignedAt ? format(new Date(inspection.landlordSignedAt), 'PPp') : 'Recently';
+      pdf.text(`Verified: ${ts}`, 20, y + 27);
+      pdf.setFontSize(10);
+    }
+
+    // Tenant Sig Row
+    pdf.line(120, y + 15, 190, y + 15);
+    pdf.text("Resident Verified", 120, y + 22);
+    if (inspection.tenantSignature) {
+      pdf.setFont("courier", "bolditalic");
+      pdf.text(inspection.tenantSignature, 120, y + 14);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(7);
+      const ts = format(new Date(inspection.tenantSignedAt), 'PPp');
+      pdf.text(`Verified: ${ts}`, 120, y + 27);
+      pdf.setFontSize(10);
+    }
 
     pdf.save(`Audit_Review_${format(new Date(), 'yyyyMMdd')}.pdf`);
     toast({ title: "Compliance Review Saved" });
@@ -284,7 +307,7 @@ export default function TenantInspectionsPage() {
                               />
                               <div className="grid gap-2 leading-tight">
                                   <label htmlFor="res-certify" className="text-base font-bold text-amber-900 cursor-pointer leading-relaxed">
-                                      I acknowledge receipt of this property audit and certify that the findings accurately represent the condition of the asset as I observe it today, {format(new Date(), 'PPP')}.
+                                      I acknowledge receipt of this property audit and certify that the findings accurately represent the condition of the asset as I observe it today, {format(new Date(), 'PPp')}.
                                   </label>
                               </div>
                           </div>
@@ -296,13 +319,33 @@ export default function TenantInspectionsPage() {
                                 <CheckCircle2 className="w-8 h-8 text-emerald-600" />
                                 <div>
                                    <p className="text-lg font-bold text-emerald-900">Digitally Verified</p>
-                                   <p className="text-xs text-emerald-800/60 font-medium">{format(new Date(activeInspection.tenantSignedAt), 'PPp')}</p>
+                                   <p className="text-[10px] font-bold text-emerald-800/60">{format(new Date(activeInspection.tenantSignedAt), 'PPp')}</p>
                                 </div>
                              </div>
                              <ShieldCheck className="w-10 h-10 text-emerald-600 opacity-20" />
                           </div>
                         )}
                     </div>
+                </div>
+
+                <div className="p-10 bg-primary/5 rounded-[3rem] border border-border flex items-center justify-between">
+                    <div className="flex items-center gap-6">
+                        <div className="p-5 bg-white dark:bg-muted rounded-[1.5rem] shadow-xl text-accent border border-border">
+                           <Gavel className="w-8 h-8" />
+                        </div>
+                        <div className="text-left">
+                           <p className="text-xl font-bold text-foreground font-headline tracking-tight">Legal Audit Compliance</p>
+                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                             {activeInspection.landlordSignature ? `Verified by Landlord: ${activeInspection.landlordSignature}` : 'Awaiting Landlord Finalization'}
+                           </p>
+                        </div>
+                    </div>
+                    {activeInspection.landlordSignedAt && (
+                      <div className="text-right">
+                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Digital Stamp</p>
+                         <p className="text-xs font-bold text-foreground">{format(new Date(activeInspection.landlordSignedAt), 'PPp')}</p>
+                      </div>
+                    )}
                 </div>
              </div>
            </ScrollArea>
